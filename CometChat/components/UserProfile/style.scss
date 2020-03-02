@@ -1,0 +1,89 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+//dark
+.dark {
+    
+    .cp-profile-list-title{
+        color: $dark-primary-text;
+    }
+    .cp-list-seperator {
+        border-bottom: 1px solid $gray-darken;
+    }
+ 
+}
+
+//light
+.light {
+   
+    .cp-profile-list-title{
+        color: $light-primary-text;
+    }
+    .cp-list-seperator {
+        border-bottom: 1px solid $gray-lighten;
+    }
+}
+
+//generic
+.cp-user-profile-scroll{
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+.cp-profile-list-title{
+    margin: 15px 15px;
+    
+}
+.cp-profile-view {
+   padding: 10px;
+    cursor: pointer;
+    .row {
+        margin: 0px;
+    }
+
+    .cp-username {
+        text-transform: capitalize;
+       
+    }
+    .cp-userstatus{
+        span{
+            color:$blue-background-primary ;
+        }
+    }
+    .cp-ellipsis{
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 140px;
+    }
+   
+}
+.cp-no-padding{
+  padding: 0px;
+}
+
+.cp-user-block{
+    cursor: pointer;
+    margin: 15px 18px;
+    .row {
+        margin: 0px;
+    }
+    .cp-list-seperator {
+        margin-left: 35px;
+    }
+    .cp-user-block-info {
+      padding: 10px 10px;
+
+    }
+    .cp-block-user-button{
+      background:none;
+      border: none;
+      color: #ff3f35;
+    }
+    
+    .cp-row-padding{
+        padding-top: 20px;
+    }
+
+}
+}

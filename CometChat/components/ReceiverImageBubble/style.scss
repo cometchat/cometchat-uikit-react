@@ -1,0 +1,46 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+
+.cp-receiver-image-container {
+    margin: 10px;
+    width: 100%;
+    display: inline-block;
+
+    .cp-receiver-image {
+        // background: $gray-lighten-more-more;
+        padding: 8px 8px;
+        height: 350px;
+        border-radius: 12px;
+        img {
+            border: 0;
+            width: 100%;
+            height: 100%;
+            display: inherit;
+            border-radius: 12px;
+        }
+    }
+    .cp-receiver-image-wrapper{
+        max-width: 50%;
+        padding: 3px 8px;
+        width: max-content;
+
+
+    }
+    .cp-time{
+        padding: 3px 6px;
+
+        font-size: 10px;
+    }
+    .cp-float-left{
+        float: left;
+    }
+
+}
+
+
+
+.dark {}
+
+
+.light {}

@@ -1,0 +1,86 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cp-message-composer {
+    .cp-show-media{
+        display: block;
+        position: absolute;
+        bottom: 45px;
+        left: 17px;
+        background-color: $light-background;
+        button{
+            background: none;
+            border: none; 
+            img{
+                width: 40px;
+            }
+        }
+    }
+    .cp-hide-media{
+        display: None;
+    }
+    .cp-media-button{
+        display: inline-block;
+        button{
+        background: none;
+        border: none;
+        img{
+            width: 20px;
+        }
+        }
+    }
+    .cp-send-button{
+        display: inline-block;
+        button{
+        background: none;
+        border: none;
+        padding: 3px 10px;
+        img{
+            width: 30px;
+        }
+        }
+    }
+    width: 100%;
+    bottom: 12px;
+    input{
+        width: 85%;
+        background-color: $gray-lighten-more-more;
+        border: 1px solid #e8e8e8;
+        border-radius: 5px;
+        padding-left: 10px;
+        padding-right: 10px;
+        height: 34px;
+        font-size: 18px;
+
+
+    }
+
+
+  
+}
+
+@media screen and (min-width: 768px) and (max-width : 992px){
+    .cp-message-composer{
+        input{
+            width: 78%;
+        }
+    }
+
+}
+
+
+.dark{
+    .cp-show-media{
+     background-color: $dark-background;
+     p{
+         color:$light-background;
+     }
+    }
+}
+
+
+.light{
+    .cp-show-media{
+        background-color: $light-background;
+    }
+}

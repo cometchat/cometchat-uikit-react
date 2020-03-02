@@ -1,0 +1,78 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cp-conversationview {
+    padding: 2px;
+    cursor: pointer;
+    min-height: 72px;
+
+    .row {
+        margin: 0px;
+    }
+
+    .cp-username {
+
+        display: inline-block;
+        text-transform: capitalize;
+        text-overflow: ellipsis;
+
+    }
+    .cp-time{
+        float: right;
+        text-overflow: ellipsis;
+     width: max-content;
+    }
+
+    .cp-user-info {
+        margin-top: 11px;
+        padding-bottom: 15px;
+
+    }
+
+    .cp-userstatus {
+        // margin-bottom: 10px !important;
+        text-overflow: ellipsis;
+    }
+    .online{
+        color:green !important;   
+    }
+    .offline{
+        color: gray;    
+    }
+.cp-conversation-avatar{
+    padding: 13px 16px 0;
+    position: relative;
+    margin-top: -1px;
+    cursor: pointer;
+}
+
+.cp-ellipsis{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 130px;
+}
+.cp-no-padding{
+    padding: 0px;
+}
+   
+    
+}
+
+
+.dark{
+    .cp-username{
+        color: $dark-primary-text;
+    }      
+    .cp-time{
+        color: $dark-primary-text;
+    }  
+}
+.light{
+    .cp-username{
+        color: $light-primary-text;
+    }        
+    .cp-time{
+        color: $light-primary-text;
+    }
+}

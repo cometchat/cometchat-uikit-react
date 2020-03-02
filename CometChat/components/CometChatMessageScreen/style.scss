@@ -1,0 +1,72 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+//dark
+.dark {
+   
+    .cp-profile-container{
+        border-left: 1px solid $gray-darken;
+    }
+    
+
+
+}
+
+//light
+.light {
+    .cp-profile-container{
+        border-left: 1px solid $gray-lighten;
+    }
+   
+}
+
+//generic
+
+.cp-chatview-container-wrapper {
+    height: 100%;
+    max-height: 100%;
+    overflow: auto;
+    overflow:hidden;
+    display:flex;
+    flex-direction:row;
+
+}
+.cp-chatview-container{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    overflow:hidden;
+    min-width: 70%;
+    width: 98%;
+}
+.cp-profile-container{
+    width: 100%;
+}
+.cp-chatwindow-conatiner {
+    height: calc(100% - 117px);
+    max-height: calc(100% - 117px);
+    overflow: auto;
+}
+
+.cp-userlist {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 110px;
+
+    .cp-list-seperator {
+        margin-left: 64px;
+    }
+
+}
+
+.cp-contact-alphabet {
+    margin-left: 10px;
+    padding: 5px;
+}
+
+
+.cp-contact-list-title {
+    margin: 15px 30px;
+}
+

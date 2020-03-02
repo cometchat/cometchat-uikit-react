@@ -1,0 +1,39 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+
+.cp-receiver-video-container {
+    margin: 10px;
+
+    .cp-receiver-video {
+        // background: $gray-lighten-more-more;
+        padding: 8px 8px;
+        width: 50%;
+        width: 100%;
+        video {
+            border: 0;
+            width: 100%;
+            height: 100%;
+            display: inherit;
+        }
+    }
+    .cp-receiver-video-wrapper{
+        max-width: 50%;
+        padding: 3px 8px;
+        width: 100%;
+    }
+    .cp-float-left{
+        float: left;
+    }
+    .cp-time{
+        padding: 3px 6px;
+
+        font-size: 10px;
+    }
+
+}
+
+.dark {}
+
+
+.light {}

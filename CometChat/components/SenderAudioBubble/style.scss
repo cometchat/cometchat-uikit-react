@@ -1,0 +1,35 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+
+
+.cp-sender-audio-container {
+    margin: 10px;
+    float: right;
+    width: 100%;
+    .cp-sender-audio {
+        // background: $blue-background-primary;
+        padding: 8px 8px;
+        margin-left: 50%;
+        audio {
+            border: 0;
+            width: 100%;
+            display: inherit;
+        }
+    }
+    .cp-time{
+        float: right;
+        font-size: 10px;
+        span{
+            padding-left: 2px;
+        }
+    }
+
+}
+
+
+
+.dark {}
+
+
+.light {}

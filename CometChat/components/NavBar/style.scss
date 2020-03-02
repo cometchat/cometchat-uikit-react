@@ -1,0 +1,74 @@
+@import '../../resources/mixins';
+@import '../../resources/colors.scss';
+
+
+
+
+.dark {
+
+  .tab {
+
+    background-color: $dark-background;
+    button {
+      background-color: $dark-background;
+      color: $dark-primary-text;
+
+  }
+}
+}
+.light {
+  .tab{
+    background-color: $light-background;
+    button {
+      background-color: $light-background;
+      color:  $light-primary-text
+  }
+
+  }
+  
+}
+
+/* Style the tab */
+.tab {
+    // overflow: hidden;
+    // position: absolute;
+    display: flex;
+    position: absolute;
+    width: 100%;
+    left: 0;
+    bottom: 15px;
+    background-color: #fff;
+    z-index: 1;
+  }
+  
+  /* Style the buttons inside the tab */
+  .tab button {
+    border: none;
+    // background: white;
+    // padding: 15px;
+
+    display: inline-block;
+    text-align: center;
+    margin: auto;
+  }
+  
+  /* Change background color of buttons on hover */
+  .tab button:hover {
+    color: #309aff;
+  }
+  
+  /* Create an active/current tablink class */
+  .tab button.active {
+    color: #309aff;
+  }
+  
+  /* Style the tab content */
+ 
+  button:focus {
+    outline: none !important;
+  }
+  .cp-navbar{
+    height: 100%;
+    overflow: hidden;
+
+  }

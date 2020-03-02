@@ -1,0 +1,43 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+
+.cp-receiver-audio-container {
+    margin: 10px;
+    width: 100%;
+    display: inline-block;
+
+
+    .cp-receiver-audio {
+        // background: $gray-lighten-more-more;
+        padding: 8px 8px;
+        margin-right: 50%;
+        width: 100%;
+        audio {
+            border: 0;
+            width: 100%;
+            display: inherit;
+        }
+    }
+    .cp-receiver-audio-wrapper{
+        max-width: 50%;
+        padding: 3px 8px;
+        width: 100%;
+    }
+    .cp-float-left{
+        float: left;
+    }
+    .cp-time{
+        padding: 3px 6px;
+
+        font-size: 10px;
+    }
+
+}
+
+
+
+.dark {}
+
+
+.light {}

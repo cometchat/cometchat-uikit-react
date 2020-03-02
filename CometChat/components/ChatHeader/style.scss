@@ -1,0 +1,87 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cp-chatheader {
+    padding: 2px;
+    min-height: 72px;
+
+    .row {
+        margin: 0px;
+    }
+
+    .cp-username {
+        display: inline-block;
+
+    }
+    .cp-time{
+        float: right;
+    }
+
+    .cp-user-info {
+       
+        margin-top: 11px;
+
+    }
+
+    .cp-userstatus {
+        // text-transform: capitalize;
+        // margin-bottom: 10px !important;
+    }
+    .online{
+        color:green !important;   
+    }
+    .offline{
+        color: gray;    
+    }
+    .cp-text-blue{
+       color: $blue-background-primary
+    }
+.cp-chat-avatar{
+    padding: 12px 12px 0;
+    position: relative;
+    margin-top: -1px;
+}
+
+.cp-ellipsis{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 150px;
+}
+   
+.cp-chathead-buttons{
+    float: right;
+    padding: 5px 0px;
+    button{
+    padding: 0px 20px;
+     background: none;
+    border: none;
+    img{
+        width: 22px;
+        // display: none
+
+    }
+    }
+}
+    
+}
+
+
+.dark{
+    .cp-username{
+        color: $dark-primary-text;
+    }      
+    .cp-time{
+        color: $dark-primary-text;
+    }  
+}
+
+
+.light{
+    .cp-username{
+        color: $light-primary-text;
+    }        
+    .cp-time{
+        color: $light-primary-text;
+    }
+}

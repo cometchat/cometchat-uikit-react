@@ -1,0 +1,87 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+//dark
+.dark {
+    .cp-userlist {
+        background-color: $dark-background;
+
+
+        .cp-list-seperator {
+            border-bottom: 1px solid $gray-darken;
+        }
+    }
+    .cp-contact-list-title{
+        color: $dark-primary-text;
+    }
+    .cp-contact-alphabet{
+        color: $dark-primary-text;
+    }
+}
+
+//light
+.light {
+    .cp-userlist {
+        background-color: $light-background;
+
+
+        .cp-list-seperator {
+            border-bottom: 1px solid $gray-lighten;
+        }
+
+
+    }
+    .cp-contact-list-title{
+        color: $light-primary-text;
+    }
+    .cp-contact-alphabet{
+        color: $light-primary-text;
+    }
+
+}
+
+//generic
+.cp-grouplist-wrapper{
+    height: 100%;
+    overflow: hidden;
+    margin: 0px 0px 0px 10px;
+.cp-userlist {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 110px;
+
+    .cp-list-seperator {
+        margin-left: 64px;
+        border-bottom: 1px solid $gray-lighten;
+    }
+
+}
+.cp-contact-alphabet{
+    margin-left: 10px;
+    padding: 5px;
+}
+
+
+.cp-contact-list-title{
+    margin: 15px 15px;
+}
+
+.cp-searchbar {
+    margin-left: 15px;
+    margin-right: 10px;
+
+    input {
+        background-color: #f6f6f6;
+        background-image: url('./resources/search-grey-icon.svg');
+        background-repeat: no-repeat;
+        background-position: 6.5px 11.5px ;
+        border: 1px solid #e8e8e8;
+        border-radius: 5px;
+        width: 100%;
+        padding-left: 27px;
+        padding-right: 10px;
+        height: 40px;
+    }
+}
+}

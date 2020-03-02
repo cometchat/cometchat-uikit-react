@@ -1,0 +1,88 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+//dark
+.dark {
+    
+    .cp-profile-list-title{
+        color: $dark-primary-text;
+    }
+    .cp-list-seperator {
+        border-bottom: 1px solid $gray-darken;
+    }
+ 
+}
+
+//light
+.light {
+   
+    .cp-profile-list-title{
+        color: $light-primary-text;
+    }
+    .cp-list-seperator {
+        border-bottom: 1px solid $gray-lighten;
+    }
+}
+
+//generic
+.cp-profile-scroll{
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 110px;
+}
+.cp-profile-list-title{
+    margin: 15px 30px;
+    
+}
+.cp-profile-view {
+    margin-left: 20px;
+    cursor: pointer;
+    .row {
+        margin: 0px;
+    }
+
+    .cp-username {
+        text-transform: capitalize;
+    }
+
+    .cp-user-info {
+        margin-left: 15px;
+        padding-bottom: 15px;
+
+    }
+    .cp-userstatus{
+        span{
+            color:$blue-background-primary ;
+        }
+    }
+    .cp-ellipsis{
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 140px;
+    }
+   
+}
+.cp-profile-preferences{
+    margin: 15px 30px;
+    cursor: pointer;
+    .row {
+        margin: 0px;
+    }
+    .cp-list-seperator {
+        margin-left: 35px;
+    }
+    .cp-user-info {
+        margin-left: 15px;
+        padding-bottom: 15px;
+
+    }
+    .cp-no-padding{
+        padding: 0px;
+    }
+    .cp-row-padding{
+        padding-top: 20px;
+    }
+
+}

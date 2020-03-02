@@ -1,0 +1,46 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+
+.cp-sender-message-container{
+    max-width: 50%;
+    margin: 10px;
+    float: right;
+    margin-left: 50%;
+
+    .cp-sender-message {
+        padding: 6px 20px;
+        border-radius: 16px;
+        color: white;
+        background: $blue-background-primary;
+        font-size: 15px;
+        word-break: break-all;
+        white-space: pre-wrap;
+        width: fit-content;
+         margin: 0px 0px 0px 32px;
+         min-width: 40px;
+       
+        
+    }
+
+    .cp-time{
+        float: right;
+        font-size: 10px;
+        span{
+            padding-left: 2px;
+        }
+    }
+
+}
+
+
+
+
+.dark{
+    
+}
+
+
+.light{
+   
+}

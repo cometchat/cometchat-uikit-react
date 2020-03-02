@@ -1,0 +1,52 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+
+
+.cp-sender-file-container {
+    max-width: 50%;
+    margin: 10px;
+    float: right;
+    margin-left: 50%;
+
+    .cp-sender-file {
+        padding: 3px 8px;
+        border-radius: 12px;
+        color: white;
+        background:  $blue-background-primary;
+        font-size: 15px;
+        word-break: break-all;
+        min-height: 50px;
+       a{
+           color:white;
+           img{
+               background-color: white;
+           }
+          
+       }
+       p{
+        float: right;
+        padding: 0px 4px 0px 0px;
+        font-size: 10px;
+        margin: 0px;
+    }
+      
+    }
+
+    .cp-time{
+        float: right;
+        font-size: 10px;
+        span{
+            padding-left: 2px;
+        }
+    }
+
+
+}
+
+
+
+.dark {}
+
+
+.light {}

@@ -1,0 +1,60 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cp-groupview {
+    padding: 2px;
+    cursor: pointer;
+    display: flex;
+
+
+    .row {
+        margin: 0px;
+        .cp-group-icon{
+            padding: 4px 16px 0;
+        }
+    }
+
+    .cp-username {
+
+        text-transform: capitalize;
+        text-overflow: ellipsis;
+
+    }
+
+    .cp-user-info {
+        margin-top: 11px;
+        padding-bottom: 15px;
+
+    }
+
+    .cp-userstatus {
+        text-transform: capitalize;
+        // margin-bottom: 10px !important;
+    }
+    .online{
+        color:green !important;   
+    }
+    .offline{
+        color: gray;    
+    }
+    .cp-ellipsis{
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 130px;
+    }
+
+    
+}
+
+
+.dark{
+    .cp-username{
+        color: $dark-primary-text;
+    }        
+}
+.light{
+    .cp-username{
+        color: $light-primary-text;
+    }        
+}

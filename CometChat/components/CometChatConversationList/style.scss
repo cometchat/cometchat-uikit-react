@@ -1,0 +1,73 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+//dark
+.dark {
+    .cp-userlist {
+        background-color: $dark-background;
+
+
+        .cp-list-seperator {
+            border-bottom: 1px solid $gray-darken;
+        }
+    }
+    .cp-contact-list-title{
+        color: $dark-primary-text;
+    }
+    .cp-contact-alphabet{
+        color: $dark-primary-text;
+    }
+}
+
+//light
+.light {
+    .cp-userlist {
+        background-color: $light-background;
+
+
+        .cp-list-seperator {
+            border-bottom: 1px solid $gray-lighten;
+        }
+
+
+    }
+    .cp-contact-list-title{
+        color: $light-primary-text;
+    }
+    .cp-contact-alphabet{
+        color: $light-primary-text;
+    }
+
+}
+
+//generic
+.cp-conversatiolist-wrapper{
+    height: 100%;
+    overflow: hidden;
+    margin: 0px 0px 0px 10px;
+    .cp-userlist {
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 110px;
+    
+        .cp-list-seperator {
+            margin-left: 64px;
+            border-bottom: 1px solid $gray-lighten;
+        }
+    
+    }
+    .cp-contact-alphabet{
+        margin-left: 10px;
+        padding: 5px;
+    }
+    
+    
+    .cp-contact-list-title{
+        margin: 15px 15px;
+    }
+    
+    
+
+
+}

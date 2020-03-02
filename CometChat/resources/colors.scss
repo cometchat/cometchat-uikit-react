@@ -1,0 +1,85 @@
+$white: #ffffff;
+
+$text: #74708d;
+$text-lighten: #c0bdd0;
+$text-darken: #615d7c;
+$text-darken-more: #514d6a;
+
+$gray: #d2d9e5;
+$gray-lighten: #e8e8e8;
+$gray-lighten-more: #f2f4f8;
+$gray-lighten-more-more: #f9fafc;
+$gray-darken: #b8beca;
+$gray-border: #e4e9f0;
+
+$black: #0e0b20;
+$black-lighten: #222034;
+$black-lighten-more: #393749;
+
+$blue: #0088ff;
+$blue-darken: #0072d6;
+$orange: #f2a654;
+$yellow: yellow;
+
+$menuBg: #001529;
+$menuBg-darken: #000c17;
+
+// Accent colors
+$default: #acb7bf;
+$primary: #795aa6;
+$secondary: #6a7a84;
+$success: #46be8a;
+$info: #0887c9;
+$warning: #f39834;
+$danger: #fb434a;
+
+
+//ThemeBases colors
+
+/*  Dark Theme*/
+$dark-primary: #39f;
+$dark-secondary: #39f;
+$dark-accent: rgb(40, 41, 43);
+$dark-background:#141414;
+$dark-background-light:#333;
+$dark-gray:#AAA;
+$dark-primary-text: #FFF;
+$dark-secondary-text: #aaa;
+
+
+/*  Light Theme*/
+$light-primary: #39f;
+$light-secondary: #39f;
+$light-accent: #39f;
+$light-background:#FFF;
+$light-background-light:#DDD;
+$light-gray:#AAA;
+$light-primary-text: #000;
+$light-secondary-text: #CCC;
+
+//Generics 
+$blue-background-primary: #39f;
+$gray: #d2d9e5;
+$gray-lighten: #e8e8e8;
+$gray-lighten-more: #f2f4f8;
+$gray-lighten-more-more: #f6f6f6;
+$gray-darken: #212121;
+$gray-border: #e4e9f0;
+
+
+//ThemeBases fonts
+
+.font-bold{
+    font-size: 14px;
+    font-weight: 600;
+}
+.font-normal{
+    font-size: 14px;
+}
+.font-muted{
+    font-size: 12px;
+}
+.font-extra-large{
+    font-size: 24px;
+    font-weight: 600;
+}
