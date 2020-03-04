@@ -80,7 +80,7 @@ After adding necessary dependancies inside you app to integrate UI Kit inside yo
 3. Start using CometChat Components by following the exmple code.
 
 
- To read the full dcoumentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/docs/reactjs-ui-kit)
+ To read the full dcoumentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/docs/react-ui-kit)
 
 
 
