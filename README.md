@@ -72,12 +72,33 @@ CometChat.createUser(user, apiKey).then(
 * We have setup 5 users for testing having UIDs: `SUPERHERO1`, `SUPERHERO2`, `SUPERHERO3`,`SUPERHERO4` and `SUPERHERO5`.
 
 
+
 ## Add UI Kit to your project
 After adding necessary dependancies inside you app to integrate UI Kit inside your app.Kindly follow the below steps:
 
-1. Simply clone the UI Kit Library from reactjs-chat-uikit repository.
-2. Copy the CometChat folderto your project lib folder
+1. Simply clone the UI Kit Library from react-chat-uikit repository.
+2. Copy the CometChat folder to your project lib folder
 3. Start using CometChat Components by following the exmple code.
+
+
+
+### Launch UI Unified
+
+*UI Unified is a way to launch a fully working chat application using the UI Kit .In UI Unified all the UI Screens and UI Components working together to give the full experience of a chat application with minimal coding effort.*
+
+ Add the following code snippet in `onSuccess` of CometChat `login`.
+
+ ```html
+ import {CometChatUnified } from "./lib/cometchat";
+ render() {
+    return (
+        <CometChatUnified/>
+    );
+  }
+ ```
+</br>
+
+
 
 
  To read the full dcoumentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/docs/react-ui-kit)
