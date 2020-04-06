@@ -1,6 +1,7 @@
 import React from "react";
 import "./style.scss";
 import NavBar from "../NavBar";
+import CallScreen from "../CallScreen";
 import CometChatMessageScreen from "../CometChatMessageScreen"
 
 
@@ -36,14 +37,24 @@ class CometChatUnified extends React.Component {
         </div>
         <div className="col-lg-9 col-sm-6 col-xs-12 cp-chat-container">
           {
-            this.state.item ? <CometChatMessageScreen {...this.state}></CometChatMessageScreen> : <h1 className="cp-center-text">Select a chat to start messaging</h1>
+            this.state.item ? <CometChatMessageScreen {...this.state} actionGenerated={(action, payload) => {
+              switch (action) {
+                case 'audioCallInitiated':
+                  this.setState({ outgoingCall: payload.call });
+                  break;
+                case 'videoCallInitiated':
+                  this.setState({ outgoingCall: payload.call });
+
+                  break;
+              }
+            }}></CometChatMessageScreen> : <h1 className="cp-center-text">Select a chat to start messaging</h1>
 
           }
-          {/* <label className="switch">
-            <input type="checkbox" onChange={this.changeTheme} />
-            <span className="slider round"></span>
-          </label> */}
+
         </div>
+        <CallScreen actionGenerated={(action, payload) => {
+          this.setState({ outgoingCall: undefined });
+        }} outgoingCall={this.state.outgoingCall}></CallScreen>
       </div>
     );
   }
@@ -52,7 +63,7 @@ class CometChatUnified extends React.Component {
 
 
 export default CometChatUnified;
-export const cometChatUnified=CometChatUnified;
+export const cometChatUnified = CometChatUnified;
 
 CometChatUnified.defaultProps = {
   launch: {}

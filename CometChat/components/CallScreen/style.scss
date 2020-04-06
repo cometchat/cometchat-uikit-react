@@ -1,0 +1,62 @@
+@import "../../resources/mixins";
+@import "../../resources/colors";
+
+.cp-call-screen-container {
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  background: $gray-darken;
+  top: 0;
+  left: 0;
+  color: white;
+}
+
+.cp-incoming-call-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  .cp-accept-button {
+    background: green;
+    border-radius: 5px;
+  }
+  .cp-accept-button:hover {
+    cursor: pointer;
+  }
+  .cp-reject-button {
+    background: red;
+    border-radius: 5px;
+  }
+  .cp-reject-button:hover {
+    cursor: pointer;
+  }
+}
+.cp-outgoing-call-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  .cp-accept-button {
+    background: green;
+    border-radius: 5px;
+  }
+  .cp-accept-button:hover {
+    cursor: pointer;
+  }
+
+  .cp-reject-button {
+    background: red;
+    border-radius: 5px;
+  }
+  .cp-reject-button:hover {
+    cursor: pointer;
+  }
+}
+.cp-call-title {
+  font-weight: 600;
+  font-size: 40px;
+}
+.p-xl {
+  padding: 15px;
+}
+.m-a {
+  margin: auto;
+}

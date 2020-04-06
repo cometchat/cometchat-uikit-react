@@ -12,6 +12,7 @@ import SenderVideoBubble from "../SenderVideoBubble"
 import ReceiverVideoBubble from "../ReceiverVideoBubble"
 import { CometChatManager } from "./controller";
 import { CometChat } from "@cometchat-pro/chat";
+import CallMessage from "../CallMessage";
 
 
 
@@ -48,7 +49,7 @@ class ChatWindow extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-if(this.state.type !== 'group')
+
     if (prevState.inputMessageList !== this.state.inputMessageList) {
       this.setState({ messageList: [...this.state.messageList, ...this.state.inputMessageList] }, () => {
         this.scrollToBottom();
@@ -97,29 +98,29 @@ if(this.state.type !== 'group')
 
   messageUpdated = (message, isReceipt) => {
     if (isReceipt) {
-      let messageList=[]
+      let messageList = []
       if (message.receiptType === "delivery") {
-        messageList=this.state.messageList.map(stateMessage => {
+        messageList = this.state.messageList.map(stateMessage => {
           if (message.messageId === stateMessage.id) {
-              stateMessage.deliveredAt = message.deliveredAt;
+            stateMessage.deliveredAt = message.deliveredAt;
           }
-          
+
           return stateMessage;
         });
-        this.setState({messageList});
-      }else {
+        this.setState({ messageList });
+      } else {
         if (message.receiptType === "read") {
-        messageList=this.state.messageList.map(stateMessage => {
-          // if (message.messageId === stateMessage.id) {
-            if(!stateMessage.readAt)  {
+          messageList = this.state.messageList.map(stateMessage => {
+            // if (message.messageId === stateMessage.id) {
+            if (!stateMessage.readAt) {
               stateMessage.readAt = message.readAt;
-            }            
-          // }
-          
-          return stateMessage;
-        });
-        this.setState({messageList});
-      }
+            }
+            // }
+
+            return stateMessage;
+          });
+          this.setState({ messageList });
+        }
       }
     }
     else {
@@ -134,10 +135,10 @@ if(this.state.type !== 'group')
     this.cometChatManager.isCometChatUserLogedIn().then(
       user => {
         this.cometChatManager.fetchPreviousMessages().then(
-          (messageList) => {            
-            messageList.map(message=>{
-              if(message.getSender().uid!==user.uid){
-                CometChat.markAsRead(message.id, message.getSender().getUid(), 'user');    
+          (messageList) => {
+            messageList.map(message => {
+              if (message.getSender().uid !== user.uid) {
+                CometChat.markAsRead(message.id, message.getSender().getUid(), 'user');
               }
               return true
             });
@@ -173,35 +174,48 @@ if(this.state.type !== 'group')
 
   }
   handleSenderMessages = (message) => {
-    switch (message.category, message.type) {
-      case ("message" && "text"):
-        return <SenderMessageBubble message={message} ></SenderMessageBubble>;
-      case ("message" && "image"):
-        return <SenderImageBubble message={message} ></SenderImageBubble>;
-      case ("message" && "file"):
-        return <SenderFileBubble message={message} ></SenderFileBubble>;
-      case ("message" && "audio"):
-        return <SenderAudioBubble message={message} ></SenderAudioBubble>;
-      case ("message" && "video"):
-        return <SenderVideoBubble message={message} ></SenderVideoBubble>;
+    switch (message.category) {
+      case ("message"): {
+        switch (message.type) {
+          case ("text"):
+            return <SenderMessageBubble message={message} ></SenderMessageBubble>;
+          case ("image"):
+            return <SenderImageBubble message={message} ></SenderImageBubble>;
+          case ("file"):
+            return <SenderFileBubble message={message} ></SenderFileBubble>;
+          case ("audio"):
+            return <SenderAudioBubble message={message} ></SenderAudioBubble>;
+          case ("video"):
+            return <SenderVideoBubble message={message} ></SenderVideoBubble>;
+        }
+      } case ("call"): {
+
+        return <CallMessage message={message} ></CallMessage>;
+      }
       default:
         return null;
     }
   }
   handlereceiverMessages = (message) => {
-    switch (message.category, message.type) {
-      case ("message" && "text"):
-        return <ReceiverMessageBubble message={message}></ReceiverMessageBubble>
-      case ("message" && "image"):
-        return <ReceiverImageBubble message={message} ></ReceiverImageBubble>;
-      case ("message" && "file"):
-        return <ReceiverFileBubble message={message} ></ReceiverFileBubble>;
-      case ("message" && "audio"):
-        return <ReceiverAudioBubble message={message} ></ReceiverAudioBubble>;
-      case ("message" && "video"):
-        return <ReceiverVideoBubble message={message} ></ReceiverVideoBubble>;
-      default:
-        return null;
+    switch (message.category) {
+      case ("message"): {
+        switch (message.category, message.type) {
+          case ("message" && "text"):
+            return <ReceiverMessageBubble message={message}></ReceiverMessageBubble>
+          case ("message" && "image"):
+            return <ReceiverImageBubble message={message} ></ReceiverImageBubble>;
+          case ("message" && "file"):
+            return <ReceiverFileBubble message={message} ></ReceiverFileBubble>;
+          case ("message" && "audio"):
+            return <ReceiverAudioBubble message={message} ></ReceiverAudioBubble>;
+          case ("message" && "video"):
+            return <ReceiverVideoBubble message={message} ></ReceiverVideoBubble>;
+          default:
+            return null;
+        }
+      } case ("call"): {
+        return <CallMessage message={message} ></CallMessage>;
+      }
     }
   }
   render() {
@@ -216,7 +230,7 @@ if(this.state.type !== 'group')
 
 
 export default ChatWindow;
-export const chatWindow=ChatWindow;
+export const chatWindow = ChatWindow;
 
 ChatWindow.defaultProps = {
 

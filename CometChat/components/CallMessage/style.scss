@@ -1,0 +1,20 @@
+@import "../../resources/mixins";
+@import "../../resources/colors";
+
+.cp-call-message-container {
+  margin: 10px;
+  //   text-align: center;
+  width: 100%;
+  display: flex;
+  > p {
+    margin: 14px auto;
+
+    height: 25px;
+  }
+}
+
+.dark {
+}
+
+.light {
+}

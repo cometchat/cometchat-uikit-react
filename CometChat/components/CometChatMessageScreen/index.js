@@ -12,11 +12,14 @@ class CometChatMessageScreen extends React.Component {
     this.state = {
       chatList: [],
       onItemClick: null,
-      messages:undefined
+      messages: undefined,
+      actionGenerated: () => {
+        return null;
+      }
     }
 
   }
-  
+
   static getDerivedStateFromProps(props, state) {
     return props;
 
@@ -24,26 +27,42 @@ class CometChatMessageScreen extends React.Component {
   render() {
     return (
       <div className="cp-chatview-container-wrapper" >
-        <div  className="cp-chatview-container" >
-        <ChatHeader item={this.state.item} type={this.state.type} onActionGenerated={(action,payload)=>{
-          this.setState({
-            ...payload
-          })
-        }}></ChatHeader>
-        <div className="cp-chatwindow-conatiner" >
-          <ChatWindow inputMessageList={(this.state.messages !==undefined ? this.state.messages : "")} item={this.state.item} type={this.state.type}></ChatWindow>
-        </div>
+        <div className="cp-chatview-container" >
+          <ChatHeader item={this.state.item} type={this.state.type} onActionGenerated={(action, payload) => {
+            this.state.actionGenerated(action, payload);
+            switch (action) {
+              case 'audioCallInitiated':
+                console.log("AUDIO calll started", payload);
 
-        <MessageComposer onMessageSent={ (message) => {         
-           this.setState({ messages: [message] });
-        }} item={this.state.item} type={this.state.type}></MessageComposer>
+                this.setState({ messages: [payload.call] });
+                break;
+              case 'videoCallInitiated':
+                console.log("VIDEOP calll started", payload);
+                this.setState({ messages: [payload.call] });
+
+                break;
+              case 'toggelProfile':
+                this.setState({
+                  ...payload
+                })
+                break;
+            }
+
+          }}></ChatHeader>
+          <div className="cp-chatwindow-conatiner" >
+            <ChatWindow inputMessageList={(this.state.messages !== undefined ? this.state.messages : "")} item={this.state.item} type={this.state.type}></ChatWindow>
+          </div>
+
+          <MessageComposer onMessageSent={(message) => {
+            this.setState({ messages: [message] });
+          }} item={this.state.item} type={this.state.type}></MessageComposer>
         </div>
-        {this.state.toggleUserProfile? <div className="cp-profile-container">
-         <UserProfile item={this.state.item} type={this.state.type} ></UserProfile>
-       
-        </div>:""}
-        
-       
+        {this.state.toggleUserProfile ? <div className="cp-profile-container">
+          <UserProfile item={this.state.item} type={this.state.type} ></UserProfile>
+
+        </div> : ""}
+
+
       </div>
 
     );
@@ -53,7 +72,7 @@ class CometChatMessageScreen extends React.Component {
 
 
 export default CometChatMessageScreen;
-export const cometChatMessageScreen=CometChatMessageScreen;
+export const cometChatMessageScreen = CometChatMessageScreen;
 
 CometChatMessageScreen.defaultProps = {
   CometChatMessageScreen: {}

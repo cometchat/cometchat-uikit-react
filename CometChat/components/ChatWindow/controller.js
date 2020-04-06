@@ -69,6 +69,27 @@ export class CometChatManager {
             })
         );
 
+        CometChat.addCallListener(
+            listenerID,
+            new CometChat.CallListener({
+                onIncomingCallReceived: (call) => {
+                    console.log(call);
+                    this.checkAndSendToCallback(callback, call);
+                },
+                onOutgoingCallAccepted: (call) => {
+                    this.checkAndSendToCallback(callback, call);
+
+                },
+                onOutgoingCallRejected: (call) => {
+                    this.checkAndSendToCallback(callback, call);
+
+                },
+                onIncomingCallCancelled: (call) => {
+                    this.checkAndSendToCallback(callback, call);
+                }
+            })
+        );
+
     }
     checkAndSendToCallback(callback, message, isReceipt = false) {
         if (this.type === 'group') {
