@@ -1,36 +1,18 @@
 import React from "react";
 import "./style.scss";
 
+const badgecount = (props) => {
 
-class BadgeCount extends React.Component {
-  constructor(props){
-    super(props)
-    this.state={
-      count:""
-  }
+  let count = "";
 
-  }
-  static getDerivedStateFromProps(props,state){    
-    return props;
-    
-  }
-  
-  render() {
-    return (  
-      <>
-      {(this.state.count>0)? <div className="cp-badge-wrapper">
-      <span className="cp-badge" >{((this.state.count)? this.state.count:"")}</span>    
-         </div>:""} 
-     
-         </>
+  if(props.count) {
+    count = (
+      <div className="cp-badge-wrapper">
+        <span className="cp-badge">{props.count}</span>
+      </div>
     );
   }
+  return count;
 }
 
-
-
-export  default BadgeCount;
-export const badgeCount=BadgeCount;
-BadgeCount.defaultProps = {
-  src:""
-};
+export default badgecount;

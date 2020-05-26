@@ -1,35 +1,21 @@
 import React from "react";
 import "./style.scss";
 
-class Avatar extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      src: ""
-    }
+const avatar = (props) => {
+  
+  const borderWidth = props.borderWidth || '1px';
+  const borderColor = props.borderColor || '#AAA';
+  const cornerRadius = props.cornerRadius || '50%';
+  const image = props.image;
 
-  }
-  static getDerivedStateFromProps(props, state) {
-    return props;
+  const getStyle = () => ({borderWidth:borderWidth, borderStyle:'solid',borderColor:borderColor ,'borderRadius': cornerRadius})
 
-  }
-
-  render() {
-    return (
-
-      <span className="cp-avatar-wrapper">
-        {this.state.src.uid ? ((this.state.src.avatar) ? <img className="cp-avatar" src={this.state.src.avatar} alt="User" /> : <div className="cp-avatar-alternate">{this.state.src.name.charAt(0)}</div>) : ((this.state.src.icon) ? <img className="cp-avatar" src={this.state.src.icon} alt="Group" /> : <div className="cp-avatar-alternate">{this.state.src.name.charAt(0)}</div>)}
-
-      </span>
-
-    );
-  }
+  return (
+    <div className="avatar" style={getStyle()}>
+      <img src={image} alt="Avatar" />
+    </div> 
+  );
+    
 }
 
-
-
-export default Avatar;
-export const avatar=Avatar;
-Avatar.defaultProps = {
-  src: ""
-};
+export default avatar;

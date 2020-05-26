@@ -1,40 +1,37 @@
-import { CometChat } from "@cometchat-pro/chat"
+import { CometChat } from "@cometchat-pro/chat";
 
-export class CometChatManager {
+import * as enums from '../../util/enums.js';
 
-    constructor() {
+export class CallScreenManager {
 
-    }
-    isUserLogedIn;
-    logedInUser;
-    isCometChatUserLogedIn() {
-        let timerCounter = 10000;
-        let timer = 0;
-        return new Promise((resolve, reject) => {
-            if (timerCounter === timer) reject();
-            if (this.logedInUser) { resolve(this.logedInUser); return; }
+    callListenerId = new Date().getTime();
 
-            this.isUserLogedIn = setInterval(() => {
-                if (CometChat.isInitialized()) {
-                    CometChat.getLoggedinUser().then(user => {
-                        this.logedInUser = user;
-                        clearInterval(this.isUserLogedIn);
-                        resolve(user);
-                        timer = 0;
-                    }, error => {
-                        console.log(error);
-                    })
-                } else {
-                }
-                timer = + 100;
-            }, 100);
-        });
-    }
-    attachCallListener(callback) {
-        var listenerID = "UNIQUE_LISTENER_ID";
+    attachListeners(callback) {
+        
+      CometChat.addCallListener(
+        this.callListenerId,
+        new CometChat.CallListener({
+            onIncomingCallReceived: call => {
+              callback(enums.INCOMING_CALL_RECEIVED, call);
+            },
+            onOutgoingCallAccepted: call => {
+              callback(enums.OUTGOING_CALL_ACCEPTED, call);
+            },
+            onOutgoingCallRejected: call => {
+                console.log("[onOutgoingCallRejected]", call)
+              callback(enums.OUTGOING_CALL_REJECTED, call);
+            },
+            onIncomingCallCancelled: call => {
+              callback(enums.INCOMING_CALL_CANCELLED, call);
+            }
+        })
+      );
 
     }
-    checkAndSendToCallback(callback, message, isReceipt = false) {
-        callback(message, isReceipt);
-    }
+
+    removeListeners() {
+
+      CometChat.removeCallListener(this.callListenerId);
+
+  }
 }

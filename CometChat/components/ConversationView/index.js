@@ -1,108 +1,133 @@
 import React from "react";
+
+import { CometChat } from '@cometchat-pro/chat';
+
 import "./style.scss";
+
 import Avatar from "../Avatar";
 import BadgeCount from "../BadgeCount";
-import blueDoubleTick from "./resources/blue-double-tick-icon.png";
-import greyDoubleTick from "./resources/grey-double-tick-icon.png";
-import greyTick from "./resources/grey-tick-icon.png";
 
+const conversationview = (props) => {
 
-class ConversationView extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      conversation: {},
+  const getMessage = () => {
+
+    let message = "";
+    const type = props.conversation.lastMessage.type;
+
+    switch(type) {
+      case CometChat.MESSAGE_TYPE.TEXT:
+        message = props.conversation.lastMessage.text;
+      break;
+      case CometChat.MESSAGE_TYPE.MEDIA:
+        message = "Media message";
+      break;
+      case CometChat.MESSAGE_TYPE.IMAGE:
+        message = "Image message";
+      break;
+      case CometChat.MESSAGE_TYPE.FILE:
+        message = "File message";
+      break;
+      case CometChat.MESSAGE_TYPE.VIDEO:
+        message = "Video message";
+      break;
+      case CometChat.MESSAGE_TYPE.AUDIO:
+        message = "Audio message";
+      break;
+      case CometChat.MESSAGE_TYPE.CUSTOM:
+        message = "Custom message";
+      break;
+      default:
+      break;
     }
-  }
-  static getDerivedStateFromProps(props, state) {
-    return props;
+
+    return message;
   }
 
-  displayTicks=(message)=>{
-    if(message.sentAt && !message.readAt && !message.deliveredAt){
-      return greyTick;
-    }else if(message.sentAt && !message.readAt && message.deliveredAt){
-      return greyDoubleTick
-    }else{
-      return blueDoubleTick
+  const getCallMessage = () => {
+
+    let message = "";
+    const type = props.conversation.lastMessage.type;
+
+    if(type === CometChat.MESSAGE_TYPE.VIDEO) {
+      message = "Video call";
+    } else if(type === CometChat.MESSAGE_TYPE.AUDIO) {
+      message = "Audio call";
     }
     
+    return message;
   }
-  displayLastMessage=(lastMessage)=>{
-    if (lastMessage.text) {
-      return lastMessage.text
-    }else if(lastMessage.type === 'image'){
-      return 'Image'
-    }else if(lastMessage.type === 'file'){
-      return 'File'
-    }else if(lastMessage.type === 'audio'){
-      return 'Audio'
-    }else if(lastMessage.type === 'video'){
-      return 'Video'
+
+  const getLastMessage = () => {
+
+    if(!props.conversation.lastMessage)
+      return false;
+
+    let message = "";
+
+    switch(props.conversation.lastMessage.category) {
+      case "message":
+        message = getMessage();
+      break;
+      case "call":
+        message = getCallMessage();
+      break;
+      case "action":
+        message = props.conversation.lastMessage.message;
+      break;
+      case "custom":
+        message = "Some Custom Message";
+      break;
+      default:
+      break;
     }
-
+    
+    return message;
   }
-  render() {
-    return (
-      <div className="cp-conversationview" onClick={() => { if (this.props.onClick) this.props.onClick(this.state.conversation) }}>
-        {(() => {
-          switch (this.state.conversation.conversationType) {
-            case "user": return (<div className="row">
-              <div className="col-xs-1 cp-conversation-avatar">
-                <Avatar src={this.state.conversation.conversationWith}></Avatar>
+
+  const getAvatar = () => {
+
+    let avatar = "";
+    if(props.conversation.getConversationType() === "user") {
+      avatar = props.conversation.getConversationWith().getAvatar();
+    } else if (props.conversation.getConversationType() === "group") {
+      avatar = props.conversation.getConversationWith().getIcon();
+    }
+    return avatar;
+  }
+    
+  return (
+    <div className="cp-conversationview">
+      <div className="row">
+        <div className="col-xs-1 cp-conversation-avatar">
+          <Avatar 
+          image={getAvatar()}
+          cornerRadius="50%" 
+          borderColor="#CCC"
+          borderWidth="1px"></Avatar>
+        </div>
+        <div className="col cp-user-info">
+          <div className="row cp-no-padding">
+            <div className="col-lg-9 col-sm-9 cp-no-padding">
+              <div className="cp-username  cp-ellipsis font-bold">{props.conversation.conversationWith.name}</div>
+            </div>
+            <div className="col-lg-3 col-sm-3 cp-no-padding">
+              <div className="cp-time text-muted"> {new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</div>
+            </div>
+          </div>
+          <div className="row cp-userstatus">
+            <div className="col cp-no-padding">
+              <div className="text-muted cp-ellipsis">
+                {getLastMessage()} 
               </div>
-              <div className="col cp-user-info">
-                <div className="row cp-no-padding">
-                  <div className="col-lg-9 col-sm-9 cp-no-padding"><div className="cp-username  cp-ellipsis font-bold">
-                    {this.state.conversation.conversationWith.name} </div></div>
-                  <div className="col-lg-3 col-sm-3 cp-no-padding"><div className="cp-time text-muted"> {new Date(this.state.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</div></div>
-                </div>
-                <div className="row cp-userstatus">
-                  <div className="col cp-no-padding">
-                   
-                    {this.state.conversation.lastMessage ? <div className={"text-muted cp-ellipsis "} >{this.displayLastMessage(this.state.conversation.lastMessage.data)} </div> : <div className={"text-muted cp-ellipsis "} >Tap to start a conversation.</div>
-                    }
-                  </div>
-                  <div className="col cp-no-padding">
-                    <BadgeCount count={this.state.conversation.unreadMessageCount}></BadgeCount>
-                  </div>
-                </div>
-              </div>
-            </div>);
-            case "group": return (<div className="row">
-              <div className="col-xs-1 cp-conversation-avatar">
-                <Avatar src={this.state.conversation.conversationWith}></Avatar>
-              </div>
-              <div className="col cp-user-info">
-                <div className="row cp-no-padding">
-                  <div className="col-lg-9 col-sm-9 cp-no-padding">
-                    <div className="cp-username  cp-ellipsis font-bold">{this.state.conversation.conversationWith.name}</div>
-                  </div>
-                  <div className="col-lg-3 col-sm-3 cp-no-padding">
-                    <div className="cp-time text-muted"> {new Date(this.state.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</div>
-                  </div>
-                </div>
-                <div className="row cp-userstatus">
-                  <div className="col cp-no-padding">
-                    {this.state.conversation.lastMessage ? <div className={"text-muted cp-ellipsis "} >{this.displayLastMessage(this.state.conversation.lastMessage.data)} </div> : <div className={"text-muted cp-ellipsis "} >Tap to start a conversation.</div>
-                    }
-                  </div>
-                  <div className="col cp-no-padding">
-                    <BadgeCount count={this.state.conversation.unreadMessageCount}></BadgeCount>
-                  </div>
-                </div>
-              </div>
-            </div>);
-            default: return null;
-          }
-        })()}
+            </div>
+            <div className="col cp-no-padding">
+              <BadgeCount count={props.conversation.unreadMessageCount}></BadgeCount>
+            </div>
+          </div>
+        </div>
       </div>
-    );
-  }
+    </div>
+  )
 }
-export default ConversationView;
-export const conversationView=ConversationView;
 
-ConversationView.defaultProps = {
-  conversation: {}
-};
+export default conversationview;

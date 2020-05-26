@@ -1,21 +1,13 @@
-import { cometChatConversationList } from "./components/CometChatConversationList";
-import { cometChatConversationListScreen } from "./components/CometChatConversationListScreen";
-import { cometChatGroupList } from "./components/CometChatGroupList";
-import { cometChatGroupListScreen } from "./components/CometChatGroupListScreen";
-import { cometChatUserList } from "./components/CometChatUserList";
-import { cometChatUserListScreen } from "./components/CometChatUserListScreen";
-import { cometChatMessageScreen } from "./components/CometChatMessageScreen";
-import { avatar } from "./components/Avatar";
-import { badgeCount } from "./components/BadgeCount";
-import { cometChatUnified } from "./components/CometChatUnified";
+export { default as Avatar }  from "./components/Avatar";
+export { default as BadgeCount } from "./components/BadgeCount";
 
-export const CometChatConversationList = cometChatConversationList;
-export const CometChatConversationListScreen = cometChatConversationListScreen;
-export const CometChatGroupList = cometChatGroupList;
-export const CometChatGroupListScreen = cometChatGroupListScreen;
-export const CometChatUserList = cometChatUserList;
-export const CometChatUserListScreen = cometChatUserListScreen;
-export const CometChatMessageScreen = cometChatMessageScreen;
-export const Avatar = avatar;
-export const BadgeCount = badgeCount;
-export const CometChatUnified = cometChatUnified;
+export { default as CometChatUserList } from "./components/CometChatUserList";
+export { default as CometChatUserListScreen } from "./components/CometChatUserListScreen";
+
+export { default as CometChatGroupList } from "./components/CometChatGroupList";
+export { default as CometChatGroupListScreen } from "./components/CometChatGroupListScreen";
+
+export { default as CometChatConversationList } from "./components/CometChatConversationList";
+export { default as CometChatConversationListScreen } from "./components/CometChatConversationListScreen";
+
+export { default as CometChatUnified } from "./components/CometChatUnified";

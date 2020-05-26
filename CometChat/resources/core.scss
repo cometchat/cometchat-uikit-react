@@ -1,6 +1,5 @@
-@import './mixins';
-@import './colors';
-
+@import "./mixins";
+@import "./colors";
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /*  CORE MODULE STYLES */
@@ -13,7 +12,6 @@ html {
   }
 }
 
-
 body {
   font-family: $base__font-family;
   color: $text-darken-more;
@@ -21,7 +19,6 @@ body {
   line-height: 1.7;
   height: 100vh;
   overflow: hidden;
-
 
   @media (max-width: $sm-max-width) {
     font-size: 12px;
@@ -79,9 +76,9 @@ input {
   box-shadow: none !important;
 }
 
-input[type=text],
-input[type=password],
-input[type=email],
+input[type="text"],
+input[type="password"],
+input[type="email"],
 textarea {
   appearance: none !important;
 }
@@ -117,12 +114,10 @@ textarea {
   font-family: inherit;
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////////////
 /*  CORE COMPONENTS & UTILITIES */
 
 .utils {
-
   // main container
   &__content {
     padding: rem(30);
@@ -131,7 +126,6 @@ textarea {
       padding: rem(30) rem(20);
       overflow-x: hidden;
     }
-
 
     @media (max-width: $sm-max-width) {
       padding: rem(30) rem(10);
@@ -156,67 +150,67 @@ textarea {
   // font size
   @at-root {
     .font-size-0 {
-      font-size: rem(0)
+      font-size: rem(0);
     }
 
     .font-size-10 {
-      font-size: rem(10)
+      font-size: rem(10);
     }
 
     .font-size-12 {
-      font-size: rem(12)
+      font-size: rem(12);
     }
 
     .font-size-14 {
-      font-size: rem(14)
+      font-size: rem(14);
     }
 
     .font-size-16 {
-      font-size: rem(16)
+      font-size: rem(16);
     }
 
     .font-size-18 {
-      font-size: rem(18)
+      font-size: rem(18);
     }
 
     .font-size-20 {
-      font-size: rem(20)
+      font-size: rem(20);
     }
 
     .font-size-24 {
-      font-size: rem(24)
+      font-size: rem(24);
     }
 
     .font-size-26 {
-      font-size: rem(26)
+      font-size: rem(26);
     }
 
     .font-size-30 {
-      font-size: rem(30)
+      font-size: rem(30);
     }
 
     .font-size-36 {
-      font-size: rem(36)
+      font-size: rem(36);
     }
 
     .font-size-40 {
-      font-size: rem(40)
+      font-size: rem(40);
     }
 
     .font-size-50 {
-      font-size: rem(50)
+      font-size: rem(50);
     }
 
     .font-size-60 {
-      font-size: rem(60)
+      font-size: rem(60);
     }
 
     .font-size-70 {
-      font-size: rem(70)
+      font-size: rem(70);
     }
 
     .font-size-80 {
-      font-size: rem(80)
+      font-size: rem(80);
     }
   }
 
@@ -406,7 +400,7 @@ textarea {
     border: 1px solid $gray-border;
 
     &:before {
-      content: 'EXAMPLE';
+      content: "EXAMPLE";
       display: block;
       margin-bottom: rem(15);
       color: $text;
@@ -416,10 +410,10 @@ textarea {
   // links
   &__link {
     &--underlined {
-      border-bottom: 1px solid rgba($black-lighten-more, .25);
+      border-bottom: 1px solid rgba($black-lighten-more, 0.25);
 
       &:hover {
-        border-bottom-color: rgba($blue, .2);
+        border-bottom-color: rgba($blue, 0.2);
       }
     }
 
@@ -431,10 +425,10 @@ textarea {
       }
 
       &.link-underlined {
-        border-bottom: 1px solid rgba($blue, .25);
+        border-bottom: 1px solid rgba($blue, 0.25);
 
         &:hover {
-          border-bottom-color: rgba($blue, .2);
+          border-bottom-color: rgba($blue, 0.2);
         }
       }
     }
@@ -498,19 +492,18 @@ textarea {
 
   // ant design example blocks
   &__codeCollapse {
-    .ant-collapse>.ant-collapse-item.ant-collapse-no-arrow>.ant-collapse-header {
+    .ant-collapse > .ant-collapse-item.ant-collapse-no-arrow > .ant-collapse-header {
       padding-left: rem(30);
       padding-right: rem(30);
     }
 
-    .ant-collapse-borderless>.ant-collapse-item {
+    .ant-collapse-borderless > .ant-collapse-item {
       margin-top: rem(17);
       border-top: 1px solid $gray-border;
       border-bottom: none;
     }
   }
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /*  CORE ANIMATIONS */
@@ -545,7 +538,6 @@ textarea {
     transform: rotate(359deg);
   }
 }
-
 
 body {
   height: 100vh !important;

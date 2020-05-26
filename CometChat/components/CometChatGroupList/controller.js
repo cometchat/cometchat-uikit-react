@@ -1,55 +1,58 @@
-import { CometChat } from "@cometchat-pro/chat"
+import { CometChat } from "@cometchat-pro/chat";
 
-export class CometChatManager {
+import * as enums from '../../util/enums.js';
 
-    groupsRequest
+export class GroupListManager {
+
+    groupRequest = null;
+    groupListenerId = new Date().getTime();
+
     constructor(searchKey) {
-        if (searchKey) {
-            this.groupsRequest = new CometChat.GroupsRequestBuilder().setLimit(30).setSearchKeyword(searchKey).build();
-        } else
-        this.groupsRequest = new CometChat.GroupsRequestBuilder().setLimit(30).build();
 
-    }
-    isUserLogedIn;
-    logedInUser;
-    isCometChatUserLogedIn() {
-        let timerCounter = 10000;
-        let timer = 0;
-        return new Promise((resolve, reject) => {
-            if (timerCounter === timer) reject();
-            this.isUserLogedIn = setInterval(() => {
-                if (CometChat.isInitialized()) {
-                    CometChat.getLoggedinUser().then(user => {
-                        this.logedInUser = user;
-                        clearInterval(this.isUserLogedIn);
-                        resolve(user);
-                    }, error => {
-                        //TODO do something if user is not loggedIn
-                    })
-                } else {
-                }
-                timer = + 100;
-            }, 100);
-        });
+        if (searchKey) {
+            this.groupRequest = new CometChat.GroupsRequestBuilder().setLimit(30).setSearchKeyword(searchKey).build();
+        } else {
+            this.groupRequest = new CometChat.GroupsRequestBuilder().setLimit(30).build();
+        }
+
     }
 
     fetchNextGroups() {
-        return this.groupsRequest.fetchNext();
+        return this.groupRequest.fetchNext();
     }
-    attachGroupListener(callback) {
-        var listenerID = "UNIQUE_LISTENER_ID";
+
+    attachListeners(callback) {
+
         CometChat.addGroupListener(
-            listenerID,
+            this.groupListenerId,
             new CometChat.GroupListener({
-                onUserOnline: onlineUser => {
-                    /* when someuser/friend comes online, user will be received here */
-                    callback(onlineUser);
-                },
-                onUserOffline: offlineUser => {
-                    /* when someuser/friend went offline, user will be received here */
-                    callback(offlineUser);
+                onGroupMemberScopeChanged: (message, changedUser, newScope, oldScope, changedGroup) => {
+                    
+                }, 
+                onGroupMemberKicked: (message, kickedUser, kickedBy, kickedFrom) => {
+                    
+                }, 
+                onGroupMemberBanned: (message, bannedUser, bannedBy, bannedFrom) => {
+                    
+                }, 
+                onGroupMemberUnbanned: (message, unbannedUser, unbannedBy, unbannedFrom) => {
+                    
+                }, 
+                onMemberAddedToGroup: (message, userAdded, userAddedBy, userAddedIn) => {
+                    
+                }, 
+                onGroupMemberLeft: (message, leavingUser, group) => {
+                    callback(enums.GROUP_MEMBER_LEFT, message, leavingUser, group);
+                }, 
+                onGroupMemberJoined: (message, joinedUser, joinedGroup) => {
+                    callback(enums.GROUP_MEMBER_JOINED, message, joinedUser, joinedGroup);
                 }
             })
         );
+
+    }
+
+    removeListeners() {
+        CometChat.removeGroupListener(this.groupListenerId);
     }
 }

@@ -1,45 +1,27 @@
-import { CometChat } from "@cometchat-pro/chat"
+import { CometChat } from "@cometchat-pro/chat";
 
-export class CometChatManager {
+export class UserListManager {
 
-    usersRequest
+    userRequest = null;
+    userListenerId = new Date().getTime();
+
     constructor(searchKey) {
+
         if (searchKey) {
             this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).setSearchKeyword(searchKey).build();
-        } else
+        } else {
             this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).build();
-
-    }
-    isUserLogedIn;
-    logedInUser;
-    isCometChatUserLogedIn() {
-        let timerCounter = 10000;
-        let timer = 0;
-        return new Promise((resolve, reject) => {
-            if (timerCounter === timer) reject();
-            this.isUserLogedIn = setInterval(() => {
-                if (CometChat.isInitialized()) {
-                    CometChat.getLoggedinUser().then(user => {
-                        this.logedInUser = user;
-                        clearInterval(this.isUserLogedIn);
-                        resolve(user);
-                    }, error => {
-                        //TODO do something if user is not loggedIn
-                    })
-                } else {
-                }
-                timer = + 100;
-            }, 100);
-        });
+        }
     }
 
-    fetchNextContacts() {
+    fetchNextUsers() {
         return this.usersRequest.fetchNext();
     }
-    attachUserListener(callback) {
-        var listenerID = "UNIQUE_LISTENER_ID";
+
+    attachListeners(callback) {
+        
         CometChat.addUserListener(
-            listenerID,
+            this.userListenerId,
             new CometChat.UserListener({
                 onUserOnline: onlineUser => {
                     /* when someuser/friend comes online, user will be received here */
@@ -51,5 +33,10 @@ export class CometChatManager {
                 }
             })
         );
+    }
+
+    removeListeners() {
+
+        CometChat.removeUserListener(this.userListenerId);
     }
 }

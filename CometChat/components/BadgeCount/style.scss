@@ -1,7 +1,7 @@
-@import '../../resources/mixins';
-@import '../../resources/colors.scss';
+@import "../../resources/mixins";
+@import "../../resources/colors.scss";
 
-.cp-badge-wrapper{
+.cp-badge-wrapper {
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
     margin: 0;
@@ -19,7 +19,7 @@
     border-radius: 50%;
     float: right;
 }
-.cp-badge {  
+.cp-badge {
     width: 100%;
     height: 100%;
     display: block;

@@ -1,58 +1,39 @@
 import { CometChat } from "@cometchat-pro/chat"
 
-export class CometChatManager {
+export class ConversationListManager {
 
-    conversationRequest
+    conversationRequest = null;
+    conversationListenerId = new Date().getTime();
+
     constructor() {
         this.conversationRequest = new CometChat.ConversationsRequestBuilder().setLimit(30).build();
-    }
-    isUserLogedIn;
-    logedInUser;
-    isCometChatUserLogedIn() {
-        let timerCounter = 10000;
-        let timer = 0;
-        return new Promise((resolve, reject) => {
-            if (timerCounter === timer) reject();
-            this.isUserLogedIn = setInterval(() => {
-                if (CometChat.isInitialized()) {
-                    CometChat.getLoggedinUser().then(user => {
-                        this.logedInUser = user;
-                        clearInterval(this.isUserLogedIn);
-                        resolve(user);
-                    }, error => {
-                        //TODO do something if user is not loggedIn
-                    })
-                } else {
-                }
-                timer = + 100;
-            }, 100);
-        });
     }
 
     fetchNextConversation() {
         return this.conversationRequest.fetchNext();
     }
-    attachMessageListener(callback) {
-        var listenerID = "UNIQUE_LISTENER_ID_COVE";
+
+    attachListeners(callback) {
 
         CometChat.addMessageListener(
-            listenerID,
+            this.conversationListenerId,
             new CometChat.MessageListener({
                 onTextMessageReceived: textMessage => {
-                    this.checkAndSendToCallback(callback, textMessage);
+                    callback(textMessage, false);
                 },
                 onMediaMessageReceived: mediaMessage => {
-                    this.checkAndSendToCallback(callback, mediaMessage);
+                    callback(mediaMessage, false);
                 },
                 onCustomMessageReceived: customMessage => {
-                    this.checkAndSendToCallback(callback, customMessage);
+                    callback(customMessage, false);
                 },
             })
         );
 
     }
-    checkAndSendToCallback(callback, message, isReceipt = false) {
-        callback(message, isReceipt);
+
+    removeListeners() {
+        CometChat.removeMessageListener(this.conversationListenerId);
     }
 
 }

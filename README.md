@@ -78,7 +78,8 @@ After adding necessary dependancies inside you app to integrate UI Kit inside yo
 
 1. Simply clone the UI Kit Library from react-chat-uikit repository.
 2. Copy the CometChat folder to your project lib folder
-3. Start using CometChat Components by following the exmple code.
+3. npm install node-sass
+4. Start using CometChat Components by following the example code.
 
 
 
