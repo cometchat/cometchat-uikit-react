@@ -41,7 +41,7 @@ CometChat.init(appID, appSetting).then(
   }
 );
 ```
-**Note: **
+**Note:**
 Make sure you replace the APP_ID with your CometChat `App_ID` and `REGION` with your app region in the above code.
 
 ### Log in your User
@@ -67,7 +67,7 @@ CometChat.createUser(user, apiKey).then(
 )
 });
 ```
-**Note: ** </br>
+**Note:** </br>
 * Make sure you replace the `API_KEY` with your CometChat API Key in the above code.
 * We have setup 5 users for testing having UIDs: `SUPERHERO1`, `SUPERHERO2`, `SUPERHERO3`,`SUPERHERO4` and `SUPERHERO5`.
 
