@@ -1,17 +1,17 @@
 
 # What is UI Kit
 The UI Kit library is collection of custom UI Component and UI Screens design to build chat application within few minutes.
-UI kit is designed to avoid boilerplate code for building UI,it has three different ways to build a chat application with fully customizable UI.It will help developers to build a chat application within using various UI Components.
+UI kit is designed to avoid boilerplate code for building UI, it has three different ways to build a chat application with fully customizable UI. It will help developers to build a chat application within using various UI Components.
 
 
 ## Setup
- Follow the below metioned steps for easy setup and seamless integration with UI Kit
+ Follow the below mentioned steps for easy setup and seamless integration with UI Kit
 
 ### Get your Application Keys
 <a href="https://app.cometchat.io/" traget="_blank">Signup for CometChat</a> and then:
 
 * Create a new app
-* Head over to the API Keys section and note the `API_Key` and `App_ID` (for Auth Only key)
+* Head over to the Auth Keys section in API Keys and note the `API_Key` and `App_ID` (for Auth Only key)
 ---
 
 
@@ -19,12 +19,12 @@ UI kit is designed to avoid boilerplate code for building UI,it has three differ
 
 install `@cometchat-pro/chat` using `npm`.
 ```javascript
-    npm install @cometchat-pro/chat@2.0.6 --save
+    npm install @cometchat-pro/chat@2.0.7 --save
 ```
 
 ### Initialize CometChat
 
-The `init()` method initializes the settings required for CometChat
+The `init()` method initializes the settings required for CometChat.
  We suggest calling the `init()` method on app startup, preferably in the `onCreate()` method of the Application class.
 ```javascript
 var appID = "APP_ID";
@@ -41,7 +41,7 @@ CometChat.init(appID, appSetting).then(
   }
 );
 ```
-**Note :**
+**Note: **
 Make sure you replace the APP_ID with your CometChat `App_ID` and `REGION` with your app region in the above code.
 
 ### Log in your User
@@ -67,14 +67,14 @@ CometChat.createUser(user, apiKey).then(
 )
 });
 ```
-**Note :** </br>
+**Note: ** </br>
 * Make sure you replace the `API_KEY` with your CometChat API Key in the above code.
 * We have setup 5 users for testing having UIDs: `SUPERHERO1`, `SUPERHERO2`, `SUPERHERO3`,`SUPERHERO4` and `SUPERHERO5`.
 
 
 
 ## Add UI Kit to your project
-After adding necessary dependancies inside you app to integrate UI Kit inside your app.Kindly follow the below steps:
+After adding necessary dependancies inside you app to integrate UI Kit inside your app. Kindly follow the below steps:
 
 1. Simply clone the UI Kit Library from react-chat-uikit repository.
 2. Copy the CometChat folder to your project lib folder
