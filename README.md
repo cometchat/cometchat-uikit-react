@@ -19,7 +19,7 @@ UI kit is designed to avoid boilerplate code for building UI, it has three diffe
 
 install `@cometchat-pro/chat` using `npm`.
 ```javascript
-    npm install @cometchat-pro/chat@2.0.7 --save
+    npm install @cometchat-pro/chat@2.0.8 --save
 ```
 
 ### Initialize CometChat
