@@ -11,7 +11,7 @@ UI kit is designed to avoid boilerplate code for building UI, it has three diffe
 <a href="https://app.cometchat.io/" traget="_blank">Signup for CometChat</a> and then:
 
 * Create a new app
-* Head over to the Auth Keys section in API Keys and note the `API_Key` and `App_ID` (for Auth Only key)
+* Head over to the Auth Keys section in API Keys and note the `API_Key` and `App_ID`
 ---
 
 
