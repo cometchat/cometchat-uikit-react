@@ -30,6 +30,7 @@ const messagescreen = (props) => {
             messages={props.messages} 
             item={props.item} 
             type={props.type}
+            scrollToBottom={props.scrollToBottom}
             actionGenerated={props.actionGenerated}></ChatWindow>
           </div>
           <MessageComposer 

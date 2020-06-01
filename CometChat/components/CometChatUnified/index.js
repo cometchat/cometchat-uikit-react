@@ -18,7 +18,8 @@ class CometChatUnified extends React.Component {
     type: "user",
     tab: "contacts",
     viewdetail: false,
-    messageList: []
+    messageList: [],
+    scrollToBottom: false
   }
 
   changeTheme = (e) => {
@@ -27,15 +28,18 @@ class CometChatUnified extends React.Component {
     })
   }
 
-  msgScreenAction = (action, msgArr) => {
+  msgScreenAction = (action, messages) => {
 
     switch(action) {
       case "messageComposed":
       case "messageReceived":
-        this.appendMessage(msgArr);
+        this.appendMessage(messages);
+      break;
+      case "messageUpdated":
+        this.updateMessages(messages);
       break;
       case "messageFetched":
-        this.updateMessageList(msgArr);
+        this.prependMessages(messages);
       break;
       case "audioCall":
         this.audioCall();
@@ -148,22 +152,24 @@ class CometChatUnified extends React.Component {
     this.setState({viewdetail: viewdetail});
   }
 
-  //listener when messages are fetched from backend
-  updateMessageList = (message) => {
-
-    const messages = [...message, ...this.state.messageList];
-    this.setState({ messageList: messages });
-    
+  //messages are fetched from backend
+  prependMessages = (messages) => {
+    const messageList = [...messages, ...this.state.messageList];
+    this.setState({ messageList: messageList, scrollToBottom: false });
   }
 
-  //listener when message is received from composer
+  //message is received or composed & sent
   appendMessage = (message) => {
 
     let messages = [...this.state.messageList];
     messages = messages.concat(message);
+    this.setState({ messageList: messages, scrollToBottom: true });
+  }
+
+  //message status is updated(read receipts)
+  updateMessages = (messages) => {
     this.setState({ messageList: messages });
   }
-  
 
   navBarAction = (action, type, item) => {
     
@@ -222,7 +228,6 @@ class CometChatUnified extends React.Component {
     switch(action) {
       case "callStarted":
       case "callEnded":
-
         if(!call) return;
         this.appendMessage(call);
       break;
@@ -241,6 +246,7 @@ class CometChatUnified extends React.Component {
         tab={this.state.tab}
         type={this.state.type} 
         viewdetail={this.state.viewdetail}
+        scrollToBottom={this.state.scrollToBottom}
         actionGenerated={this.msgScreenAction}>
       </CometChatMessageScreen>);
     }

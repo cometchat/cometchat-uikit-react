@@ -12,6 +12,14 @@ import fileUpload from "./resources/file-blue.svg";
 
 class MessageComposer extends React.PureComponent {
 
+constructor(props) {
+	super(props);
+		this.imageUploaderRef = React.createRef();
+		this.fileUploaderRef = React.createRef();
+		this.audioUploaderRef = React.createRef();
+		this.videoUploaderRef = React.createRef();
+	}
+
   state = {
     showMediaComposer: false,
     messageTxt: ""
@@ -30,16 +38,16 @@ class MessageComposer extends React.PureComponent {
 
     switch (fileType) {
       case "image":
-        this.refs.imageUploader.click();
+        this.imageUploaderRef.current.click();
         break;
       case "file":
-          this.refs.fileUploader.click();
+          this.fileUploaderRef.current.click();
         break;
       case "audio":
-          this.refs.audioUploader.click();
+          this.audioUploaderRef.current.click();
         break;
       case "video":
-          this.refs.videoUploader.click();
+          this.videoUploaderRef.current.click();
         break;
       default:
         break;
@@ -136,22 +144,22 @@ class MessageComposer extends React.PureComponent {
         </div>
         <div className={this.state.showMediaComposer ? 'cp-show-media' : 'cp-hide-media'}>
           <button onClick={() => { this.openFileDialogue("image") }} data-toggle="tooltip" title="Image">
-            <input onChange={(e) => this.onImageChange(e, "image")} accept="image/*" type="file" id="image" ref="imageUploader" style={{ display: "none" }} />
+            <input onChange={(e) => this.onImageChange(e, "image")} accept="image/*" type="file" id="image" ref={this.imageUploaderRef} style={{ display: "none" }} />
             <img src={imageUpload} alt="media"></img>
             <p>Image</p>
           </button>
           <button onClick={() => { this.openFileDialogue("file") }} data-toggle="tooltip" title="File">
-            <input onChange={(e) => this.onFileChange(e, "file")} type="file" id="file" ref="fileUploader" style={{ display: "none" }} />
+            <input onChange={(e) => this.onFileChange(e, "file")} type="file" id="file" ref={this.fileUploaderRef} style={{ display: "none" }} />
             <img src={fileUpload} alt="media"></img>
             <p>File</p>
           </button>
           <button onClick={() => { this.openFileDialogue("audio") }} data-toggle="tooltip" title="Audio"  >
-            <input onChange={(e) => this.onAudioChange(e, "audio")} accept="audio/*" type="file" id="image" ref="audioUploader" style={{ display: "none" }} />
+            <input onChange={(e) => this.onAudioChange(e, "audio")} accept="audio/*" type="file" id="image" ref={this.audioUploaderRef} style={{ display: "none" }} />
             <img src={audioUpload} alt="media"></img>
             <p>Audio</p>
           </button>
           <button onClick={() => { this.openFileDialogue("video") }} data-toggle="tooltip" title="Video" >
-            <input onChange={(e) => this.onVideoChange(e, "video")} accept="video/*" type="file" id="image" ref="videoUploader" style={{ display: "none" }} />
+            <input onChange={(e) => this.onVideoChange(e, "video")} accept="video/*" type="file" id="image" ref={this.videoUploaderRef} style={{ display: "none" }} />
             <img src={videoUpload} alt="media"></img>
             <p>Video</p>
           </button>

@@ -18,7 +18,6 @@ export class CallScreenManager {
               callback(enums.OUTGOING_CALL_ACCEPTED, call);
             },
             onOutgoingCallRejected: call => {
-                console.log("[onOutgoingCallRejected]", call)
               callback(enums.OUTGOING_CALL_REJECTED, call);
             },
             onIncomingCallCancelled: call => {

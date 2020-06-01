@@ -2,7 +2,7 @@ import React from "react";
 import "./style.scss";
 
 import { CometChatManager } from "../../util/controller";
-
+import { SvgAvatar } from '../../util/svgavatar';
 import Avatar from "../Avatar";
 
 import notificationBlack from "./resources/notification-black-icon.svg";
@@ -24,10 +24,23 @@ class CometChatUserInfoScreen extends React.Component {
   getProfile() {
 
     new CometChatManager().getLoggedInUser().then(user => {
+
+        this.setAvatar(user);
         this.setState({ user: user });
     }).catch(error => {
       console.log("[CometChatUserInfoScreen] getProfile getLoggedInUser error", error);
     });
+
+  }
+
+  setAvatar(user) {
+
+    if(!user.getAvatar()) {
+
+      const uid = user.getUid();
+      const char = user.getName().charAt(0).toUpperCase();
+      user.setAvatar(SvgAvatar.getAvatar(uid, char))
+    }
 
   }
 

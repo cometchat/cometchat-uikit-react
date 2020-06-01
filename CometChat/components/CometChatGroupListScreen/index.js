@@ -19,6 +19,7 @@ class CometChatGroupListScreen extends React.Component {
     tab: "groups",
     viewdetail: false,
     messageList: [],
+    scrollToBottom: false,
     outgoingCall: null
   }
 
@@ -46,8 +47,11 @@ class CometChatGroupListScreen extends React.Component {
       case "messageReceived":
         this.appendMessage(messages);
       break;
+      case "messageUpdated":
+        this.updateMessages(messages);
+      break;
       case "messageFetched":
-        this.updateMessageList(messages);
+        this.prependMessages(messages);
       break;
       case "audioCall":
         this.audioCall();
@@ -109,16 +113,21 @@ class CometChatGroupListScreen extends React.Component {
     this.setState({viewdetail: viewdetail});
   }
 
-  //listener when messages are fetched from backend
-  updateMessageList = (message) => {
+  //messages are fetched from backend
+  prependMessages = (message) => {
     const messages = [...message, ...this.state.messageList];
-    this.setState({ messageList: messages });
+    this.setState({ messageList: messages, scrollToBottom: false });
   }
 
-  //listener when message is received from composer
+  //message is received or composed & sent
   appendMessage = (message) => {
     let messages = [...this.state.messageList];
     messages = messages.concat(message);
+    this.setState({ messageList: messages, scrollToBottom: true });
+  }
+
+  //message status is updated
+  updateMessages = (messages) => {
     this.setState({ messageList: messages });
   }
 
@@ -160,6 +169,7 @@ class CometChatGroupListScreen extends React.Component {
         tab={this.state.tab}
         type={this.state.type} 
         viewdetail={this.state.viewdetail}
+        scrollToBottom={this.state.scrollToBottom}
         actionGenerated={this.msgScreenAction}>
       </CometChatMessageScreen>);
     }

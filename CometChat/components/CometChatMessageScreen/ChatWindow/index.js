@@ -22,7 +22,6 @@ import CallMessage from "./CallMessage";
 
 class ChatWindow extends React.PureComponent {
   loggedInUser = null;
-  updateScrollBar = true;
   lastScrollTop = 0;
 
   constructor(props) {
@@ -45,9 +44,11 @@ class ChatWindow extends React.PureComponent {
 
   componentDidUpdate(prevProps, prevState) {
 
+    const previousMessageStr = JSON.stringify(prevProps.messages);
+    const currentMessageStr = JSON.stringify(this.props.messages);
+
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
 
-      this.updateScrollBar = true;
       this.ChatWindowManager.removeListeners();
       this.ChatWindowManager = new ChatWindowManager(this.props.item, this.props.type);
       this.getMessages();
@@ -55,15 +56,14 @@ class ChatWindow extends React.PureComponent {
 
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid){
 
-      this.updateScrollBar = true;
       this.ChatWindowManager.removeListeners();
       this.ChatWindowManager = new ChatWindowManager(this.props.item, this.props.type);
       this.getMessages();
       this.ChatWindowManager.attachListeners(this.messageUpdated);
 
-    } else if (prevProps.messages !== this.props.messages) {
+    } else if (previousMessageStr !== currentMessageStr) {//to avoid re-render when message status is updated
       
-      if(this.updateScrollBar) {
+      if(this.props.scrollToBottom) {
         this.scrollToBottom();
       } else {
         this.scrollToBottom(this.lastScrollTop);
@@ -82,19 +82,24 @@ class ChatWindow extends React.PureComponent {
   getMessages = () => {
 
     new CometChatManager().getLoggedInUser().then((user) => {
-
+      
+      this.loggedInUser = user;
       this.ChatWindowManager.fetchPreviousMessages().then((messageList) => {
 
         messageList.forEach((message) => {
 
           //if the sender of the message is not the loggedin user, mark it as read.
-          if (message.getSender().uid !== user.uid) {
-            CometChat.markAsRead(message.id, message.getSender().getUid(), 'user');
+          if (message.getSender().getUid() !== user.getUid() && !message.getReadAt()) {
+            
+            if(message.getReceiverType() === "user") {
+              CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
+            } else if(message.getReceiverType() === "group") {
+              CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+            }
           }
 
         });
         
-        this.loggedInUser = user;
         this.lastScrollTop = this.messagesEnd.scrollHeight;
         this.props.actionGenerated("messageFetched", messageList);
           
@@ -108,61 +113,73 @@ class ChatWindow extends React.PureComponent {
     });
 
   }
- 
+
   //callback for listener functions
   messageUpdated = (key, message, isReceipt) => {
 
+    //new messages
     if (this.props.type === 'group' 
-    && message.receiverType === 'group' 
-    && message.receiver.guid === this.props.item.guid 
+    && message.getReceiverType() === 'group'
+    && message.getReceiver().guid === this.props.item.guid 
     && !isReceipt) {
 
-      CometChat.markAsRead(message.messageId, message.receiver.guid, 'group');
+      if(!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+      }
       this.props.actionGenerated("messageReceived", [message]);
-      this.scrollToBottom();
         
     } else if (this.props.type === 'user' 
-    && message.receiverType === 'user'
-    && message.sender.uid === this.props.item.uid 
+    && message.getReceiverType() === 'user'
+    && message.getSender().getUid() === this.props.item.uid 
     && !isReceipt) {
 
-      CometChat.markAsRead(message.id, message.sender.uid, 'user');
-      this.props.actionGenerated("messageReceived", [message]);
-      this.scrollToBottom();
-    }
-
-    if (isReceipt) {
-
-      let messageList = [...this.props.messages];
-      if (message.receiptType === "delivery") {
-
-        //search for same message
-        let msg = messageList.find((m, k) => m.id === message.messageId);
-
-        //if found, update state
-        if(msg) {
-          msg.deliveredAt = message.deliveredAt;
-          this.props.actionGenerated("messageFetched", messageList);
-        }
-
-      } else if (message.receiptType === "read") {
-
-        //search for same message
-        let msg = messageList.find((m, k) => m.id === message.messageId);
-        //if found, update state
-        if(msg && !msg.readAt) {
-          msg.readAt = message.readAt;
-          this.props.actionGenerated("messageFetched", messageList);
-        }
+      if(!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
       }
-    }
-  }
 
+      this.props.actionGenerated("messageReceived", [message]);
+    }
+
+    //read receipts
+    if (isReceipt 
+      && message.getReceiverType() === 'user'
+      && message.getSender().getUid() === this.props.item.uid
+      && message.getReceiver() === this.loggedInUser.uid) {
+
+        let messageList = [...this.props.messages];
+        if (message.getReceiptType() === "delivery") {
+
+          //search for same message
+          let msg = messageList.find((m, k) => m.id === message.messageId);
+          
+          //if found, update state
+          if(msg) {
+            msg["deliveredAt"] = message.getDeliveredAt();
+            this.props.actionGenerated("messageUpdated", messageList);
+          }
+
+        } else if (message.getReceiptType() === "read") {
+
+          //search for same message
+          let msg = messageList.find((m, k) => m.id === message.messageId);
+          //if found, update state
+          if(msg) {
+            msg["readAt"] = message.getReadAt();
+            this.props.actionGenerated("messageUpdated", messageList);
+          }
+        }
+
+    } else if (isReceipt 
+      && message.getReceiverType() === 'group' 
+      && message.getReceiver() === this.props.item.guid) {
+        //not implemented
+    }
+    
+  }
   handleScroll = (e) => {
     
     const top = Math.round(e.currentTarget.scrollTop) === 0;
     if (top && this.props.messages.length) {
-      this.updateScrollBar = false;
       this.getMessages();
     }
   }

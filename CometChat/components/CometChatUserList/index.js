@@ -46,7 +46,6 @@ class CometChatUserList extends React.PureComponent {
 
   componentWillUnmount() {
 
-    console.log("[CometChatUserList] componentWillUnmount")
     this.UserListManager.removeListeners();
     this.UserListManager = null;
   }

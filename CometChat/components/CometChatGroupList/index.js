@@ -38,7 +38,7 @@ class CometChatGroupList extends React.Component {
   handleScroll = (e) => {
     const bottom =
       Math.round(e.currentTarget.scrollHeight - e.currentTarget.scrollTop) === Math.round(e.currentTarget.clientHeight);
-    if (bottom) this.getGroupsList();
+    if (bottom) this.getGroups();
   }
 
   handleClick = (group) => {

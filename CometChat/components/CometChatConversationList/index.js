@@ -20,12 +20,11 @@ class CometChatConversationList extends React.Component {
       selectedConversation: undefined
     }
   }
-  componentDidMount() {
 
+  componentDidMount() {
     this.ConversationListManager = new ConversationListManager();
     this.getConversations();
     this.ConversationListManager.attachListeners(this.conversationUpdated);
-
   }
 
   componentWillUnmount() {
@@ -35,38 +34,42 @@ class CometChatConversationList extends React.Component {
 
   conversationUpdated = (message) => {
 
-    console.log("[CometChatConversationList] conversationUpdated message", message);
-    let conversationlist = [...this.state.conversationlist];
-    let convKey = conversationlist.findIndex((c, k) => c.conversationId === message.conversationId);
-    let convObj = conversationlist.find((c, k) => c.conversationId === message.conversationId);
-    console.log("[CometChatConversationList] conversationUpdated convObj", convObj);
-    if(convObj) {
+    CometChat.CometChatHelper.getConversationFromMessage(message).then((conversation) => {
 
-      if(this.state.selectedConversation && this.state.selectedConversation.getConversationId() === message.getConversationId()) {
-        convObj.setUnreadMessageCount(0);
-      } else {
-        convObj.setUnreadMessageCount(parseInt(convObj.getUnreadMessageCount()) + 1);
-      }
+      let conversationlist = [...this.state.conversationlist];
+      let conversationKey = conversationlist.findIndex((c, k) => c.getConversationId() === conversation.getConversationId());
+      let conversationObj = conversationlist.find((c, k) => c.getConversationId() === conversation.getConversationId());
+      
+      if(conversationObj) {
 
-      convObj.lastMessage = message;
-      const conv = conversationlist.splice(convKey, 1);
-      conversationlist.unshift(conv[0]);
-      this.setState({ conversationlist:  conversationlist});
+        conversation.setConversationWith(conversationObj.getConversationWith());
+        conversationObj.lastMessage = message;
 
-    } else {
+        //if the conversation is selected
+        if(this.state.selectedConversation && this.state.selectedConversation.getConversationId() === conversation.getConversationId()) {
+          conversationObj.setUnreadMessageCount(0);
+        } else {
+          conversationObj.setUnreadMessageCount(parseInt(conversationObj.getUnreadMessageCount()) + 1);
+        }
 
-      CometChat.CometChatHelper.getConversationFromMessage(message).then((conv) => {
-        
-        conv.setUnreadMessageCount(1);
-        convObj.lastMessage = message;
-        conversationlist.unshift(conv);
+        const removedConversation = conversationlist.splice(conversationKey, 1);
+        conversationlist.unshift(removedConversation[0]);
         this.setState({ conversationlist:  conversationlist});
 
-      }, error => {
-        console.log('This is an error in converting message to conversation', { error })
-      });
+      } else {
 
-    }
+        this.setAvatar(conversation);
+        conversation.lastMessage = message;
+        conversation.setUnreadMessageCount(1);
+        conversationlist.unshift(conversation);
+        this.setState({ conversationlist:  conversationlist});
+
+      }
+
+    }, error => {
+      console.log('This is an error in converting message to conversation', { error })
+    });
+
   }
   
   handleScroll = (e) => {
@@ -77,20 +80,20 @@ class CometChatConversationList extends React.Component {
   }
 
   //updating unread message count to zero
-  handleClick = (item, type) => {
+  handleClick = (conversation) => {
     
     if(!this.props.onItemClick)
       return;
 
-    this.props.onItemClick(item, type);
-    const conversationList = [...this.state.conversationlist];
+    this.props.onItemClick(conversation.conversationWith, conversation.conversationType);
 
-    const conversationFound = conversationList.find(conversation => conversation.conversationWith.uid === item.uid);
-    if(conversationFound) {
-      conversationFound.unreadMessageCount = 0;
-    }
-
-    this.setState({ selectedConversation: conversationFound });
+    // const conversationList = [...this.state.conversationlist];
+    // const conversationFound = conversationList.find(c => c.conversationWith.uid === item.conversationWith.uid);
+    // if(conversationFound) {console.log("[conversationFound]", conversationFound)
+    
+    // }
+    conversation.setUnreadMessageCount(0);
+    this.setState({ selectedConversation: conversation });
   }
 
   getConversations = () => {
@@ -133,7 +136,7 @@ class CometChatConversationList extends React.Component {
 
     const conversationList = this.state.conversationlist.map((conversation, key) => {
       return (
-        <div id={key} onClick={() => this.handleClick(conversation.conversationWith, conversation.conversationType)} key={key}>
+        <div id={key} onClick={() => this.handleClick(conversation)} key={key}>
           <ConversationView key={conversation.conversationId} conversation={conversation}></ConversationView>
           <div className="row cp-list-seperator"></div>
         </div>

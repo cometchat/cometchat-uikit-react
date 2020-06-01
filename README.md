@@ -27,7 +27,12 @@ To use this library, you need application keys from your CometChat account. If y
 ```javascript
     npm install @cometchat-pro/chat@2.0.8 --save
 ```
----
+
+### Import `CometChat` Object
+
+```javascript
+    import { CometChat } from "@cometchat-pro/"
+```
 
 ### Initialize CometChat
 
@@ -54,7 +59,7 @@ Replace APP_ID and REGION with your CometChat `App ID` and `REGION` in the above
 ### Log in your User
 
 Once initialization is successful, you will need to create a user.
-To create users on the fly, you can use the createUser() method. This method takes a User object and the `Auth Key` as input parameters and returns the created User object if the request is successful.
+To create users on the fly, you can use the `createUser()` method. This method takes a User object and the `Auth Key` as input parameters and returns the created User object if the request is successful.
 
 ```javascript
 const authKey = "AUTH_KEY";
@@ -71,14 +76,32 @@ CometChat.createUser(user, authKey).then(
     },error => {
         console.log("error", error);
     }
-)
-});
+);
 ```
 **Note:** </br>
 * Replace `AUTH_KEY` with your CometChat `Auth Key` in the above code.
 * Replace `UID` and `NAME` with the uid and name of the user to be created.
 * We have setup 5 users for testing having UIDs: `SUPERHERO1`, `SUPERHERO2`, `SUPERHERO3`,`SUPERHERO4` and `SUPERHERO5`.
 
+
+Once you have created the user successfully, you need to use the `login()` method.
+
+```javascript
+const authKey = "AUTH_KEY";
+const uid = "UID";
+
+CometChat.login(uid, authKey).then(
+  user => {
+    console.log("Login Successful:", { user });    
+  },
+  error => {
+    console.log("Login failed with exception:", { error });    
+  }
+);
+```
+**Note:** </br>
+* Replace `AUTH_KEY` with your CometChat `Auth Key` in the above code.
+* Replace `UID` with the uid of the user created.
 
 
 ## Usage
@@ -90,7 +113,7 @@ Here is an implementation of UI Unified.
 
 
  ```html
- import {CometChatUnified} from "./cometchat";
+ import {CometChatUnified} from "./CometChat";
  render() {
     return (
         <CometChatUnified/>
