@@ -25,7 +25,7 @@ To use this library, you need application keys from your CometChat account. If y
 ### Install CometChat SDK
 
 ```javascript
-    npm install @cometchat-pro/chat@2.0.8 --save
+    npm install @cometchat-pro/chat@2.0.9 --save
 ```
 
 ### Import `CometChat` Object
@@ -116,7 +116,7 @@ Here is an implementation of UI Unified.
  import {CometChatUnified} from "./CometChat";
  render() {
     return (
-        <CometChatUnified/>
+        <CometChatUnified />
     );
   }
  ```

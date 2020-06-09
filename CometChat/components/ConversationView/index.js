@@ -94,6 +94,15 @@ const conversationview = (props) => {
     }
     return avatar;
   }
+
+  let lastMessage = "";
+  if(props.conversation.lastMessage) {
+    lastMessage = (
+      <div className="col-lg-3 col-sm-3 cp-no-padding">
+        <div className="cp-time text-muted"> {new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</div>
+      </div>
+    );
+  }
     
   return (
     <div className="cp-conversationview">
@@ -110,9 +119,7 @@ const conversationview = (props) => {
             <div className="col-lg-9 col-sm-9 cp-no-padding">
               <div className="cp-username  cp-ellipsis font-bold">{props.conversation.conversationWith.name}</div>
             </div>
-            <div className="col-lg-3 col-sm-3 cp-no-padding">
-              <div className="cp-time text-muted"> {new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</div>
-            </div>
+            {lastMessage}
           </div>
           <div className="row cp-userstatus">
             <div className="col cp-no-padding">

@@ -7,7 +7,7 @@ import callBlue from "./resources/call-blue-icon.svg";
 import detailPaneBlue from "./resources/details-pane-blue-icon.svg";
 import videoCallBlue from "./resources/video-call-blue-icon.svg";
 
-const chatheader = (props) => {
+const messageheader = (props) => {
 
   let status, image;
   if(props.type === "user") {
@@ -18,17 +18,22 @@ const chatheader = (props) => {
     image = props.item.icon;
   }
   
-  let callBtns = (
-    <React.Fragment>
-      <button onClick={() => props.actionGenerated("audioCall")} ><img src={callBlue} alt="call" /></button>
-      <button onClick={() => props.actionGenerated("videoCall")} ><img src={videoCallBlue} alt="video call" /></button>
-    </React.Fragment>
-  );
+  let viewDetailBtn = "", audioCallBtn = "", videoCallBtn = "";
+  
+  if(!props.item.blockedByMe && props.audiocall) {
+    audioCallBtn = (<button onClick={() => props.actionGenerated("audioCall")} ><img src={callBlue} alt="Audio Call" /></button>);
+  }
 
-  if(props.item.blockedByMe) {
-    callBtns = "";
+  if(!props.item.blockedByMe && props.videocall) {
+    videoCallBtn = (<button onClick={() => props.actionGenerated("videoCall")} ><img src={videoCallBlue} alt="Video Call" /></button>);
   }
   
+  if(props.viewdetail) {
+    viewDetailBtn = (
+      <button onClick={() => props.actionGenerated("viewDetail")}><img src={detailPaneBlue} alt="details" /></button>
+    );
+  }
+
   return (
     <div className="cp-chatheader" >
       <div style={{ display: "flex" }}>
@@ -42,8 +47,9 @@ const chatheader = (props) => {
         <div className=" col cp-user-info">
           <div className="cp-username font-bold">{props.item.name}</div>
           <div className="cp-chathead-buttons ">
-            {callBtns}
-            <button onClick={() => props.actionGenerated("viewDetail")}><img src={detailPaneBlue} alt="details" /></button>
+            {audioCallBtn}
+            {videoCallBtn}
+            {viewDetailBtn}
           </div>
           <div className="row cp-userstatus">
             <span className="cp-text-blue" >{status}</span>
@@ -54,4 +60,4 @@ const chatheader = (props) => {
   )
 }
 
-export default React.memo(chatheader);
+export default React.memo(messageheader);

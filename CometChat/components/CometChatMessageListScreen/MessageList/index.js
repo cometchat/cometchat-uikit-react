@@ -4,7 +4,7 @@ import "./style.scss";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../../util/controller";
-import { ChatWindowManager } from "./controller";
+import { MessageListManager } from "./controller";
 
 import SenderMessageBubble from "./SenderMessageBubble";
 import ReceiverMessageBubble from "./ReceiverMessageBubble";
@@ -20,7 +20,7 @@ import ReceiverVideoBubble from "./ReceiverVideoBubble";
 import CallMessage from "./CallMessage";
 
 
-class ChatWindow extends React.PureComponent {
+class MessageList extends React.PureComponent {
   loggedInUser = null;
   lastScrollTop = 0;
 
@@ -35,10 +35,9 @@ class ChatWindow extends React.PureComponent {
   }
 
   componentDidMount() {
-
-    this.ChatWindowManager = new ChatWindowManager(this.props.item, this.props.type);
+    this.MessageListManager = new MessageListManager(this.props.item, this.props.type);
     this.getMessages();
-    this.ChatWindowManager.attachListeners(this.messageUpdated);
+    this.MessageListManager.attachListeners(this.messageUpdated);
     
   }
 
@@ -48,18 +47,18 @@ class ChatWindow extends React.PureComponent {
     const currentMessageStr = JSON.stringify(this.props.messages);
 
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
-
-      this.ChatWindowManager.removeListeners();
-      this.ChatWindowManager = new ChatWindowManager(this.props.item, this.props.type);
+      
+      this.MessageListManager.removeListeners();
+      this.MessageListManager = new MessageListManager(this.props.item, this.props.type);
       this.getMessages();
-      this.ChatWindowManager.attachListeners(this.messageUpdated);
+      this.MessageListManager.attachListeners(this.messageUpdated);
 
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid){
 
-      this.ChatWindowManager.removeListeners();
-      this.ChatWindowManager = new ChatWindowManager(this.props.item, this.props.type);
+      this.MessageListManager.removeListeners();
+      this.MessageListManager = new MessageListManager(this.props.item, this.props.type);
       this.getMessages();
-      this.ChatWindowManager.attachListeners(this.messageUpdated);
+      this.MessageListManager.attachListeners(this.messageUpdated);
 
     } else if (previousMessageStr !== currentMessageStr) {//to avoid re-render when message status is updated
       
@@ -84,7 +83,7 @@ class ChatWindow extends React.PureComponent {
     new CometChatManager().getLoggedInUser().then((user) => {
       
       this.loggedInUser = user;
-      this.ChatWindowManager.fetchPreviousMessages().then((messageList) => {
+      this.MessageListManager.fetchPreviousMessages().then((messageList) => {
 
         messageList.forEach((message) => {
 
@@ -105,11 +104,11 @@ class ChatWindow extends React.PureComponent {
           
       }).catch((error) => {
         //TODO Handle the erros in contact list.
-        console.error("[ChatWindow] getMessages fetchPrevious error", error);
+        console.error("[MessageList] getMessages fetchPrevious error", error);
       });
 
     }).catch((error) => {
-      console.log("[ChatWindow] getMessages getLoggedInUser error", error);
+      console.log("[MessageList] getMessages getLoggedInUser error", error);
     });
 
   }
@@ -300,10 +299,9 @@ class ChatWindow extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    this.ChatWindowManager.removeListeners();
-    this.ChatWindowManager = null;
+    this.MessageListManager.removeListeners();
+    this.MessageListManager = null;
   }
 }
 
-
-export default ChatWindow;
+export default MessageList;

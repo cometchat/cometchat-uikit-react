@@ -2,7 +2,7 @@ import { CometChat } from "@cometchat-pro/chat";
 
 import * as enums from '../../../util/enums.js';
 
-export class ChatWindowManager {
+export class MessageListManager {
 
     item = {};
     type = "";

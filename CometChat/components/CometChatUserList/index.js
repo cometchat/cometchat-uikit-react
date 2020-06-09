@@ -9,6 +9,7 @@ import UserView from "../UserView";
 
 class CometChatUserList extends React.PureComponent {
   timeout;
+  friendsOnly = false;
 
   constructor(props) {
     super(props);
@@ -19,7 +20,11 @@ class CometChatUserList extends React.PureComponent {
 
   componentDidMount() {
 
-    this.UserListManager = new UserListManager();
+    if(this.props?.friendsOnly) {
+      this.friendsOnly = this.props.friendsOnly;
+    }
+
+    this.UserListManager = new UserListManager(this.friendsOnly);
     this.getUsers();
     this.UserListManager.attachListeners(this.userUpdated);
     
@@ -95,7 +100,7 @@ class CometChatUserList extends React.PureComponent {
     let val = e.target.value;
     this.timeout = setTimeout(() => {
 
-      this.UserListManager = new UserListManager(val);
+      this.UserListManager = new UserListManager(this.friendsOnly, val);
       this.setState({ userlist: [] }, () => this.getUsers())
     }, 500)
 
@@ -130,25 +135,9 @@ class CometChatUserList extends React.PureComponent {
 
   }
 
-  transformUserList = () => {
-
-    const users = [...this.state.userlist];
-
-    //sort alphabetically by name
-    users.sort(function(a, b){
-
-      if(a.name < b.name) { return -1; }
-      if(a.name > b.name) { return 1; }
-      return 0;
-
-    });
-
-    return users;
-  }
-
   render() {
     
-    const userList = this.transformUserList();
+    const userList = [...this.state.userlist];
     let currentLetter = "";
     const users = userList.map((user, key) => {
       

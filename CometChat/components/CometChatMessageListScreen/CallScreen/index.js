@@ -3,14 +3,14 @@ import "./style.scss";
 
 import { CometChat } from "@cometchat-pro/chat";
 
-import { CometChatManager } from "../../util/controller";
+import { CometChatManager } from "../../../util/controller";
 
 import { CallScreenManager } from "./controller";
-import * as enums from '../../util/enums.js';
+import * as enums from '../../../util/enums.js';
 
-import { SvgAvatar } from '../../util/svgavatar';
+import { SvgAvatar } from '../../../util/svgavatar';
 
-import Avatar from "../Avatar";
+import Avatar from "../../Avatar";
 
 class CallScreen extends React.PureComponent {
 
@@ -220,18 +220,33 @@ class CallScreen extends React.PureComponent {
     let callScreen =  null, iframeScreen, incomingCallScreen, outgoingCallScreen;
     if(this.state.showIncomingScreen) {
 
-      if(!this.state.callIProgress.sender.getAvatar()) {
+      if(this.props.type === "user" && !this.state.callIProgress.sender.getAvatar()) {
 
         const uid = this.state.callIProgress.sender.getUid();
         const char = this.state.callIProgress.sender.getName().charAt(0).toUpperCase();
         
         this.state.callIProgress.sender.setAvatar(SvgAvatar.getAvatar(uid, char));
+
+      } else if(this.props.type === "group" && !this.state.callIProgress.sender.getIcon()) {
+
+        const guid = this.state.callIProgress.sender.getGuid();
+        const char = this.state.callIProgress.sender.getName().charAt(0).toUpperCase();
+
+        this.state.callIProgress.sender.setIcon(SvgAvatar.getAvatar(guid, char));
       }
+
+      let avatar;
+      if(this.props.type === "user") {
+        avatar = (<Avatar image={this.state.callIProgress.sender.avatar} />);
+      } else if(this.props.type === "group") {
+        avatar = (<Avatar image={this.state.callIProgress.sender.icon} />);
+      }
+
       incomingCallScreen = (
         <div className="cp-incoming-call-screen">
           <div className="m-a">Calling...</div>
           <div className="m-a cp-call-title">{this.state.callIProgress.sender.name}</div>
-          <div className="m-a"><Avatar image={this.state.callIProgress.sender.avatar}></Avatar></div>
+          <div className="m-a">{avatar}</div>
           <div className="m-a" style={{ display: "flex", width: '25%' }}>
             <div className="m-a p-xl cp-accept-button" onClick={this.acceptCall}>ACCEPT</div>
             <div className="m-a p-xl cp-reject-button" onClick={() => this.rejectCall(CometChat.CALL_STATUS.REJECTED)}>REJECT</div>
@@ -242,19 +257,33 @@ class CallScreen extends React.PureComponent {
 
     if(this.state.showOutgoingScreen) {
 
-      if(!this.state.callIProgress.receiver.getAvatar()) {
+      if(this.props.type === "user" && !this.state.callIProgress.receiver.getAvatar()) {
 
         const uid = this.state.callIProgress.receiver.getUid();
         const char = this.state.callIProgress.receiver.getName().charAt(0).toUpperCase();
         
         this.state.callIProgress.receiver.setAvatar(SvgAvatar.getAvatar(uid, char));
+
+      } else if(this.props.type === "group" && !this.state.callIProgress.receiver.getIcon()) {
+
+        const guid = this.state.callIProgress.receiver.getGuid();
+        const char = this.state.callIProgress.receiver.getName().charAt(0).toUpperCase();
+
+        this.state.callIProgress.receiver.setIcon(SvgAvatar.getAvatar(guid, char));
+      }
+
+      let avatar;
+      if(this.props.type === "user") {
+        avatar = (<Avatar image={this.state.callIProgress.receiver.avatar} />);
+      } else if(this.props.type === "group") {
+        avatar = (<Avatar image={this.state.callIProgress.receiver.icon} />);
       }
 
       outgoingCallScreen = (
         <div className="cp-outgoing-call-screen">
           <div className="m-a">Calling...</div>
           <div className="m-a cp-call-title">{this.state.callIProgress.receiver.name}</div>
-          <div className="m-a"><Avatar image={this.state.callIProgress.receiver.avatar}></Avatar></div>
+          <div className="m-a">{avatar}</div>
           <div className="m-a" style={{ display: "flex", width: '25%' }}>
             <div className="m-a p-xl cp-reject-button" onClick={() => this.rejectCall(CometChat.CALL_STATUS.CANCELLED)}>CANCEL</div>
           </div>

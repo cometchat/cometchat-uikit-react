@@ -1,6 +1,6 @@
 import { CometChat } from "@cometchat-pro/chat";
 
-import * as enums from '../../util/enums.js';
+import * as enums from '../../../util/enums.js';
 
 export class CallScreenManager {
 

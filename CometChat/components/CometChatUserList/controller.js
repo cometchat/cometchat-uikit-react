@@ -5,12 +5,12 @@ export class UserListManager {
     userRequest = null;
     userListenerId = new Date().getTime();
 
-    constructor(searchKey) {
+    constructor(friendsOnly, searchKey) {
 
         if (searchKey) {
-            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).setSearchKeyword(searchKey).build();
+            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).friendsOnly(friendsOnly).setSearchKeyword(searchKey).build();
         } else {
-            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).build();
+            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).friendsOnly(friendsOnly).build();
         }
     }
 

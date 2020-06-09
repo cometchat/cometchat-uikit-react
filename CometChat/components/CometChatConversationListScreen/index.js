@@ -1,13 +1,10 @@
 import React from "react";
 import "./style.scss";
 
-import { CometChat } from "@cometchat-pro/chat";
-
 import { CometChatManager } from "../../util/controller";
 
 import CometChatConversationList from "../CometChatConversationList";
-import CometChatMessageScreen from "../CometChatMessageScreen";
-import CallScreen from "../CallScreen";
+import CometChatMessageListScreen from "../CometChatMessageListScreen";
 
 class CometChatConversationListScreen extends React.Component {
 
@@ -15,11 +12,7 @@ class CometChatConversationListScreen extends React.Component {
     darktheme: false,
     item: {},
     type: "",
-    tab: "conversations",
-    viewdetail: false,
-    messageList: [],
-    scrollToBottom: false,
-    outgoingCall: null
+    tab: "conversations"
   }
 
   changeTheme = (e) => {
@@ -29,56 +22,26 @@ class CometChatConversationListScreen extends React.Component {
   }
 
   onItemClicked = (item, type) => {
-    
-    //empty messagelist only if user/group changes
-    if(type !== this.state.type) {
-      this.setState({ messageList: [] });
-    }
-    else if(type === "user" && item.uid !== this.state.item.uid) {
-      this.setState({ messageList: [] });
-    }
-    else if(type === "group" && item.guid !== this.state.item.guid) {
-      this.setState({ messageList: [] });
-    }
 
     this.setState({ item: {...item}, type, viewdetail: false })
   }
 
-  msgScreenAction = (action, messages) => {
-
+  viewDetailActionHandler = (action) => {
+    
     switch(action) {
-      case "messageComposed":
-      case "messageReceived":
-        this.appendMessage(messages);
-      break;
-      case "messageUpdated":
-        this.updateMessages(messages);
-      break;
-      case "messageFetched":
-        this.prependMessages(messages);
-      break;
-      case "audioCall":
-        this.audioCall();
-      break;
-      case "videoCall":
-        this.videoCall();
-      break;
-      case "viewDetail":
-        this.toggleUserDetail( );
-      break;
       case "blockUser":
-        this.blockUser( );
+        this.blockUser();
       break;
       case "unblockUser":
-        this.unblockUser( );
+        this.unblockUser();
       break;
       default:
       break;
     }
-
   }
 
   blockUser = () => {
+
     let usersList = [this.state.item.uid];
     CometChatManager.blockUsers(usersList).then(list => {
 
@@ -87,10 +50,11 @@ class CometChatConversationListScreen extends React.Component {
     }).catch(error => {
       console.log("Blocking user fails with error", error);
     });
+
   }
 
   unblockUser = () => {
-
+    
     let usersList = [this.state.item.uid];
     CometChatManager.unblockUsers(usersList).then(list => {
 
@@ -102,108 +66,16 @@ class CometChatConversationListScreen extends React.Component {
 
   }
 
-  audioCall = () => {
-
-    let receiverID;
-    let receiverType = CometChat.RECEIVER_TYPE.USER;
-    let callType = CometChat.CALL_TYPE.AUDIO;
-
-    if (this.state.type === 'group') {
-      receiverID = this.state.item.guid;
-      receiverType = CometChat.RECEIVER_TYPE.GROUP;
-    } else {
-      receiverID = this.state.item.uid;
-      receiverType = CometChat.RECEIVER_TYPE.USER;
-    }
-
-    CometChatManager.audioCall(receiverID, receiverType, callType).then(call => {
-
-      console.log("Call initiated successfully:", call);
-      this.callScreenAction("callStarted", call);
-      this.setState({ outgoingCall: call });
-
-    }).catch(error => {
-      console.log("Call initialization failed with exception:", error);
-    });
-
-  }
-
-  videoCall = () => {
-
-    let receiverID;
-    let receiverType = CometChat.RECEIVER_TYPE.USER;
-    let callType = CometChat.CALL_TYPE.VIDEO;
-    
-    if (this.state.type === 'group') {
-      receiverID = this.state.item.guid;
-      receiverType = CometChat.RECEIVER_TYPE.GROUP;
-    } else {
-      receiverID = this.state.item.uid;
-      receiverType = CometChat.RECEIVER_TYPE.USER;
-    }
-
-    CometChatManager.videoCall(receiverID, receiverType, callType).then(call => {
-
-      console.log("Call initiated successfully:", call);
-      this.callScreenAction("callStarted", call);
-      this.setState({ outgoingCall: call });
-
-    }).catch(error => {
-      console.log("Call initialization failed with exception:", error);
-    });
-
-  }
-
-  toggleUserDetail = () => {
-    let viewdetail = !this.state.viewdetail;
-    this.setState({viewdetail: viewdetail});
-  }
-
-  //messages are fetched from backend
-  prependMessages = (messages) => {
-    const messageList = [...messages, ...this.state.messageList];
-    this.setState({ messageList: messageList, scrollToBottom: false });
-  }
-
-  //message is received or composed & sent
-  appendMessage = (message) => {
-    let messages = [...this.state.messageList];
-    messages = messages.concat(message);
-    this.setState({ messageList: messages, scrollToBottom: true });
-  }
-
-  //message status is updated
-  updateMessages = (messages) => {
-    this.setState({ messageList: messages });
-  }
-
-  callScreenAction = (action, call) => {
-
-    switch(action) {
-      case "callStarted":
-      case "callEnded":
-
-        if(!call) return;
-        this.appendMessage(call);
-      break;
-      default:
-      break;
-    }
-  }
-
   render() {
 
     let messageScreen = (<h1 className="cp-center-text">Select a chat to start messaging</h1>);
     if(Object.keys(this.state.item).length) {
-      messageScreen = (<CometChatMessageScreen 
-        messages={this.state.messageList}
+      messageScreen = (<CometChatMessageListScreen 
         item={this.state.item} 
         tab={this.state.tab}
-        type={this.state.type} 
-        viewdetail={this.state.viewdetail}
-        scrollToBottom={this.state.scrollToBottom}
-        actionGenerated={this.msgScreenAction}>
-      </CometChatMessageScreen>);
+        type={this.state.type}
+        actionGenerated={this.viewDetailActionHandler}>
+      </CometChatMessageListScreen>);
     }
 
     return (
@@ -220,9 +92,6 @@ class CometChatConversationListScreen extends React.Component {
             <span className="slider round"></span>
           </label>
         </div>
-        <CallScreen 
-        actionGenerated={this.callScreenAction} 
-        outgoingCall={this.state.outgoingCall}></CallScreen>
       </div>
     );
   }

@@ -166,7 +166,7 @@ constructor(props) {
         </div>
         <input type="text" 
         disabled={disabled}
-        placeholder="Messages" 
+        placeholder="Type here" 
         onChange={this.changeHandler} 
         onKeyDown={this.sendMessageOnEnter} 
         value={this.state.messageTxt} />
