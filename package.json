@@ -1,0 +1,15 @@
+{
+  "name": "cometchat-pro-react-ui-kit",
+  "version": "1.0.3",
+  "description": "Chat UI Kit for React App",
+  "author": "Inscripts",
+  "dependencies": {
+    "@cometchat-pro/chat": "^2.0.10",
+    "node-sass": "^4.14.1",
+    "classnames": "^2.2.6"
+  },
+  "peerDependencies": {
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  }
+}

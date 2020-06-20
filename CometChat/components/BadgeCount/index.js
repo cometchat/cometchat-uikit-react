@@ -7,9 +7,7 @@ const badgecount = (props) => {
 
   if(props.count) {
     count = (
-      <div className="cp-badge-wrapper">
-        <span className="cp-badge">{props.count}</span>
-      </div>
+      <span className="chat-ppl-listitem-msg-cnt">{props.count}</span>
     );
   }
   return count;

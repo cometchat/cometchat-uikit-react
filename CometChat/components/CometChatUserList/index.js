@@ -147,9 +147,8 @@ class CometChatUserList extends React.PureComponent {
         currentLetter = chr;
         return (
           <div id={key} onClick={() => this.handleClick(user)} key={key}>
-            <div className="cp-contact-alphabet font-bold">{currentLetter}</div>
-            <UserView key={user.uid} user={user}></UserView>
-            <div className="row cp-list-seperator"></div>
+            <span className='chat-contact-list-apla-ftlr'>{currentLetter}</span>
+            <UserView key={user.uid} user={user}  ></UserView>
           </div>
         );
 
@@ -158,7 +157,6 @@ class CometChatUserList extends React.PureComponent {
         return (
           <div id={key} onClick={() => this.handleClick(user)} key={key}>
             <UserView key={user.uid} user={user}></UserView>
-            <div className="row cp-list-seperator"></div>
           </div>
         );
       }
@@ -166,15 +164,29 @@ class CometChatUserList extends React.PureComponent {
     });
 
     return (
+      <React.Fragment>
+        <div className="ccl-left-panel-head-wrap">
+          <h4 className="ccl-left-panel-head-ttl">Contacts</h4>
+        </div>
+        
+        <div className="ccl-left-panel-srch-wrap">
+          <div className="ccl-left-panel-srch-inpt-wrap">
+              <input
+              type="text" 
+              autoComplete="off" 
+              className="ccl-left-panel-srch" 
+              id="chatSearch" 
+              placeholder="Search" />
+              <input id="searchButton" type="button" className="search-btn" />
+          </div>
+        </div>
 
-      <div className="cp-userlist-wrapper" >
-        <p className="cp-contact-list-title font-extra-large">Contacts</p>
-        <p className="cp-searchbar">
-          <input className="font-normal" type="text" placeholder="Search" aria-label="Search" onChange={this.searchUsers} />
-        </p>
-        <div className="cp-userlist" onScroll={this.handleScroll}>{users}</div>
-      </div>
-
+        <div className="chat-contact-list-ext-wrap">
+          <div className="chat-contact-list" onScroll={this.handleScroll}>
+            {users}
+          </div>
+        </div>
+      </React.Fragment>
     );
   }
 }

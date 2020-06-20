@@ -15,14 +15,19 @@ const senderimagebubble = (props) => {
   }
 
   return (
-    <div className="cp-sender-image-container" >
-      <div className="cp-sender-image" >
-        <img src={props.message.data.url} alt="sender"></img>
-      </div>
-      <div className="cp-time text-muted"> {new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
-        <span><img src={ticks} alt="time"/></span>
-      </div>
-    </div>
+
+    <div className="cc1-chat-win-sndr-row clearfix">
+      <div className="cc1-chat-win-msg-block">                                
+        <div className="cc1-chat-win-sndr-img-wrap">
+          <img src={props.message.data.url} alt="sender" />                             
+        </div>
+        <div className="cc1-chat-win-msg-time-wrap">
+          <span className="cc1-chat-win-timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
+            <img src={ticks} alt="time" />
+          </span>
+        </div>
+      </div>                            
+    </div> 
   )
 
 }

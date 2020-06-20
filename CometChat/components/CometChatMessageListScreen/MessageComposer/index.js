@@ -1,37 +1,42 @@
 import React from "react";
+import classNames from "classnames";
+
 import "./style.scss";
 
 import { CometChat } from "@cometchat-pro/chat"
 
 import roundedPlus from "./resources/rounded-plus-grey-icon.svg";
 import sendBlue from "./resources/send-blue-icon.svg";
-import imageUpload from "./resources/image-blue.svg";
-import audioUpload from "./resources/audio-blue.svg";
-import videoUpload from "./resources/video-blue.svg";
-import fileUpload from "./resources/file-blue.svg";
+import imageUpload from "./resources/images_upload_icon.svg";
+import audioUpload from "./resources/audio_upload_icon.svg";
+import videoUpload from "./resources/video_upload_icon.svg";
+import docUpload from "./resources/document_upload_icon.svg";
 
 class MessageComposer extends React.PureComponent {
 
-constructor(props) {
-	super(props);
+  constructor(props) {
+    super(props);
+  
 		this.imageUploaderRef = React.createRef();
 		this.fileUploaderRef = React.createRef();
 		this.audioUploaderRef = React.createRef();
-		this.videoUploaderRef = React.createRef();
+    this.videoUploaderRef = React.createRef();
+    this.messageInputRef = React.createRef();
 	}
 
   state = {
-    showMediaComposer: false,
-    messageTxt: ""
+    showFilePicker: false,
+    messageInput: "",
+    messageType: ""
   }
   
   changeHandler = (e) => {
-    this.setState({messageTxt: e.target.value});
+    this.setState({"messageInput": e.target.value, "messageType": "text"});
   }
 
-  browseMediaMessage = () => {
-    const currentState = !this.state.showMediaComposer;
-    this.setState({ showMediaComposer: currentState });
+  toggleFilePicker = () => {
+    const currentState = !this.state.showFilePicker;
+    this.setState({ showFilePicker: currentState });
   }
 
   openFileDialogue = (fileType) => {
@@ -55,46 +60,63 @@ constructor(props) {
   }
 
   onImageChange = (e, messageType) => {
-    this.sendMediaMessage(e, messageType);
+
+    if(!e.target.files[0]) {
+      return false;
+    }
+    
+    const imageInput = e.target.files[0];
+    this.sendMediaMessage(imageInput, messageType)   
   }
 
   onFileChange = (e, messageType) => {
-    this.sendMediaMessage(e, messageType)   
+
+    if(!e.target.files[0]) {
+      return false;
+    }
+
+    const fileInput = e.target.files[0];
+    this.sendMediaMessage(fileInput, messageType)   
   }
 
   onAudioChange = (e, messageType) => {
-    this.sendMediaMessage(e, messageType)   
+
+    if(!e.target.files[0]) {
+      return false;
+    }
+
+    const audioInput = e.target.files[0];
+    this.sendMediaMessage(audioInput, messageType)   
   }
 
   onVideoChange = (e, messageType) => {
-    this.sendMediaMessage(e, messageType)   
+
+    if(!e.target.files[0]) {
+      return false;
+    }
+
+    const videoInput = e.target.files[0];
+    this.sendMediaMessage(videoInput, messageType)   
   }
 
-  sendMediaMessage = (e,messageType) => {
+  sendMediaMessage = (messageInput, messageType) => {
 
-    if(!e.target.files[0])
-      return false;
+    this.toggleFilePicker();
 
-    this.browseMediaMessage();
-
-    let receiverID = this.props.item.guid;
-    let receiverType = "group";
-
+    let receiverId;
+    let receiverType = this.props.type;
     if (this.props.type === "user") {
-      receiverID = this.props.item.uid;
-      receiverType = "user";
-    } 
+      receiverId = this.props.item.uid;
+    } else if (this.props.type === "group") {
+      receiverId = this.props.item.guid;
+    }
 
-    let textMessage = new CometChat.MediaMessage(receiverID, e.target.files[0], messageType, receiverType);
-    CometChat.sendMessage(textMessage).then(
-      message => {
-        
-        this.props.actionGenerated("messageComposed", [message])
-      },
-      error => {
-        console.log("Message sending failed with error:", error);
-      }
-    );
+    let message = new CometChat.MediaMessage(receiverId, messageInput, messageType, receiverType);
+    CometChat.sendMessage(message).then(message => {
+      this.props.actionGenerated("messageComposed", [message])
+    }).then(error => {
+      console.log("Message sending failed with error:", error);
+    });
   }
 
   sendMessageOnEnter = (e) => {
@@ -107,27 +129,31 @@ constructor(props) {
 
   sendTextMessage = () => {
 
-    if(!this.state.messageTxt.trim().length) {
+    if(!this.state.messageInput.trim().length) {
       return false;
     }
 
-    let receiverID = this.props.item.guid;
+    let messageInput = this.state.messageInput.trim();
+
+    let receiverId;
+    let receiverType = this.props.type;
     if (this.props.type === "user") {
-      receiverID = this.props.item.uid;
+      receiverId = this.props.item.uid;
+    } else if (this.props.type === "group") {
+      receiverId = this.props.item.guid;
     }
 
-    let receiverType = this.props.type;
-    let messageText = this.state.messageTxt.trim();
-    let textMessage = new CometChat.TextMessage(receiverID, messageText, receiverType);
-    CometChat.sendMessage(textMessage).then(
-      message => {
-        this.setState({messageTxt: ""})
-        this.props.actionGenerated("messageComposed", [message]);
-      },
-      error => {
-        console.log("Message sending failed with error:", error);
-      }
-    );
+    let textMessage = new CometChat.TextMessage(receiverId, messageInput, receiverType);
+    CometChat.sendMessage(textMessage).then(message => {
+      this.setState({messageInput: ""})
+      this.props.actionGenerated("messageComposed", [message]);
+    }).catch(error => {
+      console.log("Message sending failed with error:", error);
+    });
+  }
+
+  componentDidMount() {
+    this.messageInputRef.current.focus();
   }
 
   render() {
@@ -137,41 +163,53 @@ constructor(props) {
       disabled = true;
     }
 
+    const filePickerClassName = classNames({
+      "cc1-chat-win-file-popup": true,
+      "active": (this.state.showFilePicker)
+    });
+
     return (
-      <div className="cp-message-composer">
-        <div className="cp-media-button">
-          <button onClick={this.browseMediaMessage} ><img src={roundedPlus} alt="media" /></button>
+
+      <div className="cc1-chat-win-inpt-ext-wrap">
+        <div className={filePickerClassName}>
+          <div className="cc1-chat-win-file-type-list">
+            <span className="cc1-chat-win-file-type-listitem" onClick={() => { this.openFileDialogue("video") }}>
+            <input onChange={(e) => this.onVideoChange(e, "video")} accept="video/*" type="file" ref={this.videoUploaderRef} />
+              <img src={videoUpload} alt="Choose a file to upload" />
+            </span>
+            <span className="cc1-chat-win-file-type-listitem" onClick={() => { this.openFileDialogue("audio") }}>
+            <input onChange={(e) => this.onAudioChange(e, "audio")} accept="audio/*" type="file" ref={this.audioUploaderRef} />
+              <img src={audioUpload} alt="Choose an file to upload" />
+            </span>
+            <span className="cc1-chat-win-file-type-listitem" onClick={() => { this.openFileDialogue("image") }}>
+              <input onChange={(e) => this.onImageChange(e, "image")} accept="image/*" type="file" ref={this.imageUploaderRef} />
+              <img src={imageUpload} alt="Choose an file to upload" />
+            </span>
+            <span className="cc1-chat-win-file-type-listitem" onClick={() => { this.openFileDialogue("file") }}>
+            <input onChange={(e) => this.onFileChange(e, "file")} type="file" id="file" ref={this.fileUploaderRef} />
+              <img src={docUpload} alt="Choose a file to upload" />
+            </span>
+          </div>
         </div>
-        <div className={this.state.showMediaComposer ? 'cp-show-media' : 'cp-hide-media'}>
-          <button onClick={() => { this.openFileDialogue("image") }} data-toggle="tooltip" title="Image">
-            <input onChange={(e) => this.onImageChange(e, "image")} accept="image/*" type="file" id="image" ref={this.imageUploaderRef} style={{ display: "none" }} />
-            <img src={imageUpload} alt="media"></img>
-            <p>Image</p>
-          </button>
-          <button onClick={() => { this.openFileDialogue("file") }} data-toggle="tooltip" title="File">
-            <input onChange={(e) => this.onFileChange(e, "file")} type="file" id="file" ref={this.fileUploaderRef} style={{ display: "none" }} />
-            <img src={fileUpload} alt="media"></img>
-            <p>File</p>
-          </button>
-          <button onClick={() => { this.openFileDialogue("audio") }} data-toggle="tooltip" title="Audio"  >
-            <input onChange={(e) => this.onAudioChange(e, "audio")} accept="audio/*" type="file" id="image" ref={this.audioUploaderRef} style={{ display: "none" }} />
-            <img src={audioUpload} alt="media"></img>
-            <p>Audio</p>
-          </button>
-          <button onClick={() => { this.openFileDialogue("video") }} data-toggle="tooltip" title="Video" >
-            <input onChange={(e) => this.onVideoChange(e, "video")} accept="video/*" type="file" id="image" ref={this.videoUploaderRef} style={{ display: "none" }} />
-            <img src={videoUpload} alt="media"></img>
-            <p>Video</p>
-          </button>
-        </div>
-        <input type="text" 
-        disabled={disabled}
-        placeholder="Type here" 
-        onChange={this.changeHandler} 
-        onKeyDown={this.sendMessageOnEnter} 
-        value={this.state.messageTxt} />
-        <div className="cp-send-button">
-          <button onClick={this.sendTextMessage}><img src={sendBlue} alt="media" /></button>
+        <div className="cc1-chat-win-inpt-int-wrap">
+          <div className="cc1-chat-win-inpt-attach" onClick={this.toggleFilePicker}>
+            <span><img src={roundedPlus} alt="Click to upload a file" /></span>
+          </div>
+          <div className="cc1-chat-win-inpt-wrap">
+            <input 
+            type="text"
+            className="cc1-chat-win-inpt-box font-15"
+            placeholder="Type Message" 
+            autoComplete="off" 
+            disabled={disabled}
+            onChange={this.changeHandler}
+            onKeyDown={this.sendMessageOnEnter}
+            value={this.state.messageInput}
+            ref={this.messageInputRef} />
+          </div>
+          <div className="cc1-chat-win-inpt-send">
+            <span className="cc1-chat-win-inpt-send-btn" onClick={this.sendTextMessage}><img src={sendBlue} alt="Send Message" /></span>
+          </div>
         </div>
       </div>
     );

@@ -1,60 +1,55 @@
-@import '../../resources/mixins';
-@import '../../resources/colors';
-
-.cp-groupview {
-    padding: 2px;
-    cursor: pointer;
-    display: flex;
+@import '../../resources/core';
 
 
-    .row {
-        margin: 0px;
-        .cp-group-icon{
-            padding: 4px 16px 0;
+.chat-ppl-listitem {
+    padding:13px 16px 0;
+    position:relative;
+    margin-top:-1px;
+    cursor:pointer;
+    display:flex;
+
+    .chat-ppl-thumbnail-wrap {
+        display:inline-block;
+        width:36px;
+        height:36px;
+        margin-right:7px;
+
+        img { 
+            width:24px;
+            position:absolute;
+            display:inline-block;
+
+            display:block;
+            overflow:hidden;
+            width:36px;
         }
     }
 
-    .cp-username {
-
-        text-transform: capitalize;
-        text-overflow: ellipsis;
-
+    .chat-ppl-thumbnail-wrap.grp-chat-ppl-thumbnail-wrap { 
+        position:relative;
     }
 
-    .cp-user-info {
-        margin-top: 11px;
-        padding-bottom: 15px;
+    .chat-ppl-listitem-dtls {
+        display:inline-block;
+        flex:1 1 0;
+        padding-bottom:14px;
+        border-bottom:1px solid $light-background-border;
 
+        .chat-ppl-listitem-name {
+            font-size:15px;
+            font-weight:600;
+            letter-spacing:-.1px;
+            display:block;
+            max-width:147px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
     }
-
-    .cp-userstatus {
-        text-transform: capitalize;
-        // margin-bottom: 10px !important;
-    }
-    .online{
-        color:green !important;   
-    }
-    .offline{
-        color: gray;    
-    }
-    .cp-ellipsis{
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        width: 130px;
-    }
-
-    
 }
 
-
-.dark{
-    .cp-username{
-        color: $dark-primary-text;
-    }        
-}
-.light{
-    .cp-username{
-        color: $light-primary-text;
-    }        
-}
+.dark {
+    .chat-ppl-listitem-dtls {
+        border-bottom:1px solid $dark-background-border;
+    }
+} 

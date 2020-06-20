@@ -1,51 +1,59 @@
-@import '../../../../resources/mixins';
-@import '../../../../resources/colors';
+@import '../../../../resources/core';
 
+.cc1-chat-win-rcvr-row {
+    margin-bottom: 16px;
 
-.cp-receiver-file-container {
-    width: 100%;
-    display: inline-block;
-    margin: 10px;
+    .cc1-chat-win-msg-block {
+        display:inline-block;
+        position:relative;
 
-    .cp-receiver-file {
-        padding: 3px 8px;
-        border-radius: 12px;
-        color:$gray-darken ;
-        background: $gray-lighten-more-more;
-        font-size: 15px;
-        width: max-content;
-        word-break: break-all;
-        min-height: 50px;
-        a{
-            color:$gray-darken;
-           
-           
+        .cc1-chat-win-rcvr-thumbnail-wrap {
+            width: 36px;
+            float: left;
+            margin: 7px 0;
         }
-        p{
-            float: right !important;
-            padding: 0px 4px 0px 0px;
-            font-size: 10px;
-        }
+
+        .cc1-chat-win-rcvr-dtls {
+            display:inline-block;
+            margin: 0 5px;
+
+            .cc1-chat-win-rcvr-name-wrap {
+
+                .cc1-chat-win-rcvr-name {
+                    font-size: 10px;
+                    color: $secondary;
+                }
+            }
+
+            .cc1-chat-win-rcvr-file-wrap {
+                display:inline-block;
+                border-radius:12px;
+                color:$secondary;
+                background-color:rgba(248,248,248,0.92);
+                padding:8px 12px;
+
+                a {
+                    color: $text-dark;
+                    max-width: 250px;
+                    
+                    img {
+                        background-color: white;
+                    }
+                }
+            }
         
-    }
-    .cp-receiver-file-wrapper{
-        max-width: 50%;
-        padding: 3px 8px;
-        width: max-content;
-    }
-    .cp-float-left{
-        float: left;
-    }
-    .cp-time{
-        padding: 3px 6px;
-
-        font-size: 10px;
+            .cc1-chat-win-msg-time-wrap {
+        
+                .cc1-chat-win-timestamp {
+                    display:inline-block;
+                    font-size:11px;
+                    font-weight:500;
+                    letter-spacing:-.1px;
+                    line-height:12px;
+                    text-transform:uppercase;
+                    color: $secondary;
+                }
+            }
+        } 
     }
 }
-
-
-
-.dark {}
-
-
-.light {}

@@ -1,35 +1,23 @@
-@import '../../../../resources/mixins';
-@import '../../../../resources/colors';
+@import '../../../../resources/core';
 
+.cc1-chat-win-sndr-row {
+    text-align:right;
+    margin-bottom:16px;
 
+    .cc1-chat-win-msg-block {
+        display:inline-block;
+        position:relative;
 
-.cp-sender-audio-container {
-    margin: 10px;
-    float: right;
-    width: 100%;
-    .cp-sender-audio {
-        // background: $blue-background-primary;
-        padding: 8px 8px;
-        margin-left: 50%;
-        audio {
-            border: 0;
-            width: 100%;
-            display: inherit;
+        .cc1-chat-win-sndr-audio-wrap {
+            display:inline-block;
+            background-color:$blue;
+            border-radius:12px;
+            padding:8px 12px;
+
+            audio {
+                max-width: 250px;
+                display: inherit;
+            }
         }
     }
-    .cp-time{
-        float: right;
-        font-size: 10px;
-        span{
-            padding-left: 2px;
-        }
-    }
-
 }
-
-
-
-.dark {}
-
-
-.light {}

@@ -1,20 +1,14 @@
-@import '../../../resources/mixins';
-@import '../../../resources/colors';
+@import '../../../resources/core';
 
-.cp-chat-window {
+.cc1-chat-win-action-msg-wrap {
+    padding:8px 12px;
+    margin-bottom: 16px;
+    @include text-center;
   
-    height: 100%;
-    max-height: 100%;
-    overflow: auto;
-    overflow-x: hidden;
-}
-
-
-.dark{
-    
-}
-
-
-.light{
-   
-}
+    .chat-txt-msg {
+        font-size:15px;
+        margin:0;
+        letter-spacing:-.1px;
+        line-height:20px;
+    }
+  }

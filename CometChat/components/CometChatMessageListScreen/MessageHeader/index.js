@@ -3,10 +3,6 @@ import "./style.scss";
 
 import Avatar from "../../Avatar";
 
-import callBlue from "./resources/call-blue-icon.svg";
-import detailPaneBlue from "./resources/details-pane-blue-icon.svg";
-import videoCallBlue from "./resources/video-call-blue-icon.svg";
-
 const messageheader = (props) => {
 
   let status, image;
@@ -21,40 +17,36 @@ const messageheader = (props) => {
   let viewDetailBtn = "", audioCallBtn = "", videoCallBtn = "";
   
   if(!props.item.blockedByMe && props.audiocall) {
-    audioCallBtn = (<button onClick={() => props.actionGenerated("audioCall")} ><img src={callBlue} alt="Audio Call" /></button>);
+    audioCallBtn = (<span onClick={() => props.actionGenerated("audioCall")} className="cc1-chat-win-con-opt call"></span>);
   }
 
   if(!props.item.blockedByMe && props.videocall) {
-    videoCallBtn = (<button onClick={() => props.actionGenerated("videoCall")} ><img src={videoCallBlue} alt="Video Call" /></button>);
+    videoCallBtn = (<span onClick={() => props.actionGenerated("videoCall")} className="cc1-chat-win-con-opt video-call"></span>);
   }
   
   if(props.viewdetail) {
-    viewDetailBtn = (
-      <button onClick={() => props.actionGenerated("viewDetail")}><img src={detailPaneBlue} alt="details" /></button>
-    );
+    viewDetailBtn = (<span onClick={() => props.actionGenerated("viewDetail")} className="cc1-chat-win-con-opt details"></span>);
   }
 
   return (
-    <div className="cp-chatheader" >
-      <div style={{ display: "flex" }}>
-        <div className="cp-chat-avatar" >
+    <div className="cc1-chat-win-header clearfix">
+      <div className="cc1-chat-win-user">
+        <div className="cc1-chat-win-user-thumb">
           <Avatar 
           image={image} 
-          cornerRadius="50%" 
+          cornerRadius="18px" 
           borderColor="#CCC"
           borderWidth="1px"></Avatar>
         </div>
-        <div className=" col cp-user-info">
-          <div className="cp-username font-bold">{props.item.name}</div>
-          <div className="cp-chathead-buttons ">
-            {audioCallBtn}
-            {videoCallBtn}
-            {viewDetailBtn}
-          </div>
-          <div className="row cp-userstatus">
-            <span className="cp-text-blue" >{status}</span>
-          </div>
+        <div className="cc1-chat-win-user-name-wrap">
+          <h6 className="cc1-chat-win-user-name">{props.item.name}</h6>
+          <span className="cc1-chat-win-user-status ccl-blue-color">{status}</span>
         </div>
+      </div>
+      <div className="cc1-chat-win-con-opt-wrap">
+        {audioCallBtn}
+        {videoCallBtn}
+        {viewDetailBtn}
       </div>
     </div>
   )

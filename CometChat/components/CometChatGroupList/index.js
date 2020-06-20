@@ -153,21 +153,32 @@ class CometChatGroupList extends React.Component {
       return (
         <div id={key} onClick={() => this.handleClick(group)} key={key}>
           <GroupView key={group.guid} group={group}></GroupView>
-          <div className="row cp-list-seperator"></div>
         </div>
       );
 
     });
 
     return (
-      <div className="cp-grouplist-wrapper">
-        <p className="cp-contact-list-title font-extra-large">Groups</p>
-        <p className="cp-searchbar">
-          <input className="font-normal" onChange={this.searchGroup} type="text" placeholder="Search" aria-label="Search" />
-        </p>
-        <div className="cp-userlist" onScroll={this.handleScroll}>{groups}</div>
-      </div>
 
+      <React.Fragment>
+        <div className="ccl-left-panel-head-wrap">
+          <h4 className="ccl-left-panel-head-ttl">Groups</h4>
+        </div>
+        <div className="ccl-left-panel-srch-wrap">
+          <div className="ccl-left-panel-srch-inpt-wrap">
+              <input 
+              type="text" 
+              autoComplete="off" 
+              className="ccl-left-panel-srch" 
+              placeholder="Search"
+              onChange={this.searchGroup} />
+              <input id="searchButton" type="button" className="search-btn" />
+          </div>
+        </div>
+        <div className="chat-ppl-list-ext-wrap">
+          <div className="chat-ppl-list-wrap" onScroll={this.handleScroll}>{groups}</div>
+        </div>
+      </React.Fragment>
     );
   }
 }

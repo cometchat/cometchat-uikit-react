@@ -9,22 +9,26 @@ const sendervideobubble = (props) => {
 
   let ticks = blueDoubleTick;
   if(props.message.sentAt && !props.message.readAt && !props.message.deliveredAt){
-    return greyTick;
-  }else if(props.message.sentAt && !props.message.readAt && props.message.deliveredAt){
-    return greyDoubleTick
+    ticks = greyTick;
+  } else if(props.message.sentAt && !props.message.readAt && props.message.deliveredAt){
+    ticks = greyDoubleTick
   }
   
   return (
-    <div className=" cp-sender-video-container" >
-      <div className=" cp-sender-video" >
-        <video controls>
-          <source src={props.message.data.url} type="video/mp4"/>
-          <source src={props.message.data.url} type="video/ogg"/>
-        </video>
-      </div>
-      <div className="cp-time text-muted"> {new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
-        <span><img src={ticks} alt="time"></img></span>
-      </div>
+
+    <div className="cc1-chat-win-sndr-row clearfix">
+      <div className="cc1-chat-win-msg-block">                                
+        <div className="cc1-chat-win-sndr-video-wrap">
+          <video controls>
+            <source src={props.message.data.url} />
+          </video>                        
+        </div>
+        <div className="cc1-chat-win-msg-time-wrap">
+          <span className="cc1-chat-win-timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
+            <img src={ticks} alt="time" />
+          </span>
+        </div>
+      </div>                            
     </div>
   )
 }

@@ -6,18 +6,17 @@ import Avatar from "../Avatar";
 const groupview = (props) => {
 
   return (
-    <div className="cp-groupview">
-      <div className="row">
-        <div className="col-xs-1 cp-group-icon">
-          <Avatar 
-          image={props.group.icon} 
-          cornerRadius="50%" 
-          borderColor="#CCC"
-          borderWidth="1px"></Avatar>
-        </div>
-        <div className="col cp-user-info">
-          <div className="cp-username font-bold cp-ellipsis">{props.group.name}</div>              
-        </div>    
+
+    <div className="chat-ppl-listitem clearfix">
+      <div className="chat-ppl-thumbnail-wrap grp-chat-ppl-thumbnail-wrap">
+        <Avatar 
+        image={props.group.icon} 
+        cornerRadius="18px" 
+        borderColor="#CCC"
+        borderWidth="1px"></Avatar>
+      </div>
+      <div className="chat-ppl-listitem-dtls">
+          <span className="chat-ppl-listitem-name">{props.group.name}</span>
       </div>
     </div>
   )

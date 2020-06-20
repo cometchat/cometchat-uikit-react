@@ -136,21 +136,23 @@ class CometChatConversationList extends React.Component {
 
     const conversationList = this.state.conversationlist.map((conversation, key) => {
       return (
-        <div id={key} onClick={() => this.handleClick(conversation)} key={key}>
+        <div id={key} onClick={() => this.handleClick(conversation)} key={key} className="clearfix">
           <ConversationView key={conversation.conversationId} conversation={conversation}></ConversationView>
-          <div className="row cp-list-seperator"></div>
         </div>
       );
 
     });
 
     return (
-      <div className="cp-conversatiolist-wrapper">
-        <p className="cp-contact-list-title font-extra-large">Chats</p>
-        <div className="cp-userlist" onScroll={this.handleScroll}>
-          {conversationList}
+
+      <React.Fragment>
+        <div className="ccl-left-panel-head-wrap">
+          <h4 className="ccl-left-panel-head-ttl">Chats</h4>
         </div>
+        <div className="chat-ppl-list-ext-wrap">
+        <div className="chat-ppl-list-wrap">{conversationList}</div>
       </div>
+      </React.Fragment>
     );
   }
 }

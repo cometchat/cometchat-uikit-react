@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="51px" height="51px" viewBox="0 0 51 51" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>contact_upload_icon</title>
+    <defs>
+        <circle id="path-1" cx="25.5" cy="25.5" r="25.5"></circle>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="contact_upload_icon">
+            <g id="Clipped">
+                <mask id="mask-2" fill="white">
+                    <use xlink:href="#path-1"></use>
+                </mask>
+                <g id="contact-SVGID_1_"></g>
+                <g id="Group" mask="url(#mask-2)" fill-rule="nonzero">
+                    <g transform="translate(-3.000000, -3.000000)" id="Path">
+                        <path d="M28.5,0.9 C13.9,0.9 0.9,7.6 0.9,29.6 L56.1,29.6 C56,10.6 43.1,0.9 28.5,0.9 Z" fill="#0A7BBF"></path>
+                        <path d="M55,28.5 L0.9,28.5 C0.9,43.1 13.9,56.1 28.5,56.1 C43.1,56.1 56.1,43.1 56.1,28.5 L55,28.5 Z" fill="#09ABF4"></path>
+                    </g>
+                </g>
+            </g>
+            <g id="audio-blue.ccc21865" transform="translate(12.000000, 12.000000)">
+                <polygon id="Path" points="0 0 28 0 28 28 0 28"></polygon>
+                <path d="M14,3.5 L14,14.3266667 C13.4516667,14.1283333 12.8683333,14 12.25,14 C9.345,14 7,16.345 7,19.25 C7,22.155 9.345,24.5 12.25,24.5 C14.945,24.5 17.15,22.4583333 17.4416667,19.8333333 L17.5,19.8333333 L17.5,7 L22.1666667,7 L22.1666667,3.5 L14,3.5 Z" id="Path" fill="#FFFFFF" fill-rule="nonzero"></path>
+            </g>
+        </g>
+    </g>
+</svg>

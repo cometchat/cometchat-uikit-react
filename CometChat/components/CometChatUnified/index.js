@@ -5,11 +5,14 @@ import { CometChatManager } from "../../util/controller";
 
 import NavBar from "./NavBar";
 import CometChatMessageListScreen from "../CometChatMessageListScreen";
+import CometChatUserDetail from "../CometChatUserDetail";
+import CometChatGroupDetail from "../CometChatGroupDetail";
 
 class CometChatUnified extends React.Component {
   
   state = {
     darktheme: false,
+    viewdetailscreen: false,
     item: {},
     type: "user",
     tab: "contacts",
@@ -51,8 +54,7 @@ class CometChatUnified extends React.Component {
 
   itemClicked = (item, type) => {
     
-    this.setState({ item: {...item}, type });
-    
+    this.setState({ item: {...item}, type, viewdetailscreen: false });
   }
 
   tabChanged = (tab) => {
@@ -68,6 +70,9 @@ class CometChatUnified extends React.Component {
       break;
       case "unblockUser":
         this.unblockUser();
+      break;
+      case "viewDetail":
+        this.toggleDetailView();
       break;
       default:
       break;
@@ -99,10 +104,44 @@ class CometChatUnified extends React.Component {
     });
 
   }
+
+  toggleDetailView = () => {
+
+    if(this.state.type === "user") {
+      let viewdetail = !this.state.viewdetailscreen;
+      this.setState({viewdetailscreen: viewdetail});
+    }
+  }
   
   render() {
 
-    let messageScreen = (<h1 className="cp-center-text">Select a chat to start messaging</h1>);
+    let detailScreen;
+    if(this.state.viewdetailscreen) {
+
+      if(this.state.type === "user") {
+
+        detailScreen = (
+          <div className="ccl-right-panel">
+            <CometChatUserDetail
+              item={this.state.item} 
+              type={this.state.type}
+              actionGenerated={this.viewDetailActionHandler} />
+          </div>);
+
+      } else if (this.state.type === "group") {
+
+        detailScreen = (
+          <div className="ccl-right-panel">
+          <CometChatGroupDetail
+            item={this.state.item} 
+            type={this.state.type}
+            actionGenerated={this.viewDetailActionHandler} />
+          </div>
+        );
+      }
+    }
+
+    let messageScreen = (<h1>Select a chat to start messaging</h1>);
     if(Object.keys(this.state.item).length) {
       messageScreen = (<CometChatMessageListScreen 
         item={this.state.item} 
@@ -113,16 +152,18 @@ class CometChatUnified extends React.Component {
     }
     
     return (
-      <div className={"row cometchat-container " + (this.state.darktheme ? " dark" : " light")}>
-        <div className="col-lg-3 col-sm-6 col-xs-12 cp-lists-container" >
-          <div className="cp-lists">
+      <div className="page-wrapper">
+        <div className="page-int-wrapper">
+          <div className="ccl-left-panel">
             <NavBar 
-            item={this.state.item} 
-            tab={this.state.tab} 
-            actionGenerated={this.navBarAction}></NavBar>
+              item={this.state.item} 
+              tab={this.state.tab} 
+              actionGenerated={this.navBarAction} />
           </div>
+          <div className="ccl-center-panel ccl-chat-center-panel">{messageScreen}</div>
+          {detailScreen}
         </div>
-        <div className="col-lg-9 col-sm-6 col-xs-12 cp-chat-container">{messageScreen}</div>
+        
       </div>
     );
   }

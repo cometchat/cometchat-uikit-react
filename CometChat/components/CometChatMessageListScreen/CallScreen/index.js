@@ -217,27 +217,36 @@ class CallScreen extends React.PureComponent {
 
   render() {
 
-    let callScreen =  null, iframeScreen, incomingCallScreen, outgoingCallScreen;
+    let callScreen =  null, incomingCallScreen, outgoingCallScreen;
     if(this.state.showIncomingScreen) {
 
       if(!this.state.callIProgress.sender.getAvatar()) {
 
         const uid = this.state.callIProgress.sender.getUid();
         const char = this.state.callIProgress.sender.getName().charAt(0).toUpperCase();
+        
         this.state.callIProgress.sender.setAvatar(SvgAvatar.getAvatar(uid, char));
 
       }
 
       incomingCallScreen = (
-        <div className="cp-incoming-call-screen">
-          <div className="m-a">Calling...</div>
-          <div className="m-a cp-call-title">{this.state.callIProgress.sender.name}</div>
-          <div className="m-a"><Avatar image={this.state.callIProgress.sender.avatar} /></div>
-          <div className="m-a" style={{ display: "flex", width: '25%' }}>
-            <div className="m-a p-xl cp-accept-button" onClick={this.acceptCall}>ACCEPT</div>
-            <div className="m-a p-xl cp-reject-button" onClick={() => this.rejectCall(CometChat.CALL_STATUS.REJECTED)}>REJECT</div>
+
+        <React.Fragment>
+          <div className="ccl-call-ong-max-header">
+            <h6 className="ccl-call-ong-max-name">{this.state.callIProgress.sender.name}</h6>
           </div>
-        </div>
+          <div className="ccl-call-ong-max-thumb-wrap">
+            <div className="ccl-call-ong-max-thumb"><Avatar cornerRadius="50%" image={this.state.callIProgress.sender.avatar} /></div>
+          </div>
+          <div className="ccl-call-ong-max-cta-wrap">
+            <div className="ccl-call-ong-max-ctablock" onClick={this.acceptCall}>
+              <div  className="ccl-call-ong-max-cta-link callaccept"></div>
+            </div>
+            <div className="ccl-call-ong-max-ctablock" onClick={() => this.rejectCall(CometChat.CALL_STATUS.REJECTED)}>
+              <div className="ccl-call-ong-max-cta-link callend"></div>
+            </div>
+          </div>
+        </React.Fragment>
       );
     }
 
@@ -260,33 +269,36 @@ class CallScreen extends React.PureComponent {
 
       let avatar;
       if(this.props.type === "user") {
-        avatar = (<Avatar image={this.state.callIProgress.receiver.avatar} />);
+        avatar = (<Avatar cornerRadius="50%" image={this.state.callIProgress.receiver.avatar} />);
       } else if(this.props.type === "group") {
-        avatar = (<Avatar image={this.state.callIProgress.receiver.icon} />);
+        avatar = (<Avatar cornerRadius="50%" image={this.state.callIProgress.receiver.icon} />);
       }
 
       outgoingCallScreen = (
-        <div className="cp-outgoing-call-screen">
-          <div className="m-a">Calling...</div>
-          <div className="m-a cp-call-title">{this.state.callIProgress.receiver.name}</div>
-          <div className="m-a">{avatar}</div>
-          <div className="m-a" style={{ display: "flex", width: '25%' }}>
-            <div className="m-a p-xl cp-reject-button" onClick={() => this.rejectCall(CometChat.CALL_STATUS.CANCELLED)}>CANCEL</div>
-          </div>
-        </div>
-      );
-    }
 
-    if(this.state.showIframeScreen) {
-      iframeScreen = (<div id="cp-call-screen-container" className="cp-call-screen-container" style={{ zIndex: 100000 }}></div>);
+        <React.Fragment>
+          <div className="ccl-call-ong-max-header">
+            <span className="ccl-call-ong-max-dur">Calling...</span>
+            <h6 className="ccl-call-ong-max-name">{this.state.callIProgress.receiver.name}</h6>
+          </div>
+          <div className="ccl-call-ong-max-thumb-wrap">
+            <div className="ccl-call-ong-max-thumb">{avatar}</div>
+          </div>
+          <div className="ccl-call-ong-max-cta-wrap">
+            <div className="ccl-call-ong-max-ctablock" onClick={() => this.rejectCall(CometChat.CALL_STATUS.CANCELLED)}>
+              <div className="ccl-call-ong-max-cta-link callend"></div>
+            </div>
+          </div>
+        </React.Fragment>
+      );
     }
 
     if(this.state.showCallScreen) {
       callScreen = (
-        <div className="cp-call-screen-container">
-        {iframeScreen}
-        {incomingCallScreen}
-        {outgoingCallScreen}
+
+        <div className="ccl-call-ong-max-wrap audio-video-call" id="cp-call-screen-container"> 
+          {incomingCallScreen}
+          {outgoingCallScreen}
         </div>
       );
     }
