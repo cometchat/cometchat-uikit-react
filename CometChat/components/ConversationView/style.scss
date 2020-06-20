@@ -1,78 +1,68 @@
-@import '../../resources/mixins';
-@import '../../resources/colors';
+@import '../../resources/core';
 
-.cp-conversationview {
-    padding: 2px;
-    cursor: pointer;
-    min-height: 72px;
+.chat-ppl-listitem {
+    padding:13px 16px 0;
+    position:relative;
+    margin-top:-1px;
+    cursor:pointer;
+    display:flex;
 
-    .row {
-        margin: 0px;
+    .chat-ppl-thumbnail-wrap {
+        display:inline-block;
+        width:36px;
+        height:36px;
+        margin-right:7px;
+
+        img {
+            display:block;
+            overflow:hidden;
+            width:36px;
+        }
     }
 
-    .cp-username {
+    .chat-ppl-listitem-dtls { 
+        display:inline-block;
+        flex:1 1 0;
+        padding-bottom:14px;
+        border-bottom:1px solid #f7f7f7;
 
-        display: inline-block;
-        text-transform: capitalize;
-        text-overflow: ellipsis;
+        .chat-ppl-listitem-name { 
+            font-size:15px;
+            font-weight:600;
+            letter-spacing:-.1px;
+            display:block;
+            max-width:147px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
 
-    }
-    .cp-time{
-        float: right;
-        text-overflow: ellipsis;
-     width: max-content;
+        .chat-ppl-listitem-txt {
+            margin:0;
+            font-size:13px;
+            max-width:176px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+            letter-spacing:-.1px;
+            line-height:20px;
+            color: $secondary;
+        }
     }
 
-    .cp-user-info {
-        margin-top: 11px;
-        padding-bottom: 15px;
-
+    .chat-ppl-listitem-time {
+        font-size:12px;
+        letter-spacing:-.1px;
+        text-transform:uppercase;
+        display:block;
+        position:absolute;
+        right:16px;
+        top:15px;
+        color: $secondary;
     }
 
-    .cp-userstatus {
-        // margin-bottom: 10px !important;
-        text-overflow: ellipsis;
-    }
-    .online{
-        color:green !important;   
-    }
-    .offline{
-        color: gray;    
-    }
-.cp-conversation-avatar{
-    padding: 13px 16px 0;
-    position: relative;
-    margin-top: -1px;
-    cursor: pointer;
 }
 
-.cp-ellipsis{
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 130px;
-}
-.cp-no-padding{
-    padding: 0px;
-}
-   
-    
-}
-
-
-.dark{
-    .cp-username{
-        color: $dark-primary-text;
-    }      
-    .cp-time{
-        color: $dark-primary-text;
-    }  
-}
-.light{
-    .cp-username{
-        color: $light-primary-text;
-    }        
-    .cp-time{
-        color: $light-primary-text;
-    }
+.dark .chat-ppl-listitem-dtls {
+    border-bottom:1px solid #484848;
 }

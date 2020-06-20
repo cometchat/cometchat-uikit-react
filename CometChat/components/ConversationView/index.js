@@ -95,44 +95,29 @@ const conversationview = (props) => {
     return avatar;
   }
 
-  let lastMessage = "";
+  let lastMessageTimeStamp = "";
   if(props.conversation.lastMessage) {
-    lastMessage = (
-      <div className="col-lg-3 col-sm-3 cp-no-padding">
-        <div className="cp-time text-muted"> {new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</div>
-      </div>
+    lastMessageTimeStamp = (
+      <span className="chat-ppl-listitem-time">{new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
     );
   }
     
   return (
-    <div className="cp-conversationview">
-      <div className="row">
-        <div className="col-xs-1 cp-conversation-avatar">
-          <Avatar 
-          image={getAvatar()}
-          cornerRadius="50%" 
-          borderColor="#CCC"
-          borderWidth="1px"></Avatar>
-        </div>
-        <div className="col cp-user-info">
-          <div className="row cp-no-padding">
-            <div className="col-lg-9 col-sm-9 cp-no-padding">
-              <div className="cp-username  cp-ellipsis font-bold">{props.conversation.conversationWith.name}</div>
-            </div>
-            {lastMessage}
-          </div>
-          <div className="row cp-userstatus">
-            <div className="col cp-no-padding">
-              <div className="text-muted cp-ellipsis">
-                {getLastMessage()} 
-              </div>
-            </div>
-            <div className="col cp-no-padding">
-              <BadgeCount count={props.conversation.unreadMessageCount}></BadgeCount>
-            </div>
-          </div>
-        </div>
+
+    <div className="chat-ppl-listitem">
+      <div className="chat-ppl-thumbnail-wrap">
+        <Avatar 
+        image={getAvatar()}
+        cornerRadius="18px" 
+        borderColor="#CCC"
+        borderWidth="1px"></Avatar>
       </div>
+      <div className="chat-ppl-listitem-dtls">
+        <span className="chat-ppl-listitem-name">{props.conversation.conversationWith.name}</span>
+        <p className="chat-ppl-listitem-txt">{getLastMessage()} </p>
+      </div>
+      {lastMessageTimeStamp}
+      <BadgeCount count={props.conversation.unreadMessageCount}></BadgeCount>
     </div>
   )
 }

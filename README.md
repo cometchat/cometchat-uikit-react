@@ -21,20 +21,23 @@ To use this library, you need application keys from your CometChat account. If y
 4. Click your new app to open its settings.
 5. Locate API Keys and Create Auth Key. You'll need `App ID`, `Auth Key` and `Region`
 
+## Installation
 
-### Install CometChat SDK
+1. Install CometChat SDK
 
 ```javascript
-    npm install @cometchat-pro/chat@2.0.9 --save
+    npm install @cometchat-pro/chat@2.0.10 --save
 ```
 
-### Import `CometChat` Object
+2. See UI kit's package.json file and add the missing packages in your project's package.json file. 
+
+3. Import CometChat Object
 
 ```javascript
     import { CometChat } from "@cometchat-pro/"
 ```
 
-### Initialize CometChat
+4. Initialize CometChat
 
 The `init()` method initializes the settings required for CometChat.
  We suggest calling the `init()` method on app startup, preferably in the `onCreate()` method of the Application class.
@@ -56,7 +59,7 @@ CometChat.init(appID, appSetting).then(
 **Note:**
 Replace APP_ID and REGION with your CometChat `App ID` and `REGION` in the above code.
 
-### Log in your User
+5. Create & Login your User
 
 Once initialization is successful, you will need to create a user.
 To create users on the fly, you can use the `createUser()` method. This method takes a User object and the `Auth Key` as input parameters and returns the created User object if the request is successful.
@@ -103,11 +106,7 @@ CometChat.login(uid, authKey).then(
 * Replace `AUTH_KEY` with your CometChat `Auth Key` in the above code.
 * Replace `UID` with the uid of the user created.
 
-
-## Usage
-1. Download or clone this repository
-2. Copy the CometChat folder to your project folder
-3. Import the components.
+6. Import the components.
 
 Here is an implementation of UI Unified. 
 

@@ -1,87 +1,83 @@
-@import '../../../resources/mixins';
-@import '../../../resources/colors';
+@import '../../../resources/core';
 
-.cp-chatheader {
-    padding: 2px;
-    min-height: 72px;
 
-    .row {
-        margin: 0px;
+.cc1-chat-win-header {
+
+    .cc1-chat-win-user {
+        display:inline-block;
+        float:left;
+
+        .cc1-chat-win-user-thumb { 
+
+            display:inline-block;
+            width:36px;
+            height:36px;
+            margin-right:10px;
+            vertical-align:middle;
+            border-radius:24px;
+            overflow:hidden;
+
+            img {
+                display:block;
+                width:36px;
+            } 
+        }
+
+        .cc1-chat-win-user-name-wrap {
+            display:inline-block;
+            vertical-align:middle;
+
+            .cc1-chat-win-user-name {
+                margin:0;
+                font-size:15px;
+                font-weight:600;
+                letter-spacing:-.1px;
+                line-height:22px;
+            }
+
+            .cc1-chat-win-user-status {
+                font-size:13px;
+                letter-spacing:-.1px;
+                line-height:20px;
+                text-transform: capitalize;
+            }
+
+            .cc1-chat-win-user-status.ccl-blue-color {
+                color: $blue;
+            }
+        }
     }
 
-    .cp-username {
-        display: inline-block;
+    .cc1-chat-win-con-opt-wrap {
+        display:inline-block;
+        float:right;
+        padding:8px 0;
 
-    }
-    .cp-time{
-        float: right;
-    }
+        .cc1-chat-win-con-opt {
+            display:inline-block;
+            width:20px;
+            height:20px;
+            padding:2px;
+            margin-left:20px;
+            cursor: pointer;
+        }
 
-    .cp-user-info {
-       
-        margin-top: 11px;
+        .cc1-chat-win-con-opt.call {
+            background:url(./resources/call-blue-icon.svg) center center no-repeat;
+        }
 
-    }
+        .cc1-chat-win-con-opt.video-call {
+            background:url(./resources/video-call-blue-icon.svg) center center no-repeat;
+        }
 
-    .cp-userstatus {
-        // text-transform: capitalize;
-        // margin-bottom: 10px !important;
+        .cc1-chat-win-con-opt.details {
+            background:url(./resources/details-pane-blue-icon.svg) center center no-repeat;
+        }
     }
-    .online{
-        color:green !important;   
-    }
-    .offline{
-        color: gray;    
-    }
-    .cp-text-blue{
-       color: $blue-background-primary
-    }
-.cp-chat-avatar{
-    padding: 12px 12px 0;
-    position: relative;
-    margin-top: -1px;
 }
 
-.cp-ellipsis{
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 150px;
-}
-   
-.cp-chathead-buttons{
-    float: right;
-    padding: 5px 0px;
-    button{
-    padding: 0px 20px;
-     background: none;
-    border: none;
-    img{
-        width: 22px;
-        // display: none
-
-    }
-    }
-}
-    
-}
-
-
-.dark{
-    .cp-username{
-        color: $dark-primary-text;
-    }      
-    .cp-time{
-        color: $dark-primary-text;
-    }  
-}
-
-
-.light{
-    .cp-username{
-        color: $light-primary-text;
-    }        
-    .cp-time{
-        color: $light-primary-text;
+.dark {
+    .cc1-chat-win-header {
+        background-color:$dark-background;
     }
 }

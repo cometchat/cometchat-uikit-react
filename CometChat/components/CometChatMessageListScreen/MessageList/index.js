@@ -60,7 +60,7 @@ class MessageList extends React.PureComponent {
       this.getMessages();
       this.MessageListManager.attachListeners(this.messageUpdated);
 
-    } else if (previousMessageStr !== currentMessageStr) {//to avoid re-render when message status is updated
+    } else if (previousMessageStr !== currentMessageStr) {
       
       if(this.props.scrollToBottom) {
         this.scrollToBottom();
@@ -192,19 +192,19 @@ class MessageList extends React.PureComponent {
     let component;
     switch (message.type) {
       case CometChat.MESSAGE_TYPE.TEXT:
-        component =  (<SenderMessageBubble message={message} ></SenderMessageBubble>);
+        component =  (message.text ? <SenderMessageBubble message={message} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.IMAGE:
-        component =  (<SenderImageBubble message={message} ></SenderImageBubble>);
+        component =  (message.data.url ? <SenderImageBubble message={message} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.FILE:
-        component =  (<SenderFileBubble message={message} ></SenderFileBubble>);
+        component =  (message.data.attachments ? <SenderFileBubble message={message} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.VIDEO:
-        component =  (<SenderAudioBubble message={message} ></SenderAudioBubble>);
+        component =  (message.data.url ? <SenderVideoBubble message={message} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.AUDIO:
-        component =  (<SenderVideoBubble message={message} ></SenderVideoBubble>);
+        component =  (message.data.url ? <SenderAudioBubble message={message} /> : null);
       break;
       default:
       break;
@@ -219,19 +219,19 @@ class MessageList extends React.PureComponent {
     switch (message.type) {
       case "message":
       case CometChat.MESSAGE_TYPE.TEXT:
-        component = (<ReceiverMessageBubble message={message}></ReceiverMessageBubble>);
+        component = (message.text ? <ReceiverMessageBubble message={message} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.IMAGE:
-        component = (<ReceiverImageBubble message={message} ></ReceiverImageBubble>);
+        component = (message.data.url ? <ReceiverImageBubble message={message} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.FILE:
-        component = (<ReceiverFileBubble message={message} ></ReceiverFileBubble>);
+        component = (message.data.attachments ? <ReceiverFileBubble message={message} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.AUDIO:
-        component = (<ReceiverAudioBubble message={message} ></ReceiverAudioBubble>);
+        component = (message.data.url ? <ReceiverAudioBubble message={message} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.VIDEO:
-        component = (<ReceiverVideoBubble message={message} ></ReceiverVideoBubble>);
+        component = (message.data.url ? <ReceiverVideoBubble message={message} /> : null);
       break;
       default:
       break;
@@ -253,7 +253,7 @@ class MessageList extends React.PureComponent {
           component = (<CallMessage message={message} ></CallMessage>);
         break;
         case "action":
-          component = (<div className="cp-call-message-container"><p>{message.message}</p></div>);
+          component = (message.message ? <div className="cc1-chat-win-action-msg-wrap"><p className="chat-txt-msg">{message.message}</p></div> : "");
         break;
         default:
         break;
@@ -269,14 +269,12 @@ class MessageList extends React.PureComponent {
           component = (<CallMessage message={message} ></CallMessage>);
         break;
         case "action":
-          component = (<div className="cp-call-message-container"><p>{message.message}</p></div>);
+          component = (message.message ? <div className="cc1-chat-win-action-msg-wrap"><p className="chat-txt-msg">{message.message}</p></div> : "");
         break;
         default:
         break;
       }
-
     }
-    
     return component;
   }
 
@@ -285,14 +283,14 @@ class MessageList extends React.PureComponent {
     let messages;
     messages = this.props.messages.map((message, key) => {
       return (
-        <div id={key} key={key}>
+        <div id={message.id} key={key}>
           {this.getComponent(message)}
         </div>
       );
     });
 
     return (
-      <div ref={(el) => { this.messagesEnd = el; }} className="cp-chat-window" onScroll={this.handleScroll}>
+      <div ref={(el) => { this.messagesEnd = el; }} className="cc1-chat-win-conver-wrap" onScroll={this.handleScroll}>
         {messages}
       </div>
     );

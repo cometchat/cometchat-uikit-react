@@ -1,73 +1,94 @@
-@import '../../resources/mixins';
-@import '../../resources/colors';
+@import '../../resources/core';
 
-//dark
-.dark {
-    .cp-userlist {
-        background-color: $dark-background;
+.ccl-left-panel-head-wrap {
+    padding:20px 16px;
+    position:relative;
 
-
-        .cp-list-seperator {
-            border-bottom: 1px solid $gray-darken;
-        }
-    }
-    .cp-contact-list-title{
-        color: $dark-primary-text;
-    }
-    .cp-contact-alphabet{
-        color: $dark-primary-text;
+    .ccl-left-panel-head-ttl {
+        margin:0;
+        font-weight:700;
+        letter-spacing:-.5px;
     }
 }
 
-//light
-.light {
-    .cp-userlist {
-        background-color: $light-background;
-
-
-        .cp-list-seperator {
-            border-bottom: 1px solid $gray-lighten;
-        }
-
-
-    }
-    .cp-contact-list-title{
-        color: $light-primary-text;
-    }
-    .cp-contact-alphabet{
-        color: $light-primary-text;
-    }
-
+.chat-ppl-list-ext-wrap {
+    height:calc(100vh - 164px);
+    overflow-y:auto;
 }
 
-//generic
-.cp-conversatiolist-wrapper{
-    height: 100%;
-    overflow: hidden;
-    margin: 0px 0px 0px 10px;
-    .cp-userlist {
-        height: 100%;
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-bottom: 110px;
-    
-        .cp-list-seperator {
-            margin-left: 64px;
-            border-bottom: 1px solid $gray-lighten;
-        }
-    
-    }
-    .cp-contact-alphabet{
-        margin-left: 10px;
-        padding: 5px;
-    }
-    
-    
-    .cp-contact-list-title{
-        margin: 15px 15px;
-    }
-    
-    
+@media (min-width : 320px) and (max-width : 767px) {
 
-
+    .ccl-left-panel-head-ttl {
+        text-align:center;
+    }
 }
+
+// @import '../../resources/mixins';
+// @import '../../resources/colors';
+
+// //dark
+// .dark {
+//     .cp-userlist {
+//         background-color: $dark-background;
+
+
+//         .cp-list-seperator {
+//             border-bottom: 1px solid $gray-darken;
+//         }
+//     }
+//     .cp-contact-list-title{
+//         color: $dark-primary-text;
+//     }
+//     .cp-contact-alphabet{
+//         color: $dark-primary-text;
+//     }
+// }
+
+// //light
+// .light {
+//     .cp-userlist {
+//         background-color: $light-background;
+
+
+//         .cp-list-seperator {
+//             border-bottom: 1px solid $gray-lighten;
+//         }
+
+
+//     }
+//     .cp-contact-list-title{
+//         color: $light-primary-text;
+//     }
+//     .cp-contact-alphabet{
+//         color: $light-primary-text;
+//     }
+
+// }
+
+// //generic
+// .cp-conversatiolist-wrapper{
+//     height: 100%;
+//     overflow: hidden;
+//     margin: 0px 0px 0px 10px;
+//     .cp-userlist {
+//         height: 100%;
+//         overflow-y: auto;
+//         overflow-x: hidden;
+//         padding-bottom: 110px;
+    
+//         .cp-list-seperator {
+//             margin-left: 64px;
+//             border-bottom: 1px solid $gray-lighten;
+//         }
+    
+//     }
+//     .cp-contact-alphabet{
+//         margin-left: 10px;
+//         padding: 5px;
+//     }
+    
+    
+//     .cp-contact-list-title{
+//         margin: 15px 15px;
+//     }
+// }

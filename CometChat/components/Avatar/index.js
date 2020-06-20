@@ -11,9 +11,7 @@ const avatar = (props) => {
   const getStyle = () => ({borderWidth:borderWidth, borderStyle:'solid',borderColor:borderColor ,'borderRadius': cornerRadius})
 
   return (
-    <div className="avatar" style={getStyle()}>
-      <img src={image} alt="Avatar" />
-    </div> 
+    <img src={image} alt="Avatar" style={getStyle()} />
   );
     
 }

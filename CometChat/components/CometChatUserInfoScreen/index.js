@@ -5,13 +5,6 @@ import { CometChatManager } from "../../util/controller";
 import { SvgAvatar } from '../../util/svgavatar';
 import Avatar from "../Avatar";
 
-import notificationBlack from "./resources/notification-black-icon.svg";
-import privacyBlack from "./resources/privacy-black-icon.svg";
-import chatBlack from "./resources/chat-black-icon.svg";
-import helpBlack from "./resources/help-black-icon.svg";
-import reportBlack from "./resources/report-black-icon.svg";
-
-
 class CometChatUserInfoScreen extends React.Component {
   state = {
     user: {},
@@ -56,7 +49,33 @@ class CometChatUserInfoScreen extends React.Component {
     }
 
     return (
-    <div className="cp-profile-scroll">
+      <React.Fragment>
+        <div className="ccl-left-panel-head-wrap">
+          <h4 className="ccl-left-panel-head-ttl">More</h4>
+        </div>
+        <div className="cc1-left-panel-user">
+          <div className="cc1-left-panel-user-thumb">{avatar}</div>
+          <div className="cc1-left-panel-user-name-wrap">
+              <h6 className="cc1-left-panel-user-name">{this.state.user.name}</h6>
+              <span className="cc1-left-panel-user-status ccl-blue-color">Online</span>
+          </div>
+        </div>
+        <div className="cc1-left-panel-myacc-opts-wrap">
+          <div className="cc1-left-panel-myacc-opts-list-ttl ccl-text-uppercase">Preferences</div>
+          <div className="cc1-left-panel-myacc-opts-list">
+              <div className="cc1-left-panel-myacc-opt notifications"><span className="cc1-left-panel-myacc-optname"></span>Notifications</div>
+              <div className="cc1-left-panel-myacc-opt privacy"><span className="cc1-left-panel-myacc-optname"></span>Privacy and Security</div>
+              <div className="cc1-left-panel-myacc-opt chats"><span className="cc1-left-panel-myacc-optname"></span>Chats</div>
+          </div>
+          <div className="cc1-left-panel-myacc-opts-list-ttl ccl-text-uppercase">Other</div>
+          <div className="cc1-left-panel-myacc-opts-list">
+              <div className="cc1-left-panel-myacc-opt help"><span className="cc1-left-panel-myacc-optname"></span>Help</div>
+              <div className="cc1-left-panel-myacc-opt report"><span className="cc1-left-panel-myacc-optname"></span>Report a Problem</div>
+          </div>
+        </div>
+      </React.Fragment>
+
+    /*{ <div className="cp-profile-scroll">
       <p className="cp-profile-list-title font-extra-large">More</p>
       <div className="cp-profile-view">
         <div className="row">
@@ -111,7 +130,8 @@ class CometChatUserInfoScreen extends React.Component {
         <div className="row cp-list-seperator"></div>
       </div>
 
-    </div>);
+    </div> }*/
+    );
   }
 }
 

@@ -1,43 +1,54 @@
-@import '../../../../resources/mixins';
-@import '../../../../resources/colors';
+@import '../../../../resources/core';
 
+.cc1-chat-win-rcvr-row {
+    margin-bottom: 16px;
 
-.cp-receiver-audio-container {
-    margin: 10px;
-    width: 100%;
-    display: inline-block;
+    .cc1-chat-win-msg-block {
+        display:inline-block;
+        position:relative;
 
-
-    .cp-receiver-audio {
-        // background: $gray-lighten-more-more;
-        padding: 8px 8px;
-        margin-right: 50%;
-        width: 100%;
-        audio {
-            border: 0;
-            width: 100%;
-            display: inherit;
+        .cc1-chat-win-rcvr-thumbnail-wrap {
+            width: 36px;
+            float: left;
+            margin: 7px 0;
         }
-    }
-    .cp-receiver-audio-wrapper{
-        max-width: 50%;
-        padding: 3px 8px;
-        width: 100%;
-    }
-    .cp-float-left{
-        float: left;
-    }
-    .cp-time{
-        padding: 3px 6px;
 
-        font-size: 10px;
-    }
+        .cc1-chat-win-rcvr-dtls {
+            display:inline-block;
+            margin: 0 5px;
 
+            .cc1-chat-win-rcvr-name-wrap {
+
+                .cc1-chat-win-rcvr-name {
+                    font-size: 10px;
+                    color: $secondary;
+                }
+            }
+
+            .cc1-chat-win-rcvr-audio-wrap {
+                display:inline-block;
+                background-color:rgba(248,248,248,0.92);
+                border-radius: 12px;
+                padding: 8px 12px;
+
+                audio {
+                    max-width: 250px;
+                    display: inherit;
+                }
+            }
+        
+            .cc1-chat-win-msg-time-wrap {
+        
+                .cc1-chat-win-timestamp {
+                    display:inline-block;
+                    font-size:11px;
+                    font-weight:500;
+                    letter-spacing:-.1px;
+                    line-height:12px;
+                    text-transform:uppercase;
+                    color: $secondary;
+                }
+            }
+        } 
+    }
 }
-
-
-
-.dark {}
-
-
-.light {}

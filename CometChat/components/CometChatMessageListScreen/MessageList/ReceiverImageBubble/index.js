@@ -20,7 +20,7 @@ const revceiverimagebubble = (props) => {
     } 
 
     avatar = (
-      <div className="cp-float-left">
+      <div className="cc1-chat-win-rcvr-thumbnail-wrap">
         <Avatar 
         cornerRadius="50%" 
         borderColor="#CCC" 
@@ -29,18 +29,24 @@ const revceiverimagebubble = (props) => {
       </div>
     )
 
-    name = (<div className="text-muted">{props.message.sender.name}</div>);
+    name = (<div className="cc1-chat-win-rcvr-name-wrap"><span className="cc1-chat-win-rcvr-name">{props.message.sender.name}</span></div>);
   }
 
   return (
-    <div className=" cp-receiver-image-container" >
-      <div className="cp-float-left">{avatar}</div>
-      <div className="cp-float-left cp-receiver-image-wrapper">
-        {name}
-        <div className="cp-receiver-image">
-          <img src={props.message.data.url} alt="receiver"></img>
+
+    <div className="cc1-chat-win-rcvr-row clearfix">
+      <div className="cc1-chat-win-msg-block">
+        {avatar}
+        <div className="cc1-chat-win-rcvr-dtls">
+          {name}
+          <div className="cc1-chat-win-rcvr-img-wrap">
+            <img src={props.message.data.url} alt="receiver" />                            
+          </div>
+          <div className="cc1-chat-win-msg-time-wrap">
+            <span className="cc1-chat-win-timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+          </div>
         </div>
-        <div className="cp-time text-muted"> {new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</div>
+         
       </div>
     </div>
   )

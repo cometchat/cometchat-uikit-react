@@ -1,60 +1,51 @@
-@import '../../resources/mixins';
-@import '../../resources/colors';
+@import '../../resources/core';
 
-.cp-userview {
-    padding: 2px;
-    cursor: pointer;
-    display: flex;
+.chat-contact-listitem {
 
+    padding: 12px 0;
+    cursor:pointer;
 
-    .row {
-        margin: 0px;
-        .cp-user-avatar{
-            padding: 4px 16px 0;
+    .chat-contact-listitem-thum {
+        display:inline-block;
+        width:28px;
+        vertical-align:middle;
+        margin-right:8px;
+
+        img {
+            width:28px;
+            height:28px;
+            overflow: hidden;
+            display: inherit;
         }
     }
 
-    .cp-username {
-
-        text-transform: capitalize;
-
+    .chat-contact-listitem-name {
+        display:inline-block;
+        font-size: 15px;
+        vertical-align:middle;
+        width: 195px;
+        position:relative;
+        letter-spacing:-.1px;
+        line-height:22px;
+        @include semi-bold-text;
     }
 
-    .cp-user-info {
-       
-        margin-top: 11px;
-        padding-bottom: 15px;
-
+    .chat-contact-listitem-name::before {
+        content:"";
+        display:block;
+        width:100%;
+        height:1px;
+        background-color: $light-border;
+        position:absolute;
+        left:0;
+        bottom:-18px;
     }
-
-    .cp-userstatus {
-        text-transform: capitalize;
-        // margin-bottom: 10px !important;
-    }
-    .online{
-        color:green !important;   
-    }
-    .offline{
-        color: gray;    
-    }
-    .cp-ellipsis{
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        width: 140px;
-    }
-
-    
 }
 
-
-.dark{
-    .cp-username{
-        color: $dark-primary-text;
-    }        
-}
-.light{
-    .cp-username{
-        color: $light-primary-text;
-    }        
+.dark {
+    .chat-contact-listitem {
+        .chat-contact-listitem-name::before {
+            background-color:$dark-border;
+        }
+    }
 }

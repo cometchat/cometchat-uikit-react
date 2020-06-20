@@ -1,15 +1,20 @@
 import React from "react";
+import classNames from "classnames";
+
 import "./style.scss";
 
 import { CometChatManager } from "../../util/controller";
 
 import CometChatConversationList from "../CometChatConversationList";
 import CometChatMessageListScreen from "../CometChatMessageListScreen";
+import CometChatUserDetail from "../CometChatUserDetail";
+import CometChatGroupDetail from "../CometChatGroupDetail";
 
 class CometChatConversationListScreen extends React.Component {
 
   state = {
     darktheme: false,
+    viewdetailscreen: false,
     item: {},
     type: "",
     tab: "conversations"
@@ -18,12 +23,12 @@ class CometChatConversationListScreen extends React.Component {
   changeTheme = (e) => {
 
     const theme = this.state.darktheme;
-    this.setState({darktheme: theme})
+    this.setState({darktheme: !theme})
   }
 
   onItemClicked = (item, type) => {
 
-    this.setState({ item: {...item}, type, viewdetail: false })
+    this.setState({ item: {...item}, type, viewdetailscreen: false })
   }
 
   viewDetailActionHandler = (action) => {
@@ -34,6 +39,9 @@ class CometChatConversationListScreen extends React.Component {
       break;
       case "unblockUser":
         this.unblockUser();
+      break;
+      case "viewDetail":
+        this.toggleDetailView();
       break;
       default:
       break;
@@ -66,7 +74,41 @@ class CometChatConversationListScreen extends React.Component {
 
   }
 
+  toggleDetailView = () => {
+
+    if(this.state.type === "user") {
+      let viewdetail = !this.state.viewdetailscreen;
+      this.setState({viewdetailscreen: viewdetail});
+    }
+  }
+
   render() {
+
+    let detailScreen;
+    if(this.state.viewdetailscreen) {
+
+      if(this.state.type === "user") {
+
+        detailScreen = (
+          <div className="ccl-right-panel">
+            <CometChatUserDetail
+              item={this.state.item} 
+              type={this.state.type}
+              actionGenerated={this.viewDetailActionHandler} />
+          </div>);
+
+      } else if (this.state.type === "group") {
+
+        detailScreen = (
+          <div className="ccl-right-panel">
+          <CometChatGroupDetail
+            item={this.state.item} 
+            type={this.state.type}
+            actionGenerated={this.viewDetailActionHandler} />
+          </div>
+        );
+      }
+    }
 
     let messageScreen = (<h1 className="cp-center-text">Select a chat to start messaging</h1>);
     if(Object.keys(this.state.item).length) {
@@ -78,19 +120,20 @@ class CometChatConversationListScreen extends React.Component {
       </CometChatMessageListScreen>);
     }
 
+    const wrapperClassName = classNames({
+      "page-int-wrapper": true,
+      "dark": this.state.darktheme
+    });
+
     return (
-      <div className={"row cometchat-container " + (this.state.darktheme ? "dark" : "light")}>
-        <div className="col-lg-3 col-sm-6 col-xs-12 cp-lists-container" >
-          <div className="cp-lists">
-            <CometChatConversationList onItemClick={this.onItemClicked}></CometChatConversationList>
+
+      <div className="page-wrapper">
+        <div className={wrapperClassName}>
+          <div className="ccl-left-panel">
+            <CometChatConversationList onItemClick={this.onItemClicked} />
           </div>
-        </div>
-        <div className="col-lg-9 col-sm-6 col-xs-12 cp-chat-container">
-          {messageScreen}
-          <label className="switch">
-            <input type="checkbox" onChange={this.changeTheme} />
-            <span className="slider round"></span>
-          </label>
+          <div className="ccl-center-panel ccl-chat-center-panel">{messageScreen}</div>
+          {detailScreen}
         </div>
       </div>
     );

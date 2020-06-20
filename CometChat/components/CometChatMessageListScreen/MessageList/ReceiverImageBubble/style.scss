@@ -1,46 +1,50 @@
-@import '../../../../resources/mixins';
-@import '../../../../resources/colors';
+@import '../../../../resources/core';
 
+.cc1-chat-win-rcvr-row {
+    margin-bottom: 16px;
 
-.cp-receiver-image-container {
-    margin: 10px;
-    width: 100%;
-    display: inline-block;
+    .cc1-chat-win-msg-block {
+        display:inline-block;
+        position:relative;
 
-    .cp-receiver-image {
-        // background: $gray-lighten-more-more;
-        padding: 8px 8px;
-        height: 350px;
-        border-radius: 12px;
-        img {
-            border: 0;
-            width: 100%;
-            height: 100%;
-            display: inherit;
-            border-radius: 12px;
+        .cc1-chat-win-rcvr-thumbnail-wrap {
+            width: 36px;
+            float: left;
+            margin: 7px 0;
         }
-    }
-    .cp-receiver-image-wrapper{
-        max-width: 50%;
-        padding: 3px 8px;
-        width: max-content;
 
+        .cc1-chat-win-rcvr-dtls {
+            display:inline-block;
+            margin: 0 5px;
 
-    }
-    .cp-time{
-        padding: 3px 6px;
+            .cc1-chat-win-rcvr-name-wrap {
 
-        font-size: 10px;
-    }
-    .cp-float-left{
-        float: left;
-    }
+                .cc1-chat-win-rcvr-name {
+                    font-size: 10px;
+                    color: $secondary;
+                }
+            }
 
+            .cc1-chat-win-rcvr-img-wrap {
+                display:inline-block;
+
+                img {
+                    max-width: 250px;
+                }
+            }
+        
+            .cc1-chat-win-msg-time-wrap {
+        
+                .cc1-chat-win-timestamp {
+                    display:inline-block;
+                    font-size:11px;
+                    font-weight:500;
+                    letter-spacing:-.1px;
+                    line-height:12px;
+                    text-transform:uppercase;
+                    color: $secondary;
+                }
+            }
+        } 
+    }
 }
-
-
-
-.dark {}
-
-
-.light {}

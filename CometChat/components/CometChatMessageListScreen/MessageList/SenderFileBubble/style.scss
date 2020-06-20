@@ -1,52 +1,48 @@
-@import '../../../../resources/mixins';
-@import '../../../../resources/colors';
+@import '../../../../resources/core';
 
+.cc1-chat-win-sndr-row {
+    text-align:right;
+    margin-bottom:16px;
 
+    .cc1-chat-win-msg-block {
+        display:inline-block;
+        position:relative;
 
-.cp-sender-file-container {
-    max-width: 50%;
-    margin: 10px;
-    float: right;
-    margin-left: 50%;
+        .cc1-chat-win-sndr-file-wrap {
+            display:inline-block;
+            border-radius:12px;
+            background-color:$blue;
+            color:#fff;
+            padding:8px 12px;
 
-    .cp-sender-file {
-        padding: 3px 8px;
-        border-radius: 12px;
-        color: white;
-        background:  $blue-background-primary;
-        font-size: 15px;
-        word-break: break-all;
-        min-height: 50px;
-       a{
-           color:white;
-           img{
-               background-color: white;
-           }
-          
-       }
-       p{
-        float: right;
-        padding: 0px 4px 0px 0px;
-        font-size: 10px;
-        margin: 0px;
-    }
-      
-    }
+            a {
+                color:white;
+                max-width: 250px;
+                
+                img {
+                    background-color: white;
+                }
+            }
+        }
+        .cc1-chat-win-msg-time-wrap {
 
-    .cp-time{
-        float: right;
-        font-size: 10px;
-        span{
-            padding-left: 2px;
+            .cc1-chat-win-timestamp {
+                display:inline-block;
+                font-size:11px;
+                font-weight:500;
+                letter-spacing:-.1px;
+                line-height:12px;
+                text-transform:uppercase;
+                margin-top:5px;
+                margin-right:5px;
+
+                img {
+                    margin-left:3px;
+                    display:inline-block;
+                    vertical-align:bottom;
+                }
+            }
+
         }
     }
-
-
 }
-
-
-
-.dark {}
-
-
-.light {}

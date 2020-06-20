@@ -1,52 +1,65 @@
-@import '../../../../resources/mixins';
-@import '../../../../resources/colors';
+@import '../../../../resources/core';
 
+.cc1-chat-win-rcvr-row {
+    margin-bottom: 16px;
 
+    .cc1-chat-win-msg-block {
+        display:inline-block;
+        position:relative;
 
-.cp-receiver-message-container{
-    width: 100%;
-    display: inline-block;
-    margin: 10px;
-    
-    .cp-receiver-message {
-        padding: 6px 20px;
-        border-radius: 16px;
-        color:$gray-darken ;
-        background: $gray-lighten-more-more;
-        font-size: 15px;
-        word-break: break-all;
-        white-space: pre-wrap;
-        min-width: 40px;
+        .cc1-chat-win-rcvr-thumbnail-wrap {
+            width: 36px;
+            float: left;
+            margin: 7px 0;
+        }
+
+        .cc1-chat-win-rcvr-dtls {
+            display:inline-block;
+            margin: 0 5px;
+
+            .cc1-chat-win-rcvr-name-wrap {
+
+                .cc1-chat-win-rcvr-name {
+                    font-size: 10px;
+                    color: $secondary;
+                }
+            }
+
+            .cc1-chat-win-rcvr-msg-wrap {
+                display:inline-block;
+                border-radius:12px;
+                background-color:rgba(248,248,248,0.92);
+                padding:8px 12px;
         
-    }
-    .cp-receiver-message-wrapper{
-        max-width: 50%;
-        padding: 3px 8px;
-        width: max-content;
+                .chat-txt-msg {
+                    font-size:15px;
+                    margin:0;
+                    letter-spacing:-.1px;
+                    line-height:20px;
+                }
+            }
+        
+            .cc1-chat-win-msg-time-wrap {
 
-
+                margin-top:5px;
+                margin-left:5px;
+        
+                .cc1-chat-win-timestamp {
+                    display:inline-block;
+                    font-size:11px;
+                    font-weight:500;
+                    letter-spacing:-.1px;
+                    line-height:12px;
+                    text-transform:uppercase;
+                    color: $secondary;
+                }
+            }
+        } 
     }
-    .cp-time{
-        padding: 3px 6px;
-
-        font-size: 10px;
-    }
-    .cp-no-padding{
-        padding: 0px;
-    }
-    .cp-float-left{
-        float: left;
-    }
-
 }
 
-
-
-.dark{
-    
-}
-
-
-.light{
-   
-}
+.dark {
+    .cc1-chat-win-rcvr-msg-wrap {
+        background-color:rgba(51,51,51,0.92);
+    }
+} 

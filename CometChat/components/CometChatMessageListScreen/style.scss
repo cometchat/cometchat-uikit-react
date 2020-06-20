@@ -1,74 +1,116 @@
-@import '../../resources/mixins';
-@import '../../resources/colors';
+@import '../../resources/core';
 
-//dark
+
+.cc1-chat-win-header {
+    padding:14px 16px;
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    background-color: $light-background;
+    z-index:1;
+    padding-left: 45px;
+}
+
+.cc1-chat-win-conver-wrap {
+    padding:5px 16px;
+    height:calc(100vh - 132px);
+    overflow-y:auto;
+    background-color: $light-background;
+    z-index:1;
+    position:relative;
+}
+
+.cc1-chat-win-inpt-ext-wrap {
+    padding:14px 0;
+    width:100%;
+    position:absolute;
+    left:0;
+    bottom:0;
+    background-color: $light-background;
+    z-index:1;
+}
+
 .dark {
-   
-    .cp-profile-container{
-        border-left: 1px solid $gray-darken;
-    }
-    
 
-
-}
-
-//light
-.light {
-    .cp-profile-container{
-        border-left: 1px solid $gray-lighten;
-    }
-   
-}
-
-//generic
-
-.cp-chatview-container-wrapper {
-    height: 100%;
-    max-height: 100%;
-    overflow: auto;
-    overflow:hidden;
-    display:flex;
-    flex-direction:row;
-    border: 0.5px solid #eee;
-    border-radius: 5px;
-
-}
-.cp-chatview-container{
-    display:flex;
-    flex-direction:column;
-    height:100%;
-    overflow:hidden;
-    min-width: 70%;
-    width: 98%;
-}
-.cp-profile-container{
-    width: 100%;
-}
-.cp-chatwindow-conatiner {
-    height: calc(100% - 117px);
-    max-height: calc(100% - 117px);
-    overflow: auto;
-}
-
-.cp-userlist {
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-bottom: 110px;
-
-    .cp-list-seperator {
-        margin-left: 64px;
+    .cc1-chat-win-header {
+        background-color: $dark-background;
     }
 
+    .cc1-chat-win-conver-wrap {
+        background-color: $dark-background;
+    }
+
+    .cc1-chat-win-inpt-ext-wrap {
+        background-color: $dark-background;
+    }
 }
 
-.cp-contact-alphabet {
-    margin-left: 10px;
-    padding: 5px;
-}
+// @import '../../resources/mixins';
+// @import '../../resources/colors';
+
+// //dark
+// .dark {
+//     .cp-profile-container{
+//         border-left: 1px solid $gray-darken;
+//     }
+// }
+
+// //light
+// .light {
+//     .cp-profile-container{
+//         border-left: 1px solid $gray-lighten;
+//     }
+// }
+
+// //generic
+
+// .cp-chatview-container-wrapper {
+//     height: 100%;
+//     max-height: 100%;
+//     overflow: auto;
+//     overflow:hidden;
+//     display:flex;
+//     flex-direction:row;
+//     border: 0.5px solid #eee;
+//     border-radius: 5px;
+
+// }
+// .cp-chatview-container{
+//     display:flex;
+//     flex-direction:column;
+//     height:100%;
+//     overflow:hidden;
+//     min-width: 70%;
+//     width: 98%;
+// }
+// .cp-profile-container{
+//     width: 100%;
+// }
+// .cp-chatwindow-conatiner {
+//     height: calc(100% - 117px);
+//     max-height: calc(100% - 117px);
+//     overflow: auto;
+// }
+
+// .cp-userlist {
+//     height: 100%;
+//     overflow-y: auto;
+//     overflow-x: hidden;
+//     padding-bottom: 110px;
+
+//     .cp-list-seperator {
+//         margin-left: 64px;
+//     }
+// }
+
+// .cp-contact-alphabet {
+//     margin-left: 10px;
+//     padding: 5px;
+// }
 
 
-.cp-contact-list-title {
-    margin: 15px 30px;
-}
+// .cp-contact-list-title {
+//     margin: 15px 30px;
+// }
 

@@ -1,21 +1,12 @@
 import React from "react";
+import classNames from "classnames";
+
 import "./style.scss";
 
 import CometChatUserList from "../../CometChatUserList";
 import CometChatGroupList from "../../CometChatGroupList";
 import CometChatConversationList from "../../CometChatConversationList";
 import CometChatUserInfoScreen from "../../CometChatUserInfoScreen";
-
-import peopleGrey from "./resources/people-grey-icon.svg";
-import peopleBlue from "./resources/people-blue-icon.svg";
-import callGrey from "./resources/call-grey-icon.svg";
-import callBlue from "./resources/call-blue-icon.svg";
-import chatGrey from "./resources/chat-grey-icon.svg";
-import chatBlue from "./resources/chat-blue-icon.svg";
-import groupGrey from "./resources/group-chat-grey-icon.svg";
-import groupBlue from "./resources/group-chat-blue-icon.svg";
-import moreGrey from "./resources/more-grey-icon.svg";
-import moreBlue from "./resources/more-blue-icon.svg";
 
 const navbar = (props) => {
 
@@ -46,29 +37,60 @@ const navbar = (props) => {
 
   }
 
+  const contactClassName = classNames({
+    "ccl-left-panel-nav-link": true,
+    "people": true,
+    "active": (props.tab === "contacts")
+  });
+
+  // const callClassName = classNames({
+  //   "ccl-left-panel-nav-link": true,
+  //   "call": true,
+  //   "active": (props.tab === "calls")
+  // });
+
+  const convClassName = classNames({
+    "ccl-left-panel-nav-link": true,
+    "chat": true,
+    "active": (props.tab === "conversations")
+  });
+
+  const groupClassName = classNames({
+    "ccl-left-panel-nav-link": true,
+    "grp-chat": true,
+    "active": (props.tab === "groups")
+  });
+
+  const infoClassName = classNames({
+    "ccl-left-panel-nav-link": true,
+    "more": true,
+    "active": (props.tab === "info")
+  });
+
   return (
 
-    <div className="cp-navbar">
-      <div className="cp-navbar">{switchComponent()}</div>
-      <div className="tab">
-        <button onClick={() => props.actionGenerated('tabChanged', 'contacts')}>
-          <img src={props.tab === "contacts" ? peopleBlue : peopleGrey} alt="contacts" />
-        </button>
-        <button style={{ display: "none" }} onClick={() => props.actionGenerated('tabChanged', 'calls')}>
-          <img src={props.tab === "calls" ? callBlue : callGrey} alt="calls" />
-        </button>
-        <button onClick={() => props.actionGenerated('tabChanged', 'conversations')}>
-          <img src={props.tab === "conversations" ? chatBlue : chatGrey} alt="conversations" />
-        </button>
-        <button onClick={() => props.actionGenerated('tabChanged', 'groups')}>
-          <img src={props.tab === "groups" ? groupBlue : groupGrey} alt="groups" />
-        </button>
-        <button onClick={() => props.actionGenerated('tabChanged', 'info')}>
-          <img src={props.tab === "info" ? moreBlue : moreGrey} alt="info" />
-        </button>
-      </div>
-    </div>
-
+      <React.Fragment>
+        {switchComponent()}
+        <div className="ccl-left-panel-footer-wrap">
+          <div className="ccl-left-panel-nav-list clearfix">
+              <div className="ccl-left-panel-nav-listitem" onClick={() => props.actionGenerated('tabChanged', 'contacts')}>
+                <span className={contactClassName}></span>
+              </div>
+              {/* <div className="ccl-left-panel-nav-listitem" onClick={() => props.actionGenerated('tabChanged', 'calls')}>
+                <span className={callClassName}></span>
+              </div>  */}
+              <div className="ccl-left-panel-nav-listitem" onClick={() => props.actionGenerated('tabChanged', 'conversations')}>
+                <span className={convClassName}></span>
+              </div>
+              <div className="ccl-left-panel-nav-listitem" onClick={() => props.actionGenerated('tabChanged', 'groups')}>
+                <span className={groupClassName}></span>
+                </div>
+              <div className="ccl-left-panel-nav-listitem" onClick={() => props.actionGenerated('tabChanged', 'info')}>
+                <span className={infoClassName}></span>
+              </div> 
+          </div>
+        </div>
+      </React.Fragment>
   )
 }
 
