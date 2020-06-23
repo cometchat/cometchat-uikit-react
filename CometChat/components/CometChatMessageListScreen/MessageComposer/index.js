@@ -7,10 +7,6 @@ import { CometChat } from "@cometchat-pro/chat"
 
 import roundedPlus from "./resources/rounded-plus-grey-icon.svg";
 import sendBlue from "./resources/send-blue-icon.svg";
-import imageUpload from "./resources/images_upload_icon.svg";
-import audioUpload from "./resources/audio_upload_icon.svg";
-import videoUpload from "./resources/video_upload_icon.svg";
-import docUpload from "./resources/document_upload_icon.svg";
 
 class MessageComposer extends React.PureComponent {
 
@@ -171,35 +167,32 @@ class MessageComposer extends React.PureComponent {
     return (
 
       <div className="cc1-chat-win-inpt-ext-wrap">
-        <div className={filePickerClassName}>
-          <div className="cc1-chat-win-file-type-list">
-            <span className="cc1-chat-win-file-type-listitem" onClick={() => { this.openFileDialogue("video") }}>
-            <input onChange={(e) => this.onVideoChange(e, "video")} accept="video/*" type="file" ref={this.videoUploaderRef} />
-              <img src={videoUpload} alt="Choose a file to upload" />
-            </span>
-            <span className="cc1-chat-win-file-type-listitem" onClick={() => { this.openFileDialogue("audio") }}>
-            <input onChange={(e) => this.onAudioChange(e, "audio")} accept="audio/*" type="file" ref={this.audioUploaderRef} />
-              <img src={audioUpload} alt="Choose an file to upload" />
-            </span>
-            <span className="cc1-chat-win-file-type-listitem" onClick={() => { this.openFileDialogue("image") }}>
-              <input onChange={(e) => this.onImageChange(e, "image")} accept="image/*" type="file" ref={this.imageUploaderRef} />
-              <img src={imageUpload} alt="Choose an file to upload" />
-            </span>
-            <span className="cc1-chat-win-file-type-listitem" onClick={() => { this.openFileDialogue("file") }}>
-            <input onChange={(e) => this.onFileChange(e, "file")} type="file" id="file" ref={this.fileUploaderRef} />
-              <img src={docUpload} alt="Choose a file to upload" />
-            </span>
-          </div>
-        </div>
+        
         <div className="cc1-chat-win-inpt-int-wrap">
           <div className="cc1-chat-win-inpt-attach" onClick={this.toggleFilePicker}>
             <span><img src={roundedPlus} alt="Click to upload a file" /></span>
           </div>
+          <div className={filePickerClassName}>
+            <div className="cc1-chat-win-file-type-list">
+              <span className="cc1-chat-win-file-type-listitem video" onClick={() => { this.openFileDialogue("video") }}>
+              <input onChange={(e) => this.onVideoChange(e, "video")} accept="video/*" type="file" ref={this.videoUploaderRef} />
+              </span>
+              <span className="cc1-chat-win-file-type-listitem audio" onClick={() => { this.openFileDialogue("audio") }}>
+              <input onChange={(e) => this.onAudioChange(e, "audio")} accept="audio/*" type="file" ref={this.audioUploaderRef} />
+              </span>
+              <span className="cc1-chat-win-file-type-listitem image" onClick={() => { this.openFileDialogue("image") }}>
+                <input onChange={(e) => this.onImageChange(e, "image")} accept="image/*" type="file" ref={this.imageUploaderRef} />
+              </span>
+              <span className="cc1-chat-win-file-type-listitem file" onClick={() => { this.openFileDialogue("file") }}>
+              <input onChange={(e) => this.onFileChange(e, "file")} type="file" id="file" ref={this.fileUploaderRef} />
+              </span>
+            </div>
+          </div>
           <div className="cc1-chat-win-inpt-wrap">
             <input 
             type="text"
-            className="cc1-chat-win-inpt-box font-15"
-            placeholder="Type Message" 
+            className="cc1-chat-win-inpt-box"
+            placeholder="Enter your message here" 
             autoComplete="off" 
             disabled={disabled}
             onChange={this.changeHandler}

@@ -32,19 +32,22 @@ export class MessageListManager {
             this.msgListenerId,
             new CometChat.MessageListener({
                 onTextMessageReceived: textMessage => {
-                    callback(enums.TEXT_MESSAGE_RECEIVED, textMessage, false);
+                    callback(enums.TEXT_MESSAGE_RECEIVED, textMessage);
                 },
                 onMediaMessageReceived: mediaMessage => {
-                    callback(enums.MEDIA_MESSAGE_RECEIVED, mediaMessage, false);
+                    callback(enums.MEDIA_MESSAGE_RECEIVED, mediaMessage);
                 },
                 onCustomMessageReceived: customMessage => {
-                    callback(enums.CUSTOM_MESSAGE_RECEIVED, customMessage, false);
+                    callback(enums.CUSTOM_MESSAGE_RECEIVED, customMessage);
                 },
                 onMessagesDelivered: messageReceipt => {
-                    callback(enums.MESSAGE_DELIVERED, messageReceipt, true);
+                    callback(enums.MESSAGE_DELIVERED, messageReceipt);
                 },
                 onMessagesRead: messageReceipt => {
-                    callback(enums.MESSAGE_READ, messageReceipt, true);
+                    callback(enums.MESSAGE_READ, messageReceipt);
+                },
+                onMessageDeleted: deletedMessage => {
+                    callback(enums.MESSAGE_DELETED, deletedMessage);
                 }
             })
         );

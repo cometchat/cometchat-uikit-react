@@ -176,7 +176,8 @@ class CometChatUserList extends React.PureComponent {
               autoComplete="off" 
               className="ccl-left-panel-srch" 
               id="chatSearch" 
-              placeholder="Search" />
+              placeholder="Search"
+              onChange={this.searchUsers} />
               <input id="searchButton" type="button" className="search-btn" />
           </div>
         </div>
