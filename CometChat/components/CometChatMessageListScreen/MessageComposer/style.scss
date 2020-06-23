@@ -1,64 +1,77 @@
 @import '../../../resources/core';
 
 .cc1-chat-win-file-popup {
-    position:absolute;
-    left:10px;
-    bottom:62px;
-    width:260px;
+    left:0;
+    bottom:0;
+    position:relative;
+    width: 0;
     border-radius:8px;
     overflow:hidden;
     z-index:1;
     text-align:center;
-
-    visibility: hidden;
     opacity: 0;
-    transition: visibility 0s linear 0.33s, opacity 0.33s linear;
+    transition: width 0.5s linear;
+
+    .cc1-chat-win-file-type-list {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
+        margin-top: 5px;
+    }
 
     .cc1-chat-win-file-type-listitem {
-        padding: 5px;
-        width: 60px;
-        opacity: 0;
 
-        animation: slideIn ease forwards; 
+        width: 24px;
+        height: 24px;
+        background-color: $secondary;
+        cursor: pointer;
 
         input {
             display: none;
         }
-    
-        img { 
-            display:inherit;
-            cursor: pointer;
-        }
+    }
+
+    .cc1-chat-win-file-type-listitem.video {
+        -webkit-mask: url(./resources/video_upload_icon.svg) no-repeat 100% 100%;
+        mask: url(./resources/video_upload_icon.svg) no-repeat 100% 100%;
+        -webkit-mask-size: cover;
+        mask-size: cover;
+    }
+
+    .cc1-chat-win-file-type-listitem.audio {
+        -webkit-mask: url(./resources/audio_upload_icon.svg) no-repeat 100% 100%;
+        mask: url(./resources/audio_upload_icon.svg) no-repeat 100% 100%;
+        -webkit-mask-size: cover;
+        mask-size: cover;
+    }
+
+    .cc1-chat-win-file-type-listitem.image {
+        -webkit-mask: url(./resources/images_upload_icon.svg) no-repeat 100% 100%;
+        mask: url(./resources/images_upload_icon.svg) no-repeat 100% 100%;
+        -webkit-mask-size: cover;
+        mask-size: cover;
+    }
+
+    .cc1-chat-win-file-type-listitem.file {
+        -webkit-mask: url(./resources/document_upload_icon.svg) no-repeat 100% 100%;
+        mask: url(./resources/document_upload_icon.svg) no-repeat 100% 100%;
+        -webkit-mask-size: cover;
+        mask-size: cover;
     }
 }
 
 .cc1-chat-win-file-popup.active {
-    visibility: visible;
+    width: 150px;
     opacity: 1;
-    transition-delay: 0s;    
 }
-
-@keyframes slideIn {
-    0% {
-        opacity: 0;
-    }
-    25% {
-        opacity: 0.25;
-    }
-    50% {
-        opacity: 0.5;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
 
 .cc1-chat-win-inpt-int-wrap {
     display:flex;
 
     .cc1-chat-win-inpt-attach { 
-        width:60px;
+        width: 50px;
         text-align:center;
 
         span {
@@ -89,6 +102,7 @@
             letter-spacing:-.1px;
             line-height:20px;
             padding:6px 36px 6px 12px;
+            @include font-15;
         }
 
         .cc1-chat-win-inpt-box.height {
@@ -119,85 +133,3 @@
         color:#fff;
     }
 }
-
-
-// @import '../../../resources/mixins';
-// @import '../../../resources/colors';
-
-// .cp-message-composer {
-//     .cp-show-media{
-//         display: block;
-//         position: absolute;
-//         bottom: 45px;
-//         left: 17px;
-//         background-color: $light-background;
-//         button{
-//             background: none;
-//             border: none; 
-//             img{
-//                 width: 40px;
-//             }
-//         }
-//     }
-//     .cp-hide-media{
-//         display: None;
-//     }
-//     .cp-media-button{
-//         display: inline-block;
-//         button{
-//         background: none;
-//         border: none;
-//         img{
-//             width: 20px;
-//         }
-//         }
-//     }
-//     .cp-send-button{
-//         display: inline-block;
-//         button{
-//         background: none;
-//         border: none;
-//         padding: 3px 10px;
-//         img{
-//             width: 30px;
-//         }
-//         }
-//     }
-//     width: 100%;
-//     bottom: 12px;
-//     input{
-//         width: 85%;
-//         background-color: $gray-lighten-more-more;
-//         border: 1px solid #e8e8e8;
-//         border-radius: 5px;
-//         padding-left: 10px;
-//         padding-right: 10px;
-//         height: 34px;
-//         font-size: 18px;
-//     }
-// }
-
-// @media screen and (min-width: 768px) and (max-width : 992px){
-//     .cp-message-composer{
-//         input{
-//             width: 80%;
-//         }
-//     }
-// }
-
-
-// .dark{
-//     .cp-show-media{
-//      background-color: $dark-background;
-//      p{
-//          color:$light-background;
-//      }
-//     }
-// }
-
-
-// .light{
-//     .cp-show-media{
-//         background-color: $light-background;
-//     }
-// }

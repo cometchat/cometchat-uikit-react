@@ -6,6 +6,8 @@ import { CometChat } from "@cometchat-pro/chat";
 import { CometChatManager } from "../../../util/controller";
 import { MessageListManager } from "./controller";
 
+import * as enums from '../../../util/enums.js';
+
 import SenderMessageBubble from "./SenderMessageBubble";
 import ReceiverMessageBubble from "./ReceiverMessageBubble";
 import SenderImageBubble from "./SenderImageBubble";
@@ -18,7 +20,6 @@ import SenderVideoBubble from "./SenderVideoBubble";
 import ReceiverVideoBubble from "./ReceiverVideoBubble";
 
 import CallMessage from "./CallMessage";
-
 
 class MessageList extends React.PureComponent {
   loggedInUser = null;
@@ -35,14 +36,15 @@ class MessageList extends React.PureComponent {
   }
 
   componentDidMount() {
+
     this.MessageListManager = new MessageListManager(this.props.item, this.props.type);
     this.getMessages();
     this.MessageListManager.attachListeners(this.messageUpdated);
-    
   }
 
   componentDidUpdate(prevProps, prevState) {
 
+   
     const previousMessageStr = JSON.stringify(prevProps.messages);
     const currentMessageStr = JSON.stringify(this.props.messages);
 
@@ -116,65 +118,87 @@ class MessageList extends React.PureComponent {
   //callback for listener functions
   messageUpdated = (key, message, isReceipt) => {
 
-    //new messages
-    if (this.props.type === 'group' 
-    && message.getReceiverType() === 'group'
-    && message.getReceiver().guid === this.props.item.guid 
-    && !isReceipt) {
+    if(key === enums.MESSAGE_DELETED) {
 
-      if(!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-      }
-      this.props.actionGenerated("messageReceived", [message]);
-        
-    } else if (this.props.type === 'user' 
-    && message.getReceiverType() === 'user'
-    && message.getSender().getUid() === this.props.item.uid 
-    && !isReceipt) {
+      if (this.props.type === 'group' 
+      && message.getReceiverType() === 'group'
+      && message.getReceiver().guid === this.props.item.guid) {
 
-      if(!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
-      }
-
-      this.props.actionGenerated("messageReceived", [message]);
-    }
-
-    //read receipts
-    if (isReceipt 
-      && message.getReceiverType() === 'user'
-      && message.getSender().getUid() === this.props.item.uid
-      && message.getReceiver() === this.loggedInUser.uid) {
-
-        let messageList = [...this.props.messages];
-        if (message.getReceiptType() === "delivery") {
-
-          //search for same message
-          let msg = messageList.find((m, k) => m.id === message.messageId);
+        this.props.actionGenerated("messageDeleted", [message]);
           
-          //if found, update state
-          if(msg) {
-            msg["deliveredAt"] = message.getDeliveredAt();
-            this.props.actionGenerated("messageUpdated", messageList);
+      } else if (this.props.type === 'user' 
+      && message.getReceiverType() === 'user'
+      && message.getSender().getUid() === this.props.item.uid) {
+
+        this.props.actionGenerated("messageDeleted", [message]);
+      }
+
+    } else if(key === enums.MESSAGE_DELIVERED || key === enums.MESSAGE_READ) {
+
+      //read receipts
+      if (message.getReceiverType() === 'user'
+        && message.getSender().getUid() === this.props.item.uid
+        && message.getReceiver() === this.loggedInUser.uid) {
+
+          let messageList = [...this.props.messages];
+          if (message.getReceiptType() === "delivery") {
+
+            //search for same message
+            let msg = messageList.find((m, k) => m.id === message.messageId);
+            
+            //if found, update state
+            if(msg) {
+              msg["deliveredAt"] = message.getDeliveredAt();
+              this.props.actionGenerated("messageUpdated", messageList);
+            }
+
+          } else if (message.getReceiptType() === "read") {
+
+            //search for same message
+            let msg = messageList.find((m, k) => m.id === message.messageId);
+            //if found, update state
+            if(msg) {
+              msg["readAt"] = message.getReadAt();
+              this.props.actionGenerated("messageUpdated", messageList);
+            }
           }
 
-        } else if (message.getReceiptType() === "read") {
+      } else if (message.getReceiverType() === 'group' 
+        && message.getReceiver() === this.props.item.guid) {
+          //not implemented
+      }
 
-          //search for same message
-          let msg = messageList.find((m, k) => m.id === message.messageId);
-          //if found, update state
-          if(msg) {
-            msg["readAt"] = message.getReadAt();
-            this.props.actionGenerated("messageUpdated", messageList);
-          }
+    } else if(key === enums.TEXT_MESSAGE_RECEIVED || key === enums.MEDIA_MESSAGE_RECEIVED || key === enums.CUSTOM_MESSAGE_RECEIVED) {
+
+      //new messages
+      if (this.props.type === 'group' 
+      && message.getReceiverType() === 'group'
+      && message.getReceiver().guid === this.props.item.guid) {
+
+        if(!message.getReadAt()) {
+          CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+        }
+        this.props.actionGenerated("messageReceived", [message]);
+          
+      } else if (this.props.type === 'user' 
+      && message.getReceiverType() === 'user'
+      && message.getSender().getUid() === this.props.item.uid) {
+
+        if(!message.getReadAt()) {
+          CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
         }
 
-    } else if (isReceipt 
-      && message.getReceiverType() === 'group' 
-      && message.getReceiver() === this.props.item.guid) {
-        //not implemented
+        this.props.actionGenerated("messageReceived", [message]);
+      }
+
     }
+
+    
+
+    
     
   }
+
   handleScroll = (e) => {
     
     const top = Math.round(e.currentTarget.scrollTop) === 0;
@@ -187,7 +211,7 @@ class MessageList extends React.PureComponent {
     this.props.onItemClick(message, 'message');
   }
 
-  messageComponentforSender = (message) => {
+  getSenderMessageComponent = (message) => {
 
     let component;
     switch (message.type) {
@@ -213,7 +237,7 @@ class MessageList extends React.PureComponent {
     return component;
   }
 
-  messageComponentforReceiver = (message) => {
+  getReceiverMessageComponent = (message) => {
 
     let component;
     switch (message.type) {
@@ -238,6 +262,39 @@ class MessageList extends React.PureComponent {
     }
     return component;
   }
+
+  getCallMessageComponent = (message) => {
+
+    return (
+      <CallMessage message={message} />
+    );
+  }
+
+  getActionMessageComponent = (message) => {
+
+    let component = null;
+    if(message.message) {
+
+      component = (
+        <div className="cc1-chat-win-action-msg-wrap"><p className="chat-txt-msg">{message.message}</p></div>
+      );
+
+      //if action messages are set to hide in config
+      if(this.props.config) {
+
+        const found = this.props.config.find(cfg => {
+          return (cfg.action === message.action && cfg.category === message.category);
+        });
+  
+        if(found && found.enabled === false) {
+          component = null;
+        }
+      }
+      
+    }
+
+    return component;
+  }
   
   getComponent = (message) => {
 
@@ -247,13 +304,13 @@ class MessageList extends React.PureComponent {
       
       switch(message.category) {
         case "message":
-          component = this.messageComponentforSender(message);
+          component = this.getSenderMessageComponent(message);
         break;
         case "call":
-          component = (<CallMessage message={message} ></CallMessage>);
+          component = this.getCallMessageComponent(message);
         break;
         case "action":
-          component = (message.message ? <div className="cc1-chat-win-action-msg-wrap"><p className="chat-txt-msg">{message.message}</p></div> : "");
+          component = this.getActionMessageComponent(message);
         break;
         default:
         break;
@@ -263,13 +320,13 @@ class MessageList extends React.PureComponent {
 
       switch(message.category) {
         case "message":
-          component = this.messageComponentforReceiver(message);
+          component = this.getReceiverMessageComponent(message);
         break;
         case "call":
-          component = (<CallMessage message={message} ></CallMessage>);
+          component = this.getCallMessageComponent(message);
         break;
         case "action":
-          component = (message.message ? <div className="cc1-chat-win-action-msg-wrap"><p className="chat-txt-msg">{message.message}</p></div> : "");
+          component = this.getActionMessageComponent(message);
         break;
         default:
         break;

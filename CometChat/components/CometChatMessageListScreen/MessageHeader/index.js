@@ -2,14 +2,34 @@ import React from "react";
 import "./style.scss";
 
 import Avatar from "../../Avatar";
+import { SvgAvatar } from '../../../util/svgavatar';
 
 const messageheader = (props) => {
 
   let status, image;
   if(props.type === "user") {
+
+    if(!props.item.avatar) {
+
+      const uid = props.item.getUid();
+      const char = props.item.getName().charAt(0).toUpperCase();
+
+      props.item.setAvatar(SvgAvatar.getAvatar(uid, char));
+    }
+
     status = props.item.status;
     image = props.item.avatar;
+
   } else {
+
+    if(!props.item.icon) {
+
+      const guid = props.item.getGuid();
+      const char = props.item.getName().charAt(0).toUpperCase();
+
+      props.item.setIcon(SvgAvatar.getAvatar(guid, char))
+    }
+
     status = props.item.type;
     image = props.item.icon;
   }

@@ -6,6 +6,7 @@ export const MEDIA_MESSAGE_RECEIVED = 'onMediaMessageReceived';
 export const CUSTOM_MESSAGE_RECEIVED = 'onCustomMessageReceived';
 export const MESSAGE_DELIVERED = 'onMessagesDelivered';
 export const MESSAGE_READ = 'onMessagesRead';
+export const MESSAGE_DELETED = 'onMessageDeleted';
 
 export const INCOMING_CALL_RECEIVED = 'onIncomingCallReceived';
 export const OUTGOING_CALL_ACCEPTED = 'onOutgoingCallAccepted';

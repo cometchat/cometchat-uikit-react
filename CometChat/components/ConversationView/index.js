@@ -48,12 +48,42 @@ const conversationview = (props) => {
     let message = "";
     const type = props.conversation.lastMessage.type;
 
-    if(type === CometChat.MESSAGE_TYPE.VIDEO) {
-      message = "Video call";
-    } else if(type === CometChat.MESSAGE_TYPE.AUDIO) {
-      message = "Audio call";
+    switch(type) {
+      case CometChat.MESSAGE_TYPE.VIDEO:
+        message = "Video call";
+      break;
+      case CometChat.MESSAGE_TYPE.AUDIO:
+        message = "Audio call";
+      break;
+      default:
+      break;
     }
     
+    return message;
+  }
+
+  const getActionMessage = () => {
+
+    const message = props.conversation.lastMessage.message;
+
+    //if action messages are set to hide in config
+    if(props.config) {
+
+      const found = props.config.find(cfg => {
+        return (cfg.action === message.action && cfg.category === message.category);
+      });
+
+      if(found && found.enabled === false) {
+        message = "";
+      }
+    }
+
+    return message;
+  }
+
+  const getCustomMessage = () => {
+
+    const message = "Some Custom Message";
     return message;
   }
 
@@ -72,10 +102,10 @@ const conversationview = (props) => {
         message = getCallMessage();
       break;
       case "action":
-        message = props.conversation.lastMessage.message;
+        message = getActionMessage();
       break;
       case "custom":
-        message = "Some Custom Message";
+        message = getCustomMessage();
       break;
       default:
       break;

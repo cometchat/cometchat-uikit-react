@@ -137,7 +137,10 @@ class CometChatConversationList extends React.Component {
     const conversationList = this.state.conversationlist.map((conversation, key) => {
       return (
         <div id={key} onClick={() => this.handleClick(conversation)} key={key} className="clearfix">
-          <ConversationView key={conversation.conversationId} conversation={conversation}></ConversationView>
+          <ConversationView 
+          config={this.props.config}
+          key={conversation.conversationId} 
+          conversation={conversation} />
         </div>
       );
 

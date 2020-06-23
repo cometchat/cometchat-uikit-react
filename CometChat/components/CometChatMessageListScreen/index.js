@@ -129,10 +129,20 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "messageFetched":
         this.prependMessages(messages);
       break;
+      case "messageDeleted":
+        this.removeMessages(messages);
       default:
       break;
     }
 
+  }
+
+  //messages are deleted
+  removeMessages = (messages) => {
+
+    const messageList = [...this.state.messageList];
+    const filteredMessages = messageList.filter(message => message.id !== messages[0].id);
+    this.setState({ messageList: filteredMessages, scrollToBottom: false });
   }
 
   //messages are fetched from backend
@@ -184,6 +194,7 @@ class CometChatMessageListScreen extends React.PureComponent {
           item={this.props.item} 
           type={this.props.type}
           scrollToBottom={this.state.scrollToBottom}
+          config={this.props.config}
           actionGenerated={this.messageListActionHandler}></MessageList>
         <MessageComposer 
           item={this.props.item} 
