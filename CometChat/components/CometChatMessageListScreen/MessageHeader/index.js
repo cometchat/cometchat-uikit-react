@@ -14,7 +14,7 @@ const messageheader = (props) => {
       const uid = props.item.uid;
       const char = props.item.name.charAt(0).toUpperCase();
 
-      props.item.setAvatar(SvgAvatar.getAvatar(uid, char));
+      props.item.avatar = SvgAvatar.getAvatar(uid, char);
     }
 
     status = props.item.status;
@@ -27,7 +27,7 @@ const messageheader = (props) => {
       const guid = props.item.guid;
       const char = props.item.name.charAt(0).toUpperCase();
 
-      props.item.setIcon(SvgAvatar.getAvatar(guid, char))
+      props.item.icon = SvgAvatar.getAvatar(guid, char);
     }
 
     status = props.item.type;
