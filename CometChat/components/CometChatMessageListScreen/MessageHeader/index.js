@@ -11,8 +11,8 @@ const messageheader = (props) => {
 
     if(!props.item.avatar) {
 
-      const uid = props.item.getUid();
-      const char = props.item.getName().charAt(0).toUpperCase();
+      const uid = props.item.uid;
+      const char = props.item.name.charAt(0).toUpperCase();
 
       props.item.setAvatar(SvgAvatar.getAvatar(uid, char));
     }
@@ -24,8 +24,8 @@ const messageheader = (props) => {
 
     if(!props.item.icon) {
 
-      const guid = props.item.getGuid();
-      const char = props.item.getName().charAt(0).toUpperCase();
+      const guid = props.item.guid;
+      const char = props.item.name.charAt(0).toUpperCase();
 
       props.item.setIcon(SvgAvatar.getAvatar(guid, char))
     }
