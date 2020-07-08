@@ -152,7 +152,7 @@ class CometChatConversationList extends React.Component {
         <div className="ccl-left-panel-head-wrap">
           <h4 className="ccl-left-panel-head-ttl">Chats</h4>
         </div>
-        <div className="chat-ppl-list-ext-wrap">
+        <div className="chat-ppl-list-ext-wrap" onScroll={this.handleScroll}>
         <div className="chat-ppl-list-wrap">{conversationList}</div>
       </div>
       </React.Fragment>

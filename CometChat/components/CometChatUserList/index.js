@@ -179,8 +179,8 @@ class CometChatUserList extends React.PureComponent {
               <input id="searchButton" type="button" className="search-btn" />
           </div>
         </div>
-        <div className="chat-contact-list-ext-wrap">
-          <div className="chat-contact-list" onScroll={this.handleScroll}>
+        <div className="chat-contact-list-ext-wrap" onScroll={this.handleScroll}>
+          <div className="chat-contact-list">
             {users}
           </div>
         </div>
