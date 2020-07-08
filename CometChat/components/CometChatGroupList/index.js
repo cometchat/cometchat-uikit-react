@@ -243,8 +243,8 @@ class CometChatGroupList extends React.Component {
             <input id="searchButton" type="button" className="search-btn" />
           </div>
         </div>
-        <div className="chat-ppl-list-ext-wrap groups">
-          <div className="chat-ppl-list-wrap" onScroll={this.handleScroll}>
+        <div className="chat-ppl-list-ext-wrap groups" onScroll={this.handleScroll}>
+          <div className="chat-ppl-list-wrap">
             {groups}
           </div>
         </div>
