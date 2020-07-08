@@ -8,6 +8,7 @@ export class MessageListManager {
     type = "";
     messageRequest = null;
     msgListenerId = new Date().getTime();
+    groupListenerId = new Date().getTime();
 
     constructor(item, type) {
 
@@ -51,10 +52,37 @@ export class MessageListManager {
                 }
             })
         );
+
+        CometChat.addGroupListener(
+            this.groupListenerId,
+            new CometChat.GroupListener({
+                onGroupMemberScopeChanged: (message, changedUser, newScope, oldScope, changedGroup) => {
+                    callback(enums.GROUP_MEMBER_SCOPE_CHANGED, message, changedUser, newScope, oldScope, changedGroup);
+                }, 
+                onGroupMemberKicked: (message, kickedUser, kickedBy, kickedFrom) => {
+                    callback(enums.GROUP_MEMBER_KICKED, message, kickedUser, kickedBy, kickedFrom);
+                }, 
+                onGroupMemberBanned: (message, bannedUser, bannedBy, bannedFrom) => {
+                    callback(enums.GROUP_MEMBER_BANNED, message, bannedUser, bannedBy, bannedFrom);
+                }, 
+                onGroupMemberUnbanned: (message, unbannedUser, unbannedBy, unbannedFrom) => {
+                    callback(enums.GROUP_MEMBER_UNBANNED, message, unbannedUser, unbannedBy, unbannedFrom);
+                }, 
+                onMemberAddedToGroup: (message, userAdded, userAddedBy, userAddedIn) => {
+                    callback(enums.GROUP_MEMBER_ADDED, message, userAdded, userAddedBy, userAddedIn);
+                }, 
+                onGroupMemberLeft: (message, leavingUser, group) => {
+                    callback(enums.GROUP_MEMBER_LEFT, message, leavingUser, group);
+                }, 
+                onGroupMemberJoined: (message, joinedUser, joinedGroup) => {
+                    callback(enums.GROUP_MEMBER_JOINED, message, joinedUser, joinedGroup);
+                }
+            })
+        );
     }
 
     removeListeners() {
-
         CometChat.removeMessageListener(this.msgListenerId);
+        CometChat.removeGroupListener(this.groupListenerId);
     }
 }

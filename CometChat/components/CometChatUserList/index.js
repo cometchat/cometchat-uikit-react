@@ -27,7 +27,6 @@ class CometChatUserList extends React.PureComponent {
     this.UserListManager = new UserListManager(this.friendsOnly);
     this.getUsers();
     this.UserListManager.attachListeners(this.userUpdated);
-    
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -168,7 +167,6 @@ class CometChatUserList extends React.PureComponent {
         <div className="ccl-left-panel-head-wrap">
           <h4 className="ccl-left-panel-head-ttl">Contacts</h4>
         </div>
-        
         <div className="ccl-left-panel-srch-wrap">
           <div className="ccl-left-panel-srch-inpt-wrap">
               <input
@@ -181,7 +179,6 @@ class CometChatUserList extends React.PureComponent {
               <input id="searchButton" type="button" className="search-btn" />
           </div>
         </div>
-
         <div className="chat-contact-list-ext-wrap">
           <div className="chat-contact-list" onScroll={this.handleScroll}>
             {users}

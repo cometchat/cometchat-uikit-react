@@ -18,6 +18,7 @@ class MessageComposer extends React.PureComponent {
 		this.audioUploaderRef = React.createRef();
     this.videoUploaderRef = React.createRef();
     this.messageInputRef = React.createRef();
+    this.messageSending = false;
 	}
 
   state = {
@@ -99,6 +100,12 @@ class MessageComposer extends React.PureComponent {
 
     this.toggleFilePicker();
 
+    if(this.messageSending) {
+      return false;
+    }
+
+    this.messageSending = true;
+
     let receiverId;
     let receiverType = this.props.type;
     if (this.props.type === "user") {
@@ -109,9 +116,11 @@ class MessageComposer extends React.PureComponent {
 
     let message = new CometChat.MediaMessage(receiverId, messageInput, messageType, receiverType);
     CometChat.sendMessage(message).then(message => {
+      this.messageSending = false;
       this.props.actionGenerated("messageComposed", [message])
-    }).then(error => {
+    }).catch(error => {
       console.log("Message sending failed with error:", error);
+      this.messageSending = false;
     });
   }
 
@@ -129,6 +138,12 @@ class MessageComposer extends React.PureComponent {
       return false;
     }
 
+    if(this.messageSending) {
+      return false;
+    }
+
+    this.messageSending = true;
+
     let messageInput = this.state.messageInput.trim();
 
     let receiverId;
@@ -141,10 +156,12 @@ class MessageComposer extends React.PureComponent {
 
     let textMessage = new CometChat.TextMessage(receiverId, messageInput, receiverType);
     CometChat.sendMessage(textMessage).then(message => {
-      this.setState({messageInput: ""})
+      this.setState({messageInput: ""});
+      this.messageSending = false;
       this.props.actionGenerated("messageComposed", [message]);
     }).catch(error => {
       console.log("Message sending failed with error:", error);
+      this.messageSending = false;
     });
   }
 

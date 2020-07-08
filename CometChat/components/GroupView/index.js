@@ -7,7 +7,7 @@ const groupview = (props) => {
 
   return (
 
-    <div className="chat-ppl-listitem clearfix">
+    <div className="chat-ppl-listitem groups clearfix">
       <div className="chat-ppl-thumbnail-wrap grp-chat-ppl-thumbnail-wrap">
         <Avatar 
         image={props.group.icon} 

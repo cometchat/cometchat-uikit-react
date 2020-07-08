@@ -9,6 +9,7 @@ import CometChatGroupList from "../CometChatGroupList";
 import CometChatMessageListScreen from "../CometChatMessageListScreen";
 import CometChatGroupDetail from "../CometChatGroupDetail";
 
+
 class CometChatGroupListScreen extends React.Component {
 
   state = {
@@ -16,7 +17,11 @@ class CometChatGroupListScreen extends React.Component {
     viewdetailscreen: false,
     item: {},
     type: "group",
-    tab: "groups"
+    tab: "groups",
+    groupToDelete: {},
+    groupToLeave: {},
+    groupToUpdate: {},
+    groupUpdated: {}
   }
 
   changeTheme = (e) => {
@@ -27,7 +32,6 @@ class CometChatGroupListScreen extends React.Component {
   }
 
   onItemClicked = (item, type) => {
-
     this.setState({ item: {...item}, type, viewdetailscreen: false });
   }
 
@@ -45,7 +49,7 @@ class CometChatGroupListScreen extends React.Component {
     }
   }
 
-  viewDetailActionHandler = (action) => {
+  viewDetailActionHandler = (action, item, count, ...otherProps) => {
     
     switch(action) {
       case "blockUser":
@@ -56,6 +60,18 @@ class CometChatGroupListScreen extends React.Component {
       break;
       case "viewDetail":
         this.toggleDetailView();
+      break;
+      case "groupDeleted": 
+        this.deleteGroup(item);
+      break;
+      case "leftGroup":
+        this.leaveGroup(item);
+      break;
+      case "membersUpdated":
+        this.updateMembersCount(item, count);
+      break;
+      case "groupUpdated":
+        this.groupUpdated(item, count, ...otherProps);
       break;
       default:
       break;
@@ -89,8 +105,33 @@ class CometChatGroupListScreen extends React.Component {
   }
 
   toggleDetailView = () => {
-    //let viewdetail = !this.state.viewdetailscreen;
-    //this.setState({viewdetailscreen: viewdetail});
+    let viewdetail = !this.state.viewdetailscreen;
+    this.setState({viewdetailscreen: viewdetail});
+  }
+
+  deleteGroup = (group) => {
+    this.setState({groupToDelete: group, item: {}, type: "group", viewdetailscreen: false});
+  }
+
+  leaveGroup = (group) => {
+    this.setState({groupToLeave: group, item: {}, type: "group", viewdetailscreen: false});
+  }
+
+  updateMembersCount = (item, count) => {
+    const group = Object.assign({}, this.state.item, {membersCount: count, scope: item.scope});
+    this.setState({item: group, groupToUpdate: group});
+  }
+
+  groupUpdated = (message, key, ...otherProps) => {
+
+    const groupUpdated = {};
+    groupUpdated["action"] = key;
+    groupUpdated["message"] = message;
+    groupUpdated["messageId"] = message.id;
+    groupUpdated["guid"] = message.receiver.guid;
+    groupUpdated["props"] = {...otherProps};
+
+    this.setState({groupUpdated: groupUpdated});
   }
 
   render() {
@@ -103,6 +144,7 @@ class CometChatGroupListScreen extends React.Component {
         <CometChatGroupDetail
           item={this.state.item} 
           type={this.state.type}
+          groupUpdated={this.state.groupUpdated}
           actionGenerated={this.viewDetailActionHandler} />
         </div>
       );
@@ -115,8 +157,8 @@ class CometChatGroupListScreen extends React.Component {
         item={this.state.item} 
         tab={this.state.tab}
         type={this.state.type}
-        actionGenerated={this.viewDetailActionHandler}>
-      </CometChatMessageListScreen>);
+        membersCount={this.state.groupMembersCount}
+        actionGenerated={this.viewDetailActionHandler} />);
     }
 
     const wrapperClassName = classNames({
@@ -130,7 +172,10 @@ class CometChatGroupListScreen extends React.Component {
         <div className={wrapperClassName}>
           <div className="ccl-left-panel">
             <CometChatGroupList
-            item={this.state.item} 
+            item={this.state.item}
+            groupToDelete={this.state.groupToDelete}
+            groupToLeave={this.state.groupToLeave}
+            groupToUpdate={this.state.groupToUpdate}
             actionGenerated={this.groupScreenAction}
             onItemClick={this.onItemClicked} />
           </div>

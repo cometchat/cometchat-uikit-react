@@ -1,0 +1,105 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.popup-box.create-group{
+    width:360px;
+    height: 320px;
+    overflow:hidden;
+    background-color:#fff;
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:1002;
+    margin:0 auto;
+    box-shadow:rgba(20,20,20,0.2) 0 16px 32px,rgba(20,20,20,0.04) 0 0 0 1px;
+    border-radius:12px;
+    display: none;
+
+    .popup-close {
+        position:absolute;
+        width:32px;
+        height:32px;
+        border-radius:50%;
+        top:16px;
+        right:16px;
+        background:url(./resources/clear.svg) center center no-repeat;
+        cursor: pointer;
+    }
+
+    .popup-body{ 
+        padding:16px;
+    
+        .ccl-left-panel-srch-inpt-wrap {
+            position:relative;
+            margin-bottom:25px;
+
+            .ccl-left-panel-srch {
+                display:block;
+                width:100%;
+                border:0;
+                box-shadow:rgba(20,20,20,0.04) 0 0 0 1px inset;
+                border-radius:8px;
+                background-color:rgba(20,20,20,0.04);
+                letter-spacing:-.1px;
+                line-height:20px;
+                padding:6px 8px 6px 30px;
+                color: $secondary;
+                @include font-15;
+            }
+        }
+
+        .ccl-left-panel-srch-inpt-wrap.btn-container {
+            @include ccl-center;
+
+
+            .popup-btn {
+                cursor: pointer;
+                color: $white;
+                padding: 10px;
+                background-color: $blue;
+                border-radius: 5px;
+            }
+        }
+
+        .popup-ttl {
+            letter-spacing:-.5px;
+            line-height:26px;
+            margin:3px 0 40px;
+            @include ccl-center;
+            @include bold-txt;
+        }
+
+        .popup-error {
+            font-size: 10px;
+            color: red;
+            @include ccl-center;
+            display: block;
+        }
+    }
+}
+
+.popup-box.create-group.show {
+    display: block;
+}
+
+.dark {
+
+    .popup-box.create-group {
+
+        .popup-close {
+            background:url(./resources/cross-white-icon.svg) center center no-repeat rgba(255,255,255,0.1);
+        }
+    
+        .popup-box {
+            background-color:#333;
+        }
+    }
+
+    .ccl-left-panel-srch {
+        background-color:rgba(255,255,255,0.08);
+        box-shadow:rgba(255,255,255,0.04) 0 0 0 1px inset;
+        color:#cccbcb;
+    }
+
+}

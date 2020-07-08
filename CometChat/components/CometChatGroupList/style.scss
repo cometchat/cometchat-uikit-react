@@ -1,4 +1,5 @@
-@import '../../resources/core';
+@import '../../resources/mixins';
+@import '../../resources/colors';
 
 .ccl-left-panel-head-wrap { 
     padding:20px 16px;
@@ -18,6 +19,7 @@
         width:20px;
         height:20px;
         background:url(./resources/edit-blue-icon.svg) center center no-repeat;
+        cursor: pointer;
     }
 
 }
@@ -55,7 +57,7 @@
     }
 }
 
-.chat-ppl-list-ext-wrap { 
+.chat-ppl-list-ext-wrap.groups { 
     height:calc(100vh - 184px);
     overflow-y:auto;
 }

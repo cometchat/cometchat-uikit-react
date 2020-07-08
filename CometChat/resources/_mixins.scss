@@ -31,3 +31,20 @@ $base_font_size: 1.4rem;
   text-align:center;
 }
 
+@mixin bold-txt {
+  font-weight:700;
+}
+
+@mixin  clearfix {
+  clear: both;
+
+  &:before,
+  &:after {
+    content: " ";
+    display: table;
+  }
+
+  &:after {
+    clear: both;
+  }
+}

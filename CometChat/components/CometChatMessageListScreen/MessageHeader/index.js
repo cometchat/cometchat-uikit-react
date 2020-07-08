@@ -1,8 +1,10 @@
 import React from "react";
-import "./style.scss";
+import classNames from "classnames";
 
 import Avatar from "../../Avatar";
 import { SvgAvatar } from '../../../util/svgavatar';
+
+import "./style.scss";
 
 const messageheader = (props) => {
 
@@ -29,8 +31,8 @@ const messageheader = (props) => {
 
       props.item.icon = SvgAvatar.getAvatar(guid, char);
     }
-
-    status = props.item.type;
+    
+    status = `${props.item.membersCount} members`;
     image = props.item.icon;
   }
   
@@ -48,6 +50,13 @@ const messageheader = (props) => {
     viewDetailBtn = (<span onClick={() => props.actionGenerated("viewDetail")} className="cc1-chat-win-con-opt details"></span>);
   }
 
+  const statusClassName = classNames({
+    "cc1-chat-win-user-status": true,
+    "ccl-blue-color": (props.type === "user"),
+    "capitalize": (props.type === "user"),
+    "ccl-secondary-color": (props.type === "group")
+  });
+
   return (
     <div className="cc1-chat-win-header clearfix">
       <div className="cc1-chat-win-user">
@@ -60,7 +69,7 @@ const messageheader = (props) => {
         </div>
         <div className="cc1-chat-win-user-name-wrap">
           <h6 className="cc1-chat-win-user-name">{props.item.name}</h6>
-          <span className="cc1-chat-win-user-status ccl-blue-color">{status}</span>
+          <span className={statusClassName}>{status}</span>
         </div>
       </div>
       <div className="cc1-chat-win-con-opt-wrap">
@@ -72,4 +81,4 @@ const messageheader = (props) => {
   )
 }
 
-export default React.memo(messageheader);
+export default messageheader;

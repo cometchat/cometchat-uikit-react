@@ -1,0 +1,229 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.popup-box.add-member-popup {
+    min-width: 300px;
+    min-height:450px;
+    width: 30%;
+    height: 40%;
+    overflow:hidden;
+    background-color:#fff;
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:1002;
+    margin:0 auto;
+    box-shadow:rgba(20,20,20,0.2) 0 16px 32px,rgba(20,20,20,0.04) 0 0 0 1px;
+    border-radius:12px;
+    display: none;
+
+    .popup-close {
+        position:absolute;
+        width:32px;
+        height:32px;
+        border-radius:50%;
+        top:16px;
+        right:16px;
+        background:url(./resources/clear.svg) center center no-repeat;
+        cursor: pointer;
+    }
+
+    .popup-body {
+        padding:16px;
+        height: 100%;
+
+        table {
+            border-collapse: collapse;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            table-layout: fixed;
+
+            caption {
+                font-size: 1.5em;
+                margin: .5em 0 .75em;
+                font-weight: 700;
+            }
+
+            caption.search {
+                font-weight: normal;
+                
+
+                input.member-search {
+                    width: 100%;
+                    border: 0;
+                    box-shadow: rgba(20, 20, 20, 0.04) 0 0 0 1px inset;
+                    border-radius: 8px;
+                    background-color: rgba(20, 20, 20, 0.04);
+                    padding: .6em .625em .6em 2.2em;
+                    font-size: 1.5rem;
+                    color: rgba(20, 20, 20, 0.6);
+                }
+
+                input.member-search-btn{
+                    width: 14px;
+                    height: 14px;
+                    position: absolute;
+                    left: 15px;
+                    padding: 0.8em;
+                    background: url(./resources/search-grey-icon.svg) center center no-repeat;
+                }
+            }
+
+            tbody {
+                height: 265px;
+                overflow-y: auto;
+                display: block;
+            }
+
+            tfoot {
+                button {
+                    cursor: pointer;
+                    color: $white;
+                    padding: 0.625em 2.2em;
+                    background-color: $blue;
+                    border-radius: 5px;
+                }
+
+                tr {
+                    border: none;
+                }
+
+                td {
+                    @include ccl-center;
+                }
+            }
+
+            tr {
+                border: 1px solid $grey;
+                display: table;
+                width: 100%;
+                table-layout: fixed;
+            }
+
+            th {
+                font-size: .85em;
+                letter-spacing: .1em;
+            }
+            
+            th,
+            td {
+                padding: .625em;
+            }
+
+            td {
+                img {
+                    width: 36px;
+                    height: 36px;
+                    margin-right: 5%;
+                    float:left;
+                }
+
+                span {
+                    display: inline-block;
+                }
+
+                span.name {
+                    margin: 10px;
+                    max-width: 175px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                input[type="checkbox"] {
+                    display: none;
+                }
+        
+                input[type="checkbox"] + label {
+                    display:block;
+                    cursor:pointer;
+                    background:url(./resources/checkbox-inactive.svg) right center / 16px no-repeat;
+                    user-select:none;
+                    float: left;
+                    padding: .625em;
+                }
+        
+                input[type=checkbox]:checked+label {
+                    background: url(./resources/checkbox-blue-active.svg) no-repeat right center;
+                    background-size: 16px;
+                }
+            }
+        }
+    }
+}
+
+.popup-box.add-member-popup.show {
+    display: block;
+}
+
+@media screen and (max-width: 900px) {
+
+    .popup-box.add-member-popup {
+
+        .popup-body {
+
+            table {
+                border: 0;
+                
+                caption {
+                    font-size: 1.3em;
+                }
+
+                thead {
+                    border: none;
+                    clip: rect(0 0 0 0);
+                    height: 1px;
+                    margin: -1px;
+                    overflow: hidden;
+                    padding: 0;
+                    position: absolute;
+                    width: 1px;
+                }
+
+                tr {
+                    border-bottom: 3px solid $grey;
+                    display: block;
+                    margin-bottom: .625em;
+                }
+
+                td {
+                    border-bottom: 1px solid $grey;
+                    display: block;
+                    font-size: .8em;
+                    text-align: right;
+
+                    &:last-child {
+                        border-bottom: 0;
+                    }
+
+                    span.avatar {
+                        display: none;
+                    }
+
+                    span.name {
+                        margin-right: 0;
+                    }
+
+                    input[type="checkbox"] + label {
+                        float: none;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.dark {
+
+    .popup-box.add-member-popup {
+        .popup-close {
+            background:url(./resources/cross-white-icon.svg) center center no-repeat rgba(255,255,255,0.1);
+        }
+    
+        .popup-box {
+            background-color:#333;
+        }
+    }
+}

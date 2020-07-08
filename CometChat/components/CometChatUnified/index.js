@@ -16,6 +16,10 @@ class CometChatUnified extends React.Component {
     item: {},
     type: "user",
     tab: "contacts",
+    groupToDelete: {},
+    groupToLeave: {},
+    groupToUpdate: {},
+    groupUpdated: {}
   }
 
   changeTheme = (e) => {
@@ -33,12 +37,6 @@ class CometChatUnified extends React.Component {
       case "tabChanged":
         this.tabChanged(type);
       break;
-      case "groupMemberLeft":
-        this.appendMessage(item);
-      break;
-      case "groupMemberJoined":
-        this.appendMessage(item);
-      break;
       case "userStatusChanged":
         this.updateSelectedUser(item);
       break;
@@ -53,16 +51,17 @@ class CometChatUnified extends React.Component {
   }
 
   itemClicked = (item, type) => {
-    
+
+    console.log("CometChatUnified itemClicked item", item);
     this.setState({ item: {...item}, type, viewdetailscreen: false });
   }
 
   tabChanged = (tab) => {
     this.setState({tab});
-    this.setState({viewdetail: false});
+    this.setState({viewdetailscreen: false});
   }
 
-  viewDetailActionHandler = (action) => {
+  viewDetailActionHandler = (action, item, count, ...otherProps) => {
     
     switch(action) {
       case "blockUser":
@@ -73,6 +72,18 @@ class CometChatUnified extends React.Component {
       break;
       case "viewDetail":
         this.toggleDetailView();
+      break;
+      case "groupDeleted": 
+        this.deleteGroup(item);
+      break;
+      case "leftGroup":
+        this.leaveGroup(item);
+      break;
+      case "membersUpdated":
+        this.updateMembersCount(item, count);
+      break;
+      case "groupUpdated":
+        this.groupUpdated(item, count, ...otherProps);
       break;
       default:
       break;
@@ -106,16 +117,39 @@ class CometChatUnified extends React.Component {
   }
 
   toggleDetailView = () => {
-
-    if(this.state.type === "user") {
       let viewdetail = !this.state.viewdetailscreen;
       this.setState({viewdetailscreen: viewdetail});
-    }
+  }
+
+  deleteGroup = (group) => {
+    this.setState({groupToDelete: group, item: {}, type: "group", viewdetailscreen: false});
+  }
+
+  leaveGroup = (group) => {
+    this.setState({groupToLeave: group, item: {}, type: "group", viewdetailscreen: false});
+  }
+
+  updateMembersCount = (item, count) => {
+
+    const group = Object.assign({}, this.state.item, {membersCount: count, scope: item.scope});
+    this.setState({item: group, groupToUpdate: group});
+  }
+
+  groupUpdated = (message, key, ...otherProps) => {
+
+    const groupUpdated = {};
+    groupUpdated["action"] = key;
+    groupUpdated["message"] = message;
+    groupUpdated["messageId"] = message.id;
+    groupUpdated["guid"] = message.receiver.guid;
+    groupUpdated["props"] = {...otherProps};
+
+    this.setState({groupUpdated: groupUpdated});
   }
   
   render() {
 
-    let detailScreen;
+    let detailScreen = null;
     if(this.state.viewdetailscreen) {
 
       if(this.state.type === "user") {
@@ -135,36 +169,38 @@ class CometChatUnified extends React.Component {
           <CometChatGroupDetail
             item={this.state.item} 
             type={this.state.type}
+            groupUpdated={this.state.groupUpdated}
             actionGenerated={this.viewDetailActionHandler} />
           </div>
         );
       }
     }
-
+    
     let messageScreen = (<h1>Select a chat to start messaging</h1>);
     if(Object.keys(this.state.item).length) {
       messageScreen = (<CometChatMessageListScreen 
         item={this.state.item} 
         tab={this.state.tab}
         type={this.state.type}
-        actionGenerated={this.viewDetailActionHandler}>
-      </CometChatMessageListScreen>);
+        actionGenerated={this.viewDetailActionHandler} />);
     }
     
     return (
-      <div className="page-wrapper">
-        <div className="page-int-wrapper">
-          <div className="ccl-left-panel">
-            <NavBar 
-              item={this.state.item} 
-              tab={this.state.tab} 
-              actionGenerated={this.navBarAction} />
+        <div className="page-wrapper">
+          <div className="page-int-wrapper">
+            <div className="ccl-left-panel">
+              <NavBar 
+                item={this.state.item}
+                tab={this.state.tab}
+                groupToDelete={this.state.groupToDelete}
+                groupToLeave={this.state.groupToLeave}
+                groupToUpdate={this.state.groupToUpdate}
+                actionGenerated={this.navBarAction} />
+            </div>
+            <div className="ccl-center-panel ccl-chat-center-panel">{messageScreen}</div>
+            {detailScreen}
           </div>
-          <div className="ccl-center-panel ccl-chat-center-panel">{messageScreen}</div>
-          {detailScreen}
-        </div>
-        
-      </div>
+        </div>      
     );
   }
 }

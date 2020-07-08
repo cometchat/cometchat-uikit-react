@@ -1,0 +1,241 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.popup-box.view-member-popup {
+    min-width:360px;
+    min-height:450px;
+    width: 60%;
+    height: 40%;
+    overflow:hidden;
+    background-color:#fff;
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:1002;
+    margin:0 auto;
+    box-shadow:rgba(20,20,20,0.2) 0 16px 32px,rgba(20,20,20,0.04) 0 0 0 1px;
+    border-radius:12px;
+    display: none;
+    
+    .popup-close {
+        position:absolute;
+        width:32px;
+        height:32px;
+        border-radius:50%;
+        top:16px;
+        right:16px;
+        background:url(./resources/clear.svg) center center no-repeat;
+        cursor: pointer;
+    }
+
+    .popup-body {
+        padding:16px;
+        height: 100%;
+
+        table {
+            border-collapse: collapse;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            table-layout: fixed;
+
+            caption {
+                font-size: 1.5em;
+                margin: .5em 0 .75em;
+                font-weight: 700;
+            }
+
+            tbody {
+                height: 300px;
+                overflow-y: auto;
+                display: block;
+            }
+
+            tr {
+                border: 1px solid $grey;
+                display: table;
+                width: 100%;
+                table-layout: fixed;
+            }
+
+            th {
+                font-size: .85em;
+                letter-spacing: .1em;
+                text-align: left;
+            }
+            
+            th,
+            td {
+                padding: .625em;
+            }
+
+            td {
+                img {
+                    width: 36px;
+                    height: 36px;
+                    float: left;
+                }
+
+                .members-scope-select-wrap {
+                    float: left;
+                    width: 100%;
+                    transition: opacity .1s linear;
+
+                    select.members-scope-select {
+                        width: 65%;
+                        border: 0;
+                        box-shadow: rgba(20, 20, 20, 0.04) 0 0 0 1px inset;
+                        border-radius: 8px;
+                        background-color: rgba(20, 20, 20, 0.04);
+                        padding: .5em;
+                        color: rgba(20, 20, 20, 0.6);
+                        float: left;
+                    }
+
+                    img {
+                        margin: 6px 3px;
+                        float: left;
+                    }
+                }
+
+                span {
+                    display: inline-block;
+                }
+
+                span.name {
+                    margin: 10px;
+                    max-width: 100px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+            }
+
+            td.noedit {
+
+                span.name {
+                    max-width: 85%;
+                }
+
+            }
+
+            td.role {
+                font-size: 1.2rem;
+            }
+
+            td.ban,
+            td.changescope,
+            td.kick {
+                img {
+                    width: 20px;
+                    height: 20px;
+                    cursor: pointer;
+                }
+            }
+        }
+    }
+}
+
+.popup-box.view-member-popup.show {
+    display: block;
+}
+
+@media screen and (max-width: 900px) {
+
+    .popup-box.view-member-popup {
+
+        .popup-body {
+
+            table {
+                border: 0;
+                
+                caption {
+                    font-size: 1.3em;
+                }
+
+                thead {
+                    border: none;
+                    clip: rect(0 0 0 0);
+                    height: 1px;
+                    margin: -1px;
+                    overflow: hidden;
+                    padding: 0;
+                    position: absolute;
+                    width: 1px;
+                }
+
+                tr {
+                    border-bottom: 3px solid $grey;
+                    display: block;
+                    margin-bottom: .625em;
+                }
+
+                td {
+                    border-bottom: 1px solid $grey;
+                    display: block;
+                    font-size: .8em;
+                    text-align: right;
+
+                    &:before {
+                        /*
+                        * aria-label has no advantage, it won't be read inside a table
+                        content: attr(aria-label);
+                        */
+                        content: attr(data-label);
+                        float: left;
+                        @include bold-txt;
+                    }
+
+                    &:last-child {
+                        border-bottom: 0;
+                    }
+
+                    span.avatar {
+                        display: none;
+                    }
+
+                    span.name {
+                        margin-right: 0;
+                        max-width: 85%;
+                    }
+                }
+
+                td.role {
+                    font-size: .8em;
+                }
+
+                td.changescope {
+                    height: 40px;
+
+                    .members-scope-select-wrap{
+                        float: right;
+                        width: 40%;
+                        height: 25px;
+
+                        select.members-scope-select { 
+                            font-size: 1em;
+                        }
+                        
+                        img {
+                            margin: 3px 3px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.dark {
+
+    .popup-box.view-member-popup {
+        .popup-close {
+            background:url(./resources/cross-white-icon.svg) center center no-repeat rgba(255,255,255,0.1);
+        }
+    
+        .popup-box {
+            background-color:#333;
+        }
+    }
+}

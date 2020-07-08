@@ -26,6 +26,9 @@ const navbar = (props) => {
       case "groups":
         return <CometChatGroupList 
         item={props.item}
+        groupToLeave={props.groupToLeave}
+        groupToDelete={props.groupToDelete}
+        groupToUpdate={props.groupToUpdate}
         actionGenerated={props.actionGenerated}
         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatGroupList>;
       case "info":

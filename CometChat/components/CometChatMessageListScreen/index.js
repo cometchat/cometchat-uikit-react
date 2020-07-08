@@ -13,7 +13,6 @@ import CallScreen from "./CallScreen";
 class CometChatMessageListScreen extends React.PureComponent {
 
   state = {
-    viewdetailscreen: false,
     messageList: [],
     scrollToBottom: true,
     outgoingCall: null
@@ -23,13 +22,13 @@ class CometChatMessageListScreen extends React.PureComponent {
 
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
       
-      this.setState({ messageList: [], scrollToBottom: true, viewdetailscreen: false});
+      this.setState({ messageList: [], scrollToBottom: true});
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid) {
       
-      this.setState({ messageList: [], scrollToBottom: true, viewdetailscreen: false });
+      this.setState({ messageList: [], scrollToBottom: true });
     } else if(prevProps.type !== this.props.type) {
       
-      this.setState({ messageList: [], scrollToBottom: true, viewdetailscreen: false });
+      this.setState({ messageList: [], scrollToBottom: true });
     } 
 
   }
@@ -44,7 +43,7 @@ class CometChatMessageListScreen extends React.PureComponent {
         this.videoCall();
       break;
       case "viewDetail":
-        this.props.actionGenerated("viewDetail");//this.toggleUserDetail();
+        this.props.actionGenerated("viewDetail");
       break;
       default:
       break;
@@ -104,11 +103,6 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   }
 
-  toggleUserDetail = () => {
-    let viewdetail = !this.state.viewdetailscreen;
-    this.setState({viewdetailscreen: viewdetail});
-  }
-
   messageComposerActionHandler = (action, messages) => {
 
     if(action !== "messageComposed") {
@@ -117,7 +111,7 @@ class CometChatMessageListScreen extends React.PureComponent {
     this.appendMessage(messages);
   }
 
-  messageListActionHandler = (action, messages) => {
+  messageListActionHandler = (action, messages, key, ...otherProps) => {
 
     switch(action) {
       case "messageReceived":
@@ -131,6 +125,10 @@ class CometChatMessageListScreen extends React.PureComponent {
       break;
       case "messageDeleted":
         this.removeMessages(messages);
+      break;
+      case "groupUpdated":
+        this.groupUpdated(messages, key, ...otherProps);
+      break;
       default:
       break;
     }
@@ -161,6 +159,11 @@ class CometChatMessageListScreen extends React.PureComponent {
   //message status is updated
   updateMessages = (messages) => {
     this.setState({ messageList: messages });
+  }
+
+  groupUpdated = (message, key, ...otherProps) => {
+    this.appendMessage([message]);
+    this.props.actionGenerated("groupUpdated", message, key, ...otherProps);
   }
 
   callScreenAction = (action, call) => {

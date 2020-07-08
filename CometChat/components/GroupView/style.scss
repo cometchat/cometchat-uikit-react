@@ -1,7 +1,8 @@
-@import '../../resources/core';
+@import '../../resources/mixins';
+@import '../../resources/colors';
 
 
-.chat-ppl-listitem {
+.chat-ppl-listitem.groups {
     padding:13px 16px 0;
     position:relative;
     margin-top:-1px;
@@ -18,8 +19,6 @@
             width:24px;
             position:absolute;
             display:inline-block;
-
-            display:block;
             overflow:hidden;
             width:36px;
         }
@@ -32,7 +31,7 @@
     .chat-ppl-listitem-dtls {
         display:inline-block;
         flex:1 1 0;
-        padding-bottom:14px;
+        padding: 0;
         border-bottom:1px solid $light-background-border;
 
         .chat-ppl-listitem-name {
@@ -44,12 +43,13 @@
             overflow:hidden;
             text-overflow:ellipsis;
             white-space:nowrap;
+            margin: 7px 0;
         }
     }
 }
 
 .dark {
-    .chat-ppl-listitem-dtls {
+    .chat-ppl-listitem-dtls.groups {
         border-bottom:1px solid $dark-background-border;
     }
 } 

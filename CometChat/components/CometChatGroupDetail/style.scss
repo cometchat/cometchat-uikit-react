@@ -1,6 +1,7 @@
-@import '../../resources/core';
+@import '../../resources/mixins';
+@import '../../resources/colors';
 
-.ccl-dtls-panel-wrap {
+.ccl-dtls-panel-wrap.groupdetail {
 
     .ccl-right-panel-head-wrap { 
         padding:20px 16px;
@@ -51,7 +52,6 @@
                 display:inline-block;
                 width:88%;
                 vertical-align:middle;
-                @include semi-bold-text;
             }
 
             .ccl-dtls-grp-admin-cnt {
@@ -71,47 +71,51 @@
                 font-size:12px;
                 letter-spacing:-.1px;
                 line-height:20px;
-                text-transform:uppercase;
                 color:$secondary;
+                @include text-uppercase;
             }
+
             .chat-ppl-list-wrap {
 
                 .chat-ppl-listitem {
-                    padding:13px 16px 0;
                     position:relative;
                     margin-top:-1px;
                     cursor:pointer;
                     display:flex;
                     padding:13px 0 0;
-                }
-
-                .chat-ppl-listitem.add-member {
+                    @include clearfix;
 
                     .chat-ppl-thumbnail-wrap {
-                        padding:8px;
+                        display: inline-block;
+                        margin: 9px 9px 0 0;
+                        padding-bottom: 14px;
+                        width: 20px;
 
                         img {
-                            display:block;
-                            border-radius:18px;
+                            display: block;
                             overflow:hidden;
-                            width:20px;
+                            width: 20px;
                         }
                     }
 
                     .chat-ppl-listitem-dtls { 
                         float:left;
                         margin-top:9px;
+                        display: inline-block;
+                        flex: 1 1;
+                        padding-bottom: 14px;
                        
                         .chat-ppl-listitem-name {
+                            display: inline-block;
+                            vertical-align: middle;
+                            width: 72%;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            max-width: none;
                             font-size:15px;
                             font-weight:600;
                             letter-spacing:-.1px;
-                            display:block;
-                            max-width:147px;
                             overflow:hidden;
-                            text-overflow:ellipsis;
-                            white-space:nowrap;
-                            color: $blue;
                         }
 
                         .chat-ppl-listitem-role {
@@ -120,92 +124,32 @@
                             width:25%;
                             text-align:right;
                             font-size:12px;
+                            text-transform: capitalize;
                         }
                     }
                     
                 } 
             }
-        }
 
-        .ccl-dtls-section-list {
-
-            .ccl-dtls-section-listitem{
-
-                .ccl-dtls-section-listitem-link { 
-                    font-size:15px;
-                    letter-spacing:-.1px;
-                    line-height:20px;
-                    padding:6px 0;
-                    display:inline-block;
-                    color: $red; 
-                    @include semi-bold-text;
+            .ccl-dtls-section-list {
+    
+                .ccl-dtls-section-listitem{
+    
+                    .ccl-dtls-section-listitem-link { 
+                        font-size:15px;
+                        letter-spacing:-.1px;
+                        line-height:20px;
+                        padding:6px 0;
+                        display:inline-block;
+                        color: $red; 
+                        cursor: pointer;
+                        @include semi-bold-text;
+                    }
                 }
             }
-        }
-
-        .ccl-dtls-panel-media-fltr-wrap {
-            margin-top:8px;
-        
-            .ccl-dtls-panel-media-fltrs {
-                border-radius:8px;
-                background-color:rgba(20,20,20,0.08);
-                width:100%;
-                padding:2px;
-                margin-bottom:10px;
-            
-                .ccl-dtls-panel-media-fltr-btn { 
-                    display:inline-block;
-                    width:33.33%;
-                    float:left;
-                    font-size:13px;
-                    font-weight:500;
-                    letter-spacing:-.1px;
-                    line-height:18px;
-                    padding:5px;
-                    position:relative;
-                }
-                .ccl-dtls-panel-media-fltr-btn::before {
-                    content:"";
-                    position:absolute;
-                    display:block;
-                    width:2px;
-                    height:16px;
-                    background-color:rgba(20,20,20,0.12);
-                    right:-2px;
-                    top:6px;
-                }
-                .ccl-dtls-panel-media-fltr-btn.active {
-                    background-color:#fff;
-                    box-shadow:rgba(20,20,20,0.04) 0 3px 1px,rgba(20,20,20,0.12) 0 3px 8px;
-                    border-radius:7px;
-                }
-                .ccl-dtls-panel-media-fltr-btn:last-child::before,
-                .ccl-dtls-panel-media-fltr-btn.active::before {
-                    display:none;
-                }
-            }
-        
-        }
-
-        .ccl-dtls-panel-media-type-wrap {
-            .photos {
-                .ccl-dtls-panel-media-item { 
-                    display:inline-block;
-                    float:left;
-                    width:120px;
-                    border-radius:8px;
-                    overflow:hidden;
-                    margin-bottom:7px;
-                    width: 167px;
-                }
-                .ccl-dtls-panel-media-item:nth-child(2n+1) {
-                    margin-right:7px;
-                }
-            }
-        }
         }
     }
-
+}
 
 .dark {
     .chat-ppl-listitem-dtls {

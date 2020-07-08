@@ -116,87 +116,126 @@ class MessageList extends React.PureComponent {
   }
 
   //callback for listener functions
-  messageUpdated = (key, message, isReceipt) => {
+  messageUpdated = (key, message, ...otherProps) => {
 
-    if(key === enums.MESSAGE_DELETED) {
+    switch(key) {
 
-      if (this.props.type === 'group' 
-      && message.getReceiverType() === 'group'
-      && message.getReceiver().guid === this.props.item.guid) {
+      case enums.MESSAGE_DELETED:
+        this.messageDeleted(message);
+        break;
+      case enums.MESSAGE_DELIVERED:
+      case enums.MESSAGE_READ:
+        this.messageReadAndDelivered(message);
+        break;
+      case enums.TEXT_MESSAGE_RECEIVED:
+      case enums.MEDIA_MESSAGE_RECEIVED:
+      case enums.CUSTOM_MESSAGE_RECEIVED:
+        this.messageReceived(message);
+        break;
+      case enums.GROUP_MEMBER_SCOPE_CHANGED:
+      case enums.GROUP_MEMBER_JOINED:
+      case enums.GROUP_MEMBER_LEFT:
+      case enums.GROUP_MEMBER_ADDED:
+      case enums.GROUP_MEMBER_KICKED:
+      case enums.GROUP_MEMBER_BANNED:
+      case enums.GROUP_MEMBER_UNBANNED:
+        this.groupMemberUpdated(key, message, ...otherProps);
+        break;
+      default:
+        break;
+    }
+  }
 
-        this.props.actionGenerated("messageDeleted", [message]);
-          
-      } else if (this.props.type === 'user' 
-      && message.getReceiverType() === 'user'
-      && message.getSender().getUid() === this.props.item.uid) {
+  messageDeleted = (message) => {
 
-        this.props.actionGenerated("messageDeleted", [message]);
-      }
+    if (this.props.type === 'group' 
+    && message.getReceiverType() === 'group'
+    && message.getReceiver().guid === this.props.item.guid) {
 
-    } else if(key === enums.MESSAGE_DELIVERED || key === enums.MESSAGE_READ) {
+      this.props.actionGenerated("messageDeleted", [message]);
+        
+    } else if (this.props.type === 'user' 
+    && message.getReceiverType() === 'user'
+    && message.getSender().getUid() === this.props.item.uid) {
 
-      //read receipts
-      if (message.getReceiverType() === 'user'
-        && message.getSender().getUid() === this.props.item.uid
-        && message.getReceiver() === this.loggedInUser.uid) {
+      this.props.actionGenerated("messageDeleted", [message]);
+    }
+  }
 
-          let messageList = [...this.props.messages];
-          if (message.getReceiptType() === "delivery") {
+  messageReadAndDelivered = (message) => {
 
-            //search for same message
-            let msg = messageList.find((m, k) => m.id === message.messageId);
-            
-            //if found, update state
-            if(msg) {
-              msg["deliveredAt"] = message.getDeliveredAt();
-              this.props.actionGenerated("messageUpdated", messageList);
-            }
+    //read receipts
+    if (message.getReceiverType() === 'user'
+    && message.getSender().getUid() === this.props.item.uid
+    && message.getReceiver() === this.loggedInUser.uid) {
 
-          } else if (message.getReceiptType() === "read") {
+      let messageList = [...this.props.messages];
+      if (message.getReceiptType() === "delivery") {
 
-            //search for same message
-            let msg = messageList.find((m, k) => m.id === message.messageId);
-            //if found, update state
-            if(msg) {
-              msg["readAt"] = message.getReadAt();
-              this.props.actionGenerated("messageUpdated", messageList);
-            }
-          }
-
-      } else if (message.getReceiverType() === 'group' 
-        && message.getReceiver() === this.props.item.guid) {
-          //not implemented
-      }
-
-    } else if(key === enums.TEXT_MESSAGE_RECEIVED || key === enums.MEDIA_MESSAGE_RECEIVED || key === enums.CUSTOM_MESSAGE_RECEIVED) {
-
-      //new messages
-      if (this.props.type === 'group' 
-      && message.getReceiverType() === 'group'
-      && message.getReceiver().guid === this.props.item.guid) {
-
-        if(!message.getReadAt()) {
-          CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-        }
-        this.props.actionGenerated("messageReceived", [message]);
-          
-      } else if (this.props.type === 'user' 
-      && message.getReceiverType() === 'user'
-      && message.getSender().getUid() === this.props.item.uid) {
-
-        if(!message.getReadAt()) {
-          CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
+        //search for same message
+        let msg = messageList.find((m, k) => m.id === message.messageId);
+        
+        //if found, update state
+        if(msg) {
+          msg["deliveredAt"] = message.getDeliveredAt();
+          this.props.actionGenerated("messageUpdated", messageList);
         }
 
-        this.props.actionGenerated("messageReceived", [message]);
+      } else if (message.getReceiptType() === "read") {
+
+        //search for same message
+        let msg = messageList.find((m, k) => m.id === message.messageId);
+        //if found, update state
+        if(msg) {
+          msg["readAt"] = message.getReadAt();
+          this.props.actionGenerated("messageUpdated", messageList);
+        }
       }
 
+    } else if (message.getReceiverType() === 'group' 
+    && message.getReceiver() === this.props.item.guid) {
+      //not implemented
     }
 
-    
+  }
 
-    
-    
+  messageReceived = (message) => {
+
+    //new messages
+    if (this.props.type === 'group' 
+    && message.getReceiverType() === 'group'
+    && message.getReceiver().guid === this.props.item.guid) {
+
+      if(!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+      }
+      this.props.actionGenerated("messageReceived", [message]);
+        
+    } else if (this.props.type === 'user' 
+    && message.getReceiverType() === 'user'
+    && message.getSender().getUid() === this.props.item.uid) {
+
+      if(!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
+      }
+
+      this.props.actionGenerated("messageReceived", [message]);
+    }
+  }
+
+  groupMemberUpdated = (key, message, ...otherProps) => {
+
+    console.log("MessageList groupMemberUpdated key", key);
+    if (this.props.type === 'group' 
+    && message.getReceiverType() === 'group'
+    && message.getReceiver().guid === this.props.item.guid) {
+
+      if(!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+      }
+      
+      this.props.actionGenerated("groupUpdated", message, key, ...otherProps);
+    }
   }
 
   handleScroll = (e) => {
@@ -300,38 +339,24 @@ class MessageList extends React.PureComponent {
 
     let component;
 
-    if(this.loggedInUser.uid === message.sender.uid) {
-      
-      switch(message.category) {
-        case "message":
+    switch(message.category) {
+      case "action":
+        component = this.getActionMessageComponent(message);
+      break;
+      case "call":
+        component = this.getCallMessageComponent(message);
+      break;
+      case "message":
+        if(this.loggedInUser.uid === message.sender.uid) {
           component = this.getSenderMessageComponent(message);
-        break;
-        case "call":
-          component = this.getCallMessageComponent(message);
-        break;
-        case "action":
-          component = this.getActionMessageComponent(message);
-        break;
-        default:
-        break;
-      }
-
-    } else {
-
-      switch(message.category) {
-        case "message":
+        } else {
           component = this.getReceiverMessageComponent(message);
+        }
+      break;
+      default:
         break;
-        case "call":
-          component = this.getCallMessageComponent(message);
-        break;
-        case "action":
-          component = this.getActionMessageComponent(message);
-        break;
-        default:
-        break;
-      }
     }
+
     return component;
   }
 
