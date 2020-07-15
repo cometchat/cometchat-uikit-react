@@ -11,6 +11,17 @@
             margin:0;
             font-weight:700;
             letter-spacing:-.5px;
+            display: inline-block;
+        }
+
+        .cc1-right-panel-close {
+            cursor: pointer;
+            display: none;
+            background: url('./resources/navigate_before.svg') center center no-repeat;
+            width: 24px;
+            height: 24px;
+            float: left;
+            margin: 1px 10px 0 0;
         }
     }
 
@@ -49,8 +60,8 @@
                 font-size:12px;
                 letter-spacing:-.1px;
                 line-height:20px;
-                text-transform:uppercase;
                 color:$secondary;
+                @include text-uppercase;
             }
 
             .ccl-dtls-section-list {
@@ -76,6 +87,7 @@
         }
 
         .ccl-dtls-panel-section.privacy {
+            
             .ccl-dtls-section-list {
                 .ccl-dtls-section-listitem-link {
                     color: $red;
@@ -154,11 +166,11 @@
 
             }
         }
-        
-        
     }
 }
 
 @media (min-width : 320px) and (max-width : 767px) {
-    .ccl-right-panel-head-ttl{ text-align: center;margin-top: 15px;}
+	.cc1-right-panel-close {
+        display: block!important;
+    }
 }

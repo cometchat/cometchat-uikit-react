@@ -2,44 +2,38 @@
 @import '../../resources/colors';
 
 
-.chat-ppl-listitem.groups {
-    padding:13px 16px 0;
-    position:relative;
-    margin-top:-1px;
-    cursor:pointer;
-    display:flex;
+.group-listitem {
+    padding: 12px 0 0 12px;
+    position: relative;
+    cursor: pointer;
+    display: flex;
 
-    .chat-ppl-thumbnail-wrap {
+    .group-thumbnail-wrap {
         display:inline-block;
         width:36px;
         height:36px;
-        margin-right:7px;
 
         img { 
-            width:24px;
-            position:absolute;
             display:inline-block;
             overflow:hidden;
             width:36px;
         }
     }
 
-    .chat-ppl-thumbnail-wrap.grp-chat-ppl-thumbnail-wrap { 
-        position:relative;
-    }
-
-    .chat-ppl-listitem-dtls {
+    .group-listitem-dtls {
         display:inline-block;
         flex:1 1 0;
-        padding: 0;
-        border-bottom:1px solid $light-background-border;
+        margin: 0 12px;
+        padding-bottom: 12px;
+        width: calc(100% - 75px);
+        border-bottom: 1px solid $light-background-border;
 
-        .chat-ppl-listitem-name {
-            font-size:15px;
+        .group-listitem-name {
+            font-size: 1.5rem;
             font-weight:600;
             letter-spacing:-.1px;
             display:block;
-            max-width:147px;
+            max-width: 100%;
             overflow:hidden;
             text-overflow:ellipsis;
             white-space:nowrap;
@@ -49,7 +43,7 @@
 }
 
 .dark {
-    .chat-ppl-listitem-dtls.groups {
+    .group-listitem-dtls {
         border-bottom:1px solid $dark-background-border;
     }
 } 

@@ -421,8 +421,9 @@ class CometChatGroupDetail extends React.Component {
                     loggedinuser: this.state.user,
                     item: this.props.item
                 }}>
-                    <div className="ccl-dtls-panel-wrap groupdetail">
+                    <div className="ccl-dtls-panel-wrap">
                         <div className="ccl-right-panel-head-wrap">
+                            <div className="cc1-right-panel-close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
                             <h4 className="ccl-right-panel-head-ttl">Details</h4>
                         </div>
                         <div className="ccl-dtls-panel-body">
@@ -439,6 +440,7 @@ class CometChatGroupDetail extends React.Component {
                                 </div>
                             </div>
                             <div className="ccl-dtls-panel-section">
+                                <h6 className="ccl-dtls-panel-section-head">Options</h6>
                                 <div className="ccl-dtls-section-list">
                                     <div className="ccl-dtls-section-listitem"><span className="ccl-dtls-section-listitem-link" onClick={this.leaveGroup}>Leave Group</span></div>
                                     {deleteGroupBtn}

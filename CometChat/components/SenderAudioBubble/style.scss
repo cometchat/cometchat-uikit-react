@@ -1,0 +1,85 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cc1-chat-win-sndr-row {
+    text-align:right;
+    margin-bottom:16px;
+
+    .cc1-chat-win-msg-block {
+        flex: 1 1;
+        display: flex;
+        float: right;
+        flex-direction: column;
+
+        .cc1-chat-win-sndr-audio-action-wrap {
+            float: right;
+            @include clearfix;
+
+            .cc1-chat-win-sndr-audio-wrap {
+                display:inline-block;
+                background-color:$blue;
+                border-radius:12px;
+                padding:8px 12px;
+                float: right;
+
+                audio {
+                    max-width: 250px;
+                    display: inherit;
+                }
+            }
+
+            .trigger {
+                float: right;
+            }
+            
+            .cc1-chat-win-sndr-row-message-action {
+                display: none;
+                float: right;
+                position: relative;
+                width: 24px;
+                height: 24px;
+                background: url('./resources/more_vertical.svg') center center no-repeat;
+                top: 12px;
+                cursor: pointer;
+            }
+        }
+
+        .cc1-chat-win-msg-time-wrap {
+
+            .cc1-chat-win-replies {
+                display:inline-block;
+                font-size:11px;
+                font-weight:500;
+                letter-spacing:-.1px;
+                line-height:12px;
+                text-transform: lowercase;
+                padding: 0 10px;
+                color: $blue;
+                cursor: pointer;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+
+            .cc1-chat-win-timestamp {
+                display:inline-block;
+                font-size:11px;
+                font-weight:500;
+                letter-spacing:-.1px;
+                line-height:12px;
+                @include text-uppercase;
+
+                img {
+                    margin-left:3px;
+                    display:inline-block;
+                    vertical-align:bottom;
+                }
+            }
+        }
+
+        &:hover .cc1-chat-win-sndr-row-message-action {
+            display: block;
+        }
+    }
+}

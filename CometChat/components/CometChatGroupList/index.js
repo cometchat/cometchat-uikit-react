@@ -20,7 +20,8 @@ class CometChatGroupList extends React.Component {
     super(props);
     this.state = {
       grouplist: [],
-      createGroup: false
+      createGroup: false,
+      loading: false
     }
   }
 
@@ -135,6 +136,15 @@ class CometChatGroupList extends React.Component {
       this.props.onItemClick(group, 'group');
     }
   }
+
+  handleMenuClose = () => {
+
+    if(!this.props.actionGenerated) {
+      return false;
+    }
+
+    this.props.actionGenerated("closeMenuClicked")
+  }
   
   searchGroup = (e) => {
 
@@ -165,19 +175,22 @@ class CometChatGroupList extends React.Component {
 
   getGroups = () => {
 
+    this.setState({loading: true});
     new CometChatManager().getLoggedInUser().then(group => {
 
         this.GroupListManager.fetchNextGroups().then(groupList => {
 
           groupList.forEach(group => group = this.setAvatar(group));
-          this.setState({ grouplist: [...this.state.grouplist, ...groupList] });
+          this.setState({ grouplist: [...this.state.grouplist, ...groupList], loading: false });
 
         }).catch(error => {
           console.error("[CometChatGroupList] getGroups fetchNextGroups error", error);
+          this.setState({loading: false});
         });
 
     }).catch(error => {
       console.log("[CometChatGroupList] getUsers getLoggedInUser error", error);
+      this.setState({loading: false});
     });
   }
 
@@ -210,6 +223,13 @@ class CometChatGroupList extends React.Component {
 
   render() {
 
+    let loading = null;
+    if(this.state.loading) {
+      loading = (
+        <div className="loading-text">Loading...</div>
+      );
+    }
+
     const groups = this.state.grouplist.map((group, key) => {
 
       return (
@@ -222,14 +242,14 @@ class CometChatGroupList extends React.Component {
 
     let addgroup = null;
     if(!this.props.config || (this.props.config && this.props.config["group-create"])) {     
-      addgroup = (<span className="ccl-left-panel-head-edit-link" onClick={() => this.createGroupHandler(true)}></span>);
+      addgroup = (<div className="ccl-left-panel-head-edit-link" onClick={() => this.createGroupHandler(true)}></div>);
     }
 
     return (
-
       <React.Fragment>
         <div className="ccl-left-panel-head-wrap">
           <h4 className="ccl-left-panel-head-ttl">Groups</h4>
+          <div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>
           {addgroup}
         </div>
         <div className="ccl-left-panel-srch-wrap">
@@ -243,10 +263,8 @@ class CometChatGroupList extends React.Component {
             <input id="searchButton" type="button" className="search-btn" />
           </div>
         </div>
-        <div className="chat-ppl-list-ext-wrap groups" onScroll={this.handleScroll}>
-          <div className="chat-ppl-list-wrap">
-            {groups}
-          </div>
+        <div className="group-list-ext-wrap" onScroll={this.handleScroll}>
+          {groups}
         </div>
         <CometChatCreateGroup 
         open={this.state.createGroup} 

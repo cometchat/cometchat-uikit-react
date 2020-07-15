@@ -1,0 +1,136 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cc1-chat-win-file-popup {
+    left:0;
+    bottom:0;
+    position:relative;
+    width: 0;
+    border-radius:8px;
+    overflow:hidden;
+    z-index:1;
+    text-align:center;
+    opacity: 0;
+    transition: width 0.5s linear;
+
+    .cc1-chat-win-file-type-list {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
+        margin-top: 5px;
+    }
+
+    .cc1-chat-win-file-type-listitem {
+
+        width: 24px;
+        height: 24px;
+        background-color: $secondary;
+        cursor: pointer;
+
+        input {
+            display: none;
+        }
+    }
+
+    .cc1-chat-win-file-type-listitem.video {
+        -webkit-mask: url(./resources/video_upload_icon.svg) no-repeat 100% 100%;
+        mask: url(./resources/video_upload_icon.svg) no-repeat 100% 100%;
+        -webkit-mask-size: cover;
+        mask-size: cover;
+    }
+
+    .cc1-chat-win-file-type-listitem.audio {
+        -webkit-mask: url(./resources/audio_upload_icon.svg) no-repeat 100% 100%;
+        mask: url(./resources/audio_upload_icon.svg) no-repeat 100% 100%;
+        -webkit-mask-size: cover;
+        mask-size: cover;
+    }
+
+    .cc1-chat-win-file-type-listitem.image {
+        -webkit-mask: url(./resources/images_upload_icon.svg) no-repeat 100% 100%;
+        mask: url(./resources/images_upload_icon.svg) no-repeat 100% 100%;
+        -webkit-mask-size: cover;
+        mask-size: cover;
+    }
+
+    .cc1-chat-win-file-type-listitem.file {
+        -webkit-mask: url(./resources/document_upload_icon.svg) no-repeat 100% 100%;
+        mask: url(./resources/document_upload_icon.svg) no-repeat 100% 100%;
+        -webkit-mask-size: cover;
+        mask-size: cover;
+    }
+}
+
+.cc1-chat-win-file-popup.active {
+    width: 150px;
+    opacity: 1;
+}
+
+.cc1-chat-win-inpt-int-wrap {
+    display:flex;
+
+    .cc1-chat-win-inpt-attach { 
+        width: 50px;
+        text-align:center;
+
+        span {
+            padding:3px;
+            margin-top:7px;
+            display:inline-block;
+            width:20px;
+            height:20px;
+            background:url(./resources/rounded-plus-grey-icon.svg) center center no-repeat;
+            cursor: pointer;
+            img { 
+                display:none; 
+            }
+        }
+    }
+
+    .cc1-chat-win-inpt-wrap {
+        flex:1 1 0;
+        position:relative;
+    
+        .cc1-chat-win-inpt-box {
+            display:block;
+            width:100%;
+            border:0;
+            box-shadow:$grey 0 0 0 1px inset;
+            border-radius:8px;
+            background-color:$grey;
+            letter-spacing:-.1px;
+            line-height:20px;
+            padding:6px 36px 6px 12px;
+            @include font-15;
+        }
+
+        .cc1-chat-win-inpt-box.height {
+            height: 100px;
+        }
+
+    }
+
+    .cc1-chat-win-inpt-send { 
+        width:60px;
+        text-align:center;
+        
+        .cc1-chat-win-inpt-send-btn {
+            width:20px;
+            height:18px;
+            margin: 5px 10px;
+            display: block;
+            cursor: pointer;
+        }
+    
+    }
+}
+
+.dark {
+    .cc1-chat-win-inpt-box {
+        background-color:$light-grey;
+        box-shadow:$light-grey 0 0 0 1px inset;
+        color:#fff;
+    }
+}

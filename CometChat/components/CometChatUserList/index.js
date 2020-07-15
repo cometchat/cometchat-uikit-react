@@ -14,7 +14,8 @@ class CometChatUserList extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      userlist: []
+      userlist: [],
+      loading: false
     }
   }
 
@@ -77,6 +78,7 @@ class CometChatUserList extends React.PureComponent {
   }
 
   handleScroll = (e) => {
+
     const bottom =
       Math.round(e.currentTarget.scrollHeight - e.currentTarget.scrollTop) === Math.round(e.currentTarget.clientHeight);
     if (bottom) this.getUsers();
@@ -88,6 +90,15 @@ class CometChatUserList extends React.PureComponent {
       return;
 
     this.props.onItemClick(user, 'user');
+  }
+
+  handleMenuClose = () => {
+
+    if(!this.props.actionGenerated) {
+      return false;
+    }
+
+    this.props.actionGenerated("closeMenuClicked")
   }
   
   searchUsers = (e) => {
@@ -107,19 +118,22 @@ class CometChatUserList extends React.PureComponent {
 
   getUsers = () => {
 
+    this.setState({loading: true});
     new CometChatManager().getLoggedInUser().then((user) => {
 
       this.UserListManager.fetchNextUsers().then((userList) => {
         
         userList.forEach(user => user = this.setAvatar(user));
-        this.setState({ userlist: [...this.state.userlist, ...userList] });
+        this.setState({ userlist: [...this.state.userlist, ...userList], loading: false });
           
       }).catch((error) => {
         console.error("[CometChatUserList] getUsers fetchNext error", error);
+        this.setState({loading: false});
       });
 
     }).catch((error) => {
       console.log("[CometChatUserList] getUsers getLoggedInUser error", error);
+      this.setState({loading: false});
     });
   }
 
@@ -135,6 +149,13 @@ class CometChatUserList extends React.PureComponent {
   }
 
   render() {
+
+    let loading = null;
+    if(this.state.loading) {
+      loading = (
+        <div className="loading-text">Loading...</div>
+      );
+    }
     
     const userList = [...this.state.userlist];
     let currentLetter = "";
@@ -165,6 +186,7 @@ class CometChatUserList extends React.PureComponent {
     return (
       <React.Fragment>
         <div className="ccl-left-panel-head-wrap">
+          <div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>
           <h4 className="ccl-left-panel-head-ttl">Contacts</h4>
         </div>
         <div className="ccl-left-panel-srch-wrap">
@@ -180,9 +202,7 @@ class CometChatUserList extends React.PureComponent {
           </div>
         </div>
         <div className="chat-contact-list-ext-wrap" onScroll={this.handleScroll}>
-          <div className="chat-contact-list">
-            {users}
-          </div>
+          {users}
         </div>
       </React.Fragment>
     );

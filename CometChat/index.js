@@ -13,5 +13,6 @@ export { default as CometChatConversationList } from "./components/CometChatConv
 export { default as CometChatConversationListScreen } from "./components/CometChatConversationListScreen";
 
 export { default as CometChatUserInfoScreen } from "./components/CometChatUserInfoScreen";
+export { default as MessageThread } from "./components/MessageThread";
 
 export { default as CometChatUnified } from "./components/CometChatUnified";

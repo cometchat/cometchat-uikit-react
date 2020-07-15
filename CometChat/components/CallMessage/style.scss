@@ -1,0 +1,15 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cc1-chat-win-action-msg-wrap {
+  padding:8px 12px;
+  margin-bottom: 16px;
+  @include text-center;
+
+  .chat-txt-msg {
+      font-size: 1.5rem;
+      margin:0;
+      letter-spacing:-.1px;
+      line-height:20px;
+  }
+}

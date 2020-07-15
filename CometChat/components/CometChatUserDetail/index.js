@@ -22,6 +22,7 @@ class CometChatUserDetail extends React.Component {
             <div className="ccl-dtls-panel-wrap">
                 <div className="ccl-right-panel-head-wrap">
                     <h4 className="ccl-right-panel-head-ttl">Details</h4>
+                    <div className="cc1-right-panel-close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
                 </div>
                 <div className="ccl-dtls-panel-body">
                     {/* <div className="ccl-dtls-noti-sel-wrap">
@@ -36,7 +37,7 @@ class CometChatUserDetail extends React.Component {
                         </div>
                     </div> */}
                     <div className="ccl-dtls-panel-section privacy">
-                        <h6 className="ccl-dtls-panel-section-head ccl-secondary-color ccl-text-uppercase">Privacy &amp; Support</h6>
+                        <h6 className="ccl-dtls-panel-section-head">Options</h6>
                         <div className="ccl-dtls-section-list">
                             {/* <div className="ccl-dtls-section-listitem"><span className="ccl-dtls-section-listitem-link">Clear Chat</span></div> */}
                             <div className="ccl-dtls-section-listitem">{blockUserDisplay}</div>

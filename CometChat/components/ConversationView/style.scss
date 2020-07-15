@@ -1,59 +1,58 @@
 @import '../../resources/mixins';
 @import '../../resources/colors';
 
-.chat-ppl-listitem {
-    padding:13px 16px 0;
-    position:relative;
-    margin-top:-1px;
-    cursor:pointer;
-    display:flex;
+.chat-listitem {
+    padding: 12px 12px 0 12px;
+    position: relative;
+    cursor: pointer;
+    display: flex;
 
-    .chat-ppl-thumbnail-wrap {
+    .chat-thumbnail-wrap {
         display:inline-block;
-        width:36px;
-        height:36px;
-        margin-right:7px;
+        width: 36px;
+        height: 36px;
 
         img {
-            display:block;
+            display:inline-block;
             overflow:hidden;
             width:36px;
         }
     }
 
-    .chat-ppl-listitem-dtls { 
-        display:inline-block;
-        flex:1 1 0;
-        padding-bottom:14px;
-        border-bottom:1px solid #f7f7f7;
+    .chat-listitem-dtls { 
 
-        .chat-ppl-listitem-name { 
-            font-size:15px;
+        display: inline-block;
+        flex: 1 1;
+        margin: 0 12px;
+        padding-bottom: 12px;
+        width: calc(100% - 75px);
+        border-bottom: 1px solid $light-background-border;
+
+        .chat-listitem-name { 
+            font-size: 1.5rem;
             font-weight:600;
             letter-spacing:-.1px;
             display:block;
-            max-width:147px;
+            max-width: calc(100% - 70px);
             overflow:hidden;
             text-overflow:ellipsis;
             white-space:nowrap;
         }
 
-        .chat-ppl-listitem-txt {
+        .chat-listitem-txt {
             margin:0;
             font-size:13px;
-            max-width:176px;
+            max-width: calc(100% - 70px);
             overflow:hidden;
             text-overflow:ellipsis;
             white-space:nowrap;
-            letter-spacing:-.1px;
             line-height:20px;
             color: $secondary;
         }
     }
 
-    .chat-ppl-listitem-time {
+    .chat-listitem-time {
         font-size:12px;
-        letter-spacing:-.1px;
         text-transform:uppercase;
         display:block;
         position:absolute;
@@ -61,9 +60,8 @@
         top:15px;
         color: $secondary;
     }
-
 }
 
-.dark .chat-ppl-listitem-dtls {
-    border-bottom:1px solid #484848;
+.dark .chat-listitem-dtls {
+    border-bottom:1px solid $light-background-border;
 }

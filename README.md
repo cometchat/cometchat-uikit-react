@@ -26,7 +26,7 @@ To use this library, you need application keys from your CometChat account. If y
 1. Install CometChat SDK
 
 ```javascript
-    npm install @cometchat-pro/chat@2.0.11-beta1 --save
+    npm install @cometchat-pro/chat@2.0.12 --save
 ```
 
 2. See UI kit's package.json file and add the missing packages in your project's package.json file. 

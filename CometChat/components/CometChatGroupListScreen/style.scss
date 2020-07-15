@@ -1,6 +1,7 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
 
-
-.page-int-wrapper {
+.groups {
   display:flex;
   position: fixed;
   height: 100%;
@@ -8,143 +9,75 @@
 
   .ccl-left-panel { 
     width: 280px;
-    border-right:1px solid #eaeaea;
+    border-right:1px solid $light-background-border;
     height:100vh;
     position:relative;
   }
 
   .ccl-center-panel {
     height:100vh;
-    position: relative;
-    padding-top: 71px;
-    padding-bottom: 70px;
     flex: 1;
+    width: calc(100% - 680px);
+
+    h1 {
+      @include text-center;
+    }
   }
 
   .ccl-right-panel {
     float:right;
-    border-left: 1px solid #eaeaea;
+    border-left: 1px solid $light-background-border;
     height:100vh;
-    width: 280px;
+    width: 400px;
   }
 }
 
-// @import '../../resources/mixins';
-// @import '../../resources/colors';
-
-// .dark {
-//     background-color: $dark-background;
-
-
-//     .cp-lists-container{
-//         border-right: 1px solid $gray-darken;
-//     }
-//     .cp-center-text {
-//       color: $dark-primary-text;
-//     }
-// }
-
-// .light {
-
-//     background-color: $light-background;
-
-//     .cp-lists-container {
-//         border-right: 1px solid $gray-lighten;
-//     }
-//     .cp-center-text {
-//       color: $light-primary-text;
-//     }
-// }
-
-
-// //generic
-
-// .cp-lists-container {
-//     height: 100%;
-//     overflow: hidden;
-//     padding: 0px !important;
-// }
-// .cp-chat-container {
-//   height: 100%;
-//   overflow: hidden;
-//   padding: 0px !important;
-// }
-
-// .cp-lists{
-//     height: calc(100% - 55px);
-//     overflow: hidden;
-// }
-// .cp-center-text {
-//     position: absolute;
-//     float: left;
-//     top: 50%;
-//     left: 50%;
-//     transform: translate(-50%, -50%);
-//   }
-
-//   /* The switch - the box around the slider */
-// .switch {
-//     // position: relative;
-//     // display: inline-block;
-//     width: 48px;
-//     height: 22px;
-//     position: fixed;
-//     bottom: 0px;
-//     right: 0px;
-//   }
+@media (min-width : 320px) and (max-width : 767px) {
+	.ccl-left-panel {
+		position: absolute!important;
+		left: -100%;
+		top: 0;
+		bottom: 0;
+		width: 100%!important;
+    z-index: 2;
+    background-color: $white;
+		transition: all .3s ease-out;
+  }
+	.ccl-left-panel.active {
+		left: 0!important;
+    box-shadow: rgba(0,0,0,.4)-30px 0 30px 30px;
+  }
   
-//   /* Hide default HTML checkbox */
-//   .switch input {
-//     opacity: 0;
-//     width: 0;
-//     height: 0;
-//   }
+  .ccl-center-panel {
+    width: 100%;
+  }
   
-//   /* The slider */
-//   .slider {
-//     position: absolute;
-//     cursor: pointer;
-//     top: 0;
-//     left: 0;
-//     right: 0;
-//     bottom: 0;
-//     background-color: #ccc;
-//     -webkit-transition: .4s;
-//     transition: .4s;
-//   }
+  .ccl-right-panel {
+    position: absolute!important;
+		right: 0!important;
+		top: 0;
+		bottom: 0;
+		width: 100%!important;
+    z-index: 2;
+    background-color: $white;
+		transition: all .3s ease-out;
+  }
   
-//   .slider:before {
-//     position: absolute;
-//     content: "";
-//     height: 15px;
-//     width: 15px;
-//     left: 4px;
-//     bottom: 4px;
-//     background-color: white;
-//     -webkit-transition: .4s;
-//     transition: .4s;
-//   }
-  
-//   input:checked + .slider {
-//     background-color: #2196F3;
-//   }
-  
-//   input:focus + .slider {
-//     box-shadow: 0 0 1px #2196F3;
-//   }
-  
-//   input:checked + .slider:before {
-//     -webkit-transform: translateX(26px);
-//     -ms-transform: translateX(26px);
-//     transform: translateX(26px);
-//   }
-  
-//   /* Rounded sliders */
-//   .slider.round {
-//     border-radius: 34px;
-//   }
-  
-//   .slider.round:before {
-//     border-radius: 50%;
-//   }
+	.ccl-right-panel.active {
+		right: 0!important;
+    box-shadow: rgba(0,0,0,.4)-30px 0 30px 30px;
+	}
 
+}
+
+.groups.dark {
+  background-color: $dark-background;
+
+  .ccl-left-panel {
+    border-right:1px solid $dark-background-border;
+  }
+
+  .ccl-right-panel {
+    border-left: 1px solid $dark-background-border;
+  }
+}

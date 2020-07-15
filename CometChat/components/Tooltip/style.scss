@@ -1,0 +1,56 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cc1-chat-win-tooltip {
+    display: flex;
+    flex-direction: column;
+    font-size: 1.2rem;
+    margin:0;
+    padding:0;
+    list-style-type: none;
+    -webkit-margin-before: 0;
+    -webkit-margin-after: 0;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+    -webkit-padding-start: 0;
+
+    li {
+        margin: 5px 10px;
+        cursor: pointer;
+        span {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin: -3px 5px 0 0;
+            float: left;
+        }
+    }
+
+    li.reply {
+        span {
+            background: url(./resources/reply.svg) center center / 18px 19px no-repeat;
+        }
+    }
+
+    li.edit {
+        span {
+            background: url(./resources/edit.svg) center center / 18px 19px no-repeat;
+        }
+    }
+
+    li.delete {
+        span {
+            background: url(./resources/delete.svg) center center / 18px 19px no-repeat;
+        }
+    }
+}
+
+.tooltip-arrow[data-placement*='left']::after {
+    border-color: transparent transparent transparent silver;
+    left: 4px;
+}
+
+.tooltip-arrow[data-placement*='right']::after {
+    border-color: transparent silver transparent transparent;
+    left: 4px;
+}

@@ -1,0 +1,111 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+
+.cc1-left-panel-trigger {
+    cursor: pointer;
+    display: none;
+    background: url('./resources/menu-icon.svg') center center no-repeat;
+    padding: 20px;
+    width: 24px;
+    height: 24px;
+    float: left;
+}
+
+.cc1-chat-win-user {
+    display:inline-block;
+    float:left;
+    width: calc(100% - 125px);
+
+    .cc1-chat-win-user-thumb { 
+
+        display:inline-block;
+        width:36px;
+        height:36px;
+
+        img {
+            display:block;
+            width:36px;
+        } 
+    }
+
+    .cc1-chat-win-user-name-wrap {
+        display:inline-block;
+        max-width: calc(100% - 50px);
+        margin: 0 0 0 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        .cc1-chat-win-user-name {
+            margin:0;
+            font-size:15px;
+            font-weight:600;
+            letter-spacing:-.1px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cc1-chat-win-user-status {
+            font-size:13px;
+            letter-spacing:-.1px;
+            line-height:20px;
+        }
+
+        .cc1-chat-win-user-status.ccl-blue-color {
+            color: $blue;
+        }
+
+        .cc1-chat-win-user-status.ccl-secondary-color {
+            color: $secondary;
+        }
+        
+        .cc1-chat-win-user-status.capitalize {
+            text-transform: capitalize;
+        }
+
+        .cc1-chat-win-user-status.offline {
+            color: $secondary;
+        }
+    }
+}
+
+.cc1-chat-win-con-opt-wrap {
+    display: inline-block;
+    float: left;
+    padding: 8px 0;
+
+    .cc1-chat-win-con-opt {
+        display:inline-block;
+        width:20px;
+        height:20px;
+        padding:2px;
+        margin-left:20px;
+        cursor: pointer;
+    }
+
+    .cc1-chat-win-con-opt.call {
+        background:url(./resources/call-blue-icon.svg) center center no-repeat;
+    }
+
+    .cc1-chat-win-con-opt.video-call {
+        background:url(./resources/video-call-blue-icon.svg) center center no-repeat;
+    }
+
+    .cc1-chat-win-con-opt.details {
+        background:url(./resources/details-pane-blue-icon.svg) center center no-repeat;
+    }
+}
+
+@media (min-width : 320px) and (max-width : 767px) {
+
+    .cc1-left-panel-trigger {
+        display: block;
+    }
+
+    .cc1-chat-win-user {
+        width: calc(100% - 170px);
+    }
+}

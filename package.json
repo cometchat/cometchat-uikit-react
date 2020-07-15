@@ -4,9 +4,10 @@
   "description": "Chat UI Kit for React App",
   "author": "Inscripts",
   "dependencies": {
-    "@cometchat-pro/chat": "^2.0.11-beta1",
+    "@cometchat-pro/chat": "^2.0.12",
     "node-sass": "^4.12.1",
-    "classnames": "^2.2.6"
+    "classnames": "^2.2.6",
+    "react-popper-tooltip": "3.1.0"
   },
   "peerDependencies": {
     "react": "^16.13.1",

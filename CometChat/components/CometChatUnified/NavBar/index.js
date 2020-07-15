@@ -16,12 +16,14 @@ const navbar = (props) => {
       case "contacts":
         return <CometChatUserList 
         item={props.item}
+        actionGenerated={props.actionGenerated}
         userStatusChanged={(item) => props.actionGenerated("userStatusChanged", "user", item)}
         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatUserList>;
       case "calls":
         return "calls";
       case "conversations":
         return <CometChatConversationList 
+        actionGenerated={props.actionGenerated}
         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatConversationList>;
       case "groups":
         return <CometChatGroupList 

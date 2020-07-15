@@ -1,0 +1,97 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cc1-chat-win-rcvr-row {
+    margin-bottom: 16px;
+
+    .cc1-chat-win-msg-block {
+        display:inline-block;
+        position:relative;
+
+        .cc1-chat-win-rcvr-thumbnail-wrap {
+            width: 36px;
+            float: left;
+            margin: 7px 0;
+        }
+
+        .cc1-chat-win-rcvr-dtls {
+            margin: 0 5px;
+            flex: 1 1;
+            display: flex;
+            flex-direction: column;
+
+            .cc1-chat-win-rcvr-name-wrap {
+
+                .cc1-chat-win-rcvr-name {
+                    font-size: 10px;
+                    color: $secondary;
+                }
+            }
+
+            .cc1-chat-win-rcvr-audio-action-wrap {
+                float: right;
+                @include clearfix;
+
+                .cc1-chat-win-rcvr-audio-wrap {
+                    display:inline-block;
+                    background-color:rgba(248,248,248,0.92);
+                    border-radius: 12px;
+                    padding: 8px 12px;
+                    float: left;
+
+                    audio {
+                        max-width: 250px;
+                        display: inherit;
+                    }
+                }
+
+                .trigger {
+                    float: left;
+                }
+            
+                .cc1-chat-win-rcvr-row-message-action {
+                    display: none;
+                    float: right;
+                    position: relative;
+                    width: 24px;
+                    height: 24px;
+                    background: url('./resources/more_vertical.svg') center center no-repeat;
+                    top: 12px;
+                    cursor: pointer;
+                }
+            }
+            .cc1-chat-win-msg-time-wrap {
+        
+                .cc1-chat-win-timestamp {
+                    display:inline-block;
+                    font-size:11px;
+                    font-weight:500;
+                    letter-spacing:-.1px;
+                    line-height:12px;
+                    text-transform:uppercase;
+                    color: $secondary;
+                }
+
+                .cc1-chat-win-replies {
+                    display:inline-block;
+                    font-size:11px;
+                    font-weight:500;
+                    letter-spacing:-.1px;
+                    line-height:12px;
+                    text-transform: lowercase;
+                    padding: 0 10px;
+                    cursor: pointer;
+                    color: $blue;
+    
+                    &:hover {
+                        text-decoration: underline;
+                    }
+                }
+            }
+
+            &:hover .cc1-chat-win-rcvr-row-message-action {
+                display: block;
+            }
+        } 
+    }
+}

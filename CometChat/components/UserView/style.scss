@@ -1,52 +1,48 @@
 @import '../../resources/mixins';
 @import '../../resources/colors';
 
-.chat-contact-listitem {
-
-    padding: 12px 0;
+.contact-listitem {
+    padding: 12px 0 0 12px;
     cursor:pointer;
 
-    .chat-contact-listitem-thum {
+    .contact-thumbnail-wrap {
         display:inline-block;
-        width:28px;
-        vertical-align:middle;
-        margin-right:8px;
+        width:36px;
+        height:36px;
 
         img {
-            width:28px;
-            height:28px;
-            overflow: hidden;
-            display: inherit;
+            display:inline-block;
+            overflow:hidden;
+            width:36px;
         }
     }
 
-    .chat-contact-listitem-name {
-        display:inline-block;
-        font-size: 15px;
-        vertical-align:middle;
-        width: 195px;
-        position:relative;
-        letter-spacing:-.1px;
-        line-height:22px;
-        @include semi-bold-text;
-    }
+    .contact-listitem-dtls {
+        display: inline-block;
+        flex: 1 1;
+        margin: 0 0 0 12px;
+        padding: 3px;
+        width: calc(100% - 50px);
+        border-bottom: 1px solid $light-background-border;
 
-    .chat-contact-listitem-name::before {
-        content:"";
-        display:block;
-        width:100%;
-        height:1px;
-        background-color: $light-border;
-        position:absolute;
-        left:0;
-        bottom:-18px;
+        .contact-listitem-name {
+            font-size: 1.5rem;
+            font-weight:600;
+            letter-spacing:-.1px;
+            display:block;
+            max-width: 100%;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+            margin-bottom: 12px;
+        }
     }
 }
 
 .dark {
-    .chat-contact-listitem {
-        .chat-contact-listitem-name::before {
-            background-color:$dark-border;
+    .contact-listitem {
+        .contact-listitem-name::before {
+            background-color: $dark-border;
         }
     }
 }

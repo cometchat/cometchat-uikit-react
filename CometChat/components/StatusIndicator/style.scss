@@ -1,0 +1,15 @@
+.presence {
+    width: 9px;
+    height: 9px;
+    top: -12px;
+    float: right;
+    position: relative;
+}
+
+.presence.online {
+    background-color: rgb(0, 255, 0);
+}
+
+.presence.offline {
+    background-color: rgb(85, 85, 85);
+}

@@ -8,48 +8,51 @@ import { CometChatManager } from "../../util/controller";
 import CometChatGroupList from "../CometChatGroupList";
 import CometChatMessageListScreen from "../CometChatMessageListScreen";
 import CometChatGroupDetail from "../CometChatGroupDetail";
-
+import MessageThread from "../MessageThread";
 
 class CometChatGroupListScreen extends React.Component {
 
-  state = {
-    darktheme: false,
-    viewdetailscreen: false,
-    item: {},
-    type: "group",
-    tab: "groups",
-    groupToDelete: {},
-    groupToLeave: {},
-    groupToUpdate: {},
-    groupUpdated: {}
-  }
+  constructor(props) {
+		super(props);
 
-  changeTheme = (e) => {
+    this.leftPanelRef = React.createRef();
 
-    const theme = this.state.darktheme;
-    this.setState({darktheme: !theme});
-
-  }
-
-  onItemClicked = (item, type) => {
-    this.setState({ item: {...item}, type, viewdetailscreen: false });
-  }
-
-  groupScreenAction = (action, type, item) => {
-
-    switch(action) {
-      case "groupMemberLeft":
-        this.appendMessage(item);
-      break;
-      case "groupMemberJoined":
-        this.appendMessage(item);
-      break;
-      default:
-      break;
+    this.state = {
+      darktheme: false,
+      viewdetailscreen: false,
+      item: {},
+      type: "group",
+      tab: "groups",
+      groupToDelete: {},
+      groupToLeave: {},
+      groupToUpdate: {},
+      groupUpdated: {},
+      threadmessageview: false,
+      threadmessagetype: null,
+      threadmessageitem: {},
+      threadmessageparent: {},
+      composedthreadmessage: {}
     }
   }
 
-  viewDetailActionHandler = (action, item, count, ...otherProps) => {
+  componentDidMount() {
+
+    if(!Object.keys(this.state.item).length) {
+      this.toggleSideBar();
+    }
+  }
+
+  changeTheme = (e) => {
+    const theme = this.state.darktheme;
+    this.setState({darktheme: !theme});
+  }
+
+  onItemClicked = (item, type) => {
+    this.toggleSideBar();
+    this.setState({ item: {...item}, type, viewdetailscreen: false });
+  }
+
+  actionHandler = (action, item, count, ...otherProps) => {
     
     switch(action) {
       case "blockUser":
@@ -59,6 +62,7 @@ class CometChatGroupListScreen extends React.Component {
         this.unblockUser();
       break;
       case "viewDetail":
+      case "closeDetailClicked":
         this.toggleDetailView();
       break;
       case "groupDeleted": 
@@ -72,6 +76,23 @@ class CometChatGroupListScreen extends React.Component {
       break;
       case "groupUpdated":
         this.groupUpdated(item, count, ...otherProps);
+      break;
+      case "menuClicked":
+      case "closeMenuClicked":
+        this.toggleSideBar();
+      break;
+      case "groupMemberLeft":
+      case "groupMemberJoined":
+        this.appendMessage(item);
+      break;
+      case "viewMessageThread":
+        this.viewMessageThread(item);
+      break;
+      case "closeThreadClicked":
+        this.closeThreadMessages();
+      break;
+      case "threadMessageComposed":
+        this.onThreadMessageComposed(item);
       break;
       default:
       break;
@@ -101,12 +122,22 @@ class CometChatGroupListScreen extends React.Component {
       }).catch(error => {
       console.log("unblocking user fails with error", error);
     });
+  }
 
+  toggleSideBar = () => {
+
+    const elem = this.leftPanelRef.current;
+
+		if(elem.classList.contains('active')) {
+			elem.classList.remove('active');
+		} else {
+			elem.classList.add('active');
+		}
   }
 
   toggleDetailView = () => {
     let viewdetail = !this.state.viewdetailscreen;
-    this.setState({viewdetailscreen: viewdetail});
+    this.setState({viewdetailscreen: viewdetail,  threadmessageview: false});
   }
 
   deleteGroup = (group) => {
@@ -134,7 +165,53 @@ class CometChatGroupListScreen extends React.Component {
     this.setState({groupUpdated: groupUpdated});
   }
 
+  closeThreadMessages = () => {
+    this.setState({viewdetailscreen: false,  threadmessageview: false});
+  }
+
+  viewMessageThread = (parentMessage) => {
+
+    const message = {...parentMessage};
+    const threaditem = {...this.state.item};
+    this.setState({
+      threadmessageview: true, 
+      threadmessageparent: message, 
+      threadmessageitem: threaditem,
+      threadmessagetype: this.state.type, 
+      viewdetailscreen: false
+    });
+  }
+
+  onThreadMessageComposed = (composedMessage) => {
+
+    if(this.state.type !== this.state.threadmessagetype) {
+      return false;
+    }
+
+    if((this.state.threadmessagetype === "group" && this.state.item.guid !== this.state.threadmessageitem.guid)
+    || (this.state.threadmessagetype === "user" && this.state.item.uid !== this.state.threadmessageitem.uid)) {
+      return false;
+    }
+
+    const message = {...composedMessage};
+    this.setState({composedthreadmessage: message});
+  }
+
   render() {
+
+    let threadMessageView = null;
+    if(this.state.threadmessageview) {
+      threadMessageView = (
+        <div className="ccl-right-panel" ref={this.rightPanelRef}>
+          <MessageThread
+          tab={this.state.tab}
+          item={this.state.threadmessageitem}
+          type={this.state.threadmessagetype}
+          parentMessage={this.state.threadmessageparent}
+          actionGenerated={this.actionHandler} />
+        </div>
+      );
+    }
 
     let detailScreen;
     if(this.state.viewdetailscreen) {
@@ -145,7 +222,7 @@ class CometChatGroupListScreen extends React.Component {
           item={this.state.item} 
           type={this.state.type}
           groupUpdated={this.state.groupUpdated}
-          actionGenerated={this.viewDetailActionHandler} />
+          actionGenerated={this.actionHandler} />
         </div>
       );
       
@@ -153,35 +230,36 @@ class CometChatGroupListScreen extends React.Component {
 
     let messageScreen = (<h1 className="cp-center-text">Select a chat to start messaging</h1>);
     if(Object.keys(this.state.item).length) {
-      messageScreen = (<CometChatMessageListScreen 
+      messageScreen = (
+        <CometChatMessageListScreen 
         item={this.state.item} 
         tab={this.state.tab}
         type={this.state.type}
         membersCount={this.state.groupMembersCount}
-        actionGenerated={this.viewDetailActionHandler} />);
+        composedthreadmessage={this.state.composedthreadmessage}
+        actionGenerated={this.actionHandler} />
+      );
     }
 
     const wrapperClassName = classNames({
-      "page-int-wrapper": true,
+      "groups": true,
       "dark": this.state.darktheme
     });
 
     return (
-
-      <div className="page-wrapper">
-        <div className={wrapperClassName}>
-          <div className="ccl-left-panel">
-            <CometChatGroupList
-            item={this.state.item}
-            groupToDelete={this.state.groupToDelete}
-            groupToLeave={this.state.groupToLeave}
-            groupToUpdate={this.state.groupToUpdate}
-            actionGenerated={this.groupScreenAction}
-            onItemClick={this.onItemClicked} />
-          </div>
-          <div className="ccl-center-panel ccl-chat-center-panel">{messageScreen}</div>
-          {detailScreen}
+      <div className={wrapperClassName}>
+        <div className="ccl-left-panel" ref={this.leftPanelRef}>
+          <CometChatGroupList
+          item={this.state.item}
+          groupToDelete={this.state.groupToDelete}
+          groupToLeave={this.state.groupToLeave}
+          groupToUpdate={this.state.groupToUpdate}
+          actionGenerated={this.actionHandler}
+          onItemClick={this.onItemClicked} />
         </div>
+        <div className="ccl-center-panel ccl-chat-center-panel">{messageScreen}</div>
+        {detailScreen}
+        {threadMessageView}
       </div>
     );
   }

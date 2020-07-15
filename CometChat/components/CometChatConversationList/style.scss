@@ -10,17 +10,30 @@
         margin:0;
         font-weight:700;
         letter-spacing:-.5px;
+        display: inline-block;
+    }
+
+    .cc1-left-panel-close {
+        cursor: pointer;
+        display: none;
+        background: url('./resources/navigate_before.svg') center center no-repeat;
+        width: 24px;
+        height: 24px;
+        float: left;
+        margin: 0 10px 0 0;
     }
 }
 
 .chat-ppl-list-ext-wrap {
-    height:calc(100vh - 164px);
+    height: calc(100vh - 75px);
     overflow-y:auto;
-}
 
-@media (min-width : 320px) and (max-width : 767px) {
-
-    .ccl-left-panel-head-ttl {
-        text-align:center;
+    .loading-text {
+        height: 20px;
+        color:$secondary;
+        margin: 0 auto;
+        width: 100px;
+        text-align: center;
+        font-size: 1.5rem;
     }
 }

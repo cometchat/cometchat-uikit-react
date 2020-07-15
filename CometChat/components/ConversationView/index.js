@@ -6,6 +6,7 @@ import "./style.scss";
 
 import Avatar from "../Avatar";
 import BadgeCount from "../BadgeCount";
+import StatusIndicator from "../StatusIndicator";
 
 const conversationview = (props) => {
 
@@ -116,7 +117,7 @@ const conversationview = (props) => {
 
   const getAvatar = () => {
 
-    let avatar = "";
+    let avatar;
     if(props.conversation.getConversationType() === "user") {
       avatar = props.conversation.getConversationWith().getAvatar();
     } else if (props.conversation.getConversationType() === "group") {
@@ -128,23 +129,36 @@ const conversationview = (props) => {
   let lastMessageTimeStamp = "";
   if(props.conversation.lastMessage) {
     lastMessageTimeStamp = (
-      <span className="chat-ppl-listitem-time">{new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+      <span className="chat-listitem-time">{new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+    );
+  }
+
+  let presence;
+  if(props.conversation.getConversationType() === "user") {
+    const status = props.conversation.getConversationWith().getStatus();
+    presence = (
+      <StatusIndicator
+      status={status}
+      cornerRadius="50%" 
+      borderColor="rgb(238, 238, 238)" 
+      borderWidth="1px" />
     );
   }
     
   return (
 
-    <div className="chat-ppl-listitem">
-      <div className="chat-ppl-thumbnail-wrap">
+    <div className="chat-listitem">
+      <div className="chat-thumbnail-wrap">
         <Avatar 
         image={getAvatar()}
         cornerRadius="18px" 
         borderColor="#CCC"
-        borderWidth="1px"></Avatar>
+        borderWidth="1px" />
+        {presence}
       </div>
-      <div className="chat-ppl-listitem-dtls">
-        <span className="chat-ppl-listitem-name">{props.conversation.conversationWith.name}</span>
-        <p className="chat-ppl-listitem-txt">{getLastMessage()} </p>
+      <div className="chat-listitem-dtls">
+        <div className="chat-listitem-name">{props.conversation.conversationWith.name}</div>
+        <p className="chat-listitem-txt">{getLastMessage()} </p>
       </div>
       {lastMessageTimeStamp}
       <BadgeCount count={props.conversation.unreadMessageCount}></BadgeCount>

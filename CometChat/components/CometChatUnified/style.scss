@@ -1,7 +1,7 @@
 @import '../../resources/mixins';
 @import '../../resources/colors';
 
-.page-int-wrapper {
+.unified {
   display:flex;
   position: fixed;
   height: 100%;
@@ -9,17 +9,24 @@
 
   .ccl-left-panel { 
     width: 280px;
-    border-right:1px solid #eaeaea;
+    border-right:1px solid $light-background-border;
     height:100vh;
     position:relative;
+
+    .chat-contact-list-ext-wrap,
+    .group-list-ext-wrap {
+      height: calc(100vh - 175px);
+    }
+
+    .chat-ppl-list-ext-wrap {
+      height: calc(100vh - 125px);
+    }
   }
 
   .ccl-center-panel {
     height:100vh;
-    position: relative;
-    padding-top: 71px;
-    padding-bottom: 70px;
     flex: 1;
+    width: calc(100% - 680px);
 
     h1 {
       @include text-center;
@@ -28,8 +35,46 @@
 
   .ccl-right-panel {
     float:right;
-    border-left: 1px solid #eaeaea;
+    border-left: 1px solid $light-background-border;
     height:100vh;
-    width: 280px;
+    width: 400px;
   }
+}
+
+@media (min-width : 320px) and (max-width : 767px) {
+	.ccl-left-panel {
+		position: absolute!important;
+		left: -100%;
+		top: 0;
+		bottom: 0;
+		width: 100%!important;
+    z-index: 2;
+    background-color: $white;
+		transition: all .3s ease-out;
+  }
+	.ccl-left-panel.active {
+		left: 0!important;
+    box-shadow: rgba(0,0,0,.4)-30px 0 30px 30px;
+  }
+  
+  .ccl-center-panel {
+    width: 100%;
+  }
+  
+  .ccl-right-panel {
+    position: absolute!important;
+		right: 0!important;
+		top: 0;
+		bottom: 0;
+		width: 100%!important;
+    z-index: 2;
+    background-color: $white;
+		transition: all .3s ease-out;
+  }
+  
+	.ccl-right-panel.active {
+		right: 0!important;
+    box-shadow: rgba(0,0,0,.4)-30px 0 30px 30px;
+	}
+
 }

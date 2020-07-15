@@ -5,10 +5,10 @@ import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../util/controller";
 
-import MessageHeader from "./MessageHeader";
-import MessageList from "./MessageList";
-import MessageComposer from "./MessageComposer";
-import CallScreen from "./CallScreen";
+import MessageHeader from "../MessageHeader";
+import MessageList from "../MessageList";
+import MessageComposer from "../MessageComposer";
+import CallScreen from "../CallScreen";
 
 class CometChatMessageListScreen extends React.PureComponent {
 
@@ -23,13 +23,19 @@ class CometChatMessageListScreen extends React.PureComponent {
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
       
       this.setState({ messageList: [], scrollToBottom: true});
+
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid) {
       
       this.setState({ messageList: [], scrollToBottom: true });
+
     } else if(prevProps.type !== this.props.type) {
       
       this.setState({ messageList: [], scrollToBottom: true });
-    } 
+
+    } else if(prevProps.composedthreadmessage !== this.props.composedthreadmessage) {
+
+      this.updateReplyCount(this.props.composedthreadmessage);
+    }
 
   }
 
@@ -44,6 +50,9 @@ class CometChatMessageListScreen extends React.PureComponent {
       break;
       case "viewDetail":
         this.props.actionGenerated("viewDetail");
+      break;
+      case "menuClicked":
+        this.props.actionGenerated("menuClicked");
       break;
       default:
       break;
@@ -103,19 +112,21 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   }
 
-  messageComposerActionHandler = (action, messages) => {
-
-    if(action !== "messageComposed") {
-      return false;
-    }
-    this.appendMessage(messages);
-  }
-
-  messageListActionHandler = (action, messages, key, ...otherProps) => {
-
+  actionHandler = (action, messages, key, ...otherProps) => {
+    
     switch(action) {
-      case "messageReceived":
-        this.appendMessage(messages);
+      case "messageReceived": {
+
+        const message = messages[0];
+        if(message.parentMessageId) {
+          this.updateReplyCount(messages);
+        } else {
+          this.appendMessage(messages);
+        }
+      }
+      break;
+      case "messageComposed":
+        this.appendMessage(messages); 
       break;
       case "messageUpdated":
         this.updateMessages(messages);
@@ -126,13 +137,15 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "messageDeleted":
         this.removeMessages(messages);
       break;
+      case "viewMessageThread":
+        this.props.actionGenerated("viewMessageThread", messages);
+      break;
       case "groupUpdated":
         this.groupUpdated(messages, key, ...otherProps);
       break;
       default:
       break;
     }
-
   }
 
   //messages are deleted
@@ -180,6 +193,28 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   }
 
+  updateReplyCount = (messages) => {
+
+    const receivedMessage = messages[0];
+
+    const messageList = [...this.state.messageList];
+
+    let messageIndex = -1, messageFound = {};
+    messageList.forEach((message, index) => {
+
+      if(message.id === receivedMessage.parentMessageId) {
+
+        messageIndex = index;
+        let replyCount = (message.replyCount) ? message.replyCount : 0;
+        messageFound = Object.assign({}, message, {"replyCount": ++replyCount});
+      }
+
+    });
+    
+    messageList.splice(messageIndex, 1, messageFound);
+    this.setState({messageList: [...messageList], scrollToBottom: false});
+  }
+
   render() {
 
     return (
@@ -197,12 +232,13 @@ class CometChatMessageListScreen extends React.PureComponent {
           item={this.props.item} 
           type={this.props.type}
           scrollToBottom={this.state.scrollToBottom}
-          config={this.props.config}
-          actionGenerated={this.messageListActionHandler}></MessageList>
+          messageconfig={this.props.messageconfig}
+          widgetconfig={this.props.widgetconfig}
+          actionGenerated={this.actionHandler}></MessageList>
         <MessageComposer 
           item={this.props.item} 
           type={this.props.type}
-          actionGenerated={this.messageComposerActionHandler}></MessageComposer>
+          actionGenerated={this.actionHandler}></MessageComposer>
         <CallScreen className="callscreen"
           item={this.props.item} 
           type={this.props.type}

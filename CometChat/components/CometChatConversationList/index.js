@@ -17,7 +17,8 @@ class CometChatConversationList extends React.Component {
     this.state = {
       conversationlist: [],
       onItemClick: null,
-      selectedConversation: undefined
+      selectedConversation: undefined,
+      loading: false
     }
   }
 
@@ -96,21 +97,33 @@ class CometChatConversationList extends React.Component {
     this.setState({ selectedConversation: conversation });
   }
 
+  handleMenuClose = () => {
+
+    if(!this.props.actionGenerated) {
+      return false;
+    }
+
+    this.props.actionGenerated("closeMenuClicked")
+  }
+
   getConversations = () => {
 
+    this.setState({loading: true});
     new CometChatManager().getLoggedInUser().then(conversation => {
 
         this.ConversationListManager.fetchNextConversation().then(conversationList => {
 
           conversationList.forEach(conv => conv = this.setAvatar(conv));
-          this.setState({ conversationlist: [...this.state.conversationlist, ...conversationList] });
+          this.setState({ conversationlist: [...this.state.conversationlist, ...conversationList], loading: false });
 
         }).catch(error => {
           console.error("[CometChatConversationList] getConversations fetchNext error", error);
+          this.setState({loading: false});
         });
 
       }).catch(error => {
         console.log("[CometChatConversationList] getConversations getLoggedInUser error", error);
+        this.setState({loading: false});
     });
   }
 
@@ -134,6 +147,13 @@ class CometChatConversationList extends React.Component {
 
   render() {
 
+    let loading = null;
+    if(this.state.loading) {
+      loading = (
+        <div className="loading-text">Loading...</div>
+      );
+    }
+
     const conversationList = this.state.conversationlist.map((conversation, key) => {
       return (
         <div id={key} onClick={() => this.handleClick(conversation)} key={key} className="clearfix">
@@ -147,14 +167,14 @@ class CometChatConversationList extends React.Component {
     });
 
     return (
-
       <React.Fragment>
         <div className="ccl-left-panel-head-wrap">
           <h4 className="ccl-left-panel-head-ttl">Chats</h4>
+          <div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>
         </div>
         <div className="chat-ppl-list-ext-wrap" onScroll={this.handleScroll}>
-        <div className="chat-ppl-list-wrap">{conversationList}</div>
-      </div>
+          {conversationList}
+        </div>
       </React.Fragment>
     );
   }

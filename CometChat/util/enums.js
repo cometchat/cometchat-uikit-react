@@ -22,3 +22,9 @@ export const GROUP_MEMBER_UNBANNED = "onGroupMemberUnbanned";
 export const GROUP_MEMBER_ADDED = "onMemberAddedToGroup";
 export const GROUP_MEMBER_LEFT = "onGroupMemberLeft";
 export const GROUP_MEMBER_JOINED = "onGroupMemberJoined";
+
+export const USER_ONLINE = "onUserOnline";
+export const USER_OFFLINE = "onUserOffline";
+
+export const TYPING_STARTED = "onTypingStarted";
+export const TYPING_ENDED = "onTypingEnded";

@@ -1,7 +1,7 @@
 @import '../../resources/mixins';
 @import '../../resources/colors';
 
-.ccl-dtls-panel-wrap.groupdetail {
+.ccl-dtls-panel-wrap {
 
     .ccl-right-panel-head-wrap { 
         padding:20px 16px;
@@ -11,6 +11,16 @@
             margin:0;
             font-weight:700;
             letter-spacing:-.5px;
+        }
+
+        .cc1-right-panel-close {
+            cursor: pointer;
+            display: none;
+            background: url('./resources/navigate_before.svg') center center no-repeat;
+            width: 24px;
+            height: 24px;
+            float: left;
+            margin: 1px 10px 0 0;
         }
     }
 
@@ -41,30 +51,8 @@
             }
         }
 
-        .ccl-dtls-grp-admin-cnt-wrap {
-            margin-top:-10px;
-            margin-bottom:30px;
-        
-            .ccl-dtls-grp-admin-ttl {
-                font-size:15px;
-                letter-spacing:-.1px;
-                line-height:22px;
-                display:inline-block;
-                width:88%;
-                vertical-align:middle;
-            }
-
-            .ccl-dtls-grp-admin-cnt {
-                display:inline-block;
-                width:10%;
-                text-align:right;
-                vertical-align:middle;
-                color:$secondary;
-            }
-        }
-
         .ccl-dtls-panel-section {
-            margin-bottom:30px;
+            margin-bottom: 20px;
         
             .ccl-dtls-panel-section-head {
                 margin:0;
@@ -79,24 +67,9 @@
 
                 .chat-ppl-listitem {
                     position:relative;
-                    margin-top:-1px;
                     cursor:pointer;
                     display:flex;
-                    padding:13px 0 0;
                     @include clearfix;
-
-                    .chat-ppl-thumbnail-wrap {
-                        display: inline-block;
-                        margin: 9px 9px 0 0;
-                        padding-bottom: 14px;
-                        width: 20px;
-
-                        img {
-                            display: block;
-                            overflow:hidden;
-                            width: 20px;
-                        }
-                    }
 
                     .chat-ppl-listitem-dtls { 
                         float:left;
@@ -116,15 +89,6 @@
                             font-weight:600;
                             letter-spacing:-.1px;
                             overflow:hidden;
-                        }
-
-                        .chat-ppl-listitem-role {
-                            display:inline-block;
-                            vertical-align:middle;
-                            width:25%;
-                            text-align:right;
-                            font-size:12px;
-                            text-transform: capitalize;
                         }
                     }
                     
@@ -148,15 +112,9 @@
                 }
             }
         }
-    }
-}
 
-.dark {
-    .chat-ppl-listitem-dtls {
-        border-bottom:1px solid #484848;
-    }
-
-    .ccl-dtls-panel-media-fltrs { 
-        background-color:$dark-border;
+        .ccl-dtls-panel-section:last-child{
+            margin-bottom: 0;
+        }
     }
 }

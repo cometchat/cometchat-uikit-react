@@ -15,39 +15,44 @@
 .cc1-left-panel-user {
     padding:20px 16px;
 
-    .cc1-left-panel-user-thumb {
-        display:inline-block;
-        width:36px;
-        height:36px;
-        margin-right:10px;
-        vertical-align:middle;
-        border-radius:24px;
-        overflow:hidden;
+    .cc1-left-panel-user-thumbnail-wrap {
+        display: block;
+        width: 36px;
+        height: 36px;
+        float: left;
     }
 
-    .cc1-left-panel-user-name-wrap {
-        display:inline-block;
-        vertical-align:middle;
+    .cc1-left-panel-user-dtls {  
+        display: inline-block;
+        flex: 1 1;
+        margin: 0 0 0 12px;
+        width: calc(100% - 55px);
 
         .cc1-left-panel-user-name {
             margin:0;
             font-size:15px;
             font-weight:600;
             letter-spacing:-.1px;
-            line-height:22px;
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .cc1-left-panel-user-status { 
             font-size:13px;
             letter-spacing:-.1px;
             line-height:20px;
+            margin: 0;
             color: $blue;
         }
     }
 }
 
 .cc1-left-panel-myacc-opts-wrap {
-    padding:10px 0;
+    height: calc(100vh - 205px);
+    padding: 0 16px;
 
     .cc1-left-panel-myacc-opts-list-ttl {
         color:#969696;
@@ -55,8 +60,6 @@
         font-weight:500;
         letter-spacing:-.1px;
         line-height:20px;
-        margin-bottom:5px;
-        padding:0 16px;
         @include text-uppercase;
     }
 
@@ -136,7 +139,6 @@
     .cc1-left-panel-myacc-opt.report {
         background:url(./resources/report-white-icon.svg) 16px center no-repeat;
     }
-
 }
 
 @media (min-width : 320px) and (max-width : 767px) {
@@ -144,94 +146,3 @@
         text-align:center;
     }
 }
-
-
-
-// @import '../../resources/mixins';
-// @import '../../resources/colors';
-
-// //dark
-// .dark {
-    
-//     .cp-profile-list-title{
-//         color: $dark-primary-text;
-//     }
-//     .cp-list-seperator {
-//         border-bottom: 1px solid $gray-darken;
-//     }
- 
-// }
-
-// //light
-// .light {
-   
-//     .cp-profile-list-title{
-//         color: $light-primary-text;
-//     }
-//     .cp-list-seperator {
-//         border-bottom: 1px solid $gray-lighten;
-//     }
-// }
-
-// //generic
-// .cp-profile-scroll{
-//     height: 100%;
-//     overflow-y: auto;
-//     overflow-x: hidden;
-//     padding-bottom: 110px;
-// }
-// .cp-profile-list-title{
-//     margin: 15px 30px;
-    
-// }
-// .cp-profile-view {
-//     margin-left: 20px;
-//     cursor: pointer;
-//     .row {
-//         margin: 0px;
-//     }
-
-//     .cp-username {
-//         text-transform: capitalize;
-//     }
-
-//     .cp-user-info {
-//         margin-left: 15px;
-//         padding-bottom: 15px;
-
-//     }
-//     .cp-userstatus{
-//         span{
-//             color:$blue-background-primary ;
-//         }
-//     }
-//     .cp-ellipsis{
-//         white-space: nowrap;
-//         overflow: hidden;
-//         text-overflow: ellipsis;
-//         width: 140px;
-//     }
-   
-// }
-// .cp-profile-preferences{
-//     margin: 15px 30px;
-//     cursor: pointer;
-//     .row {
-//         margin: 0px;
-//     }
-//     .cp-list-seperator {
-//         margin-left: 35px;
-//     }
-//     .cp-user-info {
-//         margin-left: 15px;
-//         padding-bottom: 15px;
-
-//     }
-//     .cp-no-padding{
-//         padding: 0px;
-//     }
-//     .cp-row-padding{
-//         padding-top: 20px;
-//     }
-
-// }

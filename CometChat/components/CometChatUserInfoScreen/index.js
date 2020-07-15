@@ -54,20 +54,22 @@ class CometChatUserInfoScreen extends React.Component {
           <h4 className="ccl-left-panel-head-ttl">More</h4>
         </div>
         <div className="cc1-left-panel-user">
-          <div className="cc1-left-panel-user-thumb">{avatar}</div>
-          <div className="cc1-left-panel-user-name-wrap">
-              <h6 className="cc1-left-panel-user-name">{this.state.user.name}</h6>
-              <span className="cc1-left-panel-user-status ccl-blue-color">Online</span>
+          <div className="cc1-left-panel-user-thumbnail-wrap">{avatar}</div>
+          <div className="cc1-left-panel-user-dtls">
+            <div className="cc1-left-panel-user-name">{this.state.user.name}</div>
+            <p className="cc1-left-panel-user-status">Online</p>
           </div>
         </div>
         <div className="cc1-left-panel-myacc-opts-wrap">
-          <div className="cc1-left-panel-myacc-opts-list-ttl ccl-text-uppercase">Preferences</div>
+          <div className="cc1-left-panel-myacc-opts-list-ttl">Preferences</div>
           <div className="cc1-left-panel-myacc-opts-list">
-              <div className="cc1-left-panel-myacc-opt notifications"><span className="cc1-left-panel-myacc-optname"></span>Notifications</div>
+              <div className="cc1-left-panel-myacc-opt notifications">
+                <span className="cc1-left-panel-myacc-optname"></span>Notifications
+              </div>
               <div className="cc1-left-panel-myacc-opt privacy"><span className="cc1-left-panel-myacc-optname"></span>Privacy and Security</div>
               <div className="cc1-left-panel-myacc-opt chats"><span className="cc1-left-panel-myacc-optname"></span>Chats</div>
           </div>
-          <div className="cc1-left-panel-myacc-opts-list-ttl ccl-text-uppercase">Other</div>
+          <div className="cc1-left-panel-myacc-opts-list-ttl">Other</div>
           <div className="cc1-left-panel-myacc-opts-list">
               <div className="cc1-left-panel-myacc-opt help"><span className="cc1-left-panel-myacc-optname"></span>Help</div>
               <div className="cc1-left-panel-myacc-opt report"><span className="cc1-left-panel-myacc-optname"></span>Report a Problem</div>

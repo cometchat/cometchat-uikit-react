@@ -9,24 +9,32 @@
         margin:0;
         font-weight:700;
         letter-spacing:-.5px;
+        display: inline-block;
     }
 
     .ccl-left-panel-head-edit-link {
-        position:absolute;
-        right:14px;
-        top:23px;
         display:block;
         width:20px;
         height:20px;
         background:url(./resources/edit-blue-icon.svg) center center no-repeat;
         cursor: pointer;
+        float: right;
+    }
+
+    .cc1-left-panel-close {
+        cursor: pointer;
+        display: none;
+        background: url('./resources/navigate_before.svg') center center no-repeat;
+        width: 24px;
+        height: 24px;
+        float: left;
+        margin: 0 10px 0 0;
     }
 
 }
 
 .ccl-left-panel-srch-wrap {
     padding:0 16px 18px;
-    border-bottom:1px solid #fbfbfb;
 
     .ccl-left-panel-srch-inpt-wrap {
         position:relative;
@@ -57,116 +65,28 @@
     }
 }
 
-.chat-ppl-list-ext-wrap.groups { 
-    height:calc(100vh - 184px);
+.group-list-ext-wrap { 
+    height:calc(100vh - 125px);
     overflow-y:auto;
+
+    .loading-text {
+        height: 20px;
+        color:$secondary;
+        margin: 0 auto;
+        width: 100px;
+        text-align: center;
+        font-size: 1.5rem;
+    }
 }
 
 .dark {
     .ccl-left-panel-srch-wrap {
-        border-bottom:none;
-    }
+        border-bottom: 1px solid $light-background-border;
 
-    .ccl-left-panel-srch {
-        background-color:rgba(255,255,255,0.08);
-        box-shadow:rgba(255,255,255,0.04) 0 0 0 1px inset;
-        color:#cccbcb;
-    }
-
-}
-
-
-@media (min-width : 320px) and (max-width : 767px) {
-
-    .ccl-left-panel-head-ttl {
-        text-align:center;
+        .ccl-left-panel-srch {
+            background-color:rgba(255,255,255,0.08);
+            box-shadow:rgba(255,255,255,0.04) 0 0 0 1px inset;
+            color:#cccbcb;
+        }
     }
 }
-
-// @import '../../resources/mixins';
-// @import '../../resources/colors';
-
-// //dark
-// .dark {
-//     .cp-userlist {
-//         background-color: $dark-background;
-
-
-//         .cp-list-seperator {
-//             border-bottom: 1px solid $gray-darken;
-//         }
-//     }
-//     .cp-contact-list-title{
-//         color: $dark-primary-text;
-//     }
-//     .cp-contact-alphabet{
-//         color: $dark-primary-text;
-//     }
-// }
-
-// //light
-// .light {
-//     .cp-userlist {
-//         background-color: $light-background;
-
-
-//         .cp-list-seperator {
-//             border-bottom: 1px solid $gray-lighten;
-//         }
-
-
-//     }
-//     .cp-contact-list-title{
-//         color: $light-primary-text;
-//     }
-//     .cp-contact-alphabet{
-//         color: $light-primary-text;
-//     }
-
-// }
-
-// //generic
-// .cp-grouplist-wrapper{
-//     height: 100%;
-//     overflow: hidden;
-//     margin: 0px 0px 0px 10px;
-// .cp-userlist {
-//     height: 100%;
-//     overflow-y: auto;
-//     overflow-x: hidden;
-//     padding-bottom: 110px;
-
-//     .cp-list-seperator {
-//         margin-left: 64px;
-//         border-bottom: 1px solid $gray-lighten;
-//     }
-
-// }
-// .cp-contact-alphabet{
-//     margin-left: 10px;
-//     padding: 5px;
-// }
-
-
-// .cp-contact-list-title{
-//     margin: 15px 15px;
-// }
-
-// .cp-searchbar {
-//     margin-left: 15px;
-//     margin-right: 10px;
-
-//     input {
-//         background-color: #f6f6f6;
-//         background-image: url('./resources/search-grey-icon.svg');
-//         background-repeat: no-repeat;
-//         background-position: 6.5px 11.5px ;
-//         border: 1px solid #e8e8e8;
-//         border-radius: 5px;
-//         width: 100%;
-//         padding-left: 27px;
-//         padding-right: 10px;
-//         height: 40px;
-//     }
-// }
-// }

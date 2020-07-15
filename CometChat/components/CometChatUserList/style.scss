@@ -6,15 +6,25 @@
     position:relative;
 
     .ccl-left-panel-head-ttl {
-        margin:0;
-        font-weight:700;
-        letter-spacing:-.5px;
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: -.5px;
+        display: inline-block;
+    }
+
+    .cc1-left-panel-close {
+        cursor: pointer;
+        display: none;
+        background: url('./resources/navigate_before.svg') center center no-repeat;
+        width: 24px;
+        height: 24px;
+        float: left;
+        margin: 0 10px 0 0;
     }
 }
 
 .ccl-left-panel-srch-wrap{
     padding:0 16px 18px;
-    border-bottom:1px solid #fbfbfb;
 
     .ccl-left-panel-srch-inpt-wrap {
         position:relative;
@@ -46,19 +56,25 @@
 
 .chat-contact-list-ext-wrap {
     padding:16px;
-    height:calc(100vh - 164px);
+    height: calc(100vh - 125px);
     overflow-y:auto;
+
+    .loading-text {
+        height: 20px;
+        color:$secondary;
+        margin: 0 auto;
+        width: 100px;
+        text-align: center;
+        font-size: 1.5rem;
+    }
 }
 
-@media (min-width : 320px) and (max-width : 767px) {
-    .ccl-left-panel-head-ttl {
-        text-align:center;
-    }
+.ccl-left-panel-head-ttl {
+    text-align:center;
 }
 
 .dark {
     .ccl-left-panel-srch-wrap {
-        border-bottom:none;
 
         .ccl-left-panel-srch {
             background-color:rgba(255,255,255,0.08);
@@ -72,3 +88,10 @@
         }
     }
 }
+
+@media (min-width : 320px) and (max-width : 767px) {
+	.cc1-left-panel-close {
+        display: block!important;
+    }
+}
+
