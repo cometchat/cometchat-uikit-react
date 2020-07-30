@@ -60,20 +60,17 @@ class CometChatUserList extends React.PureComponent {
     let userlist = [...this.state.userlist];
 
     //search for user
-    let index = userlist.findIndex((u, k) => u.uid === user.uid);
-    let userObj = userlist.find((u, k) => u.uid === user.uid);
+    let userKey = userlist.findIndex((u, k) => u.uid === user.uid);
     
     //if found in the list, update user object
-    if(userObj) {
+    if(userKey > -1) {
 
-      userObj = Object.assign(userObj, user);
-      userlist.splice(index, 1, userObj);
+      let userObj = {...userlist[userKey]};
+      let newUserObj = {...userObj, ...user};
+      userlist.splice(userKey, 1, newUserObj);
 
       this.setState({ userlist: userlist });
 
-      if(this.props.userStatusChanged && this.props.item.uid === user.uid) {
-        this.props.userStatusChanged(userObj);
-      }
     }
   }
 

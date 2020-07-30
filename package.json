@@ -7,7 +7,10 @@
     "@cometchat-pro/chat": "^2.0.12",
     "node-sass": "^4.12.1",
     "classnames": "^2.2.6",
-    "react-popper-tooltip": "3.1.0"
+    "balloon-css": "^1.2.0",
+    "emoji-mart": "^3.0.0",
+    "react-html-parser": "^2.0.2",
+    "twemoji": "^13.0.1"
   },
   "peerDependencies": {
     "react": "^16.13.1",

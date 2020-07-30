@@ -34,10 +34,31 @@ class CometChatAddMembers extends React.Component {
 
         this.AddMembersManager = new AddMembersManager(this.friendsOnly);
         this.getUsers();
+        this.AddMembersManager.attachListeners(this.userUpdated);
     }
 
     componentWillUnmount() {
+
+        this.AddMembersManager.removeListeners();
         this.AddMembersManager = null;
+    }
+
+    userUpdated = (user) => {
+        
+        let userlist = [...this.state.userlist];
+  
+        //search for user
+        let userKey = userlist.findIndex((u, k) => u.uid === user.uid);
+      
+        //if found in the list, update user object
+        if(userKey > -1) {
+
+            let userObj = userlist[userKey];//{...userlist[userKey]};
+            let newUserObj = Object.assign({}, userObj, user);
+            userlist.splice(userKey, 1, newUserObj);
+    
+            this.setState({ userlist: userlist });
+        }
     }
 
     handleScroll = (e) => {
@@ -143,13 +164,12 @@ class CometChatAddMembers extends React.Component {
                             membersToAdd.push(found);
                         }
                     }
-
+                    this.props.actionGenerated("addGroupParticipants", membersToAdd);
                 }
                 this.props.close();
             }).catch(error => {
                 console.log("addMembersToGroup failed with exception:", error);
             });
- 
         }
     }
 

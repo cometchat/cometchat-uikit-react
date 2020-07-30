@@ -17,7 +17,15 @@ class MessageThread extends React.Component {
 
       this.state = {
         messageList: [],
-        scrollToBottom: false
+        scrollToBottom: false,
+        replyCount: 0
+      }
+    }
+
+    componentDidMount() {
+
+      if(this.props.parentMessage.replyCount) {
+        this.setState({replyCount: this.props.parentMessage.replyCount});
       }
     }
 
@@ -25,6 +33,10 @@ class MessageThread extends React.Component {
 
       if(prevProps.parentMessage.id !== this.props.parentMessage.id) {
         this.setState({ messageList: [], scrollToBottom: true });
+
+        if(this.props.parentMessage.replyCount) {
+          this.setState({replyCount: this.props.parentMessage.replyCount});
+        }
       }
     }
 
@@ -40,6 +52,10 @@ class MessageThread extends React.Component {
             }
             break;
             case "messageComposed": {
+
+              let replyCount = this.state.replyCount;
+
+              this.setState({replyCount: ++replyCount})
               this.appendMessage(messages);
               this.props.actionGenerated("threadMessageComposed", messages);
             }
@@ -132,16 +148,14 @@ class MessageThread extends React.Component {
       });  
 
       component = (
-        <div className="cc1-chat-win-parent-msg-row clearfix">
-          <div className={wrapperClassName}>                                
-            <div className="cc1-chat-win-parent-msg-wrap">{messageComponent}</div>
-            <div className="cc1-chat-win-parent-time-wrap">
-              <span className="cc1-chat-win-timestamp">
-                {new Date(message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
-              </span>
-            </div>
-          </div>                            
-        </div>
+        <div className={wrapperClassName}>                                
+          <div className="cc1-chat-win-parent-msg-wrap">{messageComponent}</div>
+          <div className="cc1-chat-win-parent-time-wrap">
+            <span className="cc1-chat-win-timestamp">
+              {new Date(message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
+            </span>
+          </div>
+        </div>                            
       );
       return component;
     }
@@ -149,11 +163,12 @@ class MessageThread extends React.Component {
     render() {
 
       let parentMessage = this.getMessageComponent(this.props.parentMessage);
+      
 
       let seperator = (<div className="cc1-chat-thread-parent-message-separator"><hr/></div>);
-      if(this.state.messageList.length) {
+      if(this.state.replyCount) {
 
-        const replyCount = this.state.messageList.length;
+        const replyCount = this.state.replyCount;
         const replyText = (replyCount === 1) ? `${replyCount} reply` : `${replyCount} replies`;
 
         seperator = (
@@ -165,30 +180,36 @@ class MessageThread extends React.Component {
       }
 
       return (
-        <div className="cc1-chat-thread">
+        <React.Fragment>
           <div className="cc1-chat-thread-header">
+            <div className="cc1-chat-thread-header-wrapper">
+              
+            
             <div className="cc1-chat-thread-user-name-wrap">
               <h6 className="cc1-chat-thread-user-name-ttl">Thread</h6>
               <span className="cc1-chat-thread-user-name">{this.props.item.name}</span>
             </div>
             <div className="cc1-chat-thread-close" onClick={() => this.props.actionGenerated("closeThreadClicked")}></div>
+            </div>
           </div>
-          <div className="cc1-chat-thread-parent-messsage">{parentMessage}</div>
-          {seperator}
-          <MessageList 
-          messages={this.state.messageList} 
-          item={this.props.item} 
-          type={this.props.type}
-          scrollToBottom={this.state.scrollToBottom}
-          config={this.props.config}
-          parentMessageId={this.props.parentMessage.id}
-          actionGenerated={this.actionHandler} />
-          <MessageComposer 
-          item={this.props.item} 
-          type={this.props.type}
-          parentMessageId={this.props.parentMessage.id}
-          actionGenerated={this.actionHandler} />
-        </div>
+          <div className="cc1-chat-thread-message-container">
+            <div className="cc1-chat-thread-parent-messsage">{parentMessage}</div>
+            {seperator}
+            <MessageList 
+            messages={this.state.messageList} 
+            item={this.props.item} 
+            type={this.props.type}
+            scrollToBottom={this.state.scrollToBottom}
+            config={this.props.config}
+            parentMessageId={this.props.parentMessage.id}
+            actionGenerated={this.actionHandler} />
+            <MessageComposer 
+            item={this.props.item} 
+            type={this.props.type}
+            parentMessageId={this.props.parentMessage.id}
+            actionGenerated={this.actionHandler} />
+          </div>
+        </React.Fragment>
       );
     }
 }

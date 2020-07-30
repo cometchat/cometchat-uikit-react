@@ -1,11 +1,15 @@
 import React from "react";
-import "./style.scss";
+import twemoji from "twemoji";
+import ReactHtmlParser from "react-html-parser";
+import classNames from "classnames";
 
-import Tooltip from "../Tooltip";
+import "./style.scss";
 
 import { SvgAvatar } from '../../util/svgavatar';
 
 import Avatar from "../Avatar";
+import ToolTip from "../ToolTip";
+import ReplyCount from "../ReplyCount";
 
 const receivermessagebuble = (props) => {
   
@@ -40,23 +44,34 @@ const receivermessagebuble = (props) => {
   if((!props.widgetconfig && props.message.replyCount) 
   || (props.widgetconfig && props.widgetconfig["threaded-chats"] && props.message.replyCount)) {
 
-    const replyCount = props.message.replyCount;
-    const replyText = (replyCount === 1) ? `${replyCount} reply` : `${replyCount} replies`;
-    replies = (<span className="cc1-chat-win-replies" onClick={() => props.actionGenerated("viewMessageThread", message)}>{replyText}</span>);
+    replies = (
+      <ReplyCount
+      message={message}
+      action="viewMessageThread"
+      actionGenerated={props.actionGenerated} />
+    );
   }
 
   if((!props.widgetconfig) || (props.widgetconfig && props.widgetconfig["threaded-chats"])) {
     tooltip = (
-        <Tooltip 
-        placement="right" 
-        trigger="click" 
-        action="viewMessageThread" 
-        message={message}
-        actionGenerated={props.actionGenerated}>
-          <span className="cc1-chat-win-rcvr-row-message-action"></span>     
-        </Tooltip>
+      <ToolTip
+      message={message}
+      action="viewMessageThread"
+      actionGenerated={props.actionGenerated} />
     );
   }
+
+  const emojiParsedMessage = twemoji.parse(props.message.text, {folder: "svg",  ext: ".svg"});
+  const parsedMessage = ReactHtmlParser(emojiParsedMessage);
+
+  const emojiMessage = parsedMessage.filter(message => (message instanceof Object && message.type === "img"));
+
+  const messageClassName = classNames({
+    "chat-txt-msg": true,
+    "size1x": (parsedMessage.length === emojiMessage.length && emojiMessage.length === 1),
+    "size2x": (parsedMessage.length === emojiMessage.length && emojiMessage.length === 2),
+    "size3x": (parsedMessage.length === emojiMessage.length && emojiMessage.length > 2)
+  });
 
   return (
     <div className="cc1-chat-win-rcvr-row clearfix">
@@ -64,11 +79,9 @@ const receivermessagebuble = (props) => {
         {avatar}
         <div className="cc1-chat-win-rcvr-dtls">
           {name}
-          <div className="cc1-chat-win-rcvr-msg-action-wrap">
-            <div className="cc1-chat-win-rcvr-msg-wrap">
-              <p className="chat-txt-msg">{props.message.text}</p>                                
-            </div>
-            {tooltip}
+          {tooltip}
+          <div className="cc1-chat-win-rcvr-msg-wrap">
+            <p className={messageClassName}>{parsedMessage}</p>                                
           </div>
           <div className="cc1-chat-win-msg-time-wrap">
             <span className="cc1-chat-win-timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>

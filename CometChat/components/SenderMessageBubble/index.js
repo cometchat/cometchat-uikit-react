@@ -1,8 +1,12 @@
 import React from "react";
+import twemoji from "twemoji";
+import ReactHtmlParser from "react-html-parser";
+import classNames from "classnames";
 
 import "./style.scss";
 
-import Tooltip from "../Tooltip"
+import ToolTip from "../ToolTip";
+import ReplyCount from "../ReplyCount";
 
 import blueDoubleTick from "./resources/blue-double-tick-icon.png";
 import greyDoubleTick from "./resources/grey-double-tick-icon.png";
@@ -20,47 +24,52 @@ const SenderMessageBubble = (props) => {
   const message = Object.assign({}, props.message, {messageFrom: "sender"});
 
   let replies = null, tooltip = null;
-
   if((!props.widgetconfig && props.message.replyCount) 
   || (props.widgetconfig && props.widgetconfig["threaded-chats"] && props.message.replyCount)) {
 
-    const replyCount = props.message.replyCount;
-    const replyText = (replyCount === 1) ? `${replyCount} reply` : `${replyCount} replies`;
-
-    replies = (<span className="cc1-chat-win-replies" onClick={() => props.actionGenerated("viewMessageThread", message)}>{replyText}</span>);
-
+    replies = (
+      <ReplyCount
+      message={message}
+      action="viewMessageThread"
+      actionGenerated={props.actionGenerated} />
+    );
   }
 
   if((!props.widgetconfig) || (props.widgetconfig && props.widgetconfig["threaded-chats"])) {
-
     tooltip = (
-      <Tooltip 
-      placement="left" 
-      trigger="click" 
-      action="viewMessageThread" 
+      <ToolTip
       message={message}
-      actionGenerated={props.actionGenerated}>
-        <span className="cc1-chat-win-sndr-row-message-action"></span>     
-      </Tooltip> 
+      action="viewMessageThread"
+      actionGenerated={props.actionGenerated} />
     );
   }
+
+  const emojiParsedMessage = twemoji.parse(props.message.text, {folder: "svg",  ext: ".svg"});
+  const parsedMessage = ReactHtmlParser(emojiParsedMessage);
+
+  const emojiMessage = parsedMessage.filter(message => (message instanceof Object && message.type === "img"));
+
+  const messageClassName = classNames({
+    "chat-txt-msg": true,
+    "size1x": (parsedMessage.length === emojiMessage.length && emojiMessage.length === 1),
+    "size2x": (parsedMessage.length === emojiMessage.length && emojiMessage.length === 2),
+    "size3x": (parsedMessage.length === emojiMessage.length && emojiMessage.length > 2)
+  });
 
   return (
     <React.Fragment>
       <div className="cc1-chat-win-sndr-row clearfix">
         <div className="cc1-chat-win-msg-block">
-          <div className="cc1-chat-win-sndr-msg-action-wrap">
+            {tooltip}     
             <div className="cc1-chat-win-sndr-msg-wrap">
-              <p className="chat-txt-msg">{props.message.text}</p>                                
+              <p className={messageClassName}>{parsedMessage}</p>                                
             </div>
-            {tooltip}                      
-          </div>
-          <div className="cc1-chat-win-msg-time-wrap">
-            {replies}
-            <span className="cc1-chat-win-timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
-              <img src={ticks} alt="time" />
-            </span>
-          </div>
+            <div className="cc1-chat-win-msg-time-wrap">
+              {replies}
+              <span className="cc1-chat-win-timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
+                <img src={ticks} alt="time" />
+              </span>
+            </div>
         </div>
       </div>
     </React.Fragment>

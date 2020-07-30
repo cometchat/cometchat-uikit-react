@@ -3,10 +3,14 @@
 
 .cc1-chat-win-rcvr-row {
     margin-bottom: 16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    max-width: 65%;
 
     .cc1-chat-win-msg-block {
-        display:inline-block;
-        position:relative;
+        flex: 1 1;
+        position: relative;
+        width: 100%;
 
         .cc1-chat-win-rcvr-thumbnail-wrap {
             width: 36px;
@@ -15,12 +19,14 @@
         }
 
         .cc1-chat-win-rcvr-dtls {
-            margin: 0 5px;
             flex: 1 1;
             display: flex;
             flex-direction: column;
+            position:relative;
+            margin: 0 5px;
 
             .cc1-chat-win-rcvr-name-wrap {
+                align-self: flex-start;
 
                 .cc1-chat-win-rcvr-name {
                     font-size: 10px;
@@ -28,36 +34,22 @@
                 }
             }
 
-            .cc1-chat-win-rcvr-img-action-wrap {
-                float: right;
-                @include clearfix;
+            .cc1-chat-win-rcvr-img-wrap {
+                display:inline-block;
+                border-radius:12px;
+                align-self: flex-start;
 
-                .cc1-chat-win-rcvr-img-wrap {
-                    display: inline-block;
-                    float: left;
-
-                    img {
-                        max-width: 250px;
-                    }
-                }
-
-                .trigger {
-                    float: left;
-                }
-            
-                .cc1-chat-win-rcvr-row-message-action {
-                    display: none;
-                    float: right;
-                    position: relative;
-                    width: 24px;
-                    height: 24px;
-                    background: url('./resources/more_vertical.svg') center center no-repeat;
-                    top: 7px;
-                    cursor: pointer;
+                img {
+                    max-width: 250px;
                 }
             }
-        
+
+            .cc1-chat-win-rcvr-name-wrap + .cc1-chat-win-rcvr-msg-actions {
+                top: -15px;
+            }
+            
             .cc1-chat-win-msg-time-wrap {
+                align-self: flex-start;
         
                 .cc1-chat-win-timestamp {
                     display:inline-block;
@@ -68,26 +60,10 @@
                     text-transform:uppercase;
                     color: $secondary;
                 }
-
-                .cc1-chat-win-replies {
-                    display:inline-block;
-                    font-size:11px;
-                    font-weight:500;
-                    letter-spacing:-.1px;
-                    line-height:12px;
-                    text-transform: lowercase;
-                    padding: 0 10px;
-                    cursor: pointer;
-                    color: $blue;
-    
-                    &:hover {
-                        text-decoration: underline;
-                    }
-                }
             }
 
-            &:hover .cc1-chat-win-rcvr-row-message-action {
-                display: block;
+            &:hover .cc1-chat-win-rcvr-msg-actions {
+                display: inline-flex;
             }
         } 
     }

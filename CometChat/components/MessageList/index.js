@@ -39,7 +39,12 @@ class MessageList extends React.PureComponent {
 
   componentDidMount() {
 
-    this.MessageListManager = new MessageListManager(this.props.item, this.props.type,this.props.parentMessageId);
+    if(this.props.parentMessageId) {
+      this.MessageListManager = new MessageListManager(this.props.item, this.props.type,this.props.parentMessageId);
+    } else {
+      this.MessageListManager = new MessageListManager(this.props.item, this.props.type);
+    }
+    
     this.getMessages();
     this.MessageListManager.attachListeners(this.messageUpdated);
   }
@@ -128,7 +133,7 @@ class MessageList extends React.PureComponent {
   }
 
   //callback for listener functions
-  messageUpdated = (key, message, ...otherProps) => {
+  messageUpdated = (key, message, group, options) => {
 
     switch(key) {
 
@@ -151,7 +156,7 @@ class MessageList extends React.PureComponent {
       case enums.GROUP_MEMBER_KICKED:
       case enums.GROUP_MEMBER_BANNED:
       case enums.GROUP_MEMBER_UNBANNED:
-        this.groupMemberUpdated(key, message, ...otherProps);
+        this.groupUpdated(key, message, group, options);
         break;
       default:
         break;
@@ -235,18 +240,17 @@ class MessageList extends React.PureComponent {
     }
   }
 
-  groupMemberUpdated = (key, message, ...otherProps) => {
-
-    console.log("MessageList groupMemberUpdated key", key);
+  groupUpdated = (key, message, group, options) => {
+    
     if (this.props.type === 'group' 
     && message.getReceiverType() === 'group'
     && message.getReceiver().guid === this.props.item.guid) {
 
-      if(!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-      }
+      // if(!message.getReadAt()) {
+      //   CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+      // }
       
-      this.props.actionGenerated("groupUpdated", message, key, ...otherProps);
+      this.props.actionGenerated("groupUpdated", message, key, group, options);
     }
   }
 
@@ -262,24 +266,24 @@ class MessageList extends React.PureComponent {
     this.props.onItemClick(message, 'message');
   }
 
-  getSenderMessageComponent = (message) => {
+  getSenderMessageComponent = (message, key) => {
 
     let component;
     switch (message.type) {
       case CometChat.MESSAGE_TYPE.TEXT:
-        component =  (message.text ? <SenderMessageBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component =  (message.text ? <SenderMessageBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.IMAGE:
-        component =  (message.data.url ? <SenderImageBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component =  (message.data.url ? <SenderImageBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.FILE:
-        component =  (message.data.attachments ? <SenderFileBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component =  (message.data.attachments ? <SenderFileBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.VIDEO:
-        component =  (message.data.url ? <SenderVideoBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component =  (message.data.url ? <SenderVideoBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.AUDIO:
-        component =  (message.data.url ? <SenderAudioBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component =  (message.data.url ? <SenderAudioBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       default:
       break;
@@ -288,25 +292,25 @@ class MessageList extends React.PureComponent {
     return component;
   }
 
-  getReceiverMessageComponent = (message) => {
+  getReceiverMessageComponent = (message, key) => {
 
     let component;
     switch (message.type) {
       case "message":
       case CometChat.MESSAGE_TYPE.TEXT:
-        component = (message.text ? <ReceiverMessageBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component = (message.text ? <ReceiverMessageBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.IMAGE:
-        component = (message.data.url ? <ReceiverImageBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component = (message.data.url ? <ReceiverImageBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.FILE:
-        component = (message.data.attachments ? <ReceiverFileBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component = (message.data.attachments ? <ReceiverFileBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.AUDIO:
-        component = (message.data.url ? <ReceiverAudioBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component = (message.data.url ? <ReceiverAudioBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       case CometChat.MESSAGE_TYPE.VIDEO:
-        component = (message.data.url ? <ReceiverVideoBubble message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        component = (message.data.url ? <ReceiverVideoBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
       break;
       default:
       break;
@@ -314,20 +318,20 @@ class MessageList extends React.PureComponent {
     return component;
   }
 
-  getCallMessageComponent = (message) => {
+  getCallMessageComponent = (message, key) => {
 
     return (
-      <CallMessage message={message} />
+      <CallMessage message={message} key={key} />
     );
   }
 
-  getActionMessageComponent = (message) => {
+  getActionMessageComponent = (message, key) => {
 
     let component = null;
     if(message.message) {
 
       component = (
-        <div className="cc1-chat-win-action-msg-wrap"><p className="chat-txt-msg">{message.message}</p></div>
+        <div className="cc1-chat-win-action-msg-wrap" key={key}><p className="chat-txt-msg">{message.message}</p></div>
       );
 
       //if action messages are set to hide in config
@@ -347,22 +351,22 @@ class MessageList extends React.PureComponent {
     return component;
   }
   
-  getComponent = (message) => {
+  getComponent = (message, key) => {
 
     let component;
 
     switch(message.category) {
       case "action":
-        component = this.getActionMessageComponent(message);
+        component = this.getActionMessageComponent(message, key);
       break;
       case "call":
-        component = this.getCallMessageComponent(message);
+        component = this.getCallMessageComponent(message, key);
       break;
       case "message":
         if(this.loggedInUser.uid === message.sender.uid) {
-          component = this.getSenderMessageComponent(message);
+          component = this.getSenderMessageComponent(message, key);
         } else {
-          component = this.getReceiverMessageComponent(message);
+          component = this.getReceiverMessageComponent(message, key);
         }
       break;
       default:
@@ -382,18 +386,22 @@ class MessageList extends React.PureComponent {
     }
     
     let messages;
-    messages = this.props.messages.map((message, key) => {
-      return (
-        <div id={message.id} key={key}>
-          {this.getComponent(message)}
-        </div>
-      );
-    });
+    // messages = this.props.messages.map((message, key) => {
+    //   return (
+    //     <div id={message.id} key={key}>
+    //       {this.getComponent(message)}
+    //     </div>
+    //   );
+    // });
+
+    messages = this.props.messages.map((message, key) => this.getComponent(message, key));
 
     return (
-      <div ref={(el) => { this.messagesEnd = el; }} className="cc1-chat-win-conver-wrap" onScroll={this.handleScroll}>
-        {loading}
-        {messages}
+      <div className="cc1-chat-win-conver-wrap">
+        <div className="cc1-chat-win-conver-list-wrap" ref={(el) => { this.messagesEnd = el; }} onScroll={this.handleScroll}>
+          {loading}
+          {messages}
+        </div>
       </div>
     );
   }

@@ -6,6 +6,7 @@ export class MessageHeaderManager {
 
     userListenerId = new Date().getTime();
     msgListenerId = new Date().getTime();
+    groupListenerId = new Date().getTime();
 
     attachListeners(callback) {
         
@@ -36,12 +37,33 @@ export class MessageHeaderManager {
             })
         );
 
+        CometChat.addGroupListener(
+            this.groupListenerId,
+            new CometChat.GroupListener({
+                onGroupMemberKicked: (message, kickedUser, kickedBy, kickedFrom) => {
+                    callback(enums.GROUP_MEMBER_KICKED, kickedFrom);
+                }, 
+                onGroupMemberBanned: (message, bannedUser, bannedBy, bannedFrom) => {
+                    callback(enums.GROUP_MEMBER_BANNED, bannedFrom);
+                }, 
+                onMemberAddedToGroup: (message, userAdded, userAddedBy, userAddedIn) => {
+                    callback(enums.GROUP_MEMBER_ADDED, userAddedIn);
+                }, 
+                onGroupMemberLeft: (message, leavingUser, group) => {
+                    callback(enums.GROUP_MEMBER_LEFT, group);
+                }, 
+                onGroupMemberJoined: (message, joinedUser, joinedGroup) => {
+                    callback(enums.GROUP_MEMBER_JOINED, joinedGroup);
+                }
+            })
+        );
+
     }
 
     removeListeners() {
 
         CometChat.removeUserListener(this.userListenerId);
-        CometChat.removeUserListener(this.msgListenerId);
-
+        CometChat.removeMessageListener(this.msgListenerId);
+        CometChat.removeGroupListener(this.groupListenerId);
     }
 }

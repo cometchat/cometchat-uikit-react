@@ -10,6 +10,7 @@ import * as enums from '../../util/enums.js';
 
 import StatusIndicator from "../StatusIndicator";
 
+import "balloon-css";
 import "./style.scss";
 
 class MessageHeader extends React.Component {
@@ -37,9 +38,15 @@ class MessageHeader extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
 
+    this.MessageHeaderManager.removeListeners();
+    this.MessageHeaderManager = new MessageHeaderManager();
+    this.MessageHeaderManager.attachListeners(this.updateHeader);
+
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
       this.setStatusForUser();
-    } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid) {
+    } else if (this.props.type === 'group' 
+    && (prevProps.item.guid !== this.props.item.guid 
+      || (prevProps.item.guid === this.props.item.guid && prevProps.item.membersCount !== this.props.item.membersCount)) ) {
       this.setStatusForGroup();
     }
   }
@@ -62,7 +69,6 @@ class MessageHeader extends React.Component {
 
     const status = `${this.props.item.membersCount} members`;
     this.setState({status: status});
-
   }
 
   componentWillUnmount() {
@@ -71,19 +77,42 @@ class MessageHeader extends React.Component {
     this.MessageHeaderManager = null;
   }
 
-  updateHeader = (key, item) => {
+  updateHeader = (key, item, message) => {
     
-    console.log("MessageHeader updateHeader key", key, "item", item);
     switch(key) {
 
       case enums.USER_ONLINE:
       case enums.USER_OFFLINE: {
-
         if(this.props.type === "user" && this.props.item.uid === item.uid) {
-          this.setState({status: item.status, presence: item.status})
+          this.setState({status: item.status, presence: item.status});
         }
-
+      break;
       }
+      case enums.GROUP_MEMBER_KICKED:
+      case enums.GROUP_MEMBER_BANNED:
+      case enums.GROUP_MEMBER_LEFT:
+        if(this.props.type === "group" && this.props.item.guid === item.guid) {
+
+          let membersCount = parseInt(item.membersCount) - 1;
+          const status = `${membersCount} members`;
+          this.setState({status: status});
+        }
+      break;
+      case enums.GROUP_MEMBER_JOINED:
+        if(this.props.type === "group" && this.props.item.guid === item.guid) {
+
+          let membersCount = parseInt(item.membersCount);
+          const status = `${membersCount} members`;
+          this.setState({status: status});
+        }
+      break;
+      case enums.GROUP_MEMBER_ADDED:
+        if(this.props.type === "group" && this.props.item.guid === item.guid) {
+
+          let membersCount = parseInt(item.membersCount) + 1;
+          const status = `${membersCount} members`;
+          this.setState({status: status});
+        }
       break;
       default:
       break;
@@ -92,7 +121,7 @@ class MessageHeader extends React.Component {
 
   render() {
 
-    let status, image, presence;
+    let image, presence;
     if(this.props.type === "user") {
 
       if(!this.props.item.avatar) {
@@ -145,12 +174,35 @@ class MessageHeader extends React.Component {
       "offline": (this.props.type === "user" && this.state.presence === "offline"),
       "capitalize": (this.props.type === "user"),
       "ccl-secondary-color": (this.props.type === "group")
-    });  
+    }); 
+    
+    const toggleTooltip = (event, flag) => {
+
+      const elem = event.target;
+      const scrollWidth = elem.scrollWidth;
+      const clientWidth = elem.clientWidth;
+
+      if(scrollWidth <= clientWidth) {
+        return false;
+      }
+
+      const parent = elem.parentNode;
+      if(flag) {
+        parent.setAttribute("aria-label", elem.textContent);
+        parent.setAttribute("data-balloon-pos", "right");
+        parent.setAttribute("data-balloon-length", "small")
+      } else {
+        parent.removeAttribute("aria-label");
+        parent.removeAttribute("data-balloon-pos");
+        parent.removeAttribute("data-balloon-length");
+      }
+      
+    }
 
     return (
-      <div className="cc1-chat-win-header clearfix">
-        <div className="cc1-left-panel-trigger" onClick={() => this.props.actionGenerated("menuClicked")}></div>
+      <div className="cc1-chat-win-header">
         <div className="cc1-chat-win-user">
+          <div className="cc1-left-panel-trigger" onClick={() => this.props.actionGenerated("menuClicked")}></div>
           <div className="cc1-chat-win-user-thumb">
             <Avatar 
             image={image} 
@@ -160,8 +212,12 @@ class MessageHeader extends React.Component {
             {presence}
           </div>
           <div className="cc1-chat-win-user-name-wrap">
-            <h6 className="cc1-chat-win-user-name">{this.props.item.name}</h6>
-            <span className={statusClassName}>{this.state.status}</span>
+            <h6 className="cc1-chat-win-user-name" 
+            onMouseEnter={event => toggleTooltip(event, true)} 
+            onMouseLeave={event => toggleTooltip(event, false)}>{this.props.item.name}</h6>
+            <span className={statusClassName}
+            onMouseEnter={event => toggleTooltip(event, true)}
+            onMouseLeave={event => toggleTooltip(event, false)}>{this.state.status}</span>
           </div>
         </div>
         <div className="cc1-chat-win-con-opt-wrap">

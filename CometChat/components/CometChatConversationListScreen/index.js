@@ -4,6 +4,7 @@ import classNames from "classnames";
 import "./style.scss";
 
 import { CometChatManager } from "../../util/controller";
+import * as enums from '../../util/enums.js';
 
 import CometChatConversationList from "../CometChatConversationList";
 import CometChatMessageListScreen from "../CometChatMessageListScreen";
@@ -12,6 +13,8 @@ import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
 
 class CometChatConversationListScreen extends React.Component {
+
+  loggedInUser = null;
 
   constructor(props) {
 		super(props);
@@ -24,6 +27,9 @@ class CometChatConversationListScreen extends React.Component {
       item: {},
       type: "",
       tab: "conversations",
+      groupToDelete: {},
+      groupToLeave: {},
+      groupToUpdate: {},
       threadmessageview: false,
       threadmessagetype: null,
       threadmessageitem: {},
@@ -37,6 +43,13 @@ class CometChatConversationListScreen extends React.Component {
     if(!Object.keys(this.state.item).length) {
       this.toggleSideBar();
     }
+
+    new CometChatManager().getLoggedInUser().then((user) => {
+      this.loggedInUser = user;
+    }).catch((error) => {
+      console.log("[CometChatUnified] getLoggedInUser error", error);
+      
+    });
   }
 
   changeTheme = (e) => {
@@ -49,7 +62,7 @@ class CometChatConversationListScreen extends React.Component {
     this.setState({ item: {...item}, type, viewdetailscreen: false })
   }
 
-  actionHandler = (action, item) => {
+  actionHandler = (action, item, count, ...otherProps) => {
     
     switch(action) {
       case "blockUser":
@@ -65,6 +78,18 @@ class CometChatConversationListScreen extends React.Component {
       case "menuClicked":
       case "closeMenuClicked":
         this.toggleSideBar();
+      break;
+      case "groupUpdated":
+        this.groupUpdated(item, count, ...otherProps);
+      break;
+      case "groupDeleted": 
+        this.deleteGroup(item);
+      break;
+      case "leftGroup":
+        this.leaveGroup(item, ...otherProps);
+      break;
+      case "membersUpdated":
+        this.updateMembersCount(item, count);
       break;
       case "viewMessageThread":
         this.viewMessageThread(item);
@@ -108,12 +133,8 @@ class CometChatConversationListScreen extends React.Component {
 
   toggleDetailView = () => {
 
-    if(this.state.type === "user") {
-      let viewdetail = !this.state.viewdetailscreen;
-      this.setState({viewdetailscreen: viewdetail});
-    }
-
-    this.setState({threadmessageview: false});
+    let viewdetail = !this.state.viewdetailscreen;
+    this.setState({viewdetailscreen: viewdetail, threadmessageview: false});
   }
 
   toggleSideBar = () => {
@@ -126,6 +147,45 @@ class CometChatConversationListScreen extends React.Component {
 			elem.classList.add('active');
 		}
   }
+
+  deleteGroup = (group) => {
+    this.setState({groupToDelete: group, item: {}, type: "group", viewdetailscreen: false});
+  }
+
+  leaveGroup = (group) => {
+    this.setState({groupToLeave: group, item: {}, type: "group", viewdetailscreen: false});
+  }
+
+  updateMembersCount = (item, count) => {
+
+    const group = Object.assign({}, this.state.item, {membersCount: count});
+    this.setState({item: group, groupToUpdate: group});
+  }
+
+  groupUpdated = (message, key, group, options) => {
+    
+    switch(key) {
+      case enums.GROUP_MEMBER_BANNED:
+      case enums.GROUP_MEMBER_KICKED: {
+        if(options.user.uid === this.loggedInUser.uid) {
+          this.setState({item: {}, type: "group", viewdetailscreen: false});
+        }
+        break;
+      }
+      case enums.GROUP_MEMBER_SCOPE_CHANGED: {
+        
+        if(options.user.uid === this.loggedInUser.uid) {
+
+          const newObj = Object.assign({}, this.state.item, {"scope": options["scope"]})
+          this.setState({item: newObj, type: "group", viewdetailscreen: false});
+        }
+        break;
+      }
+      default:
+      break;
+    }
+  }
+
 
   closeThreadMessages = () => {
     this.setState({viewdetailscreen: false, threadmessageview: false});
@@ -146,11 +206,10 @@ class CometChatConversationListScreen extends React.Component {
 
   onThreadMessageComposed = (composedMessage) => {
 
-    console.log("type", this.state.type, "threadmessagetype", this.state.threadmessagetype);
     if(this.state.type !== this.state.threadmessagetype) {
       return false;
     }
-    console.log("item", this.state.item, "threadmessageitem", this.state.threadmessageitem);
+
     if((this.state.threadmessagetype === "group" && this.state.item.guid !== this.state.threadmessageitem.guid)
     || (this.state.threadmessagetype === "user" && this.state.item.uid !== this.state.threadmessageitem.uid)) {
       return false;
@@ -182,7 +241,7 @@ class CometChatConversationListScreen extends React.Component {
       if(this.state.type === "user") {
 
         detailScreen = (
-          <div className="ccl-right-panel">
+          <div className="ccl-right-panel" ref={this.rightPanelRef}>
             <CometChatUserDetail
               item={this.state.item} 
               type={this.state.type}
@@ -219,14 +278,24 @@ class CometChatConversationListScreen extends React.Component {
       "dark": this.state.darktheme
     });
 
+    const centerPanelClassName = classNames({
+      "ccl-center-panel": true,
+      "ccl-chat-center-panel": true,
+      "right-panel-active": (this.state.threadmessageview || this.state.viewdetailscreen)
+    });  
+
     return (
       <div className={wrapperClassName}>
         <div className="ccl-left-panel" ref={this.leftPanelRef}>
-          <CometChatConversationList 
+          <CometChatConversationList
+           item={this.state.item}
+           groupToDelete={this.state.groupToDelete}
+           groupToLeave={this.state.groupToLeave}
+           groupToUpdate={this.state.groupToUpdate}
           onItemClick={this.onItemClicked}
           actionGenerated={this.actionHandler} />
         </div>
-        <div className="ccl-center-panel ccl-chat-center-panel">{messageScreen}</div>
+        <div className={centerPanelClassName}>{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
       </div>

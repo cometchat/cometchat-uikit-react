@@ -69,25 +69,25 @@ export class MessageListManager {
             this.groupListenerId,
             new CometChat.GroupListener({
                 onGroupMemberScopeChanged: (message, changedUser, newScope, oldScope, changedGroup) => {
-                    callback(enums.GROUP_MEMBER_SCOPE_CHANGED, message, changedUser, newScope, oldScope, changedGroup);
+                    callback(enums.GROUP_MEMBER_SCOPE_CHANGED, message, changedGroup, {"user": changedUser, "scope": newScope});
                 }, 
                 onGroupMemberKicked: (message, kickedUser, kickedBy, kickedFrom) => {
-                    callback(enums.GROUP_MEMBER_KICKED, message, kickedUser, kickedBy, kickedFrom);
+                    callback(enums.GROUP_MEMBER_KICKED, message, kickedFrom, {"user": kickedUser, "hasJoined": false});
                 }, 
                 onGroupMemberBanned: (message, bannedUser, bannedBy, bannedFrom) => {
-                    callback(enums.GROUP_MEMBER_BANNED, message, bannedUser, bannedBy, bannedFrom);
+                    callback(enums.GROUP_MEMBER_BANNED, message, bannedFrom, {"user": bannedUser});
                 }, 
                 onGroupMemberUnbanned: (message, unbannedUser, unbannedBy, unbannedFrom) => {
-                    callback(enums.GROUP_MEMBER_UNBANNED, message, unbannedUser, unbannedBy, unbannedFrom);
+                    callback(enums.GROUP_MEMBER_UNBANNED, message, unbannedFrom, {"user": unbannedUser});
                 }, 
                 onMemberAddedToGroup: (message, userAdded, userAddedBy, userAddedIn) => {
-                    callback(enums.GROUP_MEMBER_ADDED, message, userAdded, userAddedBy, userAddedIn);
+                    callback(enums.GROUP_MEMBER_ADDED, message, userAddedIn, {"user": userAdded, "hasJoined": true});
                 }, 
                 onGroupMemberLeft: (message, leavingUser, group) => {
-                    callback(enums.GROUP_MEMBER_LEFT, message, leavingUser, group);
+                    callback(enums.GROUP_MEMBER_LEFT, message, group, {"user": leavingUser});
                 }, 
                 onGroupMemberJoined: (message, joinedUser, joinedGroup) => {
-                    callback(enums.GROUP_MEMBER_JOINED, message, joinedUser, joinedGroup);
+                    callback(enums.GROUP_MEMBER_JOINED, message, joinedGroup, {"user": joinedUser});
                 }
             })
         );

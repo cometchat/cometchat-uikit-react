@@ -3,7 +3,7 @@ import React from "react";
 import { CometChat } from "@cometchat-pro/chat";
 
 import Avatar from "../Avatar";
-
+import StatusIndicator from "../StatusIndicator";
 
 import GroupDetailContext from '../CometChatGroupDetail/context';
 
@@ -160,6 +160,11 @@ class MemberView extends React.Component {
                         image={this.props.member.avatar} 
                         cornerRadius="18px" 
                         borderColor="#CCC"
+                        borderWidth="1px" />
+                        <StatusIndicator
+                        status={this.props.member.status}
+                        cornerRadius="50%" 
+                        borderColor="rgb(238, 238, 238)" 
                         borderWidth="1px" />
                     </span>
                     <span className="name">{name}</span>

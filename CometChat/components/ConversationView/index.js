@@ -118,10 +118,10 @@ const conversationview = (props) => {
   const getAvatar = () => {
 
     let avatar;
-    if(props.conversation.getConversationType() === "user") {
-      avatar = props.conversation.getConversationWith().getAvatar();
-    } else if (props.conversation.getConversationType() === "group") {
-      avatar = props.conversation.getConversationWith().getIcon();
+    if(props.conversation.conversationType === "user") {
+      avatar = props.conversation.conversationWith.avatar;
+    } else if (props.conversation.conversationType === "group") {
+      avatar = props.conversation.conversationWith.icon;
     }
     return avatar;
   }
@@ -134,8 +134,8 @@ const conversationview = (props) => {
   }
 
   let presence;
-  if(props.conversation.getConversationType() === "user") {
-    const status = props.conversation.getConversationWith().getStatus();
+  if(props.conversation.conversationType === "user") {
+    const status = props.conversation.conversationWith.status;
     presence = (
       <StatusIndicator
       status={status}
@@ -144,10 +144,9 @@ const conversationview = (props) => {
       borderWidth="1px" />
     );
   }
-    
+  
   return (
-
-    <div className="chat-listitem">
+    <div className="chat-listitem" onClick={() => props.handleClick(props.conversation, props.conversationKey)}>
       <div className="chat-thumbnail-wrap">
         <Avatar 
         image={getAvatar()}

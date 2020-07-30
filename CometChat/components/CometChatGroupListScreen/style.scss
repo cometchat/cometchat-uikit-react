@@ -3,6 +3,7 @@
 
 .groups {
   display:flex;
+  flex-direction: row;
   position: fixed;
   height: 100%;
   width: 100%;
@@ -10,25 +11,36 @@
   .ccl-left-panel { 
     width: 280px;
     border-right:1px solid $light-background-border;
-    height:100vh;
+    height: 100%;
     position:relative;
   }
 
   .ccl-center-panel {
-    height:100vh;
-    flex: 1;
-    width: calc(100% - 680px);
+    width: calc(100% - 280px);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    order: 2;
 
     h1 {
       @include text-center;
     }
   }
 
+  .ccl-center-panel.right-panel-active {
+    width: calc(100% - 680px);
+  }
+
   .ccl-right-panel {
     float:right;
     border-left: 1px solid $light-background-border;
-    height:100vh;
+    height: 100%;
     width: 400px;
+
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    order: 3;
   }
 }
 
@@ -49,7 +61,7 @@
   }
   
   .ccl-center-panel {
-    width: 100%;
+    width: 100%!important;
   }
   
   .ccl-right-panel {

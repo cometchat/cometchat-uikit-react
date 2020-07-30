@@ -5,6 +5,8 @@ import { CometChat } from "@cometchat-pro/chat";
 import { CometChatManager } from "../../util/controller";
 import { SvgAvatar } from '../../util/svgavatar';
 
+import * as enums from '../../util/enums.js';
+
 import { GroupListManager } from "./controller";
 
 import CometChatCreateGroup from "../CometChatCreateGroup";
@@ -14,6 +16,7 @@ import "./style.scss";
 
 class CometChatGroupList extends React.Component {
   timeout;
+  loggedInUser = null;
 
   constructor(props) {
 
@@ -28,6 +31,7 @@ class CometChatGroupList extends React.Component {
   componentDidMount() {
     this.GroupListManager = new GroupListManager();
     this.getGroups();
+    this.GroupListManager.attachListeners(this.groupUpdated);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -35,56 +39,117 @@ class CometChatGroupList extends React.Component {
     if(prevProps.groupToLeave && prevProps.groupToLeave.guid !== this.props.groupToLeave.guid) {
       
       const groups = [...this.state.grouplist];
-      const IndexFound = groups.findIndex(member => member.guid === this.props.groupToLeave.guid);
+      const groupKey = groups.findIndex(member => member.guid === this.props.groupToLeave.guid);
       
-      if(IndexFound) {
+      if(groupKey > -1) {
 
-        const found = groups[IndexFound];
-        groups.splice(IndexFound, 1);
-        found.hasJoined = false;
-        this.setState({grouplist: [...groups, found]});
+        const groupObj = groups[groupKey];
+        const newGroupObj = Object.assign({}, groupObj, {hasJoined: false});
+        groups.splice(groupKey, 1, newGroupObj);
+        this.setState({grouplist: groups});
       }
     }
 
     if(prevProps.groupToDelete && prevProps.groupToDelete.guid !== this.props.groupToDelete.guid) {
             
       const groups = [...this.state.grouplist];
-      const IndexFound = groups.findIndex(member => member.guid === this.props.groupToDelete.guid);
-      if(IndexFound > -1) {
+      const groupKey = groups.findIndex(member => member.guid === this.props.groupToDelete.guid);
+      if(groupKey > -1) {
 
-        groups.splice(IndexFound, 1);
-        this.setState({grouplist: [...groups]});
+        groups.splice(groupKey, 1);
+        this.setState({grouplist: groups});
       }
     }
 
     if(prevProps.groupToUpdate 
-    && ((prevProps.groupToUpdate.guid !== this.props.groupToUpdate.guid)
-    || (prevProps.groupToUpdate.guid === this.props.groupToUpdate.guid 
-      && (prevProps.groupToUpdate.membersCount !== this.props.groupToUpdate.membersCount
-      || prevProps.groupToUpdate.scope !== this.props.groupToUpdate.scope)))) {
+    && (prevProps.groupToUpdate.guid !== this.props.groupToUpdate.guid 
+    || (prevProps.groupToUpdate.guid === this.props.groupToUpdate.guid && (prevProps.groupToUpdate.membersCount !== this.props.groupToUpdate.membersCount || prevProps.groupToUpdate.scope !== this.props.groupToUpdate.scope)))) {
             
       const groups = [...this.state.grouplist];
-
       const groupToUpdate = this.props.groupToUpdate;
 
-      let groupIndex = -1, groupFound = {};
-      groups.forEach((group, index) => {
+      const groupKey = groups.findIndex(group => group.guid === groupToUpdate.guid);
+      if(groupKey > -1) {
+        const groupObj = groups[groupKey];
+        const newGroupObj = Object.assign({}, groupObj, groupToUpdate, {scope: groupToUpdate["scope"], membersCount: groupToUpdate["membersCount"]});
 
-          if(group.guid === groupToUpdate.guid) {
-            groupIndex = index;
-            groupFound = Object.assign({}, group, groupToUpdate, {scope: groupToUpdate["scope"], membersCount: groupToUpdate["membersCount"]});
-
-          }
-      });
-
-      const groupList = groups.splice(groupIndex, 1, groupFound);
-      this.setState({grouplist: [...groups]});
+        groups.splice(groupKey, 1, newGroupObj);
+        this.setState({grouplist: groups});
+      }
     }
 
   }
 
   componentWillUnmount() {
     this.GroupListManager = null;
+  }
+
+  groupUpdated = (key, message, group, options) => {
+    
+    switch(key) {
+      case enums.GROUP_MEMBER_SCOPE_CHANGED:
+        this.updateGroup(group, undefined, options);
+        break;
+      case enums.GROUP_MEMBER_KICKED:
+        this.updateGroup(group, "decrement", options);
+        break;
+      case enums.GROUP_MEMBER_BANNED:
+        this.updateGroup(group, "decrement", options);
+        break;
+      case enums.GROUP_MEMBER_UNBANNED:
+        this.updateGroup(group, undefined, options);
+        break;
+      case enums.GROUP_MEMBER_ADDED:
+        this.updateGroup(group, "increment", options);
+        break;
+      case enums.GROUP_MEMBER_LEFT:
+        this.updateGroup(group, "decrement");
+        break;
+      case enums.GROUP_MEMBER_JOINED:
+        this.updateGroup(group, "increment");
+        break;
+      default:
+        break;
+    }
+  }
+
+  updateGroup = (group, operator, options) => {
+    
+    let grouplist = [...this.state.grouplist];
+
+    //search for group
+    let groupKey = grouplist.findIndex((g, k) => g.guid === group.guid);
+
+    if(groupKey > -1) {
+
+      let groupObj = {...grouplist[groupKey]};
+
+      let membersCount = parseInt(groupObj.membersCount);
+      let scope = groupObj.scope;
+      let hasJoined = groupObj.hasJoined;
+
+      //member added to group / member joined
+      if(operator === "increment") {
+        membersCount = membersCount + 1;
+      } else if(operator === "decrement") {//member kicked, banned / member left
+        membersCount = membersCount - 1;
+      }
+
+      //if the loggedin user has been kicked from / or added to group / scope is changed
+      if(options && this.loggedInUser.uid === options.user.uid) {
+        
+        if(options.hasOwnProperty('scope')) {
+          scope = options.scope;
+        } else if(options.hasOwnProperty('hasJoined')) {
+          hasJoined = options.hasJoined;
+        }
+      }
+      let newgroupObj = Object.assign({}, groupObj, {membersCount: membersCount, scope: scope, hasJoined: hasJoined});
+
+      grouplist.splice(groupKey, 1, newgroupObj);
+
+      this.setState({ grouplist: grouplist });
+    }
   }
   
   handleScroll = (e) => {
@@ -115,19 +180,19 @@ class CometChatGroupList extends React.Component {
 
         const groups = [...this.state.grouplist];
 
-        let groupIndex = -1, groupFound = {};
-        groups.forEach((group, index) => {
+        let groupKey = groups.findIndex((g, k) => g.guid === guid);
+        if(groupKey > -1) {
 
-          if(group.guid === guid) {
-            groupIndex = index;
-            groupFound = Object.assign({}, group, response, {"scope": CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT});
-          }
+          const groupObj = groups[groupKey];
+          const newGroupObj = Object.assign({}, groupObj, response, {"scope":  CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT});
 
-        });
-        const groupList = groups.splice(groupIndex, 1, groupFound);
-        this.setState({grouplist: [...groups]});
-        this.props.onItemClick(groupFound, 'group');
+          groups.splice(groupKey, 1, newGroupObj);
+          this.setState({grouplist: groups});
 
+          this.props.onItemClick(newGroupObj, 'group');
+
+        } 
+        
       }).catch(error => {
         console.log("Group joining failed with exception:", error);
       });
@@ -176,17 +241,18 @@ class CometChatGroupList extends React.Component {
   getGroups = () => {
 
     this.setState({loading: true});
-    new CometChatManager().getLoggedInUser().then(group => {
+    new CometChatManager().getLoggedInUser().then(user => {
 
-        this.GroupListManager.fetchNextGroups().then(groupList => {
+      this.loggedInUser = user;
+      this.GroupListManager.fetchNextGroups().then(groupList => {
 
-          groupList.forEach(group => group = this.setAvatar(group));
-          this.setState({ grouplist: [...this.state.grouplist, ...groupList], loading: false });
+        groupList.forEach(group => group = this.setAvatar(group));
+        this.setState({ grouplist: [...this.state.grouplist, ...groupList], loading: false });
 
-        }).catch(error => {
-          console.error("[CometChatGroupList] getGroups fetchNextGroups error", error);
-          this.setState({loading: false});
-        });
+      }).catch(error => {
+        console.error("[CometChatGroupList] getGroups fetchNextGroups error", error);
+        this.setState({loading: false});
+      });
 
     }).catch(error => {
       console.log("[CometChatGroupList] getUsers getLoggedInUser error", error);

@@ -3,6 +3,7 @@
 
 .unified {
   display:flex;
+  flex-direction: row;
   position: fixed;
   height: 100%;
   width: 100%;
@@ -10,34 +11,47 @@
   .ccl-left-panel { 
     width: 280px;
     border-right:1px solid $light-background-border;
-    height:100vh;
+    height: 100%;
     position:relative;
 
     .chat-contact-list-ext-wrap,
     .group-list-ext-wrap {
-      height: calc(100vh - 175px);
+      height: calc(100% - 175px);
     }
 
     .chat-ppl-list-ext-wrap {
-      height: calc(100vh - 125px);
+      height: calc(100% - 125px);
     }
   }
 
   .ccl-center-panel {
-    height:100vh;
-    flex: 1;
-    width: calc(100% - 680px);
+    // height:100vh;
+    // flex: 1 1 auto;
+    width: calc(100% - 280px);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    order: 2;
 
     h1 {
       @include text-center;
     }
   }
 
+  .ccl-center-panel.right-panel-active {
+    width: calc(100% - 680px);
+  }
+
   .ccl-right-panel {
     float:right;
     border-left: 1px solid $light-background-border;
-    height:100vh;
+    height: 100%;
     width: 400px;
+
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    order: 3;
   }
 }
 
@@ -58,7 +72,7 @@
   }
   
   .ccl-center-panel {
-    width: 100%;
+    width: 100%!important;
   }
   
   .ccl-right-panel {
@@ -77,4 +91,21 @@
     box-shadow: rgba(0,0,0,.4)-30px 0 30px 30px;
 	}
 
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+}
+/* Track */
+::-webkit-scrollbar-track {
+  background: #ffffff00; 
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #ccc; 
+}
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa; 
 }

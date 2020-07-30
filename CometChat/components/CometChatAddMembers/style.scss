@@ -132,6 +132,12 @@
                     white-space: nowrap;
                 }
 
+                span.avatar {
+                    .presence {
+                        left: -8px;
+                    }
+                }
+
                 input[type="checkbox"] {
                     display: none;
                 }

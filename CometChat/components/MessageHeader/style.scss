@@ -1,7 +1,6 @@
 @import '../../resources/mixins';
 @import '../../resources/colors';
 
-
 .cc1-left-panel-trigger {
     cursor: pointer;
     display: none;
@@ -13,45 +12,55 @@
 }
 
 .cc1-chat-win-user {
-    display:inline-block;
-    float:left;
-    width: calc(100% - 125px);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 90%;
 
     .cc1-chat-win-user-thumb { 
 
-        display:inline-block;
         width:36px;
         height:36px;
 
         img {
             display:block;
-            width:36px;
+            width: 100%;
         } 
     }
 
     .cc1-chat-win-user-name-wrap {
-        display:inline-block;
-        max-width: calc(100% - 50px);
+        width: calc(100% - 40px);
         margin: 0 0 0 5px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        position: relative;
+
+        display: flex;
+        flex-direction: column;
 
         .cc1-chat-win-user-name {
             margin:0;
             font-size:15px;
             font-weight:600;
             letter-spacing:-.1px;
-            max-width: 100%;
+            width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+
+            &:hover + .tooltip {
+                visibility: visible;
+                transition: opacity 0.5s ease;
+                opacity: 1;
+            }
         }
 
         .cc1-chat-win-user-status {
             font-size:13px;
             letter-spacing:-.1px;
             line-height:20px;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .cc1-chat-win-user-status.ccl-blue-color {
@@ -73,16 +82,16 @@
 }
 
 .cc1-chat-win-con-opt-wrap {
-    display: inline-block;
-    float: left;
-    padding: 8px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    width: 10%;
 
     .cc1-chat-win-con-opt {
         display:inline-block;
         width:20px;
         height:20px;
-        padding:2px;
-        margin-left:20px;
         cursor: pointer;
     }
 
@@ -99,13 +108,46 @@
     }
 }
 
+@media (min-width : 320px) and (max-width : 479px) {
+
+    .cc1-chat-win-user {
+        width: 60%;
+    }
+
+    .cc1-chat-win-con-opt-wrap {
+        width: 40%;
+    }
+}
+
+@media (min-width : 480px) and (max-width : 959px) {
+
+    .cc1-chat-win-user {
+        width: 70%;
+    }
+
+    .cc1-chat-win-con-opt-wrap {
+        width: 30%;
+    }
+}
+
+@media (min-width : 960px) and (max-width : 1366px) {
+
+    .cc1-chat-win-user {
+        width: 80%;
+    }
+
+    .cc1-chat-win-con-opt-wrap {
+        width: 20%;
+    }
+}
+
 @media (min-width : 320px) and (max-width : 767px) {
 
     .cc1-left-panel-trigger {
         display: block;
     }
 
-    .cc1-chat-win-user {
-        width: calc(100% - 170px);
+    .cc1-chat-win-user-name-wrap {
+        width: calc(100% - 80px)!important;
     }
 }

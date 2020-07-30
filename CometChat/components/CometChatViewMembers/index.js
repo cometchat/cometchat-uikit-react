@@ -76,8 +76,8 @@ class CometChatViewMembers extends React.Component {
         CometChat.updateGroupMemberScope(guid, member.uid, scope).then(response => {
             
             if(response) {
-                console.log("Group member scopped changed", response);
-                const updatedMember = {...member, scope: scope};
+                console.log("Group member scope changed", response);
+                const updatedMember = Object.assign({}, member, {scope: scope});
                 this.props.actionGenerated("updateGroupParticipants", updatedMember);
             }
             

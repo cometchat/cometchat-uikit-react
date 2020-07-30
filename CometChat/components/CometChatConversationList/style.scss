@@ -26,14 +26,22 @@
 
 .chat-ppl-list-ext-wrap {
     height: calc(100vh - 75px);
-    overflow-y:auto;
+    width:100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 
-    .loading-text {
-        height: 20px;
-        color:$secondary;
-        margin: 0 auto;
-        width: 100px;
-        text-align: center;
-        font-size: 1.5rem;
-    }
+.loading-text {
+    background-color: $white;
+    height: 20px;
+    color: $secondary;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0);
+    width: 100%;
+    z-index: 2;
+}
+
+.loading-text.hide {
+    display: none;
 }

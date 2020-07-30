@@ -6,7 +6,8 @@
     position: relative;
 }
 
-.presence.online {
+.presence.online,
+.presence.available {
     background-color: rgb(0, 255, 0);
 }
 

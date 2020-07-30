@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import "./style.scss";
 
 import Avatar from "../Avatar";
+import StatusIndicator from "../StatusIndicator";
 
 const AddMemberView = (props) => {
 
@@ -28,6 +29,11 @@ const AddMemberView = (props) => {
           image={props.user.avatar} 
           cornerRadius="50%" 
           borderColor="#CCC" 
+          borderWidth="1px" />
+          <StatusIndicator
+          status={props.user.status}
+          cornerRadius="50%" 
+          borderColor="rgb(238, 238, 238)" 
           borderWidth="1px" />
         </span>
         <span className="name">{props.user.name}</span>

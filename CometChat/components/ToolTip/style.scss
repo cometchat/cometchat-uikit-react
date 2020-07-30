@@ -1,0 +1,32 @@
+@import '../../resources/mixins';
+@import '../../resources/colors';
+
+.cc1-chat-win-msg-actions {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    z-index: 1;
+    display: none;
+
+    .cc1-chat-win-msg-action-group {
+        background-color: $white;
+        line-height: 1;
+        margin-left: 8px;
+        border: 1px solid $grey;
+        box-shadow: 2px 2px 2px 1px $grey;
+        display: flex;
+        padding: 2px;
+        border-radius: .375em;
+
+        .cc1-chat-win-msg-action-button {
+            height: 32px;
+            width: 32px;
+            border-radius: 4px;
+            align-items: center;
+            display: inline-flex;
+            justify-content: center;
+            position: relative;
+            background: url(./resources/reply.svg) center center / 18px 19px no-repeat;
+        }
+    }
+}

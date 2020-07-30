@@ -7,22 +7,38 @@
     background-color: $light-background;
     z-index:1;
     border-bottom: 1px solid $light-background-border;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
 .cc1-chat-win-conver-wrap {
-    padding:5px 16px;
-    height:calc(100vh - 132px);
-    overflow-y:auto;
+    // padding:5px 16px;
+    // height: calc(100vh - 200px);
+    // overflow-y:auto;
+    // background-color: $light-background;
+    // z-index:1;
+    // position:relative;
+    // width: 100%;
     background-color: $light-background;
     z-index:1;
-    position:relative;
+    width: 100%;
+
+    flex: 1 1 0;
+    order: 2;
+    position: relative;
 }
 
 .cc1-chat-win-inpt-ext-wrap {
-    padding: 14px 0;
+    padding: 14px 16px;
     width: 100%;
     background-color: $light-background;
     z-index: 1;
+
+    order: 3;
+    position: relative;
+    flex: none;
+    min-height: 105px;
 }
 
 .dark {

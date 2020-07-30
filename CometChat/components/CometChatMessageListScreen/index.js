@@ -112,7 +112,7 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   }
 
-  actionHandler = (action, messages, key, ...otherProps) => {
+  actionHandler = (action, messages, key, group, options) => {
     
     switch(action) {
       case "messageReceived": {
@@ -141,7 +141,7 @@ class CometChatMessageListScreen extends React.PureComponent {
         this.props.actionGenerated("viewMessageThread", messages);
       break;
       case "groupUpdated":
-        this.groupUpdated(messages, key, ...otherProps);
+        this.groupUpdated(messages, key, group, options);
       break;
       default:
       break;
@@ -174,9 +174,10 @@ class CometChatMessageListScreen extends React.PureComponent {
     this.setState({ messageList: messages });
   }
 
-  groupUpdated = (message, key, ...otherProps) => {
+  groupUpdated = (message, key, group, options) => {
+
     this.appendMessage([message]);
-    this.props.actionGenerated("groupUpdated", message, key, ...otherProps);
+    this.props.actionGenerated("groupUpdated", message, key, group, options);
   }
 
   callScreenAction = (action, call) => {

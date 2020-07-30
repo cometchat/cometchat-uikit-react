@@ -3,6 +3,7 @@ import React from "react";
 import { CometChat } from "@cometchat-pro/chat";
 
 import Avatar from "../Avatar";
+import StatusIndicator from "../StatusIndicator";
 
 import unban from "./resources/block.svg";
 
@@ -36,10 +37,15 @@ const memberview = (props) => {
         <tr>
             <td data-label="Name">
             <span className="avatar">
-                <Avatar 
+            <Avatar 
             image={props.member.avatar} 
             cornerRadius="18px" 
             borderColor="#CCC"
+            borderWidth="1px" />
+            <StatusIndicator
+            status={props.member.status}
+            cornerRadius="50%" 
+            borderColor="rgb(238, 238, 238)" 
             borderWidth="1px" />
             </span>
             <span className="name">{name}</span>

@@ -48,10 +48,6 @@ class CometChatUserListScreen extends React.Component {
     this.setState({ item: {...item}, type, viewdetailscreen: false });
   }
 
-  updateSelectedUser = (item) => {
-    this.setState({ item: {...item}});
-  }
-
   actionHandler = (action, item) => {
     
     switch(action) {
@@ -199,18 +195,21 @@ class CometChatUserListScreen extends React.Component {
       "dark": this.state.darktheme
     });
 
+    const centerPanelClassName = classNames({
+      "ccl-center-panel": true,
+      "ccl-chat-center-panel": true,
+      "right-panel-active": (this.state.threadmessageview || this.state.viewdetailscreen)
+    });  
+
     return (
       <div className={wrapperClassName}>
         <div className="ccl-left-panel" ref={this.leftPanelRef}>
           <CometChatUserList 
           item={this.state.item}
-          userStatusChanged={this.updateSelectedUser}
           onItemClick={this.onItemClicked}
           actionGenerated={this.actionHandler} />
         </div>
-        <div className="ccl-center-panel ccl-chat-center-panel">
-          {messageScreen}
-        </div>
+        <div className={centerPanelClassName}>{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
       </div>

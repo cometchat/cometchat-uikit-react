@@ -1,7 +1,8 @@
 import React from "react";
 import "./style.scss";
 
-import Tooltip from "../Tooltip";
+import ToolTip from "../ToolTip";
+import ReplyCount from "../ReplyCount";
 
 import blueDoubleTick from "./resources/blue-double-tick-icon.png";
 import greyDoubleTick from "./resources/grey-double-tick-icon.png";
@@ -22,35 +23,31 @@ const sendervideobubble = (props) => {
   if((!props.widgetconfig && props.message.replyCount) 
   || (props.widgetconfig && props.widgetconfig["threaded-chats"] && props.message.replyCount)) {
 
-    const replyCount = props.message.replyCount;
-    const replyText = (replyCount === 1) ? `${replyCount} reply` : `${replyCount} replies`;
-    replies = (<span className="cc1-chat-win-replies" onClick={() => props.actionGenerated("viewMessageThread", message)}>{replyText}</span>);
+    replies = (
+      <ReplyCount
+      message={message}
+      action="viewMessageThread"
+      actionGenerated={props.actionGenerated} />
+    );
   }
 
   if((!props.widgetconfig) || (props.widgetconfig && props.widgetconfig["threaded-chats"])) {
-
     tooltip = (
-      <Tooltip 
-      placement="left" 
-      trigger="click" 
-      action="viewMessageThread" 
+      <ToolTip
       message={message}
-      actionGenerated={props.actionGenerated}>
-        <span className="cc1-chat-win-sndr-row-message-action"></span>     
-      </Tooltip>  
+      action="viewMessageThread"
+      actionGenerated={props.actionGenerated} />
     );
   }
 
   return (
     <div className="cc1-chat-win-sndr-row clearfix">
-      <div className="cc1-chat-win-msg-block">  
-        <div className="cc1-chat-win-sndr-video-action-wrap">
-          <div className="cc1-chat-win-sndr-video-wrap">
-            <video controls>
-              <source src={props.message.data.url} />
-            </video>                        
-          </div>
-          {tooltip}                      
+      <div className="cc1-chat-win-msg-block"> 
+        {tooltip}
+        <div className="cc1-chat-win-sndr-video-wrap">
+          <video controls>
+            <source src={props.message.data.url} />
+          </video>                        
         </div>
         <div className="cc1-chat-win-msg-time-wrap">
           {replies}
