@@ -275,7 +275,8 @@ class CometChatGroupListScreen extends React.Component {
           groupToLeave={this.state.groupToLeave}
           groupToUpdate={this.state.groupToUpdate}
           actionGenerated={this.actionHandler}
-          onItemClick={this.onItemClicked} />
+          onItemClick={this.onItemClicked}
+          enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
         <div className={centerPanelClassName}>{messageScreen}</div>
         {detailScreen}

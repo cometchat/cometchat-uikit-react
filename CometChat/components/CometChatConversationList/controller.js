@@ -66,13 +66,13 @@ export class ConversationListManager {
             this.conversationListenerId,
             new CometChat.MessageListener({
                 onTextMessageReceived: textMessage => {
-                    callback(enums.TEXT_MESSAGE_RECEIVED, textMessage);
+                    callback(enums.TEXT_MESSAGE_RECEIVED, null, textMessage);
                 },
                 onMediaMessageReceived: mediaMessage => {
-                    callback(enums.MEDIA_MESSAGE_RECEIVED, mediaMessage);
+                    callback(enums.MEDIA_MESSAGE_RECEIVED, null, mediaMessage);
                 },
                 onCustomMessageReceived: customMessage => {
-                    callback(enums.CUSTOM_MESSAGE_RECEIVED, customMessage);
+                    callback(enums.CUSTOM_MESSAGE_RECEIVED, null, customMessage);
                 },
             })
         );

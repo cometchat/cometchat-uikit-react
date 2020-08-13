@@ -17,12 +17,15 @@ const navbar = (props) => {
         return <CometChatUserList 
         item={props.item}
         actionGenerated={props.actionGenerated}
+        enableCloseMenu={props.enableCloseMenu}
         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatUserList>;
       case "calls":
         return "calls";
       case "conversations":
         return <CometChatConversationList 
+        item={props.item}
         actionGenerated={props.actionGenerated}
+        enableCloseMenu={props.enableCloseMenu}
         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatConversationList>;
       case "groups":
         return <CometChatGroupList 
@@ -30,6 +33,7 @@ const navbar = (props) => {
         groupToDelete={props.groupToDelete}
         groupToUpdate={props.groupToUpdate}
         actionGenerated={props.actionGenerated}
+        enableCloseMenu={props.enableCloseMenu}
         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatGroupList>;
       case "info":
         return <CometChatUserInfoScreen 

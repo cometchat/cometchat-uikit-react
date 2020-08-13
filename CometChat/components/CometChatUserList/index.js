@@ -146,13 +146,6 @@ class CometChatUserList extends React.PureComponent {
   }
 
   render() {
-
-    let loading = null;
-    if(this.state.loading) {
-      loading = (
-        <div className="loading-text">Loading...</div>
-      );
-    }
     
     const userList = [...this.state.userlist];
     let currentLetter = "";
@@ -180,10 +173,15 @@ class CometChatUserList extends React.PureComponent {
 
     });
 
+    let closeBtn = (<div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>);
+    if(this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0) {
+      closeBtn = null;
+    }
+
     return (
       <React.Fragment>
         <div className="ccl-left-panel-head-wrap">
-          <div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>
+          {closeBtn}
           <h4 className="ccl-left-panel-head-ttl">Contacts</h4>
         </div>
         <div className="ccl-left-panel-srch-wrap">

@@ -289,13 +289,6 @@ class CometChatGroupList extends React.Component {
 
   render() {
 
-    let loading = null;
-    if(this.state.loading) {
-      loading = (
-        <div className="loading-text">Loading...</div>
-      );
-    }
-
     const groups = this.state.grouplist.map((group, key) => {
 
       return (
@@ -311,11 +304,16 @@ class CometChatGroupList extends React.Component {
       addgroup = (<div className="ccl-left-panel-head-edit-link" onClick={() => this.createGroupHandler(true)}></div>);
     }
 
+    let closeBtn = (<div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>);
+    if(this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0) {
+      closeBtn = null;
+    }
+
     return (
       <React.Fragment>
         <div className="ccl-left-panel-head-wrap">
+          {closeBtn}
           <h4 className="ccl-left-panel-head-ttl">Groups</h4>
-          <div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>
           {addgroup}
         </div>
         <div className="ccl-left-panel-srch-wrap">
