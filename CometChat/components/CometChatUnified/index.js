@@ -313,7 +313,8 @@ class CometChatUnified extends React.Component {
             groupToDelete={this.state.groupToDelete}
             groupToLeave={this.state.groupToLeave}
             groupToUpdate={this.state.groupToUpdate}
-            actionGenerated={this.navBarAction} />
+            actionGenerated={this.navBarAction}
+            enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
         <div className={centerPanelClassName}>{messageScreen}</div>
         {detailScreen}

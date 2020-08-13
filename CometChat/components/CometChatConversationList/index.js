@@ -282,16 +282,16 @@ class CometChatConversationList extends React.Component {
       );
     });
 
-    const loadingClassName = classNames({
-      "loading-text": true,
-      "hide": !(this.state.loading)
-    }); 
+    let closeBtn = (<div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>);
+    if(this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0) {
+      closeBtn = null;
+    }
 
     return (
       <React.Fragment>
         <div className="ccl-left-panel-head-wrap">
+          {closeBtn}
           <h4 className="ccl-left-panel-head-ttl">Chats</h4>
-          <div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>
         </div>
         {/* <div className={loadingClassName}>Loading...</div> */}
         <div className="chat-ppl-list-ext-wrap" onScroll={this.handleScroll}>
