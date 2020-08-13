@@ -34,6 +34,27 @@ class CometChatConversationList extends React.Component {
     this.ConversationListManager.attachListeners(this.conversationUpdated);
   }
 
+  componentDidUpdate(prevProps, prevState) {
+
+    //if user is blocked/unblocked, update conversationlist in state
+    if(prevProps.item 
+    && Object.keys(prevProps.item).length 
+    && prevProps.item.uid === this.props.item.uid 
+    && prevProps.item.blockedByMe !== this.props.item.blockedByMe) {
+
+      let conversationlist = [...this.state.conversationlist];
+
+      //search for user
+      let convKey = conversationlist.findIndex((c, k) => c.conversationType === "user" && c.conversationWith.uid === this.props.item.uid);
+      if(convKey > -1) {
+
+        conversationlist.splice(convKey, 1);
+
+        this.setState({ conversationlist: conversationlist });
+      }
+    }
+  }
+
   componentWillUnmount() {
     this.ConversationListManager.removeListeners();
     this.ConversationListManager = null;
