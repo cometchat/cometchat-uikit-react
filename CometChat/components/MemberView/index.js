@@ -1,5 +1,8 @@
 import React from "react";
 
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
+
 import { CometChat } from "@cometchat-pro/chat";
 
 import Avatar from "../Avatar";
@@ -7,12 +10,23 @@ import StatusIndicator from "../StatusIndicator";
 
 import GroupDetailContext from '../CometChatGroupDetail/context';
 
+import {
+    tableRowStyle,
+    tableColumnStyle,
+    avatarStyle,
+    nameStyle,
+    roleStyle,
+    scopeStyle,
+    actionColumnStyle,
+    scopeWrapperStyle,
+    scopeSelectionStyle
+} from "./style";
+
 import scopeIcon from "./resources/create.svg";
 import doneIcon from "./resources/done.svg";
 import clearIcon from "./resources/clear.svg";
 import banIcon from "./resources/block.svg";
 import kickIcon from "./resources/delete.svg";
-import "./style.scss";
 
 class MemberView extends React.Component {
 
@@ -34,7 +48,6 @@ class MemberView extends React.Component {
         this.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT] = "Participant";
     }
     
-
     state = {
         showChangeScope: false,
         scope: null
@@ -53,6 +66,25 @@ class MemberView extends React.Component {
         this.toggleChangeScope();
     }
 
+    toggleTooltip = (event, flag) => {
+
+        const elem = event.currentTarget;
+        const nameContainer = elem.lastChild;
+    
+        const scrollWidth = nameContainer.scrollWidth;
+        const clientWidth = nameContainer.clientWidth;
+        
+        if(scrollWidth <= clientWidth) {
+          return false;
+        }
+    
+        if(flag) {
+            nameContainer.setAttribute("title", nameContainer.textContent);
+        } else {
+            nameContainer.removeAttribute("title");
+        }
+    }
+
     render() {
 
         const group = this.context;
@@ -60,7 +92,7 @@ class MemberView extends React.Component {
         let editClassName = "";
     
         let name = this.props.member.name;
-        let scope = this.roles[this.props.member.scope];
+        let scope = (<span css={roleStyle()}>{this.roles[this.props.member.scope]}</span>);
         let changescope = null;
         let ban = (<img src={banIcon} alt="Ban" onClick={() => {this.props.actionGenerated("ban", this.props.member)}} />);
         let kick = (<img src={kickIcon} alt="Kick" onClick={() => {this.props.actionGenerated("kick", this.props.member)}} />);
@@ -88,9 +120,9 @@ class MemberView extends React.Component {
             }
 
             changescope = (
-                <div className="members-scope-select-wrap">
+                <div css={scopeWrapperStyle()}>
                     <select 
-                    className="members-scope-select"
+                    css={scopeSelectionStyle()}
                     onChange={this.scopeChangeHandler}
                     defaultValue={this.props.member.scope}>{options}</select>
                     <img src={doneIcon} alt="Change Scope" onClick={this.updateMemberScope} />
@@ -99,15 +131,23 @@ class MemberView extends React.Component {
             );
 
         } else {
-            changescope = (
-                <img src={scopeIcon} alt="Change Scope" onClick={() => this.toggleChangeScope(true)} />
-            );
+
+            if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
+                changescope = scope;
+            } else {
+                changescope = (
+                    <React.Fragment>
+                        {scope}
+                        <img src={scopeIcon} alt="Change Scope" onClick={() => this.toggleChangeScope(true)} />
+                    </React.Fragment>
+                );
+            }
         }
 
         //disable change scope, kick, ban of group owner
         if(this.props.item.owner === this.props.member.uid) {
-            scope = "Owner";
-            changescope = null;
+            scope = (<span css={roleStyle()}>{"Owner"}</span>);
+            changescope = scope;
             ban = null;
             kick = null;
         }
@@ -115,7 +155,7 @@ class MemberView extends React.Component {
         //disable change scope, kick, ban of self
         if(group.loggedinuser.uid === this.props.member.uid) {
             name = "You";
-            changescope = null;
+            changescope = scope;
             ban = null;
             kick = null;
         }
@@ -123,7 +163,7 @@ class MemberView extends React.Component {
         //if the loggedin user is moderator, don't allow to change scope, ban, kick group moderators or administrators
         if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
         && (this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN || this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR)) {
-            changescope = null;
+            changescope = scope;
             ban = null;
             kick = null;
         }
@@ -132,44 +172,68 @@ class MemberView extends React.Component {
         if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN
         && this.props.item.owner !== group.loggedinuser.uid 
         && this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
-            
-            changescope = null;
+            changescope = scope;
             ban = null;
             kick = null;
         }
-
-        let editAccess = (
-            <React.Fragment>
-                <td data-label="Change Scope" className="changescope"><span>{changescope}</span></td>
-                <td data-label="Ban" className="ban"><span>{ban}</span></td>
-                <td data-label="Kick" className="kick"><span>{kick}</span></td>
-            </React.Fragment>
-        );
-
+        
+        let editAccess = null;
         //if the loggedin user is participant, don't show change scope, ban, kick group members
         if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
             editAccess = null;
-            editClassName = "noedit";
+            editClassName = "true";
+        } else {
+
+            editAccess = (
+                <React.Fragment>
+                    <td css={actionColumnStyle()}><span>{ban}</span></td>
+                    <td css={actionColumnStyle()}><span>{kick}</span></td>
+                </React.Fragment>
+            );
+
+            if(this.props.hasOwnProperty("widgetsettings") && this.props.widgetsettings && this.props.widgetsettings.hasOwnProperty("main")) {
+    
+                //if kick_ban_members is disabled in chatwidget
+                if (this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members")
+                && this.props.widgetsettings.main["allow_kick_ban_members"] === false) {
+    
+                    editAccess = null;//(<td data-label="Change Scope" className="changescope">{changescope}</td>);
+                }
+
+                //if promote_demote_members is disabled in chatwidget
+                if (this.props.widgetsettings.main.hasOwnProperty("allow_promote_demote_members")
+                && this.props.widgetsettings.main["allow_promote_demote_members"] === false) {
+    
+                    changescope = scope;
+                }
+            }
         }
+
+        let userPresence = (
+            <StatusIndicator
+            widgetsettings={this.props.widgetsettings}
+            status={this.props.member.status}
+            cornerRadius="50%" 
+            borderColor={this.props.theme.color.darkSecondary}
+            borderWidth="1px" />
+        );
         
         return (
-            <tr>
-                <td data-label="Name" className={editClassName}>
-                    <span className="avatar">
+            <tr css={tableRowStyle(this.props)}>
+                <td css={tableColumnStyle(editClassName)} 
+                onMouseEnter={event => this.toggleTooltip(event, true)}
+                onMouseLeave={event => this.toggleTooltip(event, false)}>
+                    <div css={avatarStyle(editClassName)}>
                         <Avatar 
                         image={this.props.member.avatar} 
                         cornerRadius="18px" 
-                        borderColor="#CCC"
+                        borderColor={this.props.theme.color.secondary}
                         borderWidth="1px" />
-                        <StatusIndicator
-                        status={this.props.member.status}
-                        cornerRadius="50%" 
-                        borderColor="rgb(238, 238, 238)" 
-                        borderWidth="1px" />
-                    </span>
-                    <span className="name">{name}</span>
+                        {userPresence}
+                    </div>
+                    <div css={nameStyle(editClassName)}>{name}</div>
                 </td>
-                <td data-label="Scope" className="role">{scope}</td>
+                <td css={scopeStyle()}>{changescope}</td>
                 {editAccess}
             </tr>
         );

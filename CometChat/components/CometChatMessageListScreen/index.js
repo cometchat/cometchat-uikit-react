@@ -1,21 +1,28 @@
 import React from "react";
-import "./style.scss";
 
-import { CometChat } from "@cometchat-pro/chat";
-
-import { CometChatManager } from "../../util/controller";
+/** @jsx jsx */
+import { jsx } from '@emotion/core';
 
 import MessageHeader from "../MessageHeader";
 import MessageList from "../MessageList";
 import MessageComposer from "../MessageComposer";
-import CallScreen from "../CallScreen";
+
+import { theme } from "../../resources/theme";
+
+import { chatWrapperStyle } from "./style";
 
 class CometChatMessageListScreen extends React.PureComponent {
 
-  state = {
-    messageList: [],
-    scrollToBottom: true,
-    outgoingCall: null
+  constructor(props) {
+
+    super(props);
+
+    this.state = {
+      messageList: [],
+      scrollToBottom: true
+    }
+
+    this.theme = Object.assign({}, theme, this.props.theme);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -35,86 +42,17 @@ class CometChatMessageListScreen extends React.PureComponent {
     } else if(prevProps.composedthreadmessage !== this.props.composedthreadmessage) {
 
       this.updateReplyCount(this.props.composedthreadmessage);
+    } else if(prevProps.callmessage !== this.props.callmessage) {
+
+      this.actionHandler("callUpdated", this.props.callmessage);
     }
-
-  }
-
-  messageHeaderActionHandler = (action) => {
-    
-    switch(action) {
-      case "audioCall":
-        this.audioCall();
-      break;
-      case "videoCall":
-        this.videoCall();
-      break;
-      case "viewDetail":
-        this.props.actionGenerated("viewDetail");
-      break;
-      case "menuClicked":
-        this.props.actionGenerated("menuClicked");
-      break;
-      default:
-      break;
-    }
-  }
-
-  audioCall = () => {
-
-    let receiverId, receiverType;
-    if(this.props.type === "user") {
-
-      receiverId = this.props.item.uid;
-      receiverType = CometChat.RECEIVER_TYPE.USER;
-
-    } else if(this.props.type === "group") {
-
-      receiverId = this.props.item.guid;
-      receiverType = CometChat.RECEIVER_TYPE.GROUP;
-    }
-
-    let callType = CometChat.CALL_TYPE.AUDIO;
-
-    CometChatManager.audioCall(receiverId, receiverType, callType).then(call => {
-
-      this.callScreenAction("callStarted", call);
-      this.setState({ outgoingCall: call });
-
-    }).catch(error => {
-      console.log("Call initialization failed with exception:", error);
-    });
-
-  }
-
-  videoCall = () => {
-
-    let receiverId, receiverType;
-    if(this.props.type === "user") {
-
-      receiverId = this.props.item.uid;
-      receiverType = CometChat.RECEIVER_TYPE.USER;
-
-    } else if(this.props.type === "group") {
-      receiverId = this.props.item.guid;
-      receiverType = CometChat.RECEIVER_TYPE.GROUP;
-    }
-   
-    let callType = CometChat.CALL_TYPE.VIDEO;
-
-    CometChatManager.videoCall(receiverId, receiverType, callType).then(call => {
-
-      this.callScreenAction("callStarted", call);
-      this.setState({ outgoingCall: call });
-
-    }).catch(error => {
-      console.log("Call initialization failed with exception:", error);
-    });
 
   }
 
   actionHandler = (action, messages, key, group, options) => {
     
     switch(action) {
+      case "customMessageReceived":
       case "messageReceived": {
 
         const message = messages[0];
@@ -123,6 +61,8 @@ class CometChatMessageListScreen extends React.PureComponent {
         } else {
           this.appendMessage(messages);
         }
+
+        this.props.actionGenerated(action, messages);
       }
       break;
       case "messageComposed":
@@ -134,6 +74,9 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "messageFetched":
         this.prependMessages(messages);
       break;
+      case "messageFetchedAgain": 
+        this.prependMessagesAndScrollBottom(messages);
+      break;
       case "messageDeleted":
         this.removeMessages(messages);
       break;
@@ -143,9 +86,41 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "groupUpdated":
         this.groupUpdated(messages, key, group, options);
       break;
+      case "callUpdated":
+        this.callUpdated(messages);
+      break;
+      case "pollAnswered": 
+        this.updatePollMessage(messages)
+      break;
+      case "pollCreated":
+        this.appendPollMessage(messages)
+      break;
       default:
       break;
     }
+  }
+
+  updatePollMessage = (message) => {
+
+    const messageList = [...this.state.messageList];
+    const messageId = message.poll.id;
+    let messageKey = messageList.findIndex((m, k) => m.id === messageId);
+    if (messageKey > -1) {
+
+      const messageObj = messageList[messageKey]; 
+
+      const metadataObj = { "@injected": { "extensions": { "polls": message.poll }}};
+
+      const newMessageObj = { ...messageObj, "metadata": metadataObj };
+
+      messageList.splice(messageKey, 1, newMessageObj);
+      this.updateMessages(messageList);
+    }
+  }
+
+  appendPollMessage = (messages) => {
+
+    this.appendMessage(messages); 
   }
 
   //messages are deleted
@@ -158,12 +133,19 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   //messages are fetched from backend
   prependMessages = (messages) => {
+
     const messageList = [...messages, ...this.state.messageList];
     this.setState({ messageList: messageList, scrollToBottom: false });
   }
 
+  prependMessagesAndScrollBottom = (messages) => {
+    const messageList = [...messages, ...this.state.messageList];
+    this.setState({ messageList: messageList, scrollToBottom: true });
+  }
+
   //message is received or composed & sent
   appendMessage = (message) => {
+
     let messages = [...this.state.messageList];
     messages = messages.concat(message);
     this.setState({ messageList: messages, scrollToBottom: true });
@@ -171,7 +153,7 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   //message status is updated
   updateMessages = (messages) => {
-    this.setState({ messageList: messages });
+    this.setState({ messageList: messages, scrollToBottom: false });
   }
 
   groupUpdated = (message, key, group, options) => {
@@ -180,18 +162,8 @@ class CometChatMessageListScreen extends React.PureComponent {
     this.props.actionGenerated("groupUpdated", message, key, group, options);
   }
 
-  callScreenAction = (action, call) => {
-
-    switch(action) {
-      case "callStarted":
-      case "callEnded":
-        if(!call) return;
-        this.appendMessage(call);
-      break;
-      default:
-      break;
-    }
-
+  callUpdated = (message) => {
+    this.appendMessage([message]);
   }
 
   updateReplyCount = (messages) => {
@@ -218,34 +190,48 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   render() {
 
-    return (
+    let messageComposer = (
+      <MessageComposer 
+      theme={this.theme}
+      item={this.props.item} 
+      type={this.props.type}
+      widgetsettings={this.props.widgetsettings}
+      enableCreatePoll={this.props.enableCreatePoll}
+      actionGenerated={this.actionHandler} />
+    );
+    if(this.props.hasOwnProperty("widgetsettings")
+    && this.props.widgetsettings
+    && this.props.widgetsettings.hasOwnProperty("main") 
+    && this.props.widgetsettings.main.hasOwnProperty("enable_sending_messages")
+    && this.props.widgetsettings.main["enable_sending_messages"] === false) {
+      messageComposer = null;
+    }
 
-      <React.Fragment>
+    return (
+      <div css={chatWrapperStyle(this.theme)}>
         <MessageHeader 
-          item={this.props.item} 
-          type={this.props.type} 
-          viewdetail={this.props.viewdetail === false ? false : true}
-          audiocall={this.props.audiocall === false ? false : true}
-          videocall={this.props.videocall === false ? false : true}
-          actionGenerated={this.messageHeaderActionHandler}></MessageHeader>
+        sidebar={this.props.sidebar}
+        theme={this.theme}
+        item={this.props.item} 
+        type={this.props.type} 
+        viewdetail={this.props.viewdetail === false ? false : true}
+        audiocall={this.props.audiocall === false ? false : true}
+        videocall={this.props.videocall === false ? false : true}
+        widgetsettings={this.props.widgetsettings}
+        loggedInUser={this.props.loggedInUser}
+        actionGenerated={this.props.actionGenerated} />
         <MessageList 
-          messages={this.state.messageList} 
-          item={this.props.item} 
-          type={this.props.type}
-          scrollToBottom={this.state.scrollToBottom}
-          messageconfig={this.props.messageconfig}
-          widgetconfig={this.props.widgetconfig}
-          actionGenerated={this.actionHandler}></MessageList>
-        <MessageComposer 
-          item={this.props.item} 
-          type={this.props.type}
-          actionGenerated={this.actionHandler}></MessageComposer>
-        <CallScreen className="callscreen"
-          item={this.props.item} 
-          type={this.props.type}
-          actionGenerated={this.callScreenAction} 
-          outgoingCall={this.state.outgoingCall} />
-      </React.Fragment>
+        theme={this.theme}
+        messages={this.state.messageList} 
+        item={this.props.item} 
+        type={this.props.type}
+        scrollToBottom={this.state.scrollToBottom}
+        messageconfig={this.props.messageconfig}
+        widgetsettings={this.props.widgetsettings}
+        widgetconfig={this.props.widgetconfig}
+        actionGenerated={this.actionHandler} />
+        {messageComposer}
+      </div>
     )
   }
 }

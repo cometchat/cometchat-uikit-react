@@ -1,5 +1,7 @@
 import React from "react";
-import classNames from "classnames";
+
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -8,7 +10,18 @@ import Backdrop from '../Backdrop';
 
 import GroupDetailContext from '../CometChatGroupDetail/context';
 
-import "./style.scss";
+import {
+    modalWrapperStyle,
+    modalCloseStyle,
+    modalBodyCtyle,
+    modalTableStyle,
+    tableCaptionStyle,
+    tableBodyStyle,
+    scopeColumnStyle,
+    actionColumnStyle
+} from "./style";
+
+import clearIcon from "./resources/clear.svg";
 
 class CometChatViewMembers extends React.Component {
 
@@ -45,12 +58,12 @@ class CometChatViewMembers extends React.Component {
         CometChat.banGroupMember(guid, memberToBan.uid).then(response => {
             
             if(response) {
-                console.log("Group member banning success with response", response);
+                console.log("banGroupMember success with response: ", response);
                 this.props.actionGenerated("removeGroupParticipants", memberToBan);
             }
 
         }).catch(error => {
-            console.log("Group member banning failed with error", error);
+            console.log("banGroupMember failed with error: ", error);
         });
     }
 
@@ -60,12 +73,12 @@ class CometChatViewMembers extends React.Component {
         CometChat.kickGroupMember(guid, memberToKick.uid).then(response => {
             
             if(response) {
-                console.log("kickGroupMember response", response);
+                console.log("kickGroupMember success with response: ", response);
                 this.props.actionGenerated("removeGroupParticipants", memberToKick);
             }
             
         }).catch(error => {
-            console.log("Group member kicking failed with error", error);
+            console.log("kickGroupMember failed with error: ", error);
         });
     }
 
@@ -76,13 +89,13 @@ class CometChatViewMembers extends React.Component {
         CometChat.updateGroupMemberScope(guid, member.uid, scope).then(response => {
             
             if(response) {
-                console.log("Group member scope changed", response);
+                console.log("updateGroupMemberScope success with response: ", response);
                 const updatedMember = Object.assign({}, member, {scope: scope});
                 this.props.actionGenerated("updateGroupParticipants", updatedMember);
             }
             
         }).catch(error => {
-            console.log("Group member scopped changed failed", error);
+            console.log("updateGroupMemberScope failed with error: ", error);
         });
     }
 
@@ -95,45 +108,56 @@ class CometChatViewMembers extends React.Component {
         const groupMembers = membersList.map((member, key) => {
         
             return (<MemberView 
+                theme={this.props.theme}
                 key={key} 
                 member={member}
                 item={this.props.item}
+                widgetsettings={this.props.widgetsettings}
                 actionGenerated={this.updateMembers} />);
         });
 
-        const wrapperClassName = classNames({
-            "popup-box": true,
-            "view-member-popup": true,
-            "show": this.props.open
-        });
+        // const wrapperClassName = classNames({
+        //     "modal__viewmembers": true,
+        //     "modal--show": this.props.open
+        // });
 
         let editAccess = null;
         if(this.props.item.scope !== CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
+
             editAccess = (
                 <React.Fragment>
-                    <th scope="col">Change Scope</th>
-                    <th scope="col">Ban</th>
-                    <th scope="col">Kick</th>
+                    <th css={actionColumnStyle()}>Ban</th>
+                    <th css={actionColumnStyle()}>Kick</th>
                 </React.Fragment>
             );
+
+            if(this.props.hasOwnProperty("widgetsettings") && this.props.widgetsettings && this.props.widgetsettings.hasOwnProperty("main")) {
+
+                //if kick_ban_members && promote_demote_members are disabled in chatwidget
+                if(this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members") 
+                && this.props.widgetsettings.main["allow_kick_ban_members"] === false) {
+
+                    editAccess = null;
+                }
+            }
         }
 
         return (
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
-                <div className={wrapperClassName}>
-                    <span className="popup-close" onClick={this.props.close} title="Close"></span>
-                    <div className="popup-body">
-                        <table>
-                            <caption>Group Members</caption>
-                            <thead>
+                <div css={modalWrapperStyle(this.props)}>
+                    <span css={modalCloseStyle(clearIcon)} onClick={this.props.close} title="Close"></span>
+                    <div css={modalBodyCtyle()}>
+                        <table css={modalTableStyle(this.props)}>
+                            <caption css={tableCaptionStyle()}>Group Members</caption>
+                            <thead> 
                                 <tr>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Scope</th>
+                                    <th>Name</th>
+                                    <th css={scopeColumnStyle()}>Scope</th>
                                     {editAccess}
                                 </tr>
                             </thead>
-                            <tbody onScroll={this.handleScroll}>{groupMembers}</tbody>
+                            <tbody css={tableBodyStyle()} onScroll={this.handleScroll}>{groupMembers}</tbody>
                         </table>
                     </div>
                 </div>

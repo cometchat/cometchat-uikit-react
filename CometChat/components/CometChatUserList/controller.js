@@ -3,7 +3,7 @@ import { CometChat } from "@cometchat-pro/chat";
 export class UserListManager {
 
     userRequest = null;
-    userListenerId = new Date().getTime();
+    userListenerId = "userlist_" + new Date().getTime();
 
     constructor(friendsOnly, searchKey) {
 

@@ -1,21 +1,40 @@
 import React from "react";
-import "./style.scss";
+
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../util/controller";
-
-import { CallScreenManager } from "./controller";
 import * as enums from '../../util/enums.js';
-
 import { SvgAvatar } from '../../util/svgavatar';
 
+import { CallScreenManager } from "./controller";
+
 import Avatar from "../Avatar";
+
+import {
+  callScreenWrapperStyle,
+  callScreenContainerStyle,
+  callScreenHeaderStyle,
+  headerDurationStyle,
+  headerNameStyle,
+  thumbnailWrapperStyle,
+  thumbnailStyle,
+  headerIconStyle,
+  iconWrapperStyle,
+  iconStyle
+} from "./style";
+
+import callIcon from "./resources/call-end-white-icon.svg";
 
 class CallScreen extends React.PureComponent {
 
   constructor(props) {
+
     super(props);
+
+    this.callScreenFrame = React.createRef();
 
     this.state = {
       showCallScreen: false,
@@ -66,7 +85,6 @@ class CallScreen extends React.PureComponent {
             callIProgress: call 
           });
         }
-        this.props.actionGenerated("callStarted", call);
       break;
       case enums.OUTGOING_CALL_ACCEPTED://occurs at the caller end
         this.onCallAccepted(call);
@@ -82,18 +100,6 @@ class CallScreen extends React.PureComponent {
       default:
       break;
     }
-
-  }
-
-  onCallDismiss = (call) => {
-    this.setState({
-      showCallScreen: false,
-      showIncomingScreen: false,
-      showOutgoingScreen: false,
-      showIframeScreen: false,
-      callIProgress: undefined
-    });
-    this.props.actionGenerated("callEnded", call);
   }
 
   onCallAccepted = (call) => {
@@ -106,7 +112,7 @@ class CallScreen extends React.PureComponent {
       callIProgress: call
     });
 
-    const el = document.getElementById("cp-call-screen-container");
+    const el = this.callScreenFrame;
     CometChat.startCall(
       call.getSessionId(),
       el,
@@ -138,6 +144,16 @@ class CallScreen extends React.PureComponent {
   );
   }
 
+  onCallDismiss = (call) => {
+    this.setState({
+      showCallScreen: false,
+      showIncomingScreen: false,
+      showOutgoingScreen: false,
+      showIframeScreen: false,
+      callIProgress: undefined
+    });
+  }
+
   //answering incoming call, occurs at the callee end
   acceptCall = () => {
 
@@ -150,7 +166,7 @@ class CallScreen extends React.PureComponent {
         showIframeScreen: true,
       });
       
-      const el = document.getElementById("cp-call-screen-container");
+      const el = this.callScreenFrame;
       CometChat.startCall(
         call.getSessionId(),
         el,
@@ -230,23 +246,22 @@ class CallScreen extends React.PureComponent {
       }
 
       incomingCallScreen = (
-
-        <React.Fragment>
-          <div className="ccl-call-ong-max-header">
-            <h6 className="ccl-call-ong-max-name">{this.state.callIProgress.sender.name}</h6>
+        <div css={callScreenContainerStyle()}>
+          <div css={callScreenHeaderStyle()}>
+            <h6 css={headerNameStyle()}>{this.state.callIProgress.sender.name}</h6>
           </div>
-          <div className="ccl-call-ong-max-thumb-wrap">
-            <div className="ccl-call-ong-max-thumb"><Avatar cornerRadius="50%" image={this.state.callIProgress.sender.avatar} /></div>
+          <div css={thumbnailWrapperStyle()}>
+            <div css={thumbnailStyle()}><Avatar cornerRadius="50%" image={this.state.callIProgress.sender.avatar} /></div>
           </div>
-          <div className="ccl-call-ong-max-cta-wrap">
-            <div className="ccl-call-ong-max-ctablock" onClick={this.acceptCall}>
-              <div  className="ccl-call-ong-max-cta-link callaccept"></div>
+          <div css={headerIconStyle()}>
+            <div css={iconWrapperStyle()} onClick={() => this.rejectCall(CometChat.CALL_STATUS.REJECTED)}>
+              <div css={iconStyle(callIcon, 0)}></div>
             </div>
-            <div className="ccl-call-ong-max-ctablock" onClick={() => this.rejectCall(CometChat.CALL_STATUS.REJECTED)}>
-              <div className="ccl-call-ong-max-cta-link callend"></div>
+            <div css={iconWrapperStyle()} onClick={this.acceptCall}>
+              <div css={iconStyle(callIcon, 1)}></div>
             </div>
           </div>
-        </React.Fragment>
+        </div>
       );
     }
 
@@ -275,28 +290,26 @@ class CallScreen extends React.PureComponent {
       }
 
       outgoingCallScreen = (
-
-        <React.Fragment>
-          <div className="ccl-call-ong-max-header">
-            <span className="ccl-call-ong-max-dur">Calling...</span>
-            <h6 className="ccl-call-ong-max-name">{this.state.callIProgress.receiver.name}</h6>
+        <div css={callScreenContainerStyle()}>
+          <div css={callScreenHeaderStyle()}>
+            <span css={headerDurationStyle()}>Calling...</span>
+            <h6 css={headerNameStyle()}>{this.state.callIProgress.receiver.name}</h6>
           </div>
-          <div className="ccl-call-ong-max-thumb-wrap">
-            <div className="ccl-call-ong-max-thumb">{avatar}</div>
+          <div css={thumbnailWrapperStyle()}>
+            <div css={thumbnailStyle()}>{avatar}</div>
           </div>
-          <div className="ccl-call-ong-max-cta-wrap">
-            <div className="ccl-call-ong-max-ctablock" onClick={() => this.rejectCall(CometChat.CALL_STATUS.CANCELLED)}>
-              <div className="ccl-call-ong-max-cta-link callend"></div>
+          <div css={headerIconStyle()}>
+            <div css={iconWrapperStyle()} onClick={() => this.rejectCall(CometChat.CALL_STATUS.CANCELLED)}>
+              <div css={iconStyle(callIcon, 0)}></div>
             </div>
           </div>
-        </React.Fragment>
+        </div>
       );
     }
 
     if(this.state.showCallScreen) {
       callScreen = (
-
-        <div className="ccl-call-ong-max-wrap audio-video-call" id="cp-call-screen-container"> 
+        <div css={callScreenWrapperStyle(this.props)} ref={(el) => { this.callScreenFrame = el; }}> 
           {incomingCallScreen}
           {outgoingCallScreen}
         </div>

@@ -7,12 +7,20 @@ export class SharedMediaManager {
     mediaMessageListenerId = new Date().getTime();
     mediaMessageRequest = null;
 
-    constructor(guid, type) {
+    constructor(item, type, messagetype) {
 
-        this.mediaMessageRequest = new CometChat.MessagesRequestBuilder(guid)
-        .setGUID(guid)
-        .setLimit(10).setCategory("message").setType(type).build();
+        if(type === "user") {
 
+            this.mediaMessageRequest = new CometChat.MessagesRequestBuilder()
+            .setUID(item.uid)
+            .setLimit(10).setCategory("message").setType(messagetype).build();
+
+        } else {
+
+            this.mediaMessageRequest = new CometChat.MessagesRequestBuilder()
+            .setGUID(item.guid)
+            .setLimit(10).setCategory("message").setType(messagetype).build();
+        }
     }
 
     fetchPreviousMessages() {

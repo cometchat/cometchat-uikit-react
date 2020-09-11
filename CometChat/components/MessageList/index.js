@@ -1,6 +1,7 @@
 import React from "react";
 
-import "./style.scss";
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -19,12 +20,24 @@ import SenderAudioBubble from "../SenderAudioBubble";
 import ReceiverAudioBubble from "../ReceiverAudioBubble";
 import SenderVideoBubble from "../SenderVideoBubble";
 import ReceiverVideoBubble from "../ReceiverVideoBubble";
+import DeletedMessageBubble from "../DeletedMessageBubble";
+import SenderPollBubble from "../SenderPollBubble";
+import ReceiverPollBubble from "../ReceiverPollBubble";
 
 import CallMessage from "../CallMessage";
+
+import { 
+  chatListStyle,
+  listWrapperStyle,
+  listLoadingStyle,
+  actionMessageStyle,
+  actionMessageTxtStyle
+} from "./style";
 
 class MessageList extends React.PureComponent {
   loggedInUser = null;
   lastScrollTop = 0;
+  times = 0;
 
   constructor(props) {
 
@@ -93,15 +106,21 @@ class MessageList extends React.PureComponent {
     }
   }
 
-  getMessages = () => {
+  getMessages = (scrollToBottom = false) => {
 
     this.setState({loading: true});
+    const actionMessages = [];
+    
     new CometChatManager().getLoggedInUser().then((user) => {
       
       this.loggedInUser = user;
       this.MessageListManager.fetchPreviousMessages().then((messageList) => {
 
         messageList.forEach((message) => {
+          
+          if (message.category === "action" && message.sender.uid === "app_system") {
+            actionMessages.push(message);
+          }
 
           //if the sender of the message is not the loggedin user, mark it as read.
           if (message.getSender().getUid() !== user.getUid() && !message.getReadAt()) {
@@ -114,10 +133,26 @@ class MessageList extends React.PureComponent {
           }
 
         });
-        
-        this.lastScrollTop = this.messagesEnd.scrollHeight;
-        this.props.actionGenerated("messageFetched", messageList);
-        this.setState({loading: false});
+
+        let actionGenerated = "messageFetched";
+        if (scrollToBottom === true) {
+          actionGenerated = "messageFetchedAgain";
+        }
+      
+        ++this.times;
+
+          if ((this.times === 1 && actionMessages.length > 5)
+            || (this.times > 1 && actionMessages.length === 30)) {
+
+            this.props.actionGenerated("messageFetched", messageList);
+            this.getMessages(true);
+
+          } else {
+
+            this.lastScrollTop = this.messagesEnd.scrollHeight;
+            this.props.actionGenerated(actionGenerated, messageList);
+            this.setState({ loading: false });
+          }
           
       }).catch((error) => {
         //TODO Handle the erros in contact list.
@@ -140,14 +175,19 @@ class MessageList extends React.PureComponent {
       case enums.MESSAGE_DELETED:
         this.messageDeleted(message);
         break;
+      case enums.MESSAGE_EDITED:
+        this.messageEdited(message);
+        break;
       case enums.MESSAGE_DELIVERED:
       case enums.MESSAGE_READ:
         this.messageReadAndDelivered(message);
         break;
       case enums.TEXT_MESSAGE_RECEIVED:
       case enums.MEDIA_MESSAGE_RECEIVED:
-      case enums.CUSTOM_MESSAGE_RECEIVED:
         this.messageReceived(message);
+        break;
+      case enums.CUSTOM_MESSAGE_RECEIVED:
+        this.customMessageReceived(message);
         break;
       case enums.GROUP_MEMBER_SCOPE_CHANGED:
       case enums.GROUP_MEMBER_JOINED:
@@ -157,6 +197,11 @@ class MessageList extends React.PureComponent {
       case enums.GROUP_MEMBER_BANNED:
       case enums.GROUP_MEMBER_UNBANNED:
         this.groupUpdated(key, message, group, options);
+        break;
+      case enums.INCOMING_CALL_RECEIVED:
+      case enums.OUTGOING_CALL_REJECTED:
+      case enums.INCOMING_CALL_CANCELLED:
+        this.props.actionGenerated("callUpdated", message);
         break;
       default:
         break;
@@ -173,10 +218,101 @@ class MessageList extends React.PureComponent {
         
     } else if (this.props.type === 'user' 
     && message.getReceiverType() === 'user'
-    && message.getSender().getUid() === this.props.item.uid) {
+      && message.getSender().uid === this.props.item.uid) {
 
       this.props.actionGenerated("messageDeleted", [message]);
     }
+  }
+
+  messageEdited = (message) => {
+
+    if ((this.props.type === 'group' && message.getReceiverType() === 'group' && message.getReceiver().guid === this.props.item.guid) 
+      || (this.props.type === 'user' && message.getReceiverType() === 'user' && message.getReceiverId() === this.props.item.uid)) {
+
+      const messageList = [...this.props.messages];
+      let messageKey = messageList.findIndex((m, k) => m.id === message.id);
+
+      if (messageKey > -1) {
+
+        const messageObj = messageList[messageKey];
+        const newMessageObj = Object.assign({}, messageObj, message);
+
+        messageList.splice(messageKey, 1, newMessageObj);
+        this.props.actionGenerated("messageUpdated", messageList);
+      } 
+
+    } 
+  }
+
+  customMessageReceived = (message) => {
+
+    //new messages
+    if (this.props.type === 'group'
+      && message.getReceiverType() === 'group'
+      && message.getReceiverId() === this.props.item.guid) {
+
+      if (!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+      }
+
+      if (message.hasOwnProperty("metadata")) {
+
+        this.props.actionGenerated("customMessageReceived", [message]);
+
+      } else if (message.type === "extension_poll") {//customdata (poll extension) does not have metadata
+
+        const newMessage = this.addMetadataToCustomData(message);
+        this.props.actionGenerated("customMessageReceived", [newMessage]);
+      }
+
+    } else if (this.props.type === 'user'
+      && message.getReceiverType() === 'user'
+      && message.getSender().uid === this.props.item.uid) {
+
+      if (!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
+      }
+
+      if (message.hasOwnProperty("metadata")) {
+
+        this.props.actionGenerated("customMessageReceived", [message]);
+
+      } else if (message.type === "extension_poll") {//customdata (poll extension) does not have metadata
+
+        const newMessage = this.addMetadataToCustomData(message);
+        this.props.actionGenerated("customMessageReceived", [newMessage]);
+      }
+    }
+
+  }
+
+  addMetadataToCustomData = (message) => {
+
+    const customData = message.data.customData;
+    const options = customData.options;
+
+    const resultOptions = {};
+    for (const option in options) {
+
+      resultOptions[option] = {
+        text: options[option],
+        count: 0,
+        voters: []
+      }
+    }
+
+    const polls = {
+      "id": message.id,
+      "options": options,
+      "results": {
+        "total": 0,
+        "options": resultOptions,
+        "question": customData.question
+      },
+      "question": customData.question
+    };
+
+    return { ...message, "metadata": { "@injected": { "extensions": { "polls": polls } } } };
   }
 
   messageReadAndDelivered = (message) => {
@@ -210,7 +346,7 @@ class MessageList extends React.PureComponent {
       }
 
     } else if (message.getReceiverType() === 'group' 
-    && message.getReceiver() === this.props.item.guid) {
+      && message.getReceiver().guid === this.props.item.guid) {
       //not implemented
     }
 
@@ -220,8 +356,8 @@ class MessageList extends React.PureComponent {
 
     //new messages
     if (this.props.type === 'group' 
-    && message.getReceiverType() === 'group'
-    && message.getReceiver().guid === this.props.item.guid) {
+      && message.getReceiverType() === 'group'
+      && message.getReceiverId() === this.props.item.guid) {
 
       if(!message.getReadAt()) {
         CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
@@ -229,11 +365,11 @@ class MessageList extends React.PureComponent {
       this.props.actionGenerated("messageReceived", [message]);
         
     } else if (this.props.type === 'user' 
-    && message.getReceiverType() === 'user'
-    && message.getSender().getUid() === this.props.item.uid) {
+      && message.getReceiverType() === 'user'
+      && message.getSender().uid === this.props.item.uid) {
 
       if(!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
+        CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
       }
 
       this.props.actionGenerated("messageReceived", [message]);
@@ -255,8 +391,11 @@ class MessageList extends React.PureComponent {
   }
 
   handleScroll = (e) => {
+
+    const scrollTop = e.currentTarget.scrollTop;
+    this.lastScrollTop = this.messagesEnd.scrollHeight - scrollTop;
     
-    const top = Math.round(e.currentTarget.scrollTop) === 0;
+    const top = Math.round(scrollTop) === 0;
     if (top && this.props.messages.length) {
       this.getMessages();
     }
@@ -269,59 +408,115 @@ class MessageList extends React.PureComponent {
   getSenderMessageComponent = (message, key) => {
 
     let component;
-    switch (message.type) {
-      case CometChat.MESSAGE_TYPE.TEXT:
-        component =  (message.text ? <SenderMessageBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      case CometChat.MESSAGE_TYPE.IMAGE:
-        component =  (message.data.url ? <SenderImageBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      case CometChat.MESSAGE_TYPE.FILE:
-        component =  (message.data.attachments ? <SenderFileBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      case CometChat.MESSAGE_TYPE.VIDEO:
-        component =  (message.data.url ? <SenderVideoBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      case CometChat.MESSAGE_TYPE.AUDIO:
-        component =  (message.data.url ? <SenderAudioBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      default:
-      break;
-    }
 
+    if(message.hasOwnProperty("deletedAt")) {
+      
+      component = (<DeletedMessageBubble theme={this.props.theme} key={key} message={message} messageOf="sender" />);
+
+    } else {
+
+      switch (message.type) {
+        case CometChat.MESSAGE_TYPE.TEXT:
+          component = (message.text ? <SenderMessageBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        case CometChat.MESSAGE_TYPE.IMAGE:
+          component = (message.data.url ? <SenderImageBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        case CometChat.MESSAGE_TYPE.FILE:
+          component = (message.data.attachments ? <SenderFileBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        case CometChat.MESSAGE_TYPE.VIDEO:
+          component = (message.data.url ? <SenderVideoBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        case CometChat.MESSAGE_TYPE.AUDIO:
+          component = (message.data.url ? <SenderAudioBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        default:
+        break;
+      }
+
+    }
+    
     return component;
   }
 
   getReceiverMessageComponent = (message, key) => {
 
     let component;
-    switch (message.type) {
-      case "message":
-      case CometChat.MESSAGE_TYPE.TEXT:
-        component = (message.text ? <ReceiverMessageBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      case CometChat.MESSAGE_TYPE.IMAGE:
-        component = (message.data.url ? <ReceiverImageBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      case CometChat.MESSAGE_TYPE.FILE:
-        component = (message.data.attachments ? <ReceiverFileBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      case CometChat.MESSAGE_TYPE.AUDIO:
-        component = (message.data.url ? <ReceiverAudioBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      case CometChat.MESSAGE_TYPE.VIDEO:
-        component = (message.data.url ? <ReceiverVideoBubble key={key} message={message} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
-      break;
-      default:
-      break;
+
+    if(message.hasOwnProperty("deletedAt")) {
+
+      component = (<DeletedMessageBubble theme={this.props.theme} key={key} message={message} messageOf="receiver" />);
+
+    } else {
+
+      switch (message.type) {
+        case "message":
+        case CometChat.MESSAGE_TYPE.TEXT:
+          component = (message.text ? <ReceiverMessageBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        case CometChat.MESSAGE_TYPE.IMAGE:
+          component = (message.data.url ? <ReceiverImageBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        case CometChat.MESSAGE_TYPE.FILE:
+          component = (message.data.attachments ? <ReceiverFileBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        case CometChat.MESSAGE_TYPE.AUDIO:
+          component = (message.data.url ? <ReceiverAudioBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        case CometChat.MESSAGE_TYPE.VIDEO:
+          component = (message.data.url ? <ReceiverVideoBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+        break;
+        default:
+        break;
+      }
     }
     return component;
   }
 
-  getCallMessageComponent = (message, key) => {
+  getSenderCustomMessageComponent = (message, key) => {
 
+    let component;
+    if (message.hasOwnProperty("deletedAt")) {
+      component = (<DeletedMessageBubble theme={this.props.theme} key={key} message={message} messageOf="sender" />);
+    } else {
+
+      switch (message.type) {
+        case "extension_poll":
+          component = <SenderPollBubble theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} />;
+          break;
+        default:
+          break;
+      }
+    }
+
+    return component;
+  }
+
+  getReceiverCustomMessageComponent = (message, key) => {
+
+    let component;
+    if (message.hasOwnProperty("deletedAt")) {
+
+      component = (<DeletedMessageBubble theme={this.props.theme} key={key} message={message} messageOf="receiver" />);
+
+    } else {
+
+      switch (message.type) {
+        case "extension_poll":
+          component = <ReceiverPollBubble user={this.loggedInUser} theme={this.props.theme} key={key} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} />;
+          break;
+        default:
+          break;
+      }
+    }
+
+    return component;
+  }
+
+  getCallMessageComponent = (message, key) => {
     return (
-      <CallMessage message={message} key={key} />
+      <CallMessage message={message} key={key} theme={this.props.theme} />
     );
   }
 
@@ -331,7 +526,7 @@ class MessageList extends React.PureComponent {
     if(message.message) {
 
       component = (
-        <div className="cc1-chat-win-action-msg-wrap" key={key}><p className="chat-txt-msg">{message.message}</p></div>
+        <div css={actionMessageStyle()} key={key}><p css={actionMessageTxtStyle()}>{message.message}</p></div>
       );
 
       //if action messages are set to hide in config
@@ -354,7 +549,7 @@ class MessageList extends React.PureComponent {
   getComponent = (message, key) => {
 
     let component;
-
+    
     switch(message.category) {
       case "action":
         component = this.getActionMessageComponent(message, key);
@@ -369,8 +564,15 @@ class MessageList extends React.PureComponent {
           component = this.getReceiverMessageComponent(message, key);
         }
       break;
+      case "custom":
+        if (this.loggedInUser.uid === message.sender.uid) {
+          component = this.getSenderCustomMessageComponent(message, key);
+        } else {
+          component = this.getReceiverCustomMessageComponent(message, key);
+        }
+      break;
       default:
-        break;
+      break;
     }
 
     return component;
@@ -381,24 +583,15 @@ class MessageList extends React.PureComponent {
     let loading = null;
     if(this.state.loading) {
       loading = (
-        <div className="loading-text">Loading...</div>
+        <div css={listLoadingStyle(this.props)}>Loading...</div>
       );
     }
-    
-    let messages;
-    // messages = this.props.messages.map((message, key) => {
-    //   return (
-    //     <div id={message.id} key={key}>
-    //       {this.getComponent(message)}
-    //     </div>
-    //   );
-    // });
 
-    messages = this.props.messages.map((message, key) => this.getComponent(message, key));
+    const messages = this.props.messages.map((message, key) => this.getComponent(message, key));
 
     return (
-      <div className="cc1-chat-win-conver-wrap">
-        <div className="cc1-chat-win-conver-list-wrap" ref={(el) => { this.messagesEnd = el; }} onScroll={this.handleScroll}>
+      <div css={chatListStyle(this.props)}>
+        <div css={listWrapperStyle()} ref={(el) => { this.messagesEnd = el; }} onScroll={this.handleScroll}>
           {loading}
           {messages}
         </div>

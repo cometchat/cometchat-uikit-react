@@ -1,5 +1,7 @@
 import React from "react";
-import classNames from "classnames";
+
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
 import { MessageHeaderManager } from "./controller";
 
@@ -10,8 +12,22 @@ import * as enums from '../../util/enums.js';
 
 import StatusIndicator from "../StatusIndicator";
 
-import "balloon-css";
-import "./style.scss";
+import { 
+  chatHeaderStyle, 
+  chatDetailStyle, 
+  chatSideBarBtnStyle, 
+  chatThumbnailStyle,
+  chatUserStyle,
+  chatNameStyle,
+  chatStatusStyle,
+  chatOptionWrapStyle,
+  chatOptionStyle
+ } from "./style";
+
+import menuIcon from './resources/menu-icon.svg';
+import audioCallIcon from './resources/call-blue-icon.svg';
+import videoCallIcon from './resources/video-call-blue-icon.svg';
+import detailPaneIcon from './resources/details-pane-blue-icon.svg';
 
 class MessageHeader extends React.Component {
 
@@ -20,7 +36,7 @@ class MessageHeader extends React.Component {
 
     this.state = {
       status: null,
-      presence: "offline"
+      presence: "offline",
     }
   }
 
@@ -77,13 +93,20 @@ class MessageHeader extends React.Component {
     this.MessageHeaderManager = null;
   }
 
-  updateHeader = (key, item, message) => {
+  updateHeader = (key, item, groupUser) => {
     
     switch(key) {
 
       case enums.USER_ONLINE:
       case enums.USER_OFFLINE: {
         if(this.props.type === "user" && this.props.item.uid === item.uid) {
+
+          if(this.props.widgetsettings 
+            && this.props.widgetsettings.hasOwnProperty("main")
+            && this.props.widgetsettings.main.hasOwnProperty("show_user_presence")
+            && this.props.widgetsettings.main["show_user_presence"] === false) {
+              return false;
+            }
           this.setState({status: item.status, presence: item.status});
         }
       break;
@@ -91,7 +114,9 @@ class MessageHeader extends React.Component {
       case enums.GROUP_MEMBER_KICKED:
       case enums.GROUP_MEMBER_BANNED:
       case enums.GROUP_MEMBER_LEFT:
-        if(this.props.type === "group" && this.props.item.guid === item.guid) {
+        if(this.props.type === "group" 
+        && this.props.item.guid === item.guid
+        && this.props.loggedInUser.uid !== groupUser.uid) {
 
           let membersCount = parseInt(item.membersCount) - 1;
           const status = `${membersCount} members`;
@@ -101,7 +126,7 @@ class MessageHeader extends React.Component {
       case enums.GROUP_MEMBER_JOINED:
         if(this.props.type === "group" && this.props.item.guid === item.guid) {
 
-          let membersCount = parseInt(item.membersCount);
+          let membersCount = parseInt(item.membersCount) + 1;
           const status = `${membersCount} members`;
           this.setState({status: status});
         }
@@ -117,6 +142,24 @@ class MessageHeader extends React.Component {
       default:
       break;
     }
+  }
+    
+  toggleTooltip = (event, flag) => {
+
+    const elem = event.target;
+    const scrollWidth = elem.scrollWidth;
+    const clientWidth = elem.clientWidth;
+
+    if(scrollWidth <= clientWidth) {
+      return false;
+    }
+
+    if(flag) {
+      elem.setAttribute("title", elem.textContent);
+    } else {
+      elem.removeAttribute("title");
+    }
+    
   }
 
   render() {
@@ -135,92 +178,86 @@ class MessageHeader extends React.Component {
       image = this.props.item.avatar;
       presence = (
         <StatusIndicator
-          status={this.state.presence}
-          cornerRadius="50%" 
-          borderColor="rgb(238, 238, 238)" 
-          borderWidth="1px" />
+        widgetsettings={this.props.widgetsettings}
+        status={this.state.presence}
+        cornerRadius="50%" 
+        borderColor={this.props.theme.borderColor.primary}
+        borderWidth="1px" />
       );
 
     } else {
 
       if(!this.props.item.icon) {
-
         const guid = this.props.item.guid;
         const char = this.props.item.name.charAt(0).toUpperCase();
 
         this.props.item.icon = SvgAvatar.getAvatar(guid, char);
       }
-      
       image = this.props.item.icon;
     }
 
-    let viewDetailBtn = "", audioCallBtn = "", videoCallBtn = "";
-  
-    if(!this.props.item.blockedByMe && this.props.audiocall) {
-      audioCallBtn = (<span onClick={() => this.props.actionGenerated("audioCall")} className="cc1-chat-win-con-opt call"></span>);
-    }
+    let status = (
+      <span css={chatStatusStyle(this.props, this.state)}
+      onMouseEnter={event => this.toggleTooltip(event, true)}
+      onMouseLeave={event => this.toggleTooltip(event, false)}>{this.state.status}</span>
+    );
 
-    if(!this.props.item.blockedByMe && this.props.videocall) {
-      videoCallBtn = (<span onClick={() => this.props.actionGenerated("videoCall")} className="cc1-chat-win-con-opt video-call"></span>);
-    }
+    let audioCallBtn = (<span onClick={() => this.props.actionGenerated("audioCall")} css={chatOptionStyle(audioCallIcon)}></span>);
+    let videoCallBtn = (<span onClick={() => this.props.actionGenerated("videoCall")} css={chatOptionStyle(videoCallIcon)}></span>);
+    let viewDetailBtn = (<span onClick={() => this.props.actionGenerated("viewDetail")} css={chatOptionStyle(detailPaneIcon)}></span>);
     
-    if(this.props.viewdetail) {
-      viewDetailBtn = (<span onClick={() => this.props.actionGenerated("viewDetail")} className="cc1-chat-win-con-opt details"></span>);
+    if(this.props.viewdetail === false) {
+      viewDetailBtn = null;
     }
 
-    const statusClassName = classNames({
-      "cc1-chat-win-user-status": true,
-      "ccl-blue-color": (this.props.type === "user"),
-      "offline": (this.props.type === "user" && this.state.presence === "offline"),
-      "capitalize": (this.props.type === "user"),
-      "ccl-secondary-color": (this.props.type === "group")
-    }); 
-    
-    const toggleTooltip = (event, flag) => {
+    if(this.props.item.blockedByMe === true || this.props.audiocall === false) {
+      audioCallBtn = null;
+    }
 
-      const elem = event.target;
-      const scrollWidth = elem.scrollWidth;
-      const clientWidth = elem.clientWidth;
+    if(this.props.item.blockedByMe === true || this.props.videocall === false) {
+      videoCallBtn = null;
+    }
 
-      if(scrollWidth <= clientWidth) {
-        return false;
+    if(this.props.widgetsettings && this.props.widgetsettings.hasOwnProperty("main")) {
+
+      if(this.props.widgetsettings.main.hasOwnProperty("enable_voice_calling")
+      && this.props.widgetsettings.main["enable_voice_calling"] === false) {
+        audioCallBtn = null;
       }
 
-      const parent = elem.parentNode;
-      if(flag) {
-        parent.setAttribute("aria-label", elem.textContent);
-        parent.setAttribute("data-balloon-pos", "right");
-        parent.setAttribute("data-balloon-length", "small")
-      } else {
-        parent.removeAttribute("aria-label");
-        parent.removeAttribute("data-balloon-pos");
-        parent.removeAttribute("data-balloon-length");
+      if(this.props.widgetsettings.main.hasOwnProperty("enable_video_calling")
+      && this.props.widgetsettings.main["enable_video_calling"] === false) {
+        videoCallBtn = null;
+      }
+
+      if(this.props.widgetsettings.main.hasOwnProperty("show_user_presence")
+      && this.props.widgetsettings.main["show_user_presence"] === false
+      && this.props.type === "user") {
+        status = null;
       }
       
     }
 
     return (
-      <div className="cc1-chat-win-header">
-        <div className="cc1-chat-win-user">
-          <div className="cc1-left-panel-trigger" onClick={() => this.props.actionGenerated("menuClicked")}></div>
-          <div className="cc1-chat-win-user-thumb">
+      <div css={chatHeaderStyle(this.props)}>
+        <div css={chatDetailStyle()}>
+          <div css={chatSideBarBtnStyle(menuIcon, this.props)} onClick={() => this.props.actionGenerated("menuClicked")}></div>
+          <div css={chatThumbnailStyle()}>
             <Avatar 
             image={image} 
             cornerRadius="18px" 
-            borderColor="#CCC"
+            borderColor={this.props.theme.borderColor.primary}
             borderWidth="1px" />
             {presence}
           </div>
-          <div className="cc1-chat-win-user-name-wrap">
-            <h6 className="cc1-chat-win-user-name" 
-            onMouseEnter={event => toggleTooltip(event, true)} 
-            onMouseLeave={event => toggleTooltip(event, false)}>{this.props.item.name}</h6>
-            <span className={statusClassName}
-            onMouseEnter={event => toggleTooltip(event, true)}
-            onMouseLeave={event => toggleTooltip(event, false)}>{this.state.status}</span>
+          <div css={chatUserStyle()}>
+            <h6 css={chatNameStyle()} 
+            onMouseEnter={event => this.toggleTooltip(event, true)} 
+            onMouseLeave={event => this.toggleTooltip(event, false)}>{this.props.item.name}</h6>
+            {status}
           </div>
         </div>
-        <div className="cc1-chat-win-con-opt-wrap">
+        <div css={chatOptionWrapStyle()}>
           {audioCallBtn}
           {videoCallBtn}
           {viewDetailBtn}

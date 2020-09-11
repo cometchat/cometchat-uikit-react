@@ -1,5 +1,11 @@
 import React from "react";
-import "./style.scss";
+
+/** @jsx jsx */
+import { jsx } from '@emotion/core';
+
+import {
+  badgeStyle
+} from "./style";
 
 const badgecount = (props) => {
 
@@ -7,7 +13,7 @@ const badgecount = (props) => {
 
   if(props.count) {
     count = (
-      <span className="chat-ppl-listitem-msg-cnt">{props.count}</span>
+      <span css={badgeStyle(props)}>{props.count}</span>
     );
   }
   return count;

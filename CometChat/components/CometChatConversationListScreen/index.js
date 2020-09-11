@@ -1,7 +1,9 @@
 import React from "react";
-import classNames from "classnames";
 
-import "./style.scss";
+/** @jsx jsx */
+import { jsx } from '@emotion/core';
+
+import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../util/controller";
 import * as enums from '../../util/enums.js';
@@ -11,6 +13,17 @@ import CometChatMessageListScreen from "../CometChatMessageListScreen";
 import CometChatUserDetail from "../CometChatUserDetail";
 import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
+import CallScreen from "../CallScreen";
+
+import { theme } from "../../resources/theme";
+
+import {
+  chatScreenStyle,
+  chatScreenSidebarStyle,
+  chatScreenMainStyle,
+  chatScreenSecondaryStyle
+} from "./style";
+
 
 class CometChatConversationListScreen extends React.Component {
 
@@ -18,8 +31,6 @@ class CometChatConversationListScreen extends React.Component {
 
   constructor(props) {
 		super(props);
-
-    this.leftPanelRef = React.createRef();
 
     this.state = {
       darktheme: false,
@@ -34,8 +45,13 @@ class CometChatConversationListScreen extends React.Component {
       threadmessagetype: null,
       threadmessageitem: {},
       threadmessageparent: {},
-      composedthreadmessage: {}
+      composedthreadmessage: {},
+      outgoingCall: null,
+      callmessage: {},
+      sidebarview: false
     }
+
+    this.theme = Object.assign({}, theme, this.props.theme);
   }
   
   componentDidMount() {
@@ -71,6 +87,12 @@ class CometChatConversationListScreen extends React.Component {
       case "unblockUser":
         this.unblockUser();
       break;
+      case "audioCall":
+        this.audioCall();
+      break;
+      case "videoCall":
+        this.videoCall();
+      break;
       case "viewDetail":
       case "closeDetailClicked":
         this.toggleDetailView();
@@ -99,6 +121,9 @@ class CometChatConversationListScreen extends React.Component {
       break;
       case "threadMessageComposed":
         this.onThreadMessageComposed(item);
+      break;
+      case "callEnded":
+        this.callUpdated(item);
       break;
       default:
       break;
@@ -131,6 +156,59 @@ class CometChatConversationListScreen extends React.Component {
 
   }
 
+  audioCall = () => {
+
+    let receiverId, receiverType;
+    if(this.state.type === "user") {
+
+      receiverId = this.state.item.uid;
+      receiverType = CometChat.RECEIVER_TYPE.USER;
+
+    } else if(this.state.type === "group") {
+
+      receiverId = this.state.item.guid;
+      receiverType = CometChat.RECEIVER_TYPE.GROUP;
+    }
+
+    let callType = CometChat.CALL_TYPE.AUDIO;
+
+    CometChatManager.audioCall(receiverId, receiverType, callType).then(call => {
+
+      this.callUpdated(call);
+      this.setState({ outgoingCall: call });
+
+    }).catch(error => {
+      console.log("Call initialization failed with exception:", error);
+    });
+
+  }
+
+  videoCall = () => {
+
+    let receiverId, receiverType;
+    if(this.state.type === "user") {
+
+      receiverId = this.state.item.uid;
+      receiverType = CometChat.RECEIVER_TYPE.USER;
+
+    } else if(this.state.type === "group") {
+      receiverId = this.state.item.guid;
+      receiverType = CometChat.RECEIVER_TYPE.GROUP;
+    }
+   
+    let callType = CometChat.CALL_TYPE.VIDEO;
+
+    CometChatManager.videoCall(receiverId, receiverType, callType).then(call => {
+
+      this.callUpdated(call);
+      this.setState({ outgoingCall: call });
+
+    }).catch(error => {
+      console.log("Call initialization failed with exception:", error);
+    });
+
+  }
+
   toggleDetailView = () => {
 
     let viewdetail = !this.state.viewdetailscreen;
@@ -139,13 +217,8 @@ class CometChatConversationListScreen extends React.Component {
 
   toggleSideBar = () => {
 
-    const elem = this.leftPanelRef.current;
-
-		if(elem.classList.contains('active')) {
-			elem.classList.remove('active');
-		} else {
-			elem.classList.add('active');
-		}
+    const sidebarview = this.state.sidebarview;
+    this.setState({ sidebarview: !sidebarview });
   }
 
   deleteGroup = (group) => {
@@ -186,7 +259,6 @@ class CometChatConversationListScreen extends React.Component {
     }
   }
 
-
   closeThreadMessages = () => {
     this.setState({viewdetailscreen: false, threadmessageview: false});
   }
@@ -219,17 +291,23 @@ class CometChatConversationListScreen extends React.Component {
     this.setState({composedthreadmessage: message});
   }
 
+  callUpdated = (call) => {
+    this.setState({callmessage: call})
+  }
+
   render() {
 
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div className="ccl-right-panel" ref={this.rightPanelRef}>
+        <div css={chatScreenSecondaryStyle(this.theme)}>
           <MessageThread
+          theme={this.theme}
           tab={this.state.tab}
           item={this.state.threadmessageitem}
           type={this.state.threadmessagetype}
           parentMessage={this.state.threadmessageparent}
+          callmessage={this.state.callmessage}
           actionGenerated={this.actionHandler} />
         </div>
       );
@@ -241,8 +319,9 @@ class CometChatConversationListScreen extends React.Component {
       if(this.state.type === "user") {
 
         detailScreen = (
-          <div className="ccl-right-panel" ref={this.rightPanelRef}>
+          <div css={chatScreenSecondaryStyle(this.theme)}>
             <CometChatUserDetail
+              theme={this.theme}
               item={this.state.item} 
               type={this.state.type}
               actionGenerated={this.actionHandler} />
@@ -251,8 +330,9 @@ class CometChatConversationListScreen extends React.Component {
       } else if (this.state.type === "group") {
 
         detailScreen = (
-          <div className="ccl-right-panel">
+          <div css={chatScreenSecondaryStyle(this.theme)}>
           <CometChatGroupDetail
+            theme={this.theme}
             item={this.state.item} 
             type={this.state.type}
             actionGenerated={this.actionHandler} />
@@ -261,44 +341,43 @@ class CometChatConversationListScreen extends React.Component {
       }
     }
 
-    let messageScreen = (<h1 className="cp-center-text">Select a chat to start messaging</h1>);
+    let messageScreen = null;
     if(Object.keys(this.state.item).length) {
       messageScreen = (
-        <CometChatMessageListScreen 
+        <CometChatMessageListScreen
+        theme={this.theme}
         item={this.state.item} 
         tab={this.state.tab}
         type={this.state.type}
         composedthreadmessage={this.state.composedthreadmessage}
+        callmessage={this.state.callmessage}
+        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
       );
-    }
-
-    const wrapperClassName = classNames({
-      "chats": true,
-      "dark": this.state.darktheme
-    });
-
-    const centerPanelClassName = classNames({
-      "ccl-center-panel": true,
-      "ccl-chat-center-panel": true,
-      "right-panel-active": (this.state.threadmessageview || this.state.viewdetailscreen)
-    });  
+    } 
 
     return (
-      <div className={wrapperClassName}>
-        <div className="ccl-left-panel" ref={this.leftPanelRef}>
+      <div css={chatScreenStyle(this.theme)}>
+        <div css={chatScreenSidebarStyle(this.state, this.theme)}>
           <CometChatConversationList
-           item={this.state.item}
-           groupToDelete={this.state.groupToDelete}
-           groupToLeave={this.state.groupToLeave}
-           groupToUpdate={this.state.groupToUpdate}
+          theme={this.theme}
+          item={this.state.item}
+          groupToDelete={this.state.groupToDelete}
+          groupToLeave={this.state.groupToLeave}
+          groupToUpdate={this.state.groupToUpdate}
           onItemClick={this.onItemClicked}
           actionGenerated={this.actionHandler}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
-        <div className={centerPanelClassName}>{messageScreen}</div>
+        <div css={chatScreenMainStyle(this.state)}>{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
+        <CallScreen
+        theme={this.theme}
+        item={this.state.item} 
+        type={this.state.type}
+        actionGenerated={this.actionHandler} 
+        outgoingCall={this.state.outgoingCall} />
       </div>
     );
   }

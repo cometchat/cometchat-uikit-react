@@ -5,7 +5,7 @@ import * as enums from '../../util/enums.js';
 export class GroupListManager {
 
     groupRequest = null;
-    groupListenerId = new Date().getTime();
+    groupListenerId = "grouplist_" + new Date().getTime();
 
     constructor(searchKey) {
 

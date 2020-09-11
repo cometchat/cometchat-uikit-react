@@ -8,8 +8,9 @@ export class MessageListManager {
     type = "";
     parentMessageId = null;
     messageRequest = null;
-    msgListenerId = new Date().getTime();
-    groupListenerId = new Date().getTime();
+    msgListenerId = "message_" + new Date().getTime();
+    groupListenerId = "group_" + new Date().getTime();
+    callListenerId = "call_" + new Date().getTime(); 
 
     constructor(item, type, parentMessageId) {
 
@@ -40,7 +41,7 @@ export class MessageListManager {
     }
 
     attachListeners(callback) {
-
+        
         CometChat.addMessageListener(
             this.msgListenerId,
             new CometChat.MessageListener({
@@ -61,6 +62,9 @@ export class MessageListManager {
                 },
                 onMessageDeleted: deletedMessage => {
                     callback(enums.MESSAGE_DELETED, deletedMessage);
+                },
+                onMessageEdited: editedMessage => {
+                    callback(enums.MESSAGE_EDITED, editedMessage);
                 }
             })
         );
@@ -91,10 +95,27 @@ export class MessageListManager {
                 }
             })
         );
+
+        CometChat.addCallListener(
+            this.callListenerId,
+            new CometChat.CallListener({
+                onIncomingCallReceived: call => {
+                  callback(enums.INCOMING_CALL_RECEIVED, call);
+                },
+                onOutgoingCallRejected: call => {
+                  callback(enums.OUTGOING_CALL_REJECTED, call);
+                },
+                onIncomingCallCancelled: call => {
+                  callback(enums.INCOMING_CALL_CANCELLED, call);
+                }
+            })
+        );
     }
 
     removeListeners() {
+
         CometChat.removeMessageListener(this.msgListenerId);
         CometChat.removeGroupListener(this.groupListenerId);
+        CometChat.removeCallListener(this.callListenerId);
     }
 }

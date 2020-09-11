@@ -1,12 +1,23 @@
 import React from "react";
 
-import { CometChat } from '@cometchat-pro/chat';
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
-import "./style.scss";
+import { CometChat } from '@cometchat-pro/chat';
 
 import Avatar from "../Avatar";
 import BadgeCount from "../BadgeCount";
 import StatusIndicator from "../StatusIndicator";
+
+import {
+  listItem,
+  itemThumbnailStyle,
+  itemDetailStyle,
+  itemRowStyle,
+  itemNameStyle,
+  itemLastMsgStyle,
+  itemLastMsgTimeStyle
+} from "./style";
 
 const conversationview = (props) => {
 
@@ -65,7 +76,7 @@ const conversationview = (props) => {
 
   const getActionMessage = () => {
 
-    const message = props.conversation.lastMessage.message;
+    let message = props.conversation.lastMessage.message;
 
     //if action messages are set to hide in config
     if(props.config) {
@@ -126,10 +137,10 @@ const conversationview = (props) => {
     return avatar;
   }
 
-  let lastMessageTimeStamp = "";
+  let lastMessageTimeStamp = null;
   if(props.conversation.lastMessage) {
     lastMessageTimeStamp = (
-      <span className="chat-listitem-time">{new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+      <span css={itemLastMsgTimeStyle(props)}>{new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
     );
   }
 
@@ -138,29 +149,56 @@ const conversationview = (props) => {
     const status = props.conversation.conversationWith.status;
     presence = (
       <StatusIndicator
+      widgetsettings={props.widgetsettings}
       status={status}
       cornerRadius="50%" 
-      borderColor="rgb(238, 238, 238)" 
+      borderColor={props.theme.color.darkSecondary}
       borderWidth="1px" />
     );
   }
-  
+
+  const toggleTooltip = (event, flag) => {
+
+    const elem = event.target;
+
+    const scrollWidth = elem.scrollWidth;
+    const clientWidth = elem.clientWidth;
+    
+    if(scrollWidth <= clientWidth) {
+      return false;
+    }
+
+    if(flag) {
+      elem.setAttribute("title", elem.textContent);
+    } else {
+      elem.removeAttribute("title");
+    }
+  }
+
   return (
-    <div className="chat-listitem" onClick={() => props.handleClick(props.conversation, props.conversationKey)}>
-      <div className="chat-thumbnail-wrap">
+    <div css={listItem(props)} onClick={() => props.handleClick(props.conversation, props.conversationKey)}>
+      <div css={itemThumbnailStyle()}>
         <Avatar 
         image={getAvatar()}
         cornerRadius="18px" 
-        borderColor="#CCC"
+        borderColor={props.theme.color.secondary}
         borderWidth="1px" />
         {presence}
       </div>
-      <div className="chat-listitem-dtls">
-        <div className="chat-listitem-name">{props.conversation.conversationWith.name}</div>
-        <p className="chat-listitem-txt">{getLastMessage()} </p>
+      <div css={itemDetailStyle()}>
+        <div css={itemRowStyle()}>
+          <div css={itemNameStyle()}
+          onMouseEnter={event => toggleTooltip(event, true)} 
+          onMouseLeave={event => toggleTooltip(event, false)}>{props.conversation.conversationWith.name}</div>
+          <BadgeCount theme={props.theme} count={props.conversation.unreadMessageCount}></BadgeCount>
+        </div>
+        <div css={itemRowStyle()}>
+          <div css={itemLastMsgStyle(props)}
+          onMouseEnter={event => toggleTooltip(event, true)} 
+          onMouseLeave={event => toggleTooltip(event, false)}>{getLastMessage()}</div>
+          {lastMessageTimeStamp}
+        </div>
       </div>
-      {lastMessageTimeStamp}
-      <BadgeCount count={props.conversation.unreadMessageCount}></BadgeCount>
     </div>
   )
 }

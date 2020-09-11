@@ -1,9 +1,14 @@
 import React from 'react';
 
-import './style.scss';
+/** @jsx jsx */
+import { jsx } from '@emotion/core';
+
+import {
+    backdropStyle
+} from "./style";
 
 const backdrop = (props) => (
-    props.show ? <div className="popup_overlay"  onClick={props.clicked}></div> : null
+    props.show ? <div css={backdropStyle()}  onClick={props.clicked}></div> : null
 );
 
 export default backdrop;

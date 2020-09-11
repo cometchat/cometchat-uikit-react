@@ -6,10 +6,10 @@ export class ConversationListManager {
 
     conversationRequest = null;
 
-    conversationListenerId = new Date().getTime();
-    userListenerId = new Date().getTime();
-    groupListenerId = new Date().getTime();
-    callListenerId = new Date().getTime();
+    conversationListenerId = "chatlist_" + new Date().getTime();
+    userListenerId = "chatlist_user_" + new Date().getTime();
+    groupListenerId = "chatlist_group_" + new Date().getTime();
+    callListenerId = "chatlist_call_" + new Date().getTime();
 
     constructor() {
         this.conversationRequest = new CometChat.ConversationsRequestBuilder().setLimit(30).build();
@@ -81,7 +81,7 @@ export class ConversationListManager {
             this.callListenerId,
             new CometChat.CallListener({
                 onIncomingCallReceived: call => {
-                  callback(enums.INCOMING_CALL_RECEIVED, call);
+                  callback(enums.INCOMING_CALL_RECEIVED, null, call);
                 }
             })
         );

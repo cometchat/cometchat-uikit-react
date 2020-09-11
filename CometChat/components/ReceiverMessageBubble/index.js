@@ -1,9 +1,9 @@
 import React from "react";
 import twemoji from "twemoji";
 import ReactHtmlParser from "react-html-parser";
-import classNames from "classnames";
 
-import "./style.scss";
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
 import { SvgAvatar } from '../../util/svgavatar';
 
@@ -11,9 +11,22 @@ import Avatar from "../Avatar";
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
 
+import {
+  messageContainerStyle,
+  messageWrapperStyle,
+  messageThumbnailStyle,
+  messageDetailStyle,
+  nameWrapperStyle,
+  nameStyle,
+  messageTxtWrapperStyle,
+  messageTxtStyle,
+  messageInfoWrapperStyle,
+  messageTimestampStyle
+} from "./style";
+
 const receivermessagebuble = (props) => {
   
-  let avatar = "", name = "";
+  let avatar = null, name = null;
   if(props.message.receiverType === 'group') {
 
     if(!props.message.sender.avatar) {
@@ -22,70 +35,51 @@ const receivermessagebuble = (props) => {
       const char = props.message.sender.getName().charAt(0).toUpperCase();
 
       props.message.sender.setAvatar(SvgAvatar.getAvatar(uid, char));
-    
     } 
     
     avatar = (
-      <div className="cc1-chat-win-rcvr-thumbnail-wrap">
+      <div css={messageThumbnailStyle}>
         <Avatar 
         cornerRadius="50%" 
-        borderColor="#CCC" 
+        borderColor={props.theme.color.secondary}
         borderWidth="1px"
-        image={props.message.sender.avatar}></Avatar>
+        image={props.message.sender.avatar} />
       </div>
     );
 
-    name = (<div className="cc1-chat-win-rcvr-name-wrap"><span className="cc1-chat-win-rcvr-name">{props.message.sender.name}</span></div>);
+    name = (<div css={nameWrapperStyle(avatar)}><span css={nameStyle(props)}>{props.message.sender.name}</span></div>);
   }
 
   const message = Object.assign({}, props.message, {messageFrom: "receiver"});
-
-  let replies = null, tooltip = null;
-  if((!props.widgetconfig && props.message.replyCount) 
-  || (props.widgetconfig && props.widgetconfig["threaded-chats"] && props.message.replyCount)) {
-
-    replies = (
-      <ReplyCount
-      message={message}
-      action="viewMessageThread"
-      actionGenerated={props.actionGenerated} />
-    );
-  }
-
-  if((!props.widgetconfig) || (props.widgetconfig && props.widgetconfig["threaded-chats"])) {
-    tooltip = (
-      <ToolTip
-      message={message}
-      action="viewMessageThread"
-      actionGenerated={props.actionGenerated} />
-    );
-  }
 
   const emojiParsedMessage = twemoji.parse(props.message.text, {folder: "svg",  ext: ".svg"});
   const parsedMessage = ReactHtmlParser(emojiParsedMessage);
 
   const emojiMessage = parsedMessage.filter(message => (message instanceof Object && message.type === "img"));
 
-  const messageClassName = classNames({
-    "chat-txt-msg": true,
-    "size1x": (parsedMessage.length === emojiMessage.length && emojiMessage.length === 1),
-    "size2x": (parsedMessage.length === emojiMessage.length && emojiMessage.length === 2),
-    "size3x": (parsedMessage.length === emojiMessage.length && emojiMessage.length > 2)
-  });
+  let showVariation = true;
+  if(props.hasOwnProperty("widgetsettings") 
+  && props.widgetsettings
+  && props.widgetsettings.hasOwnProperty("main") 
+  && props.widgetsettings.main.hasOwnProperty("show_emojis_in_larger_size")
+  && props.widgetsettings.main["show_emojis_in_larger_size"] === false) {
 
+    showVariation = false;
+  }
+  
   return (
-    <div className="cc1-chat-win-rcvr-row clearfix">
-      <div className="cc1-chat-win-msg-block">
+    <div css={messageContainerStyle()}>
+      <div css={messageWrapperStyle()}>
         {avatar}
-        <div className="cc1-chat-win-rcvr-dtls">
+        <div css={messageDetailStyle(name)}>
           {name}
-          {tooltip}
-          <div className="cc1-chat-win-rcvr-msg-wrap">
-            <p className={messageClassName}>{parsedMessage}</p>                                
+          <ToolTip action="viewMessageThread" {...props} message={message} />
+          <div css={messageTxtWrapperStyle(props)}>
+            <p css={messageTxtStyle(parsedMessage, emojiMessage, showVariation)}>{parsedMessage}</p>                                
           </div>
-          <div className="cc1-chat-win-msg-time-wrap">
-            <span className="cc1-chat-win-timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-            {replies}
+          <div css={messageInfoWrapperStyle()}>
+            <span css={messageTimestampStyle(props)}>{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+            <ReplyCount action="viewMessageThread" {...props} message={message} />
           </div>
         </div>
       </div>
