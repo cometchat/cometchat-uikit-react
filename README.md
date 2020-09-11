@@ -2,7 +2,7 @@
 # React Chat UI Kit
 React Chat UI Kit is a collection of custom UI Components and UI Screens designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
 
-![alt text](https://files.readme.io/68c7762-launch_cometchat.png "UI Unified")
+![alt text](https://files.readme.io/68c7762-launch_cometchat.png "UI Unified") 
 
 It has the following 3 ways of implementation:
 * [UI Unified](https://prodocs.cometchat.com/docs/react-ui-kit-ui-unified)
