@@ -1,13 +1,22 @@
 import React from "react";
 
+/** @jsx jsx */
+import { jsx } from '@emotion/core';
+
 import { CometChat } from "@cometchat-pro/chat";
 
 import Avatar from "../Avatar";
 import StatusIndicator from "../StatusIndicator";
 
-import unban from "./resources/block.svg";
+import {
+    tableRowStyle,
+    avatarStyle,
+    nameStyle,
+    roleStyle,
+    actionStyle
+} from "./style";
 
-import "./style.scss";
+import unban from "./resources/block.svg";
 
 const memberview = (props) => {
 
@@ -32,26 +41,48 @@ const memberview = (props) => {
             unBan = null;
         }
     }
+
+    const toggleTooltip = (event, flag) => {
+
+        const elem = event.currentTarget;
+        const nameContainer = elem.lastChild;
+    
+        const scrollWidth = nameContainer.scrollWidth;
+        const clientWidth = nameContainer.clientWidth;
+        
+        if(scrollWidth <= clientWidth) {
+          return false;
+        }
+    
+        if(flag) {
+          nameContainer.setAttribute("title", nameContainer.textContent);
+        } else {
+          nameContainer.removeAttribute("title");
+        }
+      }
     
     return (
-        <tr>
-            <td data-label="Name">
-            <span className="avatar">
-            <Avatar 
-            image={props.member.avatar} 
-            cornerRadius="18px" 
-            borderColor="#CCC"
-            borderWidth="1px" />
-            <StatusIndicator
-            status={props.member.status}
-            cornerRadius="50%" 
-            borderColor="rgb(238, 238, 238)" 
-            borderWidth="1px" />
-            </span>
-            <span className="name">{name}</span>
+        <tr css={tableRowStyle(props)}>
+            <td 
+            onMouseEnter={event => toggleTooltip(event, true)}
+            onMouseLeave={event => toggleTooltip(event, false)}>
+                <div css={avatarStyle()}>
+                    <Avatar 
+                    image={props.member.avatar} 
+                    cornerRadius="18px" 
+                    borderColor={props.theme.borderColor.primary}
+                    borderWidth="1px" />
+                    <StatusIndicator
+                    widgetsettings={props.widgetsettings}
+                    status={props.member.status}
+                    cornerRadius="50%" 
+                    borderColor={props.theme.borderColor.primary}
+                    borderWidth="1px" />
+                </div>
+                <div css={nameStyle()}>{name}</div>
             </td>
-            <td data-label="Scope" className="role">{scope}</td>
-            <td data-label="Unban" className="unban"><span>{unBan}</span></td>
+            <td css={roleStyle()}>{scope}</td>
+            <td css={actionStyle()}>{unBan}</td>
         </tr>
     );
 }

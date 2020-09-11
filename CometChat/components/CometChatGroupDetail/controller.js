@@ -8,8 +8,8 @@ export class GroupDetailManager {
     groupMemberRequest = null;
     bannedGroupMemberRequest = null;
 
-    userListenerId = new Date().getTime();
-    groupListenerId = new Date().getTime();
+    userListenerId = "group_detail_user_" + new Date().getTime();
+    groupListenerId = "group_detail_group_" + new Date().getTime();
 
     constructor(guid) {
         this.guid = guid;

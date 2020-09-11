@@ -4,9 +4,9 @@ import * as enums from '../../util/enums.js';
 
 export class MessageHeaderManager {
 
-    userListenerId = new Date().getTime();
-    msgListenerId = new Date().getTime();
-    groupListenerId = new Date().getTime();
+    userListenerId = "head_user_" + new Date().getTime();
+    msgListenerId = "head_message_" + new Date().getTime();
+    groupListenerId = "head_group_" + new Date().getTime();
 
     attachListeners(callback) {
         
@@ -28,7 +28,6 @@ export class MessageHeaderManager {
             this.msgListenerId,
             new CometChat.MessageListener({
                 onTypingStarted: typingIndicator => {
-                    console.log("MessageHeaderManager MessageListener typingIndicator", typingIndicator);
                     callback(enums.TYPING_STARTED, typingIndicator);
                 },
                 onTypingEnded: typingIndicator => {
@@ -41,16 +40,16 @@ export class MessageHeaderManager {
             this.groupListenerId,
             new CometChat.GroupListener({
                 onGroupMemberKicked: (message, kickedUser, kickedBy, kickedFrom) => {
-                    callback(enums.GROUP_MEMBER_KICKED, kickedFrom);
+                    callback(enums.GROUP_MEMBER_KICKED, kickedFrom, kickedUser);
                 }, 
                 onGroupMemberBanned: (message, bannedUser, bannedBy, bannedFrom) => {
-                    callback(enums.GROUP_MEMBER_BANNED, bannedFrom);
+                    callback(enums.GROUP_MEMBER_BANNED, bannedFrom, bannedUser);
                 }, 
                 onMemberAddedToGroup: (message, userAdded, userAddedBy, userAddedIn) => {
                     callback(enums.GROUP_MEMBER_ADDED, userAddedIn);
                 }, 
                 onGroupMemberLeft: (message, leavingUser, group) => {
-                    callback(enums.GROUP_MEMBER_LEFT, group);
+                    callback(enums.GROUP_MEMBER_LEFT, group, leavingUser);
                 }, 
                 onGroupMemberJoined: (message, joinedUser, joinedGroup) => {
                     callback(enums.GROUP_MEMBER_JOINED, joinedGroup);

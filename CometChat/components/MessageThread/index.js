@@ -1,14 +1,33 @@
 import React from "react";
-import classNames from "classnames";
+
+/** @jsx jsx */
+import { jsx } from '@emotion/core';
 
 import { CometChat } from "@cometchat-pro/chat";
 
 import MessageList from "../MessageList";
 import MessageComposer from "../MessageComposer";
 
-import blueFile from "./resources/file-blue.svg";
+import {
+  wrapperStyle,
+  headerStyle,
+  headerWrapperStyle,
+  headerDetailStyle,
+  headerTitleStyle,
+  headerNameStyle,
+  headerCloseStyle,
+  messageContainerStyle,
+  parentMessageStyle,
+  parentMessageContainerStyle,
+  parentMessageWrapperStyle,
+  messageTxtStyle,
+  messageTimestampStyle,
+  messageSeparatorStyle,
+  messageReplyStyle,
+} from "./style";
 
-import "./style.scss";
+import clearIcon from "./resources/clear.svg";
+import blueFile from "./resources/file-blue.svg";
 
 class MessageThread extends React.Component {
 
@@ -108,7 +127,7 @@ class MessageThread extends React.Component {
       switch(message.type) {
         case CometChat.MESSAGE_TYPE.TEXT:
           messageComponent =  (
-            <p className="chat-txt-msg">{message.text}</p>
+            <p css={messageTxtStyle()}>{message.text}</p>
           );
         break;
         case CometChat.MESSAGE_TYPE.IMAGE:
@@ -141,17 +160,11 @@ class MessageThread extends React.Component {
         break;
       }
 
-      const wrapperClassName = classNames({
-        "cc1-chat-win-parent-msg-block": true,
-        "sender": (message.messageFrom === "sender"),
-        "receiver": (message.messageFrom === "receiver")
-      });  
-
       component = (
-        <div className={wrapperClassName}>                                
-          <div className="cc1-chat-win-parent-msg-wrap">{messageComponent}</div>
-          <div className="cc1-chat-win-parent-time-wrap">
-            <span className="cc1-chat-win-timestamp">
+        <div css={parentMessageContainerStyle(message, this.props)}>                                
+          <div css={parentMessageWrapperStyle(message, this.props)}>{messageComponent}</div>
+          <div>
+            <span css={messageTimestampStyle()}>
               {new Date(message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
             </span>
           </div>
@@ -164,38 +177,36 @@ class MessageThread extends React.Component {
 
       let parentMessage = this.getMessageComponent(this.props.parentMessage);
       
-
-      let seperator = (<div className="cc1-chat-thread-parent-message-separator"><hr/></div>);
+      let seperator = (<div css={messageSeparatorStyle(this.props)}><hr/></div>);
       if(this.state.replyCount) {
 
         const replyCount = this.state.replyCount;
         const replyText = (replyCount === 1) ? `${replyCount} reply` : `${replyCount} replies`;
 
         seperator = (
-          <div className="cc1-chat-thread-parent-message-separator">
-            <span className="replies">{replyText}</span>
+          <div css={messageSeparatorStyle(this.props)}>
+            <span css={messageReplyStyle()}>{replyText}</span>
             <hr/>
           </div>
         );
       }
 
       return (
-        <React.Fragment>
-          <div className="cc1-chat-thread-header">
-            <div className="cc1-chat-thread-header-wrapper">
-              
-            
-            <div className="cc1-chat-thread-user-name-wrap">
-              <h6 className="cc1-chat-thread-user-name-ttl">Thread</h6>
-              <span className="cc1-chat-thread-user-name">{this.props.item.name}</span>
-            </div>
-            <div className="cc1-chat-thread-close" onClick={() => this.props.actionGenerated("closeThreadClicked")}></div>
+        <div css={wrapperStyle(this.props)}>
+          <div css={headerStyle(this.props)}>
+            <div css={headerWrapperStyle()}>    
+              <div css={headerDetailStyle()}>
+                <h6 css={headerTitleStyle()}>Thread</h6>
+                <span css={headerNameStyle()}>{this.props.item.name}</span>
+              </div>
+              <div css={headerCloseStyle(clearIcon)} onClick={() => this.props.actionGenerated("closeThreadClicked")}></div>
             </div>
           </div>
-          <div className="cc1-chat-thread-message-container">
-            <div className="cc1-chat-thread-parent-messsage">{parentMessage}</div>
+          <div css={messageContainerStyle()}>
+            <div css={parentMessageStyle()}>{parentMessage}</div>
             {seperator}
-            <MessageList 
+            <MessageList
+            theme={this.props.theme}
             messages={this.state.messageList} 
             item={this.props.item} 
             type={this.props.type}
@@ -203,13 +214,14 @@ class MessageThread extends React.Component {
             config={this.props.config}
             parentMessageId={this.props.parentMessage.id}
             actionGenerated={this.actionHandler} />
-            <MessageComposer 
+            <MessageComposer
+            theme={this.props.theme}
             item={this.props.item} 
             type={this.props.type}
             parentMessageId={this.props.parentMessage.id}
             actionGenerated={this.actionHandler} />
           </div>
-        </React.Fragment>
+        </div>
       );
     }
 }

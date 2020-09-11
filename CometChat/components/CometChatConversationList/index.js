@@ -1,7 +1,7 @@
 import React from "react";
-import classNames from "classnames";
 
-import "./style.scss";
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -13,19 +13,36 @@ import * as enums from '../../util/enums.js';
 
 import ConversationView from "../ConversationView";
 
+import { theme } from "../../resources/theme";
+
+import {
+  chatsWrapperStyle,
+  chatsHeaderStyle,
+  chatsHeaderCloseStyle,
+  chatsHeaderTitleStyle,
+  chatsMsgStyle,
+  chatsMsgTxtStyle,
+  chatsListStyle
+} from "./style";
+
+import navigateIcon from './resources/navigate_before.svg';
+
 class CometChatConversationList extends React.Component {
 
   loggedInUser = null;
+  decoratorMessage = "Loading...";
 
   constructor(props) {
 
     super(props);
+
     this.state = {
       conversationlist: [],
       onItemClick: null,
-      selectedConversation: undefined,
-      loading: false
+      selectedConversation: undefined
     }
+
+    this.theme = Object.assign({}, theme, this.props.theme);
   }
 
   componentDidMount() {
@@ -53,6 +70,29 @@ class CometChatConversationList extends React.Component {
         this.setState({ conversationlist: conversationlist });
       }
     }
+
+    if (prevProps.groupToUpdate
+      && (prevProps.groupToUpdate.guid !== this.props.groupToUpdate.guid
+        || (prevProps.groupToUpdate.guid === this.props.groupToUpdate.guid && (prevProps.groupToUpdate.membersCount !== this.props.groupToUpdate.membersCount || prevProps.groupToUpdate.scope !== this.props.groupToUpdate.scope)))) {
+
+      const conversationlist = [...this.state.conversationlist];
+      const groupToUpdate = this.props.groupToUpdate;
+
+      const convKey = conversationlist.findIndex(c => c.conversationType === "group" && c.conversationWith.guid === groupToUpdate.guid);
+      if (convKey > -1) {
+        
+        const convObj = conversationlist[convKey];
+
+        let convWithObj = { ...convObj.conversationWith };
+
+        let newConvWithObj = { ...convWithObj, scope: groupToUpdate["scope"], membersCount: groupToUpdate["membersCount"] };
+        let newConvObj = { ...convObj, conversationWith: newConvWithObj };
+
+        conversationlist.splice(convKey, 1, newConvObj);
+        this.setState({ conversationlist: conversationlist });
+      }
+    }
+
   }
 
   componentWillUnmount() {
@@ -66,7 +106,6 @@ class CometChatConversationList extends React.Component {
       case enums.TEXT_MESSAGE_RECEIVED:
       case enums.MEDIA_MESSAGE_RECEIVED:
       case enums.CUSTOM_MESSAGE_RECEIVED:
-      case enums.GROUP_MEMBER_UNBANNED:
       case enums.INCOMING_CALL_RECEIVED:
       case enums.INCOMING_CALL_CANCELLED:
         this.updateConversation(message);
@@ -76,22 +115,21 @@ class CometChatConversationList extends React.Component {
         this.updateUser(item);
         break;
       case enums.GROUP_MEMBER_SCOPE_CHANGED:
-        this.updateConversation(message, item, undefined, options);
+        this.updateGroupMemberScopeChanged(message, options);
         break;
       case enums.GROUP_MEMBER_KICKED:
-        this.updateConversation(message, item, "decrement", options);
-        break;
       case enums.GROUP_MEMBER_BANNED:
-        this.updateConversation(message, item, "decrement");
+      case enums.GROUP_MEMBER_LEFT:
+        this.updateGroupMemberRemoved(message, options);
         break;
       case enums.GROUP_MEMBER_ADDED:
-        this.updateConversation(message, item, "increment", options);
-        break;
-      case enums.GROUP_MEMBER_LEFT:
-        this.updateConversation(message, item, "decrement");
+        this.updateGroupMemberAdded(message, options);
         break;
       case enums.GROUP_MEMBER_JOINED:
-        this.updateConversation(message, item, "increment");
+        this.updateGroupMemberChanged(message, options, "increment");
+        break;
+      case enums.GROUP_MEMBER_UNBANNED:
+        this.updateGroupMemberChanged(message, options, "");
         break;
       default:
         break;
@@ -116,6 +154,199 @@ class CometChatConversationList extends React.Component {
 
   }
 
+  updateGroupMemberAdded = (message, options) => {
+
+    CometChat.CometChatHelper.getConversationFromMessage(message).then((conversation) => {
+
+      let conversationlist = [...this.state.conversationlist];
+      let conversationKey = conversationlist.findIndex((c, k) => c.conversationId === conversation.conversationId);
+
+      if (conversationKey > -1) {
+
+        let conversationObj = { ...conversationlist[conversationKey] };
+
+        let conversationWithObj = { ...conversationObj.conversationWith };
+
+        let lastMessageObj = { ...conversationObj.lastMessage, ...message };
+        let unreadMessageCount = parseInt(conversationObj.unreadMessageCount);
+        let membersCount = parseInt(conversationWithObj.membersCount) + 1;
+
+        let newConversationWithObj = { ...conversationWithObj, membersCount: membersCount };
+
+        //if the conversation is selected
+        if (this.state.selectedConversation && this.state.selectedConversation.conversationId === conversation.conversationId) {
+          unreadMessageCount = 0;
+        } else {
+          unreadMessageCount = unreadMessageCount + 1;
+        }
+
+        let newConversationObj = { ...conversationObj, conversationWith: newConversationWithObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount };
+        conversationlist.splice(conversationKey, 1);
+        conversationlist.unshift(newConversationObj);
+        this.setState({ conversationlist: conversationlist });
+
+      } else {
+
+        if (options && this.loggedInUser.uid === options.user.uid) {
+
+          let conversationObj = { ...conversation };
+
+          let conversationWithObj = { ...conversationObj.conversationWith };
+
+          let avatar = this.setAvatar(conversationObj);
+          let lastMessageObj = { ...message };
+          let unreadMessageCount = 1;
+          let membersCount = parseInt(conversationWithObj.membersCount) + 1;
+
+          let scope = CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT;
+          let hasJoined = options.hasJoined;
+
+          let newConversationWithObj = { ...conversationWithObj, icon: avatar, membersCount: membersCount, scope: scope, hasJoined: hasJoined };
+          let newConversationObj = { ...conversationObj, conversationWith: newConversationWithObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount };
+          conversationlist.unshift(newConversationObj);
+          this.setState({ conversationlist: conversationlist });
+        }
+      }
+
+    }, error => {
+      console.log('This is an error in converting message to conversation', { error })
+    });
+  }
+
+  updateGroupMemberScopeChanged = (message, options) => {
+
+    CometChat.CometChatHelper.getConversationFromMessage(message).then((conversation) => {
+
+      let conversationlist = [...this.state.conversationlist];
+      let conversationKey = conversationlist.findIndex((c, k) => c.conversationId === conversation.conversationId);
+
+      if (conversationKey > -1) {
+
+        let conversationObj = { ...conversationlist[conversationKey] };
+
+        let conversationWithObj = { ...conversationObj.conversationWith };
+
+        let lastMessageObj = { ...conversationObj.lastMessage, ...message };
+        let unreadMessageCount = parseInt(conversationObj.unreadMessageCount);
+        let membersCount = parseInt(conversationWithObj.membersCount);
+        let scope = conversationWithObj.scope;
+
+        if (options && this.loggedInUser.uid === options.user.uid) {
+          scope = options.scope;
+        }
+
+        let newConversationWithObj = { ...conversationWithObj, membersCount: membersCount, scope: scope };
+
+        //if the conversation is selected
+        if (this.state.selectedConversation && this.state.selectedConversation.conversationId === conversation.conversationId) {
+          unreadMessageCount = 0;
+        } else {
+          unreadMessageCount = unreadMessageCount + 1;
+        }
+
+        let newConversationObj = { ...conversationObj, conversationWith: newConversationWithObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount };
+        conversationlist.splice(conversationKey, 1);
+        conversationlist.unshift(newConversationObj);
+        this.setState({ conversationlist: conversationlist });
+
+      } 
+
+    }, error => {
+      console.log('This is an error in converting message to conversation', { error })
+    });
+
+  }
+
+  updateGroupMemberRemoved = (message, options) => {
+
+    CometChat.CometChatHelper.getConversationFromMessage(message).then((conversation) => {
+
+      let conversationlist = [...this.state.conversationlist];
+      let conversationKey = conversationlist.findIndex((c, k) => c.conversationId === conversation.conversationId);
+
+      if (conversationKey > -1) {
+
+        if (options && this.loggedInUser.uid === options.user.uid) {
+
+          conversationlist.splice(conversationKey, 1);
+          this.setState({ conversationlist: conversationlist });
+
+        } else {
+
+          let conversationObj = { ...conversationlist[conversationKey] };
+
+          let conversationWithObj = { ...conversationObj.conversationWith };
+
+          let lastMessageObj = { ...conversationObj.lastMessage, ...message };
+          let unreadMessageCount = parseInt(conversationObj.unreadMessageCount);
+          let membersCount = parseInt(conversationWithObj.membersCount) - 1;
+
+          let newConversationWithObj = { ...conversationWithObj, membersCount: membersCount };
+
+          //if the conversation is selected
+          if (this.state.selectedConversation && this.state.selectedConversation.conversationId === conversation.conversationId) {
+            unreadMessageCount = 0;
+          } else {
+            unreadMessageCount = unreadMessageCount + 1;
+          }
+
+          let newConversationObj = { ...conversationObj, conversationWith: newConversationWithObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount };
+          conversationlist.splice(conversationKey, 1);
+          conversationlist.unshift(newConversationObj);
+          this.setState({ conversationlist: conversationlist });
+
+        }
+      }
+
+    }, error => {
+      console.log('This is an error in converting message to conversation', { error })
+    });
+  }
+
+  updateGroupMemberChanged = (message, options, operator) => {
+
+    CometChat.CometChatHelper.getConversationFromMessage(message).then((conversation) => {
+
+      let conversationlist = [...this.state.conversationlist];
+      let conversationKey = conversationlist.findIndex((c, k) => c.conversationId === conversation.conversationId);
+
+      if (conversationKey > -1) {
+
+        if (options && this.loggedInUser.uid !== options.user.uid) {
+
+          let conversationObj = { ...conversationlist[conversationKey] };
+
+          let conversationWithObj = { ...conversationObj.conversationWith };
+
+          let lastMessageObj = { ...conversationObj.lastMessage, ...message };
+          let unreadMessageCount = parseInt(conversationObj.unreadMessageCount);
+          let membersCount = parseInt(conversationWithObj.membersCount);
+
+          if (operator === "increment") {
+            membersCount += 1;
+          } 
+
+          let newConversationWithObj = { ...conversationWithObj, membersCount: membersCount };
+
+          //if the conversation is selected
+          if (this.state.selectedConversation && this.state.selectedConversation.conversationId === conversation.conversationId) {
+            unreadMessageCount = 0;
+          } else {
+            unreadMessageCount = unreadMessageCount + 1;
+          }
+          
+          let newConversationObj = { ...conversationObj, conversationWith: newConversationWithObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount };
+          conversationlist.splice(conversationKey, 1);
+          conversationlist.unshift(newConversationObj);
+          this.setState({ conversationlist: conversationlist });
+        }
+      }
+
+    }, error => {
+      console.log('This is an error in converting message to conversation', { error })
+    });
+  }
+
   updateConversation = (message, group, operator, options) => {
 
     CometChat.CometChatHelper.getConversationFromMessage(message).then((conversation) => {
@@ -126,38 +357,11 @@ class CometChatConversationList extends React.Component {
       if(conversationKey > -1) {
 
         let conversationObj = {...conversationlist[conversationKey]};
-        let conversationWithObj = {...conversationObj.conversationWith};
+
         let lastMessageObj = {...conversationObj.lastMessage, ...message};
         let unreadMessageCount = parseInt(conversationObj.unreadMessageCount);
-        
-        let newConversationWithObj = conversationWithObj;
-        //group listeners response handler
-        if(group) {
+                
 
-          let membersCount = parseInt(conversationWithObj.membersCount);
-          let scope = conversationWithObj.scope;
-          let hasJoined = conversationWithObj.hasJoined;
-
-          //member added to group / member joined
-          if(operator === "increment") {
-            membersCount = membersCount + 1;
-          } else if(operator === "decrement") {//member kicked, banned / member left
-            membersCount = membersCount - 1;
-          }
-
-          //if the loggedin user has been kicked from / or added to group / scope is changed
-          if(options && this.loggedInUser.uid === options.user.uid) {
-
-            if(options.scope) {
-              scope = options.scope;
-            } else if(options.hasJoined) {
-              hasJoined = options.hasJoined;
-            }
-          }
-          newConversationWithObj = {...conversationWithObj, membersCount: membersCount, scope: scope, hasJoined: hasJoined};
-        }
-
-        
         //if the conversation is selected
         if(this.state.selectedConversation && this.state.selectedConversation.conversationId === conversation.conversationId) {
           unreadMessageCount = 0;
@@ -165,7 +369,7 @@ class CometChatConversationList extends React.Component {
           unreadMessageCount = unreadMessageCount + 1;
         }
 
-        let newConversationObj = {...conversationObj, conversationWith: newConversationWithObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount};
+        let newConversationObj = {...conversationObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount};
         conversationlist.splice(conversationKey, 1);
         conversationlist.unshift(newConversationObj);
         this.setState({conversationlist: conversationlist});
@@ -173,13 +377,11 @@ class CometChatConversationList extends React.Component {
       } else {
 
         let conversationObj = {...conversation};
-        let conversationWithObj = {...conversationObj.conversationWith};
-        let avatar = this.setAvatar(conversationObj);
+        
         let lastMessageObj = {...message};
         let unreadMessageCount = 1;
 
-        let newConversationWithObj = {...conversationWithObj, avatar: avatar};
-        let newConversationObj = {...conversationObj, conversationWith: newConversationWithObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount};
+        let newConversationObj = {...conversationObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount};
         conversationlist.unshift(newConversationObj);
         this.setState({ conversationlist:  conversationlist});
       }
@@ -223,11 +425,14 @@ class CometChatConversationList extends React.Component {
 
   getConversations = () => {
 
-    this.setState({loading: true});
     new CometChatManager().getLoggedInUser().then(user => {
 
       this.loggedInUser = user;
       this.ConversationListManager.fetchNextConversation().then(conversationList => {
+
+        if(conversationList.length === 0) {
+          this.decoratorMessage = "No chats found";
+        }
 
         conversationList.forEach(conversation => {
 
@@ -238,16 +443,18 @@ class CometChatConversationList extends React.Component {
           }
           
         });
-        this.setState({ conversationlist: [...this.state.conversationlist, ...conversationList], loading: false });
+        this.setState({ conversationlist: [...this.state.conversationlist, ...conversationList] });
 
       }).catch(error => {
+
+        this.decoratorMessage = "Error";
         console.error("[CometChatConversationList] getConversations fetchNext error", error);
-        this.setState({loading: false});
       });
 
     }).catch(error => {
+
+      this.decoratorMessage = "Error";
       console.log("[CometChatConversationList] getConversations getLoggedInUser error", error);
-      this.setState({loading: false});
     });
   }
 
@@ -275,29 +482,41 @@ class CometChatConversationList extends React.Component {
       return (
         <ConversationView 
         key={key}
+        theme={this.theme}
         config={this.props.config}
         conversationKey={key} 
         conversation={conversation}
+        selectedConversation={this.state.selectedConversation}
+        widgetsettings={this.props.widgetsettings}
         handleClick={this.handleClick} />
       );
     });
 
-    let closeBtn = (<div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>);
-    if(this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0) {
+    let messageContainer = null;
+    
+    if(this.state.conversationlist.length === 0) {
+      messageContainer = (
+        <div css={chatsMsgStyle()}>
+          <p css={chatsMsgTxtStyle(this.theme)}>{this.decoratorMessage}</p>
+        </div>
+      );
+    }
+
+    let closeBtn = (<div css={chatsHeaderCloseStyle(navigateIcon)} onClick={this.handleMenuClose}></div>);
+    if (!this.props.hasOwnProperty("enableCloseMenu") || (this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0)) {
       closeBtn = null;
     }
 
     return (
-      <React.Fragment>
-        <div className="ccl-left-panel-head-wrap">
+      <div css={chatsWrapperStyle()}>
+        <div css={chatsHeaderStyle(this.theme)}>
           {closeBtn}
-          <h4 className="ccl-left-panel-head-ttl">Chats</h4>
+          <h4 css={chatsHeaderTitleStyle(this.props)}>Chats</h4>
+          <div></div>
         </div>
-        {/* <div className={loadingClassName}>Loading...</div> */}
-        <div className="chat-ppl-list-ext-wrap" onScroll={this.handleScroll}>
-          {conversationList}
-        </div>
-      </React.Fragment>
+        {messageContainer}
+        <div css={chatsListStyle()} onScroll={this.handleScroll}>{conversationList}</div>
+      </div>
     );
   }
 }

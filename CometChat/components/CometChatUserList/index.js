@@ -1,5 +1,7 @@
 import React from "react";
-import "./style.scss";
+
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
 import { CometChatManager } from "../../util/controller";
 import { SvgAvatar } from '../../util/svgavatar';
@@ -7,22 +9,59 @@ import { UserListManager } from "./controller";
 
 import UserView from "../UserView";
 
+import { theme } from "../../resources/theme";
+
+import { 
+  contactWrapperStyle, 
+  contactHeaderStyle, 
+  contactHeaderCloseStyle, 
+  contactHeaderTitleStyle,
+  contactSearchStyle,
+  contactSearchInputStyle,
+  contactMsgStyle,
+  contactMsgTxtStyle,
+  contactListStyle,
+  contactAlphabetStyle
+} from "./style";
+
+import searchIcon from './resources/search-grey-icon.svg';
+import navigateIcon from './resources/navigate_before.svg';
+
 class CometChatUserList extends React.PureComponent {
   timeout;
   friendsOnly = false;
+  decoratorMessage = "Loading...";
 
   constructor(props) {
+
     super(props);
+
     this.state = {
       userlist: [],
-      loading: false
+      selectedUser: null
     }
+
+    this.theme = Object.assign({}, theme, this.props.theme);
   }
 
   componentDidMount() {
 
-    if(this.props?.friendsOnly) {
+    if(this.props.hasOwnProperty("friendsOnly")) {
       this.friendsOnly = this.props.friendsOnly;
+    }
+
+    if(this.props.hasOwnProperty("widgetsettings") 
+    && this.props.widgetsettings
+    && this.props.widgetsettings.hasOwnProperty("sidebar") 
+    && this.props.widgetsettings.sidebar.hasOwnProperty("user_listing")) {
+
+      switch(this.props.widgetsettings.sidebar["user_listing"]) {
+        case "friends":
+          this.friendsOnly = true;
+        break;
+        default:
+        break;
+      }
     }
 
     this.UserListManager = new UserListManager(this.friendsOnly);
@@ -39,13 +78,17 @@ class CometChatUserList extends React.PureComponent {
     && prevProps.item.blockedByMe !== this.props.item.blockedByMe) {
 
       let userlist = [...this.state.userlist];
-      let userObj = userlist.find((u, k) => u.uid === this.props.item.uid);
 
-      if(userObj) {
-        userObj = Object.assign(userObj, {blockedByMe: this.props.item.blockedByMe});
+      //search for user
+      let userKey = userlist.findIndex((u, k) => u.uid === this.props.item.uid);
+      if(userKey > -1) {
+
+        let userObj = {...userlist[userKey]};
+        let newUserObj = Object.assign({}, userObj, {blockedByMe: this.props.item.blockedByMe});
+        userlist.splice(userKey, 1, newUserObj);
+
+        this.setState({ userlist: userlist });
       }
-      
-      this.setState({ userlist });
     }
   }
 
@@ -86,6 +129,7 @@ class CometChatUserList extends React.PureComponent {
     if(!this.props.onItemClick)
       return;
 
+    this.setState({selectedUser: {...user}});
     this.props.onItemClick(user, 'user');
   }
 
@@ -115,22 +159,27 @@ class CometChatUserList extends React.PureComponent {
 
   getUsers = () => {
 
-    this.setState({loading: true});
     new CometChatManager().getLoggedInUser().then((user) => {
 
       this.UserListManager.fetchNextUsers().then((userList) => {
+
+        if(userList.length === 0) {
+          this.decoratorMessage = "No users found";
+        }
         
         userList.forEach(user => user = this.setAvatar(user));
-        this.setState({ userlist: [...this.state.userlist, ...userList], loading: false });
+        this.setState({ userlist: [...this.state.userlist, ...userList] });
           
       }).catch((error) => {
+
+        this.decoratorMessage = "Error";
         console.error("[CometChatUserList] getUsers fetchNext error", error);
-        this.setState({loading: false});
       });
 
     }).catch((error) => {
+
+      this.decoratorMessage = "Error";
       console.log("[CometChatUserList] getUsers getLoggedInUser error", error);
-      this.setState({loading: false});
     });
   }
 
@@ -146,60 +195,67 @@ class CometChatUserList extends React.PureComponent {
   }
 
   render() {
+
+    let messageContainer = null;
     
+    if(this.state.userlist.length === 0) {
+      messageContainer = (
+        <div css={contactMsgStyle()}>
+          <p css={contactMsgTxtStyle(this.theme)}>{this.decoratorMessage}</p>
+        </div>
+      );
+    }
+
     const userList = [...this.state.userlist];
     let currentLetter = "";
     const users = userList.map((user, key) => {
       
       const chr = user.name[0].toUpperCase();
+      let firstChar = null;
       if (chr !== currentLetter) {
-
         currentLetter = chr;
-        return (
-          <div id={key} onClick={() => this.handleClick(user)} key={key}>
-            <span className='chat-contact-list-apla-ftlr'>{currentLetter}</span>
-            <UserView key={user.uid} user={user}  ></UserView>
-          </div>
-        );
-
+        firstChar = (<div css={contactAlphabetStyle()}>{currentLetter}</div>);
       } else {
-
-        return (
-          <div id={key} onClick={() => this.handleClick(user)} key={key}>
-            <UserView key={user.uid} user={user}></UserView>
-          </div>
-        );
+        firstChar = null;
       }
+
+      return (
+        <React.Fragment key={key}>
+          {firstChar}
+          <UserView 
+          theme={this.theme}
+          user={user} 
+          selectedUser={this.state.selectedUser}
+          widgetsettings={this.props.widgetsettings} 
+          clickeHandler={this.handleClick}  />
+        </React.Fragment>
+      );
 
     });
 
-    let closeBtn = (<div className="cc1-left-panel-close" onClick={this.handleMenuClose}></div>);
-    if(this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0) {
+    let closeBtn = (<div css={contactHeaderCloseStyle(navigateIcon)} onClick={this.handleMenuClose}></div>);
+    if (!this.props.hasOwnProperty("enableCloseMenu") || (this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0)) {
       closeBtn = null;
     }
 
     return (
-      <React.Fragment>
-        <div className="ccl-left-panel-head-wrap">
+      <div css={contactWrapperStyle()}>
+        <div css={contactHeaderStyle(this.theme)}>
           {closeBtn}
-          <h4 className="ccl-left-panel-head-ttl">Contacts</h4>
+          <h4 css={contactHeaderTitleStyle(this.props)}>Contacts</h4>
+          <div></div>
         </div>
-        <div className="ccl-left-panel-srch-wrap">
-          <div className="ccl-left-panel-srch-inpt-wrap">
-              <input
-              type="text" 
-              autoComplete="off" 
-              className="ccl-left-panel-srch" 
-              id="chatSearch" 
-              placeholder="Search"
-              onChange={this.searchUsers} />
-              <input id="searchButton" type="button" className="search-btn" />
-          </div>
+        <div css={contactSearchStyle()}>
+          <input
+          type="text" 
+          autoComplete="off" 
+          css={contactSearchInputStyle(this.theme, searchIcon)}
+          placeholder="Search"
+          onChange={this.searchUsers} />
         </div>
-        <div className="chat-contact-list-ext-wrap" onScroll={this.handleScroll}>
-          {users}
-        </div>
-      </React.Fragment>
+        {messageContainer}
+        <div css={contactListStyle()} onScroll={this.handleScroll}>{users}</div>
+      </div>
     );
   }
 }

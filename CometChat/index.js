@@ -12,7 +12,12 @@ export { default as CometChatGroupListScreen } from "./components/CometChatGroup
 export { default as CometChatConversationList } from "./components/CometChatConversationList";
 export { default as CometChatConversationListScreen } from "./components/CometChatConversationListScreen";
 
+export { default as CometChatUserDetail } from "./components/CometChatUserDetail";
+export { default as CometChatGroupDetail } from "./components/CometChatGroupDetail";
+
 export { default as CometChatUserInfoScreen } from "./components/CometChatUserInfoScreen";
 export { default as MessageThread } from "./components/MessageThread";
 
 export { default as CometChatUnified } from "./components/CometChatUnified";
+
+export { default as CallScreen } from "./components/CallScreen";

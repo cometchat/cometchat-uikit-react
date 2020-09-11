@@ -1,5 +1,7 @@
 import React from "react";
-import classNames from "classnames";
+
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -8,7 +10,18 @@ import Backdrop from '../Backdrop';
 
 import GroupDetailContext from '../CometChatGroupDetail/context';
 
-import "./style.scss";
+import {
+    modalWrapperStyle,
+    modalCloseStyle,
+    modalBodyStyle,
+    modalTableStyle,
+    tableCaptionStyle,
+    tableBodyStyle,
+    roleColumnStyle,
+    actionColumnStyle
+} from "./style";
+
+import clearIcon from "./resources/clear.svg";
 
 class CometChatBanMembers extends React.Component {
 
@@ -57,16 +70,18 @@ class CometChatBanMembers extends React.Component {
     }
     
     render() {
-
+        
         const group = this.context;
         const membersList = [...group.bannedmemberlist];
         const bannedMembers = membersList.map((member, key) => {
 
             return (<BanMemberView 
+                    theme={this.props.theme}
                     key={key} 
                     member={member}
                     item={this.props.item}
                     loggedinuser={group.loggedinuser}
+                    widgetsettings={this.props.widgetsettings}
                     actionGenerated={this.updateMembers} />);
 
         });
@@ -74,29 +89,23 @@ class CometChatBanMembers extends React.Component {
         const noRecordsFound = (
             <tr><td colSpan="3">No banned members found</td></tr>
         );
-
-        const wrapperClassName = classNames({
-            "popup-box": true,
-            "ban-member-popup": true,
-            "show": this.props.open
-        });
         
         return (
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
-                <div className={wrapperClassName}>
-                    <span className="popup-close" onClick={this.props.close}></span>
-                    <div className="popup-body">
-                        <table>
-                            <caption>Banned Members</caption>
+                <div css={modalWrapperStyle(this.props)}>
+                    <span css={modalCloseStyle(clearIcon)} onClick={this.props.close}></span>
+                    <div css={modalBodyStyle()}>
+                        <table css={modalTableStyle(this.props)}>
+                            <caption css={tableCaptionStyle()}>Banned Members</caption>
                             <thead>
                                 <tr>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Scope</th>
-                                    <th scope="col">Unban</th>
+                                    <th>Name</th>
+                                    <th css={roleColumnStyle()}>Scope</th>
+                                    <th css={actionColumnStyle()}>Unban</th>
                                 </tr>
                             </thead>
-                            <tbody onScroll={this.handleScroll}>{(bannedMembers.length) ? bannedMembers : noRecordsFound}</tbody>
+                            <tbody css={tableBodyStyle()} onScroll={this.handleScroll}>{(bannedMembers.length) ? bannedMembers : noRecordsFound}</tbody>
                         </table>
                     </div>
                 </div>

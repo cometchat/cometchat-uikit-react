@@ -1,5 +1,7 @@
 import React from "react";
-import classNames from "classnames";
+
+/** @jsx jsx */
+import { jsx } from '@emotion/core';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -12,10 +14,26 @@ import Backdrop from '../Backdrop';
 
 import GroupDetailContext from '../CometChatGroupDetail/context';
 
-import "./style.scss";
+import {
+    modalWrapperStyle,
+    modalCloseStyle,
+    modalBodyCtyle,
+    modalTableStyle,
+    tableCaptionStyle,
+    tableSearchStyle,
+    searchInputStyle,
+    tableBodyStyle,
+    tableFootStyle,
+    contactMsgStyle,
+    contactMsgTxtStyle,
+} from "./style";
+
+import searchIcon from './resources/search-grey-icon.svg';
+import clearIcon from "./resources/clear.svg";
 
 class CometChatAddMembers extends React.Component {
 
+    decoratorMessage = "Loading...";
     static contextType = GroupDetailContext;
 
     constructor(props) {
@@ -87,15 +105,23 @@ class CometChatAddMembers extends React.Component {
         new CometChatManager().getLoggedInUser().then((user) => {
   
             this.AddMembersManager.fetchNextUsers().then((userList) => {
+
+                if (userList.length === 0) {
+                    this.decoratorMessage = "No users found";
+                }
             
-            userList.forEach(user => user = this.setAvatar(user));
-            this.setState({ userlist: [...this.state.userlist, ...userList] });
+                userList.forEach(user => user = this.setAvatar(user));
+                this.setState({ userlist: [...this.state.userlist, ...userList] });
                 
             }).catch((error) => {
+
+                this.decoratorMessage = "Error";
                 console.error("[CometChatAddMembers] getUsers fetchNext error", error);
             });
   
         }).catch((error) => {
+
+            this.decoratorMessage = "Error";
             console.log("[CometChatAddMembers] getUsers getLoggedInUser error", error);
         });
     }
@@ -175,6 +201,16 @@ class CometChatAddMembers extends React.Component {
 
     render() {
 
+        let messageContainer = null;
+
+        if (this.state.userlist.length === 0) {
+            messageContainer = (
+                <caption css={contactMsgStyle()}>
+                    <p css={contactMsgTxtStyle(this.props)}>{this.decoratorMessage}</p>
+                </caption>
+            );
+        }
+
         const group = this.context;
 
         const userList = [...this.state.userlist];
@@ -202,41 +238,36 @@ class CometChatAddMembers extends React.Component {
             return (
                 <React.Fragment key={user.uid}>
                     <AddMemberView 
+                    theme={this.props.theme}
                     firstLetter={firstLetter}
                     loggedinuser={group.loggedinuser}
                     user={user}
                     members={group.memberlist}
-                    changed={this.membersUpdated} />
+                    changed={this.membersUpdated}
+                    widgetsettings={this.props.widgetsettings} />
                 </React.Fragment>
             )
-        });
-
-        const wrapperClassName = classNames({
-            "popup-box": true,
-            "add-member-popup": true,
-            "show": this.props.open
         });
 
         return (
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
-                <div className={wrapperClassName}>
-                    <span className="popup-close" onClick={this.props.close} title="Close"></span>
-                    <div className="popup-body">
-                        <table>
-                            <caption>Add Members</caption>
-                            <caption className="search">
+                <div css={modalWrapperStyle(this.props)}>
+                    <span css={modalCloseStyle(clearIcon)} onClick={this.props.close} title="Close"></span>
+                    <div css={modalBodyCtyle()}>
+                        <table css={modalTableStyle()}>
+                            <caption css={tableCaptionStyle()}>Contacts</caption>
+                            <caption css={tableSearchStyle()}>
                                 <input
-                                    type="text" 
-                                    autoComplete="off" 
-                                    className="member-search" 
-                                    id="chatSearch" 
-                                    placeholder="Search"
-                                    onChange={this.searchUsers} />
-                                    <input id="searchButton" type="button" className="member-search-btn" />
+                                type="text" 
+                                autoComplete="off" 
+                                css={searchInputStyle(this.props, searchIcon)}
+                                placeholder="Search"
+                                onChange={this.searchUsers} />
                             </caption>
-                            <tbody onScroll={this.handleScroll}>{users}</tbody>
-                            <tfoot>
+                            {messageContainer}
+                            <tbody css={tableBodyStyle(this.props)} onScroll={this.handleScroll}>{users}</tbody>
+                            <tfoot css={tableFootStyle(this.props)}>
                                 <tr>
                                     <td colSpan="2"><button onClick={this.updateMembers}>Add</button></td>
                                 </tr>

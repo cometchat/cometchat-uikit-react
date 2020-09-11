@@ -1,5 +1,7 @@
 import React from "react";
-import "./style.scss";
+
+/** @jsx jsx */
+import { jsx } from '@emotion/core'
 
 import { SvgAvatar } from '../../util/svgavatar';
 
@@ -7,9 +9,21 @@ import Avatar from "../Avatar";
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
 
+import {
+  messageContainerStyle,
+  messageWrapperStyle,
+  messageThumbnailStyle,
+  messageDetailStyle,
+  nameWrapperStyle,
+  nameStyle,
+  messageImgWrapperStyle,
+  messageInfoWrapperStyle,
+  messageTimestampStyle
+} from "./style";
+
 const revceiverimagebubble = (props) => {
 
-  let avatar = "", name = "";
+  let avatar = null, name = null;
   if(props.message.receiverType === 'group') {
 
     if(!props.message.sender.avatar) {
@@ -18,59 +32,37 @@ const revceiverimagebubble = (props) => {
       const char = props.message.sender.getName().charAt(0).toUpperCase();
 
       props.message.sender.setAvatar(SvgAvatar.getAvatar(uid, char));
-    
     } 
 
     avatar = (
-      <div className="cc1-chat-win-rcvr-thumbnail-wrap">
+      <div css={messageThumbnailStyle()}>
         <Avatar 
         cornerRadius="50%" 
-        borderColor="#CCC" 
+        borderColor={props.theme.color.secondary}
         borderWidth="1px"
         image={props.message.sender.avatar}></Avatar>
       </div>
     )
 
-    name = (<div className="cc1-chat-win-rcvr-name-wrap"><span className="cc1-chat-win-rcvr-name">{props.message.sender.name}</span></div>);
+    name = (<div css={(nameWrapperStyle(avatar))}><span css={nameStyle(props)}>{props.message.sender.name}</span></div>);
   }
 
   const message = Object.assign({}, props.message, {messageFrom: "receiver"});
 
-  let replies = null, tooltip = null;
-  if((!props.widgetconfig && props.message.replyCount) 
-  || (props.widgetconfig && props.widgetconfig["threaded-chats"] && props.message.replyCount)) {
-
-    replies = (
-      <ReplyCount
-      message={message}
-      action="viewMessageThread"
-      actionGenerated={props.actionGenerated} />
-    );
-  }
-
-  if((!props.widgetconfig) || (props.widgetconfig && props.widgetconfig["threaded-chats"])) {
-    tooltip = (
-      <ToolTip
-      message={message}
-      action="viewMessageThread"
-      actionGenerated={props.actionGenerated} />
-    );
-  }
-
   return (
 
-    <div className="cc1-chat-win-rcvr-row clearfix">
-      <div className="cc1-chat-win-msg-block">
+    <div css={messageContainerStyle()}>
+      <div css={messageWrapperStyle()}>
         {avatar}
-        <div className="cc1-chat-win-rcvr-dtls">
+        <div css={messageDetailStyle(name)}>
           {name}
-          {tooltip}
-          <div className="cc1-chat-win-rcvr-img-wrap">
+          <ToolTip action="viewMessageThread" {...props} message={message} />    
+          <div css={messageImgWrapperStyle()}>
             <img src={props.message.data.url} alt="receiver" />                            
           </div>
-          <div className="cc1-chat-win-msg-time-wrap">
-            <span className="cc1-chat-win-timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-            {replies}
+          <div css={messageInfoWrapperStyle()}>
+            <span css={messageTimestampStyle(props)}>{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+            <ReplyCount action="viewMessageThread" {...props} message={message} />
           </div>
         </div>
       </div>

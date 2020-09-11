@@ -1,5 +1,8 @@
 import React from 'react';
 
+/** @jsx jsx */
+import { jsx } from '@emotion/core';
+
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../util/controller";
@@ -16,14 +19,27 @@ import CometChatBanMembers from "../CometChatBanMembers";
 
 import SharedMediaView from "../SharedMediaView";
 
-import "./style.scss";
+import {
+    detailStyle,
+    headerStyle,
+    headerCloseStyle,
+    headerTitleStyle,
+    detailPaneStyle,
+    sectionStyle,
+    sectionHeaderStyle,
+    sectionContentStyle,
+    contentItemStyle,
+    itemLinkStyle
+} from "./style";
+
+import navigateIcon from "./resources/navigate_before.svg";
 
 class CometChatGroupDetail extends React.Component {
 
     loggedInUser = null;
 
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
 
         this.state = {
             user: {},
@@ -95,20 +111,21 @@ class CometChatGroupDetail extends React.Component {
             break;
             case enums.GROUP_MEMBER_ADDED:
             case enums.GROUP_MEMBER_JOINED: {
+
                 const member = options.user;
                 this.setAvatar(member);
-                this.addParticipants([member], false);
+                
+                const updatedMember = Object.assign({}, member, { scope: CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT });
+                
+                this.addParticipants([updatedMember], false);
             }
             break;
-            case enums.GROUP_MEMBER_LEFT: {
+            case enums.GROUP_MEMBER_LEFT:
+            case enums.GROUP_MEMBER_KICKED: {
                 const member = options.user;
                 this.removeParticipants(member, false);
             }
             break;
-            case enums.GROUP_MEMBER_KICKED: {
-                this.removeParticipants(options.user, false);
-                break;
-            }
             case enums.GROUP_MEMBER_BANNED: {
                 const member = options.user;
                 this.setAvatar(member);
@@ -123,7 +140,6 @@ class CometChatGroupDetail extends React.Component {
             break;
             case enums.GROUP_MEMBER_SCOPE_CHANGED: {
                 const member = options.user;
-
                 const updatedMember = Object.assign({}, member, {scope: options["scope"]});
                 this.updateParticipants(updatedMember);
             }
@@ -249,6 +265,7 @@ class CometChatGroupDetail extends React.Component {
 
         const guid = this.props.item.guid;
         CometChat.leaveGroup(guid).then(hasLeft => {
+            
             console.log("Group left successfully:", hasLeft);
             this.props.actionGenerated("leftGroup", this.props.item);
         }).catch(error => {
@@ -274,7 +291,7 @@ class CometChatGroupDetail extends React.Component {
     }
 
     membersActionHandler = (action, members) => {
-        console.log("membersActionHandler", action);
+        
         switch(action) {
             case "banGroupMembers":
                 this.banMembers(members);
@@ -326,8 +343,9 @@ class CometChatGroupDetail extends React.Component {
     }
 
     addParticipants = (members, triggerUpdate = true) => {
-
+        
         const memberlist = [...this.state.memberlist, ...members];
+
         this.setState({
             memberlist: memberlist,
         });
@@ -338,7 +356,7 @@ class CometChatGroupDetail extends React.Component {
     }
 
     removeParticipants = (member, triggerUpdate = true) => {
-
+        
         const groupmembers = [...this.state.memberlist];
         const filteredMembers = groupmembers.filter(groupmember => {
 
@@ -373,40 +391,128 @@ class CometChatGroupDetail extends React.Component {
 
     render() {
 
-        let addMembersBtn = null, bannedMembersBtn = null, deleteGroupBtn = null;
+        let viewMembersBtn = (
+            <div css={contentItemStyle()}>
+                <div css={itemLinkStyle(this.props, 0)} onClick={() => this.clickHandler("viewmember", true)}>View Members</div>                                           
+            </div>
+        );
+
+        let addMembersBtn = null, deleteGroupBtn = null, bannedMembersBtn = null;
         if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
             addMembersBtn = (
-                <div className="chat-ppl-listitem add-member">
-                    <div className="chat-ppl-listitem-dtls">
-                        <span className="chat-ppl-listitem-name" onClick={() => this.clickHandler("addmember", true)}>Add Members</span>                                           
-                    </div>
+                <div css={contentItemStyle()}>
+                    <div css={itemLinkStyle(this.props, 0)} onClick={() => this.clickHandler("addmember", true)}>Add Members</div>                                           
                 </div>
             );
 
             deleteGroupBtn = (
-                <div className="ccl-dtls-section-listitem">
-                    <span className="ccl-dtls-section-listitem-link" onClick={this.deleteGroup}>Delete and Exit</span>
+                <div css={contentItemStyle()}>
+                    <span css={itemLinkStyle(this.props, 1)} className="item__link link--delete" onClick={this.deleteGroup}>Delete and Exit</span>
                 </div>
             );
         }
         
         if(this.props.item.scope !== CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
             bannedMembersBtn = (
-                <div className="chat-ppl-listitem add-member">
-                    <div className="chat-ppl-listitem-dtls">
-                        <span className="chat-ppl-listitem-name" onClick={() => this.clickHandler("banmember", true)}>Banned Members</span>                                           
-                    </div>
+                <div css={contentItemStyle()}>
+                    <div css={itemLinkStyle(this.props, 0)} onClick={() => this.clickHandler("banmember", true)}>Banned Members</div>                                           
                 </div>
             );
+        }
+
+        let leaveGroupBtn = (
+            <div css={contentItemStyle()}>
+                <span css={itemLinkStyle(this.props, 0)} onClick={this.leaveGroup}>Leave Group</span>
+            </div>
+        );
+
+        let sharedmediaView = (
+            <SharedMediaView theme={this.props.theme} containerHeight="225px" item={this.props.item} type={this.props.type} />
+        );
+
+        if(this.props.hasOwnProperty("widgetsettings") 
+        && this.props.widgetsettings
+        && this.props.widgetsettings.hasOwnProperty("main")) {
+
+            //if view_group_members is disabled in chatwidget
+            if(this.props.widgetsettings.main.hasOwnProperty("view_group_members")
+            && this.props.widgetsettings.main["view_group_members"] === false
+            && this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members")
+            && this.props.widgetsettings.main["allow_kick_ban_members"] === false
+            && this.props.widgetsettings.main.hasOwnProperty("allow_promote_demote_members")
+            && this.props.widgetsettings.main["allow_promote_demote_members"] === false) {
+                viewMembersBtn = null;
+            }
+
+            //if add_group_members is disabled in chatwidget
+            if(this.props.widgetsettings.main.hasOwnProperty("allow_add_members")
+            && this.props.widgetsettings.main["allow_add_members"] === false) {
+                addMembersBtn = null;
+            }
+
+            //if allow_kick_ban_members is disabled in chatwidget
+            if(this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members")
+            && this.props.widgetsettings.main["allow_kick_ban_members"] === false) {
+                bannedMembersBtn = null;
+            }
+
+            //if delete_group is disabled in chatwidget
+            if(this.props.widgetsettings.main.hasOwnProperty("allow_delete_groups")
+            && this.props.widgetsettings.main["allow_delete_groups"] === false) {
+                deleteGroupBtn = null;
+            }
+
+            //if leave_group is disabled in chatwidgets
+            if(this.props.widgetsettings.main.hasOwnProperty("join_or_leave_groups")
+            && this.props.widgetsettings.main["join_or_leave_groups"] === false) {
+                leaveGroupBtn = null;
+            }
+
+            //if view_shared_media is disabled in chatwidget
+            if(this.props.widgetsettings.main.hasOwnProperty("view_shared_media")
+            && this.props.widgetsettings.main["view_shared_media"] === false) {
+                sharedmediaView = null;
+            }
+        }
+
+        let members = (
+            <div css={sectionStyle()}>
+                <h6 css={sectionHeaderStyle(this.props)}>Members</h6>
+                <div css={sectionContentStyle()}>
+                    {viewMembersBtn}
+                    {addMembersBtn}
+                    {bannedMembersBtn}
+                </div>
+            </div>
+        );
+
+        let options = (
+            <div css={sectionStyle()}>
+                <h6 css={sectionHeaderStyle(this.props)}>Options</h6>
+                <div css={sectionContentStyle()}>
+                    {leaveGroupBtn}
+                    {deleteGroupBtn}
+                </div>
+            </div>
+        );
+
+        if(viewMembersBtn === null && addMembersBtn === null && bannedMembersBtn === null) {
+            members = null;
+        }
+
+        if(leaveGroupBtn === null && deleteGroupBtn === null) {
+            options = null;
         }
 
         let viewMembers = null;
         if(this.state.viewMember) {
             viewMembers = (
                 <CometChatViewMembers 
+                theme={this.props.theme}
                 item={this.props.item}
                 open={this.state.viewMember}
                 close={() => this.clickHandler("viewmember", false)}
+                widgetsettings={this.props.widgetsettings}
                 actionGenerated={this.membersActionHandler} />
             );
         }
@@ -415,9 +521,11 @@ class CometChatGroupDetail extends React.Component {
         if(this.state.addMember) {
             addMembers = (
                 <CometChatAddMembers 
+                theme={this.props.theme}
                 item={this.props.item}
                 open={this.state.addMember} 
                 close={() => this.clickHandler("addmember", false)}
+                widgetsettings={this.props.widgetsettings}
                 actionGenerated={this.membersActionHandler} />
             );
         }
@@ -426,15 +534,17 @@ class CometChatGroupDetail extends React.Component {
         if(this.state.banMember) {
             bannedMembers = (
                 <CometChatBanMembers
+                theme={this.props.theme}
                 item={this.props.item}
                 open={this.state.banMember} 
                 close={() => this.clickHandler("banmember", false)}
+                widgetsettings={this.props.widgetsettings}
                 actionGenerated={this.membersActionHandler}  />
             );
         }
 
         return (
-            <React.Fragment>
+            <div css={detailStyle(this.props)}>
                 <GroupDetailContext.Provider 
                 value={{
                     memberlist: this.state.memberlist,
@@ -444,43 +554,20 @@ class CometChatGroupDetail extends React.Component {
                     loggedinuser: this.loggedInUser,
                     item: this.props.item
                 }}>
-                    <div className="ccl-dtls-panel-wrap">
-                        <div className="ccl-right-panel-head-wrap">
-                            <div className="cc1-right-panel-close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
-                            <h4 className="ccl-right-panel-head-ttl">Details</h4>
-                        </div>
-                        <div className="ccl-dtls-panel-body">
-                            <div className="ccl-dtls-panel-section">
-                                <h6 className="ccl-dtls-panel-section-head">Members</h6>
-                                <div className="chat-ppl-list-wrap">
-                                    {addMembersBtn}
-                                    <div className="chat-ppl-listitem add-member">
-                                        <div className="chat-ppl-listitem-dtls">
-                                            <span className="chat-ppl-listitem-name" onClick={() => this.clickHandler("viewmember", true)}>View Members</span>                                           
-                                        </div>
-                                    </div>
-                                    {bannedMembersBtn}
-                                </div>
-                            </div>
-                            <div className="ccl-dtls-panel-section">
-                                <h6 className="ccl-dtls-panel-section-head">Options</h6>
-                                <div className="ccl-dtls-section-list">
-                                    <div className="ccl-dtls-section-listitem"><span className="ccl-dtls-section-listitem-link" onClick={this.leaveGroup}>Leave Group</span></div>
-                                    {deleteGroupBtn}
-                                </div>
-                            </div>
-                            <div className="ccl-dtls-panel-section sharedmedia">
-                                <SharedMediaView 
-                                item={this.props.item}
-                                type={this.props.type} />
-                            </div>
-                        </div>
+                    <div css={headerStyle(this.props)}>
+                        <div css={headerCloseStyle(navigateIcon)} onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
+                        <h4 css={headerTitleStyle()}>Details</h4>
+                    </div>
+                    <div css={detailPaneStyle()}>
+                        {members}
+                        {options}
+                        {sharedmediaView}
                     </div>
                     {viewMembers}
                     {addMembers}
                     {bannedMembers}
                 </GroupDetailContext.Provider>
-            </React.Fragment>
+            </div>
         );
     }
 }
