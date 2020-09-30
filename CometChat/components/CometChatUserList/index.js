@@ -40,7 +40,7 @@ class CometChatUserList extends React.PureComponent {
       userlist: [],
       selectedUser: null
     }
-
+    this.userListRef = React.createRef();
     this.theme = Object.assign({}, theme, this.props.theme);
   }
 
@@ -69,7 +69,31 @@ class CometChatUserList extends React.PureComponent {
     this.UserListManager.attachListeners(this.userUpdated);
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
+
+    const previousItem = JSON.stringify(prevProps.item);
+    const currentItem = JSON.stringify(this.props.item);
+
+    if (previousItem !== currentItem) {
+
+      if (Object.keys(this.props.item).length === 0) {
+
+        this.userListRef.scrollTop = 0;
+        this.setState({ selectedUser: {} });
+
+      } else {
+
+        let userlist = [...this.state.userlist];
+
+        //search for user
+        let userKey = userlist.findIndex(u => u.uid === this.props.item.uid);
+        if (userKey > -1) {
+
+          let userObj = { ...userlist[userKey] };
+          this.setState({ selectedUser: userObj });
+        }
+      }
+    }
 
     //if user is blocked/unblocked, update userlist in state
     if(prevProps.item 
@@ -129,7 +153,7 @@ class CometChatUserList extends React.PureComponent {
     if(!this.props.onItemClick)
       return;
 
-    this.setState({selectedUser: {...user}});
+    //this.setState({selectedUser: {...user}});
     this.props.onItemClick(user, 'user');
   }
 
@@ -254,7 +278,7 @@ class CometChatUserList extends React.PureComponent {
           onChange={this.searchUsers} />
         </div>
         {messageContainer}
-        <div css={contactListStyle()} onScroll={this.handleScroll}>{users}</div>
+        <div css={contactListStyle()} onScroll={this.handleScroll} ref={el => this.userListRef = el}>{users}</div>
       </div>
     );
   }

@@ -190,13 +190,13 @@ const conversationview = (props) => {
           <div css={itemNameStyle()}
           onMouseEnter={event => toggleTooltip(event, true)} 
           onMouseLeave={event => toggleTooltip(event, false)}>{props.conversation.conversationWith.name}</div>
-          <BadgeCount theme={props.theme} count={props.conversation.unreadMessageCount}></BadgeCount>
+          {lastMessageTimeStamp}
         </div>
         <div css={itemRowStyle()}>
           <div css={itemLastMsgStyle(props)}
           onMouseEnter={event => toggleTooltip(event, true)} 
           onMouseLeave={event => toggleTooltip(event, false)}>{getLastMessage()}</div>
-          {lastMessageTimeStamp}
+          <BadgeCount theme={props.theme} count={props.conversation.unreadMessageCount} />
         </div>
       </div>
     </div>

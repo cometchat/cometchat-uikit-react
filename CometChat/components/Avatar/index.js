@@ -12,8 +12,8 @@ import srcIcon from "./resources/1px.png";
 class Avatar extends React.Component {
 
   constructor(props) {
+    
     super(props);
-
     this.imgRef = React.createRef();
   }
 

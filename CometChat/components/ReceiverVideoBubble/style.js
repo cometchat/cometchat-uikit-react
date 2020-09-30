@@ -51,6 +51,7 @@ export const nameWrapperStyle = () => {
 
     return {
         alignSelf: "flex-start",
+        padding: "3px 5px",
     }
 }
 
@@ -81,6 +82,7 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-start",
+        padding: "3px 5px",
     }
 }
 

@@ -4,16 +4,13 @@ import * as enums from '../../util/enums.js';
 
 export class CallScreenManager {
 
-  callListenerId = new Date().getTime();
+  callListenerId = "callscreen_" + new Date().getTime();
 
   attachListeners(callback) {
     
     CometChat.addCallListener(
       this.callListenerId,
       new CometChat.CallListener({
-        onIncomingCallReceived: call => {
-          callback(enums.INCOMING_CALL_RECEIVED, call);
-        },
         onOutgoingCallAccepted: call => {
           callback(enums.OUTGOING_CALL_ACCEPTED, call);
         },

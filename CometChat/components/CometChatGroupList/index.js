@@ -48,7 +48,7 @@ class CometChatGroupList extends React.Component {
       createGroup: false,
       selectedGroup: null
     }
-
+    this.groupListRef = React.createRef();
     this.theme = Object.assign({}, theme, this.props.theme);
   }
 
@@ -59,7 +59,32 @@ class CometChatGroupList extends React.Component {
     this.GroupListManager.attachListeners(this.groupUpdated);
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
+
+    const previousItem = JSON.stringify(prevProps.item);
+    const currentItem = JSON.stringify(this.props.item);
+
+    //if different group is selected
+    if (previousItem !== currentItem) {
+
+      if (Object.keys(this.props.item).length === 0) {
+
+        this.groupListRef.scrollTop = 0;
+        this.setState({ selectedGroup: {} });
+
+      } else {
+
+        let grouplist = [...this.state.grouplist];
+
+        //search for user
+        let groupKey = grouplist.findIndex(g => g.guid === this.props.item.guid);
+        if (groupKey > -1) {
+
+          let groupObj = { ...grouplist[groupKey] };
+          this.setState({ selectedGroup: groupObj });
+        }
+      }
+    }
 
     if(prevProps.groupToLeave && prevProps.groupToLeave.guid !== this.props.groupToLeave.guid) {
       
@@ -464,7 +489,7 @@ class CometChatGroupList extends React.Component {
           onChange={this.searchGroup} />
         </div>
         {messageContainer}
-        <div css={groupListStyle()} onScroll={this.handleScroll}>{groups}</div>
+        <div css={groupListStyle()} onScroll={this.handleScroll} ref={el => this.groupListRef = el}>{groups}</div>
         <CometChatCreateGroup 
         theme={this.theme}
         open={this.state.createGroup} 

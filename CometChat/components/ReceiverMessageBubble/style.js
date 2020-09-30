@@ -50,7 +50,7 @@ export const messageDetailStyle = (name) => {
 export const nameWrapperStyle = (avatar) => {
 
     const paddingValue = (avatar) ? {
-        paddingLeft: "5px"
+        padding: "3px 5px",
     } : {};
 
     return {
@@ -142,6 +142,7 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-start",
+        padding: "3px 5px",
     }
 }
 

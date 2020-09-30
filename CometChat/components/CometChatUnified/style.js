@@ -6,6 +6,7 @@ export const unifiedStyle = (theme) => {
         width: "100%",
         boxSizing: "border-box",
         fontFamily: `${theme.fontFamily}`,
+        position: "relative",
         "*": {
             boxSizing: "border-box",
             fontFamily: `${theme.fontFamily}`,
