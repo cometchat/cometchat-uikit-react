@@ -13,6 +13,7 @@ import CometChatMessageListScreen from "../CometChatMessageListScreen";
 import CometChatUserDetail from "../CometChatUserDetail";
 import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
+import CallAlert from "../CallAlert";
 import CallScreen from "../CallScreen";
 
 import { theme } from "../../resources/theme";
@@ -46,9 +47,11 @@ class CometChatUnified extends React.Component {
       threadmessageitem: {},
       threadmessageparent: {},
       composedthreadmessage: {},
+      incomingCall: null,
       outgoingCall: null,
+      messageToMarkRead: {},
       callmessage: {},
-      sidebarview: false
+      sidebarview: false,
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -94,11 +97,13 @@ class CometChatUnified extends React.Component {
   }
   
   itemClicked = (item, type) => {
+
     this.toggleSideBar();
     this.setState({ item: {...item}, type, viewdetailscreen: false });
   }
 
   tabChanged = (tab) => {
+
     this.setState({tab});
     this.setState({viewdetailscreen: false});
   }
@@ -122,8 +127,12 @@ class CometChatUnified extends React.Component {
       case "closeDetailClicked":
         this.toggleDetailView();
       break;
-      case "menuClicked":
+      // eslint-disable-next-line no-lone-blocks
+      case "menuClicked": {
+        
         this.toggleSideBar();
+        this.setState({ item: {} });
+      }
       break;
       case "groupUpdated":
         this.groupUpdated(item, count, ...otherProps);
@@ -145,9 +154,26 @@ class CometChatUnified extends React.Component {
       break;
       case "threadMessageComposed":
         this.onThreadMessageComposed(item);
-      break;
+        break;
+      case "acceptIncomingCall":
+        this.acceptIncomingCall(item);
+        break;
+      case "acceptedIncomingCall":
+        this.callInitiated(item);
+        break;
+      case "rejectedIncomingCall":
+        this.rejectedIncomingCall(item, count);
+        break;
+      case "outgoingCallRejected":
+        this.setState({ outgoingCall: null, incomingCall: null });
+        break;
+      case "outgoingCallCancelled":
       case "callEnded":
-        this.callUpdated(item);
+        this.outgoingCallEnded(item);
+        break;
+      case "userJoinedCall":
+      case "userLeftCall":
+        this.appendCallMessage(item);
         break;
       default:
       break;
@@ -192,14 +218,13 @@ class CometChatUnified extends React.Component {
       receiverType = CometChat.RECEIVER_TYPE.GROUP;
     }
 
-    let callType = CometChat.CALL_TYPE.AUDIO;
+    CometChatManager.call(receiverId, receiverType, CometChat.CALL_TYPE.AUDIO).then(outgoingCall => {
 
-    CometChatManager.audioCall(receiverId, receiverType, callType).then(call => {
-
-      this.callUpdated(call);
-      this.setState({ outgoingCall: call });
+      this.appendCallMessage(outgoingCall);
+      this.setState({ outgoingCall: outgoingCall });
 
     }).catch(error => {
+
       console.log("Call initialization failed with exception:", error);
     });
 
@@ -218,14 +243,13 @@ class CometChatUnified extends React.Component {
       receiverType = CometChat.RECEIVER_TYPE.GROUP;
     }
    
-    let callType = CometChat.CALL_TYPE.VIDEO;
+    CometChatManager.call(receiverId, receiverType, CometChat.CALL_TYPE.VIDEO).then(outgoingCall => {
 
-    CometChatManager.videoCall(receiverId, receiverType, callType).then(call => {
-
-      this.callUpdated(call);
-      this.setState({ outgoingCall: call });
+      this.appendCallMessage(outgoingCall);
+      this.setState({ outgoingCall: outgoingCall });
 
     }).catch(error => {
+
       console.log("Call initialization failed with exception:", error);
     });
 
@@ -314,8 +338,63 @@ class CometChatUnified extends React.Component {
     }
   }
 
-  callUpdated = (call) => {
-    this.setState({callmessage: call})
+  acceptIncomingCall = (call) => {
+
+    this.setState({ incomingCall: call });
+
+    const type = call.receiverType;
+    const id = (type === "user") ? call.sender.uid : call.receiverId;
+
+    CometChat.getConversation(id, type).then(conversation => {
+
+      this.itemClicked(conversation.conversationWith, type);
+
+    }).catch(error => {
+
+      console.log('error while fetching a conversation', error);
+    });
+
+  }
+
+  callInitiated = (message) => {
+    this.appendCallMessage(message);
+  }
+
+  rejectedIncomingCall = (incomingCallMessage, rejectedCallMessage) => {
+
+    let receiverType = incomingCallMessage.receiverType;
+    let receiverId = (receiverType === "user") ? incomingCallMessage.sender.uid : incomingCallMessage.receiverId;
+
+    //marking the incoming call message as read
+    if (incomingCallMessage.hasOwnProperty("readAt") === false) {
+      CometChat.markAsRead(incomingCallMessage.id, receiverId, receiverType);
+    }
+
+    //updating unreadcount in chats list
+    this.setState({ messageToMarkRead: incomingCallMessage });
+
+    let item = this.state.item;
+    let type = this.state.type;
+
+    receiverType = rejectedCallMessage.receiverType; 
+    receiverId = rejectedCallMessage.receiverId;
+
+    if ((type === 'group' && receiverType === 'group' && receiverId === item.guid)
+      || (type === 'user' && receiverType === 'user' && receiverId === item.uid)) {
+
+      this.appendCallMessage(rejectedCallMessage);
+    }
+  }
+
+  outgoingCallEnded = (message) => {
+
+    this.setState({ outgoingCall: null, incomingCall: null });
+    this.appendCallMessage(message);
+  }
+
+  appendCallMessage = (call) => {
+
+    this.setState({ callmessage: call });
   }
   
   render() {
@@ -384,23 +463,29 @@ class CometChatUnified extends React.Component {
         <div css={unifiedSidebarStyle(this.state, this.theme)}>
           <NavBar 
           theme={this.theme}
+          type={this.state.type}
           item={this.state.item}
           tab={this.state.tab}
           groupToDelete={this.state.groupToDelete}
           groupToLeave={this.state.groupToLeave}
           groupToUpdate={this.state.groupToUpdate}
+          messageToMarkRead={this.state.messageToMarkRead}
           actionGenerated={this.navBarAction}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
         <div css={unifiedMainStyle(this.state)}>{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
+        <CallAlert 
+        theme={this.theme} 
+        actionGenerated={this.actionHandler}  />
         <CallScreen
         theme={this.theme}
         item={this.state.item} 
         type={this.state.type}
-        actionGenerated={this.actionHandler} 
-        outgoingCall={this.state.outgoingCall} />
+        incomingCall={this.state.incomingCall}
+        outgoingCall={this.state.outgoingCall}
+        actionGenerated={this.actionHandler} />
       </div>
     );
   }

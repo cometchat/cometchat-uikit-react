@@ -82,6 +82,9 @@ export class ConversationListManager {
             new CometChat.CallListener({
                 onIncomingCallReceived: call => {
                   callback(enums.INCOMING_CALL_RECEIVED, null, call);
+                },
+                onIncomingCallCancelled: call => {
+                    callback(enums.INCOMING_CALL_CANCELLED, null, call);
                 }
             })
         );

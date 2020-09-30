@@ -1,13 +1,14 @@
 import React from "react";
 
 /** @jsx jsx */
-import { jsx } from '@emotion/core'
+import { jsx } from "@emotion/core";
 
 import { Picker } from "emoji-mart";
-
 import { CometChat } from "@cometchat-pro/chat"
 
 import "emoji-mart/css/emoji-mart.css";
+
+import CometChatCreatePoll from "../CometChatCreatePoll";
 
 import {
   chatComposerStyle,
@@ -34,11 +35,12 @@ import insertEmoticon from "./resources/insert_emoticon.svg"
 import sendBlue from "./resources/send-blue-icon.svg";
 import pollIcon from "./resources/poll.png";
 
-import CometChatCreatePoll from "../CometChatCreatePoll";
+import { outgoingMessageAlert } from "../../resources/audio/";
 
 class MessageComposer extends React.PureComponent {
 
   constructor(props) {
+
     super(props);
   
 		this.imageUploaderRef = React.createRef();
@@ -49,14 +51,24 @@ class MessageComposer extends React.PureComponent {
     this.messageSending = false;
 
     this.node = React.createRef();
+
+    this.state = {
+      showFilePicker: false,
+      messageInput: "",
+      messageType: "",
+      emojiViewer: false,
+      createPoll: false
+    }
 	}
 
-  state = {
-    showFilePicker: false,
-    messageInput: "",
-    messageType: "",
-    emojiViewer: false,
-    createPoll: false
+  componentDidMount() {
+    this.audio = new Audio(outgoingMessageAlert);
+  }
+
+  playAudio = () => {
+
+    this.audio.currentTime = 0;
+    this.audio.play();
   }
 
   pasteHtmlAtCaret(html, selectPastedContent) {
@@ -260,11 +272,15 @@ class MessageComposer extends React.PureComponent {
     }
 
     CometChat.sendMessage(message).then(response => {
+
       this.messageSending = false;
-      this.props.actionGenerated("messageComposed", [response])
+      this.playAudio();
+      this.props.actionGenerated("messageComposed", [response]);
+
     }).catch(error => {
-      console.log("Message sending failed with error:", error);
+
       this.messageSending = false;
+      console.log("Message sending failed with error:", error);
     });
   }
 
@@ -310,11 +326,15 @@ class MessageComposer extends React.PureComponent {
     }
     
     CometChat.sendMessage(textMessage).then(message => {
+
       this.setState({messageInput: ""});
       this.messageSending = false;
       this.messageInputRef.current.textContent = "";
+      this.playAudio();
       this.props.actionGenerated("messageComposed", [message]);
+
     }).catch(error => {
+
       console.log("Message sending failed with error:", error);
       this.messageSending = false;
     });

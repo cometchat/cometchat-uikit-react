@@ -12,6 +12,7 @@ import CometChatGroupList from "../CometChatGroupList";
 import CometChatMessageListScreen from "../CometChatMessageListScreen";
 import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
+import CallAlert from "../CallAlert";
 import CallScreen from "../CallScreen";
 
 import { theme } from "../../resources/theme";
@@ -45,6 +46,7 @@ class CometChatGroupListScreen extends React.Component {
       threadmessageitem: {},
       threadmessageparent: {},
       composedthreadmessage: {},
+      incomingCall: null,
       outgoingCall: null,
       callmessage: {},
       sidebarview: false
@@ -72,7 +74,8 @@ class CometChatGroupListScreen extends React.Component {
     this.setState({darktheme: !theme});
   }
 
-  onItemClicked = (item, type) => {
+  itemClicked = (item, type) => {
+    
     this.toggleSideBar();
     this.setState({ item: {...item}, type, viewdetailscreen: false });
   }
@@ -92,7 +95,12 @@ class CometChatGroupListScreen extends React.Component {
       case "videoCall":
         this.videoCall();
       break;
-      case "menuClicked":
+      // eslint-disable-next-line no-lone-blocks
+      case "menuClicked": {
+        this.toggleSideBar();
+        this.setState({ item: {} });
+      }
+      break;
       case "closeMenuClicked":
         this.toggleSideBar();
       break;
@@ -121,8 +129,23 @@ class CometChatGroupListScreen extends React.Component {
       case "threadMessageComposed":
         this.onThreadMessageComposed(item);
       break;
+      case "acceptIncomingCall":
+        this.acceptIncomingCall(item);
+        break;
+      case "acceptedIncomingCall":
+        this.callInitiated(item);
+        break;
+      case "rejectedIncomingCall":
+        this.rejectedIncomingCall(item, count);
+        break;
+      case "outgoingCallRejected":
+      case "outgoingCallCancelled":
       case "callEnded":
-        this.callUpdated(item);
+        this.outgoingCallEnded(item);
+        break;
+      case "userJoinedCall":
+      case "userLeftCall":
+        this.appendCallMessage(item);
         break;
       default:
       break;
@@ -154,7 +177,6 @@ class CometChatGroupListScreen extends React.Component {
     });
   }
 
-
   audioCall = () => {
 
     let receiverId, receiverType;
@@ -169,11 +191,9 @@ class CometChatGroupListScreen extends React.Component {
       receiverType = CometChat.RECEIVER_TYPE.GROUP;
     }
 
-    let callType = CometChat.CALL_TYPE.AUDIO;
+    CometChatManager.call(receiverId, receiverType, CometChat.CALL_TYPE.AUDIO).then(call => {
 
-    CometChatManager.audioCall(receiverId, receiverType, callType).then(call => {
-
-      this.callUpdated(call);
+      this.appendCallMessage(call);
       this.setState({ outgoingCall: call });
 
     }).catch(error => {
@@ -195,11 +215,9 @@ class CometChatGroupListScreen extends React.Component {
       receiverType = CometChat.RECEIVER_TYPE.GROUP;
     }
    
-    let callType = CometChat.CALL_TYPE.VIDEO;
+    CometChatManager.call(receiverId, receiverType, CometChat.CALL_TYPE.VIDEO).then(call => {
 
-    CometChatManager.videoCall(receiverId, receiverType, callType).then(call => {
-
-      this.callUpdated(call);
+      this.appendCallMessage(call);
       this.setState({ outgoingCall: call });
 
     }).catch(error => {
@@ -288,8 +306,63 @@ class CometChatGroupListScreen extends React.Component {
     this.setState({composedthreadmessage: message});
   }
 
-  callUpdated = (call) => {
-    this.setState({callmessage: call})
+  acceptIncomingCall = (call) => {
+
+    this.setState({ incomingCall: call });
+
+    const type = call.receiverType;
+    const id = (type === "user") ? call.sender.uid : call.receiverId;
+
+    CometChat.getConversation(id, type).then(conversation => {
+
+      this.itemClicked(conversation.conversationWith, type);
+
+    }).catch(error => {
+
+      console.log('error while fetching a conversation', error);
+    });
+  }
+
+  callInitiated = (message) => {
+
+    this.appendCallMessage(message);
+  }
+
+  rejectedIncomingCall = (incomingCallMessage, rejectedCallMessage) => {
+
+    let receiverType = incomingCallMessage.receiverType;
+    let receiverId = (receiverType === "user") ? incomingCallMessage.sender.uid : incomingCallMessage.receiverId;
+
+    //marking the incoming call message as read
+    if (incomingCallMessage.hasOwnProperty("readAt") === false) {
+      CometChat.markAsRead(incomingCallMessage.id, receiverId, receiverType);
+    }
+
+    //updating unreadcount in chats list
+    this.setState({ messageToMarkRead: incomingCallMessage });
+
+    let item = this.state.item;
+    let type = this.state.type;
+
+    receiverType = rejectedCallMessage.receiverType;
+    receiverId = rejectedCallMessage.receiverId;
+
+    if ((type === 'group' && receiverType === 'group' && receiverId === item.guid)
+      || (type === 'user' && receiverType === 'user' && receiverId === item.uid)) {
+
+      this.appendCallMessage(rejectedCallMessage);
+    }
+  }
+
+  outgoingCallEnded = (message) => {
+
+    this.setState({ outgoingCall: null, incomingCall: null });
+    this.appendCallMessage(message);
+  }
+
+  appendCallMessage = (call) => {
+
+    this.setState({ callmessage: call });
   }
 
   render() {
@@ -344,22 +417,28 @@ class CometChatGroupListScreen extends React.Component {
         <div css={groupScreenSidebarStyle(this.state, this.theme)}>
           <CometChatGroupList
           theme={this.theme}
+          item={this.state.item}
+          type={this.state.type}
           groupToDelete={this.state.groupToDelete}
           groupToLeave={this.state.groupToLeave}
           groupToUpdate={this.state.groupToUpdate}
+          onItemClick={this.itemClicked}
           actionGenerated={this.actionHandler}
-          onItemClick={this.onItemClicked}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
         <div css={groupScreenMainStyle(this.state)}>{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
+        <CallAlert
+        theme={this.theme}
+        actionGenerated={this.actionHandler} />
         <CallScreen
         theme={this.theme}
         item={this.state.item} 
         type={this.state.type}
-        actionGenerated={this.actionHandler} 
-        outgoingCall={this.state.outgoingCall} />
+        incomingCall={this.state.incomingCall}
+        outgoingCall={this.state.outgoingCall}
+        actionGenerated={this.actionHandler} />
       </div>
     );
   }

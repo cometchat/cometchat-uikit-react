@@ -12,15 +12,18 @@ export const theme = {
         red: "#ff3b30"
     },
     borderColor: {
-        primary: "#eaeaea"
+        primary: "#eaeaea",
+        white: "#fff"
     },
     backgroundColor: {
         white: "#fff",
         primary: "#E6E6E6",
         secondary: "#f6f6f6",
         blue: "#39f",
+        red: "#ff3b30",
         grey: "rgba(20,20,20,0.04)",
         lightGrey: "rgba(20, 20, 20, 0.08)",
-        darkGrey: "rgba(20,20,20,0.9)"
+        darkGrey: "rgba(20,20,20,0.9)",
+        callScreenGrey: "#444444",
     }
 };

@@ -11,6 +11,8 @@ import { theme } from "../../resources/theme";
 
 import { chatWrapperStyle } from "./style";
 
+import { incomingMessageAlert } from "../../resources/audio/";
+
 class CometChatMessageListScreen extends React.PureComponent {
 
   constructor(props) {
@@ -23,6 +25,11 @@ class CometChatMessageListScreen extends React.PureComponent {
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
+  }
+
+  componentDidMount() {
+
+    this.audio = new Audio(incomingMessageAlert);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -42,11 +49,17 @@ class CometChatMessageListScreen extends React.PureComponent {
     } else if(prevProps.composedthreadmessage !== this.props.composedthreadmessage) {
 
       this.updateReplyCount(this.props.composedthreadmessage);
+
     } else if(prevProps.callmessage !== this.props.callmessage) {
 
       this.actionHandler("callUpdated", this.props.callmessage);
     }
+  }
 
+  playAudio = () => {
+
+    this.audio.currentTime = 0;
+    this.audio.play();
   }
 
   actionHandler = (action, messages, key, group, options) => {
@@ -62,8 +75,11 @@ class CometChatMessageListScreen extends React.PureComponent {
           this.appendMessage(messages);
         }
 
-        this.props.actionGenerated(action, messages);
+        this.playAudio();
       }
+      break;
+      case "messageRead":
+        this.props.actionGenerated(action, messages);
       break;
       case "messageComposed":
         this.appendMessage(messages); 
@@ -126,9 +142,18 @@ class CometChatMessageListScreen extends React.PureComponent {
   //messages are deleted
   removeMessages = (messages) => {
 
-    const messageList = [...this.state.messageList];
-    const filteredMessages = messageList.filter(message => message.id !== messages[0].id);
-    this.setState({ messageList: filteredMessages, scrollToBottom: false });
+    const deletedMessage = messages[0]; console.log("deletedMessage", deletedMessage);
+    const messagelist = [...this.state.messageList];
+
+    let messageKey = messagelist.findIndex(message => message.id === deletedMessage.id);
+    if (messageKey > -1) {
+
+      let messageObj = { ...messagelist[messageKey] }; console.log("messageObj", messageObj);
+      let newMessageObj = Object.assign({}, messageObj, deletedMessage);
+
+      messagelist.splice(messageKey, 1, newMessageObj);
+      this.setState({ messageList: messagelist, scrollToBottom: false });
+    }
   }
 
   //messages are fetched from backend
@@ -229,6 +254,7 @@ class CometChatMessageListScreen extends React.PureComponent {
         messageconfig={this.props.messageconfig}
         widgetsettings={this.props.widgetsettings}
         widgetconfig={this.props.widgetconfig}
+        loggedInUser={this.props.loggedInUser}
         actionGenerated={this.actionHandler} />
         {messageComposer}
       </div>

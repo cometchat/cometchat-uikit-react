@@ -1,34 +1,32 @@
-export const callScreenWrapperStyle = (props) => {
+export const callScreenWrapperStyle = (props, keyframes) => {
 
-    let displayValue = {
-        width: "100%",
-        height: "100%",
-        position: "fixed!important",
+    const fadeAnimation = keyframes`
+    from {
+        opacity: 0;
     }
-    if (props.hasOwnProperty("widgetsettings") && props.widgetsettings) {
-        displayValue = {
-            width: "inherit!important",
-            height: "inherit!important",
-            position: "absolute!important"
-        }
-    }
+    to {
+        opacity: 1;
+    }`;
 
     return {
-        top: "0!important",
-        right: "0!important",
-        bottom: "0!important",
-        left: "0!important",
+        width: "inherit",
+        height: "inherit",
+        position: "absolute",
+        top: "0",
+        right: "0",
+        bottom: "0",
+        left: "0",
         backgroundColor: `${props.theme.backgroundColor.darkGrey}`,
         zIndex: "999",
         color: `${props.theme.color.white}`,
         textAlign: "center",
         boxSizing: "border-box",
+        animation: `${fadeAnimation} 250ms ease`,
         fontFamily: `${props.theme.fontFamily}`,
         "*": {
             boxSizing: "border-box",
             fontFamily: `${props.theme.fontFamily}`,
         },
-        ...displayValue
     }
 }
 
@@ -42,19 +40,21 @@ export const callScreenContainerStyle = () => {
     }
 }
 
-export const callScreenHeaderStyle = () => {
+export const headerStyle = () => {
 
     return {
-        padding: "40px",
-        width: "100%"
+        padding: "20px 10px",
+        width: "100%",
+        height: "20%",
     }
 }
 
 export const headerDurationStyle = () => {
-    
+
     return {
         fontSize: "13px",
-        lineHeight: "20px",
+        display: "inline-block",
+        padding: "5px"
     }
 }
 
@@ -64,8 +64,7 @@ export const headerNameStyle = () => {
         margin: "0",
         fontWeight: "700",
         textTransform: "capitalize",
-        fontSize: "1.8rem",
-        lineHeight: "24px",
+        fontSize: "16px",
     }
 }
 
@@ -75,29 +74,25 @@ export const thumbnailWrapperStyle = () => {
         width: "100%",
         height: "50%",
         display: "flex",
-        justifyContent: "center"
+        justifyContent: "center",
+        alignItems: "center"
     }
 }
 
 export const thumbnailStyle = () => {
 
     return {
-        height: "200px",
-        '> img': {
-            maxHeight: "100%",
-            display: "inline-block",
-            borderRadius: "50%",
-            overflow: "hidden",
-            boxShadow: "rgba(20, 20, 20, 0.3) 0 19px 38px, rgba(20, 20, 20, 0.3) 0 2px 7px",
-        }
+        width: "200px",
+        flexShrink: "0",
     }
 }
 
 export const headerIconStyle = () => {
-
+    
     return {
         width: "100%",
-        padding:"40px",
+        height: "15%",
+        padding: "10px",
         display: "flex",
         justifyContent: "center"
     }
@@ -123,5 +118,19 @@ export const iconStyle = (img, callAction) => {
         margin: "auto 10px",
         cursor: "pointer",
         background: `url(${img}) center center no-repeat ${bgColor}`,
+    }
+}
+
+export const errorContainerStyle = () => {
+
+    return {
+        color: "#fff",
+        textAlign: "center",
+        borderRadius: "2px",
+        padding: "13px 10px",
+        fontSize: "13px",
+        width: "100%",
+        height: "10%",
+        backgroundColor: "#333",
     }
 }

@@ -11,23 +11,38 @@ const callmessage = (props) => {
 
     const getMessage = () => {
 
+        const sender = (props.loggedInUser.uid === props.message.sender.uid) ? "You" : props.message.sender.name;
+        const receiver = (props.loggedInUser.uid === props.message.receiver.uid) ? "You" : props.message.receiver.name;
+
+        let message = null;
         switch (props.message.action) {
     
             case CometChat.CALL_STATUS.UNANSWERED:
-                return <p css={callMessageTxtStyle}>{props.message.receiver.name + " had missed call from " + props.message.sender.name}</p>
+                message = `${receiver} had missed call from ${sender}`;
+                break;
             case CometChat.CALL_STATUS.REJECTED:
-                return <p css={callMessageTxtStyle}>{props.message.sender.name + " had rejected call with " + props.message.receiver.name} </p>
+                message = `${sender} had rejected call from ${receiver}`;
+                break;
             case CometChat.CALL_STATUS.ONGOING:
-                return <p css={callMessageTxtStyle}>{props.message.sender.name + " had joined the call with " + props.message.receiver.name}</p>
+                message = `${sender} had joined the call with ${receiver}`;
+                break;
             case CometChat.CALL_STATUS.INITIATED:
-                return <p css={callMessageTxtStyle}>{props.message.sender.name + " had initiated the call with " + props.message.receiver.name}</p>
+                message = `${sender} had initiated the call with ${receiver}`;
+                break;
             case CometChat.CALL_STATUS.ENDED:
-                return <p css={callMessageTxtStyle}>{props.message.sender.name + " ended the call with " + props.message.receiver.name}</p>
+                message = `${sender} ended the call with ${receiver}`;
+                break;
             case CometChat.CALL_STATUS.CANCELLED:
-                return <p css={callMessageTxtStyle}>{props.message.sender.name + " cancelled the call with " + props.message.receiver.name}</p>
+                message = `${sender} cancelled the call with ${receiver}`;
+                break;
+            case CometChat.CALL_STATUS.BUSY:
+                message = (props.loggedInUser.uid === props.message.sender.uid) ? `${sender} were busy on another call` : `${sender} was busy on another call`;
+                break;
             default:
                 break;
         }
+
+        return <p css={callMessageTxtStyle}>{message}</p>
     }
 
     return (

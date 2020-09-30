@@ -46,7 +46,7 @@ class MessageList extends React.PureComponent {
       onItemClick: null,
       loading: false
     }
-
+    this.loggedInUser = this.props.loggedInUser;
     this.messagesEnd = React.createRef();
   }
 
@@ -113,7 +113,7 @@ class MessageList extends React.PureComponent {
     
     new CometChatManager().getLoggedInUser().then((user) => {
       
-      this.loggedInUser = user;
+      //this.loggedInUser = user;
       this.MessageListManager.fetchPreviousMessages().then((messageList) => {
 
         messageList.forEach((message) => {
@@ -126,12 +126,15 @@ class MessageList extends React.PureComponent {
           if (message.getSender().getUid() !== user.getUid() && !message.getReadAt()) {
             
             if(message.getReceiverType() === "user") {
+
               CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
+
             } else if(message.getReceiverType() === "group") {
+
               CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
             }
           }
-
+          this.props.actionGenerated("messageRead", message);
         });
 
         let actionGenerated = "messageFetched";
@@ -199,9 +202,10 @@ class MessageList extends React.PureComponent {
         this.groupUpdated(key, message, group, options);
         break;
       case enums.INCOMING_CALL_RECEIVED:
-      case enums.OUTGOING_CALL_REJECTED:
       case enums.INCOMING_CALL_CANCELLED:
-        this.props.actionGenerated("callUpdated", message);
+      case enums.OUTGOING_CALL_ACCEPTED:
+      case enums.OUTGOING_CALL_REJECTED:
+        this.callUpdated(message);
         break;
       default:
         break;
@@ -242,6 +246,68 @@ class MessageList extends React.PureComponent {
       } 
 
     } 
+  }
+
+  messageReadAndDelivered = (message) => {
+
+    //read receipts
+    if (message.getReceiverType() === 'user'
+    && message.getSender().getUid() === this.props.item.uid
+    && message.getReceiver() === this.loggedInUser.uid) {
+
+      let messageList = [...this.props.messages];
+      if (message.getReceiptType() === "delivery") {
+
+        //search for same message
+        let msg = messageList.find((m, k) => m.id === message.messageId);
+        
+        //if found, update state
+        if(msg) {
+          msg["deliveredAt"] = message.getDeliveredAt();
+          this.props.actionGenerated("messageUpdated", messageList);
+        }
+
+      } else if (message.getReceiptType() === "read") {
+
+        //search for same message
+        let msg = messageList.find((m, k) => m.id === message.messageId);
+        //if found, update state
+        if(msg) {
+          msg["readAt"] = message.getReadAt();
+          this.props.actionGenerated("messageUpdated", messageList);
+        }
+      }
+
+    } else if (message.getReceiverType() === 'group' 
+      && message.getReceiver().guid === this.props.item.guid) {
+      //not implemented
+    }
+
+  }
+
+  messageReceived = (message) => {
+
+    //new messages
+    if (this.props.type === 'group' 
+      && message.getReceiverType() === 'group'
+      && message.getReceiverId() === this.props.item.guid) {
+
+      if(!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+      }
+      
+      this.props.actionGenerated("messageReceived", [message]);
+        
+    } else if (this.props.type === 'user' 
+      && message.getReceiverType() === 'user'
+      && message.getSender().uid === this.props.item.uid) {
+
+      if(!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
+      }
+
+      this.props.actionGenerated("messageReceived", [message]);
+    }
   }
 
   customMessageReceived = (message) => {
@@ -315,65 +381,29 @@ class MessageList extends React.PureComponent {
     return { ...message, "metadata": { "@injected": { "extensions": { "polls": polls } } } };
   }
 
-  messageReadAndDelivered = (message) => {
+  callUpdated = (message) => {
 
-    //read receipts
-    if (message.getReceiverType() === 'user'
-    && message.getSender().getUid() === this.props.item.uid
-    && message.getReceiver() === this.loggedInUser.uid) {
-
-      let messageList = [...this.props.messages];
-      if (message.getReceiptType() === "delivery") {
-
-        //search for same message
-        let msg = messageList.find((m, k) => m.id === message.messageId);
-        
-        //if found, update state
-        if(msg) {
-          msg["deliveredAt"] = message.getDeliveredAt();
-          this.props.actionGenerated("messageUpdated", messageList);
-        }
-
-      } else if (message.getReceiptType() === "read") {
-
-        //search for same message
-        let msg = messageList.find((m, k) => m.id === message.messageId);
-        //if found, update state
-        if(msg) {
-          msg["readAt"] = message.getReadAt();
-          this.props.actionGenerated("messageUpdated", messageList);
-        }
-      }
-
-    } else if (message.getReceiverType() === 'group' 
-      && message.getReceiver().guid === this.props.item.guid) {
-      //not implemented
-    }
-
-  }
-
-  messageReceived = (message) => {
-
-    //new messages
-    if (this.props.type === 'group' 
+    if (this.props.type === 'group'
       && message.getReceiverType() === 'group'
       && message.getReceiverId() === this.props.item.guid) {
 
-      if(!message.getReadAt()) {
+      if (!message.getReadAt()) {
         CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
       }
-      this.props.actionGenerated("messageReceived", [message]);
-        
-    } else if (this.props.type === 'user' 
+      
+      this.props.actionGenerated("callUpdated", message);
+
+    } else if (this.props.type === 'user'
       && message.getReceiverType() === 'user'
       && message.getSender().uid === this.props.item.uid) {
 
-      if(!message.getReadAt()) {
+      if (!message.getReadAt()) {
         CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
       }
-
-      this.props.actionGenerated("messageReceived", [message]);
+      
+      this.props.actionGenerated("callUpdated", message);
     }
+
   }
 
   groupUpdated = (key, message, group, options) => {
@@ -516,7 +546,7 @@ class MessageList extends React.PureComponent {
 
   getCallMessageComponent = (message, key) => {
     return (
-      <CallMessage message={message} key={key} theme={this.props.theme} />
+      <CallMessage message={message} key={key} theme={this.props.theme} loggedInUser={this.loggedInUser} />
     );
   }
 
