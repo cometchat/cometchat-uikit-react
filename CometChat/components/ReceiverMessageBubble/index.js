@@ -145,6 +145,8 @@ class ReceiverMessageBubble extends React.Component {
           } else {
             messageText = this.getMessageText();
           }
+        } else {
+          messageText = this.getMessageText();
         }
       }
 
