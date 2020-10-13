@@ -11,6 +11,56 @@ export const chatComposerStyle = (props) => {
     }
 }
 
+export const editPreviewContainerStyle = (props, keyframes) => {
+
+    const slideAnimation = keyframes`
+    from {
+        bottom: -60px
+    }
+    to {
+        bottom: 0px
+    }`;
+
+    return {
+        padding: "7px",
+        backgroundColor: `${props.theme.backgroundColor.white}`,
+        borderColor: `${props.theme.borderColor.primary}`,
+        borderWidth: "1px 1px 1px 5px",
+        borderStyle: "solid",
+        color: `${props.theme.color.helpText}`,
+        fontSize: "13px",
+        animation: `${slideAnimation} 0.5s ease-out`,
+        position: "relative",
+    }
+}
+
+export const previewHeadingStyle = () => {
+
+    return {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+    }
+}
+
+export const previewTextStyle = () => {
+
+    return {
+        padding: "5px 0",
+    }
+}
+
+export const previewCloseStyle = (img) => {
+
+    return {
+        width: "24px",
+        height: "24px",
+        borderRadius: "50%",
+        background: `url(${img}) center center no-repeat`,
+        cursor: "pointer",
+    }
+}
+
 export const composerInputStyle = () => {
 
     return {

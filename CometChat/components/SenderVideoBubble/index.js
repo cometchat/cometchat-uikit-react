@@ -19,19 +19,19 @@ const sendervideobubble = (props) => {
   const message = Object.assign({}, props.message, {messageFrom: "sender"});
 
   return (
-    <div css={messageContainerStyle()}>
+    <div css={messageContainerStyle()} className="message__container">
+      <ToolTip {...props} message={message} />
       <div css={messageWrapperStyle()}> 
-        <ToolTip action="viewMessageThread" {...props} message={message} />
         <div css={messageVideoWrapperStyle(props)}>
           <video controls>
             <source src={props.message.data.url} />
           </video>                        
         </div>
-        <div css={messageInfoWrapperStyle()}>
-          <ReplyCount action="viewMessageThread" {...props} message={message} />
-          <ReadReciept {...props} />
-        </div>
-      </div>                            
+      </div>
+      <div css={messageInfoWrapperStyle()}>
+        <ReplyCount {...props} message={message} />
+        <ReadReciept {...props} />
+      </div>                          
     </div>
   )
 }

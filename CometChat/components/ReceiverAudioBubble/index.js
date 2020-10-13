@@ -16,6 +16,7 @@ import {
   messageDetailStyle,
   nameWrapperStyle,
   nameStyle,
+  messageAudioContainerStyle,
   messageAudioWrapperStyle,
   messageInfoWrapperStyle,
   messageTimestampStyle
@@ -49,23 +50,25 @@ const receiveraudiobubble = (props) => {
   const message = Object.assign({}, props.message, {messageFrom: "receiver"});
 
   return (
-    <div css={messageContainerStyle()}>
+    <div css={messageContainerStyle()} className="message__container">
       <div css={messageWrapperStyle()}>
         {avatar}
-        <div css={messageDetailStyle(name)}>
+        <div css={messageDetailStyle()}>
           {name}
-          <ToolTip action="viewMessageThread" {...props} message={message} />    
-          <div css={messageAudioWrapperStyle(props)}>
-            <audio controls>
-              <source src={props.message.data.url} />
-            </audio>                        
+          <div css={messageAudioContainerStyle(props)}>
+            <div css={messageAudioWrapperStyle(props)}>
+              <audio controls>
+                <source src={props.message.data.url} />
+              </audio>                        
+            </div>
           </div>
           <div css={messageInfoWrapperStyle()}>
             <span css={messageTimestampStyle(props)}>{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-            <ReplyCount action="viewMessageThread" {...props} message={message} />
+            <ReplyCount {...props} message={message} />
           </div>
         </div>
       </div>
+      <ToolTip {...props} message={message} name={name} />
     </div>
   )
 }

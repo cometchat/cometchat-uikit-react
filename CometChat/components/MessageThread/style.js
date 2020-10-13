@@ -90,29 +90,41 @@ export const messageContainerStyle = () => {
         zIndex: "100",
         minHeight: "calc(100% - 68px)",
         order: "2",
-        ".css-1z1zpa": {
+        ".chat__list": {
             minHeight: "250px",
-            ".css-1ridola": {
+            ".list__wrapper": {
                 "::-webkit-scrollbar": {
-                    display: "none"
-                }
-            },
-            " div:hover": {
-                "ul.css-10hykrq": {
-                    display: "none"
-                },
-                "ul.css-hwrlsc": {
                     display: "none"
                 },
             }
-        }
+        },
     }
 }
 
-export const parentMessageStyle = () => {
+export const parentMessageStyle = (message) => {
+
+    const alignment = (message.messageFrom === "sender") ? {
+        justifyContent: "flex-end",
+    } : {
+        justifyContent: "flex-start",
+    };
 
     return {
         padding: "14px 16px",
+        display: "flex",
+        alignItems: "center",
+        ...alignment,
+        ".message__container": {
+            maxWidth: "100%",
+            "&:hover": {
+                ".message__actions": {
+                    display: "none"
+                }
+            }
+        },
+        ".replycount": {
+            display: "none"
+        }
     }
 }
 

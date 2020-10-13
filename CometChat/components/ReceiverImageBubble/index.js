@@ -16,58 +16,206 @@ import {
   messageDetailStyle,
   nameWrapperStyle,
   nameStyle,
+  messageImgContainerStyle,
   messageImgWrapperStyle,
   messageInfoWrapperStyle,
   messageTimestampStyle
 } from "./style";
 
-const revceiverimagebubble = (props) => {
+import srcIcon from "./resources/1px.png";
 
-  let avatar = null, name = null;
-  if(props.message.receiverType === 'group') {
+class ReceiverImageBubble extends React.Component {
 
-    if(!props.message.sender.avatar) {
+  messageFrom = "receiver";
 
-      const uid = props.message.sender.getUid();
-      const char = props.message.sender.getName().charAt(0).toUpperCase();
+  constructor(props) {
 
-      props.message.sender.setAvatar(SvgAvatar.getAvatar(uid, char));
-    } 
+    super(props);
 
-    avatar = (
-      <div css={messageThumbnailStyle()}>
-        <Avatar 
-        cornerRadius="50%" 
-        borderColor={props.theme.color.secondary}
-        borderWidth="1px"
-        image={props.message.sender.avatar}></Avatar>
-      </div>
-    )
+    this.imgRef = React.createRef();
 
-    name = (<div css={(nameWrapperStyle(avatar))}><span css={nameStyle(props)}>{props.message.sender.name}</span></div>);
+    const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
+    if (message.receiverType === 'group') {
+
+      if (!message.sender.avatar) {
+
+        const uid = message.sender.getUid();
+        const char = message.sender.getName().charAt(0).toUpperCase();
+
+        message.sender.setAvatar(SvgAvatar.getAvatar(uid, char));
+      }
+    }
+
+    this.state = {
+      message: message,
+      imageUrl: srcIcon
+    }
   }
 
-  const message = Object.assign({}, props.message, {messageFrom: "receiver"});
+  componentDidMount() {
+    this.setImage();
+  }
 
-  return (
+  componentDidUpdate(prevProps) {
 
-    <div css={messageContainerStyle()}>
-      <div css={messageWrapperStyle()}>
-        {avatar}
-        <div css={messageDetailStyle(name)}>
-          {name}
-          <ToolTip action="viewMessageThread" {...props} message={message} />    
-          <div css={messageImgWrapperStyle()}>
-            <img src={props.message.data.url} alt="receiver" />                            
-          </div>
-          <div css={messageInfoWrapperStyle()}>
-            <span css={messageTimestampStyle(props)}>{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-            <ReplyCount action="viewMessageThread" {...props} message={message} />
+    const previousMessageStr = JSON.stringify(prevProps.message);
+    const currentMessageStr = JSON.stringify(this.props.message);
+
+    if (previousMessageStr !== currentMessageStr) {
+
+      const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
+      this.setState({ message: message })
+    }
+  }
+  chooseImage = (thumbnailGenerationObject) => {
+
+    const smallUrl = thumbnailGenerationObject["url_small"];
+    const mediumUrl = thumbnailGenerationObject["url_medium"];
+
+    const mq = window.matchMedia(this.props.theme.breakPoints[0]);
+
+    let imageToDownload = mediumUrl;
+    if (mq.matches) {
+      imageToDownload = smallUrl;
+    }
+
+    return imageToDownload;
+  }
+
+  setImage = () => {
+
+    if (this.state.message.hasOwnProperty("metadata")) {
+
+      const metadata = this.state.message.metadata;
+      const injectedObject = metadata["@injected"];
+      if (injectedObject && injectedObject.hasOwnProperty("extensions")) {
+
+        const extensionsObject = injectedObject["extensions"];
+        if (extensionsObject && extensionsObject.hasOwnProperty("thumbnail-generation")) {
+
+          const thumbnailGenerationObject = extensionsObject["thumbnail-generation"];
+
+          const mq = window.matchMedia(this.props.theme.breakPoints[0]);
+          mq.addListener(() => {
+
+            const imageToDownload = this.chooseImage(thumbnailGenerationObject);
+            let img = new Image();
+            img.src = imageToDownload;
+            img.onload = () => this.setState({ imageUrl: img.src });
+
+          });
+
+          const imageToDownload = this.chooseImage(thumbnailGenerationObject);
+          this.downloadImage(imageToDownload).then(response => {
+
+            const url = URL.createObjectURL(response)
+            let img = new Image();
+            img.src = url;
+            img.onload = () => {
+
+              this.setState({ imageUrl: img.src });
+              URL.revokeObjectURL(img.src);
+
+            }
+
+          }).catch(error => console.error(error));
+
+        }
+      }
+
+    } else {
+
+      let img = new Image();
+      img.src = this.state.message.data.url;
+      img.onload = () => this.setState({ imageUrl: img.src });
+
+    }
+  }
+
+  downloadImage(imgUrl) {
+
+    const promise = new Promise((resolve, reject) => {
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", imgUrl, true);
+      xhr.responseType = "blob";
+
+      xhr.onload = () => {
+
+        if (xhr.readyState === 4) {
+
+          if (xhr.status === 200) {
+
+            this.timer = null;
+            resolve(xhr.response);
+
+          } else if (xhr.status === 403) {
+
+            this.timer = setTimeout(() => {
+
+              this.downloadImage(imgUrl).then(response => resolve(response)).catch(error => reject(error));
+
+            }, 800);
+          }
+
+        } else {
+          reject(xhr.statusText);
+        }
+
+      }
+
+      xhr.onerror = event => reject(new Error('There was a network error.', event));
+      xhr.ontimeout = event => reject(new Error('There was a timeout error.', event));
+      xhr.send();
+
+    });
+
+    return promise;
+  }
+
+  open = () => {
+    this.props.actionGenerated("viewActualImage", this.state.message);
+  }
+
+  render() {
+
+    let avatar = null, name = null;
+    if (this.props.message.receiverType === 'group') {
+
+      avatar = (
+        <div css={messageThumbnailStyle()}>
+          <Avatar
+            cornerRadius="50%"
+            borderColor={this.props.theme.color.secondary}
+            borderWidth="1px"
+            image={this.state.message.sender.avatar}></Avatar>
+        </div>
+      );
+
+      name = (<div css={(nameWrapperStyle(avatar))}><span css={nameStyle(this.props)}>{this.state.message.sender.name}</span></div>);
+    }
+
+    return (
+      <div css={messageContainerStyle()} className="message__container">
+        <ToolTip {...this.props} message={this.state.message} name={name} />
+        <div css={messageWrapperStyle()}>
+          {avatar}
+          <div css={messageDetailStyle(name)}>
+            {name}
+            <div css={messageImgContainerStyle()}>
+              <div css={messageImgWrapperStyle(this.props)} onClick={this.open}>
+                <img src={this.state.imageUrl} alt="message" ref={el => { this.imgRef = el; }} />
+              </div>
+            </div>
+            <div css={messageInfoWrapperStyle()}>
+              <span css={messageTimestampStyle(this.props)}>{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+              <ReplyCount {...this.props} message={this.state.message} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 }
 
-export default revceiverimagebubble;
+export default ReceiverImageBubble;

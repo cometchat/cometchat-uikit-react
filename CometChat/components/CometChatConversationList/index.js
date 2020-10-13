@@ -219,10 +219,19 @@ class CometChatConversationList extends React.Component {
       conversationlist.splice(conversationKey, 1, newConversationObj);
       this.setState({conversationlist: conversationlist});
     }
-
   }
 
   playAudio = () => {
+
+    //if it is disabled for chat wigdet in dashboard
+    if (this.props.hasOwnProperty("widgetsettings")
+    && this.props.widgetsettings
+    && this.props.widgetsettings.hasOwnProperty("main")
+    && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") === false
+    || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages")
+    && this.props.widgetsettings.main["enable_sound_for_messages"] === false))) {
+      return false;
+    }
 
     this.audio.currentTime = 0;
     this.audio.play();

@@ -16,6 +16,7 @@ import {
   messageDetailStyle,
   nameWrapperStyle,
   nameStyle,
+  messageFileContainerStyle,
   messageFileWrapperStyle,
   messageInfoWrapperStyle,
   messageTimestampStyle
@@ -53,18 +54,20 @@ const receiverfilebubble = (props) => {
 
   return (
 
-    <div css={messageContainerStyle()}>
+    <div css={messageContainerStyle()} className="message__container">
+      <ToolTip {...props} message={message} name={name} />    
       <div css={messageWrapperStyle()}>
         {avatar}
-        <div css={messageDetailStyle(name)}>
+        <div css={messageDetailStyle()}>
           {name}
-          <ToolTip action="viewMessageThread" {...props} message={message} />    
-          <div css={messageFileWrapperStyle(props)}>
-            <a href={props.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">{props.message.data.attachments[0].name} <img src={blueFile} alt="file"/></a>                        
+          <div css={messageFileContainerStyle(props)}>
+            <div css={messageFileWrapperStyle(props)}>
+              <a href={props.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">{props.message.data.attachments[0].name} <img src={blueFile} alt="file"/></a>                        
+            </div>
           </div>
           <div css={messageInfoWrapperStyle()}>
             <span css={messageTimestampStyle(props)}>{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-            <ReplyCount action="viewMessageThread" {...props} message={message} />
+            <ReplyCount {...props} message={message} />
           </div>
         </div>
       </div>

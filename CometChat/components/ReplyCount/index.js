@@ -10,7 +10,7 @@ const replycount = (props) => {
     const replyCount = props.message.replyCount;
     const replyText = (replyCount === 1) ? `${replyCount} reply` : `${replyCount} replies`;
 
-    let replies = (<span css={replyCountStyle(props)} onClick={() => props.actionGenerated(props.action, props.message)}>{replyText}</span>);
+    let replies = (<span css={replyCountStyle(props)} className="replycount" onClick={() => props.actionGenerated("viewMessageThread", props.message)}>{replyText}</span>);
 
     if(props.message.hasOwnProperty("replyCount") === false) {
         replies = null;

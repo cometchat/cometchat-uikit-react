@@ -3,6 +3,8 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
+import { CometChat } from "@cometchat-pro/chat";
+
 import MessageHeader from "../MessageHeader";
 import MessageList from "../MessageList";
 import MessageComposer from "../MessageComposer";
@@ -21,7 +23,9 @@ class CometChatMessageListScreen extends React.PureComponent {
 
     this.state = {
       messageList: [],
-      scrollToBottom: true
+      scrollToBottom: true,
+      messageToBeEdited: null,
+      replyPreview: null
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -58,6 +62,16 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   playAudio = () => {
 
+    //if it is disabled for chat wigdet in dashboard
+    if (this.props.hasOwnProperty("widgetsettings")
+    && this.props.widgetsettings
+    && this.props.widgetsettings.hasOwnProperty("main")
+    && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") === false
+    || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages")
+    && this.props.widgetsettings.main["enable_sound_for_messages"] === false))) {
+      return false;
+    }
+
     this.audio.currentTime = 0;
     this.audio.play();
   }
@@ -72,6 +86,8 @@ class CometChatMessageListScreen extends React.PureComponent {
         if(message.parentMessageId) {
           this.updateReplyCount(messages);
         } else {
+
+          this.smartReplyPreview(messages);
           this.appendMessage(messages);
         }
 
@@ -99,6 +115,18 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "viewMessageThread":
         this.props.actionGenerated("viewMessageThread", messages);
       break;
+      case "deleteMessage":
+        this.deleteMessage(messages);
+      break;
+      case "editMessage":
+        this.editMessage(messages);
+      break;
+      case "messageEdited":
+        this.messageEdited(messages);
+        break;
+      case "clearEditPreview":
+        this.clearEditPreview();
+        break;
       case "groupUpdated":
         this.groupUpdated(messages, key, group, options);
       break;
@@ -111,8 +139,38 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "pollCreated":
         this.appendPollMessage(messages)
       break;
+      case "viewActualImage":
+        this.props.actionGenerated("viewActualImage", messages);
+      break;
       default:
       break;
+    }
+  }
+
+  deleteMessage = (message) => {
+
+    const messageId = message.id;
+    CometChat.deleteMessage(messageId).then(deletedMessage => this.removeMessages([deletedMessage])).catch(error => {
+      console.log("Message delete failed with error:", error);
+    });
+  }
+
+  editMessage = (message) => {
+    this.setState({ messageToBeEdited: message });
+  }
+
+  messageEdited = (message) => {
+    
+    const messageList = [...this.state.messageList];
+    let messageKey = messageList.findIndex(m => m.id === message.id);
+    if (messageKey > -1) {
+
+      const messageObj = messageList[messageKey];
+
+      const newMessageObj = { ...messageObj, ...message };
+
+      messageList.splice(messageKey, 1, newMessageObj);
+      this.updateMessages(messageList);
     }
   }
 
@@ -142,13 +200,13 @@ class CometChatMessageListScreen extends React.PureComponent {
   //messages are deleted
   removeMessages = (messages) => {
 
-    const deletedMessage = messages[0]; console.log("deletedMessage", deletedMessage);
+    const deletedMessage = messages[0];
     const messagelist = [...this.state.messageList];
 
     let messageKey = messagelist.findIndex(message => message.id === deletedMessage.id);
     if (messageKey > -1) {
 
-      let messageObj = { ...messagelist[messageKey] }; console.log("messageObj", messageObj);
+      let messageObj = { ...messagelist[messageKey] };
       let newMessageObj = Object.assign({}, messageObj, deletedMessage);
 
       messagelist.splice(messageKey, 1, newMessageObj);
@@ -194,23 +252,51 @@ class CometChatMessageListScreen extends React.PureComponent {
   updateReplyCount = (messages) => {
 
     const receivedMessage = messages[0];
+  
+    let messageList = [...this.state.messageList];
+    let messageKey = messageList.findIndex(m => m.id === receivedMessage.parentMessageId);
+    if (messageKey > -1) {
 
-    const messageList = [...this.state.messageList];
+      const messageObj = messageList[messageKey];
+      let replyCount = (messageObj.replyCount) ? messageObj.replyCount : 0;
+      replyCount = replyCount + 1;
+      const newMessageObj = Object.assign({}, messageObj, { "replyCount": replyCount });
+      
+      messageList.splice(messageKey, 1, newMessageObj);
+      this.setState({ messageList: messageList, scrollToBottom: false });
+    }
+  }
 
-    let messageIndex = -1, messageFound = {};
-    messageList.forEach((message, index) => {
+  smartReplyPreview = (messages) => {
 
-      if(message.id === receivedMessage.parentMessageId) {
+    const message = messages[0];
+    console.log("smartReplyPreview", message);
+    if (message.hasOwnProperty("metadata")) {
 
-        messageIndex = index;
-        let replyCount = (message.replyCount) ? message.replyCount : 0;
-        messageFound = Object.assign({}, message, {"replyCount": ++replyCount});
+      const metadata = message.metadata;
+      if (metadata.hasOwnProperty("@injected")) {
+
+        const injectedObject = metadata["@injected"];
+        if (injectedObject.hasOwnProperty("extensions")) {
+
+          const extensionsObject = injectedObject["extensions"];
+          if (extensionsObject.hasOwnProperty("smart-reply")) {
+
+            const smartReply = extensionsObject["smart-reply"];
+            if (smartReply.hasOwnProperty("error") === false) {
+              this.setState({ replyPreview: message });
+            } else {
+              this.setState({ replyPreview: null });
+            }
+            
+          }
+        }
       }
+    }
+  }
 
-    });
-    
-    messageList.splice(messageIndex, 1, messageFound);
-    this.setState({messageList: [...messageList], scrollToBottom: false});
+  clearEditPreview = () => {
+    this.setState({ "messageToBeEdited":  null });
   }
 
   render() {
@@ -221,9 +307,11 @@ class CometChatMessageListScreen extends React.PureComponent {
       item={this.props.item} 
       type={this.props.type}
       widgetsettings={this.props.widgetsettings}
-      enableCreatePoll={this.props.enableCreatePoll}
+      messageToBeEdited={this.state.messageToBeEdited}
+      replyPreview={this.state.replyPreview}
       actionGenerated={this.actionHandler} />
     );
+
     if(this.props.hasOwnProperty("widgetsettings")
     && this.props.widgetsettings
     && this.props.widgetsettings.hasOwnProperty("main") 

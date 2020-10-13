@@ -2,7 +2,7 @@ export const backdropStyle = () => {
 
     return {
         zIndex: "1000",
-        backgroundColor: "#555",
+        backgroundColor: "#000",
         opacity: ".3",
         position: "fixed",
         width: "100%",

@@ -12,6 +12,7 @@ export const messageContainerStyle = (props) => {
         paddingRight: "16px",
         maxWidth: "65%",
         clear: "both",
+        flexShrink: "0",
         ...alignment
     }
 }
@@ -113,9 +114,19 @@ export const messageDetailStyle = (props) => {
     }
 }
 
-export const nameWrapperStyle = () => {
+export const nameWrapperStyle = (props) => {
+
+    let paddingSpace = {};
+    if (props.messageOf === "receiver" && props.message.receiverType === 'group') {
+
+        paddingSpace = {
+            padding: "3px 5px"
+        };
+    }
+
     return {
         alignSelf: "flex-start",
+        ...paddingSpace,
     }
 }
 

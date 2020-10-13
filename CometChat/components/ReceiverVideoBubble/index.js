@@ -16,6 +16,7 @@ import {
   messageDetailStyle,
   nameWrapperStyle,
   nameStyle,
+  messageVideoContainerStyle,
   messageVideoWrapperStyle,
   messageInfoWrapperStyle,
   messageTimestampStyle
@@ -51,20 +52,22 @@ const receivervideobubble = (props) => {
  
   return (
 
-    <div css={messageContainerStyle()}>
+    <div css={messageContainerStyle()} className="message__container">
+      <ToolTip {...props} message={message} name={name} />    
       <div css={messageWrapperStyle()}>
         {avatar}
         <div css={messageDetailStyle(name)}>
           {name}
-          <ToolTip action="viewMessageThread" {...props} message={message} />    
-          <div css={messageVideoWrapperStyle(props)}>
-            <video controls>
-              <source src={props.message.data.url} />
-            </video>                        
+          <div css={messageVideoContainerStyle()}>
+            <div css={messageVideoWrapperStyle(props)}>
+              <video controls>
+                <source src={props.message.data.url} />
+              </video>                        
+            </div>
           </div>
           <div css={messageInfoWrapperStyle()}>
             <span css={messageTimestampStyle(props)}>{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-            <ReplyCount action="viewMessageThread" {...props} message={message} />
+            <ReplyCount {...props} message={message} />
           </div>
         </div>
       </div>

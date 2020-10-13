@@ -14,6 +14,7 @@ import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
 import CallAlert from "../CallAlert";
 import CallScreen from "../CallScreen";
+import ImageView from "../ImageView";
 
 import { theme } from "../../resources/theme";
 
@@ -49,7 +50,8 @@ class CometChatGroupListScreen extends React.Component {
       incomingCall: null,
       outgoingCall: null,
       callmessage: {},
-      sidebarview: false
+      sidebarview: false,
+      imageView: null,
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -145,7 +147,10 @@ class CometChatGroupListScreen extends React.Component {
         break;
       case "userJoinedCall":
       case "userLeftCall":
-        this.appendCallMessage(item);
+        //this.appendCallMessage(item);
+        break;
+      case "viewActualImage":
+        this.toggleImageView(item);
         break;
       default:
       break;
@@ -365,6 +370,10 @@ class CometChatGroupListScreen extends React.Component {
     this.setState({ callmessage: call });
   }
 
+  toggleImageView = (message) => {
+    this.setState({ imageView: message });
+  }
+
   render() {
 
     let threadMessageView = null;
@@ -377,6 +386,7 @@ class CometChatGroupListScreen extends React.Component {
           item={this.state.threadmessageitem}
           type={this.state.threadmessagetype}
           parentMessage={this.state.threadmessageparent}
+          loggedInUser={this.loggedInUser}
           actionGenerated={this.actionHandler} />
         </div>
       );
@@ -412,6 +422,11 @@ class CometChatGroupListScreen extends React.Component {
       );
     }
 
+    let imageView = null;
+    if (this.state.imageView) {
+      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} />);
+    }
+
     return (
       <div css={groupScreenStyle(this.theme)}>
         <div css={groupScreenSidebarStyle(this.state, this.theme)}>
@@ -439,6 +454,7 @@ class CometChatGroupListScreen extends React.Component {
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
         actionGenerated={this.actionHandler} />
+        {imageView}
       </div>
     );
   }
