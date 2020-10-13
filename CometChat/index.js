@@ -22,3 +22,5 @@ export { default as CometChatUnified } from "./components/CometChatUnified";
 
 export { default as CallAlert } from "./components/CallAlert";
 export { default as CallScreen } from "./components/CallScreen";
+
+export { default as ImageView } from "./components/ImageView";

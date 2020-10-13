@@ -107,13 +107,14 @@ export const itemStyle = (state, props, img) => {
     if (state.messagetype === "image") {
 
         itemTypeStyle = {
-            height: "150px",
-            lineHeight: "150px",
+            height: "120px",
+            width: "120px",
+            backgroundColor: bgColor,
             "> img": {
-                maxWidth: "100%",
-                maxHeight: "100%",
-                margin: "auto",
-                backgroundColor: bgColor,
+                display: "block",
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
             }
         }
         
@@ -121,8 +122,8 @@ export const itemStyle = (state, props, img) => {
 
         itemTypeStyle = {
             "> video": {
-                width: "160px",
-                maxHeight: "100%",
+                height: "120px",
+                width: "120px",
                 margin: "auto",
             }
         }

@@ -21,17 +21,17 @@ const senderfilebubble = (props) => {
   const message = Object.assign({}, props.message, {messageFrom: "sender"});
 
   return (
-    <div css={messageContainerStyle()}>
+    <div css={messageContainerStyle()} className="message__container">
+      <ToolTip {...props} message={message} />
       <div css={messageWrapperStyle()}>
-        <ToolTip action="viewMessageThread" {...props} message={message} />
         <div css={messageFileWrapper(props)}>
           <a href={props.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">{props.message.data.attachments[0].name} <img src={blueFile} alt="file"/></a>                      
         </div>
-        <div css={messageInfoWrapperStyle()}>
-          <ReplyCount action="viewMessageThread" {...props} message={message} />
-          <ReadReciept {...props} />
-        </div>
-      </div>                            
+      </div> 
+      <div css={messageInfoWrapperStyle()}>
+        <ReplyCount {...props} message={message} />
+        <ReadReciept {...props} />
+      </div>                           
     </div>
   )
 }

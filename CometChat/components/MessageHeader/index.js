@@ -2,15 +2,15 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
+import { CometChat } from "@cometchat-pro/chat"
 
 import { MessageHeaderManager } from "./controller";
 
+import StatusIndicator from "../StatusIndicator";
 import Avatar from "../Avatar";
 import { SvgAvatar } from '../../util/svgavatar';
 
 import * as enums from '../../util/enums.js';
-
-import StatusIndicator from "../StatusIndicator";
 
 import { 
   chatHeaderStyle, 
@@ -22,7 +22,7 @@ import {
   chatStatusStyle,
   chatOptionWrapStyle,
   chatOptionStyle
- } from "./style";
+} from "./style";
 
 import menuIcon from './resources/menu-icon.svg';
 import audioCallIcon from './resources/call-blue-icon.svg';
@@ -35,7 +35,7 @@ class MessageHeader extends React.Component {
     super(props);
 
     this.state = {
-      status: null,
+      status: "",
       presence: "offline",
     }
   }
@@ -102,14 +102,14 @@ class MessageHeader extends React.Component {
         if(this.props.type === "user" && this.props.item.uid === item.uid) {
 
           if(this.props.widgetsettings 
-            && this.props.widgetsettings.hasOwnProperty("main")
-            && this.props.widgetsettings.main.hasOwnProperty("show_user_presence")
-            && this.props.widgetsettings.main["show_user_presence"] === false) {
-              return false;
-            }
-          this.setState({status: item.status, presence: item.status});
+          && this.props.widgetsettings.hasOwnProperty("main")
+          && this.props.widgetsettings.main.hasOwnProperty("show_user_presence")
+          && this.props.widgetsettings.main["show_user_presence"] === false) {
+            return false;
+          }
+          this.setState({ status: item.status, presence: item.status });
         }
-      break;
+        break;
       }
       case enums.GROUP_MEMBER_KICKED:
       case enums.GROUP_MEMBER_BANNED:
@@ -139,6 +139,29 @@ class MessageHeader extends React.Component {
           this.setState({status: status});
         }
       break;
+      case enums.TYPING_STARTED: {
+        
+        if (this.props.type === "group" && this.props.type === item.receiverType && this.props.item.guid === item.receiverId) {
+          this.setState({ status: `${item.sender.name} is typing...` });
+        } else if (this.props.type === "user" && this.props.type === item.receiverType && this.props.item.uid === item.sender.uid) {
+          this.setState({ status: "typing..." });
+        }
+        break;
+      }
+      case enums.TYPING_ENDED: {
+
+        if (this.props.type === "group" && this.props.type === item.receiverType && this.props.item.guid === item.receiverId) {
+          this.setStatusForGroup();
+        } else if (this.props.type === "user" && this.props.type === item.receiverType && this.props.item.uid === item.sender.uid) {
+          
+          if(this.state.presence === "online") {
+            this.setState({ status: "online", presence: "online" });
+          } else {
+            this.setStatusForUser();
+          }
+        }
+        break;
+      }
       default:
       break;
     }

@@ -7,17 +7,25 @@ export const messageContainerStyle = () => {
         paddingRight: "16px",
         maxWidth: "65%",
         clear: "both",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: "0",
+        ":hover": {
+            "ul.message__actions": {
+                display: "flex"
+            }
+        }
     }
 }
 
 export const messageWrapperStyle = () => {
 
     return {
+        width: "auto",
         flex: "1 1",
+        alignSelf: "flex-end",
         display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        width: "100%"
     }
 }
 
@@ -30,7 +38,7 @@ export const messageTxtWrapperStyle = (props) => {
         color: `${props.theme.color.white}`,
         padding: "8px 12px",
         alignSelf: "flex-end",
-        width: "100%",
+        width: "auto",
     }
 }
 

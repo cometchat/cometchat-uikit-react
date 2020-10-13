@@ -48,6 +48,16 @@ class CallScreen extends React.PureComponent {
 
   playOutgoingAlert = () => {
 
+    //if it is disabled for chat wigdet in dashboard
+    if (this.props.hasOwnProperty("widgetsettings")
+    && this.props.widgetsettings
+    && this.props.widgetsettings.hasOwnProperty("main")
+    && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls") === false
+    || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls")
+    && this.props.widgetsettings.main["enable_sound_for_calls"] === false))) {
+      return false;
+    }
+
     this.outgoingAlert.currentTime = 0;
     if (typeof this.outgoingAlert.loop == 'boolean') {
       this.outgoingAlert.loop = true;
@@ -61,6 +71,17 @@ class CallScreen extends React.PureComponent {
   }
 
   pauseOutgoingAlert = () => {
+
+    //if it is disabled for chat wigdet in dashboard
+    if (this.props.hasOwnProperty("widgetsettings")
+    && this.props.widgetsettings
+    && this.props.widgetsettings.hasOwnProperty("main")
+    && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls") === false
+    || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls")
+    && this.props.widgetsettings.main["enable_sound_for_calls"] === false))) {
+      return false;
+    }
+    
     this.outgoingAlert.pause();
   }
 
@@ -131,9 +152,11 @@ class CallScreen extends React.PureComponent {
 
   outgoingCallAccepted = (call) => {
 
-    this.pauseOutgoingAlert();
-    this.setState({ outgoingCallScreen: false, callInProgress: call });
-    this.startCall(call);
+    if (this.state.outgoingCallScreen) {
+      this.pauseOutgoingAlert();
+      this.setState({ outgoingCallScreen: false, callInProgress: call });
+      this.startCall(call);
+    }
   }
 
   outgoingCallRejected = (call) => {

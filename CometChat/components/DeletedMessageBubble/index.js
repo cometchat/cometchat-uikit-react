@@ -59,7 +59,7 @@ const deletedmessagebubble = (props) => {
                 </div>
             )
 
-            name = (<div css={nameWrapperStyle()}><span css={nameStyle(props)}>{props.message.sender.name}</span></div>);
+            name = (<div css={nameWrapperStyle(props)}><span css={nameStyle(props)}>{props.message.sender.name}</span></div>);
 
             message = (
                 <React.Fragment>

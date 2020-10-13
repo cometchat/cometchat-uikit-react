@@ -50,6 +50,16 @@ class CallAlert extends React.PureComponent {
 
     playIncomingAlert = () => {
 
+        //if it is disabled for chat wigdet in dashboard
+        if (this.props.hasOwnProperty("widgetsettings")
+        && this.props.widgetsettings
+        && this.props.widgetsettings.hasOwnProperty("main")
+        && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls") === false
+        || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls")
+        && this.props.widgetsettings.main["enable_sound_for_calls"] === false))) {
+            return false;
+        }
+
         this.incomingAlert.currentTime = 0;
         if (typeof this.incomingAlert.loop == 'boolean') {
             this.incomingAlert.loop = true;
@@ -60,6 +70,21 @@ class CallAlert extends React.PureComponent {
             }, false);
         }
         this.incomingAlert.play();
+    }
+
+    pauseIncomingAlert = () => {
+
+        //if it is disabled for chat wigdet in dashboard
+        if (this.props.hasOwnProperty("widgetsettings")
+        && this.props.widgetsettings
+        && this.props.widgetsettings.hasOwnProperty("main")
+        && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls") === false
+        || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls")
+        && this.props.widgetsettings.main["enable_sound_for_calls"] === false))) {
+            return false;
+        }
+        
+        this.incomingAlert.pause();
     }
 
     callScreenUpdated = (key, call) => {
@@ -114,7 +139,7 @@ class CallAlert extends React.PureComponent {
     incomingCallCancelled = (call) => {
 
         //we are not marking this as read as it will done in messagelist component
-        this.incomingAlert.pause();
+        this.pauseIncomingAlert();
         this.setState({ incomingCall: null });
     }
 
@@ -130,7 +155,7 @@ class CallAlert extends React.PureComponent {
 
     rejectCall = () => {
 
-        this.incomingAlert.pause();
+        this.pauseIncomingAlert();
         CometChatManager.rejectCall(this.state.incomingCall.sessionId, CometChat.CALL_STATUS.REJECTED).then(rejectedCall => {
 
             this.props.actionGenerated("rejectedIncomingCall", this.state.incomingCall, rejectedCall);
@@ -146,7 +171,7 @@ class CallAlert extends React.PureComponent {
     acceptCall = () => {
         
         this.setState({ incomingCall: null, callInProgress: this.props.callInProgress });
-        this.incomingAlert.pause();
+        this.pauseIncomingAlert();
         this.props.actionGenerated("acceptIncomingCall", this.state.incomingCall);
     }
 

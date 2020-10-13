@@ -19,6 +19,7 @@ import {
 
 } from "./style";
 
+import srcIcon from "./resources/1px.png";
 import fileIcon from "./resources/file-blue.svg";
 
 class SharedMediaView extends React.Component {
@@ -140,6 +141,23 @@ class SharedMediaView extends React.Component {
 
     mediaClickHandler = (type) => {
         this.setState({messagetype: type, messageList: []});
+    }
+
+    lazyLoad = (target) => {
+        const obs = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target.querySelector("img");
+                    const src = img.getAttribute('data-lazy');
+                    
+                    img.setAttribute('src', src);
+                    img.classList.add('fadeIn');
+
+                    observer.disconnect();
+                }
+            });
+        });
+        obs.observe(target);
     }
 
     render() {

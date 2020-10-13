@@ -25,5 +25,8 @@ export const theme = {
         lightGrey: "rgba(20, 20, 20, 0.08)",
         darkGrey: "rgba(20,20,20,0.9)",
         callScreenGrey: "#444444",
-    }
+    },
+    breakPoints: [
+        "(min-width : 320px) and (max-width: 767px)"
+    ]
 };

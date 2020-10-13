@@ -24,18 +24,7 @@ export const listWrapperStyle = () => {
         transition: "background .3s ease-out .1s",
         width: "100%",
         zIndex: "100",
-    }
-}
-
-export const listLoadingStyle = (props) => {
-
-    return {
-        height: "20px",
-        color: `${props.theme.color.helpText}`,
-        margin: "0 auto",
-        width: "100px",
-        textAlign: "center",
-        fontSize: "15px",
+        paddingTop: "14px"
     }
 }
 
@@ -54,5 +43,47 @@ export const actionMessageTxtStyle = () => {
         fontSize: "13.5px",
         margin: "0",
         lineHeight: "20px",
+    }
+}
+
+export const messageDateContainerStyle = () => {
+
+    return {
+        textAlign: "center",
+        marginBottom: "16px"
+    }
+}
+
+export const messageDateStyle = (props) => {
+
+    return {
+        padding: "8px 12px",
+        backgroundColor: `${props.theme.backgroundColor.secondary}`,
+        color: `${props.theme.color.primary}`,
+        borderRadius: "10px"
+    }
+}
+
+export const decoratorMessageStyle = () => {
+
+    return {
+        overflow: "hidden",
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        position: "absolute",
+        top: "50%",
+    }
+}
+
+export const decoratorMessageTxtStyle = (props) => {
+
+    return {
+        margin: "0",
+        height: "30px",
+        color: `${props.theme.color.secondary}`,
+        fontSize: "24px!important",
+        fontWeight: "600"
     }
 }

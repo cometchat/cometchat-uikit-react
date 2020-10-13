@@ -5,6 +5,8 @@ import { jsx } from '@emotion/core';
 
 import { CometChat } from "@cometchat-pro/chat";
 
+import ToolTip from "../ToolTip";
+import ReplyCount from "../ReplyCount";
 import Avatar from "../Avatar";
 import { SvgAvatar } from '../../util/svgavatar';
 
@@ -15,6 +17,7 @@ import {
     messageDetailStyle,
     nameWrapperStyle,
     nameStyle,
+    messageTxtContainerStyle,
     messageTxtWrapperStyle,
     pollQuestionStyle,
     pollAnswerStyle,
@@ -119,21 +122,27 @@ class ReceiverPollBubble extends React.Component {
             pollOptions.push(template);
         }
 
+        const message = Object.assign({}, this.props.message, { messageFrom: "receiver" });
+
         return (
             <div css={messageContainerStyle()}>
+                <ToolTip {...this.props} message={message} name={name} />    
                 <div css={messageWrapperStyle()}>
                     {avatar}
                     <div css={messageDetailStyle()}>
                         {name}
-                        <div css={messageTxtWrapperStyle(this.props)}>
-                            <p css={pollQuestionStyle()}>{pollExtensionData.question}</p>
-                            <ul css={pollAnswerStyle(this.props)}>
-                                {pollOptions}
-                            </ul>
-                            <p css={pollTotalStyle()}>{totalText}</p>
+                        <div css={messageTxtContainerStyle()}>
+                            <div css={messageTxtWrapperStyle(this.props)}>
+                                <p css={pollQuestionStyle()}>{pollExtensionData.question}</p>
+                                <ul css={pollAnswerStyle(this.props)}>
+                                    {pollOptions}
+                                </ul>
+                                <p css={pollTotalStyle()}>{totalText}</p>
+                            </div>
                         </div>
                         <div css={messageInfoWrapperStyle()}>
                             <span css={messageTimestampStyle(this.props)}>{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+                            <ReplyCount {...this.props} message={message} />
                         </div>
                     </div>
                 </div>

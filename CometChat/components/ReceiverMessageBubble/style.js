@@ -7,15 +7,25 @@ export const messageContainerStyle = () => {
         paddingRight: "16px",
         maxWidth: "65%",
         clear: "both",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: "0",
+        ":hover": {
+            "ul.message__actions": {
+                display: "flex"
+            }
+        }
     }
 }
 
 export const messageWrapperStyle = () => {
 
     return {
+        width: "auto",
         flex: "1 1",
-        position: "relative",
-        width: "100%",
+        alignSelf: "flex-start",
+        display: "flex",
     }
 }
 
@@ -26,24 +36,16 @@ export const messageThumbnailStyle = () => {
         height: "36px",
         margin: "10px 5px",
         float: "left",
+        flexShrink: "0",
     }
 }
 
-export const messageDetailStyle = (name) => {
-
-    const topPos = (name) ? { top: "-15px" } : { top: "-30px" };
+export const messageDetailStyle = () => {
 
     return {
         flex: "1 1",
         display: "flex",
         flexDirection: "column",
-        position: "relative",
-        ':hover': {
-            'ul:first-of-type': {
-                display: "inline-flex",
-                ...topPos
-            }
-        }
     }
 }
 
@@ -67,6 +69,88 @@ export const nameStyle = (props) => {
     }
 }
 
+export const messageTxtContainerStyle = () => {
+
+    return {
+        width: "auto",
+        flex: "1 1",
+        alignSelf: "flex-start",
+        display: "flex",
+    }
+}
+
+export const messagePreviewContainerStyle = (props) => {
+
+    return {
+        display: "inline-block",
+        borderRadius: "12px",
+        backgroundColor: `${props.theme.backgroundColor.white}`,
+        boxShadow: "0px 1px 2px 1px rgba(0,0,0,0.18)",
+        alignSelf: "flex-start",
+        width: "auto",
+    }
+}
+
+export const messagePreviewWrapperStyle = () => {
+
+    return {
+        display: "flex",
+        flexDirection: "column"
+    }
+}
+
+export const previewImageStyle = (img) => {
+
+    return {
+        background: `url(${img}) no-repeat center center`,
+        backgroundSize: "contain",
+        height: "150px",
+        margin: "12px 0",
+    }
+}
+
+export const previewDataStyle = (props) => {
+
+    return {
+        borderTop: `1px solid  ${props.theme.borderColor.primary}`,
+        borderBottom: `1px solid  ${props.theme.borderColor.primary}`,
+        padding: "12px",
+    }
+}
+
+export const previewTitleStyle = (props) => {
+
+    return {
+        color: `${props.theme.color.helpText}`,
+        fontWeight: "700",
+        marginBottom: "8px",
+    }
+}
+
+export const previewDescStyle = (props) => {
+
+    return {
+        color: `${props.theme.color.helpText}`,
+        fontStyle: "italic",
+        fontSize: "13px",
+    }
+}
+
+export const previewLinkStyle = (props) => {
+
+    return {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "12px",
+        "> a": {
+            display: "inline-block",
+            color: `${props.theme.color.blue}`,
+            fontWeight: "700",
+        }
+    }
+}
+
 export const messageTxtWrapperStyle = (props) => {
 
     return {
@@ -75,7 +159,7 @@ export const messageTxtWrapperStyle = (props) => {
         backgroundColor: `${props.theme.backgroundColor.secondary}`,
         padding: "8px 12px",
         alignSelf: "flex-start",
-        width: "100%",
+        width: "auto",
     }
 }
 
@@ -130,9 +214,9 @@ export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation) => {
         margin: "0",
         fontSize: "14px",
         whiteSpace: "pre-wrap",
-        wordWrap: "break-word",
+        wordBreak: "break-word",
         textAlign: "left",
-        width: "100%",
+        width: "auto",
         ...emojiAlignmentProp,
         ...emojiProp
     }

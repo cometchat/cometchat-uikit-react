@@ -15,6 +15,7 @@ import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
 import CallAlert from "../CallAlert";
 import CallScreen from "../CallScreen";
+import ImageView from "../ImageView";
 
 import { theme } from "../../resources/theme";
 
@@ -52,6 +53,7 @@ class CometChatUnified extends React.Component {
       messageToMarkRead: {},
       callmessage: {},
       sidebarview: false,
+      imageView: null,
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -173,8 +175,11 @@ class CometChatUnified extends React.Component {
         break;
       case "userJoinedCall":
       case "userLeftCall":
-        this.appendCallMessage(item);
-        break;
+        //this.appendCallMessage(item);
+        break; 
+      case "viewActualImage":
+        this.toggleImageView(item);
+      break;
       default:
       break;
     }
@@ -393,8 +398,11 @@ class CometChatUnified extends React.Component {
   }
 
   appendCallMessage = (call) => {
-
     this.setState({ callmessage: call });
+  }
+
+  toggleImageView = (message) => {
+    this.setState({ imageView: message });
   }
   
   render() {
@@ -409,6 +417,7 @@ class CometChatUnified extends React.Component {
           item={this.state.threadmessageitem}
           type={this.state.threadmessagetype}
           parentMessage={this.state.threadmessageparent}
+          loggedInUser={this.loggedInUser}
           actionGenerated={this.actionHandler} />
         </div>
       );
@@ -457,6 +466,11 @@ class CometChatUnified extends React.Component {
         actionGenerated={this.actionHandler} />
       );
     }
+
+    let imageView = null;
+    if (this.state.imageView) {
+      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} />);
+    }
     
     return (
       <div css={unifiedStyle(this.theme)}>
@@ -486,6 +500,7 @@ class CometChatUnified extends React.Component {
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
         actionGenerated={this.actionHandler} />
+        {imageView}
       </div>
     );
   }
