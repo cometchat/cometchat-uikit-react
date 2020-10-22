@@ -578,20 +578,20 @@ class MessageComposer extends React.PureComponent {
     }
 
     let docs = (
-      <span title="Attach File" css={fileItemStyle(this.props, docIcon)} onClick={() => { this.openFileDialogue("file") }}>
+      <span title="Attach File" css={fileItemStyle(this.props, docIcon)} className="filelist__item item__file" onClick={() => { this.openFileDialogue("file") }}>
         <input onChange={this.onFileChange} type="file" id="file" ref={this.fileUploaderRef} />
       </span>
     );
 
     let avp = (
       <React.Fragment>
-        <span title="Attach Video" css={fileItemStyle(this.props, videoIcon)} onClick={() => { this.openFileDialogue("video") }}>
+        <span title="Attach Video" css={fileItemStyle(this.props, videoIcon)} className="filelist__item item__video" onClick={() => { this.openFileDialogue("video") }}>
           <input onChange={this.onVideoChange} accept="video/*" type="file" ref={this.videoUploaderRef} />
         </span>
-        <span title="Attach Audio" css={fileItemStyle(this.props, audioIcon)} onClick={() => { this.openFileDialogue("audio") }}>
+        <span title="Attach Audio" css={fileItemStyle(this.props, audioIcon)} className="filelist__item item__audio" onClick={() => { this.openFileDialogue("audio") }}>
           <input onChange={this.onAudioChange} accept="audio/*" type="file" ref={this.audioUploaderRef} />
         </span>
-        <span title="Attach Image" css={fileItemStyle(this.props, imageIcon)} onClick={() => { this.openFileDialogue("image") }}>
+        <span title="Attach Image" css={fileItemStyle(this.props, imageIcon)} className="filelist__item item__image" onClick={() => { this.openFileDialogue("image") }}>
           <input onChange={this.onImageChange} accept="image/*" type="file" ref={this.imageUploaderRef} />
         </span>
       </React.Fragment>
@@ -601,13 +601,15 @@ class MessageComposer extends React.PureComponent {
       <span
       title="Create Poll"
       css={fileItemStyle(this.props, pollIcon)}
+      className="filelist__item item__poll"
       onClick={this.toggleCreatePoll}>&nbsp;</span>
     );
 
     let emojiBtn = (
       <div 
       title="Emoji"
-      css={emojiButtonStyle()} 
+      css={emojiButtonStyle()}
+      className="button__emoji" 
       onClick={this.toggleEmojiPicker}><img src={insertEmoticon} alt="Insert Emoticon" /></div>
     );
 
@@ -642,12 +644,12 @@ class MessageComposer extends React.PureComponent {
     }
 
     let attach = (
-      <div css={stickyAttachmentStyle()}>
-        <div css={attachmentIconStyle(roundedPlus)} onClick={this.toggleFilePicker}>
+      <div css={stickyAttachmentStyle()} className="input__sticky__attachment">
+        <div css={attachmentIconStyle(roundedPlus)} className="attachment__icon" onClick={this.toggleFilePicker}>
           <span>&nbsp;</span>
         </div>
-        <div css={filePickerStyle(this.state)}>
-          <div css={fileListStyle()}>
+        <div css={filePickerStyle(this.state)} className="attachment__filepicker">
+          <div css={fileListStyle()} className="filepicker__filelist">
             {avp}
             {docs}
             {createPollBtn}
@@ -720,13 +722,14 @@ class MessageComposer extends React.PureComponent {
     }
 
     return (
-      <div css={chatComposerStyle(this.props)}>
+      <div css={chatComposerStyle(this.props)} className="chat__composer">
         {editPreview}
         {smartReplyPreview}
-        <div css={composerInputStyle()}>
-          <div tabIndex="-1" css={inputInnerStyle(this.props)}>
+        <div css={composerInputStyle()} className="composer__input">
+          <div tabIndex="-1" css={inputInnerStyle(this.props)} className="input__inner">
             <div
             css={messageInputStyle(disabled)}
+            className="input__message-input"
             contentEditable="true"
             placeholder="Enter your message here"
             dir="ltr"
@@ -734,12 +737,12 @@ class MessageComposer extends React.PureComponent {
             onBlur={this.endTyping}
             onKeyDown={this.sendMessageOnEnter}
             ref={this.messageInputRef}></div>
-            <div css={inputStickyStyle(this.props)}>
+            <div css={inputStickyStyle(this.props)} className="input__sticky">
               {attach}
-              <div css={stickyButtonStyle()} ref={node => {this.node = node;}}>
+              <div css={stickyButtonStyle()} className="input__sticky__buttons" ref={node => {this.node = node;}}>
                 {emojiPicker}
                 {emojiBtn}
-                <div title="Send Message" css={sendButtonStyle()} onClick={this.sendTextMessage}><img src={sendBlue} alt="Send Message" /></div>
+                <div title="Send Message" css={sendButtonStyle()} className="button__send" onClick={this.sendTextMessage}><img src={sendBlue} alt="Send Message" /></div>
               </div>
             </div>
           </div>

@@ -1,5 +1,3 @@
-import React from "react";
-
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
@@ -36,7 +34,7 @@ const receiveraudiobubble = (props) => {
     } 
 
     avatar = (
-      <div css={messageThumbnailStyle()}>
+      <div css={messageThumbnailStyle()} className="message__thumbnail">
         <Avatar 
         cornerRadius="50%" 
         borderColor={props.theme.color.secondary}
@@ -44,31 +42,31 @@ const receiveraudiobubble = (props) => {
         image={props.message.sender.avatar} />
       </div>
     );
-    name = (<div css={nameWrapperStyle(avatar)}><span css={nameStyle(props)}>{props.message.sender.name}</span></div>);
+    name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(props)} className="message__name">{props.message.sender.name}</span></div>);
   }
 
   const message = Object.assign({}, props.message, {messageFrom: "receiver"});
 
   return (
-    <div css={messageContainerStyle()} className="message__container">
-      <div css={messageWrapperStyle()}>
+    <div css={messageContainerStyle()} className="receiver__message__container message__audio">
+      <ToolTip {...props} message={message} name={name} />
+      <div css={messageWrapperStyle()} className="message__wrapper">
         {avatar}
-        <div css={messageDetailStyle()}>
+        <div css={messageDetailStyle()} className="message__details">
           {name}
-          <div css={messageAudioContainerStyle(props)}>
-            <div css={messageAudioWrapperStyle(props)}>
+          <div css={messageAudioContainerStyle(props)} className="message__audio__container">
+            <div css={messageAudioWrapperStyle(props)} className="message__audio__wrapper">
               <audio controls>
                 <source src={props.message.data.url} />
               </audio>                        
             </div>
           </div>
-          <div css={messageInfoWrapperStyle()}>
-            <span css={messageTimestampStyle(props)}>{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+          <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+            <span css={messageTimestampStyle(props)} className="message__timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
             <ReplyCount {...props} message={message} />
           </div>
         </div>
       </div>
-      <ToolTip {...props} message={message} name={name} />
     </div>
   )
 }

@@ -54,6 +54,7 @@ class CometChatUnified extends React.Component {
       callmessage: {},
       sidebarview: false,
       imageView: null,
+      groupmessage: {}
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -175,10 +176,19 @@ class CometChatUnified extends React.Component {
         break;
       case "userJoinedCall":
       case "userLeftCall":
-        //this.appendCallMessage(item);
-        break; 
+        this.appendCallMessage(item);
+      break; 
       case "viewActualImage":
         this.toggleImageView(item);
+      break;
+      case "membersAdded": 
+        this.membersAdded(item);
+      break;
+      case "memberUnbanned":
+        this.memberUnbanned(item);
+      break;
+      case "memberScopeChanged":
+        this.memberScopeChanged(item);
       break;
       default:
       break;
@@ -314,6 +324,7 @@ class CometChatUnified extends React.Component {
 
   updateMembersCount = (item, count) => {
 
+    //console.log("updateMembersCount item", item);
     const group = Object.assign({}, this.state.item, {membersCount: count});
     this.setState({item: group, groupToUpdate: group});
   }
@@ -401,6 +412,49 @@ class CometChatUnified extends React.Component {
     this.setState({ callmessage: call });
   }
 
+  membersAdded = (members) => {
+
+    const messageList = [];
+    members.forEach(eachMember => {
+
+      const message = `${this.loggedInUser.name} added ${eachMember.name}`;
+      const sentAt = new Date() / 1000 | 0;
+      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
+      messageList.push(messageObj);
+    });
+    
+    this.setState({ groupmessage: messageList });
+  }
+
+  memberUnbanned = (members) => {
+
+    const messageList = [];
+    members.forEach(eachMember => {
+
+      const message = `${this.loggedInUser.name} unbanned ${eachMember.name}`;
+      const sentAt = new Date() / 1000 | 0;
+      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
+      messageList.push(messageObj);
+    });
+
+    this.setState({ groupmessage: messageList });
+  }
+
+  memberScopeChanged = (members) => {
+
+    const messageList = [];
+
+    members.forEach(eachMember => {
+
+      const message = `${this.loggedInUser.name} made ${eachMember.name} ${eachMember.scope}`;
+      const sentAt = new Date() / 1000 | 0;
+      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
+      messageList.push(messageObj);
+    });
+
+    this.setState({ groupmessage: messageList });
+  }
+
   toggleImageView = (message) => {
     this.setState({ imageView: message });
   }
@@ -410,7 +464,7 @@ class CometChatUnified extends React.Component {
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div css={unifiedSecondaryStyle(this.theme)}>
+        <div css={unifiedSecondaryStyle(this.theme)} className="unified__secondary-view">
           <MessageThread
           theme={this.theme}
           tab={this.state.tab}
@@ -429,7 +483,7 @@ class CometChatUnified extends React.Component {
       if(this.state.type === "user") {
 
         detailScreen = (
-          <div css={unifiedSecondaryStyle(this.theme)}>
+          <div css={unifiedSecondaryStyle(this.theme)} className="unified__secondary-view">
             <CometChatUserDetail
               theme={this.theme}
               item={this.state.item} 
@@ -441,7 +495,7 @@ class CometChatUnified extends React.Component {
       } else if (this.state.type === "group") {
 
         detailScreen = (
-          <div css={unifiedSecondaryStyle(this.theme)}>
+          <div css={unifiedSecondaryStyle(this.theme)} className="unified__secondary-view">
           <CometChatGroupDetail
             theme={this.theme}
             item={this.state.item} 
@@ -462,6 +516,7 @@ class CometChatUnified extends React.Component {
         type={this.state.type}
         composedthreadmessage={this.state.composedthreadmessage}
         callmessage={this.state.callmessage}
+        groupmessage={this.state.groupmessage}
         loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
       );
@@ -473,8 +528,8 @@ class CometChatUnified extends React.Component {
     }
     
     return (
-      <div css={unifiedStyle(this.theme)}>
-        <div css={unifiedSidebarStyle(this.state, this.theme)}>
+      <div css={unifiedStyle(this.theme)} className="cometchat cometchat--unified">
+        <div css={unifiedSidebarStyle(this.state, this.theme)} className="unified__sidebar">
           <NavBar 
           theme={this.theme}
           type={this.state.type}
@@ -487,7 +542,7 @@ class CometChatUnified extends React.Component {
           actionGenerated={this.navBarAction}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
-        <div css={unifiedMainStyle(this.state)}>{messageScreen}</div>
+        <div css={unifiedMainStyle(this.state)} className="unified__main">{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
         <CallAlert 
@@ -499,6 +554,7 @@ class CometChatUnified extends React.Component {
         type={this.state.type}
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
+        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
         {imageView}
       </div>

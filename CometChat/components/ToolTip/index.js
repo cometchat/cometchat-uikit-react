@@ -39,12 +39,13 @@ class Tooltip extends React.Component {
   render() {
     
     let threadedChats = (
-      <li css={actionGroupStyle(this.props)}>
+      <li css={actionGroupStyle(this.props)} className="action__group">
         <button
         type="button"
         onMouseEnter={event => this.toggleTooltip(event, true)}
         onMouseLeave={event => this.toggleTooltip(event, false)}
         css={groupButtonStyle(replyIcon)}
+        className="group__button button__threadedchats" 
         data-title={(this.props.message.replyCount) ? "Reply to thread" : "Reply in thread"}
         onClick={() => this.props.actionGenerated("viewMessageThread", this.props.message)}></button>
       </li>
@@ -72,12 +73,13 @@ class Tooltip extends React.Component {
     }
 
     let deleteMessage = (
-      <li css={actionGroupStyle(this.props)}>
+      <li css={actionGroupStyle(this.props)} className="action__group">
         <button
         type="button"
         onMouseEnter={event => this.toggleTooltip(event, true)}
         onMouseLeave={event => this.toggleTooltip(event, false)}
         css={groupButtonStyle(deleteIcon)}
+        className="group__button button__delete" 
         data-title="Delete message"
         onClick={() => this.props.actionGenerated("deleteMessage", this.props.message)}></button>
       </li>
@@ -88,18 +90,18 @@ class Tooltip extends React.Component {
     && this.props.widgetsettings.hasOwnProperty("main")
     && this.props.widgetsettings.main.hasOwnProperty("enable_deleting_messages")
     && this.props.widgetsettings.main["enable_deleting_messages"] === false)
-    || (this.props.message.messageFrom === "receiver" && this.props.type === "group" && this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT)
-    || (this.props.message.messageFrom === "receiver" && this.props.type === "user")) {
+    || (this.props.message.messageFrom === "receiver")) {
       deleteMessage = null;
     }
 
     let editMessage = (
-      <li css={actionGroupStyle(this.props)}>
+      <li css={actionGroupStyle(this.props)} className="action__group">
         <button
           type="button"
           onMouseEnter={event => this.toggleTooltip(event, true)}
           onMouseLeave={event => this.toggleTooltip(event, false)}
           css={groupButtonStyle(editIcon)}
+          className="group__button button__edit" 
           data-title="Edit message"
           onClick={() => this.props.actionGenerated("editMessage", this.props.message)}></button>
       </li>

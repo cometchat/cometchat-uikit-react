@@ -90,19 +90,19 @@ class Navbar extends React.Component {
     return (
       <React.Fragment>
         {this.getDefaultComponent()}
-        <div css={footerStyle()}>
-          <div css={navbarStyle()}>
-            <div css={itemStyle()} onClick={() => this.props.actionGenerated('tabChanged', 'conversations')}>
-              <span css={itemLinkStyle(chatGreyIcon, chatBlueIcon, chatsTabActive)}></span>
+        <div css={footerStyle()} className="sidebar__footer">
+          <div css={navbarStyle()} className="footer__navbar">
+            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'conversations')}>
+              <span css={itemLinkStyle(chatGreyIcon, chatBlueIcon, chatsTabActive)} className="item__link item__link__chats"></span>
             </div>
-            <div css={itemStyle()} onClick={() => this.props.actionGenerated('tabChanged', 'contacts')}>
-              <span css={itemLinkStyle(contactGreyIcon, contactBlueIcon, userTabActive)}></span>
+            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'contacts')}>
+              <span css={itemLinkStyle(contactGreyIcon, contactBlueIcon, userTabActive)} className="item__link item__link__contacts"></span>
             </div>
-            <div css={itemStyle()} onClick={() => this.props.actionGenerated('tabChanged', 'groups')}>
-              <span css={itemLinkStyle(groupGreyIcon, groupBlueIcon, groupsTabActive)}></span>
+            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'groups')}>
+              <span css={itemLinkStyle(groupGreyIcon, groupBlueIcon, groupsTabActive)} className="item__link item__link__groups"></span>
             </div>
-            <div css={itemStyle()} onClick={() => this.props.actionGenerated('tabChanged', 'info')}>
-              <span css={itemLinkStyle(moreGreyIcon, moreBlueIcon, moreTabActive)}></span>
+            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'info')}>
+              <span css={itemLinkStyle(moreGreyIcon, moreBlueIcon, moreTabActive)} className="item__link item__link__info"></span>
             </div>
           </div>
         </div>
@@ -113,75 +113,3 @@ class Navbar extends React.Component {
 }
 
 export default Navbar;
-
-// const navbar = (props) => {
-
-//   const switchComponent = () => {
-
-//     switch (props.tab) {
-//       case "contacts":
-//         return <CometChatUserList 
-//         theme={props.theme}
-//         item={props.item}
-//         actionGenerated={props.actionGenerated}
-//         enableCloseMenu={props.enableCloseMenu}
-//         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatUserList>;
-//       case "calls":
-//         return "calls";
-//       case "conversations":
-//         return <CometChatConversationList
-//         ref={defaultSidebar}
-//         theme={props.theme}
-//         item={props.item}
-//         groupToUpdate={props.groupToUpdate}
-//         actionGenerated={props.actionGenerated}
-//         enableCloseMenu={props.enableCloseMenu}
-//         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatConversationList>;
-//       case "groups":
-//         return <CometChatGroupList 
-//         theme={props.theme}
-//         groupToLeave={props.groupToLeave}
-//         groupToDelete={props.groupToDelete}
-//         groupToUpdate={props.groupToUpdate}
-//         actionGenerated={props.actionGenerated}
-//         enableCloseMenu={props.enableCloseMenu}
-//         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatGroupList>;
-//       case "info":
-//         return <CometChatUserInfoScreen
-//         theme={props.theme}
-//         onItemClick={(item, type) => props.actionGenerated("itemClicked", type, item)}></CometChatUserInfoScreen>;
-//       default:
-//         return null;
-//     }
-
-//   }
-
-//   const chatsTabActive = (props.tab === "conversations") ? true : false;
-//   const userTabActive = (props.tab === "contacts") ? true : false;
-//   const groupsTabActive = (props.tab === "groups") ? true : false;
-//   const moreTabActive = (props.tab === "info") ? true : false;
-
-//   return (
-//     <React.Fragment>
-//       {switchComponent()}
-//       <div css={footerStyle()}>
-//         <div css={navbarStyle()}>
-//           <div css={itemStyle()} onClick={() => props.actionGenerated('tabChanged', 'conversations')}>
-//             <span css={itemLinkStyle(chatGreyIcon, chatBlueIcon, chatsTabActive)}></span>
-//           </div>
-//           <div css={itemStyle()} onClick={() => props.actionGenerated('tabChanged', 'contacts')}>
-//             <span css={itemLinkStyle(contactGreyIcon, contactBlueIcon, userTabActive)}></span>
-//           </div>
-//           <div css={itemStyle()} onClick={() => props.actionGenerated('tabChanged', 'groups')}>
-//             <span css={itemLinkStyle(groupGreyIcon, groupBlueIcon, groupsTabActive)}></span>
-//           </div>
-//           <div css={itemStyle()} onClick={() => props.actionGenerated('tabChanged', 'info')}>
-//             <span css={itemLinkStyle(moreGreyIcon, moreBlueIcon, moreTabActive)}></span>
-//           </div> 
-//         </div>
-//       </div>
-//     </React.Fragment>
-//   );
-// }
-
-// export default React.memo(navbar);

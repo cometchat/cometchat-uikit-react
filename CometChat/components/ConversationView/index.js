@@ -1,5 +1,3 @@
-import React from "react";
-
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
@@ -140,7 +138,7 @@ const conversationview = (props) => {
   let lastMessageTimeStamp = null;
   if(props.conversation.lastMessage) {
     lastMessageTimeStamp = (
-      <span css={itemLastMsgTimeStyle(props)}>{new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+      <span css={itemLastMsgTimeStyle(props)} className="item__details__timestamp">{new Date(props.conversation.lastMessage.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
     );
   }
 
@@ -176,8 +174,8 @@ const conversationview = (props) => {
   }
 
   return (
-    <div css={listItem(props)} onClick={() => props.handleClick(props.conversation, props.conversationKey)}>
-      <div css={itemThumbnailStyle()}>
+    <div css={listItem(props)} className="list__item" onClick={() => props.handleClick(props.conversation, props.conversationKey)}>
+      <div css={itemThumbnailStyle()} className="list__item__thumbnail">
         <Avatar 
         image={getAvatar()}
         cornerRadius="18px" 
@@ -185,15 +183,15 @@ const conversationview = (props) => {
         borderWidth="1px" />
         {presence}
       </div>
-      <div css={itemDetailStyle()}>
-        <div css={itemRowStyle()}>
-          <div css={itemNameStyle()}
+      <div css={itemDetailStyle()} className="list__item__details">
+        <div css={itemRowStyle()} className="item__details_block_one">
+          <div css={itemNameStyle()} className="item__details__name"
           onMouseEnter={event => toggleTooltip(event, true)} 
           onMouseLeave={event => toggleTooltip(event, false)}>{props.conversation.conversationWith.name}</div>
           {lastMessageTimeStamp}
         </div>
-        <div css={itemRowStyle()}>
-          <div css={itemLastMsgStyle(props)}
+        <div css={itemRowStyle()} className="item__details_block_two">
+          <div css={itemLastMsgStyle(props)} className="item__details__last-message"
           onMouseEnter={event => toggleTooltip(event, true)} 
           onMouseLeave={event => toggleTooltip(event, false)}>{getLastMessage()}</div>
           <BadgeCount theme={props.theme} count={props.conversation.unreadMessageCount} />

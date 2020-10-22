@@ -1,5 +1,3 @@
-import React from "react";
-
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
@@ -66,7 +64,7 @@ const memberview = (props) => {
             <td 
             onMouseEnter={event => toggleTooltip(event, true)}
             onMouseLeave={event => toggleTooltip(event, false)}>
-                <div css={avatarStyle()}>
+                <div css={avatarStyle()} className="avatar">
                     <Avatar 
                     image={props.member.avatar} 
                     cornerRadius="18px" 
@@ -79,10 +77,10 @@ const memberview = (props) => {
                     borderColor={props.theme.borderColor.primary}
                     borderWidth="1px" />
                 </div>
-                <div css={nameStyle()}>{name}</div>
+                <div css={nameStyle()} className="name">{name}</div>
             </td>
-            <td css={roleStyle()}>{scope}</td>
-            <td css={actionStyle()}>{unBan}</td>
+            <td css={roleStyle()} className="role">{scope}</td>
+            <td css={actionStyle()} className="unban">{unBan}</td>
         </tr>
     );
 }

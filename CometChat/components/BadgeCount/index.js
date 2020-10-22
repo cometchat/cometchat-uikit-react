@@ -1,5 +1,3 @@
-import React from "react";
-
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
@@ -13,7 +11,7 @@ const badgecount = (props) => {
 
   if(props.count) {
     count = (
-      <span css={badgeStyle(props)}>{props.count}</span>
+      <span css={badgeStyle(props)} className="unread-count">{props.count}</span>
     );
   }
   return count;

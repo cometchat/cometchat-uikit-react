@@ -31,7 +31,7 @@ export const unifiedSidebarStyle = (state, theme) => {
         position: "relative",
         display: "flex",
         flexDirection: "column",
-        "> .css-uevzfr": {
+        "> .contacts, .chats, .groups": {
             height: "calc(100% - 50px)",
         },
         [mq[0]]: {

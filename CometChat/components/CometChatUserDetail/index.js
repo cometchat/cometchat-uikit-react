@@ -27,25 +27,25 @@ class CometChatUserDetail extends React.Component {
         let blockUserText;
         if(this.props.item.blockedByMe) {
             blockUserText = (
-                <div css={itemLinkStyle(1, this.props)} onClick={() => this.props.actionGenerated("unblockUser")}>Unblock User</div>
+                <div css={itemLinkStyle(1, this.props)} className="item__link" onClick={() => this.props.actionGenerated("unblockUser")}>Unblock User</div>
             );
         } else {
             blockUserText = (
-                <div css={itemLinkStyle(1, this.props)} onClick={() => this.props.actionGenerated("blockUser")}>Block User</div>
+                <div css={itemLinkStyle(1, this.props)} className="item__link" onClick={() => this.props.actionGenerated("blockUser")}>Block User</div>
             );
         }
 
         let blockUserView = (
-            <div css={privacySectionStyle(this.props)}>
-                <h6 css={sectionHeaderStyle(this.props)}>Options</h6>
-                <div css={sectionContentStyle()}>
-                    <div css={contentItemStyle()}>{blockUserText}</div>
+            <div css={privacySectionStyle(this.props)} className="section section__privacy">
+                <h6 css={sectionHeaderStyle(this.props)} className="section__header">Options</h6>
+                <div css={sectionContentStyle()} className="section__content">
+                    <div css={contentItemStyle()} className="content__item">{blockUserText}</div>
                 </div>
             </div>
         );
         
         let sharedmediaView = (
-            <SharedMediaView theme={this.props.theme} containerHeight="50px" item={this.props.item} type={this.props.type} />
+            <SharedMediaView theme={this.props.theme} containerHeight="50px" item={this.props.item} type={this.props.type} widgetsettings={this.props.widgetsettings} />
         );
 
         if(this.props.hasOwnProperty("widgetsettings") 
@@ -66,12 +66,12 @@ class CometChatUserDetail extends React.Component {
         }
 
         return (
-            <div css={userDetailStyle(this.props)}>
-                <div css={headerStyle(this.props)}>
-                    <div css={headerCloseStyle(navigateIcon)} onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
-                    <h4 css={headerTitleStyle()}>Details</h4>
+            <div css={userDetailStyle(this.props)} className="detailpane detailpane--user">
+                <div css={headerStyle(this.props)} className="detailpane__header">
+                    <div css={headerCloseStyle(navigateIcon)} className="header__close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
+                    <h4 css={headerTitleStyle()} className="header__title">Details</h4>
                 </div>
-                <div css={sectionStyle()}>
+                <div css={sectionStyle()} className="detailpane__section">
                     {blockUserView}
                     {sharedmediaView}
                 </div>

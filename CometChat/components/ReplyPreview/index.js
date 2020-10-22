@@ -1,5 +1,3 @@
-import React from "react";
-
 /** @jsx jsx */
 import { jsx, keyframes } from '@emotion/core';
 
@@ -17,15 +15,15 @@ const ReplyPreview = (props) => {
 
     const options = props.options.map((option, key) => {
 
-        return (<div key={key} css={previewOptionStyle(props)} onClick={() => props.clicked(option)}>{option}</div>)
+        return (<div key={key} css={previewOptionStyle(props)} className="option" onClick={() => props.clicked(option)}>{option}</div>)
     })
 
     return (
-        <div css={previewWrapperStyle(props, keyframes)}>
-            <div css={previewHeadingStyle()}>
-                <div css={previewCloseStyle(closeIcon)} onClick={props.close}></div>
+        <div css={previewWrapperStyle(props, keyframes)} className="reply__preview__wrapper">
+            <div css={previewHeadingStyle()} className="preview__heading">
+                <div css={previewCloseStyle(closeIcon)} onClick={props.close} className="preview__close"></div>
             </div>
-            <div css={previewOptionsWrapperStyle()}>{options}</div>
+            <div css={previewOptionsWrapperStyle()} className="preview__options">{options}</div>
         </div>
     )
 }

@@ -170,28 +170,28 @@ class CometChatCreatePoll extends React.Component {
         return (
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)}>
-                    <span css={modalCloseStyle(clearIcon)} onClick={this.props.close}></span>
-                    <div css={modalBodyStyle()}>
+                <div css={modalWrapperStyle(this.props)} className="modal__createpoll">
+                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close}></span>
+                    <div css={modalBodyStyle()} className="modal__body">
                         <table css={modalTableStyle(this.props)}>
-                            <caption css={tableCaptionStyle()}>Create Poll</caption>
+                            <caption css={tableCaptionStyle()} className="modal__title">Create Poll</caption>
                             <tbody css={tableBodyStyle()}>
-                                <tr>
+                                <tr className="error">
                                     <td colSpan="3"><div css={modalErrorStyle()}>{this.state.error}</div></td>
                                 </tr>
-                                <tr>
+                                <tr className="poll__question">
                                     <td><label>Question</label></td>
                                     <td colSpan="2">
                                         <input type="text" autoFocus tabIndex="1" placeholder="Enter your question" ref={this.questionRef} />
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr className="poll__options">
                                     <td><label>Options</label></td>
                                     <td colSpan="2">
                                         <input type="text" placeholder="Enter your option" ref={this.optionOneRef} />
                                     </td>
                                 </tr>
-                                <tr ref={this.optionRef}>
+                                <tr ref={this.optionRef} className="poll__options">
                                     <td>&nbsp;</td>
                                     <td colSpan="2">
                                         <input type="text" placeholder="Enter your option" ref={this.optionTwoRef} />
@@ -201,11 +201,13 @@ class CometChatCreatePoll extends React.Component {
                                 <tr>
                                     <td>&nbsp;</td>
                                     <td><label>Add new option</label></td>
-                                    <td css={iconWrapperStyle()}><span css={addOptionIconStyle(addIcon)} onClick={this.addPollOption}></span></td>
+                                    <td css={iconWrapperStyle()}>
+                                        <span css={addOptionIconStyle(addIcon)} className="option__add" onClick={this.addPollOption}></span>
+                                    </td>
                                 </tr>
                             </tbody>
                             <tfoot css={tableFootStyle(this.props)}>
-                                <tr>
+                                <tr className="createpoll">
                                     <td colSpan="2"><button onClick={this.createPoll}>Create</button></td>
                                 </tr>
                             </tfoot>

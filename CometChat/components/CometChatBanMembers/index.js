@@ -18,13 +18,16 @@ import {
     tableCaptionStyle,
     tableBodyStyle,
     roleColumnStyle,
-    actionColumnStyle
+    actionColumnStyle,
+    contactMsgStyle,
+    contactMsgTxtStyle
 } from "./style";
 
 import clearIcon from "./resources/clear.svg";
 
 class CometChatBanMembers extends React.Component {
 
+    decoratorMessage = "Loading...";
     static contextType = GroupDetailContext;
 
     constructor(props) {
@@ -86,26 +89,34 @@ class CometChatBanMembers extends React.Component {
 
         });
 
-        const noRecordsFound = (
-            <tr><td colSpan="3">No banned members found</td></tr>
-        );
+        let messageContainer = null;
+        if (bannedMembers.length === 0) {
+
+            this.decoratorMessage = "No banned members found";
+            messageContainer = (
+                <caption css={contactMsgStyle()} className="bannedmembers__decorator-message">
+                    <p css={contactMsgTxtStyle(this.props)} className="decorator-message">{this.decoratorMessage}</p>
+                </caption>
+            );
+        }
         
         return (
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)}>
-                    <span css={modalCloseStyle(clearIcon)} onClick={this.props.close}></span>
-                    <div css={modalBodyStyle()}>
+                <div css={modalWrapperStyle(this.props)} className="modal__addmembers">
+                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close}></span>
+                    <div css={modalBodyStyle()} className="modal__body">
                         <table css={modalTableStyle(this.props)}>
-                            <caption css={tableCaptionStyle()}>Banned Members</caption>
+                            <caption css={tableCaptionStyle()} className="modal__title">Banned Members</caption>
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th css={roleColumnStyle()}>Scope</th>
-                                    <th css={actionColumnStyle()}>Unban</th>
+                                    <th className="name">Name</th>
+                                    <th css={roleColumnStyle()} className="role">Scope</th>
+                                    <th css={actionColumnStyle()} className="unban">Unban</th>
                                 </tr>
                             </thead>
-                            <tbody css={tableBodyStyle()} onScroll={this.handleScroll}>{(bannedMembers.length) ? bannedMembers : noRecordsFound}</tbody>
+                            {messageContainer}
+                            <tbody css={tableBodyStyle()} onScroll={this.handleScroll}>{bannedMembers}</tbody>
                         </table>
                     </div>
                 </div>

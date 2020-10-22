@@ -120,9 +120,10 @@ class MemberView extends React.Component {
             }
 
             changescope = (
-                <div css={scopeWrapperStyle()}>
+                <div css={scopeWrapperStyle()} className="scope__wrapper">
                     <select 
                     css={scopeSelectionStyle()}
+                    className="scope__select"
                     onChange={this.scopeChangeHandler}
                     defaultValue={this.props.member.scope}>{options}</select>
                     <img src={doneIcon} alt="Change Scope" onClick={this.updateMemberScope} />
@@ -186,8 +187,8 @@ class MemberView extends React.Component {
 
             editAccess = (
                 <React.Fragment>
-                    <td css={actionColumnStyle()}><span>{ban}</span></td>
-                    <td css={actionColumnStyle()}><span>{kick}</span></td>
+                    <td css={actionColumnStyle()} className="ban"><span>{ban}</span></td>
+                    <td css={actionColumnStyle()} className="kick"><span>{kick}</span></td>
                 </React.Fragment>
             );
 
@@ -197,7 +198,7 @@ class MemberView extends React.Component {
                 if (this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members")
                 && this.props.widgetsettings.main["allow_kick_ban_members"] === false) {
     
-                    editAccess = null;//(<td data-label="Change Scope" className="changescope">{changescope}</td>);
+                    editAccess = null;
                 }
 
                 //if promote_demote_members is disabled in chatwidget
@@ -220,10 +221,10 @@ class MemberView extends React.Component {
         
         return (
             <tr css={tableRowStyle(this.props)}>
-                <td css={tableColumnStyle(editClassName)} 
+                <td css={tableColumnStyle(editClassName)} className="userinfo"
                 onMouseEnter={event => this.toggleTooltip(event, true)}
                 onMouseLeave={event => this.toggleTooltip(event, false)}>
-                    <div css={avatarStyle(editClassName)}>
+                    <div css={avatarStyle(editClassName)} className="thumbnail">
                         <Avatar 
                         image={this.props.member.avatar} 
                         cornerRadius="18px" 
@@ -231,9 +232,9 @@ class MemberView extends React.Component {
                         borderWidth="1px" />
                         {userPresence}
                     </div>
-                    <div css={nameStyle(editClassName)}>{name}</div>
+                    <div css={nameStyle(editClassName)} className="name">{name}</div>
                 </td>
-                <td css={scopeStyle()}>{changescope}</td>
+                <td css={scopeStyle()} className="scope">{changescope}</td>
                 {editAccess}
             </tr>
         );

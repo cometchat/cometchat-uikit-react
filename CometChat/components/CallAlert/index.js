@@ -194,18 +194,18 @@ class CallAlert extends React.PureComponent {
             }
             
             callScreen = (
-                <div css={incomingCallWrapperStyle(this.props, keyframes)}>
-                    <div css={callContainerStyle()}>
-                        <div css={headerWrapperStyle()}>
-                            <div css={callDetailStyle()}>
-                                <div css={nameStyle()}>{this.state.incomingCall.sender.name}</div>
-                                <div css={callTypeStyle(this.props)}>{callType}</div>
+                <div css={incomingCallWrapperStyle(this.props, keyframes)} className="callalert__wrapper">
+                    <div css={callContainerStyle()} className="callalert__container">
+                        <div css={headerWrapperStyle()} className="callalert__header">
+                            <div css={callDetailStyle()} className="header__detail">
+                                <div css={nameStyle()} className="name">{this.state.incomingCall.sender.name}</div>
+                                <div css={callTypeStyle(this.props)} className="calltype">{callType}</div>
                             </div>
-                            <div css={thumbnailStyle()}><Avatar cornerRadius="50%" image={this.state.incomingCall.sender.avatar} /></div>
+                            <div css={thumbnailStyle()} className="header__thumbnail"><Avatar cornerRadius="50%" image={this.state.incomingCall.sender.avatar} /></div>
                         </div>
-                        <div css={headerButtonStyle()}>
-                            <button css={ButtonStyle(this.props, 0)} onClick={this.rejectCall}>Decline</button>
-                            <button css={ButtonStyle(this.props, 1)} onClick={this.acceptCall}>Accept</button>
+                        <div css={headerButtonStyle()} className="callalert__buttons">
+                            <button css={ButtonStyle(this.props, 0)} className="button button__decline" onClick={this.rejectCall}>Decline</button>
+                            <button css={ButtonStyle(this.props, 1)} className="button button__accept" onClick={this.acceptCall}>Accept</button>
                         </div>
                     </div>
                 </div>

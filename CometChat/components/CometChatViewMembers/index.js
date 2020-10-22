@@ -116,18 +116,13 @@ class CometChatViewMembers extends React.Component {
                 actionGenerated={this.updateMembers} />);
         });
 
-        // const wrapperClassName = classNames({
-        //     "modal__viewmembers": true,
-        //     "modal--show": this.props.open
-        // });
-
         let editAccess = null;
         if(this.props.item.scope !== CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
 
             editAccess = (
                 <React.Fragment>
-                    <th css={actionColumnStyle()}>Ban</th>
-                    <th css={actionColumnStyle()}>Kick</th>
+                    <th css={actionColumnStyle()} className="ban">Ban</th>
+                    <th css={actionColumnStyle()} className="kick">Kick</th>
                 </React.Fragment>
             );
 
@@ -145,15 +140,15 @@ class CometChatViewMembers extends React.Component {
         return (
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)}>
-                    <span css={modalCloseStyle(clearIcon)} onClick={this.props.close} title="Close"></span>
-                    <div css={modalBodyCtyle()}>
+                <div css={modalWrapperStyle(this.props)} className="modal__viewmembers">
+                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title="Close"></span>
+                    <div css={modalBodyCtyle()} className="modal__body">
                         <table css={modalTableStyle(this.props)}>
-                            <caption css={tableCaptionStyle()}>Group Members</caption>
+                            <caption css={tableCaptionStyle()} className="modal__title">Group Members</caption>
                             <thead> 
                                 <tr>
-                                    <th>Name</th>
-                                    <th css={scopeColumnStyle()}>Scope</th>
+                                    <th className="name">Name</th>
+                                    <th css={scopeColumnStyle()} className="scope">Scope</th>
                                     {editAccess}
                                 </tr>
                             </thead>

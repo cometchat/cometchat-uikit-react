@@ -1,4 +1,3 @@
-import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
@@ -40,27 +39,27 @@ const groupview = (props) => {
   let groupTypeIcon = null;
   if(props.group.type === "private") {
 
-    groupTypeIcon = (<div css={listItemIcon()}><img src={shieldIcon} alt="time" /></div>);
+    groupTypeIcon = (<div css={listItemIcon()} className="list__item__icon"><img src={shieldIcon} alt="time" /></div>);
 
   } else if(props.group.type === "password") {
 
-    groupTypeIcon = (<div css={listItemIcon()}><img src={lockIcon} alt="time" /></div>);
+    groupTypeIcon = (<div css={listItemIcon()} className="list__item__icon"><img src={lockIcon} alt="time" /></div>);
   }
 
   return (
-    <div css={listItem(props)} onClick={() => props.clickHandler(props.group)}>
-      <div css={itemThumbnailStyle()}>
+    <div css={listItem(props)} className="list__item" onClick={() => props.clickHandler(props.group)}>
+      <div css={itemThumbnailStyle()} className="list__item__thumbnail">
         <Avatar 
         image={props.group.icon} 
         cornerRadius="18px" 
         borderColor={props.theme.color.secondary}
         borderWidth="1px"></Avatar>
       </div>
-      <div css={itemDetailStyle()}>
-        <div css={itemNameStyle()}
+      <div css={itemDetailStyle()} className="list__item__details">
+        <div css={itemNameStyle()} className="item__details__name"
         onMouseEnter={event => toggleTooltip(event, true)} 
         onMouseLeave={event => toggleTooltip(event, false)}>{props.group.name}</div>
-        <div css={itemDescStyle(props)}></div>
+        <div css={itemDescStyle(props)} className="item__details__desc"></div>
       </div>
       {groupTypeIcon}
     </div>

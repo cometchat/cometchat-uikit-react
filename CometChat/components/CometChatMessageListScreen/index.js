@@ -10,6 +10,7 @@ import MessageList from "../MessageList";
 import MessageComposer from "../MessageComposer";
 
 import { theme } from "../../resources/theme";
+import { validateWidgetSettings } from "../../util/common";
 
 import { chatWrapperStyle } from "./style";
 
@@ -32,7 +33,6 @@ class CometChatMessageListScreen extends React.PureComponent {
   }
 
   componentDidMount() {
-
     this.audio = new Audio(incomingMessageAlert);
   }
 
@@ -40,15 +40,15 @@ class CometChatMessageListScreen extends React.PureComponent {
 
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
       
-      this.setState({ messageList: [], scrollToBottom: true});
+      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: null});
 
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid) {
       
-      this.setState({ messageList: [], scrollToBottom: true });
+      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: null });
 
     } else if(prevProps.type !== this.props.type) {
       
-      this.setState({ messageList: [], scrollToBottom: true });
+      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: null });
 
     } else if(prevProps.composedthreadmessage !== this.props.composedthreadmessage) {
 
@@ -57,6 +57,12 @@ class CometChatMessageListScreen extends React.PureComponent {
     } else if(prevProps.callmessage !== this.props.callmessage) {
 
       this.actionHandler("callUpdated", this.props.callmessage);
+
+    } else if (prevProps.groupmessage !== this.props.groupmessage) {
+
+      if (validateWidgetSettings(this.props.widgetsettings, "hide_join_leave_notifications") !== true) {
+        this.appendMessage(this.props.groupmessage);
+      }
     }
   }
 
@@ -156,7 +162,7 @@ class CometChatMessageListScreen extends React.PureComponent {
   }
 
   editMessage = (message) => {
-    this.setState({ messageToBeEdited: message });
+    this.setState({ messageToBeEdited: message, replyPreview: null });
   }
 
   messageEdited = (message) => {
@@ -241,11 +247,19 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   groupUpdated = (message, key, group, options) => {
 
-    this.appendMessage([message]);
+    if (validateWidgetSettings(this.props.widgetsettings, "hide_join_leave_notifications") !== true) {
+      this.appendMessage([message]);
+    }
+
     this.props.actionGenerated("groupUpdated", message, key, group, options);
   }
 
   callUpdated = (message) => {
+
+    if (validateWidgetSettings(this.props.widgetsettings, "show_call_notifications") === false) {
+      return false;
+    }
+
     this.appendMessage([message]);
   }
 
@@ -270,7 +284,7 @@ class CometChatMessageListScreen extends React.PureComponent {
   smartReplyPreview = (messages) => {
 
     const message = messages[0];
-    console.log("smartReplyPreview", message);
+    
     if (message.hasOwnProperty("metadata")) {
 
       const metadata = message.metadata;
@@ -319,9 +333,9 @@ class CometChatMessageListScreen extends React.PureComponent {
     && this.props.widgetsettings.main["enable_sending_messages"] === false) {
       messageComposer = null;
     }
-
+    
     return (
-      <div css={chatWrapperStyle(this.theme)}>
+      <div css={chatWrapperStyle(this.theme)} className="main__chat">
         <MessageHeader 
         sidebar={this.props.sidebar}
         theme={this.theme}

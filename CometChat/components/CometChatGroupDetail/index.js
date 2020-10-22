@@ -328,14 +328,19 @@ class CometChatGroupDetail extends React.Component {
     unbanMembers = (members) => {
 
         const bannedMembers = [...this.state.bannedmemberlist];
+        const unbannedMembers = [];
+
         const filteredBannedMembers = bannedMembers.filter(bannedmember => {
 
             const found = members.find(member => bannedmember.uid === member.uid);
             if(found) {
+                unbannedMembers.push(found);
                 return false;
             }
             return true;
         });
+
+        this.props.actionGenerated("memberUnbanned", unbannedMembers);
 
         this.setState({
             bannedmemberlist: [...filteredBannedMembers]
@@ -350,6 +355,7 @@ class CometChatGroupDetail extends React.Component {
             memberlist: memberlist,
         });
 
+        this.props.actionGenerated("membersAdded", members);
         if(triggerUpdate) {
             this.props.actionGenerated("membersUpdated", this.props.item, memberlist.length);
         }
@@ -385,6 +391,7 @@ class CometChatGroupDetail extends React.Component {
 
             memberlist.splice(memberKey, 1, newMemberObj);
 
+            this.props.actionGenerated("memberScopeChanged", [newMemberObj]);
             this.setState({memberlist: memberlist});
         }
     }
@@ -392,42 +399,42 @@ class CometChatGroupDetail extends React.Component {
     render() {
 
         let viewMembersBtn = (
-            <div css={contentItemStyle()}>
-                <div css={itemLinkStyle(this.props, 0)} onClick={() => this.clickHandler("viewmember", true)}>View Members</div>                                           
+            <div css={contentItemStyle()} className="content__item">
+                <div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("viewmember", true)}>View Members</div>                                           
             </div>
         );
 
         let addMembersBtn = null, deleteGroupBtn = null, bannedMembersBtn = null;
         if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
             addMembersBtn = (
-                <div css={contentItemStyle()}>
-                    <div css={itemLinkStyle(this.props, 0)} onClick={() => this.clickHandler("addmember", true)}>Add Members</div>                                           
+                <div css={contentItemStyle()} className="content__item">
+                    <div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("addmember", true)}>Add Members</div>                                           
                 </div>
             );
 
             deleteGroupBtn = (
-                <div css={contentItemStyle()}>
-                    <span css={itemLinkStyle(this.props, 1)} className="item__link link--delete" onClick={this.deleteGroup}>Delete and Exit</span>
+                <div css={contentItemStyle()} className="content__item">
+                    <span css={itemLinkStyle(this.props, 1)} className="item__link" onClick={this.deleteGroup}>Delete and Exit</span>
                 </div>
             );
         }
         
         if(this.props.item.scope !== CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
             bannedMembersBtn = (
-                <div css={contentItemStyle()}>
-                    <div css={itemLinkStyle(this.props, 0)} onClick={() => this.clickHandler("banmember", true)}>Banned Members</div>                                           
+                <div css={contentItemStyle()} className="content__item">
+                    <div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("banmember", true)}>Banned Members</div>                                           
                 </div>
             );
         }
 
         let leaveGroupBtn = (
-            <div css={contentItemStyle()}>
-                <span css={itemLinkStyle(this.props, 0)} onClick={this.leaveGroup}>Leave Group</span>
+            <div css={contentItemStyle()} className="content__item">
+                <span css={itemLinkStyle(this.props, 0)} className="item__link" onClick={this.leaveGroup}>Leave Group</span>
             </div>
         );
 
         let sharedmediaView = (
-            <SharedMediaView theme={this.props.theme} containerHeight="225px" item={this.props.item} type={this.props.type} />
+            <SharedMediaView theme={this.props.theme} containerHeight="225px" item={this.props.item} type={this.props.type} widgetsettings={this.props.widgetsettings} />
         );
 
         if(this.props.hasOwnProperty("widgetsettings") 
@@ -476,9 +483,9 @@ class CometChatGroupDetail extends React.Component {
         }
 
         let members = (
-            <div css={sectionStyle()}>
-                <h6 css={sectionHeaderStyle(this.props)}>Members</h6>
-                <div css={sectionContentStyle()}>
+            <div css={sectionStyle()} className="section section__members">
+                <h6 css={sectionHeaderStyle(this.props)} className="section__header">Members</h6>
+                <div css={sectionContentStyle()} className="section__content">
                     {viewMembersBtn}
                     {addMembersBtn}
                     {bannedMembersBtn}
@@ -487,9 +494,9 @@ class CometChatGroupDetail extends React.Component {
         );
 
         let options = (
-            <div css={sectionStyle()}>
-                <h6 css={sectionHeaderStyle(this.props)}>Options</h6>
-                <div css={sectionContentStyle()}>
+            <div css={sectionStyle()} className="section section__options">
+                <h6 css={sectionHeaderStyle(this.props)} className="section__header">Options</h6>
+                <div css={sectionContentStyle()} className="section__content">
                     {leaveGroupBtn}
                     {deleteGroupBtn}
                 </div>
@@ -544,7 +551,7 @@ class CometChatGroupDetail extends React.Component {
         }
 
         return (
-            <div css={detailStyle(this.props)}>
+            <div css={detailStyle(this.props)} className="detailpane">
                 <GroupDetailContext.Provider 
                 value={{
                     memberlist: this.state.memberlist,
@@ -554,11 +561,11 @@ class CometChatGroupDetail extends React.Component {
                     loggedinuser: this.loggedInUser,
                     item: this.props.item
                 }}>
-                    <div css={headerStyle(this.props)}>
-                        <div css={headerCloseStyle(navigateIcon)} onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
-                        <h4 css={headerTitleStyle()}>Details</h4>
+                    <div css={headerStyle(this.props)} className="detailpane__header">
+                        <div css={headerCloseStyle(navigateIcon)} className="header__close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
+                        <h4 css={headerTitleStyle()} className="header__title">Details</h4>
                     </div>
-                    <div css={detailPaneStyle()}>
+                    <div css={detailPaneStyle()} className="detailpane__section">
                         {members}
                         {options}
                         {sharedmediaView}

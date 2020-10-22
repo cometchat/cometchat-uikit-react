@@ -29,16 +29,11 @@ import {
   headerCloseStyle,
   messageContainerStyle,
   parentMessageStyle,
-  parentMessageContainerStyle,
-  parentMessageWrapperStyle,
-  messageTxtStyle,
-  messageTimestampStyle,
   messageSeparatorStyle,
   messageReplyStyle,
 } from "./style";
 
 import clearIcon from "./resources/clear.svg";
-import blueFile from "./resources/file-blue.svg";
 
 class MessageThread extends React.Component {
 
@@ -300,26 +295,26 @@ class MessageThread extends React.Component {
         const replyText = (replyCount === 1) ? `${replyCount} reply` : `${replyCount} replies`;
 
         seperator = (
-          <div css={messageSeparatorStyle(this.props)}>
-            <span css={messageReplyStyle()}>{replyText}</span>
+          <div css={messageSeparatorStyle(this.props)} className="message__separator">
+            <span css={messageReplyStyle()} className="message__replies">{replyText}</span>
             <hr/>
           </div>
         );
       }
 
       return (
-        <div css={wrapperStyle(this.props)}>
-          <div css={headerStyle(this.props)}>
-            <div css={headerWrapperStyle()}>    
-              <div css={headerDetailStyle()}>
-                <h6 css={headerTitleStyle()}>Thread</h6>
-                <span css={headerNameStyle()}>{this.props.item.name}</span>
+        <div css={wrapperStyle(this.props)} className="thread__chat">
+          <div css={headerStyle(this.props)} className="chat__header">
+            <div css={headerWrapperStyle()} className="header__wrapper">    
+              <div css={headerDetailStyle()} className="header__details">
+                <h6 css={headerTitleStyle()} className="header__title">Thread</h6>
+                <span css={headerNameStyle()} className="header__username">{this.props.item.name}</span>
               </div>
-              <div css={headerCloseStyle(clearIcon)} onClick={() => this.props.actionGenerated("closeThreadClicked")}></div>
+              <div css={headerCloseStyle(clearIcon)} className="header__close" onClick={() => this.props.actionGenerated("closeThreadClicked")}></div>
             </div>
           </div>
-          <div css={messageContainerStyle()}>
-            <div css={parentMessageStyle(this.props.parentMessage)}>{parentMessage}</div>
+          <div css={messageContainerStyle()} className="chat__message__container">
+            <div css={parentMessageStyle(this.props.parentMessage)} className="parent__message">{parentMessage}</div>
             {seperator}
             <MessageList
             theme={this.props.theme}
@@ -328,6 +323,7 @@ class MessageThread extends React.Component {
             type={this.props.type}
             scrollToBottom={this.state.scrollToBottom}
             config={this.props.config}
+            widgetsettings={this.props.widgetsettings}
             parentMessageId={this.props.parentMessage.id}
             loggedInUser={this.props.loggedInUser}
             actionGenerated={this.actionHandler} />
@@ -335,6 +331,7 @@ class MessageThread extends React.Component {
             theme={this.props.theme}
             item={this.props.item} 
             type={this.props.type}
+            widgetsettings={this.props.widgetsettings}
             parentMessageId={this.props.parentMessage.id}
             messageToBeEdited={this.state.messageToBeEdited}
             replyPreview={this.state.replyPreview}

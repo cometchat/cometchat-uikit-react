@@ -3,8 +3,9 @@ import twemoji from "twemoji";
 import ReactHtmlParser from "react-html-parser";
 
 /** @jsx jsx */
-import { jsx } from '@emotion/core'
+import { jsx } from '@emotion/core';
 
+import { linkify } from "../../util/common";
 import { SvgAvatar } from '../../util/svgavatar';
 
 import Avatar from "../Avatar";
@@ -25,6 +26,7 @@ import {
   previewDataStyle,
   previewTitleStyle,
   previewDescStyle,
+  previewTextStyle,
   previewLinkStyle,
   messageTxtWrapperStyle,
   messageTxtStyle,
@@ -70,9 +72,10 @@ class ReceiverMessageBubble extends React.Component {
 
   getMessageText = () => {
 
-    let messageText = null;
+    let messageText = this.state.message.text;
+    const formattedText = linkify(this.state.message.text);
 
-    const emojiParsedMessage = twemoji.parse(this.state.message.text, { folder: "svg", ext: ".svg" });
+    const emojiParsedMessage = twemoji.parse(formattedText, { folder: "svg", ext: ".svg" });
     const parsedMessage = ReactHtmlParser(emojiParsedMessage);
     const emojiMessage = parsedMessage.filter(message => (message instanceof Object && message.type === "img"));
 
@@ -87,8 +90,8 @@ class ReceiverMessageBubble extends React.Component {
     }
 
     messageText = (
-      <div css={messageTxtWrapperStyle(this.props)}>
-        <p css={messageTxtStyle(parsedMessage, emojiMessage, showVariation)}>{parsedMessage}</p>
+      <div css={messageTxtWrapperStyle(this.props)} className="message__txt__wrapper">
+        <p css={messageTxtStyle(parsedMessage, emojiMessage, showVariation)} className="message__txt">{parsedMessage}</p>
       </div>
     );
 
@@ -101,7 +104,7 @@ class ReceiverMessageBubble extends React.Component {
     if (this.state.message.receiverType === 'group') {
 
       avatar = (
-        <div css={messageThumbnailStyle()}>
+        <div css={messageThumbnailStyle()} className="message__thumbnail">
           <Avatar
           cornerRadius="50%"
           borderColor={this.props.theme.color.secondary}
@@ -110,10 +113,10 @@ class ReceiverMessageBubble extends React.Component {
         </div>
       );
 
-      name = (<div css={nameWrapperStyle(avatar)}><span css={nameStyle(this.props)}>{this.state.message.sender.name}</span></div>);
+      name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span></div>);
     }
 
-    let messageText = null;
+    let messageText = this.getMessageText();
     if (this.state.message.hasOwnProperty("metadata")) {
 
       const metadata = this.state.message.metadata;
@@ -131,44 +134,37 @@ class ReceiverMessageBubble extends React.Component {
             const pattern = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)(\S+)?/;
             const linkText = (linkObject["url"].match(pattern)) ? "View on Youtube" : "Visit";
             messageText = (
-              <div css={messagePreviewContainerStyle(this.props)}>
-                <div css={messagePreviewWrapperStyle()}>
-                  <div css={previewImageStyle(linkObject["image"])}></div>
-                  <div css={previewDataStyle(this.props)}>
-                    <div css={previewTitleStyle(this.props)}><span>{linkObject["title"]}</span></div>
-                    <div css={previewDescStyle(this.props)}><span>{linkObject["description"]}</span></div>
+              <div css={messagePreviewContainerStyle(this.props)} className="message__preview">
+                <div css={messagePreviewWrapperStyle()} className="preview__card">
+                  <div css={previewImageStyle(linkObject["image"])} className="card__image"></div>
+                  <div css={previewDataStyle(this.props)} className="card__info">
+                    <div css={previewTitleStyle(this.props)} className="card__title"><span>{linkObject["title"]}</span></div>
+                    <div css={previewDescStyle(this.props)} className="card__desc"><span>{linkObject["description"]}</span></div>
+                    <div css={previewTextStyle(this.props)} className="card__text">{this.getMessageText()}</div>
                   </div>
-                  <div css={previewLinkStyle(this.props)}><a href={linkObject["url"]} target="_blank" rel="noopener noreferrer">{linkText}</a></div>
+                  <div css={previewLinkStyle(this.props)} className="card__link"><a href={linkObject["url"]} target="_blank" rel="noopener noreferrer">{linkText}</a></div>
                 </div>
               </div>
             );
-          } else {
-            messageText = this.getMessageText();
           }
-        } else {
-          messageText = this.getMessageText();
         }
       }
-
-    } else {
-
-      messageText = this.getMessageText();
     }
 
     return (
-      <div css={messageContainerStyle()} className="message__container">
-        <div css={messageWrapperStyle()}>
+      <div css={messageContainerStyle()} className="receiver__message__container message__text">
+        <ToolTip {...this.props} message={this.state.message} name={name} />
+        <div css={messageWrapperStyle()} className="message__wrapper">
           {avatar}
-          <div css={messageDetailStyle()}>
+          <div css={messageDetailStyle()} className="message__details">
             {name}
-            <div css={messageTxtContainerStyle()}>{messageText}</div>
-            <div css={messageInfoWrapperStyle()}>
-              <span css={messageTimestampStyle(this.props)}>{new Date(this.state.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+            <div css={messageTxtContainerStyle()} className="message__text__container">{messageText}</div>
+            <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+              <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.state.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
               <ReplyCount {...this.props} message={this.state.message} />
             </div>
           </div>
         </div>
-        <ToolTip {...this.props} message={this.state.message} name={name} />
       </div>
     )
   }

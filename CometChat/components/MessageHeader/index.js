@@ -2,7 +2,6 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
-import { CometChat } from "@cometchat-pro/chat"
 
 import { MessageHeaderManager } from "./controller";
 
@@ -118,7 +117,7 @@ class MessageHeader extends React.Component {
         && this.props.item.guid === item.guid
         && this.props.loggedInUser.uid !== groupUser.uid) {
 
-          let membersCount = parseInt(item.membersCount) - 1;
+          let membersCount = parseInt(item.membersCount);
           const status = `${membersCount} members`;
           this.setState({status: status});
         }
@@ -126,7 +125,7 @@ class MessageHeader extends React.Component {
       case enums.GROUP_MEMBER_JOINED:
         if(this.props.type === "group" && this.props.item.guid === item.guid) {
 
-          let membersCount = parseInt(item.membersCount) + 1;
+          let membersCount = parseInt(item.membersCount);
           const status = `${membersCount} members`;
           this.setState({status: status});
         }
@@ -134,7 +133,7 @@ class MessageHeader extends React.Component {
       case enums.GROUP_MEMBER_ADDED:
         if(this.props.type === "group" && this.props.item.guid === item.guid) {
 
-          let membersCount = parseInt(item.membersCount) + 1;
+          let membersCount = parseInt(item.membersCount);
           const status = `${membersCount} members`;
           this.setState({status: status});
         }
@@ -220,7 +219,7 @@ class MessageHeader extends React.Component {
     }
 
     let status = (
-      <span css={chatStatusStyle(this.props, this.state)}
+      <span css={chatStatusStyle(this.props, this.state)} className="user__status"
       onMouseEnter={event => this.toggleTooltip(event, true)}
       onMouseLeave={event => this.toggleTooltip(event, false)}>{this.state.status}</span>
     );
@@ -262,10 +261,10 @@ class MessageHeader extends React.Component {
     }
 
     return (
-      <div css={chatHeaderStyle(this.props)}>
-        <div css={chatDetailStyle()}>
-          <div css={chatSideBarBtnStyle(menuIcon, this.props)} onClick={() => this.props.actionGenerated("menuClicked")}></div>
-          <div css={chatThumbnailStyle()}>
+      <div css={chatHeaderStyle(this.props)} className="chat__header">
+        <div css={chatDetailStyle()} className="chat__details">
+          <div css={chatSideBarBtnStyle(menuIcon, this.props)} className="chat__sidebar-menu" onClick={() => this.props.actionGenerated("menuClicked")}></div>
+          <div css={chatThumbnailStyle()} className="chat__thumbnail">
             <Avatar 
             image={image} 
             cornerRadius="18px" 
@@ -273,14 +272,14 @@ class MessageHeader extends React.Component {
             borderWidth="1px" />
             {presence}
           </div>
-          <div css={chatUserStyle()}>
-            <h6 css={chatNameStyle()} 
+          <div css={chatUserStyle()} className="chat__user">
+            <h6 css={chatNameStyle()} className="user__name"
             onMouseEnter={event => this.toggleTooltip(event, true)} 
             onMouseLeave={event => this.toggleTooltip(event, false)}>{this.props.item.name}</h6>
             {status}
           </div>
         </div>
-        <div css={chatOptionWrapStyle()}>
+        <div css={chatOptionWrapStyle()} className="chat__options">
           {audioCallBtn}
           {videoCallBtn}
           {viewDetailBtn}

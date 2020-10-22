@@ -183,7 +183,7 @@ class ReceiverImageBubble extends React.Component {
     if (this.props.message.receiverType === 'group') {
 
       avatar = (
-        <div css={messageThumbnailStyle()}>
+        <div css={messageThumbnailStyle()} className="message__thumbnail">
           <Avatar
             cornerRadius="50%"
             borderColor={this.props.theme.color.secondary}
@@ -192,23 +192,23 @@ class ReceiverImageBubble extends React.Component {
         </div>
       );
 
-      name = (<div css={(nameWrapperStyle(avatar))}><span css={nameStyle(this.props)}>{this.state.message.sender.name}</span></div>);
+      name = (<div css={(nameWrapperStyle(avatar))} className="message__name__wrapper"><span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span></div>);
     }
 
     return (
-      <div css={messageContainerStyle()} className="message__container">
+      <div css={messageContainerStyle()} className="receiver__message__container message__image">
         <ToolTip {...this.props} message={this.state.message} name={name} />
-        <div css={messageWrapperStyle()}>
+        <div css={messageWrapperStyle()} className="message__wrapper">
           {avatar}
-          <div css={messageDetailStyle(name)}>
+          <div css={messageDetailStyle(name)} className="message__details">
             {name}
-            <div css={messageImgContainerStyle()}>
-              <div css={messageImgWrapperStyle(this.props)} onClick={this.open}>
+            <div css={messageImgContainerStyle()} className="message__image__container">
+              <div css={messageImgWrapperStyle(this.props)} onClick={this.open} className="message__image__wrapper">
                 <img src={this.state.imageUrl} alt="message" ref={el => { this.imgRef = el; }} />
               </div>
             </div>
-            <div css={messageInfoWrapperStyle()}>
-              <span css={messageTimestampStyle(this.props)}>{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+            <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+              <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
               <ReplyCount {...this.props} message={this.state.message} />
             </div>
           </div>
