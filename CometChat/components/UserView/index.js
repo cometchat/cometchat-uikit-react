@@ -1,4 +1,3 @@
-import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
@@ -37,8 +36,8 @@ const userview = (props) => {
   } 
   
   return (
-    <div css={listItem(props)} onClick={() => props.clickeHandler(props.user)}>
-      <div css={itemThumbnailStyle()}>
+    <div css={listItem(props)} onClick={() => props.clickeHandler(props.user)} className="list__item">
+      <div css={itemThumbnailStyle()} className="list__item__thumbnail">
         <Avatar 
         image={props.user.avatar} 
         cornerRadius="50%" 
@@ -46,11 +45,11 @@ const userview = (props) => {
         borderWidth="1px" />
         {userPresence}
       </div>
-      <div css={itemDetailStyle()}>
-        <div css={itemNameStyle()} 
+      <div css={itemDetailStyle()} className="list__item__details">
+        <div css={itemNameStyle()} className="item__details__name"  
         onMouseEnter={event => toggleTooltip(event, true)} 
         onMouseLeave={event => toggleTooltip(event, false)}>{props.user.name}</div>
-        <div css={itemDescStyle(props.theme)}></div>
+        <div css={itemDescStyle(props.theme)} className="item__details__desc"></div>
       </div>
     </div>
   )

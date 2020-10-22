@@ -1,14 +1,15 @@
 export const sectionStyle = (props) => {
 
-    const containerHeight = (props.containerHeight) ? {
+    const containerHeightProp = (props.containerHeight) ? {
         height: `calc(100% - ${props.containerHeight})`
     } : {
         height: "calc(100% - 20px)"
     };
+
     
     return {
         width: "100%",
-        ...containerHeight
+        ...containerHeightProp
     }
 }
 

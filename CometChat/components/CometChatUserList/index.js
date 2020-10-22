@@ -221,11 +221,10 @@ class CometChatUserList extends React.PureComponent {
   render() {
 
     let messageContainer = null;
-    
     if(this.state.userlist.length === 0) {
       messageContainer = (
-        <div css={contactMsgStyle()}>
-          <p css={contactMsgTxtStyle(this.theme)}>{this.decoratorMessage}</p>
+        <div css={contactMsgStyle()} className="contacts__decorator-message">
+          <p css={contactMsgTxtStyle(this.theme)} className="decorator-message">{this.decoratorMessage}</p>
         </div>
       );
     }
@@ -238,7 +237,7 @@ class CometChatUserList extends React.PureComponent {
       let firstChar = null;
       if (chr !== currentLetter) {
         currentLetter = chr;
-        firstChar = (<div css={contactAlphabetStyle()}>{currentLetter}</div>);
+        firstChar = (<div css={contactAlphabetStyle()} className="contacts__list__alphabet-filter">{currentLetter}</div>);
       } else {
         firstChar = null;
       }
@@ -257,28 +256,29 @@ class CometChatUserList extends React.PureComponent {
 
     });
 
-    let closeBtn = (<div css={contactHeaderCloseStyle(navigateIcon)} onClick={this.handleMenuClose}></div>);
+    let closeBtn = (<div css={contactHeaderCloseStyle(navigateIcon)} className="header__close" onClick={this.handleMenuClose}></div>);
     if (!this.props.hasOwnProperty("enableCloseMenu") || (this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0)) {
       closeBtn = null;
     }
 
     return (
-      <div css={contactWrapperStyle()}>
-        <div css={contactHeaderStyle(this.theme)}>
+      <div css={contactWrapperStyle()} className="contacts">
+        <div css={contactHeaderStyle(this.theme)} className="contacts__header">
           {closeBtn}
-          <h4 css={contactHeaderTitleStyle(this.props)}>Contacts</h4>
+          <h4 css={contactHeaderTitleStyle(this.props)} className="header__title">Contacts</h4>
           <div></div>
         </div>
-        <div css={contactSearchStyle()}>
+        <div css={contactSearchStyle()} className="contacts__search">
           <input
           type="text" 
           autoComplete="off" 
           css={contactSearchInputStyle(this.theme, searchIcon)}
+          className="search__input" 
           placeholder="Search"
           onChange={this.searchUsers} />
         </div>
         {messageContainer}
-        <div css={contactListStyle()} onScroll={this.handleScroll} ref={el => this.userListRef = el}>{users}</div>
+        <div css={contactListStyle()} className="contacts__list" onScroll={this.handleScroll} ref={el => this.userListRef = el}>{users}</div>
       </div>
     );
   }

@@ -3,8 +3,6 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
-import { CometChat } from "@cometchat-pro/chat";
-
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
 import ReadReciept from "../ReadReciept";
@@ -90,18 +88,18 @@ class SenderPollBubble extends React.Component {
         }
 
         return (
-            <div css={messageContainerStyle()}>
+            <div css={messageContainerStyle()} className="sender__message__container message__poll">
                 <ToolTip {...this.props} message={this.message} />    
-                <div css={messageWrapperStyle()}>
-                    <div css={messageTxtWrapperStyle(this.props)}>
-                        <p css={pollQuestionStyle()}>{pollExtensionData.question}</p>
-                        <ul css={pollAnswerStyle(this.props)}>
+                <div css={messageWrapperStyle()} className="message__wrapper">
+                    <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
+                        <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
+                        <ul css={pollAnswerStyle(this.props)} className="poll__options">
                             {pollOptions}
                         </ul>
-                        <p css={pollTotalStyle()}>{totalText}</p>
+                        <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>
                     </div>
                 </div>
-                <div css={messageInfoWrapperStyle()}>
+                <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
                     <ReplyCount theme={this.props.theme} {...this.props} message={this.message} />
                     <ReadReciept theme={this.props.theme} {...this.props} />
                 </div>

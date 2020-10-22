@@ -9,6 +9,7 @@ import { CometChatManager } from "../../util/controller";
 import { ConversationListManager } from "./controller";
 import { SvgAvatar } from '../../util/svgavatar';
 import * as enums from '../../util/enums.js';
+import { validateWidgetSettings } from "../../util/common";
 
 import ConversationView from "../ConversationView";
 
@@ -221,7 +222,7 @@ class CometChatConversationList extends React.Component {
     }
   }
 
-  playAudio = () => {
+  playAudio = (message) => {
 
     //if it is disabled for chat wigdet in dashboard
     if (this.props.hasOwnProperty("widgetsettings")
@@ -230,6 +231,12 @@ class CometChatConversationList extends React.Component {
     && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") === false
     || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages")
     && this.props.widgetsettings.main["enable_sound_for_messages"] === false))) {
+      return false;
+    }
+
+    if (message.category === enums.CATEGORY_ACTION 
+      && message.type === enums.ACTION_TYPE_GROUPMEMBER 
+      && validateWidgetSettings(this.props.widgetsettings, "hide_join_leave_notifications") === true) {
       return false;
     }
 
@@ -315,7 +322,7 @@ class CometChatConversationList extends React.Component {
         this.setState({ conversationlist: conversationList });
 
         if (notification) {
-          this.playAudio();
+          this.playAudio(message);
         }
 
       } else {
@@ -328,7 +335,7 @@ class CometChatConversationList extends React.Component {
         this.setState({ conversationlist: conversationList });
 
         if (notification) {
-          this.playAudio();
+          this.playAudio(message);
         }
       }
 
@@ -357,7 +364,7 @@ class CometChatConversationList extends React.Component {
         conversationList.splice(conversationKey, 1);
         conversationList.unshift(newConversationObj);
         this.setState({ conversationlist: conversationList });
-        this.playAudio();
+        this.playAudio(message);
 
       } else {
 
@@ -377,7 +384,7 @@ class CometChatConversationList extends React.Component {
           let newConversationObj = { ...conversationObj, conversationWith: newConversationWithObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount };
           conversationList.unshift(newConversationObj);
           this.setState({ conversationlist: conversationList });
-          this.playAudio();
+          this.playAudio(message);
         }
 
       }
@@ -413,7 +420,7 @@ class CometChatConversationList extends React.Component {
           conversationList.splice(conversationKey, 1);
           conversationList.unshift(newConversationObj);
           this.setState({ conversationlist: conversationList });
-          this.playAudio();
+          this.playAudio(message);
         }
       }
 
@@ -447,7 +454,7 @@ class CometChatConversationList extends React.Component {
         conversationList.splice(conversationKey, 1);
         conversationList.unshift(newConversationObj);
         this.setState({ conversationlist: conversationList });
-        this.playAudio();
+        this.playAudio(message);
 
       } 
 
@@ -479,7 +486,7 @@ class CometChatConversationList extends React.Component {
           conversationList.splice(conversationKey, 1);
           conversationList.unshift(newConversationObj);
           this.setState({ conversationlist: conversationList });
-          this.playAudio();
+          this.playAudio(message);
         }
       }
 
@@ -597,26 +604,26 @@ class CometChatConversationList extends React.Component {
     
     if(this.state.conversationlist.length === 0) {
       messageContainer = (
-        <div css={chatsMsgStyle()}>
-          <p css={chatsMsgTxtStyle(this.theme)}>{this.decoratorMessage}</p>
+        <div css={chatsMsgStyle()} className="chats__decorator-message">
+          <p css={chatsMsgTxtStyle(this.theme)} className="decorator-message">{this.decoratorMessage}</p>
         </div>
       );
     }
 
-    let closeBtn = (<div css={chatsHeaderCloseStyle(navigateIcon)} onClick={this.handleMenuClose}></div>);
+    let closeBtn = (<div css={chatsHeaderCloseStyle(navigateIcon)} className="header__close" onClick={this.handleMenuClose}></div>);
     if (!this.props.hasOwnProperty("enableCloseMenu") || (this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0)) {
       closeBtn = null;
     }
 
     return (
-      <div css={chatsWrapperStyle()}>
-        <div css={chatsHeaderStyle(this.theme)}>
+      <div css={chatsWrapperStyle()} className="chats">
+        <div css={chatsHeaderStyle(this.theme)} className="chats__header">
           {closeBtn}
-          <h4 css={chatsHeaderTitleStyle(this.props)}>Chats</h4>
+          <h4 css={chatsHeaderTitleStyle(this.props)} className="header__title">Chats</h4>
           <div></div>
         </div>
         {messageContainer}
-        <div css={chatsListStyle()} onScroll={this.handleScroll} ref={el => this.chatListRef = el}>{conversationList}</div>
+        <div css={chatsListStyle()} className="chats__list" onScroll={this.handleScroll} ref={el => this.chatListRef = el}>{conversationList}</div>
       </div>
     );
   }

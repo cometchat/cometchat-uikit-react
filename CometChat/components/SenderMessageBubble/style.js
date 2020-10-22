@@ -84,6 +84,10 @@ export const previewDataStyle = (props) => {
 export const previewTitleStyle = (props) => {
 
     return {
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+        textAlign: "left",
+        width: "auto",
         color: `${props.theme.color.helpText}`,
         fontWeight: "700",
         marginBottom: "8px",
@@ -93,9 +97,29 @@ export const previewTitleStyle = (props) => {
 export const previewDescStyle = (props) => {
 
     return {
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+        textAlign: "left",
+        width: "auto",
         color: `${props.theme.color.helpText}`,
         fontStyle: "italic",
         fontSize: "13px",
+    }
+}
+
+export const previewTextStyle = (props) => {
+
+    return {
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+        textAlign: "left",
+        width: "auto",
+        ".message__txt__wrapper": {
+            backgroundColor: "transparent",
+            color: `${props.theme.color.helpText}`,
+            fontStyle: "normal",
+            padding: "8px 0",
+        }  
     }
 }
 
@@ -114,7 +138,7 @@ export const previewLinkStyle = (props) => {
     }
 }
 
-export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation) => {
+export const messageTxtStyle = (props, parsedMessage, emojiMessage, showVariation) => {
 
     let emojiAlignmentProp = {
         " > img": {
@@ -168,6 +192,24 @@ export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation) => {
         wordBreak: "break-word",
         textAlign: "left",
         width: "auto",
+        " a": {
+            color: "#0432FF",
+            "&:hover": {
+                color: "#04009D"
+            }
+        },
+        " a[href^='mailto:']": {
+            color: "#F38C00",
+            "&:hover": {
+                color: "#F36800"
+            }
+        },
+        " a[href^='tel:']": {
+            color: "#3802DA",
+            "&:hover": {
+                color: "#2D038F"
+            }
+        },
         ...emojiAlignmentProp,
         ...emojiProp
     }

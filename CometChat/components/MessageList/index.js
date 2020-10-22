@@ -8,7 +8,8 @@ import { CometChat } from "@cometchat-pro/chat";
 import { CometChatManager } from "../../util/controller";
 import { MessageListManager } from "./controller";
 
-import * as enums from '../../util/enums.js';
+import * as enums from "../../util/enums.js";
+import { validateWidgetSettings } from "../../util/common";
 
 import SenderMessageBubble from "../SenderMessageBubble";
 import ReceiverMessageBubble from "../ReceiverMessageBubble";
@@ -49,6 +50,7 @@ class MessageList extends React.PureComponent {
     this.state = {
       onItemClick: null,
     }
+    
     this.loggedInUser = this.props.loggedInUser;
     this.messagesEnd = React.createRef();
   }
@@ -56,9 +58,9 @@ class MessageList extends React.PureComponent {
   componentDidMount() {
 
     if(this.props.parentMessageId) {
-      this.MessageListManager = new MessageListManager(this.props.item, this.props.type,this.props.parentMessageId);
+      this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type,this.props.parentMessageId);
     } else {
-      this.MessageListManager = new MessageListManager(this.props.item, this.props.type);
+      this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type);
     }
     
     this.getMessages();
@@ -75,9 +77,9 @@ class MessageList extends React.PureComponent {
       this.MessageListManager.removeListeners();
 
       if (this.props.parentMessageId) {
-        this.MessageListManager = new MessageListManager(this.props.item, this.props.type, this.props.parentMessageId);
+        this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type, this.props.parentMessageId);
       } else {
-        this.MessageListManager = new MessageListManager(this.props.item, this.props.type);
+        this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type);
       }
 
       this.getMessages();
@@ -88,9 +90,9 @@ class MessageList extends React.PureComponent {
       this.MessageListManager.removeListeners();
 
       if (this.props.parentMessageId) {
-        this.MessageListManager = new MessageListManager(this.props.item, this.props.type, this.props.parentMessageId);
+        this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type, this.props.parentMessageId);
       } else {
-        this.MessageListManager = new MessageListManager(this.props.item, this.props.type);
+        this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type);
       }
       
       this.getMessages();
@@ -99,7 +101,7 @@ class MessageList extends React.PureComponent {
     } else if(prevProps.parentMessageId !== this.props.parentMessageId) {
         
       this.MessageListManager.removeListeners();
-      this.MessageListManager = new MessageListManager(this.props.item, this.props.type, this.props.parentMessageId);
+      this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type, this.props.parentMessageId);
       this.getMessages();
       this.MessageListManager.attachListeners(this.messageUpdated);
 
@@ -399,6 +401,10 @@ class MessageList extends React.PureComponent {
 
   callUpdated = (message) => {
 
+    if (validateWidgetSettings(this.props.widgetsettings, "show_call_notifications") === false) {
+      return false;
+    }
+    
     if (this.props.type === 'group'
       && message.getReceiverType() === 'group'
       && message.getReceiverId() === this.props.item.guid) {
@@ -567,10 +573,11 @@ class MessageList extends React.PureComponent {
   getActionMessageComponent = (message, key) => {
 
     let component = null;
+    //console.log("getActionMessageComponent message", message);
     if(message.message) {
 
       component = (
-        <div css={actionMessageStyle()} key={key}><p css={actionMessageTxtStyle()}>{message.message}</p></div>
+        <div css={actionMessageStyle()} className="message__action" key={key}><p css={actionMessageTxtStyle()}>{message.message}</p></div>
       );
 
       //if action messages are set to hide in config
@@ -627,8 +634,8 @@ class MessageList extends React.PureComponent {
     let messageContainer = null;
     if (this.props.messages.length === 0) {
       messageContainer = (
-        <div css={decoratorMessageStyle()}>
-          <p css={decoratorMessageTxtStyle(this.props)}>{this.decoratorMessage}</p>
+        <div css={decoratorMessageStyle()} className="messages__decorator-message">
+          <p css={decoratorMessageTxtStyle(this.props)} className="decorator-message">{this.decoratorMessage}</p>
         </div>
       );
     }
@@ -639,7 +646,7 @@ class MessageList extends React.PureComponent {
       let dateSeparator = null;
       const messageSentDate = new Date(message.sentAt * 1000).toLocaleDateString();
       if (cDate !== messageSentDate) {
-        dateSeparator = (<div css={messageDateContainerStyle()}><span css={messageDateStyle(this.props)}>{messageSentDate}</span></div>);
+        dateSeparator = (<div css={messageDateContainerStyle()} className="message__date"><span css={messageDateStyle(this.props)}>{messageSentDate}</span></div>);
       }
       cDate = messageSentDate;
 

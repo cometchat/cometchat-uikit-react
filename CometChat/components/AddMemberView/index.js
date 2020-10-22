@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
@@ -55,10 +55,10 @@ const AddMemberView = (props) => {
   
   return (
     <tr css={tableRowStyle(props)}>
-      <td css={tableColumnStyle()}
+      <td css={tableColumnStyle()} className="userinfo"
       onMouseEnter={event => toggleTooltip(event, true)}
       onMouseLeave={event => toggleTooltip(event, false)}>
-        <div css={avatarStyle()}>
+        <div css={avatarStyle()} className="avatar">
           <Avatar 
           image={props.user.avatar} 
           cornerRadius="50%" 
@@ -71,9 +71,9 @@ const AddMemberView = (props) => {
           borderColor={props.theme.color.darkSecondary}
           borderWidth="1px" />
         </div>
-        <div css={nameStyle()}>{props.user.name}</div>
+        <div css={nameStyle()} className="name">{props.user.name}</div>
       </td>
-      <td css={selectionColumnStyle()}>
+      <td css={selectionColumnStyle()} className="selection">
           <input 
           css={selectionBoxStyle(inactiveIcon, activeIcon)}
           type="checkbox" 

@@ -84,28 +84,38 @@ class CometChatUserInfoScreen extends React.Component {
     }
 
     return (
-      <div css={userInfoScreenStyle(this.theme)}>
-        <div css={headerStyle(this.theme)}>
-          <h4 css={headerTitleStyle()}>More</h4>
+      <div css={userInfoScreenStyle(this.theme)} className="userinfo">
+        <div css={headerStyle(this.theme)} className="userinfo__header">
+          <h4 css={headerTitleStyle()} className="header__title">More</h4>
         </div>
-        <div css={detailStyle()}>
-          <div css={thumbnailStyle()}>{avatar}</div>
-          <div css={userDetailStyle()}>
-            <div css={userNameStyle()}>{this.state.user.name}</div>
-            <p css={userStatusStyle(this.theme)}>Online</p>
+        <div css={detailStyle()} className="userinfo__detail">
+          <div css={thumbnailStyle()} className="detail__thumbnail">{avatar}</div>
+          <div css={userDetailStyle()} className="detail__user">
+            <div css={userNameStyle()} className="user__name">{this.state.user.name}</div>
+            <p css={userStatusStyle(this.theme)} className="user__status">Online</p>
           </div>
         </div>
-        <div css={optionsStyle()}>
-          <div css={optionTitleStyle(this.theme)}>Preferences</div>
-          <div css={optionListStyle()}>
-            <div css={optionStyle(notificationIcon)}><div css={optionNameStyle()}>Notifications</div></div>
-            <div css={optionStyle(privacyIcon)}><div css={optionNameStyle()}>Privacy and Security</div></div>
-            <div css={optionStyle(chatIcon)}><div css={optionNameStyle()}>Chats</div></div>
+        <div css={optionsStyle()} className="userinfo__options">
+          <div css={optionTitleStyle(this.theme)} className="options__title">Preferences</div>
+          <div css={optionListStyle()} className="options_list">
+            <div css={optionStyle(notificationIcon)} className="option option-notification">
+              <div css={optionNameStyle()} className="option_name">Notifications</div>
+            </div>
+            <div css={optionStyle(privacyIcon)} className="option option-privacy">
+              <div css={optionNameStyle()} className="option_name">Privacy and Security</div>
+            </div>
+            <div css={optionStyle(chatIcon)} className="option option-chats">
+              <div css={optionNameStyle()} className="option_name">Chats</div>
+            </div>
           </div>
-          <div css={optionTitleStyle(this.theme)}>Other</div>
-          <div css={optionListStyle()}>
-            <div css={optionStyle(helpIcon)}><div css={optionNameStyle()}>Help</div></div>
-            <div css={optionStyle(reportIcon)}><div css={optionNameStyle()}>Report a Problem</div></div>
+          <div css={optionTitleStyle(this.theme)} className="options__title">Other</div>
+          <div css={optionListStyle()} className="options_list">
+            <div css={optionStyle(helpIcon)} className="option option-help">
+              <div css={optionNameStyle()} className="option_name">Help</div>
+            </div>
+            <div css={optionStyle(reportIcon)} className="option option-report">
+              <div css={optionNameStyle()} className="option_name">Report a Problem</div>
+            </div>
           </div>
         </div>
       </div>

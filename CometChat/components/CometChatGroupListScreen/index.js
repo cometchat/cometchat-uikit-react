@@ -52,6 +52,7 @@ class CometChatGroupListScreen extends React.Component {
       callmessage: {},
       sidebarview: false,
       imageView: null,
+      groupmessage: {}
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -151,6 +152,15 @@ class CometChatGroupListScreen extends React.Component {
         break;
       case "viewActualImage":
         this.toggleImageView(item);
+        break;
+      case "membersAdded":
+        this.membersAdded(item);
+        break;
+      case "memberUnbanned":
+        this.memberUnbanned(item);
+        break;
+      case "memberScopeChanged":
+        this.memberScopeChanged(item);
         break;
       default:
       break;
@@ -374,12 +384,55 @@ class CometChatGroupListScreen extends React.Component {
     this.setState({ imageView: message });
   }
 
+  membersAdded = (members) => {
+
+    const messageList = [];
+    members.forEach(eachMember => {
+
+      const message = `${this.loggedInUser.name} added ${eachMember.name}`;
+      const sentAt = new Date() / 1000 | 0;
+      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
+      messageList.push(messageObj);
+    });
+
+    this.setState({ groupmessage: messageList });
+  }
+
+  memberUnbanned = (members) => {
+
+    const messageList = [];
+    members.forEach(eachMember => {
+
+      const message = `${this.loggedInUser.name} unbanned ${eachMember.name}`;
+      const sentAt = new Date() / 1000 | 0;
+      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
+      messageList.push(messageObj);
+    });
+
+    this.setState({ groupmessage: messageList });
+  }
+
+  memberScopeChanged = (members) => {
+
+    const messageList = [];
+
+    members.forEach(eachMember => {
+
+      const message = `${this.loggedInUser.name} made ${eachMember.name} ${eachMember.scope}`;
+      const sentAt = new Date() / 1000 | 0;
+      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
+      messageList.push(messageObj);
+    });
+
+    this.setState({ groupmessage: messageList });
+  }
+
   render() {
 
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div css={groupScreenSecondaryStyle(this.theme)}>
+        <div css={groupScreenSecondaryStyle(this.theme)} className="groups__secondary-view">
           <MessageThread
           theme={this.theme}
           tab={this.state.tab}
@@ -396,7 +449,7 @@ class CometChatGroupListScreen extends React.Component {
     if(this.state.viewdetailscreen) {
 
       detailScreen = (
-        <div css={groupScreenSecondaryStyle(this.theme)}>
+        <div css={groupScreenSecondaryStyle(this.theme)} className="groups__secondary-view">
         <CometChatGroupDetail
           theme={this.theme}
           item={this.state.item} 
@@ -417,6 +470,7 @@ class CometChatGroupListScreen extends React.Component {
         type={this.state.type}
         composedthreadmessage={this.state.composedthreadmessage}
         callmessage={this.state.callmessage}
+        groupmessage={this.state.groupmessage}
         loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
       );
@@ -428,8 +482,8 @@ class CometChatGroupListScreen extends React.Component {
     }
 
     return (
-      <div css={groupScreenStyle(this.theme)}>
-        <div css={groupScreenSidebarStyle(this.state, this.theme)}>
+      <div css={groupScreenStyle(this.theme)} className="cometchat cometchat--groups">
+        <div css={groupScreenSidebarStyle(this.state, this.theme)} className="groups__sidebar">
           <CometChatGroupList
           theme={this.theme}
           item={this.state.item}
@@ -441,7 +495,7 @@ class CometChatGroupListScreen extends React.Component {
           actionGenerated={this.actionHandler}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
-        <div css={groupScreenMainStyle(this.state)}>{messageScreen}</div>
+        <div css={groupScreenMainStyle(this.state)} className="groups__main">{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
         <CallAlert
@@ -453,6 +507,7 @@ class CometChatGroupListScreen extends React.Component {
         type={this.state.type}
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
+        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
         {imageView}
       </div>

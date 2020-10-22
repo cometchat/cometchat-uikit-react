@@ -162,14 +162,14 @@ class SenderImageBubble extends React.Component {
 
     return (
       <React.Fragment>
-        <div css={messageContainerStyle()} className="message__container">
+        <div css={messageContainerStyle()} className="sender__message__container message__image">
           <ToolTip {...this.props} message={this.state.message} />
-          <div css={messageWrapperStyle()}>
-            <div css={messageImgWrapper(this.props)} onClick={this.open}>
+          <div css={messageWrapperStyle()} className="message__wrapper">
+            <div css={messageImgWrapper(this.props)} onClick={this.open} className="message__img__wrapper">
               <img src={this.state.imageUrl} alt="message" ref={el => { this.imgRef = el; }} />
             </div>
           </div>
-          <div css={messageInfoWrapperStyle()}>
+          <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
             <ReplyCount {...this.props} message={this.state.message} />
             <ReadReciept {...this.props} />
           </div>

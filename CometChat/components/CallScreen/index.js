@@ -151,8 +151,8 @@ class CallScreen extends React.PureComponent {
   }
 
   outgoingCallAccepted = (call) => {
-
-    if (this.state.outgoingCallScreen) {
+    
+    if (this.state.outgoingCallScreen === true) {
       this.pauseOutgoingAlert();
       this.setState({ outgoingCallScreen: false, callInProgress: call });
       this.startCall(call);
@@ -221,25 +221,61 @@ class CallScreen extends React.PureComponent {
           //console.log("User joined call:", enums.USER_JOINED, user);
           /* this method can be use to display message or perform any actions if someone joining the call */
 
-          //this.markMessageAsRead(call);
-          this.props.actionGenerated("userJoinedCall", user);
+          //call initiator gets the same info in outgoingcallaccpeted event
+          if (call.callInitiator.uid !== this.props.loggedInUser.uid && call.callInitiator.uid !== user.uid) {
+
+            this.markMessageAsRead(call);
+
+            const callMessage = { 
+              "category": call.category, 
+              "type": call.type, 
+              "action": call.action, 
+              "status": call.status, 
+              "callInitiator": call.callInitiator,
+              "callReceiver": call.callReceiver,
+              "receiverId": call.receiverId,
+              "receiverType": call.receiverType,
+              "sentAt": call.sentAt,
+              "sender": { ...user }
+            };
+            this.props.actionGenerated("userJoinedCall", callMessage);
+          }
         },
         onUserLeft: user => {
           /* Notification received here if another user left the call. */
           //console.log("User left call:", enums.USER_LEFT, user);
           /* this method can be use to display message or perform any actions if someone leaving the call */
 
-          //this.markMessageAsRead(call);
-          this.props.actionGenerated("userLeftCall", user);
+          //call initiator gets the same info in outgoingcallaccpeted event
+          if (call.callInitiator.uid !== this.props.loggedInUser.uid && call.callInitiator.uid !== user.uid) {
+
+            this.markMessageAsRead(call);
+
+            const callMessage = {
+              "category": call.category,
+              "type": call.type,
+              "action": "left",
+              "status": call.status,
+              "callInitiator": call.callInitiator,
+              "callReceiver": call.callReceiver,
+              "receiverId": call.receiverId,
+              "receiverType": call.receiverType,
+              "sentAt": call.sentAt,
+              "sender": { ...user }
+            };
+
+            this.props.actionGenerated("userLeftCall", callMessage);
+          }
         },
-        onCallEnded: call => {
+        onCallEnded: endedCall => {
           
           /* Notification received here if current ongoing call is ended. */
           //console.log("call ended:", enums.CALL_ENDED, call);
+
           this.setState({ showOutgoingScreen: false, callInProgress: null });
 
-          this.markMessageAsRead(call);
-          this.props.actionGenerated("callEnded", call);
+          this.markMessageAsRead(endedCall);
+          this.props.actionGenerated("callEnded", endedCall);
           /* hiding/closing the call screen can be done here. */
         }
       })
@@ -303,22 +339,24 @@ class CallScreen extends React.PureComponent {
 
       if (this.state.errorScreen) {
         errorScreen = (
-          <div css={errorContainerStyle()}><div>{this.state.errorMessage}</div></div>
+          <div css={errorContainerStyle()} className="callscreen__error__wrapper"><div>{this.state.errorMessage}</div></div>
         );
       }
 
       if (this.state.outgoingCallScreen) {
         outgoingCallScreen = (
-          <div css={callScreenContainerStyle()}>
-            <div css={headerStyle()}>
-              <h6 css={headerNameStyle()}>{this.state.callInProgress.receiver.name}</h6>
-              <span css={headerDurationStyle()}>calling...</span>
+          <div css={callScreenContainerStyle()} className="callscreen__container">
+            <div css={headerStyle()} className="callscreen__header">
+              <h6 css={headerNameStyle()} className="header__name">{this.state.callInProgress.receiver.name}</h6>
+              <span css={headerDurationStyle()} className="header__calling">calling...</span>
             </div>
-            <div css={thumbnailWrapperStyle()}><div css={thumbnailStyle()}>{avatar}</div></div>
+            <div css={thumbnailWrapperStyle()} className="callscreen__thumbnail__wrapper">
+              <div css={thumbnailStyle()} className="callscreen__thumbnail">{avatar}</div>
+            </div>
             {errorScreen}
-            <div css={headerIconStyle()}>
-              <div css={iconWrapperStyle()} onClick={this.cancelCall}>
-                <div css={iconStyle(callIcon, 0)}></div>
+            <div css={headerIconStyle()} className="callscreen__icons">
+              <div css={iconWrapperStyle()} className="icon__block" onClick={this.cancelCall}>
+                <div css={iconStyle(callIcon, 0)} className="icon icon__end"></div>
               </div>
             </div>
           </div>
@@ -329,7 +367,7 @@ class CallScreen extends React.PureComponent {
     if (this.state.callInProgress) {
 
       callScreen = (
-        <div css={callScreenWrapperStyle(this.props, keyframes)} ref={(el) => { this.callScreenFrame = el; }}>
+        <div css={callScreenWrapperStyle(this.props, keyframes)} className="callscreen__wrapper" ref={(el) => { this.callScreenFrame = el; }}>
           {outgoingCallScreen}
         </div>
       );

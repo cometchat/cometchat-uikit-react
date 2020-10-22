@@ -112,3 +112,26 @@ export const actionColumnStyle = () => {
         width: "70px"
     }
 }
+
+export const contactMsgStyle = () => {
+
+    return {
+        overflow: "hidden",
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "55%",
+    }
+}
+
+export const contactMsgTxtStyle = (props) => {
+
+    return {
+        margin: "0",
+        height: "30px",
+        color: `${props.theme.color.secondary}`,
+        fontSize: "24px!important",
+        fontWeight: "600"
+    }
+}

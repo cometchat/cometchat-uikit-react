@@ -1,5 +1,3 @@
-import React from 'react';
-
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
@@ -8,7 +6,7 @@ import {
 } from "./style";
 
 const backdrop = (props) => (
-    props.show ? <div css={backdropStyle()}  onClick={props.clicked}></div> : null
+    props.show ? <div css={backdropStyle()} className="modal__backdrop" onClick={props.clicked}></div> : null
 );
 
 export default backdrop;

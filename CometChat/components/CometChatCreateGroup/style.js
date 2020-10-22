@@ -138,26 +138,6 @@ export const tableFootStyle = (props) => {
     }
 }
 
-// export const inputWrapperStyle = () => {
-
-//     return {
-//         position: 'relative',
-//         marginBottom: "25px",
-
-//     }
-// }
-
-// export const modalTitleStyle = () => {
-
-//     return {
-//         lineHeight: "26px",
-//         margin: "3px 0 40px",
-//         textAlign: "center",
-//         fontWeight: "700",
-//         fontSize: "20px",
-//     }
-// }
-
 export const inputStyle = (props) => {
 
     return {
@@ -170,22 +150,5 @@ export const inputStyle = (props) => {
         padding: "6px 8px 6px 30px",
         color: `${props.theme.color.helpText}`,
         fontSize: "15px",
-    }
-}
-
-export const btnContainerStyle = (props) => {
-
-    return {
-        textAlign: "center",
-        "button": {
-            cursor: "pointer",
-            color: `${props.theme.color.white}`,
-            padding: "10px",
-            backgroundColor: `${props.theme.backgroundColor.blue}`,
-            borderRadius: "5px",
-            fontSize: "14px",
-            outline: "0",
-            border: "0",
-        }
     }
 }

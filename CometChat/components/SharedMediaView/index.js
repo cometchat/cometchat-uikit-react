@@ -19,7 +19,6 @@ import {
 
 } from "./style";
 
-import srcIcon from "./resources/1px.png";
 import fileIcon from "./resources/file-blue.svg";
 
 class SharedMediaView extends React.Component {
@@ -167,7 +166,7 @@ class SharedMediaView extends React.Component {
             if(this.state.messagetype === "image" && message.data.url) {
 
                 return (
-                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)}>
+                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__image">
                         <img src={message.data.url} alt="Media Item" />
                     </div>
                 );
@@ -175,7 +174,7 @@ class SharedMediaView extends React.Component {
             } else if (this.state.messagetype === "video" && message.data.url) {
 
                 return (
-                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)}>
+                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__video">
                         <video src={message.data.url} />
                     </div>
                 );
@@ -183,7 +182,7 @@ class SharedMediaView extends React.Component {
             } else if (this.state.messagetype === "file" && message.data.attachments) {
 
                 return (
-                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)}>
+                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__file">
                     <a href={message.data.attachments[0].url} 
                     target="_blank" 
                     rel="noopener noreferrer">{message.data.attachments[0].name}</a>
@@ -198,15 +197,15 @@ class SharedMediaView extends React.Component {
         });
 
         return (
-            <div css={sectionStyle(this.props)}>
-                <h6 css={sectionHeaderStyle(this.props)}>Shared Media</h6>
-                <div css={sectionContentStyle(this.props)} data-id="sharedmedia">
-                    <div css={mediaBtnStyle()}>
+            <div css={sectionStyle(this.props)} className="section section__sharedmedia">
+                <h6 css={sectionHeaderStyle(this.props)} className="section__header">Shared Media</h6>
+                <div css={sectionContentStyle(this.props)} data-id="sharedmedia" className="section__content">
+                    <div css={mediaBtnStyle()} className="media__button">
                         <span css={buttonStyle(this.state, "image")} onClick={() => this.mediaClickHandler("image")}>Photos</span>
                         <span css={buttonStyle(this.state, "video")} onClick={() => this.mediaClickHandler("video")}>Videos</span>
                         <span css={buttonStyle(this.state, "file")} onClick={() => this.mediaClickHandler("file")}>Docs</span>
                     </div>
-                    <div css={mediaItemStyle()}
+                    <div css={mediaItemStyle()} className="media_items" 
                     ref={el => this.messageContainer = el}
                     onScroll={this.handleScroll}>{(messageList.length) ? messageList : "No records found."}
                     </div>

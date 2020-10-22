@@ -329,7 +329,7 @@ class CometChatUserListScreen extends React.Component {
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div css={userScreenSecondaryStyle(this.theme)}>
+        <div css={userScreenSecondaryStyle(this.theme)} className="contacts__secondary-view">
           <MessageThread
           theme={this.theme}
           tab={this.state.tab}
@@ -345,7 +345,7 @@ class CometChatUserListScreen extends React.Component {
     let detailScreen;
     if(this.state.viewdetailscreen) {
       detailScreen = (
-        <div css={userScreenSecondaryStyle(this.theme)}>
+        <div css={userScreenSecondaryStyle(this.theme)} className="contacts__secondary-view">
           <CometChatUserDetail
             theme={this.theme}
             item={this.state.item} 
@@ -373,8 +373,8 @@ class CometChatUserListScreen extends React.Component {
     }
 
     return (
-      <div css={userScreenStyle(this.theme)}>
-        <div css={userScreenSidebarStyle(this.state, this.theme)}>
+      <div css={userScreenStyle(this.theme)} className="cometchat cometchat--contacts">
+        <div css={userScreenSidebarStyle(this.state, this.theme)} className="contacts__sidebar">
           <CometChatUserList
           theme={this.theme}
           item={this.state.item}
@@ -383,7 +383,7 @@ class CometChatUserListScreen extends React.Component {
           actionGenerated={this.actionHandler}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
-        <div css={userScreenMainStyle(this.state)}>{messageScreen}</div>
+        <div css={userScreenMainStyle(this.state)} className="contacts__main">{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
         <CallAlert
@@ -395,6 +395,7 @@ class CometChatUserListScreen extends React.Component {
         type={this.state.type}
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
+        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
         {imageView}
       </div>

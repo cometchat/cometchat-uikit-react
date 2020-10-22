@@ -29,7 +29,7 @@ const ImageView = (props) => {
     return(
         <React.Fragment>
             <Backdrop show={props.open} clicked={props.close} />
-            <div css={imageWrapperStyle(closeIcon)} onClick={props.close}>
+            <div css={imageWrapperStyle(closeIcon)} onClick={props.close} className="image__wrapper">
                 <img src={srcIcon} css={imgStyle()} alt="Full Screen View" ref={el => { imgRef = el; }} />
             </div>            
         </React.Fragment>

@@ -140,7 +140,6 @@ export const tableFootStyle = (props) => {
     }
 }
 
-
 export const contactMsgStyle = () => {
 
     return {

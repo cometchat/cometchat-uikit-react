@@ -29,3 +29,21 @@ export const USER_OFFLINE = "onUserOffline";
 
 export const TYPING_STARTED = "onTypingStarted";
 export const TYPING_ENDED = "onTypingEnded";
+
+export const CATEGORY_MESSAGE = "message";
+export const MESSAGE_TYPE_TEXT = "text";
+export const MESSAGE_TYPE_IMAGE = "image";
+export const MESSAGE_TYPE_VIDEO = "video";
+export const MESSAGE_TYPE_AUDIO = "audio";
+export const MESSAGE_TYPE_FILE = "file";
+
+export const CATEGORY_CUSTOM = "custom";
+export const CUSTOM_TYPE_POLL = "extension_poll";
+
+export const CATEGORY_ACTION = "action";
+export const ACTION_TYPE_GROUPMEMBER = "groupMember";
+export const ACTION_TYPE_MESSAGE = "message";
+
+export const CATEGORY_CALL = "call";
+export const CALL_TYPE_AUDIO = "audio";
+export const CALL_TYPE_VIDEO = "video";
