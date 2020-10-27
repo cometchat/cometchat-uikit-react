@@ -4,7 +4,7 @@ export const presenceStyle = (props) => {
         backgroundColor: "rgb(85, 85, 85)"
     }
 
-    if(props.status === "online" || props.sttaus === "available") {
+    if (props.status === "online" || props.status === "available") {
         presenceStatus = {
             backgroundColor: "rgb(0, 255, 0)"
         }

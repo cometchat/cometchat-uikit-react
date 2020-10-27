@@ -89,8 +89,11 @@ class Tooltip extends React.Component {
     && this.props.widgetsettings
     && this.props.widgetsettings.hasOwnProperty("main")
     && this.props.widgetsettings.main.hasOwnProperty("enable_deleting_messages")
-    && this.props.widgetsettings.main["enable_deleting_messages"] === false)
-    || (this.props.message.messageFrom === "receiver")) {
+    && this.props.widgetsettings.main["enable_deleting_messages"] === false)) {
+      deleteMessage = null;
+    }
+
+    if (this.props.message.messageFrom === "receiver") {
       deleteMessage = null;
     }
 

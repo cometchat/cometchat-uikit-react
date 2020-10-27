@@ -154,7 +154,7 @@ export const answerWrapperStyle = (props, optionData, img) => {
     let bgImg = {};
     let txtPadding = "6px 12px";
     let countPadding = txtPadding;
-    if (optionData.voters.hasOwnProperty(props.user.uid)) {
+    if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(props.user.uid)) {
 
         bgImg = {
             background: `url(${img}) no-repeat 10px center`,

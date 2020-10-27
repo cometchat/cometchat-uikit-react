@@ -103,9 +103,11 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "messageRead":
         this.props.actionGenerated(action, messages);
       break;
-      case "messageComposed":
-        this.appendMessage(messages); 
-      break;
+      case "messageComposed": {
+        this.appendMessage(messages);
+        this.props.actionGenerated("messageComposed", messages);
+        break;
+      }
       case "messageUpdated":
         this.updateMessages(messages);
       break;
@@ -156,7 +158,18 @@ class CometChatMessageListScreen extends React.PureComponent {
   deleteMessage = (message) => {
 
     const messageId = message.id;
-    CometChat.deleteMessage(messageId).then(deletedMessage => this.removeMessages([deletedMessage])).catch(error => {
+    CometChat.deleteMessage(messageId).then(deletedMessage => {
+
+      this.removeMessages([deletedMessage]);
+
+      const messageList = [...this.state.messageList];
+      let messageKey = messageList.findIndex(m => m.id === message.id);
+
+      if (messageList.length - messageKey === 1 && !message.replyCount) {
+        this.props.actionGenerated("messageDeleted", [deletedMessage]);
+      }
+      
+    }).catch(error => {
       console.log("Message delete failed with error:", error);
     });
   }
@@ -177,6 +190,11 @@ class CometChatMessageListScreen extends React.PureComponent {
 
       messageList.splice(messageKey, 1, newMessageObj);
       this.updateMessages(messageList);
+
+      if (messageList.length - messageKey === 1 && !message.replyCount) {
+        this.props.actionGenerated("messageEdited", [newMessageObj]);
+      }
+      
     }
   }
 

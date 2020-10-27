@@ -129,7 +129,6 @@ class CometChatCreatePoll extends React.Component {
                 resultOptions[option] = {
                     text: options[option],
                     count: 0,
-                    voters: []
                 }
             }
 

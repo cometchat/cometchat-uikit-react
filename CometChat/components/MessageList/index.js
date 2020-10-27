@@ -381,7 +381,6 @@ class MessageList extends React.PureComponent {
       resultOptions[option] = {
         text: options[option],
         count: 0,
-        voters: []
       }
     }
 

@@ -123,7 +123,7 @@ class CometChatAddMembers extends React.Component {
                     this.decoratorMessage = "No users found";
                 }
 
-                this.setState({ userlist: [...this.state.userlist, ...userList], filteredlist: filteredUserList });
+                this.setState({ userlist: [...this.state.userlist, ...userList], filteredlist: [...this.state.filteredlist, ...filteredUserList] });
                 
             }).catch((error) => {
 

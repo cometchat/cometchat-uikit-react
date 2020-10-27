@@ -32,16 +32,16 @@ const conversationview = (props) => {
         message = "Media message";
       break;
       case CometChat.MESSAGE_TYPE.IMAGE:
-        message = "Image message";
+        message = "📷 Image ";
       break;
       case CometChat.MESSAGE_TYPE.FILE:
-        message = "File message";
+        message = "📁 File";
       break;
       case CometChat.MESSAGE_TYPE.VIDEO:
-        message = "Video message";
+        message = "🎥 Video";
       break;
       case CometChat.MESSAGE_TYPE.AUDIO:
-        message = "Audio message";
+        message = "🎵 Audio";
       break;
       case CometChat.MESSAGE_TYPE.CUSTOM:
         message = "Custom message";
@@ -93,7 +93,7 @@ const conversationview = (props) => {
 
   const getCustomMessage = () => {
 
-    const message = "Some Custom Message";
+    const message = "Custom Message";
     return message;
   }
 
@@ -102,25 +102,32 @@ const conversationview = (props) => {
     if(!props.conversation.lastMessage)
       return false;
 
-    let message = "";
+    const lastMessage = props.conversation.lastMessage;
 
-    switch(props.conversation.lastMessage.category) {
-      case "message":
-        message = getMessage();
-      break;
-      case "call":
-        message = getCallMessage();
-      break;
-      case "action":
-        message = getActionMessage();
-      break;
-      case "custom":
-        message = getCustomMessage();
-      break;
-      default:
-      break;
-    }
+    let message = null;
+    if (lastMessage.hasOwnProperty("deletedAt")) {
+
+      message = (props.loggedInUser.uid === lastMessage.sender.uid) ? "⚠ You deleted this message." : "⚠ This message was deleted.";
+
+    } else {
     
+      switch (lastMessage.category) {
+        case "message":
+          message = getMessage();
+        break;
+        case "call":
+          message = getCallMessage();
+        break;
+        case "action":
+          message = getActionMessage();
+        break;
+        case "custom":
+          message = getCustomMessage();
+        break;
+        default:
+        break;
+      }
+    }
     return message;
   }
 

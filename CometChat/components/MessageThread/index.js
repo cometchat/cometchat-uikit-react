@@ -115,7 +115,10 @@ class MessageThread extends React.Component {
         break;
         case "deleteMessage":
           this.deleteMessage(messages);
-        break;
+          break;
+        case "viewActualImage":
+          this.props.actionGenerated("viewActualImage", messages);
+          break;
         default:
         break;
       }
@@ -137,6 +140,11 @@ class MessageThread extends React.Component {
 
         messageList.splice(messageKey, 1, newMessageObj);
         this.updateMessages(messageList);
+
+        if (messageList.length - messageKey === 1) {
+          this.props.actionGenerated("messageEdited", [newMessageObj]);
+        }
+
       }
     }
 
@@ -147,7 +155,18 @@ class MessageThread extends React.Component {
     deleteMessage = (message) => {
 
       const messageId = message.id;
-      CometChat.deleteMessage(messageId).then(deletedMessage => this.removeMessages([deletedMessage])).catch(error => {
+      CometChat.deleteMessage(messageId).then(deletedMessage => {
+
+        this.removeMessages([deletedMessage]);
+
+        const messageList = [...this.state.messageList];
+        let messageKey = messageList.findIndex(m => m.id === message.id);
+
+        if (messageList.length - messageKey === 1 && !message.replyCount) {
+          this.props.actionGenerated("messageDeleted", [deletedMessage]);
+        }
+
+      }).catch(error => {
         console.log("Message delete failed with error:", error);
       });
     }
