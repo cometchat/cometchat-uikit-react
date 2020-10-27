@@ -74,6 +74,12 @@ export class ConversationListManager {
                 onCustomMessageReceived: customMessage => {
                     callback(enums.CUSTOM_MESSAGE_RECEIVED, null, customMessage);
                 },
+                onMessageDeleted: deletedMessage => {
+                    callback(enums.MESSAGE_DELETED, null, deletedMessage);
+                },
+                onMessageEdited: editedMessage => {
+                    callback(enums.MESSAGE_EDITED, null, editedMessage);
+                }
             })
         );
 

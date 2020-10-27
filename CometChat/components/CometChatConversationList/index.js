@@ -91,9 +91,7 @@ class CometChatConversationList extends React.Component {
           conversationlist.splice(conversationKey, 1, newConversationObj);
           this.setState({ conversationlist: conversationlist, selectedConversation: newConversationObj });
         }
-
       }
-
     }
 
     //if user is blocked/unblocked, update conversationlist in state
@@ -160,6 +158,23 @@ class CometChatConversationList extends React.Component {
       });
 
     }
+
+    if (prevProps.lastMessage !== this.props.lastMessage) {
+
+      const lastMessage = this.props.lastMessage;
+      const conversationList = [...this.state.conversationlist];
+      const conversationKey = conversationList.findIndex(c => c.conversationId === lastMessage.conversationId);
+
+      if (conversationKey > -1) {
+
+        const conversationObj = conversationList[conversationKey];
+        let newConversationObj = { ...conversationObj, lastMessage: lastMessage };
+
+        conversationList.splice(conversationKey, 1);
+        conversationList.unshift(newConversationObj);
+        this.setState({ conversationlist: conversationList });
+      }
+    }
   }
 
   componentWillUnmount() {
@@ -178,6 +193,10 @@ class CometChatConversationList extends React.Component {
       case enums.MEDIA_MESSAGE_RECEIVED:
       case enums.CUSTOM_MESSAGE_RECEIVED:
         this.updateConversation(message);
+        break;
+      case enums.MESSAGE_EDITED:
+      case enums.MESSAGE_DELETED:
+        this.conversationEditedDeleted(message);
         break;
       case enums.INCOMING_CALL_RECEIVED:
       case enums.INCOMING_CALL_CANCELLED:
@@ -298,11 +317,8 @@ class CometChatConversationList extends React.Component {
 
   makeLastMessage = (message, conversation = {}) => {
 
-    if (Object.keys(conversation).length === 0) {
-      return { ...message };
-    }
-
-    return { ...conversation.lastMessage, ...message };
+    const newMessage = Object.assign({}, message);
+    return newMessage;
   }
 
   updateConversation = (message, notification = true) => {
@@ -310,7 +326,7 @@ class CometChatConversationList extends React.Component {
     this.makeConversation(message).then(response => {
 
       const { conversationKey, conversationObj, conversationList } = response;
-
+      
       if (conversationKey > -1) {
 
         let unreadMessageCount = this.makeUnreadMessageCount(conversationObj);
@@ -336,6 +352,31 @@ class CometChatConversationList extends React.Component {
 
         if (notification) {
           this.playAudio(message);
+        }
+      }
+
+    }).catch(error => {
+      console.log('This is an error in converting message to conversation', error);
+    });
+
+  }
+
+  conversationEditedDeleted = (message) => {
+
+    this.makeConversation(message).then(response => {
+
+      const { conversationKey, conversationObj, conversationList } = response;
+      
+      if (conversationKey > -1) {
+
+        let lastMessageObj = conversationObj.lastMessage;
+
+        if (lastMessageObj.id === message.id) {
+
+          const newLastMessageObj = Object.assign({}, lastMessageObj, message);
+          let newConversationObj = Object.assign({}, conversationObj, { lastMessage: newLastMessageObj }); 
+          conversationList.splice(conversationKey, 1, newConversationObj);
+          this.setState({ conversationlist: conversationList });
         }
       }
 
@@ -596,6 +637,7 @@ class CometChatConversationList extends React.Component {
         conversation={conversation}
         selectedConversation={this.state.selectedConversation}
         widgetsettings={this.props.widgetsettings}
+        loggedInUser={this.loggedInUser}
         handleClick={this.handleClick} />
       );
     });

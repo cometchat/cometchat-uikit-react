@@ -54,7 +54,8 @@ class CometChatUnified extends React.Component {
       callmessage: {},
       sidebarview: false,
       imageView: null,
-      groupmessage: {}
+      groupmessage: {},
+      lastmessage: {}
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -157,6 +158,7 @@ class CometChatUnified extends React.Component {
       break;
       case "threadMessageComposed":
         this.onThreadMessageComposed(item);
+        this.updateLastMessage(item[0]);
         break;
       case "acceptIncomingCall":
         this.acceptIncomingCall(item);
@@ -190,9 +192,18 @@ class CometChatUnified extends React.Component {
       case "memberScopeChanged":
         this.memberScopeChanged(item);
       break;
+      case "messageComposed": 
+      case "messageEdited":
+      case "messageDeleted":
+        this.updateLastMessage(item[0]);
+      break;
       default:
       break;
     }
+  }
+
+  updateLastMessage = (message) => {
+    this.setState({ lastmessage: message });
   }
 
   blockUser = () => {
@@ -310,7 +321,7 @@ class CometChatUnified extends React.Component {
       return false;
     }
 
-    const message = {...composedMessage};
+    const message = { ...composedMessage };
     this.setState({composedthreadmessage: message});
   }
 
@@ -539,6 +550,7 @@ class CometChatUnified extends React.Component {
           groupToLeave={this.state.groupToLeave}
           groupToUpdate={this.state.groupToUpdate}
           messageToMarkRead={this.state.messageToMarkRead}
+          lastMessage={this.state.lastmessage}
           actionGenerated={this.navBarAction}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
