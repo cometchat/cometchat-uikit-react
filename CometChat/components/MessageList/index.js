@@ -276,24 +276,32 @@ class MessageList extends React.PureComponent {
       let messageList = [...this.props.messages];
       if (message.getReceiptType() === "delivery") {
 
-        //search for same message
-        let msg = messageList.find((m, k) => m.id === message.messageId);
-        
-        //if found, update state
-        if(msg) {
-          msg["deliveredAt"] = message.getDeliveredAt();
+        //search for message
+        let messageKey = messageList.findIndex(m => m.id === message.messageId);
+
+        if (messageKey > -1) {
+
+          let messageObj = { ...messageList[messageKey] };
+          let newMessageObj = Object.assign({}, messageObj, { deliveredAt: message.getDeliveredAt() });
+          messageList.splice(messageKey, 1, newMessageObj);
+
           this.props.actionGenerated("messageUpdated", messageList);
         }
 
       } else if (message.getReceiptType() === "read") {
 
-        //search for same message
-        let msg = messageList.find((m, k) => m.id === message.messageId);
-        //if found, update state
-        if(msg) {
-          msg["readAt"] = message.getReadAt();
+        //search for message
+        let messageKey = messageList.findIndex(m => m.id === message.messageId);
+
+        if (messageKey > -1) {
+
+          let messageObj = { ...messageList[messageKey] };
+          let newMessageObj = Object.assign({}, messageObj, { readAt: message.getReadAt() });
+          messageList.splice(messageKey, 1, newMessageObj);
+
           this.props.actionGenerated("messageUpdated", messageList);
         }
+
       }
 
     } else if (message.getReceiverType() === 'group' 
