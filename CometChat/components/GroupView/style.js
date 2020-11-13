@@ -19,12 +19,22 @@ export const listItem = (props) => {
     }
 }
 
+export const listItemName = () => {
+
+    return {
+        maxWidth: "calc(100% - 30px)",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+    }
+}
+
 export const listItemIcon = () => {
 
     return {
-        alignSelf: "center",
         width: "16px",
         height: "16px",
+        margin: "0 5px",
     }
 }
 
@@ -47,16 +57,15 @@ export const itemDetailStyle = () => {
     }
 }
 
-export const itemNameStyle = () => { 
+export const itemNameWrapperStyle = () => { 
+
     return {
         fontSize: "15px",
         fontWeight: "600",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
+        display: "flex",
+        alignItems: "center",
         width: "100%",
         margin: "0",
-        marginTop: "5px",
     }
 }
 
@@ -64,6 +73,11 @@ export const itemDescStyle = (props) => {
 
     return {
         borderBottom: `1px solid ${props.theme.borderColor.primary}`,
-        marginTop: "10px",
+        padding: "0 0 5px 0",
+        fontSize: "12px",
+        color: `${props.theme.color.helpText}`,
+        "&:hover": {
+            borderBottom: `1px solid ${props.theme.borderColor.primary}`,
+        }
     }
 }

@@ -93,8 +93,9 @@ class CometChatGroupList extends React.Component {
       
       if(groupKey > -1) {
 
-        let groupObj = { ...groups[groupKey] };
-        let membersCount = parseInt(groupObj.membersCount) - 1;
+        const groupToLeave = this.props.groupToLeave;
+        const groupObj = { ...groups[groupKey] };
+        const membersCount = parseInt(groupToLeave["membersCount"]) - 1;
 
         let newgroupObj = Object.assign({}, groupObj, { membersCount: membersCount, hasJoined: false });
 
@@ -174,9 +175,8 @@ class CometChatGroupList extends React.Component {
       if (options && this.loggedInUser.uid === options.user.uid) {
 
         let groupObj = { ...grouplist[groupKey] };
-        let membersCount = parseInt(group.membersCount);
         
-        let newgroupObj = Object.assign({}, groupObj, { membersCount: membersCount, hasJoined: false });
+        let newgroupObj = Object.assign({}, groupObj, group);
         
         grouplist.splice(groupKey, 1, newgroupObj);
         this.setState({ grouplist: grouplist });

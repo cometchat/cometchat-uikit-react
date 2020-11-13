@@ -45,11 +45,11 @@ class CometChatConversationList extends React.Component {
     }
     this.chatListRef = React.createRef();
     this.theme = Object.assign({}, theme, this.props.theme);
+
+    this.audio = new Audio(incomingOtherMessageAlert);
   }
 
   componentDidMount() {
-
-    this.audio = new Audio(incomingOtherMessageAlert);
 
     this.ConversationListManager = new ConversationListManager();
     this.getConversations();
@@ -243,19 +243,24 @@ class CometChatConversationList extends React.Component {
 
   playAudio = (message) => {
 
-    //if it is disabled for chat wigdet in dashboard
-    if (this.props.hasOwnProperty("widgetsettings")
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main")
-    && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") === false
-    || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages")
-    && this.props.widgetsettings.main["enable_sound_for_messages"] === false))) {
+    //if audio sound is disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_messages") === false) {
       return false;
     }
 
+    //if it is disabled for chat wigdet in dashboard
+    // if (this.props.hasOwnProperty("widgetsettings")
+    // && this.props.widgetsettings
+    // && this.props.widgetsettings.hasOwnProperty("main")
+    // && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") === false
+    // || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages")
+    // && this.props.widgetsettings.main["enable_sound_for_messages"] === false))) {
+    //   return false;
+    // }
+
     if (message.category === enums.CATEGORY_ACTION 
-      && message.type === enums.ACTION_TYPE_GROUPMEMBER 
-      && validateWidgetSettings(this.props.widgetsettings, "hide_join_leave_notifications") === true) {
+    && message.type === enums.ACTION_TYPE_GROUPMEMBER 
+    && validateWidgetSettings(this.props.widgetsettings, "hide_join_leave_notifications") === true) {
       return false;
     }
 

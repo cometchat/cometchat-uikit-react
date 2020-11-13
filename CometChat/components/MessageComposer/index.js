@@ -10,6 +10,10 @@ import "emoji-mart/css/emoji-mart.css";
 
 import ReplyPreview from "../ReplyPreview";
 import CometChatCreatePoll from "../CometChatCreatePoll";
+import StickerView from "../StickerView";
+
+import { validateWidgetSettings } from "../../util/common";
+import * as enums from '../../util/enums.js';
 
 import {
   chatComposerStyle,
@@ -28,7 +32,9 @@ import {
   fileItemStyle,
   stickyButtonStyle,
   emojiButtonStyle,
-  sendButtonStyle
+  sendButtonStyle,
+  reactionBtnStyle,
+  stickerBtnStyle
 } from "./style";
 
 import roundedPlus from "./resources/rounded-plus-grey-icon.svg";
@@ -36,12 +42,14 @@ import videoIcon from "./resources/video_upload_icon.svg";
 import audioIcon from "./resources/audio_upload_icon.svg";
 import docIcon from "./resources/document_upload_icon.svg";
 import imageIcon from "./resources/images_upload_icon.svg";
-import insertEmoticon from "./resources/insert_emoticon.svg"
+import insertEmoticon from "./resources/smiley.png"
 import sendBlue from "./resources/send-blue-icon.svg";
 import pollIcon from "./resources/poll.png";
+import stickerIcon from "./resources/sticker.png"
 import closeIcon from "./resources/clear.png";
 
 import { outgoingMessageAlert } from "../../resources/audio/";
+
 
 class MessageComposer extends React.PureComponent {
 
@@ -65,14 +73,13 @@ class MessageComposer extends React.PureComponent {
       messageType: "",
       emojiViewer: false,
       createPoll: false,
-      messageToBeEdited: null,
+      messageToBeEdited: "",
       replyPreview: null,
+      stickerViewer: false
     }
-	}
 
-  componentDidMount() {
     this.audio = new Audio(outgoingMessageAlert);
-  }
+	}
 
   componentDidUpdate(prevProps) {
 
@@ -98,17 +105,18 @@ class MessageComposer extends React.PureComponent {
       //const message = this.props.replyPreview;
       this.setState({ replyPreview: this.props.replyPreview });  
     }
+
+    if (prevProps.item !== this.props.item) {
+
+      //const message = this.props.replyPreview;
+      this.setState({ stickerViewer: false });
+    }
   }
 
   playAudio = () => {
 
-    //if it is disabled for chat wigdet in dashboard
-    if (this.props.hasOwnProperty("widgetsettings")
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main")
-    && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") === false 
-    || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") 
-    && this.props.widgetsettings.main["enable_sound_for_messages"] === false))) {
+    //if message sound is disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_messages") === false) {
       return false;
     }
 
@@ -183,12 +191,12 @@ class MessageComposer extends React.PureComponent {
 
     const elem = event.currentTarget;
     let messageInput = elem.textContent.trim();
-    
+
     if(!messageInput.length) {
       event.currentTarget.textContent = messageInput;
-      return false;
+      //return false;
     }
-
+    
     this.setState({"messageInput": elem.innerText, "messageType": "text"});
   }
 
@@ -229,7 +237,7 @@ class MessageComposer extends React.PureComponent {
     reader.addEventListener("load", () => { // Setting up base64 URL on image
 
       const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-      this.sendMediaMessage(newFile, "image")
+      this.sendMediaMessage(newFile, "image");
 
     }, false);
 
@@ -248,7 +256,7 @@ class MessageComposer extends React.PureComponent {
     reader.addEventListener("load", () => { // Setting up base64 URL on image
 
       const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-      this.sendMediaMessage(newFile, "file")
+      this.sendMediaMessage(newFile, "file");
 
     }, false);
 
@@ -267,7 +275,7 @@ class MessageComposer extends React.PureComponent {
     reader.addEventListener("load", () => { // Setting up base64 URL on image
 
       const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-      this.sendMediaMessage(newFile, "audio")
+      this.sendMediaMessage(newFile, "audio");
 
     }, false);
 
@@ -286,7 +294,7 @@ class MessageComposer extends React.PureComponent {
     reader.addEventListener("load", () => { // Setting up base64 URL on image
 
       const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-      this.sendMediaMessage(newFile, "video")
+      this.sendMediaMessage(newFile, "video");
 
     }, false);
 
@@ -322,24 +330,18 @@ class MessageComposer extends React.PureComponent {
 
     this.messageSending = true;
 
-    let receiverId;
-    let receiverType = this.props.type;
-    if (this.props.type === "user") {
-      receiverId = this.props.item.uid;
-    } else if (this.props.type === "group") {
-      receiverId = this.props.item.guid;
-    }
+    const { receiverId, receiverType } = this.getReceiverDetails();
 
-    let message = new CometChat.MediaMessage(receiverId, messageInput, messageType, receiverType);
-    
+    let mediaMessage = new CometChat.MediaMessage(receiverId, messageInput, messageType, receiverType);
     if(this.props.parentMessageId) {
-      message.setParentMessageId(this.props.parentMessageId);
+      mediaMessage.setParentMessageId(this.props.parentMessageId);
     }
 
     this.endTyping();
+    console.log("sendMediaMessage mediaMessage", mediaMessage);
+    CometChat.sendMessage(mediaMessage).then(response => {
 
-    CometChat.sendMessage(message).then(response => {
-
+      console.log("sendMediaMessage response", response);
       this.messageSending = false;
       this.playAudio();
       this.props.actionGenerated("messageComposed", [response]);
@@ -356,7 +358,6 @@ class MessageComposer extends React.PureComponent {
     if(event.keyCode === 13 && !event.shiftKey) {
 
       event.preventDefault();
-      this.messageInputRef.current.textContent = "";
       this.sendTextMessage();
       return true;
     }
@@ -421,8 +422,11 @@ class MessageComposer extends React.PureComponent {
 
     CometChat.editMessage(textMessage).then(message => {
       
-      this.playAudio();
+      this.setState({ messageInput: "" });
       this.messageSending = false;
+      this.messageInputRef.current.textContent = "";
+      this.playAudio();
+      
 
       this.closeEditPreview();
       
@@ -439,13 +443,12 @@ class MessageComposer extends React.PureComponent {
     this.props.actionGenerated("clearEditPreview");
   }
 
-  startTyping = () => {
+  startTyping = (timer, metadata) => {
 
-    if (this.props.hasOwnProperty("widgetsettings")
-      && this.props.widgetsettings
-      && this.props.widgetsettings.hasOwnProperty("main")
-      && this.props.widgetsettings.main.hasOwnProperty("show_typing_indicators")
-      && this.props.widgetsettings.main["show_typing_indicators"] === false) {
+    let typingInterval = timer || 5000;
+    
+    //if typing indicator is disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "show_typing_indicators") === false) {
       return false;
     }
     
@@ -454,30 +457,40 @@ class MessageComposer extends React.PureComponent {
     }
 
     let { receiverId, receiverType } = this.getReceiverDetails();
+    let typingMetadata = metadata || undefined;
 
-    let typingNotification = new CometChat.TypingIndicator(receiverId, receiverType);
+    let typingNotification = new CometChat.TypingIndicator(receiverId, receiverType, typingMetadata);
     CometChat.startTyping(typingNotification);
-
+    
     this.isTyping = setTimeout(() => {
-      clearTimeout(this.isTyping);
-      this.isTyping = null;
-    }, 5000);
+
+      this.endTyping();
+      
+    }, typingInterval);
   }
 
-  endTyping = () => {
+  endTyping = (metadata) => {
 
-    if (this.props.hasOwnProperty("widgetsettings")
-      && this.props.widgetsettings
-      && this.props.widgetsettings.hasOwnProperty("main")
-      && this.props.widgetsettings.main.hasOwnProperty("show_typing_indicators")
-      && this.props.widgetsettings.main["show_typing_indicators"] === false) {
+    //if typing indicator is disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "show_typing_indicators") === false) {
       return false;
     }
 
     let { receiverId, receiverType } = this.getReceiverDetails();
 
-    let typingNotification = new CometChat.TypingIndicator(receiverId, receiverType);
+    let typingMetadata = metadata || undefined;
+
+    let typingNotification = new CometChat.TypingIndicator(receiverId, receiverType, typingMetadata);
     CometChat.endTyping(typingNotification);
+
+    clearTimeout(this.isTyping);
+    this.isTyping = null;
+  }
+
+  toggleStickerPicker = () => {
+
+    const stickerViewer = this.state.stickerViewer;
+    this.setState({ stickerViewer: !stickerViewer })
   }
 
   toggleEmojiPicker = () => {
@@ -529,9 +542,40 @@ class MessageComposer extends React.PureComponent {
         }
         
       break;
+      case "sendSticker":
+        this.sendSticker(message);
+      break;
+      case "closeSticker":
+        this.toggleStickerPicker();
+        break;
       default:
       break;
     }
+  }
+
+  sendSticker = (stickerMessage) => {
+
+    this.messageSending = true;
+
+    const { receiverId, receiverType } = this.getReceiverDetails();
+
+    const customData = { "sticker_url": stickerMessage.stickerUrl, "sticker_name": stickerMessage.stickerName };
+    const customType = enums.CUSTOM_TYPE_STICKER;
+
+    const customMessage = new CometChat.CustomMessage(receiverId, receiverType, customType, customData);
+    CometChat.sendCustomMessage(customMessage).then(message => {
+
+      this.messageSending = false;
+      this.playAudio();
+      this.props.actionGenerated("messageComposed", [message]);
+
+    }).catch(error => {
+
+      this.messageSending = false;
+      console.log("custom message sending failed with error", error);
+
+    });
+
   }
 
   sendReplyMessage = (messageInput) => {
@@ -558,7 +602,38 @@ class MessageComposer extends React.PureComponent {
     this.setState({replyPreview: null})
   }
 
+  sendReaction = (event) => {
+
+    const typingInterval = 1000;
+
+    const typingMetadata = { "type": enums.LIVE_REACTION_KEY, "reaction": this.props.reaction };
+
+    this.startTyping(typingInterval, typingMetadata);
+    this.props.actionGenerated("sendReaction");
+
+    event.persist();
+
+    setTimeout(() => {
+
+      this.endTyping(typingMetadata);
+      this.props.actionGenerated("stopReaction");
+
+    }, typingInterval);
+  }
+
   render() {
+
+    let liveReactionBtn = null;
+    if (enums.LIVE_REACTIONS.hasOwnProperty(this.props.reaction)) {
+
+      const reactionName = this.props.reaction;
+      const imgSrc = enums.LIVE_REACTIONS[reactionName];
+      liveReactionBtn = (
+        <div css={reactionBtnStyle(imgSrc)} className="button__reactions" onClick={this.sendReaction}>
+          <img src={require(`${imgSrc}`)} alt={reactionName} />
+        </div>
+      );
+    }
 
     let emojiPicker = null;
     if(this.state.emojiViewer) {
@@ -613,30 +688,53 @@ class MessageComposer extends React.PureComponent {
       onClick={this.toggleEmojiPicker}><img src={insertEmoticon} alt="Insert Emoticon" /></div>
     );
 
-    if(this.props.hasOwnProperty("widgetsettings") 
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main")) {
+    let stickerBtn = (
+      <div
+      title="Attach sticker"
+      css={stickerBtnStyle()}
+      className="filelist__item item__sticker"
+      onClick={this.toggleStickerPicker}><img src={stickerIcon} alt="Add Sticker" /></div>
+    );
 
-      if(this.props.widgetsettings.main.hasOwnProperty("send_photos_videos")
-      && this.props.widgetsettings.main["send_photos_videos"] === false) {
-        avp = null;
-      }
+    let sendBtn = (
+      <div title="Send Message" css={sendButtonStyle()} className="button__send" onClick={this.sendTextMessage}>
+        <img src={sendBlue} alt="Send Message" />
+      </div>
+    );
 
-      if(this.props.widgetsettings.main.hasOwnProperty("send_photos_videos")
-      && this.props.widgetsettings.main["send_files"] === false) {
-        docs = null;
-      }
+    if (!this.state.messageInput.length) {
+      sendBtn = null;
+    }
 
-      if(this.props.widgetsettings.main.hasOwnProperty("send_emojis")
-      && this.props.widgetsettings.main["send_emojis"] === false) {
-        emojiBtn = null;
-      }
+    //if photos, videos upload are disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "send_photos_videos") === false) {
+      avp = null;
+    }
 
-      if ((this.props.widgetsettings.main.hasOwnProperty("allow_creating_polls") === false)
-        || (this.props.widgetsettings.main.hasOwnProperty("allow_creating_polls") 
-        && this.props.widgetsettings.main["allow_creating_polls"] === false)) {
-        createPollBtn = null;
-      }
+    //if files upload are disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "send_files") === false) {
+      docs = null;
+    }
+
+    //if emojis are disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "send_emojis") === false) {
+      emojiBtn = null;
+    }
+
+    //if polls are disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "allow_creating_polls") === false) {
+      createPollBtn = null;
+    }
+
+    //if live reactions is disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "share_live_reactions") === false
+    || this.state.messageInput.length) {
+      liveReactionBtn = null;
+    }
+
+    //if stickers is disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "show_stickers") === false) {
+      stickerBtn = null;
     }
 
     if (this.props.parentMessageId) {
@@ -662,7 +760,7 @@ class MessageComposer extends React.PureComponent {
       attach = null;
     }
 
-    let createPoll = null;
+    let createPoll = null; 
     if (this.state.createPoll) {
       createPoll = (
         <CometChatCreatePoll
@@ -705,10 +803,7 @@ class MessageComposer extends React.PureComponent {
             if (extensionsObject.hasOwnProperty("smart-reply")) {
               
               const smartReplyObject = extensionsObject["smart-reply"];
-              // const reply_positive = smartReplyObject["reply_positive"];
-              // const reply_neutral = smartReplyObject["reply_neutral"];
-              // const reply_negative = smartReplyObject["reply_negative"];
-              // const category = smartReplyObject["category"];
+
               const options = [smartReplyObject["reply_positive"], smartReplyObject["reply_neutral"], smartReplyObject["reply_negative"]];
               
               smartReplyPreview = (
@@ -721,10 +816,23 @@ class MessageComposer extends React.PureComponent {
       }
     }
 
+    let stickerViewer = null;
+    if (this.state.stickerViewer) {
+      stickerViewer = (
+        <StickerView 
+        theme={this.props.theme}
+        item={this.props.item}
+        type={this.props.type}
+        widgetsettings={this.props.widgetsettings}
+        actionGenerated={this.actionHandler} />
+      );
+    }
+
     return (
       <div css={chatComposerStyle(this.props)} className="chat__composer">
         {editPreview}
         {smartReplyPreview}
+        {stickerViewer}
         <div css={composerInputStyle()} className="composer__input">
           <div tabIndex="-1" css={inputInnerStyle(this.props)} className="input__inner">
             <div
@@ -740,9 +848,11 @@ class MessageComposer extends React.PureComponent {
             <div css={inputStickyStyle(this.props)} className="input__sticky">
               {attach}
               <div css={stickyButtonStyle()} className="input__sticky__buttons" ref={node => {this.node = node;}}>
+                {stickerBtn}
                 {emojiPicker}
                 {emojiBtn}
-                <div title="Send Message" css={sendButtonStyle()} className="button__send" onClick={this.sendTextMessage}><img src={sendBlue} alt="Send Message" /></div>
+                {sendBtn}
+                {liveReactionBtn}
               </div>
             </div>
           </div>

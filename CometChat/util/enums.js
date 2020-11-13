@@ -39,6 +39,7 @@ export const MESSAGE_TYPE_FILE = "file";
 
 export const CATEGORY_CUSTOM = "custom";
 export const CUSTOM_TYPE_POLL = "extension_poll";
+export const CUSTOM_TYPE_STICKER = "extension_sticker";
 
 export const CATEGORY_ACTION = "action";
 export const ACTION_TYPE_GROUPMEMBER = "groupMember";
@@ -47,3 +48,6 @@ export const ACTION_TYPE_MESSAGE = "message";
 export const CATEGORY_CALL = "call";
 export const CALL_TYPE_AUDIO = "audio";
 export const CALL_TYPE_VIDEO = "video";
+
+export const LIVE_REACTION_KEY = "live_reaction";
+export const LIVE_REACTIONS = { "heart": "./resources/heart.png", "thumbsup": "👍", "clap": "👏", "wink": "😉" };

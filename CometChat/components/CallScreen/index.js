@@ -8,6 +8,7 @@ import { CometChat } from "@cometchat-pro/chat";
 import { CometChatManager } from "../../util/controller";
 import * as enums from '../../util/enums.js';
 import { SvgAvatar } from '../../util/svgavatar';
+import { validateWidgetSettings } from "../../util/common";
 
 import { CallScreenManager } from "./controller";
 
@@ -44,17 +45,14 @@ class CallScreen extends React.PureComponent {
       outgoingCallScreen: false,
       callInProgress: null
     }
+
+    this.outgoingAlert = new Audio(outgoingCallAlert);
   }
 
   playOutgoingAlert = () => {
 
-    //if it is disabled for chat wigdet in dashboard
-    if (this.props.hasOwnProperty("widgetsettings")
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main")
-    && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls") === false
-    || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls")
-    && this.props.widgetsettings.main["enable_sound_for_calls"] === false))) {
+    //if audio sound is disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_calls") === false) {
       return false;
     }
 
@@ -72,13 +70,8 @@ class CallScreen extends React.PureComponent {
 
   pauseOutgoingAlert = () => {
 
-    //if it is disabled for chat wigdet in dashboard
-    if (this.props.hasOwnProperty("widgetsettings")
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main")
-    && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls") === false
-    || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls")
-    && this.props.widgetsettings.main["enable_sound_for_calls"] === false))) {
+    //if audio sound is disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_calls") === false) {
       return false;
     }
     
@@ -86,8 +79,6 @@ class CallScreen extends React.PureComponent {
   }
 
   componentDidMount() {
-
-    this.outgoingAlert = new Audio(outgoingCallAlert);
 
     this.CallScreenManager = new CallScreenManager();
     this.CallScreenManager.attachListeners(this.callScreenUpdated);
@@ -211,9 +202,20 @@ class CallScreen extends React.PureComponent {
 
   startCall = (call) => {
 
+    const sessionId = call.getSessionId();
+    const callType = call.type;
+    const mode = (call.receiverType === "user") ? CometChat.CALL_MODE.SINGLE : CometChat.CALL_MODE.DEFAULT;
+
+    const callSettings = new CometChat.CallSettingsBuilder()
+                        .setSessionID(sessionId)
+                        .enableDefaultLayout(true)
+                        .setMode(mode)
+                        .setIsAudioOnlyCall(callType === "audio" ? true : false)
+                        .build();
+
     const el = this.callScreenFrame;
     CometChat.startCall(
-      call.getSessionId(),
+      callSettings,
       el,
       new CometChat.OngoingCallListener({
         onUserJoined: user => {
@@ -347,8 +349,8 @@ class CallScreen extends React.PureComponent {
         outgoingCallScreen = (
           <div css={callScreenContainerStyle()} className="callscreen__container">
             <div css={headerStyle()} className="callscreen__header">
+              <span css={headerDurationStyle()} className="header__calling">Calling...</span>
               <h6 css={headerNameStyle()} className="header__name">{this.state.callInProgress.receiver.name}</h6>
-              <span css={headerDurationStyle()} className="header__calling">calling...</span>
             </div>
             <div css={thumbnailWrapperStyle()} className="callscreen__thumbnail__wrapper">
               <div css={thumbnailStyle()} className="callscreen__thumbnail">{avatar}</div>

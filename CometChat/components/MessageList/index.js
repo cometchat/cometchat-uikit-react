@@ -24,6 +24,8 @@ import ReceiverVideoBubble from "../ReceiverVideoBubble";
 import DeletedMessageBubble from "../DeletedMessageBubble";
 import SenderPollBubble from "../SenderPollBubble";
 import ReceiverPollBubble from "../ReceiverPollBubble";
+import SenderStickerBubble from "../SenderStickerBubble";
+import ReceiverStickerBubble from "../ReceiverStickerBubble";
 
 import CallMessage from "../CallMessage";
 
@@ -241,7 +243,7 @@ class MessageList extends React.PureComponent {
         
     } else if (this.props.type === 'user' 
     && message.getReceiverType() === 'user'
-      && message.getSender().uid === this.props.item.uid) {
+    && message.getSender().uid === this.props.item.uid) {
 
       this.props.actionGenerated("messageDeleted", [message]);
     }
@@ -249,12 +251,11 @@ class MessageList extends React.PureComponent {
 
   messageEdited = (message) => {
 
-    if ((this.props.type === 'group' && message.getReceiverType() === 'group' && message.getReceiver().guid === this.props.item.guid) 
-      || (this.props.type === 'user' && message.getReceiverType() === 'user' && message.getSender().uid === this.props.item.uid)) {
+    const messageList = [...this.props.messages];
+    const updateEditedMessage = (message) => {
 
-      const messageList = [...this.props.messages];
-      let messageKey = messageList.findIndex((m, k) => m.id === message.id);
-      
+      let messageKey = messageList.findIndex(m => m.id === message.id);
+
       if (messageKey > -1) {
 
         const messageObj = messageList[messageKey];
@@ -262,8 +263,42 @@ class MessageList extends React.PureComponent {
 
         messageList.splice(messageKey, 1, newMessageObj);
         this.props.actionGenerated("messageUpdated", messageList);
+      }
+
+    }
+
+    if (message.category === enums.CATEGORY_CUSTOM && message.type === enums.CUSTOM_TYPE_POLL) {
+
+      if ((this.props.type === 'group' && message.getReceiverType() === 'group' && message.getReceiver().guid === this.props.item.guid)
+        || (this.props.type === 'user' && message.getReceiverType() === 'user' && message.getReceiver().uid === this.props.item.uid)) {
+
+        updateEditedMessage(message);
       } 
+
+    } else {
+
+      if ((this.props.type === 'group' && message.getReceiverType() === 'group' && message.getReceiver().guid === this.props.item.guid) 
+        || (this.props.type === 'user' && message.getReceiverType() === 'user' && message.getSender().uid === this.props.item.uid)) {
+
+        updateEditedMessage(message);
+      } 
+    }
+  }
+
+  updateEditedMessage = (message) => {
+
+    const messageList = [...this.props.messages];
+    let messageKey = messageList.findIndex((m, k) => m.id === message.id);
+
+    if (messageKey > -1) {
+
+      const messageObj = messageList[messageKey];
+      const newMessageObj = Object.assign({}, messageObj, message);
+
+      messageList.splice(messageKey, 1, newMessageObj);
+      this.props.actionGenerated("messageUpdated", messageList);
     } 
+
   }
 
   messageReadAndDelivered = (message) => {
@@ -274,6 +309,7 @@ class MessageList extends React.PureComponent {
     && message.getReceiver() === this.loggedInUser.uid) {
 
       let messageList = [...this.props.messages];
+      
       if (message.getReceiptType() === "delivery") {
 
         //search for message
@@ -346,12 +382,16 @@ class MessageList extends React.PureComponent {
       if (!message.getReadAt()) {
         CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
       }
-
+      
       if (message.hasOwnProperty("metadata")) {
 
         this.props.actionGenerated("customMessageReceived", [message]);
 
-      } else if (message.type === "extension_poll") {//customdata (poll extension) does not have metadata
+      } else if (message.type === enums.CUSTOM_TYPE_STICKER) {
+
+        this.props.actionGenerated("customMessageReceived", [message]);
+
+      } else if (message.type === enums.CUSTOM_TYPE_POLL) {//customdata (poll extension) does not have metadata
 
         const newMessage = this.addMetadataToCustomData(message);
         this.props.actionGenerated("customMessageReceived", [newMessage]);
@@ -369,7 +409,11 @@ class MessageList extends React.PureComponent {
 
         this.props.actionGenerated("customMessageReceived", [message]);
 
-      } else if (message.type === "extension_poll") {//customdata (poll extension) does not have metadata
+      } else if (message.type === enums.CUSTOM_TYPE_STICKER) {
+
+        this.props.actionGenerated("customMessageReceived", [message]);
+
+      } else if (message.type === enums.CUSTOM_TYPE_POLL) {//customdata (poll extension) does not have metadata
 
         const newMessage = this.addMetadataToCustomData(message);
         this.props.actionGenerated("customMessageReceived", [newMessage]);
@@ -541,8 +585,11 @@ class MessageList extends React.PureComponent {
     } else {
 
       switch (message.type) {
-        case "extension_poll":
+        case enums.CUSTOM_TYPE_POLL:
           component = <SenderPollBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          break;
+        case enums.CUSTOM_TYPE_STICKER:
+          component = <SenderStickerBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
           break;
         default:
           break;
@@ -560,8 +607,11 @@ class MessageList extends React.PureComponent {
     } else {
 
       switch (message.type) {
-        case "extension_poll":
+        case enums.CUSTOM_TYPE_POLL:
           component = <ReceiverPollBubble user={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          break;
+        case enums.CUSTOM_TYPE_STICKER:
+          component = <ReceiverStickerBubble user={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
           break;
         default:
           break;

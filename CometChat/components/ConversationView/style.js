@@ -70,7 +70,7 @@ export const itemLastMsgStyle = (props) => {
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
         lineHeight: "20px",
-        color: `${props.theme.color.helpText }`,
+        color: `${props.theme.color.helpText}`,
     }
 }
 

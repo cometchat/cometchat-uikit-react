@@ -9,7 +9,7 @@ import * as enums from '../../util/enums.js';
 
 import Avatar from "../Avatar";
 import { SvgAvatar } from '../../util/svgavatar';
-
+import { validateWidgetSettings } from "../../util/common";
 import { CallAlertManager } from "./controller";
 
 import {
@@ -38,11 +38,11 @@ class CallAlert extends React.PureComponent {
             incomingCall: null,
             callInProgress: null
         }
+
+        this.incomingAlert = new Audio(incomingCallAlert);
     }
 
     componentDidMount() {
-
-        this.incomingAlert = new Audio(incomingCallAlert);
 
         this.CallAlertManager = new CallAlertManager();
         this.CallAlertManager.attachListeners(this.callScreenUpdated);
@@ -50,13 +50,8 @@ class CallAlert extends React.PureComponent {
 
     playIncomingAlert = () => {
 
-        //if it is disabled for chat wigdet in dashboard
-        if (this.props.hasOwnProperty("widgetsettings")
-        && this.props.widgetsettings
-        && this.props.widgetsettings.hasOwnProperty("main")
-        && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls") === false
-        || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls")
-        && this.props.widgetsettings.main["enable_sound_for_calls"] === false))) {
+        //if audio sound is disabled in chat widget
+        if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_calls") === false) {
             return false;
         }
 
@@ -74,13 +69,8 @@ class CallAlert extends React.PureComponent {
 
     pauseIncomingAlert = () => {
 
-        //if it is disabled for chat wigdet in dashboard
-        if (this.props.hasOwnProperty("widgetsettings")
-        && this.props.widgetsettings
-        && this.props.widgetsettings.hasOwnProperty("main")
-        && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls") === false
-        || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_calls")
-        && this.props.widgetsettings.main["enable_sound_for_calls"] === false))) {
+        //if audio sound is disabled in chat widget
+        if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_calls") === false) {
             return false;
         }
         

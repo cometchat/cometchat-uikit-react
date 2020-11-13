@@ -326,10 +326,14 @@ class CometChatUnified extends React.Component {
   }
 
   deleteGroup = (group) => {
+
+    this.toggleSideBar();
     this.setState({groupToDelete: group, item: {}, type: "group", viewdetailscreen: false});
   }
 
   leaveGroup = (group) => {
+
+    this.toggleSideBar();
     this.setState({groupToLeave: group, item: {}, type: "group", viewdetailscreen: false});
   }
 

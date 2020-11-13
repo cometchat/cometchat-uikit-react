@@ -67,6 +67,7 @@ class ReceiverImageBubble extends React.Component {
       this.setState({ message: message })
     }
   }
+  
   chooseImage = (thumbnailGenerationObject) => {
 
     const smallUrl = thumbnailGenerationObject["url_small"];
@@ -115,21 +116,22 @@ class ReceiverImageBubble extends React.Component {
 
               this.setState({ imageUrl: img.src });
               URL.revokeObjectURL(img.src);
-
             }
 
           }).catch(error => console.error(error));
-
         }
       }
 
     } else {
-
-      let img = new Image();
-      img.src = this.state.message.data.url;
-      img.onload = () => this.setState({ imageUrl: img.src });
-
+      this.setMessageImageUrl();
     }
+  }
+
+  setMessageImageUrl = () => {
+
+    let img = new Image();
+    img.src = this.state.message.data.url;
+    img.onload = () => this.setState({ imageUrl: img.src });
   }
 
   downloadImage(imgUrl) {
