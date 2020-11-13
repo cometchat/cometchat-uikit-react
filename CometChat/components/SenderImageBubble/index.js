@@ -106,11 +106,15 @@ class SenderImageBubble extends React.Component {
       }
 
     } else {
-
-      let img = new Image();
-      img.src = this.state.message.data.url;
-      img.onload = () => this.setState({ imageUrl: img.src });
+      this.setMessageImageUrl();
     }
+  }
+
+  setMessageImageUrl = () => {
+
+    let img = new Image();
+    img.src = this.state.message.data.url;
+    img.onload = () => this.setState({ imageUrl: img.src });
   }
 
   downloadImage(imgUrl) {

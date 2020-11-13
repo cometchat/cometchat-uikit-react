@@ -20,6 +20,8 @@ export const validateWidgetSettings = (wSettings, checkAgainst) => {
 
         if (wSettings.main.hasOwnProperty(checkAgainst)) {
             output = wSettings.main[checkAgainst];
+        } else {
+            output = false;
         }
     } 
     

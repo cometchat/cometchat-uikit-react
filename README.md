@@ -13,9 +13,9 @@ It has the following 3 ways of implementation:
  1. [CometChat Account](#cometchat-account)
 
 ### CometChat Account
-To use this library, you need application keys from your CometChat account. If you don't have an account, you can create one <a href="https://app.cometchat.io/" target="_blank">here</a>.
+To use this library, you need application keys from your CometChat account. If you don't have an account, you can create one <a href="https://app.cometchat.com/" target="_blank">here</a>.
 
-1. Sign in to your <a href="https://app.cometchat.io/" target="_blank">CometChat Dashboard</a>
+1. Sign in to your <a href="https://app.cometchat.com/" target="_blank">CometChat Dashboard</a>
 2. Click **Add New App**
 3. Give your app a name, and select a region and click  Add App
 4. Click your new app to open its settings.
@@ -26,7 +26,7 @@ To use this library, you need application keys from your CometChat account. If y
 1. Install CometChat SDK
 
 ```javascript
-    npm install @cometchat-pro/chat@2.1.2 --save
+    npm install @cometchat-pro/chat@2.1.4 --save
 ```
 
 2. See UI kit's package.json file and add the missing packages in your project's package.json file. 

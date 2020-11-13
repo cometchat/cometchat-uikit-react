@@ -141,18 +141,29 @@ class MessageHeader extends React.Component {
       case enums.TYPING_STARTED: {
         
         if (this.props.type === "group" && this.props.type === item.receiverType && this.props.item.guid === item.receiverId) {
+
           this.setState({ status: `${item.sender.name} is typing...` });
+          this.props.actionGenerated("showReaction", item);
+
         } else if (this.props.type === "user" && this.props.type === item.receiverType && this.props.item.uid === item.sender.uid) {
+
           this.setState({ status: "typing..." });
+          this.props.actionGenerated("showReaction", item);
+          
         }
         break;
       }
       case enums.TYPING_ENDED: {
 
         if (this.props.type === "group" && this.props.type === item.receiverType && this.props.item.guid === item.receiverId) {
+
           this.setStatusForGroup();
+          this.props.actionGenerated("stopReaction", item);
+
         } else if (this.props.type === "user" && this.props.type === item.receiverType && this.props.item.uid === item.sender.uid) {
           
+          this.props.actionGenerated("stopReaction", item);
+
           if(this.state.presence === "online") {
             this.setState({ status: "online", presence: "online" });
           } else {

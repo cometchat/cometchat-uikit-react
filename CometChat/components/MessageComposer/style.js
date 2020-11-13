@@ -132,7 +132,7 @@ export const inputStickyStyle = (props) => {
         borderTop: `1px solid ${props.theme.borderColor.primary}`,
         backgroundColor: `${props.theme.backgroundColor.grey}`,
         display: "flex",
-        justifyContent: "flex-end",
+        justifyContent: "space-between",
     }
 }
 
@@ -140,7 +140,6 @@ export const stickyAttachmentStyle = () => {
 
     return {
         display: "flex",
-        width: "calc(100% - 50px)",
     }
 }
 
@@ -154,9 +153,6 @@ export const attachmentIconStyle = (img) => {
             height: "20px",
             background: `url(${img}) center center no-repeat`,
             cursor: "pointer",
-            // 'img': {
-            //     display: "none", 
-            // }
         }
     }
 }
@@ -198,7 +194,6 @@ export const fileItemStyle = (props, img) => {
 
     const icon = {
         background: `url(${img}) no-repeat 100% 100%`,
-        // maskSize: "cover",
     }
 
     return {
@@ -217,33 +212,49 @@ export const stickyButtonStyle = () => {
 
     return {
         display: "flex",
-        flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        "div:not(:first-of-type)": {
+            marginLeft: "5px",
+        },
+        "div:not(:last-of-type)": {
+            marginRight: "5px"
+        }
     }
 }
 
 export const emojiButtonStyle = () => {
 
     return {
-        padding: "0 5px",
-        '> img': {
-            width: "20px",
-            height: "20px",
-            display: "inline-block",
-            cursor: "pointer",
-        }
+        width: "20px",
+        height: "20px",
+        cursor: "pointer",
     }
 }
 
 export const sendButtonStyle = () => {
 
     return {
-        '> img': {
-            width: "20px",
-            height: "18px",
-            display: "inline-block",
-            cursor: "pointer",
-        }
+        width: "20px",
+        height: "20px",
+        cursor: "pointer",
+    }
+}
+
+export const reactionBtnStyle = () => {
+
+    return {
+        cursor: "pointer",
+        width: "20px",
+        height: "20px",
+    }
+}
+
+export const stickerBtnStyle = () => {
+
+    return {
+        cursor: "pointer",
+        width: "20px",
+        height: "20px",
     }
 }

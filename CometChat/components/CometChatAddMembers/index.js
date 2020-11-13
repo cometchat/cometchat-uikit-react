@@ -96,7 +96,7 @@ class CometChatAddMembers extends React.Component {
         this.timeout = setTimeout(() => {
 
         this.AddMembersManager = new AddMembersManager(this.friendsOnly, val);
-            this.setState({ userlist: [], membersToAdd: [], membersToRemove: [] }, () => this.getUsers())
+            this.setState({ userlist: [], membersToAdd: [], membersToRemove: [], filteredlist: [] }, () => this.getUsers())
         }, 500);
   
     }

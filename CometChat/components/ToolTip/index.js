@@ -5,6 +5,8 @@ import { jsx } from '@emotion/core';
 
 import { CometChat } from "@cometchat-pro/chat";
 
+import { validateWidgetSettings } from "../../util/common";
+
 import {
   messageActionStyle,
   actionGroupStyle,
@@ -51,24 +53,11 @@ class Tooltip extends React.Component {
       </li>
     );
 
-    if ((this.props.hasOwnProperty("widgetconfig")
-    && this.props.widgetconfig
-    && this.props.widgetconfig.hasOwnProperty("threaded-chats")
-    && this.props.widgetconfig["threaded-chats"] === false)
-    || this.props.message.category === "custom") {
-      threadedChats = null;
-    }
-
-    if ((this.props.hasOwnProperty("widgetsettings")
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main")
-    && this.props.widgetsettings.main.hasOwnProperty("enable_threaded_replies")
-    && this.props.widgetsettings.main["enable_threaded_replies"] === false)
-    || this.props.message.category === "custom") {
-      threadedChats = null;
-    }
-
-    if (this.props.message.parentMessageId) {
+    //if threaded messages are disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetconfig, "threaded-chats") === false 
+      || validateWidgetSettings(this.props.widgetsettings, "enable_threaded_replies") === false
+      || this.props.message.category === "custom"
+      || this.props.message.parentMessageId) {
       threadedChats = null;
     }
 
@@ -85,15 +74,9 @@ class Tooltip extends React.Component {
       </li>
     );
 
-    if ((this.props.hasOwnProperty("widgetsettings")
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main")
-    && this.props.widgetsettings.main.hasOwnProperty("enable_deleting_messages")
-    && this.props.widgetsettings.main["enable_deleting_messages"] === false)) {
-      deleteMessage = null;
-    }
-
-    if (this.props.message.messageFrom === "receiver") {
+    //if deleting messages are disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_deleting_messages") === false
+      || this.props.message.messageFrom === "receiver") {
       deleteMessage = null;
     }
 
@@ -110,13 +93,10 @@ class Tooltip extends React.Component {
       </li>
     );
 
-    if ((this.props.hasOwnProperty("widgetsettings")
-      && this.props.widgetsettings
-      && this.props.widgetsettings.hasOwnProperty("main")
-      && this.props.widgetsettings.main.hasOwnProperty("enable_editing_messages")
-      && this.props.widgetsettings.main["enable_editing_messages"] === false)
-      || this.props.message.messageFrom === "receiver"
-      || this.props.message.type !== CometChat.MESSAGE_TYPE.TEXT) {
+    //if editing messages are disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_editing_messages") === false
+    || this.props.message.messageFrom === "receiver"
+    || this.props.message.type !== CometChat.MESSAGE_TYPE.TEXT) {
       editMessage = null;
     }
 

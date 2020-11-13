@@ -81,22 +81,17 @@ export const messageImgContainerStyle = () => {
 
 export const messageImgWrapperStyle = (props) => {
 
-    const mq = [...props.theme.breakPoints];
+    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
 
     return {
         display: "inline-block",
         alignSelf: "flex-start",
-        maxWidth: "300px",
-        height: "200px",
+        maxWidth: "128px",
+        height: "128px",
         cursor: "pointer",
-        'img': {
-            borderRadius: "8px",
-            height: "100%",
-        },
-        [`@media ${mq[0]}`]: {
-            minWidth: "50px",
-            maxWidth: "150px",
-            height: "100px",
+        [mq[0]]: {
+            maxWidth: "128px",
+            height: "128px",
             padding: "2px 2px",
         }
     }

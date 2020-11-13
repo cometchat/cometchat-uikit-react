@@ -8,13 +8,13 @@ import {
   listItemIcon,
   itemThumbnailStyle,
   itemDetailStyle,
-  itemNameStyle,
-  itemDescStyle
-
+  itemNameWrapperStyle,
+  itemDescStyle,
+  listItemName  
 } from "./style";
 
-import shieldIcon from "./resources/shield.svg";
-import lockIcon from "./resources/lock.svg";
+import shieldIcon from "./resources/shield.png";
+import lockIcon from "./resources/lock.png";
 
 const groupview = (props) => {
 
@@ -39,11 +39,11 @@ const groupview = (props) => {
   let groupTypeIcon = null;
   if(props.group.type === "private") {
 
-    groupTypeIcon = (<div css={listItemIcon()} className="list__item__icon"><img src={shieldIcon} alt="time" /></div>);
+    groupTypeIcon = (<img src={shieldIcon} alt="Private Group" />);
 
   } else if(props.group.type === "password") {
 
-    groupTypeIcon = (<div css={listItemIcon()} className="list__item__icon"><img src={lockIcon} alt="time" /></div>);
+    groupTypeIcon = (<img src={lockIcon} alt="Protected Group" />);
   }
 
   return (
@@ -53,15 +53,17 @@ const groupview = (props) => {
         image={props.group.icon} 
         cornerRadius="18px" 
         borderColor={props.theme.color.secondary}
-        borderWidth="1px"></Avatar>
+        borderWidth="1px" />
       </div>
       <div css={itemDetailStyle()} className="list__item__details">
-        <div css={itemNameStyle()} className="item__details__name"
+        <div css={itemNameWrapperStyle()} className="item__details__name"
         onMouseEnter={event => toggleTooltip(event, true)} 
-        onMouseLeave={event => toggleTooltip(event, false)}>{props.group.name}</div>
-        <div css={itemDescStyle(props)} className="item__details__desc"></div>
+        onMouseLeave={event => toggleTooltip(event, false)}> 
+          <span css={listItemName()}>{props.group.name}</span>
+          <span css={listItemIcon()}>{groupTypeIcon}</span>
+        </div>
+        <div css={itemDescStyle(props)} className="item__details__desc">{props.group.membersCount} members</div>
       </div>
-      {groupTypeIcon}
     </div>
   )
 }

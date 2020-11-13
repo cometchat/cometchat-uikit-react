@@ -22,6 +22,7 @@ class MessageFilter {
             [enums.MESSAGE_TYPE_AUDIO]: enums.MESSAGE_TYPE_AUDIO,
             [enums.MESSAGE_TYPE_FILE]: enums.MESSAGE_TYPE_FILE,
             [enums.CUSTOM_TYPE_POLL]: enums.CUSTOM_TYPE_POLL,
+            [enums.CUSTOM_TYPE_STICKER]: enums.CUSTOM_TYPE_STICKER,
             [enums.ACTION_TYPE_GROUPMEMBER]: enums.ACTION_TYPE_GROUPMEMBER,
             [enums.CALL_TYPE_AUDIO]: enums.CALL_TYPE_AUDIO,
             [enums.CALL_TYPE_VIDEO]: enums.CALL_TYPE_VIDEO

@@ -8,11 +8,14 @@ import { CometChat } from "@cometchat-pro/chat";
 import MessageHeader from "../MessageHeader";
 import MessageList from "../MessageList";
 import MessageComposer from "../MessageComposer";
+import LiveReaction from "../LiveReaction";
 
 import { theme } from "../../resources/theme";
+
+import * as enums from '../../util/enums.js';
 import { validateWidgetSettings } from "../../util/common";
 
-import { chatWrapperStyle } from "./style";
+import { chatWrapperStyle, reactionsWrapperStyle } from "./style";
 
 import { incomingMessageAlert } from "../../resources/audio/";
 
@@ -26,13 +29,13 @@ class CometChatMessageListScreen extends React.PureComponent {
       messageList: [],
       scrollToBottom: true,
       messageToBeEdited: null,
-      replyPreview: null
+      replyPreview: null,
+      liveReaction: false
     }
 
-    this.theme = Object.assign({}, theme, this.props.theme);
-  }
+    this.reactionName = props.reaction || "heart";
 
-  componentDidMount() {
+    this.theme = Object.assign({}, theme, this.props.theme);
     this.audio = new Audio(incomingMessageAlert);
   }
 
@@ -150,8 +153,48 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "viewActualImage":
         this.props.actionGenerated("viewActualImage", messages);
       break;
+      case "audioCall":
+      case "videoCall":
+      case "viewDetail":
+      case "menuClicked":
+        this.props.actionGenerated(action);
+        break;
+      case "sendReaction":
+        this.toggleReaction(true);
+      break;
+      case "showReaction":
+        this.showReaction(messages);
+        break;
+      case "stopReaction":
+        this.toggleReaction(false);
+      break;
       default:
       break;
+    }
+  }
+
+  toggleReaction = (flag) => {
+    this.setState({ liveReaction: flag});
+  }
+
+  showReaction = (reaction) => {
+    
+    if(!reaction.hasOwnProperty("metadata")) {
+      return false;
+    }
+
+    if (!reaction.metadata.hasOwnProperty("type") || !reaction.metadata.hasOwnProperty("reaction")) {
+      return false;
+    }
+
+    if (!enums.LIVE_REACTIONS.hasOwnProperty(reaction.metadata.reaction)) {
+      return false;
+    }
+
+    if (reaction.metadata.type === enums.LIVE_REACTION_KEY) {
+
+      this.reactionName = reaction.metadata.reaction;
+      this.setState({ liveReaction: true });
     }
   }
 
@@ -186,7 +229,7 @@ class CometChatMessageListScreen extends React.PureComponent {
 
       const messageObj = messageList[messageKey];
 
-      const newMessageObj = { ...messageObj, ...message };
+      const newMessageObj = Object.assign({}, messageObj, message);
 
       messageList.splice(messageKey, 1, newMessageObj);
       this.updateMessages(messageList);
@@ -274,6 +317,7 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   callUpdated = (message) => {
 
+    //if call actions messages are disabled in chat widget
     if (validateWidgetSettings(this.props.widgetsettings, "show_call_notifications") === false) {
       return false;
     }
@@ -328,7 +372,7 @@ class CometChatMessageListScreen extends React.PureComponent {
   }
 
   clearEditPreview = () => {
-    this.setState({ "messageToBeEdited":  null });
+    this.setState({ "messageToBeEdited":  "" });
   }
 
   render() {
@@ -341,15 +385,22 @@ class CometChatMessageListScreen extends React.PureComponent {
       widgetsettings={this.props.widgetsettings}
       messageToBeEdited={this.state.messageToBeEdited}
       replyPreview={this.state.replyPreview}
+      reaction={this.reactionName}
       actionGenerated={this.actionHandler} />
     );
 
-    if(this.props.hasOwnProperty("widgetsettings")
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main") 
-    && this.props.widgetsettings.main.hasOwnProperty("enable_sending_messages")
-    && this.props.widgetsettings.main["enable_sending_messages"] === false) {
+    //if sending messages are disabled for chat wigdet in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_sending_messages") === false) {
       messageComposer = null;
+    }
+
+    let liveReactionView = null;
+    if (this.state.liveReaction) {
+      liveReactionView = (
+        <div css={reactionsWrapperStyle()}>
+          <LiveReaction reaction={this.reactionName} theme={this.theme} />
+        </div>
+      );
     }
     
     return (
@@ -364,7 +415,7 @@ class CometChatMessageListScreen extends React.PureComponent {
         videocall={this.props.videocall === false ? false : true}
         widgetsettings={this.props.widgetsettings}
         loggedInUser={this.props.loggedInUser}
-        actionGenerated={this.props.actionGenerated} />
+        actionGenerated={this.actionHandler} />
         <MessageList 
         theme={this.theme}
         messages={this.state.messageList} 
@@ -376,6 +427,7 @@ class CometChatMessageListScreen extends React.PureComponent {
         widgetconfig={this.props.widgetconfig}
         loggedInUser={this.props.loggedInUser}
         actionGenerated={this.actionHandler} />
+        {liveReactionView}
         {messageComposer}
       </div>
     )
