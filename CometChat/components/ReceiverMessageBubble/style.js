@@ -11,11 +11,6 @@ export const messageContainerStyle = () => {
         display: "flex",
         flexDirection: "column",
         flexShrink: "0",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 
@@ -74,8 +69,8 @@ export const messageTxtContainerStyle = () => {
     return {
         width: "auto",
         flex: "1 1",
-        alignSelf: "flex-start",
         display: "flex",
+        alignSelf: "flex-start",
     }
 }
 
@@ -183,7 +178,6 @@ export const messageTxtWrapperStyle = (props) => {
         borderRadius: "12px",
         backgroundColor: `${props.theme.backgroundColor.secondary}`,
         padding: "8px 12px",
-        alignSelf: "flex-start",
         width: "auto",
     }
 }
@@ -282,5 +276,32 @@ export const messageTimestampStyle = (props) => {
         lineHeight: "12px",
         textTransform: "uppercase",
         color: `${props.theme.color.helpText}`,
+    }
+}
+
+export const messageActionWrapperStyle = () => {
+
+    return {
+        width: "auto",
+        flex: "1 1",
+        alignSelf: "flex-start",
+        display: "flex",
+        flexDirection: "row-reverse",
+        ":hover": {
+            "ul.message__actions": {
+                display: "flex"
+            }
+        }
+    }
+}
+
+export const messageReactionsWrapperStyle = () => {
+
+    return {
+        display: "inline-flex",
+        alignSelf: "flex-start",
+        width: "100%",
+        flexWrap: "wrap",
+        justifyContent: "flex-start",
     }
 }

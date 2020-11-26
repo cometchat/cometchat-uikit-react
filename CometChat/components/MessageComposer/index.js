@@ -3,7 +3,6 @@ import React from "react";
 /** @jsx jsx */
 import { jsx, keyframes } from "@emotion/core";
 
-import { Picker } from "emoji-mart";
 import { CometChat } from "@cometchat-pro/chat";
 
 import "emoji-mart/css/emoji-mart.css";
@@ -11,6 +10,7 @@ import "emoji-mart/css/emoji-mart.css";
 import ReplyPreview from "../ReplyPreview";
 import CometChatCreatePoll from "../CometChatCreatePoll";
 import StickerView from "../StickerView";
+import EmojiView from "../EmojiView";
 
 import { validateWidgetSettings } from "../../util/common";
 import * as enums from '../../util/enums.js';
@@ -50,7 +50,6 @@ import closeIcon from "./resources/clear.png";
 
 import { outgoingMessageAlert } from "../../resources/audio/";
 
-
 class MessageComposer extends React.PureComponent {
 
   constructor(props) {
@@ -75,13 +74,14 @@ class MessageComposer extends React.PureComponent {
       createPoll: false,
       messageToBeEdited: "",
       replyPreview: null,
-      stickerViewer: false
+      stickerViewer: false,
+      messageToReact: ""
     }
 
     this.audio = new Audio(outgoingMessageAlert);
-	}
+  }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
 
     if (prevProps.messageToBeEdited !== this.props.messageToBeEdited) {
 
@@ -101,15 +101,19 @@ class MessageComposer extends React.PureComponent {
     }
 
     if (prevProps.replyPreview !== this.props.replyPreview) {
-
-      //const message = this.props.replyPreview;
       this.setState({ replyPreview: this.props.replyPreview });  
     }
 
-    if (prevProps.item !== this.props.item) {
+    const previousMessageStr = JSON.stringify(prevProps.messageToReact);
+    const currentMessageStr = JSON.stringify(this.props.messageToReact);
 
-      //const message = this.props.replyPreview;
-      this.setState({ stickerViewer: false });
+    if (previousMessageStr !== currentMessageStr) {
+      this.setState({ messageToReact: this.props.messageToReact });
+    }
+
+    if (prevProps.item !== this.props.item) {
+      this.messageInputRef.current.textContent = "";
+      this.setState({ stickerViewer: false, emojiViewer: false, replyPreview: null, messageToBeEdited: "", messageInput: "" });
     }
   }
 
@@ -178,6 +182,11 @@ class MessageComposer extends React.PureComponent {
   }
 
   emojiClicked = (emoji, event) => {
+
+    if (this.state.messageToReact) {
+      this.reactToMessages(emoji);
+      return;
+    }
 
     const element = this.messageInputRef.current;
     element.focus();
@@ -338,10 +347,9 @@ class MessageComposer extends React.PureComponent {
     }
 
     this.endTyping();
-    console.log("sendMediaMessage mediaMessage", mediaMessage);
+    
     CometChat.sendMessage(mediaMessage).then(response => {
 
-      console.log("sendMediaMessage response", response);
       this.messageSending = false;
       this.playAudio();
       this.props.actionGenerated("messageComposed", [response]);
@@ -417,7 +425,7 @@ class MessageComposer extends React.PureComponent {
     let messageText = this.state.messageInput.trim();
     let textMessage = new CometChat.TextMessage(receiverId, messageText, receiverType);
     textMessage.setId(messageToBeEdited.id);
-
+    
     this.endTyping();
 
     CometChat.editMessage(textMessage).then(message => {
@@ -429,8 +437,9 @@ class MessageComposer extends React.PureComponent {
       
 
       this.closeEditPreview();
-      
-      this.props.actionGenerated("messageEdited", message);
+
+      const newMessage = Object.assign({}, message, { messageFrom: messageToBeEdited.messageFrom })
+      this.props.actionGenerated("messageEdited", newMessage);
 
     }).catch(error => {
 
@@ -490,30 +499,13 @@ class MessageComposer extends React.PureComponent {
   toggleStickerPicker = () => {
 
     const stickerViewer = this.state.stickerViewer;
-    this.setState({ stickerViewer: !stickerViewer })
+    this.setState({ stickerViewer: !stickerViewer, emojiViewer: false })
   }
 
   toggleEmojiPicker = () => {
 
-    if (!this.state.emojiViewer) {
-      // attach/remove event handler
-      document.addEventListener('click', this.handleOutsideClick, false);
-    } else {
-      document.removeEventListener('click', this.handleOutsideClick, false);
-    }
-
     const emojiViewer = this.state.emojiViewer;
-    this.setState({emojiViewer: !emojiViewer})
-  }
-  
-  handleOutsideClick = (event) => {
-    // ignore clicks on the component itself
-    
-    if (this.node && this.node.contains(event.target)) {
-      return;
-    }
-    
-    this.toggleEmojiPicker();
+    this.setState({ emojiViewer: !emojiViewer, stickerViewer: false});
   }
 
   toggleCreatePoll = () => {
@@ -621,6 +613,24 @@ class MessageComposer extends React.PureComponent {
     }, typingInterval);
   }
 
+  reactToMessages = (emoji) => {
+
+    //const message = this.state.messageToReact;
+    CometChat.callExtension("reactions", "POST", "v1/react", {
+      msgId: this.state.messageToReact.id,
+      emoji: emoji.colons,
+    }).then(response => {
+
+      if (response.hasOwnProperty("success") && response["success"] === true) {
+        this.toggleEmojiPicker();
+      }
+
+    }).catch(error => {
+      // Some error occured
+    });
+
+  }
+
   render() {
 
     let liveReactionBtn = null;
@@ -634,22 +644,10 @@ class MessageComposer extends React.PureComponent {
         </div>
       );
     }
-
-    let emojiPicker = null;
-    if(this.state.emojiViewer) {
-      emojiPicker = (
-        <Picker 
-        title="Pick your emoji" 
-        emoji="point_up"
-        native
-        onClick={this.emojiClicked}
-        style={{position: "absolute", bottom: "20px", right: "50px", "zIndex": "2", "width": "280px"}} />
-      );
-    }
      
-    let disabled = false;
+    let disabledState = false;
     if(this.props.item.blockedByMe) {
-      disabled = true;
+      disabledState = true;
     }
 
     let docs = (
@@ -680,12 +678,16 @@ class MessageComposer extends React.PureComponent {
       onClick={this.toggleCreatePoll}>&nbsp;</span>
     );
 
+    const emojiBtnIcon = (this.state.emojiViewer) ? closeIcon : insertEmoticon;
     let emojiBtn = (
       <div 
       title="Emoji"
       css={emojiButtonStyle()}
       className="button__emoji" 
-      onClick={this.toggleEmojiPicker}><img src={insertEmoticon} alt="Insert Emoticon" /></div>
+      onClick={() => {
+        this.toggleEmojiPicker();
+        this.setState({ messageToReact: ""  });
+      }}><img src={emojiBtnIcon} alt="Insert Emoticon" /></div>
     );
 
     let stickerBtn = (
@@ -828,15 +830,23 @@ class MessageComposer extends React.PureComponent {
       );
     }
 
+    let emojiPicker = null;
+    if (this.state.emojiViewer) {
+      emojiPicker = (
+        <EmojiView emojiClicked={this.emojiClicked} />
+      );
+    }
+
     return (
       <div css={chatComposerStyle(this.props)} className="chat__composer">
         {editPreview}
         {smartReplyPreview}
         {stickerViewer}
+        {emojiPicker}
         <div css={composerInputStyle()} className="composer__input">
-          <div tabIndex="-1" css={inputInnerStyle(this.props)} className="input__inner">
+          <div tabIndex="-1" css={inputInnerStyle(this.props, this.state)} className="input__inner">
             <div
-            css={messageInputStyle(disabled)}
+            css={messageInputStyle(disabledState)}
             className="input__message-input"
             contentEditable="true"
             placeholder="Enter your message here"
@@ -845,11 +855,10 @@ class MessageComposer extends React.PureComponent {
             onBlur={this.endTyping}
             onKeyDown={this.sendMessageOnEnter}
             ref={this.messageInputRef}></div>
-            <div css={inputStickyStyle(this.props)} className="input__sticky">
+            <div css={inputStickyStyle(this.props, disabledState)} className="input__sticky">
               {attach}
               <div css={stickyButtonStyle()} className="input__sticky__buttons" ref={node => {this.node = node;}}>
                 {stickerBtn}
-                {emojiPicker}
                 {emojiBtn}
                 {sendBtn}
                 {liveReactionBtn}

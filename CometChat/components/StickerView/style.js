@@ -11,11 +11,10 @@ export const stickerWrapperStyle = (props, keyframes) => {
     return {
         backgroundColor: `${props.theme.backgroundColor.grey}`,
         border: `1px solid ${props.theme.borderColor.primary}`,
+        borderBottom: "none",
         animation: `${slideAnimation} 0.5s ease-out`,
-        borderRadius: "10px",
-        marginBottom: "-15px",
-        paddingBottom: "15px",
-        height: "230px",
+        borderRadius: "10px 10px 0 0",
+        height: "215px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -45,7 +44,6 @@ export const stickerSectionListStyle = (props) => {
 
 export const sectionListItemStyle = (props) => {
 
-    const mq = [...props.theme.breakPoints];
     return {
 
         height: "35px",

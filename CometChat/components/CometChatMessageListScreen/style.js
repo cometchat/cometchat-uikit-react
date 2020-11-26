@@ -6,6 +6,7 @@ export const chatWrapperStyle = (theme) => {
         height: "100%",
         width: "100%",
         boxSizing: "border-box",
+        position: "relative", 
         fontFamily: `${theme.fontFamily}`,
         "*": {
             boxSizing: "border-box",
@@ -17,7 +18,7 @@ export const chatWrapperStyle = (theme) => {
 export const reactionsWrapperStyle = () => {
 
     return {
-        position: "fixed", 
+        position: "absolute", 
         width: "100%", 
         height: "100%", 
         top: "0", 

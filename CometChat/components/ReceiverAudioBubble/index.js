@@ -1,11 +1,15 @@
+import React from "react";
+
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
+import { checkMessageForExtensionsData } from "../../util/common";
 import { SvgAvatar } from '../../util/svgavatar';
 
 import Avatar from "../Avatar";
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
+import RegularReactionView from "../RegularReactionView";
 
 import {
   messageContainerStyle,
@@ -17,58 +21,119 @@ import {
   messageAudioContainerStyle,
   messageAudioWrapperStyle,
   messageInfoWrapperStyle,
-  messageTimestampStyle
+  messageTimestampStyle,
+  messageActionWrapperStyle,
+  messageReactionsWrapperStyle
 } from "./style";
 
-const receiveraudiobubble = (props) => {
 
-  let avatar = null, name = null;
-  if(props.message.receiverType === 'group') {
+class ReceiverAudioBubble extends React.Component {
 
-    if(!props.message.sender.avatar) {
+  messageFrom = "receiver";
 
-      const uid = props.message.sender.getUid();
-      const char = props.message.sender.getName().charAt(0).toUpperCase();
+  constructor(props) {
 
-      props.message.sender.setAvatar(SvgAvatar.getAvatar(uid, char));
-    } 
+    super(props);
 
-    avatar = (
-      <div css={messageThumbnailStyle()} className="message__thumbnail">
-        <Avatar 
-        cornerRadius="50%" 
-        borderColor={props.theme.color.secondary}
-        borderWidth="1px"
-        image={props.message.sender.avatar} />
-      </div>
-    );
-    name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(props)} className="message__name">{props.message.sender.name}</span></div>);
+    const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
+    if (message.receiverType === 'group') {
+
+      if (!message.sender.avatar) {
+
+        const uid = message.sender.getUid();
+        const char = message.sender.getName().charAt(0).toUpperCase();
+
+        message.sender.setAvatar(SvgAvatar.getAvatar(uid, char));
+      }
+    }
+
+    this.state = {
+      message: message
+    }
   }
 
-  const message = Object.assign({}, props.message, {messageFrom: "receiver"});
+  componentDidUpdate(prevProps) {
 
-  return (
-    <div css={messageContainerStyle()} className="receiver__message__container message__audio">
-      <ToolTip {...props} message={message} name={name} />
-      <div css={messageWrapperStyle()} className="message__wrapper">
-        {avatar}
-        <div css={messageDetailStyle()} className="message__details">
-          {name}
-          <div css={messageAudioContainerStyle(props)} className="message__audio__container">
-            <div css={messageAudioWrapperStyle(props)} className="message__audio__wrapper">
-              <audio controls>
-                <source src={props.message.data.url} />
-              </audio>                        
-            </div>
+    const previousMessageStr = JSON.stringify(prevProps.message);
+    const currentMessageStr = JSON.stringify(this.props.message);
+
+    if (previousMessageStr !== currentMessageStr) {
+
+      const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
+      this.setState({ message: message })
+    }
+  }
+
+  render() {
+
+    let avatar = null, name = null;
+    if (this.state.message.receiverType === 'group') {
+
+      avatar = (
+        <div css={messageThumbnailStyle()} className="message__thumbnail">
+          <Avatar
+            cornerRadius="50%"
+            borderColor={this.props.theme.color.secondary}
+            borderWidth="1px"
+            image={this.state.message.sender.avatar} />
+        </div>
+      );
+
+      name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span></div>);
+    }
+
+    let messageReactions = null;
+    const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
+    if (reactionsData) {
+
+      console.log("reactionsData", reactionsData);
+
+      if (Object.keys(reactionsData).length) {
+        messageReactions = (
+          <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
+            <RegularReactionView
+            theme={this.props.theme}
+            message={this.state.message}
+            reaction={reactionsData}
+            loggedInUser={this.props.loggedInUser}
+            widgetsettings={this.props.widgetsettings}
+            actionGenerated={this.props.actionGenerated} />
           </div>
-          <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-            <span css={messageTimestampStyle(props)} className="message__timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-            <ReplyCount {...props} message={message} />
+        );
+      }
+    }
+
+    return (
+      <div css={messageContainerStyle()} className="receiver__message__container message__audio">
+        
+        <div css={messageWrapperStyle()} className="message__wrapper">
+          {avatar}
+          <div css={messageDetailStyle()} className="message__details">
+            {name}
+
+            <div css={messageActionWrapperStyle()} className="message__action__wrapper">
+              <ToolTip {...this.props} message={this.state.message} name={name} />
+              <div css={messageAudioContainerStyle(this.props)} className="message__audio__container">
+                <div css={messageAudioWrapperStyle(this.props)} className="message__audio__wrapper">
+                  <audio controls>
+                    <source src={this.props.message.data.url} />
+                  </audio>
+                </div>
+              </div>
+            </div>
+
+            {messageReactions}
+
+            <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+              <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+              <ReplyCount {...this.props} message={this.state.message} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
+
 }
 
-export default receiveraudiobubble;
+export default ReceiverAudioBubble;

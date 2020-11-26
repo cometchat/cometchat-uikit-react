@@ -75,19 +75,25 @@ export const composerInputStyle = () => {
     }
 }
 
-export const inputInnerStyle = (props) => {
+export const inputInnerStyle = (props, state) => {
+
+    const borderRadiusVal = (state.emojiViewer || state.stickerViewer) ? {
+        borderRadius: "0 0 8px 8px",
+    } : {
+        borderRadius: "8px",
+    };
 
     return {
         flex: "1 1 auto",
         position: "relative",
         outline: "none",
-        borderRadius: "8px",
         border: `1px solid ${props.theme.borderColor.primary}`,
         backgroundColor: `${props.theme.backgroundColor.white}`,
         display: "flex",
         flexDirection: "column",
         width: "100%",
         minHeight: "85px",
+        ...borderRadiusVal
     }
 }
 
@@ -124,7 +130,11 @@ export const messageInputStyle = (disabled) => {
     }
 }
 
-export const inputStickyStyle = (props) => {
+export const inputStickyStyle = (props, disabled) => {
+
+    const disabledState = (disabled) ? {
+        pointerEvents: "none",
+    } : {};
 
     return {
         padding: "7px 10px",
@@ -133,6 +143,10 @@ export const inputStickyStyle = (props) => {
         backgroundColor: `${props.theme.backgroundColor.grey}`,
         display: "flex",
         justifyContent: "space-between",
+        ...disabledState,
+        '&:empty:before': {
+            pointerEvents: "none",
+        }
     }
 }
 

@@ -11,11 +11,6 @@ export const messageContainerStyle = () => {
         display: "flex",
         flexDirection: "column",
         flexShrink: "0",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 
@@ -23,9 +18,9 @@ export const messageWrapperStyle = () => {
 
     return {
         width: "auto",
-        flex: "1 1",
         alignSelf: "flex-end",
         display: "flex",
+        flex: "1 1"
     }
 }
 
@@ -37,7 +32,6 @@ export const messageTxtWrapperStyle = (props) => {
         backgroundColor: `${props.theme.backgroundColor.blue}`,
         color: `${props.theme.color.white}`,
         padding: "8px 12px",
-        alignSelf: "flex-end",
         width: "auto",
     }
 }
@@ -219,5 +213,31 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-end",
+    }
+}
+
+export const messageActionWrapperStyle = () => {
+
+    return {
+        width: "auto",
+        flex: "1 1",
+        alignSelf: "flex-end",
+        display: "flex",
+        ":hover": {
+            "ul.message__actions": {
+                display: "flex"
+            }
+        }
+    }
+}
+
+export const messageReactionsWrapperStyle = () => {
+
+    return {
+        display: "inline-flex",
+        alignSelf: "flex-end",
+        width: "100%",
+        flexWrap: "wrap",
+        justifyContent: "flex-end",
     }
 }

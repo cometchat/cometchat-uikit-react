@@ -11,11 +11,6 @@ export const messageContainerStyle = () => {
         display: "flex",
         flexDirection: "column",
         flexShrink: "0",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 
@@ -154,7 +149,7 @@ export const answerWrapperStyle = (props, optionData, img) => {
     let bgImg = {};
     let txtPadding = "6px 12px";
     let countPadding = txtPadding;
-    if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(props.user.uid)) {
+    if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(props.loggedInUser.uid)) {
 
         bgImg = {
             background: `url(${img}) no-repeat 10px center`,
@@ -207,5 +202,32 @@ export const messageTimestampStyle = (props) => {
         lineHeight: "12px",
         textTransform: "uppercase",
         color: `${props.theme.color.helpText}`,
+    }
+}
+
+export const messageActionWrapperStyle = () => {
+
+    return {
+        width: "auto",
+        flex: "1 1",
+        alignSelf: "flex-start",
+        display: "flex",
+        flexDirection: "row-reverse",
+        ":hover": {
+            "ul.message__actions": {
+                display: "flex"
+            }
+        }
+    }
+}
+
+export const messageReactionsWrapperStyle = () => {
+
+    return {
+        display: "inline-flex",
+        alignSelf: "flex-start",
+        width: "100%",
+        flexWrap: "wrap",
+        justifyContent: "flex-start",
     }
 }

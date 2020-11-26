@@ -5,9 +5,12 @@ import { jsx } from '@emotion/core'
 
 import { SvgAvatar } from '../../util/svgavatar';
 
+import { checkMessageForExtensionsData } from "../../util/common";
+
 import Avatar from "../Avatar";
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
+import RegularReactionView from "../RegularReactionView";
 
 import {
     messageContainerStyle,
@@ -19,7 +22,9 @@ import {
     messageImgContainerStyle,
     messageImgWrapperStyle,
     messageInfoWrapperStyle,
-    messageTimestampStyle
+    messageTimestampStyle,
+    messageActionWrapperStyle,
+    messageReactionsWrapperStyle
 } from "./style";
 
 class ReceiverStickerBubble extends React.Component {
@@ -86,16 +91,42 @@ class ReceiverStickerBubble extends React.Component {
             }
         }
 
+        let messageReactions = null;
+        const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
+        if (reactionsData) {
+
+            if (Object.keys(reactionsData).length) {
+                messageReactions = (
+                    <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
+                        <RegularReactionView
+                        theme={this.props.theme}
+                        message={this.state.message}
+                        reaction={reactionsData}
+                        loggedInUser={this.props.loggedInUser}
+                        widgetsettings={this.props.widgetsettings}
+                        actionGenerated={this.props.actionGenerated} />
+                    </div>
+                );
+            }
+        }
+
         return (
             <div css={messageContainerStyle()} className="receiver__message__container message__sticker">
-                <ToolTip {...this.props} message={this.state.message} name={name} />
+                
                 <div css={messageWrapperStyle()} className="message__wrapper">
                     {avatar}
                     <div css={messageDetailStyle(name)} className="message__details">
                         {name}
-                        <div css={messageImgContainerStyle()} className="message__image__container">
-                            <div css={messageImgWrapperStyle(this.props)} className="message__image__wrapper">{stickerImg}</div>
+
+                        <div css={messageActionWrapperStyle()} className="message__action__wrapper">
+                            <ToolTip {...this.props} message={this.state.message} name={name} />
+                            <div css={messageImgContainerStyle()} className="message__image__container">
+                                <div css={messageImgWrapperStyle(this.props)} className="message__image__wrapper">{stickerImg}</div>
+                            </div>
                         </div>
+
+                        {messageReactions}
+
                         <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
                             <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
                             <ReplyCount {...this.props} message={this.state.message} />
