@@ -28,10 +28,13 @@ class CometChatMessageListScreen extends React.PureComponent {
     this.state = {
       messageList: [],
       scrollToBottom: true,
-      messageToBeEdited: null,
+      messageToBeEdited: "",
       replyPreview: null,
-      liveReaction: false
+      liveReaction: false,
+      messageToReact: null
     }
+
+    this.composerRef = React.createRef();
 
     this.reactionName = props.reaction || "heart";
 
@@ -43,15 +46,15 @@ class CometChatMessageListScreen extends React.PureComponent {
 
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
       
-      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: null});
+      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: ""});
 
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid) {
       
-      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: null });
+      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "" });
 
     } else if(prevProps.type !== this.props.type) {
       
-      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: null });
+      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "" });
 
     } else if(prevProps.composedthreadmessage !== this.props.composedthreadmessage) {
 
@@ -71,13 +74,8 @@ class CometChatMessageListScreen extends React.PureComponent {
 
   playAudio = () => {
 
-    //if it is disabled for chat wigdet in dashboard
-    if (this.props.hasOwnProperty("widgetsettings")
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main")
-    && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") === false
-    || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages")
-    && this.props.widgetsettings.main["enable_sound_for_messages"] === false))) {
+    //if audio sound is disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_messages") === false) {
       return false;
     }
 
@@ -167,6 +165,9 @@ class CometChatMessageListScreen extends React.PureComponent {
         break;
       case "stopReaction":
         this.toggleReaction(false);
+        break; 
+      case "reactToMessage":
+        this.reactToMessage(messages);
       break;
       default:
       break;
@@ -208,6 +209,8 @@ class CometChatMessageListScreen extends React.PureComponent {
       const messageList = [...this.state.messageList];
       let messageKey = messageList.findIndex(m => m.id === message.id);
 
+      this.props.actionGenerated("updateThreadMessage", [deletedMessage], "delete");
+
       if (messageList.length - messageKey === 1 && !message.replyCount) {
         this.props.actionGenerated("messageDeleted", [deletedMessage]);
       }
@@ -233,6 +236,8 @@ class CometChatMessageListScreen extends React.PureComponent {
 
       messageList.splice(messageKey, 1, newMessageObj);
       this.updateMessages(messageList);
+
+      this.props.actionGenerated("updateThreadMessage", [newMessageObj], "edit");
 
       if (messageList.length - messageKey === 1 && !message.replyCount) {
         this.props.actionGenerated("messageEdited", [newMessageObj]);
@@ -375,17 +380,29 @@ class CometChatMessageListScreen extends React.PureComponent {
     this.setState({ "messageToBeEdited":  "" });
   }
 
+  reactToMessage = (message) => {
+
+    this.setState({ "messageToReact": message});
+
+    if (this.composerRef) {
+      this.composerRef.toggleEmojiPicker();
+    }
+  }
+
   render() {
 
     let messageComposer = (
       <MessageComposer 
+      ref={(el) => { this.composerRef = el; } }
       theme={this.theme}
       item={this.props.item} 
       type={this.props.type}
       widgetsettings={this.props.widgetsettings}
+      loggedInUser={this.props.loggedInUser}
       messageToBeEdited={this.state.messageToBeEdited}
       replyPreview={this.state.replyPreview}
       reaction={this.reactionName}
+      messageToReact={this.state.messageToReact}
       actionGenerated={this.actionHandler} />
     );
 

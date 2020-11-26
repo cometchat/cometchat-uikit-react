@@ -96,6 +96,7 @@ export const messageContainerStyle = () => {
                 "::-webkit-scrollbar": {
                     display: "none"
                 },
+                scrollbarWidth: "none"
             }
         },
     }

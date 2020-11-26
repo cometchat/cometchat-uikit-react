@@ -2,6 +2,7 @@ export const messageActionStyle = (props) => {
 
     const topPos = (props.name) ? { top: "0px"} : { top: "-20px" };
     const alignment = (props.message.messageFrom === "receiver") ? { alignSelf: "flex-end" } : { alignSelf: "flex-start" };
+    const direction = (props.message.messageFrom === "receiver") ? { flexDirection: "row-reverse" } : {};
 
     return {
         position: "absolute",
@@ -18,6 +19,7 @@ export const messageActionStyle = (props) => {
         justifyContent: "center",
         ...alignment,
         ...topPos,
+        ...direction
     }
 }
 
@@ -41,6 +43,6 @@ export const groupButtonStyle = (img) => {
         display: "inline-flex",
         justifyContent: "center",
         position: "relative",
-        background: `url(${img}) center center / 18px 19px no-repeat`,
+        background: `url(${img}) center center / 20px 19px no-repeat`,
     }
 }

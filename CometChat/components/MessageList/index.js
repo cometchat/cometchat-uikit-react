@@ -53,7 +53,7 @@ class MessageList extends React.PureComponent {
       onItemClick: null,
     }
     
-    this.loggedInUser = this.props.loggedInUser;
+    this.loggedInUser = props.loggedInUser;
     this.messagesEnd = React.createRef();
   }
 
@@ -76,6 +76,7 @@ class MessageList extends React.PureComponent {
 
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
       
+      this.decoratorMessage = "Loading...";
       this.MessageListManager.removeListeners();
 
       if (this.props.parentMessageId) {
@@ -89,6 +90,7 @@ class MessageList extends React.PureComponent {
 
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid){
 
+      this.decoratorMessage = "Loading...";
       this.MessageListManager.removeListeners();
 
       if (this.props.parentMessageId) {
@@ -101,7 +103,8 @@ class MessageList extends React.PureComponent {
       this.MessageListManager.attachListeners(this.messageUpdated);
 
     } else if(prevProps.parentMessageId !== this.props.parentMessageId) {
-        
+      
+      this.decoratorMessage = "Loading...";
       this.MessageListManager.removeListeners();
       this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type, this.props.parentMessageId);
       this.getMessages();
@@ -264,25 +267,24 @@ class MessageList extends React.PureComponent {
         messageList.splice(messageKey, 1, newMessageObj);
         this.props.actionGenerated("messageUpdated", messageList);
       }
-
     }
 
-    if (message.category === enums.CATEGORY_CUSTOM && message.type === enums.CUSTOM_TYPE_POLL) {
+    if (this.props.type === 'group' && message.getReceiverType() === 'group' && message.getReceiver().guid === this.props.item.guid) {
 
-      if ((this.props.type === 'group' && message.getReceiverType() === 'group' && message.getReceiver().guid === this.props.item.guid)
-        || (this.props.type === 'user' && message.getReceiverType() === 'user' && message.getReceiver().uid === this.props.item.uid)) {
+      updateEditedMessage(message);
 
-        updateEditedMessage(message);
-      } 
+    } else if (this.props.type === 'user' 
+    && message.getReceiverType() === 'user' 
+    && (this.loggedInUser.uid === message.getReceiverId() && message.getSender().uid === this.props.item.uid)) {
 
-    } else {
+      updateEditedMessage(message);
 
-      if ((this.props.type === 'group' && message.getReceiverType() === 'group' && message.getReceiver().guid === this.props.item.guid) 
-        || (this.props.type === 'user' && message.getReceiverType() === 'user' && message.getSender().uid === this.props.item.uid)) {
-
-        updateEditedMessage(message);
-      } 
+    } else if (this.props.type === 'user'
+    && message.getReceiverType() === 'user'
+    && (this.loggedInUser.uid === message.getSender().uid && message.getReceiverId() === this.props.item.uid)) {
+      updateEditedMessage(message);
     }
+
   }
 
   updateEditedMessage = (message) => {
@@ -520,19 +522,19 @@ class MessageList extends React.PureComponent {
 
       switch (message.type) {
         case CometChat.MESSAGE_TYPE.TEXT:
-          component = (message.text ? <SenderMessageBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.text ? <SenderMessageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.IMAGE:
-          component = (message.data.url ? <SenderImageBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <SenderImageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.FILE:
-          component = (message.data.attachments ? <SenderFileBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.attachments ? <SenderFileBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.VIDEO:
-          component = (message.data.url ? <SenderVideoBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <SenderVideoBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.AUDIO:
-          component = (message.data.url ? <SenderAudioBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <SenderAudioBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         default:
         break;
@@ -556,19 +558,19 @@ class MessageList extends React.PureComponent {
       switch (message.type) {
         case "message":
         case CometChat.MESSAGE_TYPE.TEXT:
-          component = (message.text ? <ReceiverMessageBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.text ? <ReceiverMessageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.IMAGE:
-          component = (message.data.url ? <ReceiverImageBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <ReceiverImageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.FILE:
-          component = (message.data.attachments ? <ReceiverFileBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.attachments ? <ReceiverFileBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.AUDIO:
-          component = (message.data.url ? <ReceiverAudioBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <ReceiverAudioBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.VIDEO:
-          component = (message.data.url ? <ReceiverVideoBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <ReceiverVideoBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
         break;
         default:
         break;
@@ -586,10 +588,10 @@ class MessageList extends React.PureComponent {
 
       switch (message.type) {
         case enums.CUSTOM_TYPE_POLL:
-          component = <SenderPollBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <SenderPollBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
           break;
         case enums.CUSTOM_TYPE_STICKER:
-          component = <SenderStickerBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <SenderStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
           break;
         default:
           break;
@@ -608,10 +610,10 @@ class MessageList extends React.PureComponent {
 
       switch (message.type) {
         case enums.CUSTOM_TYPE_POLL:
-          component = <ReceiverPollBubble user={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <ReceiverPollBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
           break;
         case enums.CUSTOM_TYPE_STICKER:
-          component = <ReceiverStickerBubble user={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <ReceiverStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
           break;
         default:
           break;

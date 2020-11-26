@@ -3,9 +3,12 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
+import { checkMessageForExtensionsData } from "../../util/common";
+
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
 import ReadReciept from "../ReadReciept";
+import RegularReactionView from "../RegularReactionView";
 
 import {
     messageContainerStyle,
@@ -16,26 +19,36 @@ import {
     pollTotalStyle,
     pollPercentStyle,
     answerWrapperStyle,
-    messageInfoWrapperStyle
+    messageInfoWrapperStyle,
+    messageActionWrapperStyle,
+    messageReactionsWrapperStyle,
 } from "./style";
 
 class SenderPollBubble extends React.Component {
     pollId;
     requestInProgress = null;
+    messageFrom = "sender";
 
     constructor(props) {
         
         super(props);
-        this.message = Object.assign({}, props.message, { messageFrom: "sender" });
+        const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
+
+        this.state = {
+            message: message
+        }
     }
 
-    componentDidMount() {
+    componentDidUpdate(prevProps) {
 
-        this.message = Object.assign({}, this.props.message, { messageFrom: "sender" });
-    }
+        const previousMessageStr = JSON.stringify(prevProps.message);
+        const currentMessageStr = JSON.stringify(this.props.message);
 
-    componentDidUpdate() {
-        this.message = Object.assign({}, this.props.message, { messageFrom: "sender" });
+        if (previousMessageStr !== currentMessageStr) {
+
+            const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
+            this.setState({ message: message })
+        }
     }
 
     render() {
@@ -87,20 +100,45 @@ class SenderPollBubble extends React.Component {
             pollOptions.push(template);
         }
 
+        let messageReactions = null;
+        const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
+        if (reactionsData) {
+
+            if (Object.keys(reactionsData).length) {
+                messageReactions = (
+                    <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
+                        <RegularReactionView
+                        theme={this.props.theme}
+                        message={this.state.message}
+                        reaction={reactionsData}
+                        loggedInUser={this.props.loggedInUser}
+                        widgetsettings={this.props.widgetsettings}
+                        actionGenerated={this.props.actionGenerated} />
+                    </div>
+                );
+            }
+        }
+
         return (
             <div css={messageContainerStyle()} className="sender__message__container message__poll">
-                <ToolTip {...this.props} message={this.message} />    
-                <div css={messageWrapperStyle()} className="message__wrapper">
-                    <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
-                        <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
-                        <ul css={pollAnswerStyle(this.props)} className="poll__options">
-                            {pollOptions}
-                        </ul>
-                        <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>
+                
+                <div css={messageActionWrapperStyle()} className="message__action__wrapper">
+                    <ToolTip {...this.props} message={this.state.message} />
+                    <div css={messageWrapperStyle()} className="message__wrapper">
+                        <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
+                            <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
+                            <ul css={pollAnswerStyle(this.props)} className="poll__options">
+                                {pollOptions}
+                            </ul>
+                            <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>
+                        </div>
                     </div>
                 </div>
+
+                {messageReactions}
+
                 <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                    <ReplyCount theme={this.props.theme} {...this.props} message={this.message} />
+                    <ReplyCount theme={this.props.theme} {...this.props} message={this.state.message} />
                     <ReadReciept theme={this.props.theme} {...this.props} />
                 </div>
             </div>

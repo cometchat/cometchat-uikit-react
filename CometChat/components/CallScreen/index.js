@@ -215,7 +215,7 @@ class CallScreen extends React.PureComponent {
 
     const el = this.callScreenFrame;
     CometChat.startCall(
-      callSettings,
+      call.getSessionId(),
       el,
       new CometChat.OngoingCallListener({
         onUserJoined: user => {

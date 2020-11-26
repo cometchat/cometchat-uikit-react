@@ -5,11 +5,12 @@ import ReactHtmlParser from "react-html-parser";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
-import { linkify } from "../../util/common";
+import { linkify, checkMessageForExtensionsData, validateWidgetSettings } from "../../util/common";
 
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
 import ReadReciept from "../ReadReciept";
+import RegularReactionView from "../RegularReactionView";
 
 import {
   messageContainerStyle,
@@ -24,7 +25,9 @@ import {
   messageTxtWrapperStyle,
   messageTxtStyle,
   previewTextStyle,
-  messageInfoWrapperStyle
+  messageInfoWrapperStyle,
+  messageActionWrapperStyle,
+  messageReactionsWrapperStyle,
 } from "./style";
 
 class SenderMessageBubble extends React.Component {
@@ -65,12 +68,8 @@ class SenderMessageBubble extends React.Component {
     const emojiMessage = parsedMessage.filter(message => (message instanceof Object && message.type === "img"));
 
     let showVariation = true;
-    if (this.props.hasOwnProperty("widgetsettings")
-      && this.props.widgetsettings
-      && this.props.widgetsettings.hasOwnProperty("main")
-      && this.props.widgetsettings.main.hasOwnProperty("show_emojis_in_larger_size")
-      && this.props.widgetsettings.main["show_emojis_in_larger_size"] === false) {
-
+    //if larger size emojis are disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "show_emojis_in_larger_size") === false) {
       showVariation = false;
     }
 
@@ -85,6 +84,7 @@ class SenderMessageBubble extends React.Component {
 
   render() {
 
+    let messageReactions = null;
     let messageText = this.getMessageText();
     if (this.state.message.hasOwnProperty("metadata")) {
 
@@ -124,10 +124,34 @@ class SenderMessageBubble extends React.Component {
       }
     } 
 
+    const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
+    if (reactionsData) {
+
+      if (Object.keys(reactionsData).length) {
+        messageReactions = (
+          <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
+            <RegularReactionView 
+            theme={this.props.theme} 
+            message={this.state.message} 
+            reaction={reactionsData} 
+            loggedInUser={this.props.loggedInUser}
+            widgetsettings={this.props.widgetsettings}
+            actionGenerated={this.props.actionGenerated} />
+          </div>
+        );
+      }
+    }
+
     return (
       <div css={messageContainerStyle()} className="sender__message__container message__text">
-        <ToolTip {...this.props} message={this.state.message} />
-        <div css={messageWrapperStyle()} className="message__wrapper">{messageText}</div>
+        
+        <div css={messageActionWrapperStyle()} className="message__action__wrapper">
+          <ToolTip {...this.props} message={this.state.message} />
+          <div css={messageWrapperStyle()} className="message__wrapper">{messageText}</div>
+        </div>
+        
+        {messageReactions}
+
         <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
           <ReplyCount theme={this.props.theme} {...this.props} message={this.state.message} />
           <ReadReciept theme={this.props.theme} {...this.props} message={this.state.message} />

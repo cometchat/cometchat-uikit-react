@@ -172,6 +172,9 @@ class CometChatConversationListScreen extends React.Component {
       case "messageDeleted":
         this.updateLastMessage(item[0]);
         break;
+      case "updateThreadMessage":
+        this.updateThreadMessage(item[0], count);
+        break;
       default:
       break;
     }
@@ -179,6 +182,20 @@ class CometChatConversationListScreen extends React.Component {
 
   updateLastMessage = (message) => {
     this.setState({ lastmessage: message });
+  }
+
+  updateThreadMessage = (message, action) => {
+
+    if (this.state.threadmessageview === false) {
+      return false;
+    }
+
+    if (action === "delete") {
+      this.setState({ threadmessageparent: { ...message }, threadmessageview: false });
+    } else {
+      this.setState({ threadmessageparent: { ...message } });
+    }
+
   }
 
   blockUser = () => {

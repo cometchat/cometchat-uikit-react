@@ -137,9 +137,26 @@ class CometChatUserListScreen extends React.Component {
       case "viewActualImage":
         this.toggleImageView(item);
         break;
+      case "updateThreadMessage":
+        this.updateThreadMessage(item[0], count);
+        break;
       default:
       break;
     }
+  }
+
+  updateThreadMessage = (message, action) => {
+
+    if (this.state.threadmessageview === false) {
+      return false;
+    }
+
+    if (action === "delete") {
+      this.setState({ threadmessageparent: { ...message }, threadmessageview: false });
+    } else {
+      this.setState({ threadmessageparent: { ...message } });
+    }
+
   }
 
   blockUser = () => {

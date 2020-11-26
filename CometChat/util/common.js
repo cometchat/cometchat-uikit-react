@@ -27,3 +27,24 @@ export const validateWidgetSettings = (wSettings, checkAgainst) => {
     
     return output;
 }
+
+export const checkMessageForExtensionsData = (message, extensionKey) => {
+
+    let output = null;
+    //console.log("checkMessageForExtensionsData message", message);
+    if (message.hasOwnProperty("metadata")) {
+
+        const metadata = message.metadata;
+        const injectedObject = metadata["@injected"];
+        if (injectedObject && injectedObject.hasOwnProperty("extensions")) {
+
+            const extensionsObject = injectedObject["extensions"];
+            if (extensionsObject && extensionsObject.hasOwnProperty(extensionKey)) {
+
+                output = extensionsObject[extensionKey];
+            }
+        }
+    }
+
+    return output;
+}

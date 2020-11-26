@@ -13,7 +13,8 @@ export const theme = {
     },
     borderColor: {
         primary: "#eaeaea",
-        white: "#fff"
+        white: "#fff",
+        blue: "#39f",
     },
     backgroundColor: {
         white: "#fff",

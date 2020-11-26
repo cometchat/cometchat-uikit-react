@@ -113,8 +113,8 @@ class CometChatConversationList extends React.Component {
     }
 
     if (prevProps.groupToUpdate
-      && (prevProps.groupToUpdate.guid !== this.props.groupToUpdate.guid
-        || (prevProps.groupToUpdate.guid === this.props.groupToUpdate.guid && (prevProps.groupToUpdate.membersCount !== this.props.groupToUpdate.membersCount || prevProps.groupToUpdate.scope !== this.props.groupToUpdate.scope)))) {
+    && (prevProps.groupToUpdate.guid !== this.props.groupToUpdate.guid
+    || (prevProps.groupToUpdate.guid === this.props.groupToUpdate.guid && (prevProps.groupToUpdate.membersCount !== this.props.groupToUpdate.membersCount || prevProps.groupToUpdate.scope !== this.props.groupToUpdate.scope)))) {
 
       const conversationlist = [...this.state.conversationlist];
       const groupToUpdate = this.props.groupToUpdate;
@@ -247,16 +247,6 @@ class CometChatConversationList extends React.Component {
     if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_messages") === false) {
       return false;
     }
-
-    //if it is disabled for chat wigdet in dashboard
-    // if (this.props.hasOwnProperty("widgetsettings")
-    // && this.props.widgetsettings
-    // && this.props.widgetsettings.hasOwnProperty("main")
-    // && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") === false
-    // || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages")
-    // && this.props.widgetsettings.main["enable_sound_for_messages"] === false))) {
-    //   return false;
-    // }
 
     if (message.category === enums.CATEGORY_ACTION 
     && message.type === enums.ACTION_TYPE_GROUPMEMBER 

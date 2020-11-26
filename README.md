@@ -26,7 +26,7 @@ To use this library, you need application keys from your CometChat account. If y
 1. Install CometChat SDK
 
 ```javascript
-    npm install @cometchat-pro/chat@2.1.4 --save
+    npm install @cometchat-pro/chat@2.1.5-beta1 --save
 ```
 
 2. See UI kit's package.json file and add the missing packages in your project's package.json file. 
@@ -74,11 +74,11 @@ const user = new CometChat.User(uid);
 user.setName(name);
 
 CometChat.createUser(user, authKey).then(
-    user => {
-        console.log("user created", user);
-    },error => {
-        console.log("error", error);
-    }
+  user => {
+    console.log("user created", user);
+  },error => {
+    console.log("error", error);
+  }
 );
 ```
 **Note:** </br>
