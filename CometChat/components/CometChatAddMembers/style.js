@@ -47,7 +47,7 @@ export const modalCloseStyle = (img) => {
 export const modalBodyCtyle = () => {
 
     return {
-        padding: "25px",
+        padding: "24px",
         height: "100%",
         width: "100%",
     }
@@ -68,7 +68,7 @@ export const tableCaptionStyle = () => {
 
     return {
         fontSize: "20px",
-        marginBottom: "15px",
+        marginBottom: "16px",
         fontWeight: "bold",
         textAlign: "left",
     }
@@ -78,7 +78,7 @@ export const tableSearchStyle = () => {
 
     return {
         fontWeight: "normal",
-        marginBottom: "15px",
+        marginBottom: "16px",
     }
 }
 
@@ -89,7 +89,7 @@ export const searchInputStyle = (props, img) => {
         border: "0",
         boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
         borderRadius: "8px",
-        padding: "6px 8px 6px 35px",
+        padding: "8px 8px 8px 40px",
         fontSize: "15px",
         outline: "none",
         color: `${props.theme.color.primary}`,
@@ -123,7 +123,7 @@ export const tableFootStyle = (props) => {
 
         "button": {
             cursor: "pointer",
-            padding: "10px 20px",
+            padding: "8px 16px",
             backgroundColor: `${props.theme.backgroundColor.blue}`,
             borderRadius: "5px",
             color: `${props.theme.color.white}`,

@@ -1,5 +1,9 @@
+import React from "react";
+import dateFormat from "dateformat";
 /** @jsx jsx */
-import { jsx } from '@emotion/core'
+import { jsx } from '@emotion/core';
+
+import { validateWidgetSettings } from "../../util/common";
 
 import { msgTimestampStyle } from "./style";
 
@@ -7,29 +11,53 @@ import blueDoubleTick from "./resources/blue-double-tick-icon.png";
 import greyDoubleTick from "./resources/grey-double-tick-icon.png";
 import greyTick from "./resources/grey-tick-icon.png";
 
-const readreceipt = (props) => {
+class ReadReceipt extends React.PureComponent { 
 
-    let ticks = blueDoubleTick;
-    if(props.message.sentAt && !props.message.readAt && !props.message.deliveredAt){
-      ticks = greyTick;
-    } else if(props.message.sentAt && !props.message.readAt && props.message.deliveredAt){
-      ticks = greyDoubleTick;
+  constructor(props) {
+
+    super(props);
+    this.state = {
+      message: props.message
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+
+    const previousMessageStr = JSON.stringify(prevProps.message);
+    const currentMessageStr = JSON.stringify(this.props.message);
+
+    if (previousMessageStr !== currentMessageStr) {
+      this.setState({ message: this.props.message })
+    }
+  }
+
+  render() {
+
+    let ticks = null;
+    if(this.state.message.messageFrom === "sender") {
+
+      ticks = blueDoubleTick;
+      if (this.props.message.sentAt && !this.props.message.readAt && !this.props.message.deliveredAt) {
+        ticks = greyTick;
+      } else if (this.props.message.sentAt && !this.props.message.readAt && this.props.message.deliveredAt) {
+        ticks = greyDoubleTick;
+      }
     }
 
-    if(props.hasOwnProperty("widgetsettings") 
-    && props.widgetsettings
-    && props.widgetsettings.hasOwnProperty("main") 
-    && props.widgetsettings.main.hasOwnProperty("show_delivery_read_indicators")
-    && props.widgetsettings.main["show_delivery_read_indicators"] === false) {
+    //if delivery receipts are disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "show_delivery_read_indicators") === false) {
       ticks = null;
     }
-
+    
     const receipt = (ticks) ? <img src={ticks} alt="time" /> : null;
-    const timestamp = new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 
-    return (
-      <span css={msgTimestampStyle()} className="message__timestamp">{timestamp}{receipt}</span>
-    );
+    const messageDate = (this.state.message.sentAt * 1000);
+    const timestamp = dateFormat(messageDate, "shortTime");
+    
+    return(
+      <span css={msgTimestampStyle(this.props, this.state)} className="message__timestamp">{timestamp}{receipt}</span>
+    )
+  }
 }
 
-export default readreceipt;
+export default ReadReceipt;

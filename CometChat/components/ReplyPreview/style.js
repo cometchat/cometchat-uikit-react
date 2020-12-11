@@ -57,10 +57,13 @@ export const previewOptionsWrapperStyle = () => {
 export const previewOptionStyle = (props) => {
 
     return {
-        padding: "10px",
+        padding: "8px",
+        margin: "0 8px",
         backgroundColor: `${props.theme.backgroundColor.grey}`,
         border: `1px solid ${props.theme.borderColor.primary}`,
         borderRadius: "10px",
         cursor: "pointer",
+        height: "100%",
+        textAlign: "center",
     }
 }

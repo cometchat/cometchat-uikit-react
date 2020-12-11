@@ -21,7 +21,7 @@ import {
     actionColumnStyle
 } from "./style";
 
-import clearIcon from "./resources/clear.svg";
+import clearIcon from "./resources/close.png";
 
 class CometChatViewMembers extends React.Component {
 

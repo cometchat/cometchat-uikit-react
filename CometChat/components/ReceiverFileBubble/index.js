@@ -10,6 +10,7 @@ import { SvgAvatar } from '../../util/svgavatar';
 import Avatar from "../Avatar";
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
+import ReadReciept from "../ReadReciept";
 import RegularReactionView from "../RegularReactionView";
 
 import { 
@@ -22,12 +23,10 @@ import {
   messageFileContainerStyle,
   messageFileWrapperStyle,
   messageInfoWrapperStyle,
-  messageTimestampStyle,
-  messageActionWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
 
-import blueFile from "./resources/file-blue.svg";
+import blueFile from "./resources/receiverfile.png";
 
 class ReceiverFileBubble extends React.Component {
 
@@ -87,8 +86,6 @@ class ReceiverFileBubble extends React.Component {
     const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
     if (reactionsData) {
 
-      console.log("reactionsData", reactionsData);
-
       if (Object.keys(reactionsData).length) {
         messageReactions = (
           <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
@@ -111,20 +108,20 @@ class ReceiverFileBubble extends React.Component {
           {avatar}
           <div css={messageDetailStyle()} className="message__details">
             {name}
-
-            <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-              <ToolTip {...this.props} message={this.state.message} name={name} />
-              <div css={messageFileContainerStyle(this.props)} className="message__file__container">
-                <div css={messageFileWrapperStyle(this.props)} className="message__file__wrapper">
-                  <a href={this.state.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">{this.state.message.data.attachments[0].name} <img src={blueFile} alt="file" /></a>
-                </div>
+            <ToolTip {...this.props} message={this.state.message} name={name} />
+            <div css={messageFileContainerStyle(this.props)} className="message__file__container">
+              <div css={messageFileWrapperStyle(this.props)} className="message__file__wrapper">
+                <a href={this.state.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">
+                  <img src={blueFile} alt="file" />
+                  <label>{this.state.message.data.attachments[0].name}</label>
+                </a>
               </div>
             </div>
 
             {messageReactions}
 
             <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-              <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.state.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+              <ReadReciept {...this.props} message={this.state.message} />
               <ReplyCount {...this.props} message={this.state.message} />
             </div>
           </div>

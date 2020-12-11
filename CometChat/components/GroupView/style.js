@@ -26,15 +26,16 @@ export const listItemName = () => {
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
+        margin: "0"
     }
 }
 
 export const listItemIcon = () => {
 
     return {
-        width: "16px",
-        height: "16px",
-        margin: "0 5px",
+        width: "14px",
+        height: "auto",
+        margin: "0 8px",
     }
 }
 

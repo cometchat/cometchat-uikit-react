@@ -23,7 +23,7 @@ import {
     contactMsgTxtStyle
 } from "./style";
 
-import clearIcon from "./resources/clear.svg";
+import clearIcon from "./resources/close.png";
 
 class CometChatBanMembers extends React.Component {
 

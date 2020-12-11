@@ -202,16 +202,16 @@ class CallScreen extends React.PureComponent {
 
   startCall = (call) => {
 
-    const sessionId = call.getSessionId();
-    const callType = call.type;
-    const mode = (call.receiverType === "user") ? CometChat.CALL_MODE.SINGLE : CometChat.CALL_MODE.DEFAULT;
+    // const sessionId = call.getSessionId();
+    // const callType = call.type;
+    // const mode = (call.receiverType === "user") ? CometChat.CALL_MODE.SINGLE : CometChat.CALL_MODE.DEFAULT;
 
-    const callSettings = new CometChat.CallSettingsBuilder()
-                        .setSessionID(sessionId)
-                        .enableDefaultLayout(true)
-                        .setMode(mode)
-                        .setIsAudioOnlyCall(callType === "audio" ? true : false)
-                        .build();
+    // const callSettings = new CometChat.CallSettingsBuilder()
+    //                     .setSessionID(sessionId)
+    //                     .enableDefaultLayout(true)
+    //                     .setMode(mode)
+    //                     .setIsAudioOnlyCall(callType === "audio" ? true : false)
+    //                     .build();
 
     const el = this.callScreenFrame;
     CometChat.startCall(

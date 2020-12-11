@@ -9,6 +9,7 @@ import { checkMessageForExtensionsData } from "../../util/common";
 
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
+import ReadReciept from "../ReadReciept";
 import Avatar from "../Avatar";
 import { SvgAvatar } from '../../util/svgavatar';
 import RegularReactionView from "../RegularReactionView";
@@ -28,8 +29,6 @@ import {
     answerWrapperStyle,
     pollTotalStyle,
     messageInfoWrapperStyle,
-    messageTimestampStyle,
-    messageActionWrapperStyle,
     messageReactionsWrapperStyle
 } from "./style";
 
@@ -173,29 +172,26 @@ class ReceiverPollBubble extends React.Component {
 
         return (
             <div css={messageContainerStyle()} className="receiver__message__container message__poll">
-                <ToolTip {...this.props} message={this.state.message} name={name} />    
+
                 <div css={messageWrapperStyle()} className="message__wrapper">
                     {avatar}
                     <div css={messageDetailStyle()} className="message__details">
                         {name}
-
-                        <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-                            <ToolTip {...this.props} message={this.state.message} name={name} />
-                            <div css={messageTxtContainerStyle()} className="message__poll__container">
-                                <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
-                                    <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
-                                    <ul css={pollAnswerStyle(this.props)} className="poll__options">
-                                        {pollOptions}
-                                    </ul>
-                                    <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>
-                                </div>
+                        <ToolTip {...this.props} message={this.state.message} name={name} />    
+                        <div css={messageTxtContainerStyle()} className="message__poll__container">
+                            <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
+                                <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
+                                <ul css={pollAnswerStyle(this.props)} className="poll__options">
+                                    {pollOptions}
+                                </ul>
+                                <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>
                             </div>
                         </div>
 
                         {messageReactions}
 
                         <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                            <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+                            <ReadReciept {...this.props} message={this.state.message} />
                             <ReplyCount {...this.props} message={this.state.message} />
                         </div>
                     </div>

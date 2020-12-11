@@ -16,7 +16,7 @@ import {
     stickerCloseStyle
 } from "./style";
 
-import closeIcon from "./resources/clear.svg";
+import closeIcon from "./resources/close.png";
 
 class StickerView extends React.PureComponent {
 

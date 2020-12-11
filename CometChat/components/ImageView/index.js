@@ -9,7 +9,7 @@ import {
 } from "./style";
 
 import srcIcon from "./resources/ring.svg";
-import closeIcon from "./resources/clear.svg";
+import closeIcon from "./resources/close.png";
 
 import Backdrop from "../Backdrop";
 

@@ -110,34 +110,6 @@ export const messageInfoWrapperStyle = () => {
     }
 }
 
-export const messageTimestampStyle = (props) => {
-
-    return {
-        display: "inline-block",
-        fontSize: "11px",
-        fontWeight: "500",
-        lineHeight: "12px",
-        textTransform: "uppercase",
-        color: `${props.theme.color.helpText}`,
-    }
-}
-
-export const messageActionWrapperStyle = () => {
-
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
-        flexDirection: "row-reverse",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
-    }
-}
-
 export const messageReactionsWrapperStyle = () => {
 
     return {

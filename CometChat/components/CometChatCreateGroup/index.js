@@ -19,7 +19,7 @@ import {
     tableFootStyle,
 } from "./style";
 
-import closeIcon from "./resources/clear.svg";
+import closeIcon from "./resources/close.png";
 
 class CometChatCreateGroup extends React.Component {
 
@@ -172,11 +172,11 @@ class CometChatCreateGroup extends React.Component {
                                 <tr>
                                     <td>
                                         <select
-                                            css={inputStyle(this.props)}
-                                            className="grouptype" 
-                                            onChange={this.typeChangeHandler}
-                                            value={this.state.type}
-                                            tabIndex="2">
+                                        css={inputStyle(this.props)}
+                                        className="grouptype" 
+                                        onChange={this.typeChangeHandler}
+                                        value={this.state.type}
+                                        tabIndex="2">
                                             <option value="">Select group type</option>
                                             <option value="public">Public</option>
                                             <option value="private">Private</option>

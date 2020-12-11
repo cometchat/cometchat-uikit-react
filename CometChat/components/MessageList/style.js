@@ -31,7 +31,7 @@ export const listWrapperStyle = () => {
 export const actionMessageStyle = () => {
 
     return {
-        padding: "8px 12px",
+        padding: "8px 16px",
         marginBottom: "16px",
         textAlign: "center",
     }
@@ -49,8 +49,10 @@ export const actionMessageTxtStyle = () => {
 export const messageDateContainerStyle = () => {
 
     return {
-        textAlign: "center",
-        marginBottom: "16px"
+        marginBottom: "16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
     }
 }
 

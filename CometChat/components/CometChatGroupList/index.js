@@ -30,9 +30,9 @@ import {
   groupListStyle
 } from "./style";
 
-import searchIcon from './resources/search-grey-icon.svg';
-import navigateIcon from './resources/navigate_before.svg';
-import addIcon from './resources/edit-blue-icon.svg';
+import searchIcon from './resources/search-grey-icon.png';
+import navigateIcon from './resources/navigate.png';
+import addIcon from './resources/creategroup.png';
 
 class CometChatGroupList extends React.Component {
   timeout;
@@ -460,7 +460,9 @@ class CometChatGroupList extends React.Component {
       clickHandler={this.handleClick} />);
     });
 
-    let creategroup = (<div css={groupAddStyle(addIcon)} title="Create Group" onClick={() => this.createGroupHandler(true)}></div>);
+    let creategroup = (<div css={groupAddStyle(addIcon)} title="Create Group" onClick={() => this.createGroupHandler(true)}>
+      <img src={addIcon} alt="Create Group" />
+    </div>);
     if(this.props.hasOwnProperty("config") 
     && this.props.config
     && this.props.config.hasOwnProperty("group-create") 

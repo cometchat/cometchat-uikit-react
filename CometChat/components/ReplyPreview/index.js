@@ -9,7 +9,7 @@ import {
     previewOptionStyle,
 } from "./style";
 
-import closeIcon from "./resources/clear.png";
+import closeIcon from "./resources/close.png";
 
 const ReplyPreview = (props) => {
 

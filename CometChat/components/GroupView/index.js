@@ -59,8 +59,8 @@ const groupview = (props) => {
         <div css={itemNameWrapperStyle()} className="item__details__name"
         onMouseEnter={event => toggleTooltip(event, true)} 
         onMouseLeave={event => toggleTooltip(event, false)}> 
-          <span css={listItemName()}>{props.group.name}</span>
-          <span css={listItemIcon()}>{groupTypeIcon}</span>
+          <p css={listItemName()}>{props.group.name}</p>
+          <div css={listItemIcon()}>{groupTypeIcon}</div>
         </div>
         <div css={itemDescStyle(props)} className="item__details__desc">{props.group.membersCount} members</div>
       </div>

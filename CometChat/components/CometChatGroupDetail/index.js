@@ -32,7 +32,7 @@ import {
     itemLinkStyle
 } from "./style";
 
-import navigateIcon from "./resources/navigate_before.svg";
+import navigateIcon from "./resources/navigate.png";
 
 class CometChatGroupDetail extends React.Component {
 

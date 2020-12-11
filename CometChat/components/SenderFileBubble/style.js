@@ -11,6 +11,11 @@ export const messageContainerStyle = () => {
         display: "flex",
         flexDirection: "column",
         flexShrink: "0",
+        ":hover": {
+            "ul.message__actions": {
+                display: "flex"
+            }
+        }
     }
 }
 
@@ -31,10 +36,13 @@ export const messageFileWrapper = (props) => {
         borderRadius: "12px",
         backgroundColor: `${props.theme.backgroundColor.blue}`,
         color: `${props.theme.color.white}`,
-        padding: "8px 12px",
+        padding: "8px 16px",
         alignSelf: "flex-end",
         maxWidth: "100%",
         "> a": {
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
             background: "0 0",
             textDecoration: "none",
             color: `${props.theme.color.white}`,
@@ -44,8 +52,14 @@ export const messageFileWrapper = (props) => {
                 color: `${props.theme.color.white}`,
                 textDecoration: "none",
             },
-            "img": {
-                backgroundColor: `${props.theme.backgroundColor.white}`,
+            "> p": {
+                margin: "0",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                textAlign: "left",
+                width: "100%",
+                fontSize: "14px",
+                marginLeft: "8px"
             }
         }
     }
@@ -55,21 +69,6 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-end",
-    }
-}
-
-export const messageActionWrapperStyle = () => {
-
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-end",
-        display: "flex",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 

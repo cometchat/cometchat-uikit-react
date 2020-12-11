@@ -15,14 +15,14 @@ import {
   itemLinkStyle
 } from "./style";
 
-import chatGreyIcon from "./resources/chat-grey-icon.svg";
-import chatBlueIcon from "./resources/chat-blue-icon.svg";
-import contactGreyIcon from "./resources/people-grey-icon.svg";
-import contactBlueIcon from "./resources/people-blue-icon.svg";
-import groupGreyIcon from "./resources/group-chat-grey-icon.svg";
-import groupBlueIcon from "./resources/group-chat-blue-icon.svg";
-import moreGreyIcon from "./resources/more-grey-icon.svg";
-import moreBlueIcon from "./resources/more-blue-icon.svg";
+import chatGreyIcon from "./resources/chats-grey.png";
+import chatBlueIcon from "./resources/chats-blue.png";
+import contactGreyIcon from "./resources/contacts-grey.png";
+import contactBlueIcon from "./resources/contacts-blue.png";
+import groupGreyIcon from "./resources/groups-grey.png";
+import groupBlueIcon from "./resources/groups-blue.png";
+import moreGreyIcon from "./resources/userinfo-grey.png";
+import moreBlueIcon from "./resources/userinfo-blue.png";
 
 
 class Navbar extends React.Component {
@@ -94,16 +94,16 @@ class Navbar extends React.Component {
         <div css={footerStyle()} className="sidebar__footer">
           <div css={navbarStyle()} className="footer__navbar">
             <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'conversations')}>
-              <span css={itemLinkStyle(chatGreyIcon, chatBlueIcon, chatsTabActive)} className="item__link item__link__chats"></span>
+              <div css={itemLinkStyle(chatGreyIcon, chatBlueIcon, chatsTabActive, "chats")} className="item__link item__link__chats"></div>
             </div>
             <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'contacts')}>
-              <span css={itemLinkStyle(contactGreyIcon, contactBlueIcon, userTabActive)} className="item__link item__link__contacts"></span>
+              <div css={itemLinkStyle(contactGreyIcon, contactBlueIcon, userTabActive, "contacts")} className="item__link item__link__contacts"></div>
             </div>
             <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'groups')}>
-              <span css={itemLinkStyle(groupGreyIcon, groupBlueIcon, groupsTabActive)} className="item__link item__link__groups"></span>
+              <div css={itemLinkStyle(groupGreyIcon, groupBlueIcon, groupsTabActive, "groups")} className="item__link item__link__groups"></div>
             </div>
             <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'info')}>
-              <span css={itemLinkStyle(moreGreyIcon, moreBlueIcon, moreTabActive)} className="item__link item__link__info"></span>
+              <div css={itemLinkStyle(moreGreyIcon, moreBlueIcon, moreTabActive, "userinfo")} className="item__link item__link__info"></div>
             </div>
           </div>
         </div>

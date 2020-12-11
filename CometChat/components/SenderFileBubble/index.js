@@ -15,11 +15,10 @@ import {
   messageWrapperStyle,
   messageFileWrapper,
   messageInfoWrapperStyle,
-  messageActionWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
 
-import blueFile from "./resources/file-blue.svg";
+import blueFile from "./resources/senderfile.png";
 
 class SenderFileBubble extends React.Component {
 
@@ -72,12 +71,14 @@ class SenderFileBubble extends React.Component {
     return (
       <div css={messageContainerStyle()} className="sender__message__container message__file">
 
-        <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-          <ToolTip {...this.props} message={this.state.message} />
-          <div css={messageWrapperStyle()} className="message__wrapper">
-            <div css={messageFileWrapper(this.props)} className="message__file__wrapper">
-              <a href={this.props.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">{this.props.message.data.attachments[0].name} <img src={blueFile} alt="file" /></a>
-            </div>
+        <ToolTip {...this.props} message={this.state.message} />
+          
+        <div css={messageWrapperStyle()} className="message__wrapper">
+          <div css={messageFileWrapper(this.props)} className="message__file__wrapper">
+            <a href={this.props.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">
+              <img src={blueFile} alt="file" />
+              <p>{this.props.message.data.attachments[0].name} </p>
+            </a>
           </div>
         </div>
 
@@ -85,7 +86,7 @@ class SenderFileBubble extends React.Component {
 
         <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
           <ReplyCount {...this.props} message={this.state.message} />
-          <ReadReciept {...this.props} />
+          <ReadReciept {...this.props} message={this.state.message} />
         </div>
       </div>
     )

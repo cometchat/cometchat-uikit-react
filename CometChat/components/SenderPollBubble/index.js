@@ -20,7 +20,6 @@ import {
     pollPercentStyle,
     answerWrapperStyle,
     messageInfoWrapperStyle,
-    messageActionWrapperStyle,
     messageReactionsWrapperStyle,
 } from "./style";
 
@@ -122,24 +121,23 @@ class SenderPollBubble extends React.Component {
         return (
             <div css={messageContainerStyle()} className="sender__message__container message__poll">
                 
-                <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-                    <ToolTip {...this.props} message={this.state.message} />
-                    <div css={messageWrapperStyle()} className="message__wrapper">
-                        <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
-                            <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
-                            <ul css={pollAnswerStyle(this.props)} className="poll__options">
-                                {pollOptions}
-                            </ul>
-                            <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>
-                        </div>
+                <ToolTip {...this.props} message={this.state.message} />
+                    
+                <div css={messageWrapperStyle()} className="message__wrapper">
+                    <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
+                        <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
+                        <ul css={pollAnswerStyle(this.props)} className="poll__options">
+                            {pollOptions}
+                        </ul>
+                        <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>
                     </div>
                 </div>
 
                 {messageReactions}
 
                 <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                    <ReplyCount theme={this.props.theme} {...this.props} message={this.state.message} />
-                    <ReadReciept theme={this.props.theme} {...this.props} />
+                    <ReplyCount {...this.props} message={this.state.message} />
+                    <ReadReciept {...this.props} message={this.state.message} />
                 </div>
             </div>
         );

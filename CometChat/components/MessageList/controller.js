@@ -10,22 +10,7 @@ export class MessageListManager {
     parentMessageId = null;
     messageRequest = null;
     limit = 30;
-    categories = [enums.CATEGORY_MESSAGE, enums.CATEGORY_CUSTOM, enums.CATEGORY_ACTION, enums.CATEGORY_CALL];
-    //categories = [enums.CATEGORY_CUSTOM];
-    types = [
-        enums.MESSAGE_TYPE_TEXT, 
-        enums.MESSAGE_TYPE_IMAGE, 
-        enums.MESSAGE_TYPE_VIDEO, 
-        enums.MESSAGE_TYPE_AUDIO, 
-        enums.MESSAGE_TYPE_FILE, 
-        enums.CUSTOM_TYPE_POLL,
-        enums.CUSTOM_TYPE_STICKER,
-        enums.ACTION_TYPE_GROUPMEMBER,
-        enums.CALL_TYPE_AUDIO,
-        enums.CALL_TYPE_VIDEO
-    ];
-    //types = [];
-
+    
     msgListenerId = "message_" + new Date().getTime();
     groupListenerId = "group_" + new Date().getTime();
     callListenerId = "call_" + new Date().getTime(); 

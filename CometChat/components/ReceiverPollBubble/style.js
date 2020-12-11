@@ -11,6 +11,11 @@ export const messageContainerStyle = () => {
         display: "flex",
         flexDirection: "column",
         flexShrink: "0",
+        ":hover": {
+            "ul.message__actions": {
+                display: "flex"
+            }
+        }
     }
 }
 
@@ -81,7 +86,7 @@ export const messageTxtWrapperStyle = (props) => {
         flexDirection: "column",
         borderRadius: "12px",
         backgroundColor: `${props.theme.backgroundColor.secondary}`,
-        padding: "8px 12px",
+        padding: "8px 16px",
         alignSelf: "flex-start",
         width: "100%",
     }
@@ -190,34 +195,6 @@ export const messageInfoWrapperStyle = () => {
     return {
         alignSelf: "flex-start",
         padding: "3px 5px",
-    }
-}
-
-export const messageTimestampStyle = (props) => {
-
-    return {
-        display: "inline-block",
-        fontSize: "11px",
-        fontWeight: "500",
-        lineHeight: "12px",
-        textTransform: "uppercase",
-        color: `${props.theme.color.helpText}`,
-    }
-}
-
-export const messageActionWrapperStyle = () => {
-
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
-        flexDirection: "row-reverse",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 

@@ -1,7 +1,7 @@
 export const chatHeaderStyle = (props) => {
 
     return {
-        padding: "14px 16px",
+        padding: "16px",
         width: "100%",
         backgroundColor: `${props.theme.backgroundColor.white}`,
         zIndex: "1",
@@ -59,7 +59,7 @@ export const chatUserStyle = () => {
 
     return {
         width: "calc(100% - 50px)",
-        padding: "0 14px",
+        padding: "0 16px",
         flexGrow: "1",
         display: "flex",
         flexDirection: "column",
@@ -127,11 +127,8 @@ export const chatStatusStyle = (props, state) => {
 
     return {
         fontSize: "13px",
-        lineHeight: "20px",
         width: "100%",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
+
         ...status
     }
 }
@@ -141,26 +138,22 @@ export const chatOptionWrapStyle = () => {
     return {
         display: "flex",
         flexDirection: "row",
-        justifyContent: "flex-end",
+        justifyContent: "center",
         alignItems: "center",
-        width: "100px",
+        width: "110px",
+        "div:not(:last-of-type)": {
+            marginRight: "14px"
+        },
     }
 }
 
 export const chatOptionStyle = (img) => {
 
     return {
-        display: "inline-block",
-        width: "20px",
-        height: "20px",
-        margin: "0 10px",
+        width: "24px",
+        height: "24px",
         cursor: "pointer",
-        background: `url(${img}) center center no-repeat`,
-        '&:first-of-type': {
-            marginLeft: 0,
-        },
-        '&:last-of-type': {
-            marginRight: 0,
-        }
+        display: "flex",
+        alignItems: "center",
     }
 }

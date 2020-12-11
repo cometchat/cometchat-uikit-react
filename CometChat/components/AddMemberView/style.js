@@ -57,7 +57,7 @@ export const selectionBoxStyle = (inactiveStateImg, activeStateImg) => {
             background: `url(${inactiveStateImg}) right center / 16px no-repeat`,
             userSelect: "none",
             float: "right",
-            padding: ".625em",
+            padding: "8px",
         },
         "&:checked + label": {
             background: `url(${activeStateImg}) no-repeat right center`,

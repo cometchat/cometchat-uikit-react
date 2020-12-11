@@ -25,7 +25,7 @@ import {
   chatsListStyle
 } from "./style";
 
-import navigateIcon from './resources/navigate_before.svg';
+import navigateIcon from './resources/navigate.png';
 
 import { incomingOtherMessageAlert } from "../../resources/audio/";
 

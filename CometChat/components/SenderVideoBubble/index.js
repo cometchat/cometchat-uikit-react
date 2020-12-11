@@ -14,7 +14,6 @@ import {
   messageWrapperStyle,
   messageVideoWrapperStyle,
   messageInfoWrapperStyle,
-  messageActionWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
 
@@ -70,14 +69,13 @@ class SenderVideoBubble extends React.PureComponent {
     return (
       <div css={messageContainerStyle()} className="sender__message__container message__video">
 
-        <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-          <ToolTip {...this.props} message={this.state.message} />
-          <div css={messageWrapperStyle()} className="message__wrapper">
-            <div css={messageVideoWrapperStyle(this.props)} className="message__video__wrapper">
-              <video controls>
-                <source src={this.props.message.data.url} />
-              </video>
-            </div>
+        <ToolTip {...this.props} message={this.state.message} />
+          
+        <div css={messageWrapperStyle()} className="message__wrapper">
+          <div css={messageVideoWrapperStyle(this.props)} className="message__video__wrapper">
+            <video controls>
+              <source src={this.props.message.data.url} />
+            </video>
           </div>
         </div>
 

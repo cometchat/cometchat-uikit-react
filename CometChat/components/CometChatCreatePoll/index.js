@@ -24,7 +24,7 @@ import {
 } from "./style";
 
 import addIcon from "./resources/add.png";
-import clearIcon from "./resources/clear.svg";
+import clearIcon from "./resources/close.png";
 
 class CometChatCreatePoll extends React.Component {
 
@@ -145,11 +145,17 @@ class CometChatCreatePoll extends React.Component {
 
             const message = { ...data, "sender": { "uid": data.sender }, "metadata": { "@injected": { "extensions": { "polls": polls } } } };
             this.props.actionGenerated("pollCreated", message);
-            this.setState({ error: null });
 
         }).catch(error => {
+
             console.log("error", error);
-            this.setState({ error: error });
+
+            if (error.hasOwnProperty("message") && error.message.hasOwnProperty("message")) {
+                this.setState({ error: error.message.message });
+            } else {
+                this.setState({ error: "Error" });
+            }
+            
         });
     }
 
@@ -161,10 +167,20 @@ class CometChatCreatePoll extends React.Component {
                 <CreatePollView 
                 key={index} 
                 option={option} 
+                tabIndex={index+4}
                 optionChangeHandler={this.optionChangeHandler}
                 removePollOption={this.removePollOption} />
             );
         });
+
+        let errorContainer = null;
+        if (this.state.error) {
+            errorContainer = (
+                <tr className="error">
+                    <td colSpan="3"><div css={modalErrorStyle()}>{this.state.error}</div></td>
+                </tr>
+            );
+        }
 
         return (
             <React.Fragment>
@@ -175,9 +191,7 @@ class CometChatCreatePoll extends React.Component {
                         <table css={modalTableStyle(this.props)}>
                             <caption css={tableCaptionStyle()} className="modal__title">Create Poll</caption>
                             <tbody css={tableBodyStyle()}>
-                                <tr className="error">
-                                    <td colSpan="3"><div css={modalErrorStyle()}>{this.state.error}</div></td>
-                                </tr>
+                                {errorContainer}
                                 <tr className="poll__question">
                                     <td><label>Question</label></td>
                                     <td colSpan="2">
@@ -187,13 +201,13 @@ class CometChatCreatePoll extends React.Component {
                                 <tr className="poll__options">
                                     <td><label>Options</label></td>
                                     <td colSpan="2">
-                                        <input type="text" placeholder="Enter your option" ref={this.optionOneRef} />
+                                        <input type="text" tabIndex="2" placeholder="Enter your option" ref={this.optionOneRef} />
                                     </td>
                                 </tr>
                                 <tr ref={this.optionRef} className="poll__options">
                                     <td>&nbsp;</td>
                                     <td colSpan="2">
-                                        <input type="text" placeholder="Enter your option" ref={this.optionTwoRef} />
+                                        <input type="text" tabIndex="3" placeholder="Enter your option" ref={this.optionTwoRef} />
                                     </td>
                                 </tr>
                                 {pollOptionView}
@@ -201,7 +215,7 @@ class CometChatCreatePoll extends React.Component {
                                     <td>&nbsp;</td>
                                     <td><label>Add new option</label></td>
                                     <td css={iconWrapperStyle()}>
-                                        <span css={addOptionIconStyle(addIcon)} className="option__add" onClick={this.addPollOption}></span>
+                                        <span tabIndex="100" css={addOptionIconStyle(addIcon)} className="option__add" onClick={this.addPollOption}></span>
                                     </td>
                                 </tr>
                             </tbody>

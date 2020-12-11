@@ -47,7 +47,7 @@ export const modalCloseStyle = (img) => {
 export const modalBodyStyle = () => {
 
     return {
-        padding: "25px",
+        padding: "24px",
         height: "100%",
         width: "100%"
     }
@@ -59,6 +59,7 @@ export const modalErrorStyle = () => {
         fontSize: "12px",
         color: "red",
         textAlign: "center",
+        height: "30px"
     }
 }
 
@@ -97,22 +98,22 @@ export const tableBodyStyle = () => {
         display: "block",
         "tr": {
             "td": {
-                padding: "6px 12px",
+                padding: "8px 16px",
                 fontSize: "14px",
                 "input": {
                     width: "100%",
                     border: "none",
-                    padding: "6px 12px",
+                    padding: "8px 16px",
                     fontSize: "14px",
                     "&:focus": {
                         outline: "none"
                     }
                 },
                 "label": {
-                    padding: "6px 12px", 
+                    padding: "8px 16px", 
                 },
                 ":first-of-type": {
-                    width: "90px"
+                    width: "120px"
                 }
             }
         }
@@ -126,7 +127,7 @@ export const tableFootStyle = (props) => {
         display: "inline-block",
         "button": {
             cursor: "pointer",
-            padding: "10px 20px",
+            padding: "8px 16px",
             backgroundColor: `${props.theme.backgroundColor.blue}`,
             borderRadius: "5px",
             color: `${props.theme.color.white}`,

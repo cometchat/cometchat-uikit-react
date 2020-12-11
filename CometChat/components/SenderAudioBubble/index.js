@@ -14,7 +14,6 @@ import {
   messageWrapperStyle,
   messageAudioWrapperStyle,
   messageInfoWrapperStyle,
-  messageActionWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
 
@@ -67,14 +66,13 @@ class SenderAudioBubble extends React.Component {
     return (
       <div css={messageContainerStyle()} className="sender__message__container message__audio">
 
-        <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-          <ToolTip {...this.props} message={this.state.message} />
-          <div css={messageWrapperStyle()} className="message__wrapper">
-            <div css={messageAudioWrapperStyle(this.props)} className="message__audio__wrapper">
-              <audio controls>
-                <source src={this.props.message.data.url} />
-              </audio>
-            </div>
+        <ToolTip {...this.props} message={this.state.message} />
+
+        <div css={messageWrapperStyle()} className="message__wrapper">
+          <div css={messageAudioWrapperStyle(this.props)} className="message__audio__wrapper">
+            <audio controls>
+              <source src={this.props.message.data.url} />
+            </audio>
           </div>
         </div>
 
@@ -82,7 +80,7 @@ class SenderAudioBubble extends React.Component {
 
         <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
           <ReplyCount {...this.props} message={this.state.message} />
-          <ReadReciept {...this.props} />
+          <ReadReciept {...this.props} message={this.state.message} />
         </div>
       </div>
     )

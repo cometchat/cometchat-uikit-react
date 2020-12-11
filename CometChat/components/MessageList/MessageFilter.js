@@ -23,13 +23,12 @@ class MessageFilter {
             [enums.MESSAGE_TYPE_FILE]: enums.MESSAGE_TYPE_FILE,
             [enums.CUSTOM_TYPE_POLL]: enums.CUSTOM_TYPE_POLL,
             [enums.CUSTOM_TYPE_STICKER]: enums.CUSTOM_TYPE_STICKER,
+            [enums.CUSTOM_TYPE_DOCUMENT]: enums.CUSTOM_TYPE_DOCUMENT,
+            [enums.CUSTOM_TYPE_WHITEBOARD]: enums.CUSTOM_TYPE_WHITEBOARD,
             [enums.ACTION_TYPE_GROUPMEMBER]: enums.ACTION_TYPE_GROUPMEMBER,
             [enums.CALL_TYPE_AUDIO]: enums.CALL_TYPE_AUDIO,
             [enums.CALL_TYPE_VIDEO]: enums.CALL_TYPE_VIDEO
         }
-
-        // console.log("this.categories ", this.categories);
-        // console.log("this.types", this.types);
     }
 
     getCategories = (widgetSettings) => {
@@ -41,8 +40,6 @@ class MessageFilter {
         if (validateWidgetSettings(widgetSettings, "show_call_notifications") === false) {
             delete this.categories[enums.CATEGORY_CALL];
         }
-
-        //console.log("this.categories ", this.categories);
         
         return Object.keys(this.categories);
     }
@@ -57,8 +54,6 @@ class MessageFilter {
             delete this.types[enums.CALL_TYPE_AUDIO];
             delete this.types[enums.CALL_TYPE_VIDEO];
         }
-
-        //console.log("this.types", this.types);
 
         return Object.keys(this.types);
     }

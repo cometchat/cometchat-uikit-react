@@ -1,11 +1,12 @@
 import React from "react";
-
+import dateFormat from "dateformat";
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
 import { CometChat } from '@cometchat-pro/chat';
 
 import * as enums from "../../util/enums.js";
+import { checkMessageForExtensionsData } from "../../util/common";
 
 import Avatar from "../Avatar";
 import BadgeCount from "../BadgeCount";
@@ -118,7 +119,7 @@ class ConversationView extends React.Component {
 
     if (diffTimestamp < 24 * 60 * 60 * 1000) {
 
-      timestamp = messageTimestamp.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+      timestamp = dateFormat(messageTimestamp, "shortTime");
 
     } else if (diffTimestamp < 48 * 60 * 60 * 1000) {
 
@@ -126,11 +127,11 @@ class ConversationView extends React.Component {
 
     } else if (diffTimestamp < 7 * 24 * 60 * 60 * 1000) {
 
-      timestamp = messageTimestamp.toLocaleString('en-US', { weekday: 'long' });
+      timestamp = dateFormat(messageTimestamp, "dddd");
 
     } else {
 
-      timestamp = messageTimestamp.toLocaleDateString('en-US', { year: "2-digit", month: "2-digit", day: "2-digit" });
+      timestamp = dateFormat(messageTimestamp, "dd/mm/yyyy"); 
     }
 
     return timestamp;
@@ -141,10 +142,16 @@ class ConversationView extends React.Component {
     let message = null;
     switch(lastMessage.type) {
       case enums.CUSTOM_TYPE_POLL:
-        message = "Poll";
+        message = "📊 Poll";
         break;
       case enums.CUSTOM_TYPE_STICKER:
-        message = "Sticker";
+        message = "💟 Sticker";
+        break;
+      case enums.CUSTOM_TYPE_DOCUMENT:
+        message = "📃 Document";
+        break;
+      case enums.CUSTOM_TYPE_WHITEBOARD:
+        message = "📝 Whiteboard";
         break;
       default:
         break;
@@ -153,13 +160,46 @@ class ConversationView extends React.Component {
     return message;
   }
 
+  getTextMessage = (message) => {
+
+    let messageText = message.text;
+
+    //xss extensions data
+    const xssData = checkMessageForExtensionsData(message, "xss-filter");
+    if (xssData && xssData.hasOwnProperty("sanitized_text")) {
+      messageText = xssData.sanitized_text;
+    }
+
+    //datamasking extensions data
+    const maskedData = checkMessageForExtensionsData(message, "data-masking");
+    if (maskedData
+      && maskedData.hasOwnProperty("data")
+      && maskedData.data.hasOwnProperty("sensitive_data")
+      && maskedData.data.hasOwnProperty("message_masked")
+      && maskedData.data.sensitive_data === "yes") {
+      messageText = maskedData.data.message_masked;
+    }
+
+    //profanity extensions data
+    const profaneData = checkMessageForExtensionsData(message, "profanity-filter");
+    if (profaneData
+      && profaneData.hasOwnProperty("profanity")
+      && profaneData.hasOwnProperty("message_clean")
+      && profaneData.profanity === "yes") {
+      messageText = profaneData.message_clean;
+    }
+
+    return messageText;
+
+  }
+
   getMessage = (lastMessage) => {
 
     let message = null;
     switch (lastMessage.type) {
 
       case CometChat.MESSAGE_TYPE.TEXT:
-        message = lastMessage.text;
+        message = this.getTextMessage(lastMessage);
         break;
       case CometChat.MESSAGE_TYPE.MEDIA:
         message = "Media message";

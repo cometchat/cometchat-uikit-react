@@ -121,6 +121,6 @@ export const stickerCloseStyle = (img) => {
         alignSelf: "flex-end",
         background: `url(${img}) center center no-repeat`,
         cursor: "pointer",
-	    margin: "10px 10px 0 0",
+        margin: "8px 8px 0 0",
     }
 }

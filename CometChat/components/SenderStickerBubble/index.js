@@ -15,7 +15,6 @@ import {
     messageWrapperStyle,
     messageImgWrapper,
     messageInfoWrapperStyle,
-    messageActionWrapperStyle,
     messageReactionsWrapperStyle,
 } from "./style";
 
@@ -82,18 +81,17 @@ class SenderStickerBubble extends React.Component {
             <React.Fragment>
                 <div css={messageContainerStyle()} className="sender__message__container message__sticker">
                     
-                    <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-                        <ToolTip {...this.props} message={this.state.message} />
-                        <div css={messageWrapperStyle()} className="message__wrapper">
-                            <div css={messageImgWrapper(this.props)} className="message__img__wrapper">{stickerImg} </div>
-                        </div>
+                    <ToolTip {...this.props} message={this.state.message} />
+
+                    <div css={messageWrapperStyle()} className="message__wrapper">
+                        <div css={messageImgWrapper(this.props)} className="message__img__wrapper">{stickerImg} </div>
                     </div>
 
                     {messageReactions}
 
                     <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
                         <ReplyCount {...this.props} message={this.state.message} />
-                        <ReadReciept {...this.props} />
+                        <ReadReciept {...this.props} message={this.state.message} />
                     </div>
                 </div>
             </React.Fragment>

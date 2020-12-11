@@ -15,13 +15,12 @@ import {
   messageWrapperStyle,
   messageImgWrapper,
   messageInfoWrapperStyle,
-  messageActionWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
 
 import srcIcon from "./resources/1px.png";
 
-class SenderImageBubble extends React.Component {
+class SenderImageBubble extends React.PureComponent {
 
   timer = null;
   messageFrom = "sender";
@@ -73,42 +72,31 @@ class SenderImageBubble extends React.Component {
 
   setImage = () => {
 
-    if (this.state.message.hasOwnProperty("metadata")) {
+    const thumbnailGenerationData = checkMessageForExtensionsData(this.state.message, "thumbnail-generation");
+    if (thumbnailGenerationData) {
 
-      const metadata = this.state.message.metadata;
-      const injectedObject = metadata["@injected"];
-      if (injectedObject && injectedObject.hasOwnProperty("extensions")) {
+      const mq = window.matchMedia(this.props.theme.breakPoints[0]);
+      mq.addListener(() => {
 
-        const extensionsObject = injectedObject["extensions"];
-        if (extensionsObject && extensionsObject.hasOwnProperty("thumbnail-generation")) {
+        const imageToDownload = this.chooseImage(thumbnailGenerationData);
+        let img = new Image();
+        img.src = imageToDownload;
+        img.onload = () => this.setState({ imageUrl: img.src });
 
-          const thumbnailGenerationObject = extensionsObject["thumbnail-generation"];
+      });
 
-          const mq = window.matchMedia(this.props.theme.breakPoints[0]);
-          mq.addListener(() => {
+      const imageToDownload = this.chooseImage(thumbnailGenerationData);
+      this.downloadImage(imageToDownload).then(response => {
 
-            const imageToDownload = this.chooseImage(thumbnailGenerationObject);
-            let img = new Image();
-            img.src = imageToDownload;
-            img.onload = () => this.setState({ imageUrl: img.src });
+        let img = new Image();
+        img.src = imageToDownload;
+        img.onload = () => {
 
-          });
-
-          const imageToDownload = this.chooseImage(thumbnailGenerationObject);
-          this.downloadImage(imageToDownload).then(response => {
-
-            const url = URL.createObjectURL(response)
-            let img = new Image();
-            img.src = url;
-            img.onload = () => {
-
-              this.setState({ imageUrl: img.src });
-              URL.revokeObjectURL(img.src);
-            }
-
-          }).catch(error => console.error(error));
+          this.setState({ imageUrl: img.src });
         }
-      }
+
+      }).catch(error => console.error(error));
+
 
     } else {
       this.setMessageImageUrl();
@@ -137,13 +125,13 @@ class SenderImageBubble extends React.Component {
           if (xhr.status === 200) {
 
             this.timer = null;
-            resolve(xhr.response);
+            resolve(imgUrl);
 
           } else if (xhr.status === 403) {
 
             this.timer = setTimeout(() => {
 
-              this.downloadImage(imgUrl).then(response => resolve(response)).catch(error => reject(error));
+              this.downloadImage(imgUrl).then(response => resolve(imgUrl)).catch(error => reject(error));
 
             }, 800);
           }
@@ -191,12 +179,11 @@ class SenderImageBubble extends React.Component {
     return (
       <div css={messageContainerStyle()} className="sender__message__container message__image">
 
-        <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-          <ToolTip {...this.props} message={this.state.message} />
-          <div css={messageWrapperStyle()} className="message__wrapper">
-            <div css={messageImgWrapper(this.props)} onClick={this.open} className="message__img__wrapper">
-              <img src={this.state.imageUrl} alt="message" ref={el => { this.imgRef = el; }} />
-            </div>
+        <ToolTip {...this.props} message={this.state.message} />
+          
+        <div css={messageWrapperStyle()} className="message__wrapper">
+          <div css={messageImgWrapper(this.props)} onClick={this.open} className="message__img__wrapper">
+            <img src={this.state.imageUrl} alt="message" ref={el => { this.imgRef = el; }} />
           </div>
         </div>
 
@@ -204,7 +191,7 @@ class SenderImageBubble extends React.Component {
 
         <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
           <ReplyCount {...this.props} message={this.state.message} />
-          <ReadReciept {...this.props} />
+          <ReadReciept {...this.props} message={this.state.message} />
         </div>
       </div>
     )

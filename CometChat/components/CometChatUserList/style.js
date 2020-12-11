@@ -84,7 +84,7 @@ export const contactSearchInputStyle = (theme, img) => {
         border: "0",
         boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
         borderRadius: "8px",
-        padding: "6px 8px 6px 35px",
+        padding: "8px 8px 8px 40px",
         fontSize: "15px",
         outline: "none",
         color: `${theme.color.primary}`,

@@ -9,6 +9,7 @@ import { SvgAvatar } from '../../util/svgavatar';
 import Avatar from "../Avatar";
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
+import ReadReciept from "../ReadReciept";
 import RegularReactionView from "../RegularReactionView";
 
 import {
@@ -21,14 +22,12 @@ import {
   messageImgContainerStyle,
   messageImgWrapperStyle,
   messageInfoWrapperStyle,
-  messageTimestampStyle,
-  messageActionWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
 
 import srcIcon from "./resources/1px.png";
 
-class ReceiverImageBubble extends React.Component {
+class ReceiverImageBubble extends React.PureComponent {
 
   messageFrom = "receiver";
 
@@ -89,42 +88,30 @@ class ReceiverImageBubble extends React.Component {
 
   setImage = () => {
 
-    if (this.state.message.hasOwnProperty("metadata")) {
+    const thumbnailGenerationData = checkMessageForExtensionsData(this.state.message, "thumbnail-generation");
+    if (thumbnailGenerationData) {
 
-      const metadata = this.state.message.metadata;
-      const injectedObject = metadata["@injected"];
-      if (injectedObject && injectedObject.hasOwnProperty("extensions")) {
+      const mq = window.matchMedia(this.props.theme.breakPoints[0]);
+      mq.addListener(() => {
 
-        const extensionsObject = injectedObject["extensions"];
-        if (extensionsObject && extensionsObject.hasOwnProperty("thumbnail-generation")) {
+        const imageToDownload = this.chooseImage(thumbnailGenerationData);
+        let img = new Image();
+        img.src = imageToDownload;
+        img.onload = () => this.setState({ imageUrl: img.src });
 
-          const thumbnailGenerationObject = extensionsObject["thumbnail-generation"];
+      });
 
-          const mq = window.matchMedia(this.props.theme.breakPoints[0]);
-          mq.addListener(() => {
+      const imageToDownload = this.chooseImage(thumbnailGenerationData);
+      this.downloadImage(imageToDownload).then(response => {
 
-            const imageToDownload = this.chooseImage(thumbnailGenerationObject);
-            let img = new Image();
-            img.src = imageToDownload;
-            img.onload = () => this.setState({ imageUrl: img.src });
+        let img = new Image();
+        img.src = imageToDownload;
+        img.onload = () => {
 
-          });
-
-          const imageToDownload = this.chooseImage(thumbnailGenerationObject);
-          this.downloadImage(imageToDownload).then(response => {
-
-            const url = URL.createObjectURL(response)
-            let img = new Image();
-            img.src = url;
-            img.onload = () => {
-
-              this.setState({ imageUrl: img.src });
-              URL.revokeObjectURL(img.src);
-            }
-
-          }).catch(error => console.error(error));
+          this.setState({ imageUrl: img.src });
         }
-      }
+
+      }).catch(error => console.error(error));
 
     } else {
       this.setMessageImageUrl();
@@ -227,20 +214,17 @@ class ReceiverImageBubble extends React.Component {
           {avatar}
           <div css={messageDetailStyle(name)} className="message__details">
             {name}
-
-            <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-              <ToolTip {...this.props} message={this.state.message} name={name} />
-              <div css={messageImgContainerStyle()} className="message__image__container">
-                <div css={messageImgWrapperStyle(this.props)} onClick={this.open} className="message__image__wrapper">
-                  <img src={this.state.imageUrl} alt="message" ref={el => { this.imgRef = el; }} />
-                </div>
+            <ToolTip {...this.props} message={this.state.message} name={name} />
+            <div css={messageImgContainerStyle()} className="message__image__container">
+              <div css={messageImgWrapperStyle(this.props)} onClick={this.open} className="message__image__wrapper">
+                <img src={this.state.imageUrl} alt="message" ref={el => { this.imgRef = el; }} />
               </div>
             </div>
 
             {messageReactions}
 
             <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-              <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+              <ReadReciept {...this.props} message={this.state.message} />
               <ReplyCount {...this.props} message={this.state.message} />
             </div>
           </div>
