@@ -47,7 +47,7 @@ export const modalCloseStyle = (img) => {
 export const modalBodyStyle = () => {
 
     return {
-        padding: "25px",
+        padding: "24px",
         height: "100%",
         width: "100%"
     }
@@ -87,18 +87,18 @@ export const tableBodyStyle = () => {
         display: "block",
         "tr": {
             "td": {
-                padding: "8px",
+                padding: "8px 0",
                 fontSize: "14px",
                 "input": {
                     width: "100%",
                     border: "none",
-                    padding: "10px 14px",
+                    padding: "8px 16px",
                     fontSize: "14px",
                     outline: "none",
                 },
                 "select": {
                     outline: "none",
-                    padding: "10px",
+                    padding: "8px 16px",
                 }
             }
         }
@@ -121,7 +121,7 @@ export const tableFootStyle = (props) => {
         display: "inline-block",
         "button": {
             cursor: "pointer",
-            padding: "10px 20px",
+            padding: "8px 16px",
             backgroundColor: `${props.theme.backgroundColor.blue}`,
             borderRadius: "5px",
             color: `${props.theme.color.white}`,
@@ -147,8 +147,7 @@ export const inputStyle = (props) => {
         boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
         borderRadius: "8px",
         backgroundColor: `${props.theme.backgroundColor.grey}`,
-        padding: "6px 8px 6px 30px",
         color: `${props.theme.color.helpText}`,
-        fontSize: "15px",
+        fontSize: "14px",
     }
 }

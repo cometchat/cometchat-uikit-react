@@ -10,27 +10,19 @@ import { linkify, checkMessageForExtensionsData, validateWidgetSettings } from "
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
 import ReadReciept from "../ReadReciept";
+import LinkPreview from "../LinkPreview";
 import RegularReactionView from "../RegularReactionView";
 
 import {
   messageContainerStyle,
   messageWrapperStyle,
-  messagePreviewContainerStyle,
-  messagePreviewWrapperStyle,
-  previewImageStyle,
-  previewDataStyle,
-  previewTitleStyle,
-  previewDescStyle,
-  previewLinkStyle,
   messageTxtWrapperStyle,
   messageTxtStyle,
-  previewTextStyle,
   messageInfoWrapperStyle,
-  messageActionWrapperStyle,
   messageReactionsWrapperStyle,
 } from "./style";
 
-class SenderMessageBubble extends React.Component {
+class SenderMessageBubble extends React.PureComponent {
 
   messageFrom = "sender";
 
@@ -60,10 +52,39 @@ class SenderMessageBubble extends React.Component {
   getMessageText = () => {
 
     let messageText = this.state.message.text;
+    
+    //xss extensions data
+    const xssData = checkMessageForExtensionsData(this.state.message, "xss-filter");
+    if (xssData 
+    && xssData.hasOwnProperty("sanitized_text") 
+    && xssData.hasOwnProperty("hasXSS")
+    && xssData.hasXSS === "yes") {
+      messageText = xssData.sanitized_text;
+    }
+    
+    //datamasking extensions data
+    const maskedData = checkMessageForExtensionsData(this.state.message, "data-masking");
+    if (maskedData 
+    && maskedData.hasOwnProperty("data") 
+    && maskedData.data.hasOwnProperty("sensitive_data") 
+    && maskedData.data.hasOwnProperty("message_masked") 
+    && maskedData.data.sensitive_data === "yes") {
+      messageText = maskedData.data.message_masked;
+    }
+   
+    //profanity extensions data
+    const profaneData = checkMessageForExtensionsData(this.state.message, "profanity-filter");
+    if (profaneData 
+      && profaneData.hasOwnProperty("profanity") 
+      && profaneData.hasOwnProperty("message_clean")
+      && profaneData.profanity === "yes") {
+      messageText = profaneData.message_clean;
+    }
+    
     const formattedText = linkify(messageText);
-
+    
     const emojiParsedMessage = twemoji.parse(formattedText, { folder: "svg", ext: ".svg" });
-    const parsedMessage = ReactHtmlParser(emojiParsedMessage);
+    const parsedMessage = ReactHtmlParser(emojiParsedMessage, { decodeEntities: false });
     
     const emojiMessage = parsedMessage.filter(message => (message instanceof Object && message.type === "img"));
 
@@ -84,46 +105,19 @@ class SenderMessageBubble extends React.Component {
 
   render() {
 
-    let messageReactions = null;
     let messageText = this.getMessageText();
-    if (this.state.message.hasOwnProperty("metadata")) {
+    
+    //linkpreview extensions data
+    const linkPreviewData = checkMessageForExtensionsData(this.state.message, "link-preview");
+    if (linkPreviewData && linkPreviewData.hasOwnProperty("links") && linkPreviewData["links"].length) {
 
-      const metadata = this.state.message.metadata;
-      const injectedObject = metadata["@injected"];
-      if (injectedObject && injectedObject.hasOwnProperty("extensions")) {
+      messageText = (
+        <LinkPreview {...this.props} message={this.state.message} messageText={messageText} />
+      );
+    }
 
-        const extensionsObject = injectedObject["extensions"];
-        if (extensionsObject && extensionsObject.hasOwnProperty("link-preview")) {
-
-          const linkPreviewObject = extensionsObject["link-preview"]
-          if (linkPreviewObject && linkPreviewObject.hasOwnProperty("links") && linkPreviewObject["links"].length) {
-
-            const linkObject = linkPreviewObject["links"][0];
-
-            const pattern = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)(\S+)?/;
-            const linkText = (linkObject["url"].match(pattern)) ? "View on Youtube" : "Visit";
-
-            const actualMessage = messageText;
-            messageText = (
-              <div css={messagePreviewContainerStyle(this.props)} className="message__preview">
-                <div css={messagePreviewWrapperStyle()} className="preview__card">
-                  <div css={previewImageStyle(linkObject["image"])} className="card__image"></div>
-                  <div css={previewDataStyle(this.props)} className="card__info">
-                    <div css={previewTitleStyle(this.props)} className="card__title"><span>{linkObject["title"]}</span></div>
-                    <div css={previewDescStyle(this.props)} className="card__desc"><span>{linkObject["description"]}</span></div>
-                    <div css={previewTextStyle(this.props)} className="card__text">{actualMessage}</div>
-                  </div>
-                  <div css={previewLinkStyle(this.props)} className="card__link">
-                    <a href={linkObject["url"]} target="_blank" rel="noopener noreferrer">{linkText}</a>
-                  </div>
-                </div>
-              </div>
-            );
-          } 
-        } 
-      }
-    } 
-
+    //messagereactions extensions data
+    let messageReactions = null;
     const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
     if (reactionsData) {
 
@@ -145,16 +139,14 @@ class SenderMessageBubble extends React.Component {
     return (
       <div css={messageContainerStyle()} className="sender__message__container message__text">
         
-        <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-          <ToolTip {...this.props} message={this.state.message} />
-          <div css={messageWrapperStyle()} className="message__wrapper">{messageText}</div>
-        </div>
+        <ToolTip {...this.props} message={this.state.message} />
+        <div css={messageWrapperStyle()} className="message__wrapper">{messageText}</div>
         
         {messageReactions}
 
         <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-          <ReplyCount theme={this.props.theme} {...this.props} message={this.state.message} />
-          <ReadReciept theme={this.props.theme} {...this.props} message={this.state.message} />
+          <ReplyCount {...this.props} message={this.state.message} />
+          <ReadReciept {...this.props} message={this.state.message} />
         </div>
       </div>
     );

@@ -5,6 +5,7 @@ import { jsx } from '@emotion/core';
 
 import { CometChat } from "@cometchat-pro/chat";
 
+import { checkMessageForExtensionsData } from "../../util/common";
 import * as enums from "../../util/enums.js";
 import { MessageThreadManager } from "./controller";
 
@@ -21,6 +22,14 @@ import SenderAudioBubble from "../SenderAudioBubble";
 import ReceiverAudioBubble from "../ReceiverAudioBubble";
 import SenderVideoBubble from "../SenderVideoBubble";
 import ReceiverVideoBubble from "../ReceiverVideoBubble";
+import SenderPollBubble from "../SenderPollBubble";
+import ReceiverPollBubble from "../ReceiverPollBubble";
+import SenderStickerBubble from "../SenderStickerBubble";
+import ReceiverStickerBubble from "../ReceiverStickerBubble";
+import SenderDocumentBubble from "../SenderDocumentBubble";
+import ReceiverDocumentBubble from "../ReceiverDocumentBubble";
+import SenderWhiteboardBubble from "../SenderWhiteboardBubble";
+import ReceiverWhiteboardBubble from "../ReceiverWhiteboardBubble";
 
 import {
   wrapperStyle,
@@ -36,7 +45,7 @@ import {
   messageReplyStyle,
 } from "./style";
 
-import clearIcon from "./resources/clear.svg";
+import clearIcon from "./resources/close.png";
 
 class MessageThread extends React.PureComponent {
 
@@ -99,7 +108,7 @@ class MessageThread extends React.PureComponent {
   actionHandler = (action, messages) => {
       
     switch(action) {
-
+      case "customMessageReceived":
       case "messageReceived": {
         const message = messages[0];
         if (message.hasOwnProperty("parentMessageId") && message.parentMessageId === this.state.parentMessage.id) {
@@ -117,9 +126,6 @@ class MessageThread extends React.PureComponent {
       }
       break;
       case "messageComposed": {
-
-        // let replyCount = this.state.replyCount;
-        // this.setState({replyCount: ++replyCount});
 
         const replyCount = (this.state.parentMessage.hasOwnProperty("replyCount")) ? this.state.parentMessage.replyCount : 0;
         const newReplyCount = replyCount + 1;
@@ -214,28 +220,12 @@ class MessageThread extends React.PureComponent {
   smartReplyPreview = (messages) => {
 
     const message = messages[0];
-    
-    if (message.hasOwnProperty("metadata")) {
 
-      const metadata = message.metadata;
-      if (metadata.hasOwnProperty("@injected")) {
-
-        const injectedObject = metadata["@injected"];
-        if (injectedObject.hasOwnProperty("extensions")) {
-
-          const extensionsObject = injectedObject["extensions"];
-          if (extensionsObject.hasOwnProperty("smart-reply")) {
-
-            const smartReply = extensionsObject["smart-reply"];
-            if (smartReply.hasOwnProperty("error") === false) {
-              this.setState({ replyPreview: message });
-            } else {
-              this.setState({ replyPreview: null });
-            }
-
-          }
-        }
-      }
+    const smartReplyData = checkMessageForExtensionsData(message, "smart-reply");
+    if (smartReplyData && smartReplyData.hasOwnProperty("error") === false) {
+      this.setState({ replyPreview: message });
+    } else {
+      this.setState({ replyPreview: null });
     }
   }
 
@@ -329,17 +319,78 @@ class MessageThread extends React.PureComponent {
     return component;
   }
 
-  getMessageComponent = (message) => {
+  getSenderCustomMessageComponent = (message, key) => {
+
+    let component;
+
+    switch (message.type) {
+      case enums.CUSTOM_TYPE_POLL:
+        component = <SenderPollBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        break;
+      case enums.CUSTOM_TYPE_STICKER:
+        component = <SenderStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        break;
+      case enums.CUSTOM_TYPE_DOCUMENT:
+        component = <SenderDocumentBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        break;
+      case enums.CUSTOM_TYPE_WHITEBOARD:
+        component = <SenderWhiteboardBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        break;
+      default:
+        break;
+    }
+
+    return component;
+  }
+
+  getReceiverCustomMessageComponent = (message, key) => {
+
+    let component;
+    switch (message.type) {
+      case enums.CUSTOM_TYPE_POLL:
+        component = <ReceiverPollBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        break;
+      case enums.CUSTOM_TYPE_STICKER:
+        component = <ReceiverStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        break;
+      case enums.CUSTOM_TYPE_DOCUMENT:
+        component = <ReceiverDocumentBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        break;
+      case enums.CUSTOM_TYPE_WHITEBOARD:
+        component = <ReceiverWhiteboardBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        break;
+      default:
+        break;
+    }
+
+    return component;
+  }
+
+  getParentMessageComponent = (message) => {
 
     let component = null;
     const key = 1;
-    
-    if (this.props.loggedInUser.uid === message.sender.uid) {
-      component = this.getSenderMessageComponent(message, key);
-    } else {
-      component = this.getReceiverMessageComponent(message, key);
+
+    switch (message.category) {
+
+      case "message":
+        if (this.props.loggedInUser.uid === message.sender.uid) {
+          component = this.getSenderMessageComponent(message, key);
+        } else {
+          component = this.getReceiverMessageComponent(message, key);
+        }
+      break;
+      case "custom":
+        if (this.props.loggedInUser.uid === message.sender.uid) {
+          component = this.getSenderCustomMessageComponent(message, key);
+        } else {
+          component = this.getReceiverCustomMessageComponent(message, key);
+        }
+      break;
+      default:
+      break;
     }
-    
+
     return component;
   }
 
@@ -354,7 +405,7 @@ class MessageThread extends React.PureComponent {
 
   render() {
 
-    let parentMessage = this.getMessageComponent(this.state.parentMessage);
+    let parentMessage = this.getParentMessageComponent(this.state.parentMessage);
     
     let seperator = (<div css={messageSeparatorStyle(this.props)}><hr/></div>);
     if (this.state.parentMessage.hasOwnProperty("replyCount")) {

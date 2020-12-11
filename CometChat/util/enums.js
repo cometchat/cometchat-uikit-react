@@ -40,6 +40,8 @@ export const MESSAGE_TYPE_FILE = "file";
 export const CATEGORY_CUSTOM = "custom";
 export const CUSTOM_TYPE_POLL = "extension_poll";
 export const CUSTOM_TYPE_STICKER = "extension_sticker";
+export const CUSTOM_TYPE_DOCUMENT = "extension_document";
+export const CUSTOM_TYPE_WHITEBOARD = "extension_whiteboard";
 
 export const CATEGORY_ACTION = "action";
 export const ACTION_TYPE_GROUPMEMBER = "groupMember";

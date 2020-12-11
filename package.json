@@ -4,12 +4,13 @@
   "description": "Chat UI Kit for React App",
   "author": "Inscripts",
   "dependencies": {
-    "@cometchat-pro/chat": "2.1.5-beta1",
+    "@cometchat-pro/chat": "2.1.5",
     "node-sass": "^4.12.1",
     "emoji-mart": "^3.0.0",
     "react-html-parser": "^2.0.2",
     "twemoji": "^13.0.1",
-    "@emotion/core": "^10.0.35"
+    "@emotion/core": "^10.0.35",
+    "dateformat": "^4.0.0"
   },
   "peerDependencies": {
     "react": "^16.13.1",

@@ -86,7 +86,7 @@ export const messageFileWrapperStyle = (props) => {
         borderRadius: "12px",
         color: `${props.theme.color.secondary}`,
         backgroundColor: `${props.theme.backgroundColor.secondary}`,
-        padding: "8px 12px",
+        padding: "8px 16px",
         alignSelf: "flex-start",
         width: "auto",
         "> a": {
@@ -96,12 +96,18 @@ export const messageFileWrapperStyle = (props) => {
             color: `${props.theme.color.primary}`,
             width: "auto",
             fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             "&:visited, &:active, &:hover": {
                 color: `${props.theme.color.primary}`,
                 textDecoration: "none",
             },
             "img": {
-                backgroundColor: `${props.theme.backgroundColor.white}`
+                marginRight: "8px",
+            },
+            "label": {
+                cursor: "pointer"
             }
         }
     }
@@ -112,34 +118,6 @@ export const messageInfoWrapperStyle = () => {
     return {
         alignSelf: "flex-start",
         padding: "3px 5px",
-    }
-}
-
-export const messageTimestampStyle = (props) => {
-
-    return {
-        display: "inline-block",
-        fontSize: "11px",
-        fontWeight: "500",
-        lineHeight: "12px",
-        textTransform: "uppercase",
-        color: `${props.theme.color.helpText}`,
-    }
-}
-
-export const messageActionWrapperStyle = () => {
-
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
-        flexDirection: "row-reverse",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 

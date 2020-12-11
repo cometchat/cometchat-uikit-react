@@ -18,7 +18,7 @@ import {
     itemLinkStyle
 } from "./style";
 
-import navigateIcon from "./resources/navigate_before.svg";
+import navigateIcon from "./resources/navigate.png";
 
 class CometChatUserDetail extends React.Component {
 

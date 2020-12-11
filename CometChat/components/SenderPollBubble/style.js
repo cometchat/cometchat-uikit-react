@@ -11,6 +11,11 @@ export const messageContainerStyle = () => {
         display: "flex",
         flexDirection: "column",
         flexShrink: "0",
+        ":hover": {
+            "ul.message__actions": {
+                display: "flex"
+            }
+        }
     }
 }
 
@@ -31,7 +36,7 @@ export const messageTxtWrapperStyle = (props) => {
         borderRadius: "12px",
         backgroundColor: `${props.theme.backgroundColor.blue}`,
         color: `${props.theme.color.white}`,
-        padding: "8px 12px",
+        padding: "8px 16px",
         alignSelf: "flex-end",
         width: "auto",
     }
@@ -75,7 +80,6 @@ export const pollTotalStyle = () => {
         alignSelf: "flex-end"
     }
 }
-
 
 export const pollPercentStyle = (props, width) => {
 
@@ -127,21 +131,6 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-end",
-    }
-}
-
-export const messageActionWrapperStyle = () => {
-
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-end",
-        display: "flex",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 

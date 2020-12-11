@@ -77,7 +77,7 @@ export const headerCloseStyle = (img) => {
     }
 }
 
-export const messageContainerStyle = () => {
+export const messageContainerStyle = (event) => {
 
     return {
         display: "flex",

@@ -24,8 +24,8 @@ import {
   contactAlphabetStyle
 } from "./style";
 
-import searchIcon from './resources/search-grey-icon.svg';
-import navigateIcon from './resources/navigate_before.svg';
+import searchIcon from './resources/search-grey-icon.png';
+import navigateIcon from './resources/navigate.png';
 
 class CometChatUserList extends React.PureComponent {
   timeout;

@@ -9,6 +9,7 @@ import { SvgAvatar } from '../../util/svgavatar';
 import Avatar from "../Avatar";
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
+import ReadReciept from "../ReadReciept";
 import RegularReactionView from "../RegularReactionView";
 
 import {
@@ -21,8 +22,6 @@ import {
   messageVideoContainerStyle,
   messageVideoWrapperStyle,
   messageInfoWrapperStyle,
-  messageTimestampStyle,
-  messageActionWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
 
@@ -109,27 +108,24 @@ class ReceiverVideoBubble extends React.Component {
 
     return (
       <div css={messageContainerStyle()} className="receiver__message__container message__video">
-        
+
         <div css={messageWrapperStyle()} className="message__wrapper">
           {avatar}
           <div css={messageDetailStyle(name)} className="message__details">
             {name}
-
-            <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-              <ToolTip {...this.props} message={this.state.message} name={name} />
-              <div css={messageVideoContainerStyle()} className="message__video__container">
-                <div css={messageVideoWrapperStyle(this.props)} className="message__video__wrapper">
-                  <video controls>
-                    <source src={this.props.message.data.url} />
-                  </video>
-                </div>
+            <ToolTip {...this.props} message={this.state.message} name={name} /> 
+            <div css={messageVideoContainerStyle()} className="message__video__container">
+              <div css={messageVideoWrapperStyle(this.props)} className="message__video__wrapper">
+                <video controls>
+                  <source src={this.props.message.data.url} />
+                </video>
               </div>
             </div>
 
             {messageReactions}
 
             <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-              <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+              <ReadReciept {...this.props} message={this.state.message} />
               <ReplyCount {...this.props} message={this.state.message} />
             </div>
           </div>

@@ -58,6 +58,14 @@ class CometChatUnified extends React.Component {
       lastmessage: {}
     }
 
+    new CometChatManager().getLoggedInUser().then((user) => {
+      this.loggedInUser = user;
+
+    }).catch((error) => {
+      console.log("[CometChatUnified] getLoggedInUser error", error);
+
+    });
+
     this.theme = Object.assign({}, theme, this.props.theme);
 	}
   
@@ -67,13 +75,13 @@ class CometChatUnified extends React.Component {
       this.toggleSideBar();
     }
 
-    new CometChatManager().getLoggedInUser().then((user) => {
-      this.loggedInUser = user;
+    // new CometChatManager().getLoggedInUser().then((user) => {
+    //   this.loggedInUser = user;
 
-    }).catch((error) => {
-      console.log("[CometChatUnified] getLoggedInUser error", error);
+    // }).catch((error) => {
+    //   console.log("[CometChatUnified] getLoggedInUser error", error);
       
-    });
+    // });
     
   }
 

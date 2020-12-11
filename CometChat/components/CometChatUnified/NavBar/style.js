@@ -20,20 +20,30 @@ export const itemStyle = () => {
 
     return {
         display: "inline-block",
-        padding: "13px",
+        padding: "8px",
         cursor: "pointer"
     }
 }
 
-export const itemLinkStyle = (icon, activeStateIcon, isActive) => {
+export const itemLinkStyle = (icon, activeStateIcon, isActive, key) => {
 
-    let activeStateBg = (isActive) ? { background: `url(${activeStateIcon}) center center / 20px 21px no-repeat`, } : {};
+    let activeStateBg = (isActive) ? { background: `url(${activeStateIcon}) center center no-repeat`, } : {};
+
+    let widthProp = {};
+
+    if(key === "groups") {
+        widthProp = { width: "31px" }
+    } else if (key === "chats") {
+        widthProp = { width: "22px" }
+    } else {
+        widthProp = { width: "20px" }
+    }
 
     return {
-        width: "20px",
-        height: "21px",
+        height: "20px",
+        ...widthProp,
         display: "inline-block",
-        background: `url(${icon}) center center / 20px 21px no-repeat`,
+        background: `url(${icon}) center center no-repeat`,
         ...activeStateBg
     }
 }

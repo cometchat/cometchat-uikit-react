@@ -1,5 +1,5 @@
 import React from "react";
-
+import dateFormat from "dateformat";
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
@@ -23,10 +23,10 @@ import {
   chatOptionStyle
 } from "./style";
 
-import menuIcon from './resources/menu-icon.svg';
-import audioCallIcon from './resources/call-blue-icon.svg';
-import videoCallIcon from './resources/video-call-blue-icon.svg';
-import detailPaneIcon from './resources/details-pane-blue-icon.svg';
+import menuIcon from './resources/menuicon.png';
+import audioCallIcon from './resources/audiocall.png';
+import videoCallIcon from './resources/videocall.png';
+import detailPaneIcon from './resources/detailpane.png';
 
 class MessageHeader extends React.Component {
 
@@ -72,7 +72,11 @@ class MessageHeader extends React.Component {
     const presence = (this.props.item.status === "online") ? "online" : "offline";
 
     if(this.props.item.status === "offline" && this.props.item.lastActiveAt) {
-      status = "Last active at: " + new Date(this.props.item.lastActiveAt * 1000).toLocaleTimeString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+
+      const lastActive = (this.props.item.lastActiveAt * 1000);
+      const messageDate = dateFormat(lastActive, "d mmmm yyyy, h:MM TT");
+
+      status = "Last active at: " + messageDate;
     } else if(this.props.item.status === "offline") {
       status = "offline";
     }
@@ -230,14 +234,20 @@ class MessageHeader extends React.Component {
     }
 
     let status = (
-      <span css={chatStatusStyle(this.props, this.state)} className="user__status"
-      onMouseEnter={event => this.toggleTooltip(event, true)}
-      onMouseLeave={event => this.toggleTooltip(event, false)}>{this.state.status}</span>
+      <span css={chatStatusStyle(this.props, this.state)} className="user__status">{this.state.status}</span>
     );
 
-    let audioCallBtn = (<span onClick={() => this.props.actionGenerated("audioCall")} css={chatOptionStyle(audioCallIcon)}></span>);
-    let videoCallBtn = (<span onClick={() => this.props.actionGenerated("videoCall")} css={chatOptionStyle(videoCallIcon)}></span>);
-    let viewDetailBtn = (<span onClick={() => this.props.actionGenerated("viewDetail")} css={chatOptionStyle(detailPaneIcon)}></span>);
+    let audioCallBtn = (
+      <div onClick={() => this.props.actionGenerated("audioCall")} css={chatOptionStyle(audioCallIcon)}>
+        <img src={audioCallIcon} alt="Voice call" />
+      </div>);
+    let videoCallBtn = (
+      <div onClick={() => this.props.actionGenerated("videoCall")} css={chatOptionStyle(videoCallIcon)}>
+        <img src={videoCallIcon} alt="Video call" />
+      </div>);
+    let viewDetailBtn = (<div onClick={() => this.props.actionGenerated("viewDetail")} css={chatOptionStyle(detailPaneIcon)}>
+      <img src={detailPaneIcon} alt="View detail" />
+    </div>);
     
     if(this.props.viewdetail === false) {
       viewDetailBtn = null;

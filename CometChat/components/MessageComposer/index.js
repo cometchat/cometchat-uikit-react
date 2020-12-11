@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/img-redundant-alt */
 import React from "react";
 
 /** @jsx jsx */
@@ -12,7 +13,7 @@ import CometChatCreatePoll from "../CometChatCreatePoll";
 import StickerView from "../StickerView";
 import EmojiView from "../EmojiView";
 
-import { validateWidgetSettings } from "../../util/common";
+import { validateWidgetSettings, checkMessageForExtensionsData } from "../../util/common";
 import * as enums from '../../util/enums.js';
 
 import {
@@ -26,10 +27,10 @@ import {
   messageInputStyle,
   inputStickyStyle,
   stickyAttachmentStyle,
-  attachmentIconStyle,
   filePickerStyle,
   fileListStyle,
   fileItemStyle,
+  stickyAttachButtonStyle,
   stickyButtonStyle,
   emojiButtonStyle,
   sendButtonStyle,
@@ -37,16 +38,18 @@ import {
   stickerBtnStyle
 } from "./style";
 
-import roundedPlus from "./resources/rounded-plus-grey-icon.svg";
-import videoIcon from "./resources/video_upload_icon.svg";
-import audioIcon from "./resources/audio_upload_icon.svg";
-import docIcon from "./resources/document_upload_icon.svg";
-import imageIcon from "./resources/images_upload_icon.svg";
-import insertEmoticon from "./resources/smiley.png"
-import sendBlue from "./resources/send-blue-icon.svg";
-import pollIcon from "./resources/poll.png";
-import stickerIcon from "./resources/sticker.png"
-import closeIcon from "./resources/clear.png";
+import roundedPlus from "./resources/attach.png";
+import videoIcon from "./resources/attachvideo.png";
+import audioIcon from "./resources/attachaudio.png";
+import docIcon from "./resources/attachfile.png";
+import imageIcon from "./resources/attachimage.png";
+import insertEmoticon from "./resources/insertemoji.png"
+import sendBlue from "./resources/sendmessage.png";
+import pollIcon from "./resources/createpoll.png";
+import stickerIcon from "./resources/insertsticker.png"
+import closeIcon from "./resources/close.png";
+import documentIcon from "./resources/launchcollaborativedocument.png";
+import whiteboardIcon from "./resources/launchcollaborativewhiteboard.png";
 
 import { outgoingMessageAlert } from "../../resources/audio/";
 
@@ -63,7 +66,6 @@ class MessageComposer extends React.PureComponent {
     this.messageInputRef = React.createRef();
     this.messageSending = false;
 
-    this.node = React.createRef();
     this.isTyping = false;
 
     this.state = {
@@ -75,7 +77,9 @@ class MessageComposer extends React.PureComponent {
       messageToBeEdited: "",
       replyPreview: null,
       stickerViewer: false,
-      messageToReact: ""
+      messageToReact: "",
+      shareDocument: false,
+      shareWhiteboard: false
     }
 
     this.audio = new Audio(outgoingMessageAlert);
@@ -92,8 +96,20 @@ class MessageComposer extends React.PureComponent {
       const element = this.messageInputRef.current;
       if (messageToBeEdited) {
 
+        let messageText = messageToBeEdited.text;
+
+        //xss extensions data
+        const xssData = checkMessageForExtensionsData(messageToBeEdited, "xss-filter");
+        if (xssData
+          && xssData.hasOwnProperty("sanitized_text")
+          && xssData.hasOwnProperty("hasXSS")
+          && xssData.hasXSS === "yes") {
+          messageText = xssData.sanitized_text;
+        }
+        
         element.focus();
-        this.pasteHtmlAtCaret(messageToBeEdited.text, false);
+        element.textContent = "";
+        this.pasteHtmlAtCaret(messageText, false);
 
       } else {
         element.textContent = "";
@@ -147,7 +163,7 @@ class MessageComposer extends React.PureComponent {
         // only relatively recently standardized and is not supported in
         // some browsers (IE9, for one)
         var el = document.createElement("div");
-        el.innerHTML = html;
+        el.innerText = html;
         var frag = document.createDocumentFragment(), node, lastNode;
         while ( (node = el.firstChild) ) {
           lastNode = frag.appendChild(node);
@@ -210,6 +226,7 @@ class MessageComposer extends React.PureComponent {
   }
 
   toggleFilePicker = () => {
+
     const currentState = !this.state.showFilePicker;
     this.setState({ showFilePicker: currentState });
   }
@@ -374,7 +391,7 @@ class MessageComposer extends React.PureComponent {
   sendTextMessage = () => {
 
     if(this.state.emojiViewer) {
-      this.setState({emojiViewer: false});
+      this.setState({ emojiViewer: false});
     }
 
     if(!this.state.messageInput.trim().length) {
@@ -403,7 +420,7 @@ class MessageComposer extends React.PureComponent {
     
     CometChat.sendMessage(textMessage).then(message => {
 
-      this.setState({messageInput: ""});
+      this.setState({ messageInput: "", replyPreview: false });
       this.messageSending = false;
       this.messageInputRef.current.textContent = "";
       this.playAudio();
@@ -514,6 +531,34 @@ class MessageComposer extends React.PureComponent {
     this.setState({ createPoll: !createPoll });
   }
 
+  toggleCollaborativeDocument = () => {
+
+    const { receiverId, receiverType } = this.getReceiverDetails();
+
+    CometChat.callExtension("document", "POST", "v1/create", {
+      "receiver": receiverId,
+      "receiverType": receiverType
+    }).then(response => {
+      // Response with document url
+    }).catch(error => {
+      // Some error occured
+    });
+  }
+
+  toggleCollaborativeBoard = () => {
+
+    const { receiverId, receiverType } = this.getReceiverDetails();
+
+    CometChat.callExtension("whiteboard", "POST", "v1/create", {
+      "receiver": receiverId,
+      "receiverType": receiverType
+    }).then(response => {
+      // Response with board_url
+    }).catch(error => {
+      // Some error occured
+    });
+  }
+
   closeCreatePoll = () => {
 
     this.toggleCreatePoll();
@@ -555,6 +600,10 @@ class MessageComposer extends React.PureComponent {
     const customType = enums.CUSTOM_TYPE_STICKER;
 
     const customMessage = new CometChat.CustomMessage(receiverId, receiverType, customType, customData);
+    if (this.props.parentMessageId) {
+      customMessage.setParentMessageId(this.props.parentMessageId);
+    }
+
     CometChat.sendCustomMessage(customMessage).then(message => {
 
       this.messageSending = false;
@@ -651,34 +700,63 @@ class MessageComposer extends React.PureComponent {
     }
 
     let docs = (
-      <span title="Attach File" css={fileItemStyle(this.props, docIcon)} className="filelist__item item__file" onClick={() => { this.openFileDialogue("file") }}>
+      <div 
+      title="Attach file" 
+      css={fileItemStyle()} 
+      className="filelist__item item__file" 
+      onClick={() => { this.openFileDialogue("file") }}>
+        <img src={docIcon} alt="Attach a file" />
         <input onChange={this.onFileChange} type="file" id="file" ref={this.fileUploaderRef} />
-      </span>
+      </div>
     );
 
     let avp = (
       <React.Fragment>
-        <span title="Attach Video" css={fileItemStyle(this.props, videoIcon)} className="filelist__item item__video" onClick={() => { this.openFileDialogue("video") }}>
+        <div title="Attach video" css={fileItemStyle()} className="filelist__item item__video" onClick={() => { this.openFileDialogue("video") }}>
+          <img src={videoIcon} alt="Attach video" />
           <input onChange={this.onVideoChange} accept="video/*" type="file" ref={this.videoUploaderRef} />
-        </span>
-        <span title="Attach Audio" css={fileItemStyle(this.props, audioIcon)} className="filelist__item item__audio" onClick={() => { this.openFileDialogue("audio") }}>
+        </div>
+        <div title="Attach audio" css={fileItemStyle()} className="filelist__item item__audio" onClick={() => { this.openFileDialogue("audio") }}>
+          <img src={audioIcon} alt="Attach audio" />
           <input onChange={this.onAudioChange} accept="audio/*" type="file" ref={this.audioUploaderRef} />
-        </span>
-        <span title="Attach Image" css={fileItemStyle(this.props, imageIcon)} className="filelist__item item__image" onClick={() => { this.openFileDialogue("image") }}>
+        </div>
+        <div title="Attach image" css={fileItemStyle()} className="filelist__item item__image" onClick={() => { this.openFileDialogue("image") }}>
+          <img src={imageIcon} alt="Attach an image" />
           <input onChange={this.onImageChange} accept="image/*" type="file" ref={this.imageUploaderRef} />
-        </span>
+        </div>
       </React.Fragment>
     );
 
     let createPollBtn = (
-      <span
-      title="Create Poll"
-      css={fileItemStyle(this.props, pollIcon)}
+      <div
+      title="Create a poll"
+      css={fileItemStyle()}
       className="filelist__item item__poll"
-      onClick={this.toggleCreatePoll}>&nbsp;</span>
+      onClick={this.toggleCreatePoll}>
+      <img src={pollIcon} alt="Create a poll" />
+      </div>
     );
 
-    const emojiBtnIcon = (this.state.emojiViewer) ? closeIcon : insertEmoticon;
+    let collaborativeDocBtn = (
+      <div
+      title="Collaborate using a document"
+      css={fileItemStyle()}
+      className="filelist__item item__document"
+      onClick={this.toggleCollaborativeDocument}>
+        <img src={documentIcon} alt="Collaborate using a document" />
+      </div>
+    );
+
+    let collaborativeBoardBtn = (
+      <div
+      title="Collaborate using a whiteboard"
+      css={fileItemStyle()}
+      className="filelist__item item__whiteboard"
+      onClick={this.toggleCollaborativeBoard}>
+        <img src={whiteboardIcon} alt="Collaborate using a document" />
+      </div>
+    );
+
     let emojiBtn = (
       <div 
       title="Emoji"
@@ -687,7 +765,7 @@ class MessageComposer extends React.PureComponent {
       onClick={() => {
         this.toggleEmojiPicker();
         this.setState({ messageToReact: ""  });
-      }}><img src={emojiBtnIcon} alt="Insert Emoticon" /></div>
+        }}><img src={insertEmoticon} alt="Insert Emoticon" /></div>
     );
 
     let stickerBtn = (
@@ -704,61 +782,69 @@ class MessageComposer extends React.PureComponent {
       </div>
     );
 
-    if (!this.state.messageInput.length) {
-      sendBtn = null;
-    }
-
-    //if photos, videos upload are disabled for chat wigdet in dashboard
+    //if photos, videos upload are disabled for chat widget in dashboard
     if (validateWidgetSettings(this.props.widgetsettings, "send_photos_videos") === false) {
       avp = null;
     }
 
-    //if files upload are disabled for chat wigdet in dashboard
+    //if files upload are disabled for chat widget in dashboard
     if (validateWidgetSettings(this.props.widgetsettings, "send_files") === false) {
       docs = null;
     }
 
-    //if emojis are disabled for chat wigdet in dashboard
+    //if polls are disabled for chat widget in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "allow_creating_polls") === false || this.props.parentMessageId) {
+      createPollBtn = null;
+    }
+
+    //if collaborative_document are disabled for chat widget in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_collaborative_document") === false || this.props.parentMessageId) {
+      collaborativeDocBtn = null;
+    }
+
+    //if collaborative_document are disabled for chat widget in dashboard
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_collaborative_whiteboard") === false || this.props.parentMessageId) {
+      collaborativeBoardBtn = null;
+    }
+
+    //if emojis are disabled for chat widget in dashboard
     if (validateWidgetSettings(this.props.widgetsettings, "send_emojis") === false) {
       emojiBtn = null;
     }
 
-    //if polls are disabled for chat wigdet in dashboard
-    if (validateWidgetSettings(this.props.widgetsettings, "allow_creating_polls") === false) {
-      createPollBtn = null;
-    }
-
-    //if live reactions is disabled for chat wigdet in dashboard
+    //if live reactions is disabled for chat widget in dashboard
     if (validateWidgetSettings(this.props.widgetsettings, "share_live_reactions") === false
     || this.state.messageInput.length) {
       liveReactionBtn = null;
     }
 
-    //if stickers is disabled for chat wigdet in dashboard
+    //if stickers is disabled for chat widget in dashboard
     if (validateWidgetSettings(this.props.widgetsettings, "show_stickers") === false) {
       stickerBtn = null;
     }
 
-    if (this.props.parentMessageId) {
-      createPollBtn = null;
+    if (!this.state.messageInput.length) {
+      sendBtn = null;
     }
 
     let attach = (
       <div css={stickyAttachmentStyle()} className="input__sticky__attachment">
-        <div css={attachmentIconStyle(roundedPlus)} className="attachment__icon" onClick={this.toggleFilePicker}>
-          <span>&nbsp;</span>
+        <div css={stickyAttachButtonStyle()} className="attachment__icon" onClick={this.toggleFilePicker} title="Attach">
+          <img src={roundedPlus} alt="Attach" />
         </div>
         <div css={filePickerStyle(this.state)} className="attachment__filepicker">
           <div css={fileListStyle()} className="filepicker__filelist">
             {avp}
             {docs}
             {createPollBtn}
+            {collaborativeDocBtn}
+            {collaborativeBoardBtn}
           </div>
         </div>
       </div>
     );
 
-    if (avp === null && docs === null && createPollBtn === null) {
+    if (avp === null && docs === null && createPollBtn === null && collaborativeDocBtn === null && collaborativeBoardBtn === null) {
       attach = null;
     }
 
@@ -778,13 +864,44 @@ class MessageComposer extends React.PureComponent {
 
     let editPreview = null;
     if (this.state.messageToBeEdited) {
+
+      let messageText = this.state.messageToBeEdited.text;
+
+      //xss extensions data
+      const xssData = checkMessageForExtensionsData(this.state.messageToBeEdited, "xss-filter");
+      if (xssData
+        && xssData.hasOwnProperty("sanitized_text")
+        && xssData.hasOwnProperty("hasXSS")
+        && xssData.hasXSS === "yes") {
+        messageText = xssData.sanitized_text;
+      }
+
+      //datamasking extensions data
+      const maskedData = checkMessageForExtensionsData(this.state.messageToBeEdited, "data-masking");
+      if (maskedData
+        && maskedData.hasOwnProperty("data")
+        && maskedData.data.hasOwnProperty("sensitive_data")
+        && maskedData.data.hasOwnProperty("message_masked")
+        && maskedData.data.sensitive_data === "yes") {
+        messageText = maskedData.data.message_masked;
+      }
+
+      //profanity extensions data
+      const profaneData = checkMessageForExtensionsData(this.state.messageToBeEdited, "profanity-filter");
+      if (profaneData
+        && profaneData.hasOwnProperty("profanity")
+        && profaneData.hasOwnProperty("message_clean")
+        && profaneData.profanity === "yes") {
+        messageText = profaneData.message_clean;
+      }
+
       editPreview = (
         <div css={editPreviewContainerStyle(this.props, keyframes)}>
           <div css={previewHeadingStyle()}>
             <div css={previewTextStyle()}>Edit message</div>
             <span css={previewCloseStyle(closeIcon)} onClick={this.closeEditPreview}></span>
           </div>
-          <div>{this.state.messageToBeEdited.text}</div>
+          <div>{messageText}</div>
         </div>
       );
     }
@@ -793,28 +910,15 @@ class MessageComposer extends React.PureComponent {
     if(this.state.replyPreview) {
 
       const message = this.state.replyPreview;
-      if (message.hasOwnProperty("metadata")) {
 
-        const metadata = message.metadata;
-        if (metadata.hasOwnProperty("@injected")) {
+      const smartReplyData = checkMessageForExtensionsData(message, "smart-reply");
+      if (smartReplyData && smartReplyData.hasOwnProperty("error") === false) {
 
-          const injectedObject = metadata["@injected"];
-          if (injectedObject.hasOwnProperty("extensions")) {
+        const options = [smartReplyData["reply_positive"], smartReplyData["reply_neutral"], smartReplyData["reply_negative"]];
+        smartReplyPreview = (
+          <ReplyPreview {...this.props} options={options} clicked={this.sendReplyMessage} close={this.clearReplyPreview} />
+        );
 
-            const extensionsObject = injectedObject["extensions"];
-            if (extensionsObject.hasOwnProperty("smart-reply")) {
-              
-              const smartReplyObject = extensionsObject["smart-reply"];
-
-              const options = [smartReplyObject["reply_positive"], smartReplyObject["reply_neutral"], smartReplyObject["reply_negative"]];
-              
-              smartReplyPreview = (
-                <ReplyPreview {...this.props} options={options} clicked={this.sendReplyMessage} close={this.clearReplyPreview} />
-              );
-
-            }
-          }
-        }
       }
     }
 
@@ -830,9 +934,9 @@ class MessageComposer extends React.PureComponent {
       );
     }
 
-    let emojiPicker = null;
+    let emojiViewer = null;
     if (this.state.emojiViewer) {
-      emojiPicker = (
+      emojiViewer = (
         <EmojiView emojiClicked={this.emojiClicked} />
       );
     }
@@ -842,7 +946,7 @@ class MessageComposer extends React.PureComponent {
         {editPreview}
         {smartReplyPreview}
         {stickerViewer}
-        {emojiPicker}
+        {emojiViewer}
         <div css={composerInputStyle()} className="composer__input">
           <div tabIndex="-1" css={inputInnerStyle(this.props, this.state)} className="input__inner">
             <div
@@ -857,7 +961,7 @@ class MessageComposer extends React.PureComponent {
             ref={this.messageInputRef}></div>
             <div css={inputStickyStyle(this.props, disabledState)} className="input__sticky">
               {attach}
-              <div css={stickyButtonStyle()} className="input__sticky__buttons" ref={node => {this.node = node;}}>
+              <div css={stickyButtonStyle(this.props, this.state)} className="input__sticky__buttons">
                 {stickerBtn}
                 {emojiBtn}
                 {sendBtn}

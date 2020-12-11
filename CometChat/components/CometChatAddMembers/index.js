@@ -28,8 +28,8 @@ import {
     contactMsgTxtStyle,
 } from "./style";
 
-import searchIcon from './resources/search-grey-icon.svg';
-import clearIcon from "./resources/clear.svg";
+import searchIcon from './resources/search-grey-icon.png';
+import clearIcon from "./resources/close.png";
 
 class CometChatAddMembers extends React.Component {
 

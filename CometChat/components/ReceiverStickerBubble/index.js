@@ -10,6 +10,7 @@ import { checkMessageForExtensionsData } from "../../util/common";
 import Avatar from "../Avatar";
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
+import ReadReciept from "../ReadReciept";
 import RegularReactionView from "../RegularReactionView";
 
 import {
@@ -22,8 +23,6 @@ import {
     messageImgContainerStyle,
     messageImgWrapperStyle,
     messageInfoWrapperStyle,
-    messageTimestampStyle,
-    messageActionWrapperStyle,
     messageReactionsWrapperStyle
 } from "./style";
 
@@ -117,18 +116,15 @@ class ReceiverStickerBubble extends React.Component {
                     {avatar}
                     <div css={messageDetailStyle(name)} className="message__details">
                         {name}
-
-                        <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-                            <ToolTip {...this.props} message={this.state.message} name={name} />
-                            <div css={messageImgContainerStyle()} className="message__image__container">
-                                <div css={messageImgWrapperStyle(this.props)} className="message__image__wrapper">{stickerImg}</div>
-                            </div>
+                        <ToolTip {...this.props} message={this.state.message} name={name} />
+                        <div css={messageImgContainerStyle()} className="message__image__container">
+                            <div css={messageImgWrapperStyle(this.props)} className="message__image__wrapper">{stickerImg}</div>
                         </div>
 
                         {messageReactions}
 
                         <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                            <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+                            <ReadReciept {...this.props} message={this.state.message} />
                             <ReplyCount {...this.props} message={this.state.message} />
                         </div>
                     </div>

@@ -22,11 +22,11 @@ import {
     scopeSelectionStyle
 } from "./style";
 
-import scopeIcon from "./resources/create.svg";
-import doneIcon from "./resources/done.svg";
-import clearIcon from "./resources/clear.svg";
-import banIcon from "./resources/block.svg";
-import kickIcon from "./resources/delete.svg";
+import scopeIcon from "./resources/edit.png";
+import doneIcon from "./resources/done.png";
+import clearIcon from "./resources/close.png";
+import banIcon from "./resources/block.png";
+import kickIcon from "./resources/delete.png";
 
 class MemberView extends React.Component {
 

@@ -14,7 +14,7 @@ import {
     actionStyle
 } from "./style";
 
-import unban from "./resources/block.svg";
+import unban from "./resources/block.png";
 
 const memberview = (props) => {
 

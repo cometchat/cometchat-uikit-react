@@ -1,5 +1,5 @@
 import React from "react";
-
+import dateFormat from "dateformat";
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
@@ -26,6 +26,10 @@ import SenderPollBubble from "../SenderPollBubble";
 import ReceiverPollBubble from "../ReceiverPollBubble";
 import SenderStickerBubble from "../SenderStickerBubble";
 import ReceiverStickerBubble from "../ReceiverStickerBubble";
+import SenderDocumentBubble from "../SenderDocumentBubble";
+import ReceiverDocumentBubble from "../ReceiverDocumentBubble";
+import SenderWhiteboardBubble from "../SenderWhiteboardBubble";
+import ReceiverWhiteboardBubble from "../ReceiverWhiteboardBubble";
 
 import CallMessage from "../CallMessage";
 
@@ -376,32 +380,7 @@ class MessageList extends React.PureComponent {
 
   customMessageReceived = (message) => {
 
-    //new messages
-    if (this.props.type === 'group'
-      && message.getReceiverType() === 'group'
-      && message.getReceiverId() === this.props.item.guid) {
-
-      if (!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-      }
-      
-      if (message.hasOwnProperty("metadata")) {
-
-        this.props.actionGenerated("customMessageReceived", [message]);
-
-      } else if (message.type === enums.CUSTOM_TYPE_STICKER) {
-
-        this.props.actionGenerated("customMessageReceived", [message]);
-
-      } else if (message.type === enums.CUSTOM_TYPE_POLL) {//customdata (poll extension) does not have metadata
-
-        const newMessage = this.addMetadataToCustomData(message);
-        this.props.actionGenerated("customMessageReceived", [newMessage]);
-      }
-
-    } else if (this.props.type === 'user'
-      && message.getReceiverType() === 'user'
-      && message.getSender().uid === this.props.item.uid) {
+    const triggerCustomMessageReceived = (message) => {
 
       if (!message.getReadAt()) {
         CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
@@ -411,15 +390,55 @@ class MessageList extends React.PureComponent {
 
         this.props.actionGenerated("customMessageReceived", [message]);
 
-      } else if (message.type === enums.CUSTOM_TYPE_STICKER) {
+      } else {
+        if (message.type === enums.CUSTOM_TYPE_POLL) {//customdata (poll extension) does not have metadata
+
+          const newMessage = this.addMetadataToCustomData(message);
+          this.props.actionGenerated("customMessageReceived", [newMessage]);
+        }
+      }
+
+    }
+
+    //new messages
+    if (this.props.type === 'group'
+    && message.getReceiverType() === 'group'
+    && message.getReceiverId() === this.props.item.guid) {
+
+      if (!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+      }
+      
+      if (message.hasOwnProperty("metadata")) {
 
         this.props.actionGenerated("customMessageReceived", [message]);
 
-      } else if (message.type === enums.CUSTOM_TYPE_POLL) {//customdata (poll extension) does not have metadata
+      } else {
 
-        const newMessage = this.addMetadataToCustomData(message);
-        this.props.actionGenerated("customMessageReceived", [newMessage]);
+        if (message.type === enums.CUSTOM_TYPE_POLL) {//customdata (poll extension) does not have metadata
+
+          const newMessage = this.addMetadataToCustomData(message);
+          this.props.actionGenerated("customMessageReceived", [newMessage]);
+        }
       }
+
+    } else if (this.props.type === 'user'
+    && message.getReceiverType() === 'user'
+    && message.getSender().uid === this.props.item.uid) {
+
+      console.log("inside 1st else if");
+
+      triggerCustomMessageReceived(message);
+
+    } else if (this.props.type === 'user'
+    && message.getReceiverType() === 'user'
+    && this.loggedInUser.uid === message.getSender().uid && message.getReceiverId() === this.props.item.uid
+    && (message.type === enums.CUSTOM_TYPE_DOCUMENT || message.type === enums.CUSTOM_TYPE_WHITEBOARD)) {
+
+      console.log("inside 2nd else if");
+
+      triggerCustomMessageReceived(message);
+
     }
 
   }
@@ -593,6 +612,12 @@ class MessageList extends React.PureComponent {
         case enums.CUSTOM_TYPE_STICKER:
           component = <SenderStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
           break;
+        case enums.CUSTOM_TYPE_DOCUMENT:
+          component = <SenderDocumentBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          break; 
+        case enums.CUSTOM_TYPE_WHITEBOARD:
+          component = <SenderWhiteboardBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          break;
         default:
           break;
       }
@@ -614,6 +639,12 @@ class MessageList extends React.PureComponent {
           break;
         case enums.CUSTOM_TYPE_STICKER:
           component = <ReceiverStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          break;
+        case enums.CUSTOM_TYPE_DOCUMENT:
+          component = <ReceiverDocumentBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          break;
+        case enums.CUSTOM_TYPE_WHITEBOARD:
+          component = <ReceiverWhiteboardBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
           break;
         default:
           break;
@@ -703,7 +734,9 @@ class MessageList extends React.PureComponent {
     const messages = this.props.messages.map((message, key) => {
 
       let dateSeparator = null;
-      const messageSentDate = new Date(message.sentAt * 1000).toLocaleDateString();
+
+      const messageDate = (message.sentAt * 1000);
+      const messageSentDate = dateFormat(messageDate, "dd/mm/yyyy");
       if (cDate !== messageSentDate) {
         dateSeparator = (<div css={messageDateContainerStyle()} className="message__date"><span css={messageDateStyle(this.props)}>{messageSentDate}</span></div>);
       }

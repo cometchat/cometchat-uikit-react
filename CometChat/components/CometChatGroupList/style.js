@@ -30,6 +30,7 @@ export const groupHeaderStyle = (theme) => {
         padding: "19px 16px",
         position: "relative",
         display: "flex",
+        justifyContent: "space-between",
         alignItems: "center",
         borderBottom: `1px solid ${theme.borderColor.primary}`
     }
@@ -73,10 +74,8 @@ export const groupAddStyle = (img) => {
     
     return {
         display: "block",
-        height: "20px",
-        background: `url(${img}) right center no-repeat`,
+        height: "24px",
         cursor: "pointer",
-        width: "35%"
     }
 }
 
@@ -97,7 +96,7 @@ export const groupSearchInputStyle = (theme, img) => {
         boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
         borderRadius: "8px",
         lineHeight: "20px",
-        padding: "6px 8px 6px 30px",
+        padding: "8px 8px 8px 40px",
         fontSize: "15px",
         outline: "none",
         color: `${theme.color.primary}`,

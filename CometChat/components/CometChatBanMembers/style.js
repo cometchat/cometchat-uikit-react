@@ -47,7 +47,7 @@ export const modalCloseStyle = (img) => {
 export const modalBodyStyle = () => {
 
     return {
-        padding: "25px",
+        padding: "24px",
         height: "100%",
         width: "100%"
     }
@@ -79,7 +79,7 @@ export const tableCaptionStyle = () => {
 
     return {
         fontSize: "20px",
-        marginBottom: "15px",
+        marginBottom: "16px",
         fontWeight: "bold",
         textAlign: "left",
     }

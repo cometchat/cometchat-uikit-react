@@ -109,7 +109,7 @@ export const messageInputStyle = (disabled) => {
         fontSize: "15px",
         lineHeight: "20px",
         fontWeight: "400",
-        padding: "15px 10px",
+        padding: "16px",
         outline: "none",
         overflowX: "hidden",
         overflowY: "auto",
@@ -137,8 +137,8 @@ export const inputStickyStyle = (props, disabled) => {
     } : {};
 
     return {
-        padding: "7px 10px",
-        height: "35px",
+        padding: "8px 16px",
+        height: "40px",
         borderTop: `1px solid ${props.theme.borderColor.primary}`,
         backgroundColor: `${props.theme.backgroundColor.grey}`,
         display: "flex",
@@ -154,35 +154,31 @@ export const stickyAttachmentStyle = () => {
 
     return {
         display: "flex",
+        width: "50%"
     }
 }
 
-export const attachmentIconStyle = (img) => {
+export const attachmentIconStyle = () => {
 
     return {
         margin: "auto 0",
-        ' > span': {
-            display: "inline-block",
-            width: "20px",
-            height: "20px",
-            background: `url(${img}) center center no-repeat`,
-            cursor: "pointer",
-        }
+        width: "24px",
+        height: "20px",
+        cursor: "pointer",
+        textAlign: "center"
     }
 }
 
 export const filePickerStyle = (state) => {
 
     const active = (state.showFilePicker) ? {
-        width: "120px",
+        width: "100%",
         opacity: "1",
-        margin: "auto 10px",
     } : {};
 
     return {
-        left: "0",
-        bottom: "0",
-        position: "relative",
+        position: "absolute",
+        left: "48px",
         width: "0",
         borderRadius: "8px",
         overflow: "hidden",
@@ -201,38 +197,63 @@ export const fileListStyle = () => {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
+        "div:not(:last-of-type)": {
+            marginRight: "14px"
+        }
     }
 }
 
-export const fileItemStyle = (props, img) => {
+export const fileItemStyle = () => {
 
-    const icon = {
-        background: `url(${img}) no-repeat 100% 100%`,
-    }
 
     return {
-        width: "21px",
-        height: "21px",
-        backgroundColor: `${props.theme.backgroundColor.secondary}`,
+        height: "24px",
         cursor: "pointer",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
         ' > input': {
             display: "none",
         },
-        ...icon
     }
 }
 
-export const stickyButtonStyle = () => {
+export const stickyAttachButtonStyle = () => {
 
     return {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        "div:not(:first-of-type)": {
-            marginLeft: "5px",
-        },
         "div:not(:last-of-type)": {
-            marginRight: "5px"
+            marginRight: "14px"
+        },
+        cursor: "pointer",
+        maxWidth: "100px",
+    }
+}
+
+export const stickyButtonStyle = (props, state) => {
+
+    const mq = [...props.theme.breakPoints];
+
+    const active = (state.showFilePicker) ? {
+        display: "none",
+    } : {
+        display: "flex",
+    };
+
+
+    return {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        "div:not(:last-of-type)": {
+            marginRight: "14px"
+        },
+        cursor: "pointer",
+        maxWidth: "100px",
+        [`@media ${mq[0]}`]: {
+            ...active
         }
     }
 }
@@ -240,18 +261,22 @@ export const stickyButtonStyle = () => {
 export const emojiButtonStyle = () => {
 
     return {
-        width: "20px",
-        height: "20px",
+        height: "24px",
         cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
     }
 }
 
 export const sendButtonStyle = () => {
 
     return {
-        width: "20px",
-        height: "20px",
+        height: "24px",
         cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
     }
 }
 
@@ -259,8 +284,10 @@ export const reactionBtnStyle = () => {
 
     return {
         cursor: "pointer",
-        width: "20px",
-        height: "20px",
+        height: "24px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
     }
 }
 
@@ -268,7 +295,9 @@ export const stickerBtnStyle = () => {
 
     return {
         cursor: "pointer",
-        width: "20px",
-        height: "20px",
+        height: "24px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
     }
 }

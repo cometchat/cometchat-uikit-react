@@ -1,17 +1,27 @@
 export const messageActionStyle = (props) => {
 
-    const topPos = (props.name) ? { top: "0px"} : { top: "-20px" };
-    const alignment = (props.message.messageFrom === "receiver") ? { alignSelf: "flex-end" } : { alignSelf: "flex-start" };
-    const direction = (props.message.messageFrom === "receiver") ? { flexDirection: "row-reverse" } : {};
+    const topPos = (props.name) ? { top: "-4px"} : { top: "-30px" };
+    const alignment = (props.message.messageFrom === "receiver") ? { alignSelf: "flex-start" } : { alignSelf: "flex-end" };
+    const direction = (props.message.messageFrom === "receiver") ? { 
+        flexDirection: "row-reverse",
+        "li:not(:first-of-type)": {
+            marginRight: "8px",
+        }
+
+    } : {
+        "li:not(:last-of-type)": {
+            marginRight: "8px",
+        }
+    };
 
     return {
         position: "absolute",
         zIndex: "1",
         display: "none",
         listStyleType: "none",
-        padding: "0",
+        padding: "8px",
         margin: "0",
-        height: "26px",
+        height: "35px",
         border: `1px solid ${props.theme.borderColor.primary}`,
         backgroundColor: `${props.theme.backgroundColor.white}`,
         borderRadius: "4px",
@@ -19,7 +29,7 @@ export const messageActionStyle = (props) => {
         justifyContent: "center",
         ...alignment,
         ...topPos,
-        ...direction
+        ...direction,
     }
 }
 

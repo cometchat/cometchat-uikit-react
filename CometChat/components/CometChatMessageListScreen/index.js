@@ -13,7 +13,7 @@ import LiveReaction from "../LiveReaction";
 import { theme } from "../../resources/theme";
 
 import * as enums from '../../util/enums.js';
-import { validateWidgetSettings } from "../../util/common";
+import { checkMessageForExtensionsData, validateWidgetSettings } from "../../util/common";
 
 import { chatWrapperStyle, reactionsWrapperStyle } from "./style";
 
@@ -333,13 +333,13 @@ class CometChatMessageListScreen extends React.PureComponent {
   updateReplyCount = (messages) => {
 
     const receivedMessage = messages[0];
-  
+
     let messageList = [...this.state.messageList];
     let messageKey = messageList.findIndex(m => m.id === receivedMessage.parentMessageId);
     if (messageKey > -1) {
 
       const messageObj = messageList[messageKey];
-      let replyCount = (messageObj.replyCount) ? messageObj.replyCount : 0;
+      let replyCount = (messageObj.hasOwnProperty("replyCount")) ? messageObj.replyCount : 0;
       replyCount = replyCount + 1;
       const newMessageObj = Object.assign({}, messageObj, { "replyCount": replyCount });
       
@@ -351,33 +351,20 @@ class CometChatMessageListScreen extends React.PureComponent {
   smartReplyPreview = (messages) => {
 
     const message = messages[0];
+    if (message.sender.uid === this.props.loggedInUser.uid || message.category === enums.CATEGORY_CUSTOM) {
+      return false;
+    }
     
-    if (message.hasOwnProperty("metadata")) {
-
-      const metadata = message.metadata;
-      if (metadata.hasOwnProperty("@injected")) {
-
-        const injectedObject = metadata["@injected"];
-        if (injectedObject.hasOwnProperty("extensions")) {
-
-          const extensionsObject = injectedObject["extensions"];
-          if (extensionsObject.hasOwnProperty("smart-reply")) {
-
-            const smartReply = extensionsObject["smart-reply"];
-            if (smartReply.hasOwnProperty("error") === false) {
-              this.setState({ replyPreview: message });
-            } else {
-              this.setState({ replyPreview: null });
-            }
-            
-          }
-        }
-      }
+    const smartReplyData = checkMessageForExtensionsData(message, "smart-reply");
+    if (smartReplyData && smartReplyData.hasOwnProperty("error") === false) {
+      this.setState({ replyPreview: message });
+    } else {
+      this.setState({ replyPreview: null });
     }
   }
 
   clearEditPreview = () => {
-    this.setState({ "messageToBeEdited":  "" });
+    this.setState({ messageToBeEdited:  "" });
   }
 
   reactToMessage = (message) => {

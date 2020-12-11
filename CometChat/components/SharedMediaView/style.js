@@ -140,7 +140,7 @@ export const itemStyle = (state, props, img) => {
                 backgroundColor: bgColor,
                 display: "inline-block",
                 padding: "10px",
-                paddingLeft: "35px",
+                paddingLeft: "40px",
                 fontSize: "13px",
                 color: `${props.theme.color.primary}`,
                 background: `url(${img}) no-repeat 10px center`,

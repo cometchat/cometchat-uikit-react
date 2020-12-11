@@ -9,6 +9,7 @@ import { SvgAvatar } from '../../util/svgavatar';
 import Avatar from "../Avatar";
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
+import ReadReciept from "../ReadReciept";
 import RegularReactionView from "../RegularReactionView";
 
 import {
@@ -21,8 +22,6 @@ import {
   messageAudioContainerStyle,
   messageAudioWrapperStyle,
   messageInfoWrapperStyle,
-  messageTimestampStyle,
-  messageActionWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
 
@@ -86,8 +85,6 @@ class ReceiverAudioBubble extends React.Component {
     const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
     if (reactionsData) {
 
-      console.log("reactionsData", reactionsData);
-
       if (Object.keys(reactionsData).length) {
         messageReactions = (
           <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
@@ -106,26 +103,24 @@ class ReceiverAudioBubble extends React.Component {
     return (
       <div css={messageContainerStyle()} className="receiver__message__container message__audio">
         
+        
         <div css={messageWrapperStyle()} className="message__wrapper">
           {avatar}
           <div css={messageDetailStyle()} className="message__details">
             {name}
-
-            <div css={messageActionWrapperStyle()} className="message__action__wrapper">
-              <ToolTip {...this.props} message={this.state.message} name={name} />
-              <div css={messageAudioContainerStyle(this.props)} className="message__audio__container">
-                <div css={messageAudioWrapperStyle(this.props)} className="message__audio__wrapper">
-                  <audio controls>
-                    <source src={this.props.message.data.url} />
-                  </audio>
-                </div>
+            <ToolTip {...this.props} message={this.state.message} name={name} />
+            <div css={messageAudioContainerStyle(this.props)} className="message__audio__container">
+              <div css={messageAudioWrapperStyle(this.props)} className="message__audio__wrapper">
+                <audio controls>
+                  <source src={this.props.message.data.url} />
+                </audio>
               </div>
             </div>
 
             {messageReactions}
 
             <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-              <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+              <ReadReciept {...this.props} message={this.state.message} />
               <ReplyCount {...this.props} message={this.state.message} />
             </div>
           </div>

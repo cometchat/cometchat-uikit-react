@@ -19,7 +19,7 @@ import {
 
 } from "./style";
 
-import fileIcon from "./resources/file-blue.svg";
+import fileIcon from "./resources/file.png";
 
 class SharedMediaView extends React.Component {
 
