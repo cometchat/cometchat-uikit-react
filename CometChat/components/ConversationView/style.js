@@ -11,11 +11,11 @@ export const listItem = (props) => {
         alignItems: "center",
         cursor: "pointer",
         width: "100%",
-        padding: "10px 20px",
+        padding: "8px 16px",
         ...selectedState,
         '&:hover': {
             backgroundColor: `${props.theme.backgroundColor.primary}`
-        }
+        },
     }
 }
 
@@ -34,7 +34,11 @@ export const itemDetailStyle = () => {
     return {
         width: "calc(100% - 45px)",
         flexGrow: "1",
-        paddingLeft: "15px",
+        paddingLeft: "16px",
+        "&[dir=rtl]": {
+            paddingRight: "16px",
+            paddingLeft: "0",
+        }
     }
 }
 

@@ -2,6 +2,8 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
+
 import { checkMessageForExtensionsData } from "../../util/common";
 
 import ToolTip from "../ToolTip";
@@ -26,6 +28,9 @@ import {
     messageInfoWrapperStyle,
     messageReactionsWrapperStyle
 } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 import documentIcon from "./resources/receiverdocument.png";
 
@@ -86,15 +91,13 @@ class ReceiverDocumentBubble extends React.PureComponent {
 
             avatar = (
                 <div css={messageThumbnailStyle} className="message__thumbnail">
-                    <Avatar
-                    cornerRadius="50%"
-                    borderColor={this.props.theme.color.secondary}
-                    borderWidth="1px"
-                    image={this.state.message.sender.avatar} />
+                    <Avatar borderColor={this.props.theme.borderColor.primary} image={this.state.message.sender.avatar} />
                 </div>
             );
 
-            name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span></div>);
+            name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
+                <span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span>
+                </div>);
         }
 
         let messageReactions = null;
@@ -104,19 +107,13 @@ class ReceiverDocumentBubble extends React.PureComponent {
             if (Object.keys(reactionsData).length) {
                 messageReactions = (
                     <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-                        <RegularReactionView
-                        theme={this.props.theme}
-                        message={this.state.message}
-                        reaction={reactionsData}
-                        loggedInUser={this.props.loggedInUser}
-                        widgetsettings={this.props.widgetsettings}
-                        actionGenerated={this.props.actionGenerated} />
+                        <RegularReactionView {...this.props} message={this.state.message} reaction={reactionsData} />
                     </div>
                 );
             }
         }
 
-        const documentTitle = this.state.message.sender.name + " has shared a collaborative document"; 
+        const documentTitle = `${this.state.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_DOCUMENT", this.props.lang)}`;
 
         return (
             <div css={messageContainerStyle()} className="receiver__message__container message__document">
@@ -129,13 +126,13 @@ class ReceiverDocumentBubble extends React.PureComponent {
                         <div css={messageTxtContainerStyle()} className="message__document__container">
                             <div css={messageTxtWrapperStyle(this.props)} className="message__document__wrapper">
                                 <div css={messageTxtTitleStyle(this.props)} className="message__document__title">
-                                    <img src={documentIcon} alt="Collaborative Document" />
+                                    <img src={documentIcon} alt={Translator.translate("COLLABORATIVE_DOCUMENT", this.props.lang)} />
                                     <p css={messageTxtStyle()} className="document__title">{documentTitle}</p>
                                 </div>
                                 
                                 <ul css={messageBtnStyle(this.props)} className="document__button">
                                     <li onClick={this.launchCollaborativeDocument}>
-                                        <p>Launch</p>
+                                        <p>{Translator.translate("JOIN", this.props.lang)}</p>
                                     </li>
                                 </ul>
                             </div>
@@ -152,6 +149,17 @@ class ReceiverDocumentBubble extends React.PureComponent {
             </div>
         )
     }
+}
+
+// Specifies the default values for props:
+ReceiverDocumentBubble.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+ReceiverDocumentBubble.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default ReceiverDocumentBubble;

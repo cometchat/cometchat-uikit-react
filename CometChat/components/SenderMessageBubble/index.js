@@ -4,6 +4,7 @@ import ReactHtmlParser from "react-html-parser";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { linkify, checkMessageForExtensionsData, validateWidgetSettings } from "../../util/common";
 
@@ -21,6 +22,8 @@ import {
   messageInfoWrapperStyle,
   messageReactionsWrapperStyle,
 } from "./style";
+
+import { theme } from "../../resources/theme";
 
 class SenderMessageBubble extends React.PureComponent {
 
@@ -124,13 +127,7 @@ class SenderMessageBubble extends React.PureComponent {
       if (Object.keys(reactionsData).length) {
         messageReactions = (
           <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-            <RegularReactionView 
-            theme={this.props.theme} 
-            message={this.state.message} 
-            reaction={reactionsData} 
-            loggedInUser={this.props.loggedInUser}
-            widgetsettings={this.props.widgetsettings}
-            actionGenerated={this.props.actionGenerated} />
+            <RegularReactionView  {...this.props} message={this.state.message} reaction={reactionsData} />
           </div>
         );
       }
@@ -151,6 +148,15 @@ class SenderMessageBubble extends React.PureComponent {
       </div>
     );
   }
+}
+
+// Specifies the default values for props:
+SenderMessageBubble.defaultProps = {
+  theme: theme
+};
+
+SenderMessageBubble.propTypes = {
+  theme: PropTypes.object
 }
 
 export default SenderMessageBubble;

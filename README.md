@@ -1,46 +1,75 @@
+<div style="width:100%">
+    <div style="width:50%;">
+        <div align="center">
+        <img align="center" width="180" height="180" alt="CometChat" src="./Screenshots/logo.png">    
+        </div>    
+    </div>    
+</div>
+
+<br/><br/>
 
 # React Chat UI Kit
-React Chat UI Kit is a collection of custom UI Components and UI Screens designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
 
-![alt text](https://files.readme.io/68c7762-launch_cometchat.png "UI Unified")
+<p align="left">
 
-It has the following 3 ways of implementation:
-* [UI Unified](https://prodocs.cometchat.com/docs/react-ui-kit-ui-unified)
-* [UI Screens](https://prodocs.cometchat.com/docs/react-ui-kit-ui-screens)
-* [UI Components](https://prodocs.cometchat.com/docs/react-ui-kit-ui-components)
+<a href="https://github.com/cometchat-pro/javascript-react-chat-ui-kit/releases/" alt="Releases">
+  <img src="https://img.shields.io/github/v/release/cometchat-pro/javascript-react-chat-ui-kit" />
+</a>
 
-## Requirements
- 1. [CometChat Account](#cometchat-account)
+<a href="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit">
+  <img src="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit" />
+</a>
 
-### CometChat Account
-To use this library, you need application keys from your CometChat account. If you don't have an account, you can create one <a href="https://app.cometchat.com/" target="_blank">here</a>.
+<a href="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social">
+  <img src="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social" />
+</a>
 
-1. Sign in to your <a href="https://app.cometchat.com/" target="_blank">CometChat Dashboard</a>
-2. Click **Add New App**
-3. Give your app a name, and select a region and click  Add App
-4. Click your new app to open its settings.
-5. Locate API Keys and Create Auth Key. You'll need `App ID`, `Auth Key` and `Region`
+</p>
 
-## Installation
+<br/>
 
-1. Install CometChat SDK
+<div style="width:100%">
+    <div style="width:50%;">
+        <div align="center">
+          <img align="left" alt="Main" src="./Screenshots/main.png">    
+        </div>    
+    </div>    
+</div>
+
+<br/>
+
+React Chat UI Kit is a collection of custom **UI Components** and **UI Screens** designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
+
+___
+
+
+
+## Installing React Chat UI Kit 
+
+## 1. Setup
+
+To install React UI Kit, you need to first register on CometChat Dashboard. <a href="https://app.cometchat.com/" target="_blank">Click here to sign up</a>
+
+### i. Get your Application Keys
+
+* Create a new app
+* Head over to the Quick Start or API & Auth Keys section and note the `App ID`, `Auth Key`, and `Region`.
+
+### ii. Add the CometChat Dependency
 
 ```javascript
-    npm install @cometchat-pro/chat@2.1.5 --save
+  npm install @cometchat-pro/chat@2.1.5 --save
 ```
 
-2. See UI kit's package.json file and add the missing packages in your project's package.json file. 
+<br/>
 
-3. Import CometChat Object
+## 2. Configure CometChat inside your app
 
-```javascript
-    import { CometChat } from "@cometchat-pro/"
-```
-
-4. Initialize CometChat
+### i. Initialize CometChat
 
 The `init()` method initializes the settings required for CometChat.
- We suggest calling the `init()` method on app startup, preferably in the `onCreate()` method of the Application class.
+We suggest calling the `init()` method on app startup, preferably in the `onCreate()` method of the Application class.
+
 ```javascript
 const appID = "APP_ID";
 const region = "REGION";
@@ -56,42 +85,17 @@ CometChat.init(appID, appSetting).then(
   }
 );
 ```
-**Note:**
-Replace APP_ID and REGION with your CometChat `App ID` and `REGION` in the above code.
-
-5. Create & Login your User
-
-Once initialization is successful, you will need to create a user.
-To create users on the fly, you can use the `createUser()` method. This method takes a User object and the `Auth Key` as input parameters and returns the created User object if the request is successful.
-
-```javascript
-const authKey = "AUTH_KEY";
-const uid = "UID";
-const name = "NAME";
-
-const user = new CometChat.User(uid);
-
-user.setName(name);
-
-CometChat.createUser(user, authKey).then(
-  user => {
-    console.log("user created", user);
-  },error => {
-    console.log("error", error);
-  }
-);
-```
-**Note:** </br>
-* Replace `AUTH_KEY` with your CometChat `Auth Key` in the above code.
-* Replace `UID` and `NAME` with the uid and name of the user to be created.
-* We have setup 5 users for testing having UIDs: `SUPERHERO1`, `SUPERHERO2`, `SUPERHERO3`,`SUPERHERO4` and `SUPERHERO5`.
+**Note:**</br>
+* Replace APP_ID and REGION with your CometChat `App ID` and `Region` in the above code.
 
 
-Once you have created the user successfully, you need to use the `login()` method.
+### ii. Login your user
+
+This method takes `UID` and `Auth Key` as input parameters and returns the User object containing all the information of the logged-in user..
 
 ```javascript
 const authKey = "AUTH_KEY";
-const uid = "UID";
+const uid = "SUPERHERO1";
 
 CometChat.login(uid, authKey).then(
   user => {
@@ -104,26 +108,55 @@ CometChat.login(uid, authKey).then(
 ```
 **Note:** </br>
 * Replace `AUTH_KEY` with your CometChat `Auth Key` in the above code.
-* Replace `UID` with the uid of the user created.
 
-6. Import the components.
+* We have setup 5 users for testing having UIDs: `SUPERHERO1`, `SUPERHERO2`, `SUPERHERO3`,`SUPERHERO4` and `SUPERHERO5`.
 
-Here is an implementation of UI Unified. 
+<br/>
 
+## 3. Add UI Kit to your project
+
+Clone this repository and copy the CometChat folder to your source folder
+
+<br/>
+
+## 4. Launch UI Unified
+
+**UI Unified** is an option to launch a fully functional chat application using the UI Kit. In UI Unified all the UI Screens and UI Components are interlinked and work together to launch a fully functional chat on your website/application.
 
  ```html
  import {CometChatUnified} from "./CometChat";
+
  render() {
-    return (
-        <CometChatUnified />
-    );
+
+    return (<CometChatUnified />);
   }
  ```
-</br>
 
+<br/>
+
+## Checkout our sample app
+
+Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-chat-app) repo to run the React sample app.
+
+<br/>
+
+## Troubleshooting
+
+- To read the full documentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/docs/react-ui-kit).
+
+- Facing any issues while integrating or installing the UI Kit please <a href="https://app.cometchat.com/" target="_blank"> connect with us via real time support present in CometChat Dashboard.</a>
+
+<br/>
+
+## Contributors
+
+Thanks to the following people who have contributed to this project:
+
+[@priyadarshininadar](https://github.com/priyadarshininadar) <br>
+[@ajaygajra](https://github.com/ajaygajra)<br>
 
 
 ## Further Information
- Please refer our [Documentation](https://prodocs.cometchat.com/docs/react-ui-kit) for more information about how to integrate UI Kit to your applications.
+Please refer our <a href="https://prodocs.cometchat.com/docs/react-ui-kit" target="_blank">Documentation</a> for more information about how to integrate UI Kit to your applications.
 
 Please visit our [Forum](https://forum.cometchat.com/) if you are facing any issues while installation or integration of this library.

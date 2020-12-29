@@ -2,10 +2,12 @@ import React from 'react';
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
 import Backdrop from '../Backdrop';
+import Translator from "../../resources/localization/translator";
 
 import {
     modalWrapperStyle,
@@ -31,8 +33,13 @@ class CometChatCreateGroup extends React.Component {
             passwordInput: false,
             name: "",
             type: "",
-            password: ""
+            password: "",
         }
+    }
+
+    //Set default props
+    static defaultProps = {
+        lang: Translator.getDefaultLanguage(),
     }
 
     passwordChangeHandler = (event) => {
@@ -61,12 +68,12 @@ class CometChatCreateGroup extends React.Component {
         const groupType = this.state.type.trim();
 
         if(!groupName) {
-            this.setState({error: "Group name cannnot be blank."})
+            this.setState({ error: Translator.translate("GROUP_NAME_BLANK", this.props.lang) })
             return false;
         }
 
         if(!groupType) {
-            this.setState({error: "Group type cannnot be blank."})
+            this.setState({ error: Translator.translate("GROUP_TYPE_BLANK", this.props.lang) })
             return false;
         }
 
@@ -75,7 +82,7 @@ class CometChatCreateGroup extends React.Component {
             password = this.state.password;
 
             if(!password.length) {
-                this.setState({error: "Group password cannnot be blank."})
+                this.setState({ error: Translator.translate("GROUP_PASSWORD_BLANK", this.props.lang) })
                 return false;
             }
         }
@@ -134,7 +141,7 @@ class CometChatCreateGroup extends React.Component {
                         <input 
                         autoComplete="off" 
                         css={inputStyle(this.props)}
-                        placeholder="Enter group password" 
+                        placeholder={Translator.translate("ENTER_GROUP_PASSWORD", this.props.lang)}
                         type="password"
                         tabIndex="3"
                         onChange={this.passwordChangeHandler}
@@ -148,10 +155,10 @@ class CometChatCreateGroup extends React.Component {
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
                 <div css={modalWrapperStyle(this.props)} className="modal__creategroup">
-                    <span css={modalCloseStyle(closeIcon)} className="modal__close" onClick={this.props.close}></span>
+                    <span css={modalCloseStyle(closeIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyStyle()} className="modal__body">
                         <table css={modalTableStyle(this.props)}>
-                            <caption css={tableCaptionStyle()} className="modal__title">Create Group</caption>
+                            <caption css={tableCaptionStyle()} className="modal__title">{Translator.translate("CREATE_GROUP", this.props.lang)}</caption>
                             <tbody css={tableBodyStyle()} className="modal__search">
                                 <tr className="error">
                                     <td><div css={tableErrorStyle()}>{this.state.error}</div></td>
@@ -162,7 +169,7 @@ class CometChatCreateGroup extends React.Component {
                                         autoComplete="off"
                                         css={inputStyle(this.props)}
                                         className="search__input" 
-                                        placeholder="Enter group name"
+                                        placeholder={Translator.translate("ENTER_GROUP_NAME", this.props.lang)}
                                         type="text"
                                         tabIndex="1"
                                         onChange={this.nameChangeHandler}
@@ -177,10 +184,10 @@ class CometChatCreateGroup extends React.Component {
                                         onChange={this.typeChangeHandler}
                                         value={this.state.type}
                                         tabIndex="2">
-                                            <option value="">Select group type</option>
-                                            <option value="public">Public</option>
-                                            <option value="private">Private</option>
-                                            <option value="protected">Password Protected</option>
+                                            <option value="">{Translator.translate("SELECT_GROUP_TYPE", this.props.lang)}</option>
+                                            <option value="public">{Translator.translate("PUBLIC", this.props.lang)}</option>
+                                            <option value="private">{Translator.translate("PRIVATE", this.props.lang)}</option>
+                                            <option value="protected">{Translator.translate("PASSWORD_PROTECTED", this.props.lang)}</option>
                                         </select>
                                     </td>
                                 </tr>
@@ -188,7 +195,7 @@ class CometChatCreateGroup extends React.Component {
                             </tbody>
                             <tfoot css={tableFootStyle(this.props)}>
                                 <tr className="creategroup">
-                                    <td><button tabIndex="4" onClick={this.createGroup}>Create</button></td>
+                                    <td><button tabIndex="4" onClick={this.createGroup}>{Translator.translate("CREATE", this.props.lang)}</button></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -197,6 +204,15 @@ class CometChatCreateGroup extends React.Component {
             </React.Fragment>
         );
     }
+}
+
+// Specifies the default values for props:
+CometChatCreateGroup.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+};
+
+CometChatCreateGroup.propTypes = {
+    lang: PropTypes.string,
 }
 
 export default CometChatCreateGroup;

@@ -1,21 +1,18 @@
 import React from "react";
 
 /** @jsx jsx */
-import { jsx } from '@emotion/core'
+import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../util/controller";
 import { SvgAvatar } from '../../util/svgavatar';
-
 import * as enums from '../../util/enums.js';
-
+import { validateWidgetSettings } from "../../util/common";
 import { GroupListManager } from "./controller";
-
 import CometChatCreateGroup from "../CometChatCreateGroup";
 import GroupView from "../GroupView";
-
-import { theme } from "../../resources/theme";
 
 import {
   groupWrapperStyle,
@@ -30,6 +27,9 @@ import {
   groupListStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
+
 import searchIcon from './resources/search-grey-icon.png';
 import navigateIcon from './resources/navigate.png';
 import addIcon from './resources/creategroup.png';
@@ -37,7 +37,6 @@ import addIcon from './resources/creategroup.png';
 class CometChatGroupList extends React.Component {
   timeout;
   loggedInUser = null;
-  decoratorMessage = "Loading...";
 
   constructor(props) {
 
@@ -46,10 +45,12 @@ class CometChatGroupList extends React.Component {
     this.state = {
       grouplist: [],
       createGroup: false,
-      selectedGroup: null
+      selectedGroup: null,
+      lang: props.lang
     }
+
+    this.decoratorMessage = Translator.translate("LOADING", props.lang);
     this.groupListRef = React.createRef();
-    this.theme = Object.assign({}, theme, this.props.theme);
   }
 
   componentDidMount() {
@@ -57,6 +58,8 @@ class CometChatGroupList extends React.Component {
     this.GroupListManager = new GroupListManager();
     this.getGroups();
     this.GroupListManager.attachListeners(this.groupUpdated);
+
+    window.addEventListener('languagechange', this.setState({ lang: Translator.getLanguage() }));
   }
 
   componentDidUpdate(prevProps) {
@@ -113,7 +116,7 @@ class CometChatGroupList extends React.Component {
         groups.splice(groupKey, 1);
         this.setState({grouplist: groups});
         if(groups.length === 0) {
-          this.decoratorMessage = "No groups found";
+          this.decoratorMessage = Translator.translate("NO_GROUPS_FOUND", this.state.lang);
         }
       }
     }
@@ -135,6 +138,9 @@ class CometChatGroupList extends React.Component {
       }
     }
 
+    if (prevProps.lang !== this.props.lang) {
+      this.setState({ lang: this.props.lang });
+    }
   }
 
   componentWillUnmount() {
@@ -300,19 +306,15 @@ class CometChatGroupList extends React.Component {
 
     if (group.hasJoined === false) {
 
-      if(this.props.hasOwnProperty("widgetsettings")
-      && this.props.widgetsettings
-      && this.props.widgetsettings.hasOwnProperty("main") 
-      && this.props.widgetsettings.main.hasOwnProperty("join_or_leave_groups")
-      && this.props.widgetsettings.main["join_or_leave_groups"] === false) {
-        
+      //if join or leave groups is disabled in chat widget
+      if (validateWidgetSettings(this.props.widgetsettings, "join_or_leave_groups") === false) {
         console.log("Group joining disabled in widget settings");
         return false;
       }
 
       let password = "";
       if(group.type === CometChat.GROUP_TYPE.PASSWORD) {
-        password = prompt("Enter your password");
+        password = prompt(Translator.translate("ENTER_YOUR_PASSWORD", this.state.lang));
       } 
 
       const guid = group.guid;
@@ -391,7 +393,7 @@ class CometChatGroupList extends React.Component {
       this.GroupListManager.fetchNextGroups().then(groupList => {
 
         if(groupList.length === 0) {
-          this.decoratorMessage = "No groups found";
+          this.decoratorMessage = Translator.translate("NO_GROUPS_FOUND", this.state.lang);
         }
 
         groupList.forEach(group => group = this.setAvatar(group));
@@ -399,13 +401,13 @@ class CometChatGroupList extends React.Component {
 
       }).catch(error => {
 
-        this.decoratorMessage = "Error";
+        this.decoratorMessage = Translator.translate("ERROR", this.state.lang);
         console.error("[CometChatGroupList] getGroups fetchNextGroups error", error);
       });
 
     }).catch(error => {
 
-      this.decoratorMessage = "Error";
+      this.decoratorMessage = Translator.translate("ERROR", this.state.lang);
       console.log("[CometChatGroupList] getUsers getLoggedInUser error", error);
     });
   }
@@ -445,7 +447,7 @@ class CometChatGroupList extends React.Component {
     if(this.state.grouplist.length === 0) {
       messageContainer = (
         <div css={groupMsgStyle()} className="groups__decorator-message">
-          <p css={groupMsgTxtStyle(this.theme)} className="decorator-message">{this.decoratorMessage}</p>
+          <p css={groupMsgTxtStyle(this.props.theme)} className="decorator-message">{this.decoratorMessage}</p>
         </div>
       );
     }
@@ -454,27 +456,24 @@ class CometChatGroupList extends React.Component {
       return (
       <GroupView 
       key={key} 
-      theme={this.theme}
+      theme={this.props.theme}
       group={group} 
+      lang={this.state.lang}
       selectedGroup={this.state.selectedGroup}
       clickHandler={this.handleClick} />);
     });
 
-    let creategroup = (<div css={groupAddStyle(addIcon)} title="Create Group" onClick={() => this.createGroupHandler(true)}>
-      <img src={addIcon} alt="Create Group" />
+    let creategroup = (<div css={groupAddStyle(addIcon)} title={Translator.translate("CREATE_GROUP", this.state.lang)} onClick={() => this.createGroupHandler(true)}>
+      <img src={addIcon} alt={Translator.translate("CREATE_GROUP", this.state.lang)} />
     </div>);
-    if(this.props.hasOwnProperty("config") 
-    && this.props.config
-    && this.props.config.hasOwnProperty("group-create") 
-    && this.props.config["group-create"] === false) {
+
+    //if create group is disabled in v1 chat widget
+    if (validateWidgetSettings(this.props.config, "group-create") === false) {
       creategroup = null;
     }
 
-    if(this.props.hasOwnProperty("widgetsettings") 
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("main") 
-    && this.props.widgetsettings.main.hasOwnProperty("create_groups")
-    && this.props.widgetsettings.main["create_groups"] === false) {
+    //if create group is disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "create_groups") === false) {
       creategroup = null;
     }
 
@@ -485,30 +484,42 @@ class CometChatGroupList extends React.Component {
 
     return (
       <div css={groupWrapperStyle()} className="groups">
-        <div css={groupHeaderStyle(this.theme)} className="groups__header">
+        <div css={groupHeaderStyle(this.props.theme)} className="groups__header">
           {closeBtn}
-          <h4 css={groupHeaderTitleStyle(this.props)} className="header__title">Groups</h4>
+          <h4 css={groupHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>{Translator.translate("GROUPS", this.state.lang)}</h4>
           {creategroup}
         </div>
         <div css={groupSearchStyle()} className="groups__search">
           <input 
           type="text" 
           autoComplete="off" 
-          css={groupSearchInputStyle(this.theme, searchIcon)}
+          css={groupSearchInputStyle(this.props.theme, searchIcon)}
           className="search__input" 
-          placeholder="Search"
+          placeholder={Translator.translate("SEARCH", this.state.lang)}
           onChange={this.searchGroup} />
         </div>
         {messageContainer}
         <div css={groupListStyle()} className="groups__list" onScroll={this.handleScroll} ref={el => this.groupListRef = el}>{groups}</div>
         <CometChatCreateGroup 
-        theme={this.theme}
+        theme={this.props.theme}
+        lang={this.state.lang}
         open={this.state.createGroup} 
         close={() => this.createGroupHandler(false)}
         actionGenerated={this.createGroupActionHandler} />
       </div>
     );
   }
+}
+
+// Specifies the default values for props:
+CometChatGroupList.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+CometChatGroupList.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default CometChatGroupList;

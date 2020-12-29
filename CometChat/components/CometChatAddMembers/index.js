@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -28,12 +29,14 @@ import {
     contactMsgTxtStyle,
 } from "./style";
 
+import Translator from "../../resources/localization/translator";
+import { theme } from "../../resources/theme";
 import searchIcon from './resources/search-grey-icon.png';
 import clearIcon from "./resources/close.png";
 
 class CometChatAddMembers extends React.Component {
 
-    decoratorMessage = "Loading...";
+    decoratorMessage = Translator.translate("LOADING", Translator.getDefaultLanguage());
     static contextType = GroupDetailContext;
 
     constructor(props) {
@@ -41,7 +44,7 @@ class CometChatAddMembers extends React.Component {
         this.state = {
             userlist: [],
             membersToAdd: [],
-            filteredlist: []
+            filteredlist: [],
         }
     }
 
@@ -120,20 +123,20 @@ class CometChatAddMembers extends React.Component {
                 });
 
                 if (filteredUserList.length === 0) {
-                    this.decoratorMessage = "No users found";
+                    this.decoratorMessage = Translator.translate("NO_USERS_FOUND", this.props.lang);
                 }
 
                 this.setState({ userlist: [...this.state.userlist, ...userList], filteredlist: [...this.state.filteredlist, ...filteredUserList] });
                 
             }).catch((error) => {
 
-                this.decoratorMessage = "Error";
+                this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
                 console.error("[CometChatAddMembers] getUsers fetchNext error", error);
             });
   
         }).catch((error) => {
 
-            this.decoratorMessage = "Error";
+            this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
             console.log("[CometChatAddMembers] getUsers getLoggedInUser error", error);
         });
     }
@@ -205,6 +208,7 @@ class CometChatAddMembers extends React.Component {
                     this.props.actionGenerated("addGroupParticipants", membersToAdd);
                 }
                 this.props.close();
+
             }).catch(error => {
                 console.log("addMembersToGroup failed with exception:", error);
             });
@@ -240,6 +244,7 @@ class CometChatAddMembers extends React.Component {
                 <React.Fragment key={user.uid}>
                     <AddMemberView 
                     theme={this.props.theme}
+                    lang={this.props.lang}
                     firstLetter={firstLetter}
                     loggedinuser={group.loggedinuser}
                     user={user}
@@ -254,24 +259,24 @@ class CometChatAddMembers extends React.Component {
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
                 <div css={modalWrapperStyle(this.props)} className="modal__addmembers">
-                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title="Close"></span>
+                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyCtyle()} className="modal__body">
                         <table css={modalTableStyle()}>
-                            <caption css={tableCaptionStyle()} className="modal__title">Contacts</caption>
+                            <caption css={tableCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">{Translator.translate("USERS", this.props.lang)}</caption>
                             <caption css={tableSearchStyle()} className="modal__search">
                                 <input
                                 type="text" 
                                 autoComplete="off" 
                                 css={searchInputStyle(this.props, searchIcon)}
                                 className="search__input" 
-                                placeholder="Search"
+                                placeholder={Translator.translate("SEARCH", this.props.lang)}
                                 onChange={this.searchUsers} />
                             </caption>
                             {messageContainer}
                             <tbody css={tableBodyStyle(this.props)} onScroll={this.handleScroll}>{users}</tbody>
                             <tfoot css={tableFootStyle(this.props)}>
                                 <tr>
-                                    <td colSpan="2" className="addmembers"><button onClick={this.updateMembers}>Add</button></td>
+                                    <td colSpan="2" className="addmembers"><button onClick={this.updateMembers}>{Translator.translate("ADD", this.props.lang)}</button></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -280,6 +285,17 @@ class CometChatAddMembers extends React.Component {
             </React.Fragment>
         );
     }
+}
+
+// Specifies the default values for props:
+CometChatAddMembers.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+CometChatAddMembers.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default CometChatAddMembers;

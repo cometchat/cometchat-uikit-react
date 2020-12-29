@@ -1,6 +1,7 @@
 import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { checkMessageForExtensionsData } from "../../util/common";
 
@@ -54,13 +55,7 @@ class SenderVideoBubble extends React.PureComponent {
       if (Object.keys(reactionsData).length) {
         messageReactions = (
           <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-            <RegularReactionView
-            theme={this.props.theme}
-            message={this.state.message}
-            reaction={reactionsData}
-            loggedInUser={this.props.loggedInUser}
-            widgetsettings={this.props.widgetsettings}
-            actionGenerated={this.props.actionGenerated} />
+            <RegularReactionView {...this.props} message={this.state.message} reaction={reactionsData} />
           </div>
         );
       }

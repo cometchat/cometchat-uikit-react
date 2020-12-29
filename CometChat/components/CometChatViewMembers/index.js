@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -21,6 +22,8 @@ import {
     actionColumnStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 import clearIcon from "./resources/close.png";
 
 class CometChatViewMembers extends React.Component {
@@ -112,6 +115,7 @@ class CometChatViewMembers extends React.Component {
                 key={key} 
                 member={member}
                 item={this.props.item}
+                lang={this.props.lang}
                 widgetsettings={this.props.widgetsettings}
                 actionGenerated={this.updateMembers} />);
         });
@@ -121,8 +125,8 @@ class CometChatViewMembers extends React.Component {
 
             editAccess = (
                 <React.Fragment>
-                    <th css={actionColumnStyle()} className="ban">Ban</th>
-                    <th css={actionColumnStyle()} className="kick">Kick</th>
+                    <th css={actionColumnStyle()} className="ban">{Translator.translate("BAN", this.props.lang)}</th>
+                    <th css={actionColumnStyle()} className="kick">{Translator.translate("KICK", this.props.lang)}</th>
                 </React.Fragment>
             );
 
@@ -141,14 +145,14 @@ class CometChatViewMembers extends React.Component {
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
                 <div css={modalWrapperStyle(this.props)} className="modal__viewmembers">
-                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title="Close"></span>
+                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyCtyle()} className="modal__body">
                         <table css={modalTableStyle(this.props)}>
-                            <caption css={tableCaptionStyle()} className="modal__title">Group Members</caption>
+                        <caption css={tableCaptionStyle()} className="modal__title">{Translator.translate("GROUP_MEMBERS", this.props.lang)}</caption>
                             <thead> 
                                 <tr>
-                                    <th className="name">Name</th>
-                                    <th css={scopeColumnStyle()} className="scope">Scope</th>
+                                <th className="name">{Translator.translate("NAME", this.props.lang)}</th>
+                                <th css={scopeColumnStyle()} className="scope">{Translator.translate("SCOPE", this.props.lang)}</th>
                                     {editAccess}
                                 </tr>
                             </thead>
@@ -159,6 +163,17 @@ class CometChatViewMembers extends React.Component {
             </React.Fragment>
         );
     }
+}
+
+// Specifies the default values for props:
+CometChatViewMembers.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+CometChatViewMembers.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default CometChatViewMembers;

@@ -64,13 +64,20 @@ export const modalTableStyle = () => {
     }
 }
 
-export const tableCaptionStyle = () => {
+export const tableCaptionStyle = (dir) => {
+
+    const textAlignStyle = (dir === "rtl") ? {
+        textAlign: "right",
+        paddingRight: "32px",
+    } : { 
+        textAlign: "left", 
+    };
 
     return {
         fontSize: "20px",
         marginBottom: "16px",
         fontWeight: "bold",
-        textAlign: "left",
+        ...textAlignStyle
     }
 }
 

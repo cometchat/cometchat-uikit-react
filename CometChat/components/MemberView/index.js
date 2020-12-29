@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -21,6 +22,8 @@ import {
     scopeWrapperStyle,
     scopeSelectionStyle
 } from "./style";
+
+import Translator from "../../resources/localization/translator";
 
 import scopeIcon from "./resources/edit.png";
 import doneIcon from "./resources/done.png";
@@ -42,15 +45,25 @@ class MemberView extends React.Component {
             defaultValue={this.props.member.scope}></select>
         )
 
+        this.state = {
+            showChangeScope: false,
+            scope: null
+        }
+
         this.roles = {}
-        this.roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN] = "Administrator";
-        this.roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR] = "Moderator";
-        this.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT] = "Participant";
+        this.roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN] = Translator.translate("ADMINISTRATOR", props.lang);
+        this.roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR] = Translator.translate("MODERATOR", props.lang);
+        this.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT] = Translator.translate("PARTICIPANT", props.lang);
     }
-    
-    state = {
-        showChangeScope: false,
-        scope: null
+
+    componentDidUpdate(prevProps) {
+
+        if (prevProps.lang !== this.props.lang) {
+
+            this.roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN] = Translator.translate("ADMINISTRATOR", this.props.lang);
+            this.roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR] = Translator.translate("MODERATOR", this.props.lang);
+            this.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT] = Translator.translate("PARTICIPANT", this.props.lang);
+        }
     }
 
     toggleChangeScope = (flag) => {
@@ -94,8 +107,8 @@ class MemberView extends React.Component {
         let name = this.props.member.name;
         let scope = (<span css={roleStyle()}>{this.roles[this.props.member.scope]}</span>);
         let changescope = null;
-        let ban = (<img src={banIcon} alt="Ban" onClick={() => {this.props.actionGenerated("ban", this.props.member)}} />);
-        let kick = (<img src={kickIcon} alt="Kick" onClick={() => {this.props.actionGenerated("kick", this.props.member)}} />);
+        let ban = (<img src={banIcon} alt={Translator.translate("BAN", this.props.lang)} onClick={() => {this.props.actionGenerated("ban", this.props.member)}} />);
+        let kick = (<img src={kickIcon} alt={Translator.translate("KICK", this.props.lang)} onClick={() => {this.props.actionGenerated("kick", this.props.member)}} />);
         
 
         if(this.state.showChangeScope) {
@@ -126,8 +139,8 @@ class MemberView extends React.Component {
                     className="scope__select"
                     onChange={this.scopeChangeHandler}
                     defaultValue={this.props.member.scope}>{options}</select>
-                    <img src={doneIcon} alt="Change Scope" onClick={this.updateMemberScope} />
-                    <img src={clearIcon} alt="Change Scope" onClick={() => this.toggleChangeScope(false)} />
+                    <img src={doneIcon} alt={Translator.translate("CHANGE_SCOPE", this.props.lang)} onClick={this.updateMemberScope} />
+                    <img src={clearIcon} alt={Translator.translate("CHANGE_SCOPE", this.props.lang)} onClick={() => this.toggleChangeScope(false)} />
                 </div>
             );
 
@@ -139,7 +152,7 @@ class MemberView extends React.Component {
                 changescope = (
                     <React.Fragment>
                         {scope}
-                        <img src={scopeIcon} alt="Change Scope" onClick={() => this.toggleChangeScope(true)} />
+                        <img src={scopeIcon} alt={Translator.translate("CHANGE_SCOPE", this.props.lang)} onClick={() => this.toggleChangeScope(true)} />
                     </React.Fragment>
                 );
             }
@@ -147,7 +160,7 @@ class MemberView extends React.Component {
 
         //disable change scope, kick, ban of group owner
         if(this.props.item.owner === this.props.member.uid) {
-            scope = (<span css={roleStyle()}>{"Owner"}</span>);
+            scope = (<span css={roleStyle()}>{Translator.translate("OWNER", this.props.lang)}</span>);
             changescope = scope;
             ban = null;
             kick = null;
@@ -155,7 +168,7 @@ class MemberView extends React.Component {
 
         //disable change scope, kick, ban of self
         if(group.loggedinuser.uid === this.props.member.uid) {
-            name = "You";
+            name = Translator.translate("YOU", this.props.lang);
             changescope = scope;
             ban = null;
             kick = null;
@@ -197,14 +210,12 @@ class MemberView extends React.Component {
                 //if kick_ban_members is disabled in chatwidget
                 if (this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members")
                 && this.props.widgetsettings.main["allow_kick_ban_members"] === false) {
-    
                     editAccess = null;
                 }
 
                 //if promote_demote_members is disabled in chatwidget
                 if (this.props.widgetsettings.main.hasOwnProperty("allow_promote_demote_members")
                 && this.props.widgetsettings.main["allow_promote_demote_members"] === false) {
-    
                     changescope = scope;
                 }
             }
@@ -214,9 +225,7 @@ class MemberView extends React.Component {
             <StatusIndicator
             widgetsettings={this.props.widgetsettings}
             status={this.props.member.status}
-            cornerRadius="50%" 
-            borderColor={this.props.theme.color.darkSecondary}
-            borderWidth="1px" />
+            borderColor={this.props.theme.borderColor.primary} />
         );
         
         return (
@@ -225,11 +234,7 @@ class MemberView extends React.Component {
                 onMouseEnter={event => this.toggleTooltip(event, true)}
                 onMouseLeave={event => this.toggleTooltip(event, false)}>
                     <div css={avatarStyle(editClassName)} className="thumbnail">
-                        <Avatar 
-                        image={this.props.member.avatar} 
-                        cornerRadius="18px" 
-                        borderColor={this.props.theme.color.secondary}
-                        borderWidth="1px" />
+                        <Avatar image={this.props.member.avatar} borderColor={this.props.theme.borderColor.primary} />
                         {userPresence}
                     </div>
                     <div css={nameStyle(editClassName)} className="name">{name}</div>
@@ -239,6 +244,15 @@ class MemberView extends React.Component {
             </tr>
         );
     }
+}
+
+// Specifies the default values for props:
+MemberView.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+};
+
+MemberView.propTypes = {
+    lang: PropTypes.string,
 }
 
 export default MemberView;

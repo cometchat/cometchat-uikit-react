@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { checkMessageForExtensionsData } from "../../util/common";
 
@@ -17,6 +18,9 @@ import {
     messageInfoWrapperStyle,
     messageReactionsWrapperStyle,
 } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 class SenderStickerBubble extends React.Component {
 
@@ -53,7 +57,7 @@ class SenderStickerBubble extends React.Component {
             stickerData = this.state.message.data.customData;
 
             if (stickerData.hasOwnProperty("sticker_url")) {
-                const stickerName = (stickerData.hasOwnProperty("sticker_name")) ? stickerData.sticker_name : "Sticker";
+                const stickerName = (stickerData.hasOwnProperty("sticker_name")) ? stickerData.sticker_name : Translator.translate("STICKER", this.props.lang);
                 stickerImg = (<img src={stickerData.sticker_url} alt={stickerName} />);
             }
         }
@@ -65,13 +69,7 @@ class SenderStickerBubble extends React.Component {
             if (Object.keys(reactionsData).length) {
                 messageReactions = (
                     <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-                        <RegularReactionView
-                        theme={this.props.theme}
-                        message={this.state.message}
-                        reaction={reactionsData}
-                        loggedInUser={this.props.loggedInUser}
-                        widgetsettings={this.props.widgetsettings}
-                        actionGenerated={this.props.actionGenerated} />
+                        <RegularReactionView {...this.props} message={this.state.message} reaction={reactionsData} />
                     </div>
                 );
             }
@@ -97,6 +95,17 @@ class SenderStickerBubble extends React.Component {
             </React.Fragment>
         )
     }
+}
+
+// Specifies the default values for props:
+SenderStickerBubble.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+SenderStickerBubble.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default SenderStickerBubble;

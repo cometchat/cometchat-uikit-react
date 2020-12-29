@@ -138,12 +138,9 @@ export const chatOptionWrapStyle = () => {
     return {
         display: "flex",
         flexDirection: "row",
-        justifyContent: "center",
+        justifyContent: "space-between",
         alignItems: "center",
         width: "110px",
-        "div:not(:last-of-type)": {
-            marginRight: "14px"
-        },
     }
 }
 

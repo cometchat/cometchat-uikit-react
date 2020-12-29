@@ -2,6 +2,7 @@ import React from "react";
 import dateFormat from "dateformat";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { SvgAvatar } from '../../util/svgavatar';
 import Avatar from "../Avatar";
@@ -19,6 +20,9 @@ import {
     nameStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
+
 const deletedmessagebubble = (props) => {
 
     let message = null;
@@ -28,7 +32,7 @@ const deletedmessagebubble = (props) => {
         message = (
             <React.Fragment>
                 <div css={messageTxtWrapperStyle(props)} className="message__txt__wrapper">
-                    <p css={messageTxtStyle(props)} className="message__txt">You deleted this message.</p>                         
+                    <p css={messageTxtStyle(props)} className="message__txt">{Translator.translate("YOU_DELETED_THIS_MESSAGE", props.lang)}</p>                         
                 </div>
                 <div css={messageInfoWrapperStyle(props)} className="message__info__wrapper">
                     <span css={messageTimeStampStyle(props)} className="message__timestamp">{dateFormat(messageDate, "shortTime")}</span>
@@ -59,7 +63,10 @@ const deletedmessagebubble = (props) => {
                     image={props.message.sender.avatar} />
                 </div>
             )
-            name = (<div css={nameWrapperStyle(props)} className="message__name__wrapper"><span css={nameStyle(props)} className="message__name">{props.message.sender.name}</span></div>);
+            name = (
+            <div css={nameWrapperStyle(props)} className="message__name__wrapper">
+                <span css={nameStyle(props)} className="message__name">{props.message.sender.name}</span>
+            </div>);
         } 
 
         message = (
@@ -68,7 +75,7 @@ const deletedmessagebubble = (props) => {
                 <div css={messageDetailStyle(props)} className="message__details">
                     {name}
                     <div css={messageTxtWrapperStyle(props)} className="message__txt__wrapper">
-                        <p css={messageTxtStyle(props)} className="message__txt">This message was deleted.</p>
+                        <p css={messageTxtStyle(props)} className="message__txt">{Translator.translate("THIS_MESSAGE_DELETED", props.lang)}</p>
                     </div>
                     <div css={messageInfoWrapperStyle(props)} className="message__info__wrapper">
                         <span css={messageTimeStampStyle(props)} className="message__timestamp">{dateFormat(messageDate, "shortTime")}</span>
@@ -83,6 +90,17 @@ const deletedmessagebubble = (props) => {
             <div css={messageWrapperStyle(props)} className="message__wrapper">{message}</div>                            
         </div>
     )
+}
+
+// Specifies the default values for props:
+deletedmessagebubble.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+deletedmessagebubble.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default deletedmessagebubble;

@@ -2,12 +2,12 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
 import { checkMessageForExtensionsData } from "../../util/common";
 import * as enums from "../../util/enums.js";
-import { MessageThreadManager } from "./controller";
 
 import MessageList from "../MessageList";
 import MessageComposer from "../MessageComposer";
@@ -45,6 +45,9 @@ import {
   messageReplyStyle,
 } from "./style";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
+
 import clearIcon from "./resources/close.png";
 
 class MessageThread extends React.PureComponent {
@@ -52,9 +55,6 @@ class MessageThread extends React.PureComponent {
   constructor(props) {
 
     super(props);
-
-    this.MessageThreadManager = new MessageThreadManager();
-    this.MessageThreadManager.attachListeners(this.listenerCallback);
 
     this.composerRef = React.createRef();
     this.loggedInUser = props.loggedInUser;
@@ -80,18 +80,6 @@ class MessageThread extends React.PureComponent {
       } 
       
     } 
-  }
-
-  listenerCallback = (key, message) => {
-
-    switch (key) {
-
-      case enums.MESSAGE_EDITED:
-        this.parentMessageEdited(message);
-        break;
-      default:
-        break;
-    }
   }
 
   parentMessageEdited = (message) => {
@@ -138,7 +126,7 @@ class MessageThread extends React.PureComponent {
         this.props.actionGenerated("threadMessageComposed", messages);
       }
       break;
-      case "messageUpdated":
+      case "onMessageEdited":
         this.updateMessages(messages);
       break;
       case "messageFetched":
@@ -270,19 +258,19 @@ class MessageThread extends React.PureComponent {
 
     switch (message.type) {
       case CometChat.MESSAGE_TYPE.TEXT:
-        component = <SenderMessageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <SenderMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       case CometChat.MESSAGE_TYPE.IMAGE:
-        component = <SenderImageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <SenderImageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       case CometChat.MESSAGE_TYPE.FILE:
-        component = <SenderFileBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <SenderFileBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       case CometChat.MESSAGE_TYPE.VIDEO:
-        component = <SenderVideoBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <SenderVideoBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       case CometChat.MESSAGE_TYPE.AUDIO:
-        component = <SenderAudioBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <SenderAudioBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       default:
         break;
@@ -298,19 +286,19 @@ class MessageThread extends React.PureComponent {
     switch (message.type) {
       case "message":
       case CometChat.MESSAGE_TYPE.TEXT:
-        component = <ReceiverMessageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <ReceiverMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       case CometChat.MESSAGE_TYPE.IMAGE:
-        component = <ReceiverImageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <ReceiverImageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       case CometChat.MESSAGE_TYPE.FILE:
-        component = <ReceiverFileBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <ReceiverFileBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       case CometChat.MESSAGE_TYPE.AUDIO:
-        component = <ReceiverAudioBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <ReceiverAudioBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       case CometChat.MESSAGE_TYPE.VIDEO:
-        component = <ReceiverVideoBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+        component = <ReceiverVideoBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
         break;
       default:
         break;
@@ -325,16 +313,16 @@ class MessageThread extends React.PureComponent {
 
     switch (message.type) {
       case enums.CUSTOM_TYPE_POLL:
-        component = <SenderPollBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        component = <SenderPollBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
         break;
       case enums.CUSTOM_TYPE_STICKER:
-        component = <SenderStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        component = <SenderStickerBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
         break;
       case enums.CUSTOM_TYPE_DOCUMENT:
-        component = <SenderDocumentBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        component = <SenderDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
         break;
       case enums.CUSTOM_TYPE_WHITEBOARD:
-        component = <SenderWhiteboardBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        component = <SenderWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
         break;
       default:
         break;
@@ -348,16 +336,16 @@ class MessageThread extends React.PureComponent {
     let component;
     switch (message.type) {
       case enums.CUSTOM_TYPE_POLL:
-        component = <ReceiverPollBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        component = <ReceiverPollBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
         break;
       case enums.CUSTOM_TYPE_STICKER:
-        component = <ReceiverStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        component = <ReceiverStickerBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
         break;
       case enums.CUSTOM_TYPE_DOCUMENT:
-        component = <ReceiverDocumentBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        component = <ReceiverDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
         break;
       case enums.CUSTOM_TYPE_WHITEBOARD:
-        component = <ReceiverWhiteboardBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+        component = <ReceiverWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
         break;
       default:
         break;
@@ -411,7 +399,7 @@ class MessageThread extends React.PureComponent {
     if (this.state.parentMessage.hasOwnProperty("replyCount")) {
 
       const replyCount = this.state.parentMessage.replyCount;
-      const replyText = (replyCount === 1) ? `${replyCount} reply` : `${replyCount} replies`;
+      const replyText = (replyCount === 1) ? (`${replyCount} ${Translator.translate("REPLY", this.props.lang)}`) : (`${replyCount} ${Translator.translate("REPLIES", this.props.lang)}`);
 
       seperator = (
         <div css={messageSeparatorStyle(this.props)} className="message__separator">
@@ -426,7 +414,7 @@ class MessageThread extends React.PureComponent {
         <div css={headerStyle(this.props)} className="chat__header">
           <div css={headerWrapperStyle()} className="header__wrapper">    
             <div css={headerDetailStyle()} className="header__details">
-              <h6 css={headerTitleStyle()} className="header__title">Thread</h6>
+              <h6 css={headerTitleStyle()} className="header__title">{Translator.translate("THREAD", this.props.lang)}</h6>
               <span css={headerNameStyle()} className="header__username">{this.props.item.name}</span>
             </div>
             <div css={headerCloseStyle(clearIcon)} className="header__close" onClick={() => this.props.actionGenerated("closeThreadClicked")}></div>
@@ -445,12 +433,14 @@ class MessageThread extends React.PureComponent {
           widgetsettings={this.props.widgetsettings}
           parentMessageId={this.props.parentMessage.id}
           loggedInUser={this.props.loggedInUser}
+          lang={this.props.lang}
           actionGenerated={this.actionHandler} />
           <MessageComposer
           ref={(el) => { this.composerRef = el; }}
           theme={this.props.theme}
           item={this.props.item} 
           type={this.props.type}
+          lang={this.props.lang}
           widgetsettings={this.props.widgetsettings}
           parentMessageId={this.props.parentMessage.id}
           messageToBeEdited={this.state.messageToBeEdited}
@@ -461,6 +451,17 @@ class MessageThread extends React.PureComponent {
       </div>
     );
   }
+}
+
+// Specifies the default values for props:
+MessageThread.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+MessageThread.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default MessageThread;

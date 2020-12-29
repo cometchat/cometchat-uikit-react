@@ -53,3 +53,5 @@ export const CALL_TYPE_VIDEO = "video";
 
 export const LIVE_REACTION_KEY = "live_reaction";
 export const LIVE_REACTIONS = { "heart": "./resources/heart.png", "thumbsup": "👍", "clap": "👏", "wink": "😉" };
+
+export const LOCALE_KEY = "cometchat:locale";

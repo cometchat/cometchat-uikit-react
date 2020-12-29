@@ -2,10 +2,10 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChatManager } from "../../util/controller";
 import { SharedMediaManager } from "./controller";
-
 import * as enums from '../../util/enums.js';
 
 import {
@@ -18,6 +18,9 @@ import {
     itemStyle,
 
 } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 import fileIcon from "./resources/file.png";
 
@@ -142,23 +145,6 @@ class SharedMediaView extends React.Component {
         this.setState({messagetype: type, messageList: []});
     }
 
-    lazyLoad = (target) => {
-        const obs = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target.querySelector("img");
-                    const src = img.getAttribute('data-lazy');
-                    
-                    img.setAttribute('src', src);
-                    img.classList.add('fadeIn');
-
-                    observer.disconnect();
-                }
-            });
-        });
-        obs.observe(target);
-    }
-
     render() {
 
         const template = (message, key) => {
@@ -167,7 +153,7 @@ class SharedMediaView extends React.Component {
 
                 return (
                     <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__image">
-                        <img src={message.data.url} alt="Media Item" />
+                        <img src={message.data.url} alt={Translator.translate("SHARED_MEDIA", this.props.lang)} />
                     </div>
                 );
 
@@ -198,16 +184,16 @@ class SharedMediaView extends React.Component {
 
         return (
             <div css={sectionStyle(this.props)} className="section section__sharedmedia">
-                <h6 css={sectionHeaderStyle(this.props)} className="section__header">Shared Media</h6>
+                <h6 css={sectionHeaderStyle(this.props)} className="section__header">{Translator.translate("SHARED_MEDIA", this.props.lang)}</h6>
                 <div css={sectionContentStyle(this.props)} data-id="sharedmedia" className="section__content">
                     <div css={mediaBtnStyle()} className="media__button">
-                        <span css={buttonStyle(this.state, "image")} onClick={() => this.mediaClickHandler("image")}>Photos</span>
-                        <span css={buttonStyle(this.state, "video")} onClick={() => this.mediaClickHandler("video")}>Videos</span>
-                        <span css={buttonStyle(this.state, "file")} onClick={() => this.mediaClickHandler("file")}>Docs</span>
+                        <span css={buttonStyle(this.state, "image")} onClick={() => this.mediaClickHandler("image")}>{Translator.translate("PHOTOS", this.props.lang)}</span>
+                        <span css={buttonStyle(this.state, "video")} onClick={() => this.mediaClickHandler("video")}>{Translator.translate("VIDEOS", this.props.lang)}</span>
+                        <span css={buttonStyle(this.state, "file")} onClick={() => this.mediaClickHandler("file")}>{Translator.translate("DOCS", this.props.lang)}</span>
                     </div>
                     <div css={mediaItemStyle()} className="media_items" 
                     ref={el => this.messageContainer = el}
-                    onScroll={this.handleScroll}>{(messageList.length) ? messageList : "No records found."}
+                    onScroll={this.handleScroll}>{(messageList.length) ? messageList : Translator.translate("NO_RECORDS_FOUND", this.props.lang)}
                     </div>
                 </div>
             </div>
@@ -218,6 +204,17 @@ class SharedMediaView extends React.Component {
       this.SharedMediaManager.removeListeners();
       this.SharedMediaManager = null;
     }
+}
+
+// Specifies the default values for props:
+SharedMediaView.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+SharedMediaView.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default SharedMediaView;

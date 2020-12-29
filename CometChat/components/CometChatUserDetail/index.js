@@ -2,7 +2,10 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
+import { validateWidgetSettings } from "../../util/common";
+import Translator from "../../resources/localization/translator";
 import SharedMediaView from "../SharedMediaView";
 
 import {
@@ -27,17 +30,17 @@ class CometChatUserDetail extends React.Component {
         let blockUserText;
         if(this.props.item.blockedByMe) {
             blockUserText = (
-                <div css={itemLinkStyle(1, this.props)} className="item__link" onClick={() => this.props.actionGenerated("unblockUser")}>Unblock User</div>
+                <div css={itemLinkStyle(1, this.props)} className="item__link" onClick={() => this.props.actionGenerated("unblockUser")}>{Translator.translate("UNBLOCK_USER", this.props.lang)}</div>
             );
         } else {
             blockUserText = (
-                <div css={itemLinkStyle(1, this.props)} className="item__link" onClick={() => this.props.actionGenerated("blockUser")}>Block User</div>
+                <div css={itemLinkStyle(1, this.props)} className="item__link" onClick={() => this.props.actionGenerated("blockUser")}>{Translator.translate("BLOCK_USER", this.props.lang)}</div>
             );
         }
 
         let blockUserView = (
             <div css={privacySectionStyle(this.props)} className="section section__privacy">
-                <h6 css={sectionHeaderStyle(this.props)} className="section__header">Options</h6>
+                <h6 css={sectionHeaderStyle(this.props)} className="section__header">{Translator.translate("OPTIONS", this.props.lang)}</h6>
                 <div css={sectionContentStyle()} className="section__content">
                     <div css={contentItemStyle()} className="content__item">{blockUserText}</div>
                 </div>
@@ -45,31 +48,30 @@ class CometChatUserDetail extends React.Component {
         );
         
         let sharedmediaView = (
-            <SharedMediaView theme={this.props.theme} containerHeight="50px" item={this.props.item} type={this.props.type} widgetsettings={this.props.widgetsettings} />
+            <SharedMediaView 
+            theme={this.props.theme} 
+            containerHeight="50px" 
+            item={this.props.item} 
+            type={this.props.type} 
+            lang={this.props.lang}
+            widgetsettings={this.props.widgetsettings} />
         );
 
-        if(this.props.hasOwnProperty("widgetsettings") 
-        && this.props.widgetsettings
-        && this.props.widgetsettings.hasOwnProperty("main")) {
+        //if block/unblock user is disabled in chat widget
+        if (validateWidgetSettings(this.props.widgetsettings, "block_user") === false) {
+            blockUserView = null;
+        }
 
-            //if block_user is disabled in chatwidget
-            if(this.props.widgetsettings.main.hasOwnProperty("block_user")
-            && this.props.widgetsettings.main["block_user"] === false) {
-                blockUserView = null;
-            }
-
-            //if view_shared_media is disabled in chatwidget
-            if(this.props.widgetsettings.main.hasOwnProperty("view_shared_media")
-            && this.props.widgetsettings.main["view_shared_media"] === false) {
-                sharedmediaView = null;
-            }
+        //if shared media is disabled in chat widget
+        if (validateWidgetSettings(this.props.widgetsettings, "view_shared_media") === false) {
+            sharedmediaView = null;
         }
 
         return (
             <div css={userDetailStyle(this.props)} className="detailpane detailpane--user">
                 <div css={headerStyle(this.props)} className="detailpane__header">
                     <div css={headerCloseStyle(navigateIcon)} className="header__close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
-                    <h4 css={headerTitleStyle()} className="header__title">Details</h4>
+                    <h4 css={headerTitleStyle()} className="header__title">{Translator.translate("DETAILS", this.props.lang)}</h4>
                 </div>
                 <div css={sectionStyle()} className="detailpane__section">
                     {blockUserView}
@@ -78,6 +80,15 @@ class CometChatUserDetail extends React.Component {
             </div>
         );
     }
+}
+
+// Specifies the default values for props:
+CometChatUserDetail.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+};
+
+CometChatUserDetail.propTypes = {
+    lang: PropTypes.string
 }
 
 export default CometChatUserDetail;

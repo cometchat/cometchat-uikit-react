@@ -1,6 +1,7 @@
 import React from "react";
 import twemoji from "twemoji";
 import ReactHtmlParser from "react-html-parser";
+import PropTypes from 'prop-types';
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
@@ -28,6 +29,9 @@ import {
   messageInfoWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 class ReceiverMessageBubble extends React.Component {
 
@@ -127,15 +131,13 @@ class ReceiverMessageBubble extends React.Component {
 
       avatar = (
         <div css={messageThumbnailStyle()} className="message__thumbnail">
-          <Avatar
-          cornerRadius="50%"
-          borderColor={this.props.theme.color.secondary}
-          borderWidth="1px"
-          image={this.state.message.sender.avatar} />
+          <Avatar borderColor={this.props.theme.borderColor.primary} image={this.state.message.sender.avatar} />
         </div>
       );
 
-      name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span></div>);
+      name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
+        <span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span>
+        </div>);
     }
 
     let messageText = this.getMessageText();
@@ -156,13 +158,7 @@ class ReceiverMessageBubble extends React.Component {
       if (Object.keys(reactionsData).length) {
         messageReactions = (
           <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-            <RegularReactionView
-            theme={this.props.theme}
-            message={this.state.message}
-            reaction={reactionsData}
-            loggedInUser={this.props.loggedInUser}
-            widgetsettings={this.props.widgetsettings}
-            actionGenerated={this.props.actionGenerated} />
+            <RegularReactionView {...this.props} message={this.state.message} reaction={reactionsData} />
           </div>
         );
       }
@@ -189,6 +185,17 @@ class ReceiverMessageBubble extends React.Component {
       </div>
     )
   }
+}
+
+// Specifies the default values for props:
+ReceiverMessageBubble.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+ReceiverMessageBubble.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default ReceiverMessageBubble;

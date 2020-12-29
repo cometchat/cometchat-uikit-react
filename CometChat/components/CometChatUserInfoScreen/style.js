@@ -15,7 +15,7 @@ export const userInfoScreenStyle = (theme) =>{
 export const headerStyle = (theme) => {
 
     return {
-        padding: "19px 16px",
+        padding: "16px",
         position: "relative",
         borderBottom: `1px solid ${theme.borderColor.primary}`
     }
@@ -33,7 +33,7 @@ export const headerTitleStyle = () => {
 export const detailStyle = () => {
 
     return {
-        padding: "19px 16px",
+        padding: "16px",
         display: "flex",
         flexDirection: "row",
         justifyContent: "left",
@@ -56,7 +56,11 @@ export const userDetailStyle = () => {
     return {
         width: "calc(100% - 45px)",
         flexGrow: "1",
-        paddingLeft: "15px",
+        paddingLeft: "16px",
+        "&[dir=rtl]": {
+            paddingRight: "16px",
+            paddingLeft: "0",
+        }
     }
 }
 

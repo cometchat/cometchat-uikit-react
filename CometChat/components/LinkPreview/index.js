@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { checkMessageForExtensionsData } from "../../util/common";
 
@@ -15,6 +16,9 @@ import {
     previewLinkStyle,
     previewTextStyle,
 } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 class LinkPreview extends React.PureComponent {
 
@@ -34,7 +38,7 @@ class LinkPreview extends React.PureComponent {
         const linkObject = linkPreviewData["links"][0];
 
         const pattern = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)(\S+)?/;
-        const linkText = (linkObject["url"].match(pattern)) ? "View on Youtube" : "Visit";
+        const linkText = (linkObject["url"].match(pattern)) ? Translator.translate("VIEW_ON_YOUTUBE", this.props.lang) : Translator.translate("VISIT", this.props.lang);
 
         return (
             <div css={messagePreviewContainerStyle(this.props)} className="message__preview">
@@ -52,6 +56,17 @@ class LinkPreview extends React.PureComponent {
             </div>
         );
     }
+}
+
+// Specifies the default values for props:
+LinkPreview.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+LinkPreview.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default LinkPreview;

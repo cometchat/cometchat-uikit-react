@@ -1,10 +1,12 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
+import { iconWrapperStyle } from "../CometChatCreatePoll/style";
 import { removeOptionIconStyle } from "./style";
 
+import Translator from "../../resources/localization/translator";
 import removeIcon from "./resources/remove.png";
-import { iconWrapperStyle } from "../CometChatCreatePoll/style";
 
 const createpollview = (props) => {
 
@@ -17,7 +19,7 @@ const createpollview = (props) => {
                 tabIndex={props.tabIndex}
                 type="text" 
                 autoComplete="off" 
-                placeholder="Enter your option" 
+                placeholder={Translator.translate("ENTER_YOUR_OPTION", props.lang)}
                 value={props.value}
                 onChange={(event) => props.optionChangeHandler(event, props.option)} />
             </td>
@@ -26,6 +28,15 @@ const createpollview = (props) => {
             </td>
         </tr>
     );
+}
+
+// Specifies the default values for props:
+createpollview.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+};
+
+createpollview.propTypes = {
+    lang: PropTypes.string,
 }
 
 export default createpollview;

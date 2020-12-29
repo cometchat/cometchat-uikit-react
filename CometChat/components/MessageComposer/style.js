@@ -1,7 +1,7 @@
 export const chatComposerStyle = (props) => {
 
     return {
-        padding: "14px 16px",
+        padding: "16px",
         backgroundColor: `${props.theme.backgroundColor.white}`,
         zIndex: "1",
         order: "3",
@@ -172,7 +172,7 @@ export const attachmentIconStyle = () => {
 export const filePickerStyle = (state) => {
 
     const active = (state.showFilePicker) ? {
-        width: "100%",
+        width: "calc(100% - 100px)",
         opacity: "1",
     } : {};
 
@@ -186,7 +186,11 @@ export const filePickerStyle = (state) => {
         textAlign: "center",
         opacity: "0",
         transition: "width 0.5s linear",
-        ...active
+        ...active,
+        "&[dir=rtl]": {
+            left: "0",
+            right: "48px",
+        }
     }
 }
 
@@ -197,9 +201,7 @@ export const fileListStyle = () => {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        "div:not(:last-of-type)": {
-            marginRight: "14px"
-        }
+        justifyContent: "space-between"
     }
 }
 
@@ -234,27 +236,19 @@ export const stickyAttachButtonStyle = () => {
 
 export const stickyButtonStyle = (props, state) => {
 
-    const mq = [...props.theme.breakPoints];
-
     const active = (state.showFilePicker) ? {
         display: "none",
     } : {
         display: "flex",
     };
 
-
     return {
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
-        "div:not(:last-of-type)": {
-            marginRight: "14px"
-        },
+        justifyContent: "space-around",
         cursor: "pointer",
-        maxWidth: "100px",
-        [`@media ${mq[0]}`]: {
-            ...active
-        }
+        width: "100px",
+        ...active
     }
 }
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import Avatar from "../Avatar";
 import StatusIndicator from "../StatusIndicator";
@@ -15,6 +16,7 @@ import {
   selectionBoxStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
 import inactiveIcon from "./resources/checkbox-inactive.svg";
 import activeIcon from "./resources/checkbox-blue-active.svg";
 
@@ -59,17 +61,11 @@ const AddMemberView = (props) => {
       onMouseEnter={event => toggleTooltip(event, true)}
       onMouseLeave={event => toggleTooltip(event, false)}>
         <div css={avatarStyle()} className="avatar">
-          <Avatar 
-          image={props.user.avatar} 
-          cornerRadius="50%" 
-          borderColor={props.theme.color.secondary}
-          borderWidth="1px" />
+          <Avatar image={props.user.avatar} borderColor={props.theme.borderColor.primary} />
           <StatusIndicator
           widgetsettings={props.widgetsettings}
           status={props.user.status}
-          cornerRadius="50%" 
-          borderColor={props.theme.color.darkSecondary}
-          borderWidth="1px" />
+          borderColor={props.theme.borderColor.primary} />
         </div>
         <div css={nameStyle()} className="name">{props.user.name}</div>
       </td>
@@ -84,6 +80,15 @@ const AddMemberView = (props) => {
       </td>
     </tr>
   )
+}
+
+// Specifies the default values for props:
+AddMemberView.defaultProps = {
+  theme: theme
+};
+
+AddMemberView.propTypes = {
+  theme: PropTypes.object
 }
 
 export default AddMemberView;

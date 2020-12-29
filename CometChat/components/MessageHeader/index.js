@@ -1,15 +1,16 @@
 import React from "react";
 import dateFormat from "dateformat";
 /** @jsx jsx */
-import { jsx } from '@emotion/core'
+import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { MessageHeaderManager } from "./controller";
 
 import StatusIndicator from "../StatusIndicator";
 import Avatar from "../Avatar";
 import { SvgAvatar } from '../../util/svgavatar';
-
 import * as enums from '../../util/enums.js';
+import { validateWidgetSettings } from "../../util/common";
 
 import { 
   chatHeaderStyle, 
@@ -22,6 +23,9 @@ import {
   chatOptionWrapStyle,
   chatOptionStyle
 } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 import menuIcon from './resources/menuicon.png';
 import audioCallIcon from './resources/audiocall.png';
@@ -57,18 +61,24 @@ class MessageHeader extends React.Component {
     this.MessageHeaderManager = new MessageHeaderManager();
     this.MessageHeaderManager.attachListeners(this.updateHeader);
 
-    if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
+    if (this.props.type === 'user' 
+    && (prevProps.item.uid !== this.props.item.uid
+    || (prevProps.item.uid === this.props.item.uid && prevProps.lang !== this.props.lang))) {
+
       this.setStatusForUser();
+
     } else if (this.props.type === 'group' 
     && (prevProps.item.guid !== this.props.item.guid 
-      || (prevProps.item.guid === this.props.item.guid && prevProps.item.membersCount !== this.props.item.membersCount)) ) {
+    || (prevProps.item.guid === this.props.item.guid && prevProps.item.membersCount !== this.props.item.membersCount)
+    || (prevProps.item.guid === this.props.item.guid && prevProps.lang !== this.props.lang)) ) {
+
       this.setStatusForGroup();
     }
   }
 
   setStatusForUser = () => {
 
-    let status = this.props.item.status;
+    let status = "";
     const presence = (this.props.item.status === "online") ? "online" : "offline";
 
     if(this.props.item.status === "offline" && this.props.item.lastActiveAt) {
@@ -76,9 +86,15 @@ class MessageHeader extends React.Component {
       const lastActive = (this.props.item.lastActiveAt * 1000);
       const messageDate = dateFormat(lastActive, "d mmmm yyyy, h:MM TT");
 
-      status = "Last active at: " + messageDate;
+      status = `${Translator.translate("LAST_ACTIVE_AT", this.props.lang)} : ${messageDate}`;
+
     } else if(this.props.item.status === "offline") {
-      status = "offline";
+      
+      status = (Translator.translate("OFFLINE", this.props.lang));
+
+    } else if (this.props.item.status === "online") {
+
+      status = (Translator.translate("ONLINE", this.props.lang));
     }
 
     this.setState({status: status, presence: presence});
@@ -86,7 +102,8 @@ class MessageHeader extends React.Component {
 
   setStatusForGroup = () => {
 
-    const status = `${this.props.item.membersCount} members`;
+    let membersText = (Translator.translate("MEMBERS", this.props.lang)).toLowerCase();
+    const status = `${this.props.item.membersCount} ${membersText}`;
     this.setState({status: status});
   }
 
@@ -104,12 +121,11 @@ class MessageHeader extends React.Component {
       case enums.USER_OFFLINE: {
         if(this.props.type === "user" && this.props.item.uid === item.uid) {
 
-          if(this.props.widgetsettings 
-          && this.props.widgetsettings.hasOwnProperty("main")
-          && this.props.widgetsettings.main.hasOwnProperty("show_user_presence")
-          && this.props.widgetsettings.main["show_user_presence"] === false) {
+          //if user presence is disabled in chat widget
+          if (validateWidgetSettings(this.props.widgetsettings, "show_user_presence") === false) {
             return false;
           }
+
           this.setState({ status: item.status, presence: item.status });
         }
         break;
@@ -122,7 +138,7 @@ class MessageHeader extends React.Component {
         && this.props.loggedInUser.uid !== groupUser.uid) {
 
           let membersCount = parseInt(item.membersCount);
-          const status = `${membersCount} members`;
+          const status = `${membersCount} ${Translator.translate("MEMBERS", this.props.lang).toLowerCase()}`;
           this.setState({status: status});
         }
       break;
@@ -130,7 +146,7 @@ class MessageHeader extends React.Component {
         if(this.props.type === "group" && this.props.item.guid === item.guid) {
 
           let membersCount = parseInt(item.membersCount);
-          const status = `${membersCount} members`;
+          const status = `${membersCount} ${(Translator.translate("MEMBERS", this.props.lang)).toLowerCase()}`;
           this.setState({status: status});
         }
       break;
@@ -138,7 +154,7 @@ class MessageHeader extends React.Component {
         if(this.props.type === "group" && this.props.item.guid === item.guid) {
 
           let membersCount = parseInt(item.membersCount);
-          const status = `${membersCount} members`;
+          const status = `${membersCount} ${(Translator.translate("MEMBERS", this.props.lang)).toLowerCase()}`;
           this.setState({status: status});
         }
       break;
@@ -146,15 +162,17 @@ class MessageHeader extends React.Component {
         
         if (this.props.type === "group" && this.props.type === item.receiverType && this.props.item.guid === item.receiverId) {
 
-          this.setState({ status: `${item.sender.name} is typing...` });
+          const typingText = `${item.sender.name} ${Translator.translate("IS_TYPING", this.props.lang)}`;
+          this.setState({ status: typingText });
           this.props.actionGenerated("showReaction", item);
 
         } else if (this.props.type === "user" && this.props.type === item.receiverType && this.props.item.uid === item.sender.uid) {
 
-          this.setState({ status: "typing..." });
+          const typingText = `${Translator.translate("TYPING", this.props.lang)}`;
+          this.setState({ status: typingText });
           this.props.actionGenerated("showReaction", item);
-          
         }
+        
         break;
       }
       case enums.TYPING_ENDED: {
@@ -217,9 +235,7 @@ class MessageHeader extends React.Component {
         <StatusIndicator
         widgetsettings={this.props.widgetsettings}
         status={this.state.presence}
-        cornerRadius="50%" 
-        borderColor={this.props.theme.borderColor.primary}
-        borderWidth="1px" />
+        borderColor={this.props.theme.borderColor.primary} />
       );
 
     } else {
@@ -237,16 +253,21 @@ class MessageHeader extends React.Component {
       <span css={chatStatusStyle(this.props, this.state)} className="user__status">{this.state.status}</span>
     );
 
-    let audioCallBtn = (
-      <div onClick={() => this.props.actionGenerated("audioCall")} css={chatOptionStyle(audioCallIcon)}>
-        <img src={audioCallIcon} alt="Voice call" />
+    const audioCallText = Translator.translate("AUDIO_CALL", this.props.lang);
+    let audioCallBtn = ( 
+      <div title={audioCallText} onClick={() => this.props.actionGenerated("audioCall")} css={chatOptionStyle(audioCallIcon)}>
+        <img src={audioCallIcon} alt={audioCallText} />
       </div>);
+    
+    const videoCallText = Translator.translate("VIDEO_CALL", this.props.lang);
     let videoCallBtn = (
-      <div onClick={() => this.props.actionGenerated("videoCall")} css={chatOptionStyle(videoCallIcon)}>
-        <img src={videoCallIcon} alt="Video call" />
+      <div title={videoCallText} onClick={() => this.props.actionGenerated("videoCall")} css={chatOptionStyle(videoCallIcon)}>
+        <img src={videoCallIcon} alt={videoCallText} />
       </div>);
-    let viewDetailBtn = (<div onClick={() => this.props.actionGenerated("viewDetail")} css={chatOptionStyle(detailPaneIcon)}>
-      <img src={detailPaneIcon} alt="View detail" />
+
+    const viewDetailText = Translator.translate("VIEW_DETAIL", this.props.lang);
+    let viewDetailBtn = (<div title={viewDetailText}  onClick={() => this.props.actionGenerated("viewDetail")} css={chatOptionStyle(detailPaneIcon)}>
+      <img src={detailPaneIcon} alt={viewDetailText} />
     </div>);
     
     if(this.props.viewdetail === false) {
@@ -261,24 +282,19 @@ class MessageHeader extends React.Component {
       videoCallBtn = null;
     }
 
-    if(this.props.widgetsettings && this.props.widgetsettings.hasOwnProperty("main")) {
+    //if audiocall is disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_voice_calling") === false) {
+      audioCallBtn = null;
+    }
 
-      if(this.props.widgetsettings.main.hasOwnProperty("enable_voice_calling")
-      && this.props.widgetsettings.main["enable_voice_calling"] === false) {
-        audioCallBtn = null;
-      }
+    //if videocall is disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_video_calling") === false) {
+      videoCallBtn = null;
+    }
 
-      if(this.props.widgetsettings.main.hasOwnProperty("enable_video_calling")
-      && this.props.widgetsettings.main["enable_video_calling"] === false) {
-        videoCallBtn = null;
-      }
-
-      if(this.props.widgetsettings.main.hasOwnProperty("show_user_presence")
-      && this.props.widgetsettings.main["show_user_presence"] === false
-      && this.props.type === "user") {
-        status = null;
-      }
-      
+    //if user presence is disabled in chat widget
+    if (validateWidgetSettings(this.props.widgetsettings, "show_user_presence") === false && this.props.type === "user") {
+      status = null;
     }
 
     return (
@@ -286,11 +302,7 @@ class MessageHeader extends React.Component {
         <div css={chatDetailStyle()} className="chat__details">
           <div css={chatSideBarBtnStyle(menuIcon, this.props)} className="chat__sidebar-menu" onClick={() => this.props.actionGenerated("menuClicked")}></div>
           <div css={chatThumbnailStyle()} className="chat__thumbnail">
-            <Avatar 
-            image={image} 
-            cornerRadius="18px" 
-            borderColor={this.props.theme.borderColor.primary}
-            borderWidth="1px" />
+            <Avatar image={image} borderColor={this.props.theme.borderColor.primary} />
             {presence}
           </div>
           <div css={chatUserStyle()} className="chat__user">
@@ -308,6 +320,17 @@ class MessageHeader extends React.Component {
       </div>
     );
   }
+}
+
+// Specifies the default values for props:
+MessageHeader.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+MessageHeader.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default MessageHeader;

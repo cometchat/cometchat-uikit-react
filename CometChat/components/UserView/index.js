@@ -1,10 +1,14 @@
 /** @jsx jsx */
-import { jsx } from '@emotion/core'
+import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import Avatar from "../Avatar";
 import StatusIndicator from "../StatusIndicator";
 
 import { listItem, itemThumbnailStyle, itemDetailStyle, itemNameStyle, itemDescStyle } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 const userview = (props) => {
 
@@ -12,9 +16,7 @@ const userview = (props) => {
     <StatusIndicator
     widgetsettings={props.widgetsettings}
     status={props.user.status}
-    cornerRadius="50%" 
-    borderColor={props.theme.color.darkSecondary}
-    borderWidth="1px" />
+    borderColor={props.theme.borderColor.primary} />
   );
 
   const toggleTooltip = (event, flag) => {
@@ -38,14 +40,10 @@ const userview = (props) => {
   return (
     <div css={listItem(props)} onClick={() => props.clickeHandler(props.user)} className="list__item">
       <div css={itemThumbnailStyle()} className="list__item__thumbnail">
-        <Avatar 
-        image={props.user.avatar} 
-        cornerRadius="50%" 
-        borderColor={props.theme.color.secondary}
-        borderWidth="1px" />
+        <Avatar  image={props.user.avatar} borderColor={props.theme.borderColor.primary} />
         {userPresence}
       </div>
-      <div css={itemDetailStyle()} className="list__item__details">
+      <div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(props.lang)}>
         <div css={itemNameStyle()} className="item__details__name"  
         onMouseEnter={event => toggleTooltip(event, true)} 
         onMouseLeave={event => toggleTooltip(event, false)}>{props.user.name}</div>
@@ -53,6 +51,15 @@ const userview = (props) => {
       </div>
     </div>
   )
+}
+
+// Specifies the default values for props:
+userview.defaultProps = {
+  theme: theme
+};
+
+userview.propTypes = {
+  theme: PropTypes.object
 }
 
 export default userview;

@@ -2,11 +2,13 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../util/controller";
 import * as enums from '../../util/enums.js';
+import Translator from "../../resources/localization/translator";
 
 import NavBar from "./NavBar";
 import CometChatMessageListScreen from "../CometChatMessageListScreen";
@@ -55,19 +57,17 @@ class CometChatUnified extends React.Component {
       sidebarview: false,
       imageView: null,
       groupmessage: {},
-      lastmessage: {}
+      lastmessage: {},
+      lang: props.lang,
     }
 
-    new CometChatManager().getLoggedInUser().then((user) => {
+    CometChat.getLoggedInUser().then((user) => {
       this.loggedInUser = user;
 
     }).catch((error) => {
       console.log("[CometChatUnified] getLoggedInUser error", error);
-
     });
-
-    this.theme = Object.assign({}, theme, this.props.theme);
-	}
+  }
   
   componentDidMount() {
 
@@ -75,14 +75,14 @@ class CometChatUnified extends React.Component {
       this.toggleSideBar();
     }
 
-    // new CometChatManager().getLoggedInUser().then((user) => {
-    //   this.loggedInUser = user;
+    window.addEventListener('languagechange', this.setState({ lang: Translator.getLanguage() }));
+  }
 
-    // }).catch((error) => {
-    //   console.log("[CometChatUnified] getLoggedInUser error", error);
-      
-    // });
-    
+  componentDidUpdate(prevProps) {
+
+    if (prevProps.lang !== this.props.lang) {
+      this.setState({ lang: this.props.lang });
+    }
   }
 
   changeTheme = (e) => {
@@ -219,7 +219,7 @@ class CometChatUnified extends React.Component {
 
   updateThreadMessage = (message, action) => {
 
-    if (this.state.threadmessageview === false) {
+    if (this.state.threadmessageview === false || message.id !== this.state.threadmessageparent.id) {
       return false;
     }
 
@@ -504,14 +504,15 @@ class CometChatUnified extends React.Component {
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div css={unifiedSecondaryStyle(this.theme)} className="unified__secondary-view">
+        <div css={unifiedSecondaryStyle(this.props.theme)} className="unified__secondary-view">
           <MessageThread
-          theme={this.theme}
+          theme={this.props.theme}
           tab={this.state.tab}
           item={this.state.threadmessageitem}
           type={this.state.threadmessagetype}
           parentMessage={this.state.threadmessageparent}
           loggedInUser={this.loggedInUser}
+          lang={this.state.lang}
           actionGenerated={this.actionHandler} />
         </div>
       );
@@ -523,11 +524,12 @@ class CometChatUnified extends React.Component {
       if(this.state.type === "user") {
 
         detailScreen = (
-          <div css={unifiedSecondaryStyle(this.theme)} className="unified__secondary-view">
+          <div css={unifiedSecondaryStyle(this.props.theme)} className="unified__secondary-view">
             <CometChatUserDetail
-              theme={this.theme}
+              theme={this.props.theme}
               item={this.state.item} 
               type={this.state.type}
+              lang={this.state.lang}
               actionGenerated={this.actionHandler} />
           </div>
           );
@@ -535,11 +537,12 @@ class CometChatUnified extends React.Component {
       } else if (this.state.type === "group") {
 
         detailScreen = (
-          <div css={unifiedSecondaryStyle(this.theme)} className="unified__secondary-view">
+          <div css={unifiedSecondaryStyle(this.props.theme)} className="unified__secondary-view">
           <CometChatGroupDetail
-            theme={this.theme}
+            theme={this.props.theme}
             item={this.state.item} 
             type={this.state.type}
+            lang={this.state.lang}
             actionGenerated={this.actionHandler} />
           </div>
         );
@@ -550,7 +553,7 @@ class CometChatUnified extends React.Component {
     if(Object.keys(this.state.item).length) {
       messageScreen = (
         <CometChatMessageListScreen 
-        theme={this.theme}
+        theme={this.props.theme}
         item={this.state.item} 
         tab={this.state.tab}
         type={this.state.type}
@@ -558,20 +561,21 @@ class CometChatUnified extends React.Component {
         callmessage={this.state.callmessage}
         groupmessage={this.state.groupmessage}
         loggedInUser={this.loggedInUser}
+        lang={this.state.lang}
         actionGenerated={this.actionHandler} />
       );
     }
 
     let imageView = null;
     if (this.state.imageView) {
-      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} />);
+      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} lang={this.state.lang} />);
     }
-    
+
     return (
-      <div css={unifiedStyle(this.theme)} className="cometchat cometchat--unified">
-        <div css={unifiedSidebarStyle(this.state, this.theme)} className="unified__sidebar">
+      <div css={unifiedStyle(this.props.theme)} className="cometchat cometchat--unified" dir={Translator.getDirection(this.state.lang)}>
+        <div css={unifiedSidebarStyle(this.state, this.props.theme)} className="unified__sidebar">
           <NavBar 
-          theme={this.theme}
+          theme={this.props.theme}
           type={this.state.type}
           item={this.state.item}
           tab={this.state.tab}
@@ -580,6 +584,7 @@ class CometChatUnified extends React.Component {
           groupToUpdate={this.state.groupToUpdate}
           messageToMarkRead={this.state.messageToMarkRead}
           lastMessage={this.state.lastmessage}
+          lang={this.state.lang}
           actionGenerated={this.navBarAction}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
@@ -587,12 +592,14 @@ class CometChatUnified extends React.Component {
         {detailScreen}
         {threadMessageView}
         <CallAlert 
-        theme={this.theme} 
+        theme={this.props.theme} 
+        lang={this.state.lang}
         actionGenerated={this.actionHandler}  />
         <CallScreen
-        theme={this.theme}
+        theme={this.props.theme}
         item={this.state.item} 
         type={this.state.type}
+        lang={this.state.lang}
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
         loggedInUser={this.loggedInUser}
@@ -601,6 +608,17 @@ class CometChatUnified extends React.Component {
       </div>
     );
   }
+}
+
+// Specifies the default values for props:
+CometChatUnified.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+CometChatUnified.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default CometChatUnified;

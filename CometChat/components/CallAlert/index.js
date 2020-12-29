@@ -2,14 +2,17 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx, keyframes } from "@emotion/core";
+import PropTypes from 'prop-types';
+
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../util/controller";
 import * as enums from '../../util/enums.js';
-
+import { validateWidgetSettings } from "../../util/common";
+import Translator from "../../resources/localization/translator";
 import Avatar from "../Avatar";
 import { SvgAvatar } from '../../util/svgavatar';
-import { validateWidgetSettings } from "../../util/common";
+
 import { CallAlertManager } from "./controller";
 
 import {
@@ -172,13 +175,13 @@ class CallAlert extends React.PureComponent {
             
             let callType = (
                 <React.Fragment>
-                    <img src={audioCallIcon} alt="Incoming audio call" /><span>Incoming audio call</span>
+                    <img src={audioCallIcon} alt={Translator.translate("INCOMING_AUDIO_CALL", this.props.lang)} /><span>{Translator.translate("INCOMING_AUDIO_CALL", this.props.lang)}</span>
                 </React.Fragment>
             );
             if (this.state.incomingCall.type === "video") {
                 callType = (
                     <React.Fragment>
-                        <img src={videoCallIcon} alt="Incoming video call" /><span>Incoming video call</span>
+                        <img src={videoCallIcon} alt={Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)} /><span>{Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}</span>
                     </React.Fragment>
                 );
             }
@@ -191,11 +194,13 @@ class CallAlert extends React.PureComponent {
                                 <div css={nameStyle()} className="name">{this.state.incomingCall.sender.name}</div>
                                 <div css={callTypeStyle(this.props)} className="calltype">{callType}</div>
                             </div>
-                            <div css={thumbnailStyle()} className="header__thumbnail"><Avatar cornerRadius="50%" image={this.state.incomingCall.sender.avatar} /></div>
+                            <div css={thumbnailStyle()} className="header__thumbnail">
+                                <Avatar cornerRadius="50%" image={this.state.incomingCall.sender.avatar} />
+                            </div>
                         </div>
                         <div css={headerButtonStyle()} className="callalert__buttons">
-                            <button css={ButtonStyle(this.props, 0)} className="button button__decline" onClick={this.rejectCall}>Decline</button>
-                            <button css={ButtonStyle(this.props, 1)} className="button button__accept" onClick={this.acceptCall}>Accept</button>
+                            <button css={ButtonStyle(this.props, 0)} className="button button__decline" onClick={this.rejectCall}>{Translator.translate("DECLINE", this.props.lang)}</button>
+                            <button css={ButtonStyle(this.props, 1)} className="button button__accept" onClick={this.acceptCall}>{Translator.translate("ACCEPT", this.props.lang)}</button>
                         </div>
                     </div>
                 </div>
@@ -204,6 +209,15 @@ class CallAlert extends React.PureComponent {
         
         return callScreen;
     }
+}
+
+// Specifies the default values for props:
+CallAlert.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+};
+
+CallAlert.propTypes = {
+    lang: PropTypes.string,
 }
 
 export default CallAlert;

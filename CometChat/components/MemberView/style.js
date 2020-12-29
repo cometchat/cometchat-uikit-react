@@ -13,11 +13,6 @@ export const tableColumnStyle = () => {
 
     return {
         padding: "8px",
-        "img": {
-            width: "36px",
-            height: "36px",
-            float: "left",
-        }
     }
 }
 
@@ -32,10 +27,9 @@ export const avatarStyle = (participantView) => {
     return {
         display: "inline-block",
         float: "left",
-        "span": {
-            top: "26px",
-            left: "-8px",
-        },
+        width: "36px",
+        height: "36px",
+        marginRight: "8px",
         [mq[0]]: {
             ...displayProp
         }

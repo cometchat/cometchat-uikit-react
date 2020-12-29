@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -13,20 +14,15 @@ import {
   groupButtonStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
+
 import replyIcon from "./resources/startthread.png";
 import deleteIcon from "./resources/deletemessage.png";
 import editIcon from "./resources/edit.png";
 import reactIcon from "./resources/add-reaction.png";
 
 class Tooltip extends React.PureComponent {
-
-  constructor(props) {
-    super(props);
-
-    this.state = {
-
-    }
-  }
 
   toggleTooltip = (event, flag) => {
 
@@ -49,7 +45,7 @@ class Tooltip extends React.PureComponent {
           onMouseLeave={event => this.toggleTooltip(event, false)}
           css={groupButtonStyle(reactIcon)}
           className="group__button button__reacttomessage"
-          data-title="Add reaction"
+          data-title={Translator.translate("ADD_REACTION", this.props.lang)}
           onClick={() => this.props.actionGenerated("reactToMessage", this.props.message)}></button>
       </li>
     );
@@ -67,7 +63,7 @@ class Tooltip extends React.PureComponent {
         onMouseLeave={event => this.toggleTooltip(event, false)}
         css={groupButtonStyle(replyIcon)}
         className="group__button button__threadedchats" 
-        data-title={(this.props.message.replyCount) ? "Reply to thread" : "Reply in thread"}
+          data-title={(this.props.message.replyCount) ? Translator.translate("REPLY_TO_THREAD", this.props.lang) : Translator.translate("REPLY_IN_THREAD", this.props.lang) }
         onClick={() => this.props.actionGenerated("viewMessageThread", this.props.message)}></button>
       </li>
     );
@@ -87,7 +83,7 @@ class Tooltip extends React.PureComponent {
         onMouseLeave={event => this.toggleTooltip(event, false)}
         css={groupButtonStyle(deleteIcon)}
         className="group__button button__delete" 
-        data-title="Delete message"
+        data-title={Translator.translate("DELETE_MESSAGE", this.props.lang)}
         onClick={() => this.props.actionGenerated("deleteMessage", this.props.message)}></button>
       </li>
     );
@@ -106,7 +102,7 @@ class Tooltip extends React.PureComponent {
           onMouseLeave={event => this.toggleTooltip(event, false)}
           css={groupButtonStyle(editIcon)}
           className="group__button button__edit" 
-          data-title="Edit message"
+          data-title={Translator.translate("EDIT_MESSAGE", this.props.lang)}
           onClick={() => this.props.actionGenerated("editMessage", this.props.message)}></button>
       </li>
     );
@@ -133,6 +129,17 @@ class Tooltip extends React.PureComponent {
 
     return tooltip;
   }
+}
+
+// Specifies the default values for props:
+Tooltip.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+Tooltip.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default Tooltip;
