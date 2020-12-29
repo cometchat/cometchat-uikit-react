@@ -76,9 +76,8 @@ class Translator {
 
     static translate(str, language) {
 
-        try {
-
-            const languageDb = translations[language];
+        const languageDb = translations[language];
+        if (languageDb) {
 
             if (languageDb.hasOwnProperty(str)) {
                 return languageDb[str];
@@ -86,10 +85,14 @@ class Translator {
 
             return str;
 
-        } catch (error) {
+        } else {
 
-            console.error("Error while translating::translateWord", error);
-            // If something goes wrong return the word as it is.
+            console.log("Error while translating::defaulting to en");
+            const languageDb = translations["en"];
+            if (languageDb.hasOwnProperty(str)) {
+                return languageDb[str];
+            }
+
             return str;
         }
     }
