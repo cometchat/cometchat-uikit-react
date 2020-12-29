@@ -2,12 +2,12 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
 import BanMemberView from "../BanMemberView";
 import Backdrop from '../Backdrop';
-
 import GroupDetailContext from '../CometChatGroupDetail/context';
 
 import {
@@ -23,18 +23,23 @@ import {
     contactMsgTxtStyle
 } from "./style";
 
+import Translator from "../../resources/localization/translator";
+import { theme } from "../../resources/theme";
 import clearIcon from "./resources/close.png";
 
 class CometChatBanMembers extends React.Component {
 
-    decoratorMessage = "Loading...";
     static contextType = GroupDetailContext;
 
     constructor(props) {
+
         super(props);
+
+        this.decoratorMessage = Translator.translate("LOADING", props.lang);
+
         this.state = {
             membersToBan: [],
-            membersToUnBan: []
+            membersToUnBan: [],
         }
     }
 
@@ -84,6 +89,7 @@ class CometChatBanMembers extends React.Component {
                     member={member}
                     item={this.props.item}
                     loggedinuser={group.loggedinuser}
+                    lang={this.props.lang}
                     widgetsettings={this.props.widgetsettings}
                     actionGenerated={this.updateMembers} />);
 
@@ -92,7 +98,7 @@ class CometChatBanMembers extends React.Component {
         let messageContainer = null;
         if (bannedMembers.length === 0) {
 
-            this.decoratorMessage = "No banned members found";
+            this.decoratorMessage = Translator.translate("NO_BANNED_MEMBERS_FOUND", this.props.lang);
             messageContainer = (
                 <caption css={contactMsgStyle()} className="bannedmembers__decorator-message">
                     <p css={contactMsgTxtStyle(this.props)} className="decorator-message">{this.decoratorMessage}</p>
@@ -103,16 +109,16 @@ class CometChatBanMembers extends React.Component {
         return (
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)} className="modal__addmembers">
-                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close}></span>
+                <div css={modalWrapperStyle(this.props)} className="modal__bannedmembers">
+                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyStyle()} className="modal__body">
                         <table css={modalTableStyle(this.props)}>
-                            <caption css={tableCaptionStyle()} className="modal__title">Banned Members</caption>
+                            <caption css={tableCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">{Translator.translate("BANNED_MEMBERS", this.props.lang)}</caption>
                             <thead>
                                 <tr>
-                                    <th className="name">Name</th>
-                                    <th css={roleColumnStyle()} className="role">Scope</th>
-                                    <th css={actionColumnStyle()} className="unban">Unban</th>
+                                    <th className="name">{Translator.translate("NAME", this.props.lang)}</th>
+                                    <th css={roleColumnStyle()} className="role">{Translator.translate("SCOPE", this.props.lang)}</th>
+                                    <th css={actionColumnStyle()} className="unban">{Translator.translate("UNBAN", this.props.lang)}</th>
                                 </tr>
                             </thead>
                             {messageContainer}
@@ -123,6 +129,17 @@ class CometChatBanMembers extends React.Component {
             </React.Fragment>
         );
     }
+}
+
+// Specifies the default values for props:
+CometChatBanMembers.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+CometChatBanMembers.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default CometChatBanMembers;

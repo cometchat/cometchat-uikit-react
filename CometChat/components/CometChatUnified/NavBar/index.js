@@ -2,11 +2,15 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import CometChatUserList from "../../CometChatUserList";
 import CometChatGroupList from "../../CometChatGroupList";
 import CometChatConversationList from "../../CometChatConversationList";
 import CometChatUserInfoScreen from "../../CometChatUserInfoScreen";
+
+import Translator from "../../../resources/localization/translator";
+import { theme } from "../../../resources/theme";
 
 import {
   footerStyle,
@@ -24,13 +28,10 @@ import groupBlueIcon from "./resources/groups-blue.png";
 import moreGreyIcon from "./resources/userinfo-grey.png";
 import moreBlueIcon from "./resources/userinfo-blue.png";
 
-
 class Navbar extends React.Component {
 
   constructor(props) {
-
     super(props);
-    
     this.sidebar = React.createRef();
   }
 
@@ -42,6 +43,7 @@ class Navbar extends React.Component {
           theme={this.props.theme}
           item={this.props.item}
           type={this.props.type}
+          lang={this.props.lang}
           actionGenerated={this.props.actionGenerated}
           enableCloseMenu={this.props.enableCloseMenu}
           onItemClick={(item, type) => this.props.actionGenerated("itemClicked", type, item)} />;
@@ -53,6 +55,7 @@ class Navbar extends React.Component {
           theme={this.props.theme}
           item={this.props.item}
           type={this.props.type}
+          lang={this.props.lang}
           groupToUpdate={this.props.groupToUpdate}
           messageToMarkRead={this.props.messageToMarkRead}
           lastMessage={this.props.lastMessage}
@@ -64,6 +67,7 @@ class Navbar extends React.Component {
           theme={this.props.theme}
           item={this.props.item}
           type={this.props.type}
+          lang={this.props.lang}
           groupToLeave={this.props.groupToLeave}
           groupToDelete={this.props.groupToDelete}
           groupToUpdate={this.props.groupToUpdate}
@@ -73,13 +77,12 @@ class Navbar extends React.Component {
       case "info":
         return <CometChatUserInfoScreen
           theme={this.props.theme}
+          lang={this.props.lang}
           onItemClick={(item, type) => this.props.actionGenerated("itemClicked", type, item)} />;
       default:
         return null;
     }
-
   }
-
 
   render() {
 
@@ -94,23 +97,45 @@ class Navbar extends React.Component {
         <div css={footerStyle()} className="sidebar__footer">
           <div css={navbarStyle()} className="footer__navbar">
             <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'conversations')}>
-              <div css={itemLinkStyle(chatGreyIcon, chatBlueIcon, chatsTabActive, "chats")} className="item__link item__link__chats"></div>
+              <div 
+              css={itemLinkStyle(chatGreyIcon, chatBlueIcon, chatsTabActive, "chats")} 
+              className="item__link item__link__chats"
+              title={Translator.translate("CHATS", this.props.lang)}></div>
             </div>
             <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'contacts')}>
-              <div css={itemLinkStyle(contactGreyIcon, contactBlueIcon, userTabActive, "contacts")} className="item__link item__link__contacts"></div>
+              <div 
+              css={itemLinkStyle(contactGreyIcon, contactBlueIcon, userTabActive, "contacts")} 
+              className="item__link item__link__contacts"
+                title={Translator.translate("USERS", this.props.lang)}></div>
             </div>
             <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'groups')}>
-              <div css={itemLinkStyle(groupGreyIcon, groupBlueIcon, groupsTabActive, "groups")} className="item__link item__link__groups"></div>
+              <div 
+              css={itemLinkStyle(groupGreyIcon, groupBlueIcon, groupsTabActive, "groups")} 
+              className="item__link item__link__groups"
+              title={Translator.translate("GROUPS", this.props.lang)}></div>
             </div>
             <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', 'info')}>
-              <div css={itemLinkStyle(moreGreyIcon, moreBlueIcon, moreTabActive, "userinfo")} className="item__link item__link__info"></div>
+              <div 
+              css={itemLinkStyle(moreGreyIcon, moreBlueIcon, moreTabActive, "userinfo")} 
+              className="item__link item__link__info"
+              title={Translator.translate("MORE", this.props.lang)}></div>
             </div>
           </div>
         </div>
       </React.Fragment>
     )
-
   }
+}
+
+// Specifies the default values for props:
+Navbar.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+Navbar.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default Navbar;

@@ -2,14 +2,15 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
-import { CometChatManager } from "../../util/controller";
 import { ConversationListManager } from "./controller";
 import { SvgAvatar } from '../../util/svgavatar';
 import * as enums from '../../util/enums.js';
 import { validateWidgetSettings } from "../../util/common";
+import Translator from "../../resources/localization/translator";
 
 import ConversationView from "../ConversationView";
 
@@ -32,7 +33,6 @@ import { incomingOtherMessageAlert } from "../../resources/audio/";
 class CometChatConversationList extends React.Component {
 
   loggedInUser = null;
-  decoratorMessage = "Loading...";
 
   constructor(props) {
 
@@ -41,12 +41,23 @@ class CometChatConversationList extends React.Component {
     this.state = {
       conversationlist: [],
       onItemClick: null,
-      selectedConversation: undefined
+      selectedConversation: undefined,
+      lang: props.lang
     }
-    this.chatListRef = React.createRef();
-    this.theme = Object.assign({}, theme, this.props.theme);
 
+    this.decoratorMessage = Translator.translate("LOADING", props.lang);
+    this.chatListRef = React.createRef();
     this.audio = new Audio(incomingOtherMessageAlert);
+
+    CometChat.getLoggedInUser().then((user) => {
+
+      this.loggedInUser = user;
+
+    }).catch((error) => {
+
+      this.decoratorMessage = Translator.translate("ERROR", this.state.lang);
+      console.log("[CometChatConversationList] getConversations getLoggedInUser error", error);
+    });
   }
 
   componentDidMount() {
@@ -54,6 +65,8 @@ class CometChatConversationList extends React.Component {
     this.ConversationListManager = new ConversationListManager();
     this.getConversations();
     this.ConversationListManager.attachListeners(this.conversationUpdated);
+
+    window.addEventListener('languagechange', this.setState({ lang: Translator.getLanguage() }));
   }
 
   componentDidUpdate(prevProps) {
@@ -174,6 +187,10 @@ class CometChatConversationList extends React.Component {
         conversationList.unshift(newConversationObj);
         this.setState({ conversationlist: conversationList });
       }
+    }
+
+    if (prevProps.lang !== this.props.lang) {
+      this.setState({ lang: this.props.lang });
     }
   }
 
@@ -559,46 +576,37 @@ class CometChatConversationList extends React.Component {
 
   getConversations = () => {
 
-    new CometChatManager().getLoggedInUser().then(user => {
+    this.ConversationListManager.fetchNextConversation().then(conversationList => {
 
-      this.loggedInUser = user;
-      this.ConversationListManager.fetchNextConversation().then(conversationList => {
+      if(conversationList.length === 0) {
+        this.decoratorMessage = Translator.translate("NO_CHATS_FOUND", this.state.lang);
+      }
 
-        if(conversationList.length === 0) {
-          this.decoratorMessage = "No chats found";
+      conversationList.forEach(conversation => {
+
+        if(conversation.conversationType === "user" && !conversation.conversationWith.avatar) {
+          conversation.conversationWith.avatar = this.setAvatar(conversation);
+        } else if(conversation.conversationType === "group" && !conversation.conversationWith.icon) {
+          conversation.conversationWith.icon = this.setAvatar(conversation);
         }
 
-        conversationList.forEach(conversation => {
+        
+        if (this.props.hasOwnProperty("type") && this.props.hasOwnProperty("item") && this.props.type === conversation.conversationType) {
 
-          if(conversation.conversationType === "user" && !conversation.conversationWith.avatar) {
-            conversation.conversationWith.avatar = this.setAvatar(conversation);
-          } else if(conversation.conversationType === "group" && !conversation.conversationWith.icon) {
-            conversation.conversationWith.icon = this.setAvatar(conversation);
+          if ((conversation.conversationType === "user" && this.props.item.uid === conversation.conversationWith.uid) ||
+            (conversation.conversationType === "group" && this.props.item.guid === conversation.conversationWith.guid)) {
+
+            conversation.unreadMessageCount = 0;
           }
-
-          
-          if (this.props.hasOwnProperty("type") && this.props.hasOwnProperty("item") && this.props.type === conversation.conversationType) {
-
-            if ((conversation.conversationType === "user" && this.props.item.uid === conversation.conversationWith.uid) ||
-              (conversation.conversationType === "group" && this.props.item.guid === conversation.conversationWith.guid)) {
-
-              conversation.unreadMessageCount = 0;
-            }
-          }
-          
-        });
-        this.setState({ conversationlist: [...this.state.conversationlist, ...conversationList] });
-
-      }).catch(error => {
-
-        this.decoratorMessage = "Error";
-        console.error("[CometChatConversationList] getConversations fetchNext error", error);
+        }
+        
       });
+      this.setState({ conversationlist: [...this.state.conversationlist, ...conversationList] });
 
     }).catch(error => {
 
-      this.decoratorMessage = "Error";
-      console.log("[CometChatConversationList] getConversations getLoggedInUser error", error);
+      this.decoratorMessage = Translator.translate("ERROR", this.state.lang);
+      console.error("[CometChatConversationList] getConversations fetchNext error", error);
     });
   }
 
@@ -626,8 +634,9 @@ class CometChatConversationList extends React.Component {
       return (
         <ConversationView 
         key={key}
-        theme={this.theme}
+        theme={this.props.theme}
         config={this.props.config}
+        lang={this.state.lang}
         conversationKey={key} 
         conversation={conversation}
         selectedConversation={this.state.selectedConversation}
@@ -638,11 +647,10 @@ class CometChatConversationList extends React.Component {
     });
 
     let messageContainer = null;
-    
     if(this.state.conversationlist.length === 0) {
       messageContainer = (
         <div css={chatsMsgStyle()} className="chats__decorator-message">
-          <p css={chatsMsgTxtStyle(this.theme)} className="decorator-message">{this.decoratorMessage}</p>
+          <p css={chatsMsgTxtStyle(this.props.theme)} className="decorator-message">{this.decoratorMessage}</p>
         </div>
       );
     }
@@ -650,20 +658,30 @@ class CometChatConversationList extends React.Component {
     let closeBtn = (<div css={chatsHeaderCloseStyle(navigateIcon)} className="header__close" onClick={this.handleMenuClose}></div>);
     if (!this.props.hasOwnProperty("enableCloseMenu") || (this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0)) {
       closeBtn = null;
-    }
+    }    
 
     return (
       <div css={chatsWrapperStyle()} className="chats">
-        <div css={chatsHeaderStyle(this.theme)} className="chats__header">
+        <div css={chatsHeaderStyle(this.props.theme)} className="chats__header">
           {closeBtn}
-          <h4 css={chatsHeaderTitleStyle(this.props)} className="header__title">Chats</h4>
-          <div></div>
+          <h4 css={chatsHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>{Translator.translate("CHATS", this.state.lang)}</h4>
         </div>
         {messageContainer}
         <div css={chatsListStyle()} className="chats__list" onScroll={this.handleScroll} ref={el => this.chatListRef = el}>{conversationList}</div>
       </div>
     );
   }
+}
+
+// Specifies the default values for props:
+CometChatConversationList.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+CometChatConversationList.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default CometChatConversationList;

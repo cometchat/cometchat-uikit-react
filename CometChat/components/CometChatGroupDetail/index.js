@@ -2,13 +2,14 @@ import React from 'react';
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../util/controller";
 import { SvgAvatar } from '../../util/svgavatar';
-
 import * as enums from '../../util/enums.js';
+import { validateWidgetSettings } from "../../util/common";
 
 import { GroupDetailManager } from "./controller";
 import GroupDetailContext from './context';
@@ -16,8 +17,10 @@ import GroupDetailContext from './context';
 import CometChatViewMembers from "../CometChatViewMembers";
 import CometChatAddMembers from "../CometChatAddMembers";
 import CometChatBanMembers from "../CometChatBanMembers";
-
 import SharedMediaView from "../SharedMediaView";
+
+import Translator from "../../resources/localization/translator";
+import { theme } from "../../resources/theme";
 
 import {
     detailStyle,
@@ -400,7 +403,7 @@ class CometChatGroupDetail extends React.Component {
 
         let viewMembersBtn = (
             <div css={contentItemStyle()} className="content__item">
-                <div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("viewmember", true)}>View Members</div>                                           
+                <div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("viewmember", true)}>{Translator.translate("VIEW_MEMBERS", this.props.lang)}</div>                                           
             </div>
         );
 
@@ -408,13 +411,13 @@ class CometChatGroupDetail extends React.Component {
         if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
             addMembersBtn = (
                 <div css={contentItemStyle()} className="content__item">
-                    <div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("addmember", true)}>Add Members</div>                                           
+                    <div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("addmember", true)}>{Translator.translate("ADD_MEMBERS", this.props.lang)}</div>                                           
                 </div>
             );
 
             deleteGroupBtn = (
                 <div css={contentItemStyle()} className="content__item">
-                    <span css={itemLinkStyle(this.props, 1)} className="item__link" onClick={this.deleteGroup}>Delete and Exit</span>
+                    <span css={itemLinkStyle(this.props, 1)} className="item__link" onClick={this.deleteGroup}>{Translator.translate("DELETE_AND_EXIT", this.props.lang)}</span>
                 </div>
             );
         }
@@ -422,69 +425,62 @@ class CometChatGroupDetail extends React.Component {
         if(this.props.item.scope !== CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
             bannedMembersBtn = (
                 <div css={contentItemStyle()} className="content__item">
-                    <div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("banmember", true)}>Banned Members</div>                                           
+                    <div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("banmember", true)}>{Translator.translate("BANNED_MEMBERS", this.props.lang)}</div>                                           
                 </div>
             );
         }
 
         let leaveGroupBtn = (
             <div css={contentItemStyle()} className="content__item">
-                <span css={itemLinkStyle(this.props, 0)} className="item__link" onClick={this.leaveGroup}>Leave Group</span>
+                <span css={itemLinkStyle(this.props, 0)} className="item__link" onClick={this.leaveGroup}>{Translator.translate("LEAVE_GROUP", this.props.lang)}</span>
             </div>
         );
 
         let sharedmediaView = (
-            <SharedMediaView theme={this.props.theme} containerHeight="225px" item={this.props.item} type={this.props.type} widgetsettings={this.props.widgetsettings} />
+            <SharedMediaView 
+            theme={this.props.theme} 
+            item={this.props.item} 
+            type={this.props.type} 
+            lang={this.props.lang}
+            containerHeight="225px" 
+            widgetsettings={this.props.widgetsettings} />
         );
 
-        if(this.props.hasOwnProperty("widgetsettings") 
-        && this.props.widgetsettings
-        && this.props.widgetsettings.hasOwnProperty("main")) {
+        //if viewing, kicking/banning, promoting/demoting group membersare disabled in chatwidget
+        if (validateWidgetSettings(this.props.widgetsettings, "view_group_members") === false
+        && validateWidgetSettings(this.props.widgetsettings, "allow_kick_ban_members") === false
+        && validateWidgetSettings(this.props.widgetsettings, "allow_promote_demote_members") === false) {
+            viewMembersBtn = null;
+        }
 
-            //if view_group_members is disabled in chatwidget
-            if(this.props.widgetsettings.main.hasOwnProperty("view_group_members")
-            && this.props.widgetsettings.main["view_group_members"] === false
-            && this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members")
-            && this.props.widgetsettings.main["allow_kick_ban_members"] === false
-            && this.props.widgetsettings.main.hasOwnProperty("allow_promote_demote_members")
-            && this.props.widgetsettings.main["allow_promote_demote_members"] === false) {
-                viewMembersBtn = null;
-            }
+        //if adding group members is disabled in chatwidget
+        if (validateWidgetSettings(this.props.widgetsettings, "allow_add_members") === false) {
+            addMembersBtn = null;
+        }
 
-            //if add_group_members is disabled in chatwidget
-            if(this.props.widgetsettings.main.hasOwnProperty("allow_add_members")
-            && this.props.widgetsettings.main["allow_add_members"] === false) {
-                addMembersBtn = null;
-            }
+        //if kicking/banning/unbanning group members is disabled in chatwidget
+        if (validateWidgetSettings(this.props.widgetsettings, "allow_kick_ban_members") === false) {
+            bannedMembersBtn = null;
+        }
 
-            //if allow_kick_ban_members is disabled in chatwidget
-            if(this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members")
-            && this.props.widgetsettings.main["allow_kick_ban_members"] === false) {
-                bannedMembersBtn = null;
-            }
+        //if deleting group is disabled in chatwidget
+        if (validateWidgetSettings(this.props.widgetsettings, "allow_delete_groups") === false) {
+            deleteGroupBtn = null;
+        }
 
-            //if delete_group is disabled in chatwidget
-            if(this.props.widgetsettings.main.hasOwnProperty("allow_delete_groups")
-            && this.props.widgetsettings.main["allow_delete_groups"] === false) {
-                deleteGroupBtn = null;
-            }
+        //if leaving group is disabled in chatwidget
+        if (validateWidgetSettings(this.props.widgetsettings, "join_or_leave_groups") === false) {
+            leaveGroupBtn = null;
+        }
 
-            //if leave_group is disabled in chatwidgets
-            if(this.props.widgetsettings.main.hasOwnProperty("join_or_leave_groups")
-            && this.props.widgetsettings.main["join_or_leave_groups"] === false) {
-                leaveGroupBtn = null;
-            }
-
-            //if view_shared_media is disabled in chatwidget
-            if(this.props.widgetsettings.main.hasOwnProperty("view_shared_media")
-            && this.props.widgetsettings.main["view_shared_media"] === false) {
-                sharedmediaView = null;
-            }
+        //if viewing shared media group is disabled in chatwidget
+        if (validateWidgetSettings(this.props.widgetsettings, "view_shared_media") === false) {
+            sharedmediaView = null;
         }
 
         let members = (
             <div css={sectionStyle()} className="section section__members">
-                <h6 css={sectionHeaderStyle(this.props)} className="section__header">Members</h6>
+                <h6 css={sectionHeaderStyle(this.props)} className="section__header">{Translator.translate("MEMBERS", this.props.lang)}</h6>
                 <div css={sectionContentStyle()} className="section__content">
                     {viewMembersBtn}
                     {addMembersBtn}
@@ -495,7 +491,7 @@ class CometChatGroupDetail extends React.Component {
 
         let options = (
             <div css={sectionStyle()} className="section section__options">
-                <h6 css={sectionHeaderStyle(this.props)} className="section__header">Options</h6>
+                <h6 css={sectionHeaderStyle(this.props)} className="section__header">{Translator.translate("OPTIONS", this.props.lang)}</h6>
                 <div css={sectionContentStyle()} className="section__content">
                     {leaveGroupBtn}
                     {deleteGroupBtn}
@@ -517,6 +513,7 @@ class CometChatGroupDetail extends React.Component {
                 <CometChatViewMembers 
                 theme={this.props.theme}
                 item={this.props.item}
+                lang={this.props.lang}
                 open={this.state.viewMember}
                 close={() => this.clickHandler("viewmember", false)}
                 widgetsettings={this.props.widgetsettings}
@@ -530,6 +527,7 @@ class CometChatGroupDetail extends React.Component {
                 <CometChatAddMembers 
                 theme={this.props.theme}
                 item={this.props.item}
+                lang={this.props.lang}
                 open={this.state.addMember} 
                 close={() => this.clickHandler("addmember", false)}
                 widgetsettings={this.props.widgetsettings}
@@ -543,6 +541,7 @@ class CometChatGroupDetail extends React.Component {
                 <CometChatBanMembers
                 theme={this.props.theme}
                 item={this.props.item}
+                lang={this.props.lang}
                 open={this.state.banMember} 
                 close={() => this.clickHandler("banmember", false)}
                 widgetsettings={this.props.widgetsettings}
@@ -554,29 +553,40 @@ class CometChatGroupDetail extends React.Component {
             <div css={detailStyle(this.props)} className="detailpane">
                 <GroupDetailContext.Provider 
                 value={{
-                    memberlist: this.state.memberlist,
-                    bannedmemberlist: this.state.bannedmemberlist,
-                    administratorslist: this.state.administratorslist,
-                    moderatorslist: this.state.moderatorslist,
-                    loggedinuser: this.loggedInUser,
-                    item: this.props.item
+                memberlist: this.state.memberlist,
+                bannedmemberlist: this.state.bannedmemberlist,
+                administratorslist: this.state.administratorslist,
+                moderatorslist: this.state.moderatorslist,
+                loggedinuser: this.loggedInUser,
+                item: this.props.item
                 }}>
-                    <div css={headerStyle(this.props)} className="detailpane__header">
-                        <div css={headerCloseStyle(navigateIcon)} className="header__close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
-                        <h4 css={headerTitleStyle()} className="header__title">Details</h4>
-                    </div>
-                    <div css={detailPaneStyle()} className="detailpane__section">
-                        {members}
-                        {options}
-                        {sharedmediaView}
-                    </div>
-                    {viewMembers}
-                    {addMembers}
-                    {bannedMembers}
+                <div css={headerStyle(this.props)} className="detailpane__header">
+                    <div css={headerCloseStyle(navigateIcon)} className="header__close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
+                    <h4 css={headerTitleStyle()} className="header__title">{Translator.translate("DETAILS", this.props.lang)}</h4>
+                </div>
+                <div css={detailPaneStyle()} className="detailpane__section">
+                    {members}
+                    {options}
+                    {sharedmediaView}
+                </div>
+                {viewMembers}
+                {addMembers}
+                {bannedMembers}
                 </GroupDetailContext.Provider>
             </div>
         );
     }
+}
+
+// Specifies the default values for props:
+CometChatGroupDetail.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+CometChatGroupDetail.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default CometChatGroupDetail;

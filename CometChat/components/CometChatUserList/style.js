@@ -26,7 +26,7 @@ export const contactWrapperStyle = () => {
 export const contactHeaderStyle = (theme) => {
 
     return {
-        padding: "19px 16px",
+        padding: "16px",
         position: "relative",
         display: "flex",
         alignItems: "center",
@@ -61,10 +61,13 @@ export const contactHeaderTitleStyle = (props) => {
         margin: "0",
         fontWeight: "700",
         display: "inline-block",
-        width: "66%",
+        width: "100%",
         textAlign: "left",
         fontSize: "20px",
-        ...alignment
+        ...alignment,
+        "&[dir=rtl]": {
+            textAlign: "right",
+        }
     }
 }
 
@@ -129,7 +132,7 @@ export const contactListStyle = () => {
 export const contactAlphabetStyle = () => {
     
     return {
-        padding: "0 15px",
+        padding: "0 16px",
         margin: "5px 0",
         width: "100%",
         fontSize: "14px"

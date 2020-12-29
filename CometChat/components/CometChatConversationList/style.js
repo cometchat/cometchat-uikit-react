@@ -27,7 +27,7 @@ export const chatsWrapperStyle = () => {
 export const chatsHeaderStyle = (theme) => {
 
     return {
-        padding: "19px 16px",
+        padding: "16px",
         display: "flex",
         alignItems: "center",
         borderBottom: `1px solid ${theme.color.darkSecondary}`
@@ -60,10 +60,13 @@ export const chatsHeaderTitleStyle = (props) => {
     return {
         margin: "0",
         display: "inline-block",
-        width: "66%",
+        width: "100%",
         textAlign: "left",
         fontSize: "20px",
-        ...alignment
+        ...alignment,
+        "&[dir=rtl]": {
+            textAlign: "right",
+        }
     }
 }
 

@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx, keyframes } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -16,14 +17,18 @@ import {
     stickerCloseStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
+
 import closeIcon from "./resources/close.png";
 
 class StickerView extends React.PureComponent {
 
     constructor(props) {
+
         super(props);
 
-        this.decoratorMessage = "Loading...";
+        this.decoratorMessage = Translator.translate("LOADING", props.lang);
 
         this.state = {
             stickerlist: [],
@@ -57,7 +62,7 @@ class StickerView extends React.PureComponent {
             const stickerList = [...defaultStickers, ...customStickers];
             
             if (stickerList.length === 0) {
-                this.decoratorMessage = "No stickers found";
+                this.decoratorMessage = Translator.translate("NO_STICKERS_FOUND", this.props.lang);
             }
 
             const stickerSet = stickerList.reduce((r, sticker, index) => {
@@ -95,7 +100,7 @@ class StickerView extends React.PureComponent {
             
             // Some error occured
             console.warn("Error: ", error);
-            this.decoratorMessage = "No stickers found";
+            this.decoratorMessage = Translator.translate("NO_STICKERS_FOUND", this.props.lang);
 
             this.setState({ "activestickerlist": [], "stickerset": {} });
 
@@ -174,7 +179,17 @@ class StickerView extends React.PureComponent {
             </div>
         );
     }
+}
 
+// Specifies the default values for props:
+StickerView.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+StickerView.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default StickerView;

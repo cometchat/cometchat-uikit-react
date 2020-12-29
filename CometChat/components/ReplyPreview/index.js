@@ -1,5 +1,6 @@
 /** @jsx jsx */
 import { jsx, keyframes } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import {
     previewWrapperStyle,
@@ -8,6 +9,8 @@ import {
     previewOptionsWrapperStyle,
     previewOptionStyle,
 } from "./style";
+
+import { theme } from "../../resources/theme";
 
 import closeIcon from "./resources/close.png";
 
@@ -26,6 +29,15 @@ const ReplyPreview = (props) => {
             <div css={previewOptionsWrapperStyle()} className="preview__options">{options}</div>
         </div>
     )
+}
+
+// Specifies the default values for props:
+ReplyPreview.defaultProps = {
+    theme: theme
+};
+
+ReplyPreview.propTypes = {
+    theme: PropTypes.object
 }
 
 export default ReplyPreview;

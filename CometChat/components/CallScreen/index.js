@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx, keyframes } from "@emotion/core";
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -9,7 +10,6 @@ import { CometChatManager } from "../../util/controller";
 import * as enums from '../../util/enums.js';
 import { SvgAvatar } from '../../util/svgavatar';
 import { validateWidgetSettings } from "../../util/common";
-
 import { CallScreenManager } from "./controller";
 
 import Avatar from "../Avatar";
@@ -28,6 +28,8 @@ import {
   errorContainerStyle
 } from "./style";
 
+import Translator from "../../resources/localization/translator";
+import { theme } from "../../resources/theme";
 import callIcon from "./resources/call-end-white-icon.svg";
 import { outgoingCallAlert } from "../../resources/audio/";
 
@@ -43,10 +45,15 @@ class CallScreen extends React.PureComponent {
       errorScreen: false,
       errorMessage: null,
       outgoingCallScreen: false,
-      callInProgress: null
+      callInProgress: null,
     }
 
     this.outgoingAlert = new Audio(outgoingCallAlert);
+  }
+
+  //Set default props
+  static defaultProps = {
+    lang: Translator.getDefaultLanguage(),
   }
 
   playOutgoingAlert = () => {
@@ -349,7 +356,7 @@ class CallScreen extends React.PureComponent {
         outgoingCallScreen = (
           <div css={callScreenContainerStyle()} className="callscreen__container">
             <div css={headerStyle()} className="callscreen__header">
-              <span css={headerDurationStyle()} className="header__calling">Calling...</span>
+              <span css={headerDurationStyle()} className="header__calling">{ Translator.translate("CALLING", this.props.lang) }</span>
               <h6 css={headerNameStyle()} className="header__name">{this.state.callInProgress.receiver.name}</h6>
             </div>
             <div css={thumbnailWrapperStyle()} className="callscreen__thumbnail__wrapper">
@@ -377,6 +384,17 @@ class CallScreen extends React.PureComponent {
 
     return callScreen;
   }
+}
+
+// Specifies the default values for props:
+CallScreen.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+CallScreen.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default CallScreen;

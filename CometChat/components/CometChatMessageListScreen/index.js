@@ -1,7 +1,9 @@
+/* eslint-disable no-lone-blocks */
 import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -14,6 +16,7 @@ import { theme } from "../../resources/theme";
 
 import * as enums from '../../util/enums.js';
 import { checkMessageForExtensionsData, validateWidgetSettings } from "../../util/common";
+import Translator from "../../resources/localization/translator";
 
 import { chatWrapperStyle, reactionsWrapperStyle } from "./style";
 
@@ -31,15 +34,17 @@ class CometChatMessageListScreen extends React.PureComponent {
       messageToBeEdited: "",
       replyPreview: null,
       liveReaction: false,
-      messageToReact: null
+      messageToReact: null,
+      lang: props.lang
     }
 
     this.composerRef = React.createRef();
-
-    this.reactionName = props.reaction || "heart";
-
-    this.theme = Object.assign({}, theme, this.props.theme);
+    this.reactionName = props.reaction;
     this.audio = new Audio(incomingMessageAlert);
+  }
+
+  componentDidMount() {
+    window.addEventListener('languagechange', this.setState({ lang: Translator.getLanguage() }));
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -69,6 +74,10 @@ class CometChatMessageListScreen extends React.PureComponent {
       if (validateWidgetSettings(this.props.widgetsettings, "hide_join_leave_notifications") !== true) {
         this.appendMessage(this.props.groupmessage);
       }
+    }
+
+    if (prevProps.lang !== this.props.lang) {
+      this.setState({ lang: this.props.lang });
     }
   }
 
@@ -109,8 +118,13 @@ class CometChatMessageListScreen extends React.PureComponent {
         this.props.actionGenerated("messageComposed", messages);
         break;
       }
-      case "messageUpdated":
+      case "onMessageEdited": {
+
         this.updateMessages(messages);
+        //update the parent message of thread message
+        this.props.actionGenerated("updateThreadMessage", messages, "edit");
+
+      }
       break;
       case "messageFetched":
         this.prependMessages(messages);
@@ -118,8 +132,13 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "messageFetchedAgain": 
         this.prependMessagesAndScrollBottom(messages);
       break;
-      case "messageDeleted":
+      case "messageDeleted": {
+
         this.removeMessages(messages);
+        //remove the thread message
+        this.props.actionGenerated("updateThreadMessage", messages, "delete");
+
+      }
       break;
       case "viewMessageThread":
         this.props.actionGenerated("viewMessageThread", messages);
@@ -203,6 +222,11 @@ class CometChatMessageListScreen extends React.PureComponent {
 
     const messageId = message.id;
     CometChat.deleteMessage(messageId).then(deletedMessage => {
+      
+      //remove edit preview when message is deleted
+      if (deletedMessage.id === this.state.messageToBeEdited.id) {
+        this.setState({ messageToBeEdited: "" });
+      }
 
       this.removeMessages([deletedMessage]);
 
@@ -381,9 +405,10 @@ class CometChatMessageListScreen extends React.PureComponent {
     let messageComposer = (
       <MessageComposer 
       ref={(el) => { this.composerRef = el; } }
-      theme={this.theme}
+      theme={this.props.theme}
       item={this.props.item} 
       type={this.props.type}
+      lang={this.state.lang}
       widgetsettings={this.props.widgetsettings}
       loggedInUser={this.props.loggedInUser}
       messageToBeEdited={this.state.messageToBeEdited}
@@ -402,18 +427,19 @@ class CometChatMessageListScreen extends React.PureComponent {
     if (this.state.liveReaction) {
       liveReactionView = (
         <div css={reactionsWrapperStyle()}>
-          <LiveReaction reaction={this.reactionName} theme={this.theme} />
+          <LiveReaction reaction={this.reactionName} theme={this.props.theme} lang={this.state.lang} />
         </div>
       );
     }
     
     return (
-      <div css={chatWrapperStyle(this.theme)} className="main__chat">
+      <div css={chatWrapperStyle(this.props.theme)} className="main__chat" dir={Translator.getDirection(this.state.lang)}>
         <MessageHeader 
         sidebar={this.props.sidebar}
-        theme={this.theme}
+        theme={this.props.theme}
         item={this.props.item} 
         type={this.props.type} 
+        lang={this.state.lang}
         viewdetail={this.props.viewdetail === false ? false : true}
         audiocall={this.props.audiocall === false ? false : true}
         videocall={this.props.videocall === false ? false : true}
@@ -421,10 +447,11 @@ class CometChatMessageListScreen extends React.PureComponent {
         loggedInUser={this.props.loggedInUser}
         actionGenerated={this.actionHandler} />
         <MessageList 
-        theme={this.theme}
+        theme={this.props.theme}
         messages={this.state.messageList} 
         item={this.props.item} 
         type={this.props.type}
+        lang={this.state.lang}
         scrollToBottom={this.state.scrollToBottom}
         messageconfig={this.props.messageconfig}
         widgetsettings={this.props.widgetsettings}
@@ -436,6 +463,19 @@ class CometChatMessageListScreen extends React.PureComponent {
       </div>
     )
   }
+}
+
+// Specifies the default values for props:
+CometChatMessageListScreen.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme,
+  reaction: "heart"
+};
+
+CometChatMessageListScreen.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object,
+  reaction: PropTypes.string
 }
 
 export default CometChatMessageListScreen;

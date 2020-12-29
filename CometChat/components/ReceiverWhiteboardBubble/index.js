@@ -2,6 +2,8 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
+
 import { checkMessageForExtensionsData } from "../../util/common";
 
 import ToolTip from "../ToolTip";
@@ -26,6 +28,9 @@ import {
     messageInfoWrapperStyle,
     messageReactionsWrapperStyle
 } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 import whiteboardIcon from "./resources/receiverwhiteboard.png";
 
@@ -88,15 +93,13 @@ class ReceiverWhiteboardBubble extends React.PureComponent {
 
             avatar = (
                 <div css={messageThumbnailStyle} className="message__thumbnail">
-                    <Avatar
-                        cornerRadius="50%"
-                        borderColor={this.props.theme.color.secondary}
-                        borderWidth="1px"
-                        image={this.state.message.sender.avatar} />
+                    <Avatar borderColor={this.props.theme.borderColor.primary} image={this.state.message.sender.avatar} />
                 </div>
             );
 
-            name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span></div>);
+            name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
+                <span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span>
+            </div>);
         }
 
         let messageReactions = null;
@@ -106,19 +109,13 @@ class ReceiverWhiteboardBubble extends React.PureComponent {
             if (Object.keys(reactionsData).length) {
                 messageReactions = (
                     <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-                        <RegularReactionView
-                        theme={this.props.theme}
-                        message={this.state.message}
-                        reaction={reactionsData}
-                        loggedInUser={this.props.loggedInUser}
-                        widgetsettings={this.props.widgetsettings}
-                        actionGenerated={this.props.actionGenerated} />
+                        <RegularReactionView  {...this.props} message={this.state.message} reaction={reactionsData} />
                     </div>
                 );
             }
         }
 
-        const documentTitle = this.state.message.sender.name + " has shared a collaborative whiteboard";
+        const documentTitle = `${this.state.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_WHITEBOARD", this.props.lang)}`;
 
         return (
             <div css={messageContainerStyle()} className="receiver__message__container message__whiteboard">
@@ -131,13 +128,13 @@ class ReceiverWhiteboardBubble extends React.PureComponent {
                         <div css={messageTxtContainerStyle()} className="message__whiteboard__container">
                             <div css={messageTxtWrapperStyle(this.props)} className="message__whiteboard__wrapper">
                                 <div css={messageTxtTitleStyle(this.props)} className="message__whiteboard__title">
-                                    <img src={whiteboardIcon} alt="Collaborative Document" />
+                                    <img src={whiteboardIcon} alt={Translator.translate("COLLABORATIVE_WHITEBOARD", this.props.lang)} />
                                     <p css={messageTxtStyle()} className="whiteboard__title">{documentTitle}</p>
                                 </div>
                                 
                                 <ul css={messageBtnStyle(this.props)} className="whiteboard__button">
                                     <li onClick={this.launchCollaborativeWhiteboard}>
-                                        <p>Launch</p>
+                                        <p>{Translator.translate("JOIN", this.props.lang)}</p>
                                     </li>
                                 </ul>
                             </div>
@@ -154,6 +151,17 @@ class ReceiverWhiteboardBubble extends React.PureComponent {
             </div>
         )
     }
+}
+
+// Specifies the default values for props:
+ReceiverWhiteboardBubble.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+ReceiverWhiteboardBubble.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default ReceiverWhiteboardBubble;

@@ -1,13 +1,13 @@
 import React from "react";
 import dateFormat from "dateformat";
 /** @jsx jsx */
-import { jsx } from '@emotion/core'
+import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatManager } from "../../util/controller";
 import { MessageListManager } from "./controller";
-
 import * as enums from "../../util/enums.js";
 import { validateWidgetSettings } from "../../util/common";
 
@@ -33,6 +33,9 @@ import ReceiverWhiteboardBubble from "../ReceiverWhiteboardBubble";
 
 import CallMessage from "../CallMessage";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
+
 import { 
   chatListStyle,
   listWrapperStyle,
@@ -48,7 +51,7 @@ class MessageList extends React.PureComponent {
   loggedInUser = null;
   lastScrollTop = 0;
   times = 0;
-  decoratorMessage = "Loading...";
+  decoratorMessage = Translator.translate("LOADING", Translator.getDefaultLanguage());
 
   constructor(props) {
 
@@ -80,7 +83,7 @@ class MessageList extends React.PureComponent {
 
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
       
-      this.decoratorMessage = "Loading...";
+      this.decoratorMessage = Translator.translate("LOADING", this.props.lang);
       this.MessageListManager.removeListeners();
 
       if (this.props.parentMessageId) {
@@ -94,7 +97,7 @@ class MessageList extends React.PureComponent {
 
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid){
 
-      this.decoratorMessage = "Loading...";
+      this.decoratorMessage = Translator.translate("LOADING", this.props.lang);
       this.MessageListManager.removeListeners();
 
       if (this.props.parentMessageId) {
@@ -108,7 +111,7 @@ class MessageList extends React.PureComponent {
 
     } else if(prevProps.parentMessageId !== this.props.parentMessageId) {
       
-      this.decoratorMessage = "Loading...";
+      this.decoratorMessage = Translator.translate("LOADING", this.props.lang);
       this.MessageListManager.removeListeners();
       this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type, this.props.parentMessageId);
       this.getMessages();
@@ -142,7 +145,7 @@ class MessageList extends React.PureComponent {
       this.MessageListManager.fetchPreviousMessages().then(messageList => {
 
         if (messageList.length === 0) {
-          this.decoratorMessage = "No messages found";
+          this.decoratorMessage = Translator.translate("NO_MESSAGES_FOUND", this.props.lang);
         }
 
         messageList.forEach((message) => {
@@ -188,12 +191,12 @@ class MessageList extends React.PureComponent {
       }).catch((error) => {
         //TODO Handle the erros in contact list.
         console.error("[MessageList] getMessages fetchPrevious error", error);
-        this.decoratorMessage = "Error";
+        this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
       });
 
     }).catch((error) => {
       console.log("[MessageList] getMessages getLoggedInUser error", error);
-      this.decoratorMessage = "Error";
+      this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
     });
 
   }
@@ -269,7 +272,7 @@ class MessageList extends React.PureComponent {
         const newMessageObj = Object.assign({}, messageObj, message);
 
         messageList.splice(messageKey, 1, newMessageObj);
-        this.props.actionGenerated("messageUpdated", messageList);
+        this.props.actionGenerated("onMessageEdited", messageList);
       }
     }
 
@@ -426,8 +429,6 @@ class MessageList extends React.PureComponent {
     && message.getReceiverType() === 'user'
     && message.getSender().uid === this.props.item.uid) {
 
-      console.log("inside 1st else if");
-
       triggerCustomMessageReceived(message);
 
     } else if (this.props.type === 'user'
@@ -435,12 +436,8 @@ class MessageList extends React.PureComponent {
     && this.loggedInUser.uid === message.getSender().uid && message.getReceiverId() === this.props.item.uid
     && (message.type === enums.CUSTOM_TYPE_DOCUMENT || message.type === enums.CUSTOM_TYPE_WHITEBOARD)) {
 
-      console.log("inside 2nd else if");
-
       triggerCustomMessageReceived(message);
-
     }
-
   }
 
   addMetadataToCustomData = (message) => {
@@ -535,25 +532,25 @@ class MessageList extends React.PureComponent {
     
     if(message.hasOwnProperty("deletedAt")) {
       
-      component = (<DeletedMessageBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} messageOf="sender" />);
+      component = (<DeletedMessageBubble key={key} message={message} messageOf="sender" {...this.props} />);
 
     } else {
 
       switch (message.type) {
         case CometChat.MESSAGE_TYPE.TEXT:
-          component = (message.text ? <SenderMessageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.text ? <SenderMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.IMAGE:
-          component = (message.data.url ? <SenderImageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <SenderImageBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.FILE:
-          component = (message.data.attachments ? <SenderFileBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.attachments ? <SenderFileBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.VIDEO:
-          component = (message.data.url ? <SenderVideoBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <SenderVideoBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.AUDIO:
-          component = (message.data.url ? <SenderAudioBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <SenderAudioBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         default:
         break;
@@ -570,26 +567,26 @@ class MessageList extends React.PureComponent {
 
     if(message.hasOwnProperty("deletedAt")) {
 
-      component = (<DeletedMessageBubble theme={this.props.theme} key={key} message={message} messageOf="receiver" />);
+      component = (<DeletedMessageBubble key={key} message={message} messageOf="receiver" />);
 
     } else {
 
       switch (message.type) {
         case "message":
         case CometChat.MESSAGE_TYPE.TEXT:
-          component = (message.text ? <ReceiverMessageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.text ? <ReceiverMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.IMAGE:
-          component = (message.data.url ? <ReceiverImageBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <ReceiverImageBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.FILE:
-          component = (message.data.attachments ? <ReceiverFileBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.attachments ? <ReceiverFileBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.AUDIO:
-          component = (message.data.url ? <ReceiverAudioBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <ReceiverAudioBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         case CometChat.MESSAGE_TYPE.VIDEO:
-          component = (message.data.url ? <ReceiverVideoBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} widgetconfig={this.props.widgetconfig} actionGenerated={this.props.actionGenerated} /> : null);
+          component = (message.data.url ? <ReceiverVideoBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
         break;
         default:
         break;
@@ -602,21 +599,21 @@ class MessageList extends React.PureComponent {
 
     let component;
     if (message.hasOwnProperty("deletedAt")) {
-      component = (<DeletedMessageBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} messageOf="sender" />);
+      component = (<DeletedMessageBubble key={key} message={message} messageOf="sender" {...this.props} />);
     } else {
 
       switch (message.type) {
         case enums.CUSTOM_TYPE_POLL:
-          component = <SenderPollBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <SenderPollBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break;
         case enums.CUSTOM_TYPE_STICKER:
-          component = <SenderStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <SenderStickerBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break;
         case enums.CUSTOM_TYPE_DOCUMENT:
-          component = <SenderDocumentBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <SenderDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break; 
         case enums.CUSTOM_TYPE_WHITEBOARD:
-          component = <SenderWhiteboardBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <SenderWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break;
         default:
           break;
@@ -630,21 +627,21 @@ class MessageList extends React.PureComponent {
 
     let component;
     if (message.hasOwnProperty("deletedAt")) {
-      component = (<DeletedMessageBubble theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} messageOf="receiver" />);
+      component = (<DeletedMessageBubble key={key} message={message} messageOf="receiver" {...this.props} />);
     } else {
 
       switch (message.type) {
         case enums.CUSTOM_TYPE_POLL:
-          component = <ReceiverPollBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <ReceiverPollBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break;
         case enums.CUSTOM_TYPE_STICKER:
-          component = <ReceiverStickerBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <ReceiverStickerBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break;
         case enums.CUSTOM_TYPE_DOCUMENT:
-          component = <ReceiverDocumentBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <ReceiverDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break;
         case enums.CUSTOM_TYPE_WHITEBOARD:
-          component = <ReceiverWhiteboardBubble loggedInUser={this.loggedInUser} theme={this.props.theme} key={key} item={this.props.item} type={this.props.type} message={message} widgetsettings={this.props.widgetsettings} actionGenerated={this.props.actionGenerated} />;
+          component = <ReceiverWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break;
         default:
           break;
@@ -656,14 +653,13 @@ class MessageList extends React.PureComponent {
 
   getCallMessageComponent = (message, key) => {
     return (
-      <CallMessage message={message} key={key} theme={this.props.theme} loggedInUser={this.loggedInUser} />
+      <CallMessage loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />
     );
   }
 
   getActionMessageComponent = (message, key) => {
 
     let component = null;
-    //console.log("getActionMessageComponent message", message);
     if(message.message) {
 
       component = (
@@ -738,7 +734,9 @@ class MessageList extends React.PureComponent {
       const messageDate = (message.sentAt * 1000);
       const messageSentDate = dateFormat(messageDate, "dd/mm/yyyy");
       if (cDate !== messageSentDate) {
-        dateSeparator = (<div css={messageDateContainerStyle()} className="message__date"><span css={messageDateStyle(this.props)}>{messageSentDate}</span></div>);
+        dateSeparator = (<div css={messageDateContainerStyle()} className="message__date">
+          <span css={messageDateStyle(this.props)}>{messageSentDate}</span>
+        </div>);
       }
       cDate = messageSentDate;
 
@@ -764,6 +762,17 @@ class MessageList extends React.PureComponent {
     this.MessageListManager.removeListeners();
     this.MessageListManager = null;
   }
+}
+
+// Specifies the default values for props:
+MessageList.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+MessageList.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default MessageList;

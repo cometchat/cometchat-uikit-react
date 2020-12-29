@@ -27,7 +27,7 @@ export const groupWrapperStyle = () => {
 export const groupHeaderStyle = (theme) => {
 
     return {
-        padding: "19px 16px",
+        padding: "16px",
         position: "relative",
         display: "flex",
         justifyContent: "space-between",
@@ -63,10 +63,13 @@ export const groupHeaderTitleStyle = (props) => {
         margin: "0",
         fontWeight: "700",
         display: "inline-block",
-        width: "66%",
+        width: "100%",
         textAlign: "left",
         fontSize: "20px",
-        ...alignment
+        ...alignment,
+        "&[dir=rtl]": {
+            textAlign: "right",
+        }
     }
 }
 

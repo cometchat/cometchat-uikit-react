@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
+import PropTypes from 'prop-types';
 
 import { checkMessageForExtensionsData } from "../../util/common";
 import { SvgAvatar } from '../../util/svgavatar';
@@ -24,6 +25,8 @@ import {
   messageInfoWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
+
+import { theme } from "../../resources/theme";
 
 class ReceiverVideoBubble extends React.Component {
 
@@ -76,15 +79,13 @@ class ReceiverVideoBubble extends React.Component {
 
       avatar = (
         <div css={messageThumbnailStyle()} className="message__thumbnail">
-          <Avatar
-            cornerRadius="50%"
-            borderColor={this.props.theme.color.secondary}
-            borderWidth="1px"
-            image={this.props.message.sender.avatar} />
+          <Avatar borderColor={this.props.theme.borderColor.primary} image={this.props.message.sender.avatar} />
         </div>
       );
 
-      name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span></div>);
+      name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
+        <span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span>
+        </div>);
     }
 
     let messageReactions = null;
@@ -94,13 +95,7 @@ class ReceiverVideoBubble extends React.Component {
       if (Object.keys(reactionsData).length) {
         messageReactions = (
           <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-            <RegularReactionView
-            theme={this.props.theme}
-            message={this.state.message}
-            reaction={reactionsData}
-            loggedInUser={this.props.loggedInUser}
-            widgetsettings={this.props.widgetsettings}
-            actionGenerated={this.props.actionGenerated} />
+            <RegularReactionView  {...this.props} message={this.state.message} reaction={reactionsData} />
           </div>
         );
       }
@@ -133,6 +128,15 @@ class ReceiverVideoBubble extends React.Component {
       </div>
     )
   }
+}
+
+// Specifies the default values for props:
+ReceiverVideoBubble.defaultProps = {
+  theme: theme
+};
+
+ReceiverVideoBubble.propTypes = {
+  theme: PropTypes.object
 }
 
 export default ReceiverVideoBubble;

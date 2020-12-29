@@ -1,7 +1,8 @@
 import React from "react";
 import dateFormat from "dateformat";
 /** @jsx jsx */
-import { jsx } from '@emotion/core'
+import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from '@cometchat-pro/chat';
 
@@ -22,6 +23,9 @@ import {
   itemLastMsgTimeStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
+
 class ConversationView extends React.Component {
 
   constructor(props) {
@@ -30,7 +34,7 @@ class ConversationView extends React.Component {
 
     this.state = {
       lastMessage: "",
-      lastMessageTimestamp: ""
+      lastMessageTimestamp: "",
     }
   }
 
@@ -47,7 +51,7 @@ class ConversationView extends React.Component {
     const previousItem = JSON.stringify(prevProps.conversation);
     const currentItem = JSON.stringify(this.props.conversation);
 
-    if (previousItem !== currentItem) {
+    if (previousItem !== currentItem || prevProps.lang !== this.props.lang) {
 
       const message = this.getLastMessage();
       const timestamp = this.getLastMessageTimestamp();
@@ -71,7 +75,7 @@ class ConversationView extends React.Component {
 
     if (lastMessage.hasOwnProperty("deletedAt")) {
 
-      message = (this.props.loggedInUser.uid === lastMessage.sender.uid) ? "⚠ You deleted this message." : "⚠ This message was deleted.";
+      message = (this.props.loggedInUser.uid === lastMessage.sender.uid) ? `${Translator.translate("YOU_DELETED_THIS_MESSAGE", this.props.lang)}` : `${Translator.translate("THIS_MESSAGE_DELETED", this.props.lang)}`;
 
     } else {
 
@@ -92,7 +96,6 @@ class ConversationView extends React.Component {
           break;
       }
     }
-
     return message;
   }
 
@@ -116,18 +119,19 @@ class ConversationView extends React.Component {
     const currentTimestamp = Date.now();
 
     const diffTimestamp = currentTimestamp - messageTimestamp;
-
+    
     if (diffTimestamp < 24 * 60 * 60 * 1000) {
 
       timestamp = dateFormat(messageTimestamp, "shortTime");
 
     } else if (diffTimestamp < 48 * 60 * 60 * 1000) {
 
-      timestamp = "Yesterday";
+      timestamp = Translator.translate("YESTERDAY", this.props.lang);
 
     } else if (diffTimestamp < 7 * 24 * 60 * 60 * 1000) {
 
-      timestamp = dateFormat(messageTimestamp, "dddd");
+      timestamp = dateFormat(messageTimestamp, "dddd").toUpperCase();
+      timestamp = Translator.translate(timestamp, this.props.lang);
 
     } else {
 
@@ -140,23 +144,36 @@ class ConversationView extends React.Component {
   getCustomMessage = (lastMessage) => {
 
     let message = null;
-    switch(lastMessage.type) {
-      case enums.CUSTOM_TYPE_POLL:
-        message = "📊 Poll";
-        break;
-      case enums.CUSTOM_TYPE_STICKER:
-        message = "💟 Sticker";
-        break;
-      case enums.CUSTOM_TYPE_DOCUMENT:
-        message = "📃 Document";
-        break;
-      case enums.CUSTOM_TYPE_WHITEBOARD:
-        message = "📝 Whiteboard";
-        break;
-      default:
-        break;
-    }
+    const sender = (this.props.loggedInUser.uid !== lastMessage.sender.uid) ? `${lastMessage.sender.name}: ` : ``;
 
+    switch(lastMessage.type) {
+      case enums.CUSTOM_TYPE_POLL: {
+        
+        const pollMessage = Translator.translate("CUSTOM_MESSAGE_POLL", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${pollMessage}` : `${pollMessage}`;
+      }
+      break;
+      case enums.CUSTOM_TYPE_STICKER: {
+
+        const stickerMessage = Translator.translate("CUSTOM_MESSAGE_STICKER", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${stickerMessage}` : `${stickerMessage}`;
+      }
+      break;
+      case enums.CUSTOM_TYPE_DOCUMENT: {
+
+        const docMessage = Translator.translate("CUSTOM_MESSAGE_DOCUMENT", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${docMessage}` : `${docMessage}`;
+      }
+      break;
+      case enums.CUSTOM_TYPE_WHITEBOARD: {
+
+        const whiteboardMessage = Translator.translate("CUSTOM_MESSAGE_WHITEBOARD", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${whiteboardMessage}` : `${whiteboardMessage}`;
+      }
+      break;
+      default:
+      break;
+    }
     return message;
   }
 
@@ -190,37 +207,59 @@ class ConversationView extends React.Component {
     }
 
     return messageText;
-
   }
 
   getMessage = (lastMessage) => {
 
     let message = null;
+    const sender = (this.props.loggedInUser.uid !== lastMessage.sender.uid) ? `${lastMessage.sender.name}: ` : ``;
+
     switch (lastMessage.type) {
 
-      case CometChat.MESSAGE_TYPE.TEXT:
-        message = this.getTextMessage(lastMessage);
-        break;
-      case CometChat.MESSAGE_TYPE.MEDIA:
-        message = "Media message";
-        break;
-      case CometChat.MESSAGE_TYPE.IMAGE:
-        message = "📷 Image ";
-        break
-      case CometChat.MESSAGE_TYPE.FILE:
-        message = "📁 File";
-        break;
-      case CometChat.MESSAGE_TYPE.VIDEO:
-        message = "🎥 Video";
-        break;
-      case CometChat.MESSAGE_TYPE.AUDIO:
-        message = "🎵 Audio";
-        break;
-      case CometChat.MESSAGE_TYPE.CUSTOM:
-        message = "Custom message";
-        break;
+      case CometChat.MESSAGE_TYPE.TEXT: {
+
+        const textMessage = this.getTextMessage(lastMessage);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${textMessage}` : `${textMessage}`;
+      }
+      break;
+      case CometChat.MESSAGE_TYPE.MEDIA: {
+
+        const mediaMessage = Translator.translate("MEDIA_MESSAGE", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${mediaMessage}` : `${mediaMessage}`; 
+      }
+      break;
+      case CometChat.MESSAGE_TYPE.IMAGE: {
+
+        const imageMessage = Translator.translate("MESSAGE_IMAGE", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${imageMessage}` : `${imageMessage}`; 
+      }
+      break
+      case CometChat.MESSAGE_TYPE.FILE: {
+
+        const fileMessage = Translator.translate("MESSAGE_FILE", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${fileMessage}` : `${fileMessage}`; 
+      }
+      break;
+      case CometChat.MESSAGE_TYPE.VIDEO: {
+
+        const videoMessage = Translator.translate("MESSAGE_VIDEO", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${videoMessage}` : `${videoMessage}`; 
+      }
+      break;
+      case CometChat.MESSAGE_TYPE.AUDIO: {
+
+        const audioMessage = Translator.translate("MESSAGE_AUDIO", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${audioMessage}` : `${audioMessage}`; 
+      }
+      break;
+      case CometChat.MESSAGE_TYPE.CUSTOM: {
+
+        const customMessage = Translator.translate("CUSTOM_MESSAGE", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${customMessage}` : `${customMessage}`; 
+      }
+      break;
       default:
-        break;
+      break;
     }
 
     return message;
@@ -229,19 +268,28 @@ class ConversationView extends React.Component {
   getCallMessage = (lastMessage) => {
 
     let message = null;
+    const sender = (this.props.loggedInUser.uid !== lastMessage.sender.uid) ? `${lastMessage.sender.name}: ` : ``;
+
     switch (lastMessage.type) {
-      case CometChat.MESSAGE_TYPE.VIDEO:
-        message = "Video call";
-        break;
-      case CometChat.MESSAGE_TYPE.AUDIO:
-        message = "Audio call";
-        break;
+      case CometChat.MESSAGE_TYPE.VIDEO: {
+
+        const videoMessage = Translator.translate("VIDEO_CALL", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${videoMessage}` : `${videoMessage}`;
+      }
+      break;
+      case CometChat.MESSAGE_TYPE.AUDIO: {
+
+        const audioMessage = Translator.translate("AUDIO_CALL", this.props.lang);
+        message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${audioMessage}` : `${audioMessage}`;
+      }
+      break;
       default:
-        break;
+      break;
     }
 
     return message;
   }
+
   toggleTooltip = (event, flag) => {
 
     const elem = event.target;
@@ -288,23 +336,17 @@ class ConversationView extends React.Component {
         <StatusIndicator
         widgetsettings={this.props.widgetsettings}
         status={status}
-        cornerRadius="50%"
-        borderColor={this.props.theme.color.darkSecondary}
-        borderWidth="1px" />
+        borderColor={this.props.theme.borderColor.primary} />
       );
     }
 
     return (
       <div css={listItem(this.props)} className="list__item" onClick={() => this.props.handleClick(this.props.conversation, this.props.conversationKey)}>
         <div css={itemThumbnailStyle()} className="list__item__thumbnail">
-          <Avatar
-          image={this.getAvatar()}
-          cornerRadius="18px"
-          borderColor={this.props.theme.color.secondary}
-          borderWidth="1px" />
+          <Avatar image={this.getAvatar()} borderColor={this.props.theme.borderColor.primary} />
           {presence}
         </div>
-        <div css={itemDetailStyle()} className="list__item__details">
+        <div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(this.props.lang)}>
           <div css={itemRowStyle()} className="item__details_block_one">
             <div css={itemNameStyle()} className="item__details__name"
             onMouseEnter={event => this.toggleTooltip(event, true)}
@@ -322,6 +364,17 @@ class ConversationView extends React.Component {
     );
 
   }
+}
+
+// Specifies the default values for props:
+ConversationView.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+ConversationView.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default ConversationView;

@@ -1,5 +1,6 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -14,18 +15,20 @@ import {
     actionStyle
 } from "./style";
 
+import Translator from "../../resources/localization/translator";
+import { theme } from "../../resources/theme";
 import unban from "./resources/block.png";
 
 const memberview = (props) => {
 
     const roles = {}
-    roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN] = "Administrator";
-    roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR] = "Moderator";
-    roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT] = "Participant";
+    roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN] = Translator.translate("ADMINISTRATOR", props.lang);
+    roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR] = Translator.translate("MODERATOR", props.lang);
+    roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT] = Translator.translate("PARTICIPANT", props.lang);
 
     let name = props.member.name;
     let scope = roles[props.member.scope];
-    let unBan = (<img src={unban} alt="Unban" onClick={() => {props.actionGenerated("unban", props.member)}} />);
+    let unBan = (<img src={unban} alt={Translator.translate("UNBAN", props.lang)} onClick={() => {props.actionGenerated("unban", props.member)}} />);
 
     //if the loggedin user is moderator, don't allow unban of banned moderators or administrators
     if(props.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
@@ -57,7 +60,7 @@ const memberview = (props) => {
         } else {
           nameContainer.removeAttribute("title");
         }
-      }
+    }
     
     return (
         <tr css={tableRowStyle(props)}>
@@ -65,17 +68,11 @@ const memberview = (props) => {
             onMouseEnter={event => toggleTooltip(event, true)}
             onMouseLeave={event => toggleTooltip(event, false)}>
                 <div css={avatarStyle()} className="avatar">
-                    <Avatar 
-                    image={props.member.avatar} 
-                    cornerRadius="18px" 
-                    borderColor={props.theme.borderColor.primary}
-                    borderWidth="1px" />
+                    <Avatar image={props.member.avatar} borderColor={props.theme.borderColor.primary} />
                     <StatusIndicator
                     widgetsettings={props.widgetsettings}
                     status={props.member.status}
-                    cornerRadius="50%" 
-                    borderColor={props.theme.borderColor.primary}
-                    borderWidth="1px" />
+                    borderColor={props.theme.borderColor.primary} />
                 </div>
                 <div css={nameStyle()} className="name">{name}</div>
             </td>
@@ -83,6 +80,17 @@ const memberview = (props) => {
             <td css={actionStyle()} className="unban">{unBan}</td>
         </tr>
     );
+}
+
+// Specifies the default values for props:
+memberview.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+memberview.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default memberview;

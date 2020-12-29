@@ -8,11 +8,6 @@ export const tableRowStyle = (props) => {
         fontSize: "14px",
         "td": {
             padding: ".625em",
-            "img": {
-                width: "36px",
-                height: "36px",
-                float: "left",
-            }
         }
     }
 }
@@ -22,10 +17,9 @@ export const avatarStyle = () => {
     return {
         display: "inline-block",
         float: "left",
-        "span": {
-            top: "26px",
-            left: "-8px",
-        }
+        width: "36px",
+        height: "36px",
+        marginRight: "8px",
     }
 }
 

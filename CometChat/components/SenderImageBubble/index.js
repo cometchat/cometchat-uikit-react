@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { checkMessageForExtensionsData } from "../../util/common";
 
@@ -17,6 +18,8 @@ import {
   messageInfoWrapperStyle,
   messageReactionsWrapperStyle
 } from "./style";
+
+import { theme } from "../../resources/theme";
 
 import srcIcon from "./resources/1px.png";
 
@@ -164,13 +167,7 @@ class SenderImageBubble extends React.PureComponent {
       if (Object.keys(reactionsData).length) {
         messageReactions = (
           <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-            <RegularReactionView
-            theme={this.props.theme}
-            message={this.state.message}
-            reaction={reactionsData}
-            loggedInUser={this.props.loggedInUser}
-            widgetsettings={this.props.widgetsettings}
-            actionGenerated={this.props.actionGenerated} />
+            <RegularReactionView {...this.props} message={this.state.message} reaction={reactionsData} />
           </div>
         );
       }
@@ -183,7 +180,7 @@ class SenderImageBubble extends React.PureComponent {
           
         <div css={messageWrapperStyle()} className="message__wrapper">
           <div css={messageImgWrapper(this.props)} onClick={this.open} className="message__img__wrapper">
-            <img src={this.state.imageUrl} alt="message" ref={el => { this.imgRef = el; }} />
+            <img src={this.state.imageUrl} alt={this.state.imageUrl} ref={el => { this.imgRef = el; }} />
           </div>
         </div>
 
@@ -196,6 +193,15 @@ class SenderImageBubble extends React.PureComponent {
       </div>
     )
   }
+}
+
+// Specifies the default values for props:
+SenderImageBubble.defaultProps = {
+  theme: theme
+};
+
+SenderImageBubble.propTypes = {
+  theme: PropTypes.object
 }
 
 export default SenderImageBubble;

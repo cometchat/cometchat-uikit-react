@@ -1,15 +1,14 @@
 import React from "react";
 
 /** @jsx jsx */
-import { jsx } from '@emotion/core'
+import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChatManager } from "../../util/controller";
 import { SvgAvatar } from '../../util/svgavatar';
 import { UserListManager } from "./controller";
 
 import UserView from "../UserView";
-
-import { theme } from "../../resources/theme";
 
 import { 
   contactWrapperStyle, 
@@ -24,13 +23,14 @@ import {
   contactAlphabetStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 import searchIcon from './resources/search-grey-icon.png';
 import navigateIcon from './resources/navigate.png';
 
 class CometChatUserList extends React.PureComponent {
   timeout;
   friendsOnly = false;
-  decoratorMessage = "Loading...";
 
   constructor(props) {
 
@@ -38,13 +38,19 @@ class CometChatUserList extends React.PureComponent {
 
     this.state = {
       userlist: [],
-      selectedUser: null
+      selectedUser: null,
+      lang: props.lang
     }
+    
+    this.decoratorMessage = Translator.translate("LOADING", props.lang);
     this.userListRef = React.createRef();
-    this.theme = Object.assign({}, theme, this.props.theme);
   }
 
   componentDidMount() {
+
+    window.addEventListener('languagechange', () => {
+      this.setState({ lang: Translator.getLanguage() });
+    });
 
     if(this.props.hasOwnProperty("friendsOnly")) {
       this.friendsOnly = this.props.friendsOnly;
@@ -113,6 +119,10 @@ class CometChatUserList extends React.PureComponent {
 
         this.setState({ userlist: userlist });
       }
+    }
+
+    if (prevProps.lang !== this.props.lang) {
+      this.setState({ lang: this.props.lang });
     }
   }
 
@@ -188,7 +198,7 @@ class CometChatUserList extends React.PureComponent {
       this.UserListManager.fetchNextUsers().then((userList) => {
 
         if(userList.length === 0) {
-          this.decoratorMessage = "No users found";
+          this.decoratorMessage = Translator.translate("NO_USERS_FOUND", this.state.lang);
         }
         
         userList.forEach(user => user = this.setAvatar(user));
@@ -196,13 +206,13 @@ class CometChatUserList extends React.PureComponent {
           
       }).catch((error) => {
 
-        this.decoratorMessage = "Error";
+        this.decoratorMessage = Translator.translate("ERROR", this.state.lang);
         console.error("[CometChatUserList] getUsers fetchNext error", error);
       });
 
     }).catch((error) => {
 
-      this.decoratorMessage = "Error";
+      this.decoratorMessage = Translator.translate("ERROR", this.state.lang);
       console.log("[CometChatUserList] getUsers getLoggedInUser error", error);
     });
   }
@@ -224,7 +234,7 @@ class CometChatUserList extends React.PureComponent {
     if(this.state.userlist.length === 0) {
       messageContainer = (
         <div css={contactMsgStyle()} className="contacts__decorator-message">
-          <p css={contactMsgTxtStyle(this.theme)} className="decorator-message">{this.decoratorMessage}</p>
+          <p css={contactMsgTxtStyle(this.props.theme)} className="decorator-message">{this.decoratorMessage}</p>
         </div>
       );
     }
@@ -246,9 +256,10 @@ class CometChatUserList extends React.PureComponent {
         <React.Fragment key={key}>
           {firstChar}
           <UserView 
-          theme={this.theme}
+          theme={this.props.theme}
           user={user} 
           selectedUser={this.state.selectedUser}
+          lang={this.state.lang}
           widgetsettings={this.props.widgetsettings} 
           clickeHandler={this.handleClick}  />
         </React.Fragment>
@@ -263,18 +274,18 @@ class CometChatUserList extends React.PureComponent {
 
     return (
       <div css={contactWrapperStyle()} className="contacts">
-        <div css={contactHeaderStyle(this.theme)} className="contacts__header">
+        <div css={contactHeaderStyle(this.props.theme)} className="contacts__header">
           {closeBtn}
-          <h4 css={contactHeaderTitleStyle(this.props)} className="header__title">Contacts</h4>
+          <h4 css={contactHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>{Translator.translate("USERS", this.state.lang)}</h4>
           <div></div>
         </div>
         <div css={contactSearchStyle()} className="contacts__search">
           <input
           type="text" 
           autoComplete="off" 
-          css={contactSearchInputStyle(this.theme, searchIcon)}
+          css={contactSearchInputStyle(this.props.theme, searchIcon)}
           className="search__input" 
-          placeholder="Search"
+          placeholder={Translator.translate("SEARCH", this.state.lang)}
           onChange={this.searchUsers} />
         </div>
         {messageContainer}
@@ -282,6 +293,17 @@ class CometChatUserList extends React.PureComponent {
       </div>
     );
   }
+}
+
+// Specifies the default values for props:
+CometChatUserList.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+CometChatUserList.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default CometChatUserList;

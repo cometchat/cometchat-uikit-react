@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -15,14 +16,15 @@ import CallAlert from "../CallAlert";
 import CallScreen from "../CallScreen";
 import ImageView from "../ImageView";
 
-import { theme } from "../../resources/theme";
-
 import {
   userScreenStyle,
   userScreenSidebarStyle,
   userScreenMainStyle,
   userScreenSecondaryStyle
 } from "./style"
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 class CometChatUserListScreen extends React.Component {
 
@@ -48,9 +50,8 @@ class CometChatUserListScreen extends React.Component {
       callmessage: {},
       sidebarview: false,
       imageView: null,
+      lang: props.lang
     }
-
-    this.theme = Object.assign({}, theme, this.props.theme);
   }
   
   componentDidMount() {
@@ -65,6 +66,13 @@ class CometChatUserListScreen extends React.Component {
       console.log("[CometChatUnified] getLoggedInUser error", error);
 
     });
+  }
+
+  componentDidUpdate(prevProps) {
+
+    if (prevProps.lang !== this.props.lang) {
+      this.setState({ lang: this.props.lang });
+    }
   }
 
   changeTheme = (e) => {
@@ -147,7 +155,7 @@ class CometChatUserListScreen extends React.Component {
 
   updateThreadMessage = (message, action) => {
 
-    if (this.state.threadmessageview === false) {
+    if (this.state.threadmessageview === false || message.id !== this.state.threadmessageparent.id) {
       return false;
     }
 
@@ -346,14 +354,15 @@ class CometChatUserListScreen extends React.Component {
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div css={userScreenSecondaryStyle(this.theme)} className="contacts__secondary-view">
+        <div css={userScreenSecondaryStyle(this.props.theme)} className="contacts__secondary-view">
           <MessageThread
-          theme={this.theme}
+          theme={this.props.theme}
           tab={this.state.tab}
           item={this.state.threadmessageitem}
           type={this.state.threadmessagetype}
           parentMessage={this.state.threadmessageparent}
           loggedInUser={this.loggedInUser}
+          lang={this.state.lang}
           actionGenerated={this.actionHandler} />
         </div>
       );
@@ -362,11 +371,12 @@ class CometChatUserListScreen extends React.Component {
     let detailScreen;
     if(this.state.viewdetailscreen) {
       detailScreen = (
-        <div css={userScreenSecondaryStyle(this.theme)} className="contacts__secondary-view">
+        <div css={userScreenSecondaryStyle(this.props.theme)} className="contacts__secondary-view">
           <CometChatUserDetail
-            theme={this.theme}
+            theme={this.props.theme}
             item={this.state.item} 
             type={this.state.type}
+            lang={this.state.lang}
             actionGenerated={this.actionHandler} />
         </div>);
     }
@@ -374,28 +384,30 @@ class CometChatUserListScreen extends React.Component {
     let messageScreen = null;
     if(Object.keys(this.state.item).length) {
       messageScreen = (<CometChatMessageListScreen
-      theme={this.theme}
+      theme={this.props.theme}
       item={this.state.item} 
       tab={this.state.tab}
       type={this.state.type}
       composedthreadmessage={this.state.composedthreadmessage}
       callmessage={this.state.callmessage}
       loggedInUser={this.loggedInUser}
+      lang={this.state.lang}
       actionGenerated={this.actionHandler} />);
     }
 
     let imageView = null;
     if (this.state.imageView) {
-      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} />);
+      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} lang={this.state.lang} />);
     }
 
     return (
-      <div css={userScreenStyle(this.theme)} className="cometchat cometchat--contacts">
-        <div css={userScreenSidebarStyle(this.state, this.theme)} className="contacts__sidebar">
+      <div css={userScreenStyle(this.props.theme)} className="cometchat cometchat--contacts" dir={Translator.getDirection(this.state.lang)}>
+        <div css={userScreenSidebarStyle(this.state, this.props.theme)} className="contacts__sidebar">
           <CometChatUserList
-          theme={this.theme}
+          theme={this.props.theme}
           item={this.state.item}
           type={this.state.type}
+          lang={this.state.lang}
           onItemClick={this.itemClicked}
           actionGenerated={this.actionHandler}
           enableCloseMenu={Object.keys(this.state.item).length} />
@@ -404,20 +416,33 @@ class CometChatUserListScreen extends React.Component {
         {detailScreen}
         {threadMessageView}
         <CallAlert
-        theme={this.theme}
+        theme={this.props.theme}
+        lang={this.state.lang}
         actionGenerated={this.actionHandler} />
         <CallScreen
-        theme={this.theme}
+        theme={this.props.theme}
         item={this.state.item} 
         type={this.state.type}
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
         loggedInUser={this.loggedInUser}
+        lang={this.state.lang}
         actionGenerated={this.actionHandler} />
         {imageView}
       </div>
     );
   }
+}
+
+// Specifies the default values for props:
+CometChatUserListScreen.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+CometChatUserListScreen.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default CometChatUserListScreen;

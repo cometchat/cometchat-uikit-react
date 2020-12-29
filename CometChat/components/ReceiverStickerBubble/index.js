@@ -2,6 +2,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
+import PropTypes from 'prop-types';
 
 import { SvgAvatar } from '../../util/svgavatar';
 
@@ -25,6 +26,9 @@ import {
     messageInfoWrapperStyle,
     messageReactionsWrapperStyle
 } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 class ReceiverStickerBubble extends React.Component {
 
@@ -67,15 +71,13 @@ class ReceiverStickerBubble extends React.Component {
 
             avatar = (
                 <div css={messageThumbnailStyle()} className="message__thumbnail">
-                    <Avatar
-                        cornerRadius="50%"
-                        borderColor={this.props.theme.color.secondary}
-                        borderWidth="1px"
-                        image={this.state.message.sender.avatar}></Avatar>
+                    <Avatar borderColor={this.props.theme.borderColor.primary} image={this.state.message.sender.avatar} />
                 </div>
             );
 
-            name = (<div css={(nameWrapperStyle(avatar))} className="message__name__wrapper"><span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span></div>);
+            name = (<div css={(nameWrapperStyle(avatar))} className="message__name__wrapper">
+                <span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span>
+            </div>);
         }
 
         let stickerData = null;
@@ -85,7 +87,7 @@ class ReceiverStickerBubble extends React.Component {
             stickerData = this.state.message.data.customData;
             
             if (stickerData.hasOwnProperty("sticker_url")) {
-                const stickerName = (stickerData.hasOwnProperty("sticker_name")) ? stickerData.sticker_name : "Sticker";
+                const stickerName = (stickerData.hasOwnProperty("sticker_name")) ? stickerData.sticker_name : Translator.translate("STICKER", this.props.lang);
                 stickerImg = (<img src={stickerData.sticker_url} alt={stickerName} />);
             }
         }
@@ -97,13 +99,7 @@ class ReceiverStickerBubble extends React.Component {
             if (Object.keys(reactionsData).length) {
                 messageReactions = (
                     <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-                        <RegularReactionView
-                        theme={this.props.theme}
-                        message={this.state.message}
-                        reaction={reactionsData}
-                        loggedInUser={this.props.loggedInUser}
-                        widgetsettings={this.props.widgetsettings}
-                        actionGenerated={this.props.actionGenerated} />
+                        <RegularReactionView  {...this.props} message={this.state.message} reaction={reactionsData} />
                     </div>
                 );
             }
@@ -132,6 +128,17 @@ class ReceiverStickerBubble extends React.Component {
             </div>
         )
     }
+}
+
+// Specifies the default values for props:
+ReceiverStickerBubble.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
+    theme: theme
+};
+
+ReceiverStickerBubble.propTypes = {
+    lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
 export default ReceiverStickerBubble;

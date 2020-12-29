@@ -3,6 +3,7 @@ import React from "react";
 
 /** @jsx jsx */
 import { jsx, keyframes } from "@emotion/core";
+import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -37,6 +38,9 @@ import {
   reactionBtnStyle,
   stickerBtnStyle
 } from "./style";
+
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
 
 import roundedPlus from "./resources/attach.png";
 import videoIcon from "./resources/attachvideo.png";
@@ -85,6 +89,13 @@ class MessageComposer extends React.PureComponent {
     this.audio = new Audio(outgoingMessageAlert);
   }
 
+  componentDidMount() {
+
+    if (this.messageInputRef && this.messageInputRef.current) {
+      this.messageInputRef.current.focus();
+    }
+  }
+
   componentDidUpdate(prevProps, prevState) {
 
     if (prevProps.messageToBeEdited !== this.props.messageToBeEdited) {
@@ -128,8 +139,13 @@ class MessageComposer extends React.PureComponent {
     }
 
     if (prevProps.item !== this.props.item) {
+
       this.messageInputRef.current.textContent = "";
       this.setState({ stickerViewer: false, emojiViewer: false, replyPreview: null, messageToBeEdited: "", messageInput: "" });
+
+      if (this.messageInputRef && this.messageInputRef.current) {
+        this.messageInputRef.current.focus();
+      }
     }
   }
 
@@ -683,12 +699,13 @@ class MessageComposer extends React.PureComponent {
   render() {
 
     let liveReactionBtn = null;
+    const liveReactionText = Translator.translate("LIVE_REACTION", this.props.lang);
     if (enums.LIVE_REACTIONS.hasOwnProperty(this.props.reaction)) {
 
       const reactionName = this.props.reaction;
       const imgSrc = enums.LIVE_REACTIONS[reactionName];
       liveReactionBtn = (
-        <div css={reactionBtnStyle(imgSrc)} className="button__reactions" onClick={this.sendReaction}>
+        <div title={liveReactionText} css={reactionBtnStyle(imgSrc)} className="button__reactions" onClick={this.sendReaction}>
           <img src={require(`${imgSrc}`)} alt={reactionName} />
         </div>
       );
@@ -699,86 +716,97 @@ class MessageComposer extends React.PureComponent {
       disabledState = true;
     }
 
+    const docText = Translator.translate("ATTACH_FILE", this.props.lang);
     let docs = (
       <div 
-      title="Attach file" 
+      title={docText}
       css={fileItemStyle()} 
       className="filelist__item item__file" 
       onClick={() => { this.openFileDialogue("file") }}>
-        <img src={docIcon} alt="Attach a file" />
+        <img src={docIcon} alt={docText} />
         <input onChange={this.onFileChange} type="file" id="file" ref={this.fileUploaderRef} />
       </div>
     );
 
+    const videoText = Translator.translate("ATTACH_VIDEO", this.props.lang);
+    const audioText = Translator.translate("ATTACH_AUDIO", this.props.lang);
+    const imageText = Translator.translate("ATTACH_IMAGE", this.props.lang);
     let avp = (
       <React.Fragment>
-        <div title="Attach video" css={fileItemStyle()} className="filelist__item item__video" onClick={() => { this.openFileDialogue("video") }}>
-          <img src={videoIcon} alt="Attach video" />
+        <div title={videoText} css={fileItemStyle()} className="filelist__item item__video" onClick={() => { this.openFileDialogue("video") }}>
+          <img src={videoIcon} alt={videoText} />
           <input onChange={this.onVideoChange} accept="video/*" type="file" ref={this.videoUploaderRef} />
         </div>
-        <div title="Attach audio" css={fileItemStyle()} className="filelist__item item__audio" onClick={() => { this.openFileDialogue("audio") }}>
-          <img src={audioIcon} alt="Attach audio" />
+        <div title={audioText} css={fileItemStyle()} className="filelist__item item__audio" onClick={() => { this.openFileDialogue("audio") }}>
+          <img src={audioIcon} alt={audioText} />
           <input onChange={this.onAudioChange} accept="audio/*" type="file" ref={this.audioUploaderRef} />
         </div>
-        <div title="Attach image" css={fileItemStyle()} className="filelist__item item__image" onClick={() => { this.openFileDialogue("image") }}>
-          <img src={imageIcon} alt="Attach an image" />
+        <div title={imageText} css={fileItemStyle()} className="filelist__item item__image" onClick={() => { this.openFileDialogue("image") }}>
+          <img src={imageIcon} alt={imageText} />
           <input onChange={this.onImageChange} accept="image/*" type="file" ref={this.imageUploaderRef} />
         </div>
       </React.Fragment>
     );
 
+    const pollText = Translator.translate("CREATE_POLL", this.props.lang);
     let createPollBtn = (
       <div
-      title="Create a poll"
+      title={pollText}
       css={fileItemStyle()}
       className="filelist__item item__poll"
       onClick={this.toggleCreatePoll}>
-      <img src={pollIcon} alt="Create a poll" />
+        <img src={pollIcon} alt={pollText} />
       </div>
     );
 
+    const collaborativeDocText = Translator.translate("COLLABORATE_USING_DOCUMENT", this.props.lang);
     let collaborativeDocBtn = (
       <div
-      title="Collaborate using a document"
+      title={collaborativeDocText}
       css={fileItemStyle()}
       className="filelist__item item__document"
       onClick={this.toggleCollaborativeDocument}>
-        <img src={documentIcon} alt="Collaborate using a document" />
+        <img src={documentIcon} alt={collaborativeDocText} />
       </div>
     );
 
+    const collaborativeBoardText = Translator.translate("COLLABORATE_USING_WHITEBOARD", this.props.lang);
     let collaborativeBoardBtn = (
       <div
-      title="Collaborate using a whiteboard"
+      title={collaborativeBoardText}
       css={fileItemStyle()}
       className="filelist__item item__whiteboard"
       onClick={this.toggleCollaborativeBoard}>
-        <img src={whiteboardIcon} alt="Collaborate using a document" />
+        <img src={whiteboardIcon} alt={collaborativeBoardText} />
       </div>
     );
 
+    const emojiText = Translator.translate("EMOJI", this.props.lang);
     let emojiBtn = (
       <div 
-      title="Emoji"
+      title={emojiText}
       css={emojiButtonStyle()}
       className="button__emoji" 
       onClick={() => {
-        this.toggleEmojiPicker();
-        this.setState({ messageToReact: ""  });
-        }}><img src={insertEmoticon} alt="Insert Emoticon" /></div>
+      this.toggleEmojiPicker();
+      this.setState({ messageToReact: ""  });}}>
+        <img src={insertEmoticon} alt={emojiText} />
+      </div>
     );
 
+    const StickerText = Translator.translate("STICKER", this.props.lang);
     let stickerBtn = (
       <div
-      title="Attach sticker"
+      title={StickerText}
       css={stickerBtnStyle()}
       className="filelist__item item__sticker"
-      onClick={this.toggleStickerPicker}><img src={stickerIcon} alt="Add Sticker" /></div>
+      onClick={this.toggleStickerPicker} > <img src={stickerIcon} alt={StickerText} /></div>
     );
 
+    const sendMessageText = Translator.translate("SEND_MESSAGE", this.props.lang);
     let sendBtn = (
-      <div title="Send Message" css={sendButtonStyle()} className="button__send" onClick={this.sendTextMessage}>
-        <img src={sendBlue} alt="Send Message" />
+      <div title={sendMessageText} css={sendButtonStyle()} className="button__send" onClick={this.sendTextMessage}>
+        <img src={sendBlue} alt={sendMessageText} />
       </div>
     );
 
@@ -827,12 +855,13 @@ class MessageComposer extends React.PureComponent {
       sendBtn = null;
     }
 
+    const attachText = Translator.translate("ATTACH", this.props.lang);
     let attach = (
       <div css={stickyAttachmentStyle()} className="input__sticky__attachment">
-        <div css={stickyAttachButtonStyle()} className="attachment__icon" onClick={this.toggleFilePicker} title="Attach">
-          <img src={roundedPlus} alt="Attach" />
+        <div css={stickyAttachButtonStyle()} className="attachment__icon" onClick={this.toggleFilePicker} title={attachText}>
+          <img src={roundedPlus} alt={attachText} />
         </div>
-        <div css={filePickerStyle(this.state)} className="attachment__filepicker">
+        <div css={filePickerStyle(this.state)} className="attachment__filepicker" dir={Translator.getDirection(this.props.lang)}>
           <div css={fileListStyle()} className="filepicker__filelist">
             {avp}
             {docs}
@@ -857,6 +886,7 @@ class MessageComposer extends React.PureComponent {
         type={this.props.type}
         open={this.state.createPoll}
         close={this.closeCreatePoll}
+        lang={this.props.lang}
         widgetsettings={this.props.widgetsettings}
         actionGenerated={this.actionHandler} />
       );
@@ -898,7 +928,7 @@ class MessageComposer extends React.PureComponent {
       editPreview = (
         <div css={editPreviewContainerStyle(this.props, keyframes)}>
           <div css={previewHeadingStyle()}>
-            <div css={previewTextStyle()}>Edit message</div>
+            <div css={previewTextStyle()}>{Translator.translate("EDIT_MESSAGE", this.props.lang)}</div>
             <span css={previewCloseStyle(closeIcon)} onClick={this.closeEditPreview}></span>
           </div>
           <div>{messageText}</div>
@@ -929,6 +959,7 @@ class MessageComposer extends React.PureComponent {
         theme={this.props.theme}
         item={this.props.item}
         type={this.props.type}
+        lang={this.props.lang}
         widgetsettings={this.props.widgetsettings}
         actionGenerated={this.actionHandler} />
       );
@@ -937,7 +968,7 @@ class MessageComposer extends React.PureComponent {
     let emojiViewer = null;
     if (this.state.emojiViewer) {
       emojiViewer = (
-        <EmojiView emojiClicked={this.emojiClicked} />
+        <EmojiView lang={this.props.lang} emojiClicked={this.emojiClicked} />
       );
     }
 
@@ -953,8 +984,8 @@ class MessageComposer extends React.PureComponent {
             css={messageInputStyle(disabledState)}
             className="input__message-input"
             contentEditable="true"
-            placeholder="Enter your message here"
-            dir="ltr"
+            placeholder={Translator.translate("ENTER_YOUR_MESSAGE_HERE", this.props.lang)}
+            dir={Translator.getDirection(this.props.lang)}
             onInput={this.changeHandler}
             onBlur={this.endTyping}
             onKeyDown={this.sendMessageOnEnter}
@@ -974,6 +1005,17 @@ class MessageComposer extends React.PureComponent {
       </div>
     );
   }
+}
+
+// Specifies the default values for props:
+MessageComposer.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
+  theme: theme
+};
+
+MessageComposer.propTypes = {
+  lang: PropTypes.string,
+  theme: PropTypes.object
 }
 
 export default MessageComposer;
