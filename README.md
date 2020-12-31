@@ -162,6 +162,20 @@ Thanks to the following people who have contributed to this project:
 [@mayur-bhandari](https://github.com/mayur-bhandari)
 
 
+---
+
+# Contact
+
+Contact us via real time support present in [CometChat Dashboard.](https://app.cometchat.com/)
+
+---
+
+# License
+
+---
+
+This project uses the following [license](https://github.com/cometchat-pro/javascript-react-chat-ui-kit/blob/master/LICENSE).
+
 ## Further Information
 Please refer our <a href="https://prodocs.cometchat.com/docs/react-ui-kit" target="_blank">Documentation</a> for more information about how to integrate UI Kit to your applications.
 
