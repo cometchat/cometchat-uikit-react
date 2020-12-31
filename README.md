@@ -28,7 +28,7 @@
 
 <br/>
 
-<div style="width:100%">
+<div style="width:100%;margin-bottom:8px;">
     <div style="width:50%;">
         <div align="center">
           <img align="left" alt="Main" src="./Screenshots/main.png">    
@@ -36,14 +36,19 @@
     </div>    
 </div>
 
-<br/>
-
 React Chat UI Kit is a collection of custom **UI Components** and **UI Screens** designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
 
 ___
 
+## Prerequisites
 
+Before you begin, ensure you have met the following requirements:
 
+- React v16.14.0
+
+- React DOM v16.14.0
+
+___
 ## Installing React Chat UI Kit 
 
 ## 1. Setup
