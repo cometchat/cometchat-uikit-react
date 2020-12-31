@@ -144,7 +144,8 @@ Clone this repository and copy the CometChat folder to your source folder
 
 Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-chat-app) repo to run the React sample app.
 
-<br/>
+---
+
 
 # Troubleshooting
 
@@ -152,7 +153,7 @@ Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-
 
 - Facing any issues while integrating or installing the UI Kit please <a href="https://app.cometchat.com/" target="_blank"> connect with us via real time support present in CometChat Dashboard.</a>
 
-<br/>
+---
 
 # Contributors
 
