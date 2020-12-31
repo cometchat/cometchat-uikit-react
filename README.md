@@ -31,7 +31,7 @@
         </div>    
     </div>    
 </div>
-/br></br>
+</br></br>
 React Chat UI Kit is a collection of custom **UI Components** and **UI Screens** designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
 
 ___
