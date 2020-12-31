@@ -34,7 +34,9 @@
         </div>    
     </div>    
 </div>
+
 </br></br>
+
 React Chat UI Kit is a collection of custom **UI Components** and **UI Screens** designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
 
 ___
@@ -138,13 +140,13 @@ Clone this repository and copy the CometChat folder to your source folder
 
 <br/>
 
-## Checkout our sample app
+# Checkout our sample app
 
 Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-chat-app) repo to run the React sample app.
 
 <br/>
 
-## Troubleshooting
+# Troubleshooting
 
 - To read the full documentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/docs/react-ui-kit).
 
@@ -152,7 +154,7 @@ Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-
 
 <br/>
 
-## Contributors
+# Contributors
 
 Thanks to the following people who have contributed to this project:
 
