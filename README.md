@@ -11,15 +11,18 @@
 # React Chat UI Kit
 
 <p align="left">
-<a href="https://github.com/cometchat-pro/javascript-react-chat-ui-kit/releases/" alt="Releases">
-  <img src="https://img.shields.io/github/v/release/cometchat-pro/javascript-react-chat-ui-kit" />
-</a>
-<a href="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit">
-  <img src="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit" />
-</a>
-<a href="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social">
-  <img src="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social" />
-</a>
+  <a href="https://github.com/cometchat-pro/javascript-react-chat-ui-kit/releases/" alt="Releases">
+    <img src="https://img.shields.io/github/v/release/cometchat-pro/javascript-react-chat-ui-kit" />
+  </a>
+  <a href="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit">
+    <img src="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit" />
+  </a>
+  <a href="https://github.com/cometchat-pro/javascript-react-chat-app/stargazers">
+    <img src="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social" />
+  </a>
+  <a href="https://twitter.com/CometChat">
+    <img src="https://img.shields.io/twitter/follow/CometChat?label=CometChat&style=social" />
+  </a>
 </p>
 
 </br></br>
@@ -154,7 +157,9 @@ Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-
 Thanks to the following people who have contributed to this project:
 
 [@priyadarshininadar](https://github.com/priyadarshininadar) <br>
-[@ajaygajra](https://github.com/ajaygajra)<br>
+[@ajaygajra](https://github.com/ajaygajra) <br>
+[@prathamesh-majgaonkar](https://github.com/prathamesh-majgaonkar) <br>
+[@mayur-bhandari](https://github.com/mayur-bhandari)
 
 
 ## Further Information
