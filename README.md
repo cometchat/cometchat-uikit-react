@@ -11,31 +11,27 @@
 # React Chat UI Kit
 
 <p align="left">
-
 <a href="https://github.com/cometchat-pro/javascript-react-chat-ui-kit/releases/" alt="Releases">
   <img src="https://img.shields.io/github/v/release/cometchat-pro/javascript-react-chat-ui-kit" />
 </a>
-
 <a href="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit">
   <img src="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit" />
 </a>
-
 <a href="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social">
   <img src="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social" />
 </a>
-
 </p>
 
-<br/>
+</br></br>
 
-<div style="width:100%;margin-bottom:8px;">
-    <div style="width:50%;">
+<div style="width:100%">
+    <div style="width:50%; display:inline-block">
         <div align="center">
           <img align="left" alt="Main" src="./Screenshots/main.png">    
         </div>    
     </div>    
 </div>
-
+/br></br>
 React Chat UI Kit is a collection of custom **UI Components** and **UI Screens** designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
 
 ___
