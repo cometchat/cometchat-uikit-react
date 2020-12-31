@@ -11,15 +11,18 @@
 # React Chat UI Kit
 
 <p align="left">
-<a href="https://github.com/cometchat-pro/javascript-react-chat-ui-kit/releases/" alt="Releases">
-  <img src="https://img.shields.io/github/v/release/cometchat-pro/javascript-react-chat-ui-kit" />
-</a>
-<a href="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit">
-  <img src="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit" />
-</a>
-<a href="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social">
-  <img src="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social" />
-</a>
+  <a href="https://github.com/cometchat-pro/javascript-react-chat-ui-kit/releases/" alt="Releases">
+    <img src="https://img.shields.io/github/v/release/cometchat-pro/javascript-react-chat-ui-kit" />
+  </a>
+  <a href="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit">
+    <img src="https://img.shields.io/github/languages/top/cometchat-pro/javascript-react-chat-ui-kit" />
+  </a>
+  <a href="https://github.com/cometchat-pro/javascript-react-chat-app/stargazers">
+    <img src="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social" />
+  </a>
+  <a href="https://twitter.com/CometChat">
+    <img src="https://img.shields.io/twitter/follow/CometChat?label=CometChat&style=social" />
+  </a>
 </p>
 
 </br></br>
@@ -31,7 +34,9 @@
         </div>    
     </div>    
 </div>
+
 </br></br>
+
 React Chat UI Kit is a collection of custom **UI Components** and **UI Screens** designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
 
 ___
@@ -135,13 +140,13 @@ Clone this repository and copy the CometChat folder to your source folder
 
 <br/>
 
-## Checkout our sample app
+# Checkout our sample app
 
 Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-chat-app) repo to run the React sample app.
 
 <br/>
 
-## Troubleshooting
+# Troubleshooting
 
 - To read the full documentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/docs/react-ui-kit).
 
@@ -149,15 +154,26 @@ Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-
 
 <br/>
 
-## Contributors
+# Contributors
 
 Thanks to the following people who have contributed to this project:
 
 [@priyadarshininadar](https://github.com/priyadarshininadar) <br>
-[@ajaygajra](https://github.com/ajaygajra)<br>
+[@ajaygajra](https://github.com/ajaygajra) <br>
+[@prathamesh-majgaonkar](https://github.com/prathamesh-majgaonkar) <br>
+[@mayur-bhandari](https://github.com/mayur-bhandari)
 
 
-## Further Information
-Please refer our <a href="https://prodocs.cometchat.com/docs/react-ui-kit" target="_blank">Documentation</a> for more information about how to integrate UI Kit to your applications.
+---
 
-Please visit our [Forum](https://forum.cometchat.com/) if you are facing any issues while installation or integration of this library.
+# Contact
+
+Contact us via real time support present in [CometChat Dashboard.](https://app.cometchat.com/)
+
+---
+
+# License
+
+---
+
+This project uses the following [license](https://github.com/cometchat-pro/javascript-react-chat-ui-kit/blob/master/LICENSE).
