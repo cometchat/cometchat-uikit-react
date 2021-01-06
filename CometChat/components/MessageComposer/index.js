@@ -799,7 +799,7 @@ class MessageComposer extends React.PureComponent {
       <div
       title={StickerText}
       css={stickerBtnStyle()}
-      className="filelist__item item__sticker"
+      className="button__sticker"
       onClick={this.toggleStickerPicker} > <img src={stickerIcon} alt={StickerText} /></div>
     );
 

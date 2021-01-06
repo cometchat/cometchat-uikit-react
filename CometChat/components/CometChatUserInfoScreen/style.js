@@ -17,7 +17,10 @@ export const headerStyle = (theme) => {
     return {
         padding: "16px",
         position: "relative",
-        borderBottom: `1px solid ${theme.borderColor.primary}`
+        borderBottom: `1px solid ${theme.borderColor.primary}`,
+        height: "70px",
+        display: "flex",
+        alignItems: "center",
     }
 }
 
@@ -106,7 +109,7 @@ export const optionTitleStyle = (theme) => {
         margin: "5px 0",
         width: "100%",
         fontSize: "12px",
-        color: `${theme.color.secondary}`,
+        color: `${theme.color.helpText}`,
         textTransform: "uppercase",
     }
 }

@@ -6,6 +6,8 @@ import ReactHtmlParser from "react-html-parser";
 import { jsx } from '@emotion/core';
 import PropTypes from 'prop-types';
 
+import { CometChat } from "@cometchat-pro/chat";
+
 import { linkify, checkMessageForExtensionsData, validateWidgetSettings } from "../../util/common";
 
 import ToolTip from "../ToolTip";
@@ -23,6 +25,7 @@ import {
   messageReactionsWrapperStyle,
 } from "./style";
 
+import Translator from "../../resources/localization/translator";
 import { theme } from "../../resources/theme";
 
 class SenderMessageBubble extends React.PureComponent {
@@ -36,7 +39,8 @@ class SenderMessageBubble extends React.PureComponent {
     const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
 
     this.state = {
-      message: message
+      message: message,
+      translatedMessage: ""
     }
   }
 
@@ -99,11 +103,47 @@ class SenderMessageBubble extends React.PureComponent {
 
     messageText = (
       <div css={messageTxtWrapperStyle(this.props)} className="message__txt__wrapper">
-        <p css={messageTxtStyle(this.props, parsedMessage, emojiMessage, showVariation)} className="message__txt">{parsedMessage}</p>
+        <p css={messageTxtStyle(this.props, parsedMessage, emojiMessage, showVariation)} className="message__txt">{parsedMessage}{this.state.translatedMessage}</p>
       </div>
     );
 
     return messageText;
+  }
+
+  translateMessage = (message) => {
+
+    const messageId = message.id;
+    const messageText = message.text;
+    const translateToLanguage = Translator.getDefaultLanguage();
+
+    let translatedMessage = "";
+
+    CometChat.callExtension('message-translation', 'POST', 'v2/translate', {
+      "msgId": messageId,
+      "text": messageText,
+      "languages": [translateToLanguage]
+    }).then(result => {
+
+      if (result.hasOwnProperty("language_original") && result["language_original"] !== translateToLanguage) {
+
+        if (result.hasOwnProperty("translations") && result.translations.length) {
+          
+          const messageTranslation = result.translations[0];
+          if (messageTranslation.hasOwnProperty("message_translated")) {
+
+            translatedMessage = `\n(${messageTranslation["message_translated"]})`;
+          }
+        }
+      }
+
+      this.setState({ translatedMessage: translatedMessage })
+
+    }).catch(error => {
+      // Some error occured
+
+      console.log("translateMessage error", error);
+
+    });
   }
 
   render() {
@@ -136,7 +176,7 @@ class SenderMessageBubble extends React.PureComponent {
     return (
       <div css={messageContainerStyle()} className="sender__message__container message__text">
         
-        <ToolTip {...this.props} message={this.state.message} />
+        <ToolTip {...this.props} message={this.state.message} translateMessage={this.translateMessage} />
         <div css={messageWrapperStyle()} className="message__wrapper">{messageText}</div>
         
         {messageReactions}

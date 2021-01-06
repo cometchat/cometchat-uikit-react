@@ -125,8 +125,18 @@ class MessageHeader extends React.Component {
           if (validateWidgetSettings(this.props.widgetsettings, "show_user_presence") === false) {
             return false;
           }
+          let status = "";
+          
+          if (item.status === "offline") {
 
-          this.setState({ status: item.status, presence: item.status });
+            status = Translator.translate("OFFLINE", this.props.lang);
+
+          } else if (item.status === "online") {
+
+            status = Translator.translate("ONLINE", this.props.lang);
+          }
+
+          this.setState({ status: status, presence: item.status });
         }
         break;
       }
@@ -187,7 +197,7 @@ class MessageHeader extends React.Component {
           this.props.actionGenerated("stopReaction", item);
 
           if(this.state.presence === "online") {
-            this.setState({ status: "online", presence: "online" });
+            this.setState({ status: Translator.translate("ONLINE", this.props.lang), presence: "online" });
           } else {
             this.setStatusForUser();
           }

@@ -59,7 +59,10 @@ class CometChatUnified extends React.Component {
       groupmessage: {},
       lastmessage: {},
       lang: props.lang,
+      unreadMessages: []
     }
+
+    this.messageScreenRef = React.createRef();
 
     CometChat.getLoggedInUser().then((user) => {
       this.loggedInUser = user;
@@ -207,6 +210,9 @@ class CometChatUnified extends React.Component {
       break;
       case "updateThreadMessage":
         this.updateThreadMessage(item[0], count);
+      break;
+      case "unreadMessages":
+        this.setState({ unreadMessages: [...item] });
       break;
       default:
       break;
@@ -457,9 +463,17 @@ class CometChatUnified extends React.Component {
     const messageList = [];
     members.forEach(eachMember => {
 
-      const message = `${this.loggedInUser.name} added ${eachMember.name}`;
+      const message = `${this.loggedInUser.name} ${Translator.translate("ADDED", this.state.lang)} ${eachMember.name}`;
       const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
+      const messageObj = { 
+        "category": "action", 
+        "message": message, 
+        "type": enums.ACTION_TYPE_GROUPMEMBER, 
+        "sentAt": sentAt, 
+        "action": "added",
+        "actionBy": { ...this.loggedInUser }, 
+        "actionOn": { ...eachMember } 
+      };
       messageList.push(messageObj);
     });
     
@@ -471,9 +485,18 @@ class CometChatUnified extends React.Component {
     const messageList = [];
     members.forEach(eachMember => {
 
-      const message = `${this.loggedInUser.name} unbanned ${eachMember.name}`;
+      const message = `${this.loggedInUser.name} ${Translator.translate("UNBANNED", this.state.lang)} ${eachMember.name}`;
       const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
+      const messageObj = { 
+        "category": "action", 
+        "message": message, 
+        "type": enums.ACTION_TYPE_GROUPMEMBER, 
+        "sentAt": sentAt,
+        "action": CometChat.ACTION_TYPE.MEMBER_UNBANNED,
+        "actionBy": { ...this.loggedInUser },
+        "actionOn": { ...eachMember } 
+      };
+
       messageList.push(messageObj);
     });
 
@@ -486,9 +509,19 @@ class CometChatUnified extends React.Component {
 
     members.forEach(eachMember => {
 
-      const message = `${this.loggedInUser.name} made ${eachMember.name} ${eachMember.scope}`;
+      const newScope = Translator.translate(eachMember.scope, this.state.lang);
+
+      const message = `${this.loggedInUser.name} ${Translator.translate("MADE", this.state.lang)} ${eachMember.name} ${newScope}`;
       const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
+      const messageObj = { 
+        "category": "action", 
+        "message": message, 
+        "type": enums.ACTION_TYPE_GROUPMEMBER, 
+        "sentAt": sentAt,
+        "action": CometChat.ACTION_TYPE.MEMBER_SCOPE_CHANGED,
+        "actionBy": { ...this.loggedInUser },
+        "actionOn": { ...eachMember } 
+      };
       messageList.push(messageObj);
     });
 
@@ -553,6 +586,7 @@ class CometChatUnified extends React.Component {
     if(Object.keys(this.state.item).length) {
       messageScreen = (
         <CometChatMessageListScreen 
+        ref={(el) => { this.messageScreenRef = el; }}
         theme={this.props.theme}
         item={this.state.item} 
         tab={this.state.tab}
@@ -585,6 +619,7 @@ class CometChatUnified extends React.Component {
           messageToMarkRead={this.state.messageToMarkRead}
           lastMessage={this.state.lastmessage}
           lang={this.state.lang}
+          unreadMessages={this.state.unreadMessages}
           actionGenerated={this.navBarAction}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>

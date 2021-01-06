@@ -18,7 +18,15 @@ import * as enums from '../../util/enums.js';
 import { checkMessageForExtensionsData, validateWidgetSettings } from "../../util/common";
 import Translator from "../../resources/localization/translator";
 
-import { chatWrapperStyle, reactionsWrapperStyle } from "./style";
+import { 
+  chatWrapperStyle, 
+  reactionsWrapperStyle,
+  messagePaneTopStyle,
+  messagePaneBannerStyle,
+  messagePaneUnreadBannerStyle,
+  messagePaneUnreadBannerMessageStyle,
+  iconArrowDownStyle,
+} from "./style";
 
 import { incomingMessageAlert } from "../../resources/audio/";
 
@@ -35,10 +43,17 @@ class CometChatMessageListScreen extends React.PureComponent {
       replyPreview: null,
       liveReaction: false,
       messageToReact: null,
-      lang: props.lang
+      lang: props.lang,
+      unreadMessages: [],
     }
 
+    CometChat.getLoggedInUser().then(user => this.loggedInUser = user).catch((error) => {
+      console.log("[CometChatUnified] getLoggedInUser error", error);
+    });
+
     this.composerRef = React.createRef();
+    this.messageListRef = React.createRef();
+    
     this.reactionName = props.reaction;
     this.audio = new Audio(incomingMessageAlert);
   }
@@ -51,15 +66,15 @@ class CometChatMessageListScreen extends React.PureComponent {
 
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
       
-      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: ""});
+      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "", unreadMessages: [] });
 
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid) {
       
-      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "" });
+      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "", unreadMessages: [] });
 
     } else if(prevProps.type !== this.props.type) {
       
-      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "" });
+      this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "", unreadMessages: [] });
 
     } else if(prevProps.composedthreadmessage !== this.props.composedthreadmessage) {
 
@@ -118,12 +133,14 @@ class CometChatMessageListScreen extends React.PureComponent {
         this.props.actionGenerated("messageComposed", messages);
         break;
       }
+      case "onMessageReadAndDelivered":
+        this.updateMessages(messages);
+      break;
       case "onMessageEdited": {
 
         this.updateMessages(messages);
         //update the parent message of thread message
-        this.props.actionGenerated("updateThreadMessage", messages, "edit");
-
+        this.props.actionGenerated("updateThreadMessage", [key], "edit");
       }
       break;
       case "messageFetched":
@@ -131,15 +148,25 @@ class CometChatMessageListScreen extends React.PureComponent {
       break;
       case "messageFetchedAgain": 
         this.prependMessagesAndScrollBottom(messages);
+        break;
+      case "refreshingMessages":
+        this.refreshingMessages();
+        break;
+      case "messageRefreshed":
+        this.messageRefreshed(messages);
+      break;
+      case "newMessagesArrived": 
+        this.newMessagesArrived(messages); 
+      break;
+      case "clearUnreadMessages":
+        this.jumpToMessages(true);
       break;
       case "messageDeleted": {
-
         this.removeMessages(messages);
         //remove the thread message
         this.props.actionGenerated("updateThreadMessage", messages, "delete");
-
+        break;
       }
-      break;
       case "viewMessageThread":
         this.props.actionGenerated("viewMessageThread", messages);
       break;
@@ -188,6 +215,9 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "reactToMessage":
         this.reactToMessage(messages);
       break;
+      case "translateMessage":
+        this.translateMessage(messages);
+        break;
       default:
       break;
     }
@@ -293,6 +323,104 @@ class CometChatMessageListScreen extends React.PureComponent {
     this.appendMessage(messages); 
   }
 
+  refreshingMessages = () => {
+
+    this.setState({ messageList: [], messageToBeEdited: "", replyPreview: null, liveReaction: false, messageToReact: null });
+  }
+
+  messageRefreshed = (messages) => {
+
+    const messageList = [...messages];
+    this.setState({ messageList: messageList, scrollToBottom: true });
+  }
+
+  newMessagesArrived = (newMessage) => {
+
+    let messageList = [...this.state.unreadMessages];
+    messageList = messageList.concat(newMessage);
+
+    this.props.actionGenerated("unreadMessages", messageList);
+
+    this.setState({ unreadMessages: messageList });
+  }
+
+  markMessagesAsRead = (scrollToBottom) => {
+
+    if (this.state.unreadMessages.length === 0) {
+      return false;
+    }
+
+    let unreadMessages = [...this.state.unreadMessages];
+    let messageList = [...this.state.messageList];
+
+    unreadMessages.forEach(unreadMessage => {
+
+      if (unreadMessage.getReceiverType() === 'user') {
+
+        if (this.messageListRef) {
+
+          if (unreadMessage.category === enums.CATEGORY_CUSTOM && unreadMessage.type === enums.CUSTOM_TYPE_POLL) {
+            
+            const newMessage = this.messageListRef.addMetadataToCustomData(unreadMessage);
+            messageList.push(newMessage);   
+
+          } else {
+            messageList.push(unreadMessage);
+          }
+
+          this.messageListRef.markMessageAsRead(unreadMessage, "user");
+        }
+
+      } else if (unreadMessage.getReceiverType() === 'group') {
+
+        if (this.messageListRef) {
+
+          if (unreadMessage.category === enums.CATEGORY_CUSTOM && unreadMessage.type === enums.CUSTOM_TYPE_POLL) {
+
+            const newMessage = this.messageListRef.addMetadataToCustomData(unreadMessage);
+            messageList.push(newMessage);   
+
+          } else {
+            messageList.push(unreadMessage);
+          }
+          
+          this.messageListRef.markMessageAsRead(unreadMessage, "group");
+        }
+      }
+    });
+
+    this.props.actionGenerated("unreadMessages", []);
+
+    this.setState({ unreadMessages: [], messageList: messageList, scrollToBottom: scrollToBottom });
+  }
+
+  jumpToMessages = () => {
+
+    if (this.state.unreadMessages.length === 0) {
+      return false;
+    }
+
+    let unreadMessages = [...this.state.unreadMessages]
+    let messageList = [...this.state.messageList];
+    messageList = messageList.concat(unreadMessages);
+
+    const lastMessage = messageList.pop();
+    this.props.actionGenerated("clearUnreadMessages", [lastMessage]);
+
+    if (messageList.length > enums.MAX_MESSAGE_COUNT) {
+
+      this.props.actionGenerated("unreadMessages", []);
+      this.setState({ unreadMessages: [] });
+
+      if (this.messageListRef) {
+        this.messageListRef.reInitializeMessageBuilder();
+      }
+
+    } else {
+      this.markMessagesAsRead(true);
+    }
+  }
+
   //messages are deleted
   removeMessages = (messages) => {
 
@@ -375,7 +503,7 @@ class CometChatMessageListScreen extends React.PureComponent {
   smartReplyPreview = (messages) => {
 
     const message = messages[0];
-    if (message.sender.uid === this.props.loggedInUser.uid || message.category === enums.CATEGORY_CUSTOM) {
+    if (message.sender.uid === this.loggedInUser.uid || message.category === enums.CATEGORY_CUSTOM) {
       return false;
     }
     
@@ -410,13 +538,31 @@ class CometChatMessageListScreen extends React.PureComponent {
       type={this.props.type}
       lang={this.state.lang}
       widgetsettings={this.props.widgetsettings}
-      loggedInUser={this.props.loggedInUser}
+      loggedInUser={this.loggedInUser}
       messageToBeEdited={this.state.messageToBeEdited}
       replyPreview={this.state.replyPreview}
       reaction={this.reactionName}
       messageToReact={this.state.messageToReact}
       actionGenerated={this.actionHandler} />
     );
+
+    let newMessageIndicator = null;
+    if (this.state.unreadMessages.length) {
+
+      const unreadMessageCount = this.state.unreadMessages.length;
+      const messageText = (unreadMessageCount > 1) ? `${unreadMessageCount} ${Translator.translate("NEW_MESSAGES", this.state.lang)}` : `${unreadMessageCount} ${Translator.translate("NEW_MESSAGE", this.state.lang)}`;
+      newMessageIndicator = (
+        <div css={messagePaneTopStyle()} className="message_pane__top">
+          <div css={messagePaneBannerStyle(this.props)} className="message_pane__banner">
+            <div css={messagePaneUnreadBannerStyle()} className="message_pane__unread_banner__banner" title={Translator.translate("JUMP", this.state.lang)}>
+              <button css={messagePaneUnreadBannerMessageStyle(this.props)} className="message_pane__unread_banner__msg" onClick={this.jumpToMessages}>
+                <span css={iconArrowDownStyle()} className="icon--arrow-down">&#x2193; </span>{messageText}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     //if sending messages are disabled for chat wigdet in dashboard
     if (validateWidgetSettings(this.props.widgetsettings, "enable_sending_messages") === false) {
@@ -444,9 +590,10 @@ class CometChatMessageListScreen extends React.PureComponent {
         audiocall={this.props.audiocall === false ? false : true}
         videocall={this.props.videocall === false ? false : true}
         widgetsettings={this.props.widgetsettings}
-        loggedInUser={this.props.loggedInUser}
+        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
-        <MessageList 
+        <MessageList
+        ref={(el) => { this.messageListRef = el; }}
         theme={this.props.theme}
         messages={this.state.messageList} 
         item={this.props.item} 
@@ -456,10 +603,10 @@ class CometChatMessageListScreen extends React.PureComponent {
         messageconfig={this.props.messageconfig}
         widgetsettings={this.props.widgetsettings}
         widgetconfig={this.props.widgetconfig}
-        loggedInUser={this.props.loggedInUser}
         actionGenerated={this.actionHandler} />
         {liveReactionView}
         {messageComposer}
+        {newMessageIndicator}
       </div>
     )
   }

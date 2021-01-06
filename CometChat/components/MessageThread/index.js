@@ -52,12 +52,14 @@ import clearIcon from "./resources/close.png";
 
 class MessageThread extends React.PureComponent {
 
+  loggedInUser = null;
+
   constructor(props) {
 
     super(props);
 
-    this.composerRef = React.createRef();
     this.loggedInUser = props.loggedInUser;
+    this.composerRef = React.createRef();
 
     this.state = {
       messageList: [],
@@ -126,6 +128,9 @@ class MessageThread extends React.PureComponent {
         this.props.actionGenerated("threadMessageComposed", messages);
       }
       break;
+      case "onMessageReadAndDelivered":
+        this.updateMessages(messages);
+        break;
       case "onMessageEdited":
         this.updateMessages(messages);
       break;
@@ -362,14 +367,14 @@ class MessageThread extends React.PureComponent {
     switch (message.category) {
 
       case "message":
-        if (this.props.loggedInUser.uid === message.sender.uid) {
+        if (this.loggedInUser.uid === message.sender.uid) {
           component = this.getSenderMessageComponent(message, key);
         } else {
           component = this.getReceiverMessageComponent(message, key);
         }
       break;
       case "custom":
-        if (this.props.loggedInUser.uid === message.sender.uid) {
+        if (this.loggedInUser.uid === message.sender.uid) {
           component = this.getSenderCustomMessageComponent(message, key);
         } else {
           component = this.getReceiverCustomMessageComponent(message, key);
@@ -432,7 +437,6 @@ class MessageThread extends React.PureComponent {
           config={this.props.config}
           widgetsettings={this.props.widgetsettings}
           parentMessageId={this.props.parentMessage.id}
-          loggedInUser={this.props.loggedInUser}
           lang={this.props.lang}
           actionGenerated={this.actionHandler} />
           <MessageComposer

@@ -30,7 +30,8 @@ export const chatsHeaderStyle = (theme) => {
         padding: "16px",
         display: "flex",
         alignItems: "center",
-        borderBottom: `1px solid ${theme.color.darkSecondary}`
+        borderBottom: `1px solid ${theme.borderColor.primary}`,
+        height: "69px",
     }
 }
 
@@ -87,10 +88,11 @@ export const chatsMsgTxtStyle = (theme) => {
 
     return {
         margin: "0",
-        height: "30px",
+        height: "36px",
         color: `${theme.color.secondary}`,
         fontSize: "24px!important",
         fontWeight: "600",
+        lineHeight: "30px",
     }
 }
 

@@ -45,18 +45,25 @@ ___
 
 Before you begin, ensure you have met the following requirements:
 
-- React v16.14.0
+- A text editor, to write code in. This could be a text editor (e.g. [Visual Studio Code](https://code.visualstudio.com/), [Notepad++](https://notepad-plus-plus.org/), [Sublime Text](https://www.sublimetext.com/), [Atom](https://atom.io/), or [VIM](https://www.vim.org/))
 
-- React DOM v16.14.0
+- [Node](https://nodejs.org/)
+
+- [npm](https://www.npmjs.com/get-npm)
+
+- React v16.13.1 `npm install react@16.13.1`
+
+- React DOM v16.13.1 `npm install react-dom@16.13.1`
 
 ___
+
 ## Installing React Chat UI Kit 
 
-## 1. Setup
+## 1. Setup :wrench:
 
 To install React UI Kit, you need to first register on CometChat Dashboard. <a href="https://app.cometchat.com/" target="_blank">Click here to sign up</a>
 
-### i. Get your Application Keys
+### i. Get your Application Keys :key:
 
 * Create a new app
 * Head over to the Quick Start or API & Auth Keys section and note the `App ID`, `Auth Key`, and `Region`.
@@ -64,14 +71,14 @@ To install React UI Kit, you need to first register on CometChat Dashboard. <a h
 ### ii. Add the CometChat Dependency
 
 ```javascript
-  npm install @cometchat-pro/chat@2.1.5 --save
+  npm install @cometchat-pro/chat@2.1.6 --save
 ```
 
 <br/>
 
 ## 2. Configure CometChat inside your app
 
-### i. Initialize CometChat
+### i. Initialize CometChat 🌟
 
 The `init()` method initializes the settings required for CometChat.
 We suggest calling the `init()` method on app startup, preferably in the `onCreate()` method of the Application class.
@@ -95,7 +102,7 @@ CometChat.init(appID, appSetting).then(
 * Replace APP_ID and REGION with your CometChat `App ID` and `Region` in the above code.
 
 
-### ii. Login your user
+### ii. Login your user 👤
 
 This method takes `UID` and `Auth Key` as input parameters and returns the User object containing all the information of the logged-in user..
 
@@ -121,7 +128,14 @@ CometChat.login(uid, authKey).then(
 
 ## 3. Add UI Kit to your project
 
-Clone this repository and copy the CometChat folder to your source folder
+* Clone this repository 
+* Copy the CometChat folder to your source folder
+
+<img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
+
+* Copy all the dependencies from package.json into your project's package.js and install them
+
+<img align="center" width="auto" height="auto"  src="./Screenshots/package-dependencies.png" />
 
 <br/>
 
@@ -134,18 +148,17 @@ Clone this repository and copy the CometChat folder to your source folder
 
  render() {
 
-    return (<CometChatUnified />);
-  }
+  return (<CometChatUnified />);
+}
  ```
-
-<br/>
-
-# Checkout our sample app
-
-Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-chat-app) repo to run the React sample app.
 
 ---
 
+# Checkout our sample app
+
+Visit our [React sample app](https://github.com/cometchat-pro/javascript-react-chat-app) repo to run the React sample app.
+
+---
 
 # Troubleshooting
 
@@ -159,17 +172,17 @@ Visit our [React sample app] (https://github.com/cometchat-pro/javascript-react-
 
 Thanks to the following people who have contributed to this project:
 
-[@priyadarshininadar](https://github.com/priyadarshininadar) <br>
-[@ajaygajra](https://github.com/ajaygajra) <br>
-[@prathamesh-majgaonkar](https://github.com/prathamesh-majgaonkar) <br>
-[@mayur-bhandari](https://github.com/mayur-bhandari)
+[👨‍💻 @priyadarshininadar](https://github.com/priyadarshininadar) <br>
+[👨‍💻 @ajaygajra](https://github.com/ajaygajra) <br>
+[👨‍💻 @prathamesh-majgaonkar](https://github.com/prathamesh-majgaonkar) <br>
+[👨‍💻 @mayur-bhandari](https://github.com/mayur-bhandari)
 
 
 ---
 
-# Contact
+# Contact :mailbox:
 
-Contact us via real time support present in [CometChat Dashboard.](https://app.cometchat.com/)
+Contact us via real time support present in [CometChat Dashboard](https://app.cometchat.com/).
 
 ---
 

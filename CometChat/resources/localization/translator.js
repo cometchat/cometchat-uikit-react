@@ -40,6 +40,7 @@ class Translator {
 
     static key = enums["LOCALE_KEY"];
     static rtlLanguages = ["ar"];
+    static defaultLanguage = "en";
 
     static getLanguage = () => {
 
@@ -59,7 +60,7 @@ class Translator {
         let language = this.getLanguage();
         if (language) {
 
-            return language;
+            return (translations.hasOwnProperty(language)) ? language : this.defaultLanguage;
 
         } else {
 
@@ -76,9 +77,9 @@ class Translator {
 
     static translate(str, language) {
 
-        const languageDb = translations[language];
-        if (languageDb) {
+        if (translations.hasOwnProperty(language)) {
 
+            const languageDb = translations[language];
             if (languageDb.hasOwnProperty(str)) {
                 return languageDb[str];
             }
@@ -87,8 +88,7 @@ class Translator {
 
         } else {
 
-            console.log("Error while translating::defaulting to en");
-            const languageDb = translations["en"];
+            const languageDb = translations[this.defaultLanguage];
             if (languageDb.hasOwnProperty(str)) {
                 return languageDb[str];
             }
