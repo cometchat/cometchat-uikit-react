@@ -129,7 +129,7 @@ CometChat.login(uid, authKey).then(
 ## 3. Add UI Kit to your project
 
 * Clone this repository 
-* Copy the CometChat folder to your source folder
+* Copy the folder to your source folder
 
 <img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
 
