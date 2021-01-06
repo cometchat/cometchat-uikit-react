@@ -59,6 +59,7 @@ class Navbar extends React.Component {
           groupToUpdate={this.props.groupToUpdate}
           messageToMarkRead={this.props.messageToMarkRead}
           lastMessage={this.props.lastMessage}
+          unreadMessages={this.props.unreadMessages}
           actionGenerated={this.props.actionGenerated}
           enableCloseMenu={this.props.enableCloseMenu}
           onItemClick={(item, type) => this.props.actionGenerated("itemClicked", type, item)} />;

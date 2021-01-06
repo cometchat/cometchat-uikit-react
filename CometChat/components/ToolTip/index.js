@@ -21,6 +21,7 @@ import replyIcon from "./resources/startthread.png";
 import deleteIcon from "./resources/deletemessage.png";
 import editIcon from "./resources/edit.png";
 import reactIcon from "./resources/add-reaction.png";
+import translateIcon from "./resources/translate.png";
 
 class Tooltip extends React.PureComponent {
 
@@ -43,7 +44,7 @@ class Tooltip extends React.PureComponent {
           type="button"
           onMouseEnter={event => this.toggleTooltip(event, true)}
           onMouseLeave={event => this.toggleTooltip(event, false)}
-          css={groupButtonStyle(reactIcon)}
+          css={groupButtonStyle(this.props, reactIcon)}
           className="group__button button__reacttomessage"
           data-title={Translator.translate("ADD_REACTION", this.props.lang)}
           onClick={() => this.props.actionGenerated("reactToMessage", this.props.message)}></button>
@@ -61,9 +62,9 @@ class Tooltip extends React.PureComponent {
         type="button"
         onMouseEnter={event => this.toggleTooltip(event, true)}
         onMouseLeave={event => this.toggleTooltip(event, false)}
-        css={groupButtonStyle(replyIcon)}
+        css={groupButtonStyle(this.props, replyIcon)}
         className="group__button button__threadedchats" 
-          data-title={(this.props.message.replyCount) ? Translator.translate("REPLY_TO_THREAD", this.props.lang) : Translator.translate("REPLY_IN_THREAD", this.props.lang) }
+        data-title={(this.props.message.replyCount) ? Translator.translate("REPLY_TO_THREAD", this.props.lang) : Translator.translate("REPLY_IN_THREAD", this.props.lang) }
         onClick={() => this.props.actionGenerated("viewMessageThread", this.props.message)}></button>
       </li>
     );
@@ -81,7 +82,7 @@ class Tooltip extends React.PureComponent {
         type="button"
         onMouseEnter={event => this.toggleTooltip(event, true)}
         onMouseLeave={event => this.toggleTooltip(event, false)}
-        css={groupButtonStyle(deleteIcon)}
+        css={groupButtonStyle(this.props, deleteIcon)}
         className="group__button button__delete" 
         data-title={Translator.translate("DELETE_MESSAGE", this.props.lang)}
         onClick={() => this.props.actionGenerated("deleteMessage", this.props.message)}></button>
@@ -97,13 +98,13 @@ class Tooltip extends React.PureComponent {
     let editMessage = (
       <li css={actionGroupStyle(this.props)} className="action__group">
         <button
-          type="button"
-          onMouseEnter={event => this.toggleTooltip(event, true)}
-          onMouseLeave={event => this.toggleTooltip(event, false)}
-          css={groupButtonStyle(editIcon)}
-          className="group__button button__edit" 
-          data-title={Translator.translate("EDIT_MESSAGE", this.props.lang)}
-          onClick={() => this.props.actionGenerated("editMessage", this.props.message)}></button>
+        type="button"
+        onMouseEnter={event => this.toggleTooltip(event, true)}
+        onMouseLeave={event => this.toggleTooltip(event, false)}
+        css={groupButtonStyle(this.props, editIcon)}
+        className="group__button button__edit" 
+        data-title={Translator.translate("EDIT_MESSAGE", this.props.lang)}
+        onClick={() => this.props.actionGenerated("editMessage", this.props.message)}></button>
       </li>
     );
 
@@ -114,16 +115,35 @@ class Tooltip extends React.PureComponent {
       editMessage = null;
     }
 
+    let translateMessage = (
+      <li css={actionGroupStyle(this.props)} className="action__group">
+        <button
+        type="button"
+        onMouseEnter={event => this.toggleTooltip(event, true)}
+        onMouseLeave={event => this.toggleTooltip(event, false)}
+        css={groupButtonStyle(this.props, translateIcon)}
+        className="group__button button__translate"
+        data-title={Translator.translate("TRANSLATE_MESSAGE", this.props.lang)}
+        onClick={() => this.props.translateMessage(this.props.message)}></button>
+      </li>
+    );
+
+    if (validateWidgetSettings(this.props.widgetsettings, "enable_message_translation") === false
+    || this.props.message.type !== CometChat.MESSAGE_TYPE.TEXT) {
+      translateMessage = null;
+    }
+
     let tooltip = (
       <ul css={messageActionStyle(this.props)} className="message__actions">
         {reactToMessage}
         {threadedChats}
         {editMessage}
         {deleteMessage}
+        {translateMessage}
       </ul>
     );
 
-    if (threadedChats === null && deleteMessage === null && editMessage === null && reactToMessage === null) {
+    if (threadedChats === null && deleteMessage === null && editMessage === null && reactToMessage === null && translateMessage === null) {
       tooltip = null;
     }
 

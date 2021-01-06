@@ -18,7 +18,7 @@ export const chatDetailStyle = () => {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        width: "calc(100% - 100px)",
+        width: "calc(100% - 116px)",
     }
 }
 
@@ -32,7 +32,6 @@ export const chatSideBarBtnStyle = (img, props) => {
         cursor: "pointer",
         display: "none",
         background: `url(${img}) center center no-repeat`,
-        padding: "20px",
         width: "24px",
         height: "24px",
         float: "left",
@@ -50,6 +49,7 @@ export const chatThumbnailStyle = () => {
         width: "36px",
         height: "36px",
         flexShrink: "0",
+        margin: "0 16px",
     }
 }
 
@@ -59,7 +59,7 @@ export const chatUserStyle = () => {
 
     return {
         width: "calc(100% - 50px)",
-        padding: "0 16px",
+        padding: "0",
         flexGrow: "1",
         display: "flex",
         flexDirection: "column",
@@ -140,7 +140,7 @@ export const chatOptionWrapStyle = () => {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        width: "110px",
+        width: "auto",
     }
 }
 
@@ -152,5 +152,6 @@ export const chatOptionStyle = (img) => {
         cursor: "pointer",
         display: "flex",
         alignItems: "center",
+        margin: "0 0 0 16px",
     }
 }

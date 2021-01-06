@@ -42,7 +42,8 @@ class CometChatConversationList extends React.Component {
       conversationlist: [],
       onItemClick: null,
       selectedConversation: undefined,
-      lang: props.lang
+      lang: props.lang,
+      selectedConversationUnreadMessages: []
     }
 
     this.decoratorMessage = Translator.translate("LOADING", props.lang);
@@ -80,7 +81,7 @@ class CometChatConversationList extends React.Component {
       if (Object.keys(this.props.item).length === 0) {
 
         this.chatListRef.scrollTop = 0;
-        this.setState({ selectedConversation: {} });
+        this.setState({ selectedConversation: {}, selectedConversationUnreadMessages: [] });
 
       } else {
 
@@ -102,7 +103,7 @@ class CometChatConversationList extends React.Component {
           let newConversationObj = { ...conversationObj, unreadMessageCount: 0 };
 
           conversationlist.splice(conversationKey, 1, newConversationObj);
-          this.setState({ conversationlist: conversationlist, selectedConversation: newConversationObj });
+          this.setState({ conversationlist: conversationlist, selectedConversation: newConversationObj, selectedConversationUnreadMessages: [] });
         }
       }
     }
@@ -191,6 +192,31 @@ class CometChatConversationList extends React.Component {
 
     if (prevProps.lang !== this.props.lang) {
       this.setState({ lang: this.props.lang });
+    }
+
+    if (prevProps.unreadMessages.length !== this.props.unreadMessages.length) {
+
+      this.setState({ selectedConversationUnreadMessages: [ ...this.props.unreadMessages ] });
+      
+      if (this.props.unreadMessages.length === 0) {
+
+        const unreadMessage = prevProps.unreadMessages[0];
+        this.makeConversation(unreadMessage).then(response => {
+
+          const { conversationKey, conversationObj, conversationList } = response;
+
+          let unreadMessageCount = this.props.unreadMessages.length;
+          let newConversationObj = { ...conversationObj, unreadMessageCount: unreadMessageCount };
+
+          conversationList.splice(conversationKey, 1);
+          conversationList.unshift(newConversationObj);
+          this.setState({ conversationlist: conversationList });
+
+        }).catch(error => {
+          console.log('This is an error in converting message to conversation', error);
+        });
+
+      }
     }
   }
 
@@ -307,10 +333,20 @@ class CometChatConversationList extends React.Component {
     let unreadMessageCount = parseInt(conversation.unreadMessageCount)
     if (this.state.selectedConversation && this.state.selectedConversation.conversationId === conversation.conversationId) {
 
-      unreadMessageCount = 0;
+      if(this.state.selectedConversationUnreadMessages.length) {
 
-    } else if ((this.props.hasOwnProperty("item") && this.props.item.hasOwnProperty("guid") && conversation.conversationWith.hasOwnProperty("guid") && this.props.item.guid === conversation.conversationWith.guid)
-      || (this.props.hasOwnProperty("item") && this.props.item.hasOwnProperty("uid") && conversation.conversationWith.hasOwnProperty("uid") && this.props.item.uid === conversation.conversationWith.uid)) {
+        const unreadMessage = this.state.selectedConversationUnreadMessages[0];
+        const selectedConversation = this.state.selectedConversation;
+
+        if (unreadMessage.hasOwnProperty("conversationId") && unreadMessage.conversationId === selectedConversation.conversationId) {
+          unreadMessageCount = 0 + this.state.selectedConversationUnreadMessages.length;
+        }
+      } else {
+        unreadMessageCount = 0;
+      }
+
+    } else if ((this.props.item.hasOwnProperty("guid") && conversation.conversationWith.hasOwnProperty("guid") && this.props.item.guid === conversation.conversationWith.guid)
+      || (this.props.item.hasOwnProperty("uid") && conversation.conversationWith.hasOwnProperty("uid") && this.props.item.uid === conversation.conversationWith.uid)) {
 
       unreadMessageCount = 0;
 
@@ -676,12 +712,16 @@ class CometChatConversationList extends React.Component {
 // Specifies the default values for props:
 CometChatConversationList.defaultProps = {
   lang: Translator.getDefaultLanguage(),
-  theme: theme
+  theme: theme,
+  unreadMessages: [],
+  item: {}
 };
 
 CometChatConversationList.propTypes = {
   lang: PropTypes.string,
-  theme: PropTypes.object
+  theme: PropTypes.object,
+  unreadMessages: PropTypes.array,
+  item: PropTypes.object
 }
 
 export default CometChatConversationList;

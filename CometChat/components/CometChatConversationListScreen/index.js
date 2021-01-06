@@ -58,7 +58,8 @@ class CometChatConversationListScreen extends React.Component {
       imageView: null,
       groupmessage: {},
       lastmessage: {},
-      lang: props.lang
+      lang: props.lang,
+      unreadMessages: []
     }
   }
   
@@ -183,6 +184,9 @@ class CometChatConversationListScreen extends React.Component {
         break;
       case "updateThreadMessage":
         this.updateThreadMessage(item[0], count);
+        break;
+      case "unreadMessages":
+        this.setState({ unreadMessages: [...item] });
         break;
       default:
       break;
@@ -556,6 +560,7 @@ class CometChatConversationListScreen extends React.Component {
           groupToLeave={this.state.groupToLeave}
           groupToUpdate={this.state.groupToUpdate}
           messageToMarkRead={this.state.messageToMarkRead}
+          unreadMessages={this.state.unreadMessages}
           onItemClick={this.itemClicked}
           lastMessage={this.state.lastmessage}
           actionGenerated={this.actionHandler}

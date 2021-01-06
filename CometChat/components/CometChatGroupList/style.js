@@ -32,7 +32,8 @@ export const groupHeaderStyle = (theme) => {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        borderBottom: `1px solid ${theme.borderColor.primary}`
+        borderBottom: `1px solid ${theme.borderColor.primary}`,
+        height: "70px",
     }
 }
 
@@ -124,10 +125,11 @@ export const groupMsgTxtStyle = (theme) => {
 
     return {
         margin: "0",
-        height: "30px",
+        height: "36px",
         color: `${theme.color.secondary}`,
         fontSize: "24px!important",
-        fontWeight: "600"
+        fontWeight: "600",
+        lineHeight: "30px",
     }
 }
 

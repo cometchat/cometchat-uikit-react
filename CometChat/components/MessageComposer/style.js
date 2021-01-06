@@ -154,7 +154,7 @@ export const stickyAttachmentStyle = () => {
 
     return {
         display: "flex",
-        width: "50%"
+        width: "auto"
     }
 }
 
@@ -165,32 +165,24 @@ export const attachmentIconStyle = () => {
         width: "24px",
         height: "20px",
         cursor: "pointer",
-        textAlign: "center"
     }
 }
 
 export const filePickerStyle = (state) => {
 
     const active = (state.showFilePicker) ? {
-        width: "calc(100% - 100px)",
+        width: "calc(100% - 20px)",
         opacity: "1",
     } : {};
 
     return {
-        position: "absolute",
-        left: "48px",
         width: "0",
         borderRadius: "8px",
         overflow: "hidden",
         zIndex: "1",
-        textAlign: "center",
         opacity: "0",
         transition: "width 0.5s linear",
         ...active,
-        "&[dir=rtl]": {
-            left: "0",
-            right: "48px",
-        }
     }
 }
 
@@ -199,9 +191,9 @@ export const fileListStyle = () => {
     return {
         width: "100%",
         display: "flex",
-        flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between"
+        justifyContent: "center",
+        padding: "0 0 0 16px",
     }
 }
 
@@ -214,6 +206,7 @@ export const fileItemStyle = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        margin: "0 16px 0 0",
         ' > input': {
             display: "none",
         },
@@ -225,12 +218,9 @@ export const stickyAttachButtonStyle = () => {
     return {
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
-        "div:not(:last-of-type)": {
-            marginRight: "14px"
-        },
+        justifyContent: "center",
         cursor: "pointer",
-        maxWidth: "100px",
+        width: "20px",
     }
 }
 
@@ -245,9 +235,9 @@ export const stickyButtonStyle = (props, state) => {
     return {
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-around",
+        justifyContent: "center",
         cursor: "pointer",
-        width: "100px",
+        width: "auto",
         ...active
     }
 }
@@ -259,7 +249,8 @@ export const emojiButtonStyle = () => {
         cursor: "pointer",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
+        margin: "0 0 0 16px",
     }
 }
 
@@ -270,7 +261,8 @@ export const sendButtonStyle = () => {
         cursor: "pointer",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
+        margin: "0 0 0 16px",
     }
 }
 
@@ -281,7 +273,8 @@ export const reactionBtnStyle = () => {
         height: "24px",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
+        margin: "0 0 0 16px",
     }
 }
 
@@ -292,6 +285,7 @@ export const stickerBtnStyle = () => {
         height: "24px",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
+        margin: "0 0 0 16px",
     }
 }

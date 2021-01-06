@@ -30,7 +30,8 @@ export const contactHeaderStyle = (theme) => {
         position: "relative",
         display: "flex",
         alignItems: "center",
-        borderBottom: `1px solid ${theme.color.darkSecondary}`
+        borderBottom: `1px solid ${theme.borderColor.primary}`,
+        height: "70px",
     }
 }
 
@@ -74,7 +75,7 @@ export const contactHeaderTitleStyle = (props) => {
 export const contactSearchStyle = () => {
     
     return {
-        padding: "16px 16px",
+        padding: "16px",
         position: "relative"
     }
 }
@@ -112,10 +113,11 @@ export const contactMsgTxtStyle = (theme) => {
 
     return {
         margin: "0",
-        height: "30px",
+        height: "36px",
         color: `${theme.color.secondary}`,
         fontSize: "24px!important",
-        fontWeight: "600"
+        fontWeight: "600",
+        lineHeight: "30px",
     }
 }
 

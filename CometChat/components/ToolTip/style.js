@@ -41,7 +41,7 @@ export const actionGroupStyle = (props) => {
     }
 }
 
-export const groupButtonStyle = (img) => {
+export const groupButtonStyle = (props, img) => {
 
     return {
         outline: "0",

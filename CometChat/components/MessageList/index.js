@@ -6,7 +6,6 @@ import PropTypes from 'prop-types';
 
 import { CometChat } from "@cometchat-pro/chat";
 
-import { CometChatManager } from "../../util/controller";
 import { MessageListManager } from "./controller";
 import * as enums from "../../util/enums.js";
 import { validateWidgetSettings } from "../../util/common";
@@ -32,6 +31,7 @@ import SenderWhiteboardBubble from "../SenderWhiteboardBubble";
 import ReceiverWhiteboardBubble from "../ReceiverWhiteboardBubble";
 
 import CallMessage from "../CallMessage";
+import ActionMessage from "../ActionMessage";
 
 import { theme } from "../../resources/theme";
 import Translator from "../../resources/localization/translator";
@@ -39,8 +39,6 @@ import Translator from "../../resources/localization/translator";
 import { 
   chatListStyle,
   listWrapperStyle,
-  actionMessageStyle,
-  actionMessageTxtStyle,
   messageDateContainerStyle,
   messageDateStyle,
   decoratorMessageStyle,
@@ -59,8 +57,11 @@ class MessageList extends React.PureComponent {
     this.state = {
       onItemClick: null,
     }
-    
-    this.loggedInUser = props.loggedInUser;
+
+    CometChat.getLoggedInUser().then(user => this.loggedInUser = user).catch((error) => {
+      console.log("[CometChatUnified] getLoggedInUser error", error);
+    });
+
     this.messagesEnd = React.createRef();
   }
 
@@ -83,6 +84,7 @@ class MessageList extends React.PureComponent {
 
     if (this.props.type === 'user' && prevProps.item.uid !== this.props.item.uid) {
       
+      this.messageCount = 0;
       this.decoratorMessage = Translator.translate("LOADING", this.props.lang);
       this.MessageListManager.removeListeners();
 
@@ -97,6 +99,7 @@ class MessageList extends React.PureComponent {
 
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid){
 
+      this.messageCount = 0;
       this.decoratorMessage = Translator.translate("LOADING", this.props.lang);
       this.MessageListManager.removeListeners();
 
@@ -111,8 +114,10 @@ class MessageList extends React.PureComponent {
 
     } else if(prevProps.parentMessageId !== this.props.parentMessageId) {
       
+      this.messageCount = 0;
       this.decoratorMessage = Translator.translate("LOADING", this.props.lang);
       this.MessageListManager.removeListeners();
+
       this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type, this.props.parentMessageId);
       this.getMessages();
       this.MessageListManager.attachListeners(this.messageUpdated);
@@ -135,67 +140,41 @@ class MessageList extends React.PureComponent {
     }
   }
 
-  getMessages = (scrollToBottom = false) => {
+  getMessages = (actionGenerated = "messageFetched") => {
+          
+    this.MessageListManager.fetchPreviousMessages().then(messageList => {
 
-    const actionMessages = [];
-    
-    new CometChatManager().getLoggedInUser().then((user) => {
-      
-      //this.loggedInUser = user;
-      this.MessageListManager.fetchPreviousMessages().then(messageList => {
+      if (messageList.length === 0) {
+        this.decoratorMessage = Translator.translate("NO_MESSAGES_FOUND", this.props.lang);
+      }
 
-        if (messageList.length === 0) {
-          this.decoratorMessage = Translator.translate("NO_MESSAGES_FOUND", this.props.lang);
+      //updating messagecount variable
+      this.messageCount = messageList.length;
+
+      messageList.forEach((message) => {
+
+        //if the sender of the message is not the loggedin user, mark it as read.
+        if (message.getSender().getUid() !== this.loggedInUser.getUid() && !message.getReadAt()) {
+          
+          if(message.getReceiverType() === "user") {
+
+            CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
+
+          } else if(message.getReceiverType() === "group") {
+
+            CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+          }
         }
 
-        messageList.forEach((message) => {
-          
-          if (message.category === "action" && message.sender.uid === "app_system") {
-            actionMessages.push(message);
-          }
-
-          //if the sender of the message is not the loggedin user, mark it as read.
-          if (message.getSender().getUid() !== user.getUid() && !message.getReadAt()) {
-            
-            if(message.getReceiverType() === "user") {
-
-              CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
-
-            } else if(message.getReceiverType() === "group") {
-
-              CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-            }
-          }
-          this.props.actionGenerated("messageRead", message);
-        });
-
-        let actionGenerated = "messageFetched";
-        if (scrollToBottom === true) {
-          actionGenerated = "messageFetchedAgain";
-        }
-      
-        ++this.times;
-
-          if ((this.times === 1 && actionMessages.length > 5)
-            || (this.times > 1 && actionMessages.length === 30)) {
-
-            this.props.actionGenerated("messageFetched", messageList);
-            this.getMessages(true);
-
-          } else {
-
-            this.lastScrollTop = this.messagesEnd.scrollHeight;
-            this.props.actionGenerated(actionGenerated, messageList);
-          }
-          
-      }).catch((error) => {
-        //TODO Handle the erros in contact list.
-        console.error("[MessageList] getMessages fetchPrevious error", error);
-        this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
+        this.props.actionGenerated("messageRead", message);
       });
 
+      this.lastScrollTop = this.messagesEnd.scrollHeight;
+      this.props.actionGenerated(actionGenerated, messageList);
+        
     }).catch((error) => {
-      console.log("[MessageList] getMessages getLoggedInUser error", error);
+      //TODO Handle the erros in contact list.
+      console.error("[MessageList] getMessages fetchPrevious error", error);
       this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
     });
 
@@ -210,11 +189,11 @@ class MessageList extends React.PureComponent {
         this.messageDeleted(message);
         break;
       case enums.MESSAGE_EDITED:
-        this.messageEdited(message);
+        this.onMessageEdited(message);
         break;
       case enums.MESSAGE_DELIVERED:
       case enums.MESSAGE_READ:
-        this.messageReadAndDelivered(message);
+        this.onMessageReadAndDelivered(message);
         break;
       case enums.TEXT_MESSAGE_RECEIVED:
       case enums.MEDIA_MESSAGE_RECEIVED:
@@ -259,7 +238,7 @@ class MessageList extends React.PureComponent {
     }
   }
 
-  messageEdited = (message) => {
+  onMessageEdited = (message) => {
 
     const messageList = [...this.props.messages];
     const updateEditedMessage = (message) => {
@@ -269,10 +248,12 @@ class MessageList extends React.PureComponent {
       if (messageKey > -1) {
 
         const messageObj = messageList[messageKey];
+        console.log("onMessageEdited messageObj", messageObj, "message", message);
+
         const newMessageObj = Object.assign({}, messageObj, message);
 
         messageList.splice(messageKey, 1, newMessageObj);
-        this.props.actionGenerated("onMessageEdited", messageList);
+        this.props.actionGenerated("onMessageEdited", messageList, newMessageObj);
       }
     }
 
@@ -294,23 +275,7 @@ class MessageList extends React.PureComponent {
 
   }
 
-  updateEditedMessage = (message) => {
-
-    const messageList = [...this.props.messages];
-    let messageKey = messageList.findIndex((m, k) => m.id === message.id);
-
-    if (messageKey > -1) {
-
-      const messageObj = messageList[messageKey];
-      const newMessageObj = Object.assign({}, messageObj, message);
-
-      messageList.splice(messageKey, 1, newMessageObj);
-      this.props.actionGenerated("messageUpdated", messageList);
-    } 
-
-  }
-
-  messageReadAndDelivered = (message) => {
+  onMessageReadAndDelivered = (message) => {
 
     //read receipts
     if (message.getReceiverType() === 'user'
@@ -330,7 +295,7 @@ class MessageList extends React.PureComponent {
           let newMessageObj = Object.assign({}, messageObj, { deliveredAt: message.getDeliveredAt() });
           messageList.splice(messageKey, 1, newMessageObj);
 
-          this.props.actionGenerated("messageUpdated", messageList);
+          this.props.actionGenerated("onMessageReadAndDelivered", messageList);
         }
 
       } else if (message.getReceiptType() === "read") {
@@ -344,7 +309,7 @@ class MessageList extends React.PureComponent {
           let newMessageObj = Object.assign({}, messageObj, { readAt: message.getReadAt() });
           messageList.splice(messageKey, 1, newMessageObj);
 
-          this.props.actionGenerated("messageUpdated", messageList);
+          this.props.actionGenerated("onMessageReadAndDelivered", messageList);
         }
 
       }
@@ -356,6 +321,44 @@ class MessageList extends React.PureComponent {
 
   }
 
+  reInitializeMessageBuilder = () => {
+
+    if (this.props.hasOwnProperty("parentMessageId") === false) {
+      this.messageCount = 0;
+    }
+    
+    this.props.actionGenerated("refreshingMessages", []);
+
+    this.decoratorMessage = Translator.translate("LOADING", this.props.lang);
+    this.MessageListManager.removeListeners();
+
+    if (this.props.parentMessageId) {
+      this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type, this.props.parentMessageId);
+    } else {
+      this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type);
+    }
+    
+    this.getMessages("messageRefreshed");
+    this.MessageListManager.attachListeners(this.messageUpdated);
+  }
+
+  markMessageAsRead = (message, type) => {
+
+    if (type === "user") {
+
+      if (!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
+      }
+
+    } else if (type === "group") {
+
+      if (!message.getReadAt()) {
+        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+      }
+
+    }
+  }
+
   messageReceived = (message) => {
 
     //new messages
@@ -363,81 +366,139 @@ class MessageList extends React.PureComponent {
       && message.getReceiverType() === 'group'
       && message.getReceiverId() === this.props.item.guid) {
 
-      if(!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-      }
-      
-      this.props.actionGenerated("messageReceived", [message]);
+      this.messageReceivedHandler(message, "group");
         
     } else if (this.props.type === 'user' 
       && message.getReceiverType() === 'user'
       && message.getSender().uid === this.props.item.uid) {
 
-      if(!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
-      }
-
-      this.props.actionGenerated("messageReceived", [message]);
+      this.messageReceivedHandler(message, "user");
     }
   }
 
-  customMessageReceived = (message) => {
+  messageReceivedHandler = (message, type) => {
 
-    const triggerCustomMessageReceived = (message) => {
+    //handling dom lag - increment count only for main message list
+    if (message.hasOwnProperty("parentMessageId") === false && this.props.hasOwnProperty("parentMessageId") === false) {
 
-      if (!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
-      }
+      ++this.messageCount;
+      //if the user has not scrolled in chat window(scroll is at the bottom of the chat window)
+      if (this.messagesEnd.scrollHeight - this.messagesEnd.scrollTop === this.messagesEnd.clientHeight) {
 
-      if (message.hasOwnProperty("metadata")) {
+        if (this.messageCount > enums.MAX_MESSAGE_COUNT) {
 
-        this.props.actionGenerated("customMessageReceived", [message]);
+          this.reInitializeMessageBuilder();
 
-      } else {
-        if (message.type === enums.CUSTOM_TYPE_POLL) {//customdata (poll extension) does not have metadata
-
-          const newMessage = this.addMetadataToCustomData(message);
-          this.props.actionGenerated("customMessageReceived", [newMessage]);
+        } else {
+          
+          this.markMessageAsRead(message, type);
+          this.props.actionGenerated("messageReceived", [message]);
         }
+
+      } else {//if the user has scrolled in chat window
+        this.props.actionGenerated("newMessagesArrived", [message]);
       }
 
+    } else if (message.hasOwnProperty("parentMessageId") === true && this.props.hasOwnProperty("parentMessageId") === true) {
+
+      if (message.parentMessageId === this.props.parentMessageId) {
+        this.markMessageAsRead(message, type);
+      }
+
+      this.props.actionGenerated("messageReceived", [message]);
+
+    } else {
+      this.props.actionGenerated("messageReceived", [message]);
     }
+
+  }
+
+  //polls, stickers, collaborative document, collaborative whiteboard
+  customMessageReceived = (message) => {
 
     //new messages
     if (this.props.type === 'group'
+      && message.getReceiverType() === 'group'
+      && this.loggedInUser.uid === message.getSender().uid && message.getReceiverId() === this.props.item.guid
+      && (message.type === enums.CUSTOM_TYPE_DOCUMENT || message.type === enums.CUSTOM_TYPE_WHITEBOARD)) {
+
+      //showing collaborative document and whiteboard for sender (custom message received listener for sender)
+      this.props.actionGenerated("customMessageReceived", [message]);
+
+    } else if (this.props.type === 'group'
     && message.getReceiverType() === 'group'
     && message.getReceiverId() === this.props.item.guid) {
 
-      if (!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-      }
-      
-      if (message.hasOwnProperty("metadata")) {
-
-        this.props.actionGenerated("customMessageReceived", [message]);
-
-      } else {
-
-        if (message.type === enums.CUSTOM_TYPE_POLL) {//customdata (poll extension) does not have metadata
-
-          const newMessage = this.addMetadataToCustomData(message);
-          this.props.actionGenerated("customMessageReceived", [newMessage]);
-        }
-      }
+      this.customMessageReceivedHandler(message, "group");
 
     } else if (this.props.type === 'user'
     && message.getReceiverType() === 'user'
     && message.getSender().uid === this.props.item.uid) {
 
-      triggerCustomMessageReceived(message);
+      this.customMessageReceivedHandler(message, "user");
 
     } else if (this.props.type === 'user'
     && message.getReceiverType() === 'user'
     && this.loggedInUser.uid === message.getSender().uid && message.getReceiverId() === this.props.item.uid
     && (message.type === enums.CUSTOM_TYPE_DOCUMENT || message.type === enums.CUSTOM_TYPE_WHITEBOARD)) {
 
+      //showing collaborative document and whiteboard for sender (custom message received listener for sender)
+      this.props.actionGenerated("customMessageReceived", [message]);
+
+    }
+  }
+
+  customMessageReceivedHandler = (message, type) => {
+
+    const triggerCustomMessageReceived = (message) => {
+
+      if (message.type === enums.CUSTOM_TYPE_POLL) {
+
+        const newMessage = this.addMetadataToCustomData(message);
+        this.props.actionGenerated("customMessageReceived", [newMessage]);
+
+      } else {
+
+        this.props.actionGenerated("customMessageReceived", [message]);
+      }
+    }
+
+    //handling dom lag - increment count only for main message list
+    if (message.hasOwnProperty("parentMessageId") === false && this.props.hasOwnProperty("parentMessageId") === false) {
+
+      ++this.messageCount;
+      
+      //if the user has not scrolled in chat window(scroll is at the bottom of the chat window)
+      if (this.messagesEnd.scrollHeight - this.messagesEnd.scrollTop === this.messagesEnd.clientHeight) {
+
+        if (this.messageCount > enums.MAX_MESSAGE_COUNT) {
+
+          this.reInitializeMessageBuilder();
+
+        } else {
+
+          this.markMessageAsRead(message, type);
+          triggerCustomMessageReceived(message);
+        }
+
+      } else {//if the user has scrolled in chat window
+        
+        this.props.actionGenerated("newMessagesArrived", [message]);
+      }
+
+    } else if (message.hasOwnProperty("parentMessageId") === true && this.props.hasOwnProperty("parentMessageId") === true) {
+
+      if (message.parentMessageId === this.props.parentMessageId) {
+        this.markMessageAsRead(message, type);
+      }
+      
+      triggerCustomMessageReceived(message);
+
+    } else {
+
       triggerCustomMessageReceived(message);
     }
+
   }
 
   addMetadataToCustomData = (message) => {
@@ -514,7 +575,14 @@ class MessageList extends React.PureComponent {
   handleScroll = (e) => {
 
     const scrollTop = e.currentTarget.scrollTop;
-    this.lastScrollTop = this.messagesEnd.scrollHeight - scrollTop;
+    const scrollHeight = e.currentTarget.scrollHeight;
+    const clientHeight = e.currentTarget.clientHeight;
+
+    this.lastScrollTop = scrollHeight - scrollTop;
+
+    if (this.lastScrollTop === clientHeight) {
+      this.props.actionGenerated("clearUnreadMessages");
+    }
     
     const top = Math.round(scrollTop) === 0;
     if (top && this.props.messages.length) {
@@ -659,28 +727,9 @@ class MessageList extends React.PureComponent {
 
   getActionMessageComponent = (message, key) => {
 
-    let component = null;
-    if(message.message) {
-
-      component = (
-        <div css={actionMessageStyle()} className="message__action" key={key}><p css={actionMessageTxtStyle()}>{message.message}</p></div>
-      );
-
-      //if action messages are set to hide in config
-      if(this.props.messageconfig) {
-
-        const found = this.props.messageconfig.find(cfg => {
-          return (cfg.action === message.action && cfg.category === message.category);
-        });
-  
-        if(found && found.enabled === false) {
-          component = null;
-        }
-      }
-      
-    }
-
-    return component;
+    return (
+      <ActionMessage loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />
+    );
   }
   
   getComponent = (message, key) => {

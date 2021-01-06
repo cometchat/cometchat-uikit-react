@@ -28,24 +28,6 @@ export const listWrapperStyle = () => {
     }
 }
 
-export const actionMessageStyle = () => {
-
-    return {
-        padding: "8px 16px",
-        marginBottom: "16px",
-        textAlign: "center",
-    }
-}
-
-export const actionMessageTxtStyle = () => {
-
-    return {
-        fontSize: "13.5px",
-        margin: "0",
-        lineHeight: "20px",
-    }
-}
-
 export const messageDateContainerStyle = () => {
 
     return {
@@ -83,9 +65,10 @@ export const decoratorMessageTxtStyle = (props) => {
 
     return {
         margin: "0",
-        height: "30px",
+        height: "36px",
         color: `${props.theme.color.secondary}`,
         fontSize: "24px!important",
-        fontWeight: "600"
+        fontWeight: "600",
+        lineHeight: "30px",
     }
 }
