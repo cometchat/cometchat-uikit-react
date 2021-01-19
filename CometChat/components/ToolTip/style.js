@@ -17,7 +17,7 @@ export const messageActionStyle = (props) => {
     return {
         position: "absolute",
         zIndex: "1",
-        display: "none",
+        display: "flex",
         listStyleType: "none",
         padding: "8px",
         margin: "0",

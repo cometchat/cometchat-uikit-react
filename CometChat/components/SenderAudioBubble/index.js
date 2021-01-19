@@ -1,6 +1,7 @@
 import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
+import PropTypes from 'prop-types';
 
 import { checkMessageForExtensionsData } from "../../util/common";
 
@@ -17,6 +18,8 @@ import {
   messageReactionsWrapperStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
+
 class SenderAudioBubble extends React.Component {
 
   messageFrom = "sender";
@@ -24,9 +27,11 @@ class SenderAudioBubble extends React.Component {
   constructor(props) {
 
     super(props);
+
     const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
     this.state = {
-      message: message
+      message: message,
+      isHovering: false
     }
   }
 
@@ -40,6 +45,17 @@ class SenderAudioBubble extends React.Component {
       const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
       this.setState({ message: message })
     }
+  }
+
+  handleMouseHover = () => {
+    this.setState(this.toggleHoverState);
+  }
+
+  toggleHoverState = (state) => {
+
+    return {
+      isHovering: !state.isHovering,
+    };
   }
 
   render() {
@@ -57,11 +73,19 @@ class SenderAudioBubble extends React.Component {
       }
     }
 
+    let toolTipView = null;
+    if (this.state.isHovering) {
+      toolTipView = (<ToolTip {...this.props} message={this.state.message} />);
+    }
+
     return (
-      <div css={messageContainerStyle()} className="sender__message__container message__audio">
+      <div 
+      css={messageContainerStyle()} 
+      className="sender__message__container message__audio"
+      onMouseEnter={this.handleMouseHover}
+      onMouseLeave={this.handleMouseHover}>
 
-        <ToolTip {...this.props} message={this.state.message} />
-
+        {toolTipView}
         <div css={messageWrapperStyle()} className="message__wrapper">
           <div css={messageAudioWrapperStyle(this.props)} className="message__audio__wrapper">
             <audio controls>
@@ -79,6 +103,17 @@ class SenderAudioBubble extends React.Component {
       </div>
     )
   }
+}
+
+// Specifies the default values for props:
+SenderAudioBubble.defaultProps = {
+  theme: theme,
+  message: {}
+};
+
+SenderAudioBubble.propTypes = {
+  theme: PropTypes.object,
+  message: PropTypes.object
 }
 
 export default SenderAudioBubble;

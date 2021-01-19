@@ -57,17 +57,42 @@ class Translator {
 
     static getDefaultLanguage = () => {
 
-        let language = this.getLanguage();
-        if (language) {
+        //get the language from localstorage
+        const savedLanguage = this.getLanguage();
 
-            return (translations.hasOwnProperty(language)) ? language : this.defaultLanguage;
+        //get the language set in the browser
+        const browserLanguageCode = Translator.getBrowserLanguage().toLowerCase();
+        let browserLanguage = browserLanguageCode;
+
+        //check if the language set in the browser has hyphen(-), if yes split and take the first element of the array
+        if (browserLanguageCode !== "zh-tw" && browserLanguageCode.indexOf("-") !== -1) {
+
+            const browserLanguageArray = browserLanguageCode.split("-");
+            browserLanguage = browserLanguageArray[0];
+        }
+
+        //if there is language set in localstorage and it is different from browser language, update local storage and return the language code
+        if (savedLanguage) {
+
+            if (savedLanguage !== browserLanguage) {
+
+                this.setLanguage(browserLanguage);
+                
+                //if the translations are not available, default to en
+                return (translations.hasOwnProperty(browserLanguage)) ? browserLanguage : this.defaultLanguage;
+                
+            } else {
+
+                //if the translations are not available, default to en
+                return (translations.hasOwnProperty(browserLanguage)) ? browserLanguage : this.defaultLanguage;
+            }
 
         } else {
 
-            let language = this.getBrowserLanguage().toLowerCase();
-            this.setLanguage(language);
-            
-            return language;
+            this.setLanguage(browserLanguage);
+
+            //if the translations are not available, default to en
+            return (translations.hasOwnProperty(browserLanguage)) ? browserLanguage : this.defaultLanguage;
         }
     }
 

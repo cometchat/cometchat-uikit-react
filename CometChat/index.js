@@ -20,7 +20,9 @@ export { default as MessageThread } from "./components/MessageThread";
 
 export { default as CometChatUnified } from "./components/CometChatUnified";
 
-export { default as CallAlert } from "./components/CallAlert";
-export { default as CallScreen } from "./components/CallScreen";
+export { default as CometChatIncomingCall } from "./components/CometChatIncomingCall";
+export { default as CometChatOutgoingCall } from "./components/CometChatOutgoingCall";
+
+export { default as CometChatIncomingMessage } from "./components/CometChatIncomingMessage";
 
 export { default as ImageView } from "./components/ImageView";

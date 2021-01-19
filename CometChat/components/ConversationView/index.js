@@ -171,6 +171,12 @@ class ConversationView extends React.Component {
         message = (lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? `${sender} ${whiteboardMessage}` : `${whiteboardMessage}`;
       }
       break;
+      case enums.CUSTOM_TYPE_MEETING: {
+
+        const meetingMessage = Translator.translate("VIDEO_CALL", this.props.lang);
+        message = `${sender} ${meetingMessage}`;
+      }
+        break;
       default:
       break;
     }

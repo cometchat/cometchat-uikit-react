@@ -58,8 +58,6 @@ class CometChatGroupList extends React.Component {
     this.GroupListManager = new GroupListManager();
     this.getGroups();
     this.GroupListManager.attachListeners(this.groupUpdated);
-
-    window.addEventListener('languagechange', this.setState({ lang: Translator.getLanguage() }));
   }
 
   componentDidUpdate(prevProps) {

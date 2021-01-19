@@ -205,5 +205,7 @@ export const ButtonStyle = (props, action) => {
         outline: "0",
         border: "0",
         width: "45%",
+        textOverflow: "ellipsis",
+        overflow: "hidden",
     }
 }

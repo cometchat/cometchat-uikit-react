@@ -3,17 +3,13 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 import PropTypes from 'prop-types';
-
 import { CometChat } from "@cometchat-pro/chat";
-
-import { CometChatManager } from "../../util/controller";
 
 import CometChatUserList from "../CometChatUserList";
 import CometChatMessageListScreen from "../CometChatMessageListScreen";
 import CometChatUserDetail from "../CometChatUserDetail";
 import MessageThread from "../MessageThread";
-import CallAlert from "../CallAlert";
-import CallScreen from "../CallScreen";
+import CometChatIncomingCall from "../CometChatIncomingCall";
 import ImageView from "../ImageView";
 
 import {
@@ -46,12 +42,18 @@ class CometChatUserListScreen extends React.Component {
       threadmessageparent: {},
       composedthreadmessage: {},
       incomingCall: null,
-      outgoingCall: null,
-      callmessage: {},
       sidebarview: false,
       imageView: null,
       lang: props.lang
     }
+
+    this.messageScreenRef = React.createRef();
+
+    CometChat.getLoggedInUser().then((user) => {
+      this.loggedInUser = user;
+    }).catch((error) => {
+      console.log("[CometChatUnified] getLoggedInUser error", error);
+    });
   }
   
   componentDidMount() {
@@ -59,13 +61,6 @@ class CometChatUserListScreen extends React.Component {
     if(!Object.keys(this.state.item).length) {
       this.toggleSideBar();
     }
-
-    new CometChatManager().getLoggedInUser().then((user) => {
-      this.loggedInUser = user;
-    }).catch((error) => {
-      console.log("[CometChatUnified] getLoggedInUser error", error);
-
-    });
   }
 
   componentDidUpdate(prevProps) {
@@ -96,12 +91,6 @@ class CometChatUserListScreen extends React.Component {
       case "unblockUser":
         this.unblockUser();
       break;
-      case "audioCall":
-        this.audioCall();
-      break;
-      case "videoCall":
-        this.videoCall();
-      break;
       case "viewDetail":
       case "closeDetailClicked":
         this.toggleDetailView();
@@ -124,23 +113,11 @@ class CometChatUserListScreen extends React.Component {
       case "threadMessageComposed":
         this.onThreadMessageComposed(item);
       break;
-      case "acceptIncomingCall":
-        this.acceptIncomingCall(item);
-        break;
       case "acceptedIncomingCall":
-        this.callInitiated(item);
+        this.acceptedIncomingCall(item);
         break;
       case "rejectedIncomingCall":
         this.rejectedIncomingCall(item, count);
-        break;
-      case "outgoingCallRejected":
-      case "outgoingCallCancelled":
-      case "callEnded":
-        this.outgoingCallEnded(item);
-        break;
-      case "userJoinedCall":
-      case "userLeftCall":
-        //this.appendCallMessage(item);
         break;
       case "viewActualImage":
         this.toggleImageView(item);
@@ -170,7 +147,7 @@ class CometChatUserListScreen extends React.Component {
   blockUser = () => {
 
     let usersList = [this.state.item.uid];
-    CometChatManager.blockUsers(usersList).then(list => {
+    CometChat.blockUsers(usersList).then(list => {
 
         this.setState({item: {...this.state.item, blockedByMe: true}});
 
@@ -183,61 +160,12 @@ class CometChatUserListScreen extends React.Component {
   unblockUser = () => {
     
     let usersList = [this.state.item.uid];
-    CometChatManager.unblockUsers(usersList).then(list => {
+    CometChat.unblockUsers(usersList).then(list => {
 
         this.setState({item: {...this.state.item, blockedByMe: false}});
 
       }).catch(error => {
       console.log("unblocking user fails with error", error);
-    });
-
-  }
-
-  audioCall = () => {
-
-    let receiverId, receiverType;
-    if(this.state.type === "user") {
-
-      receiverId = this.state.item.uid;
-      receiverType = CometChat.RECEIVER_TYPE.USER;
-
-    } else if(this.state.type === "group") {
-
-      receiverId = this.state.item.guid;
-      receiverType = CometChat.RECEIVER_TYPE.GROUP;
-    }
-
-    CometChatManager.call(receiverId, receiverType, CometChat.CALL_TYPE.AUDIO).then(call => {
-
-      this.appendCallMessage(call);
-      this.setState({ outgoingCall: call });
-
-    }).catch(error => {
-      console.log("Call initialization failed with exception:", error);
-    });
-
-  }
-
-  videoCall = () => {
-
-    let receiverId, receiverType;
-    if(this.state.type === "user") {
-
-      receiverId = this.state.item.uid;
-      receiverType = CometChat.RECEIVER_TYPE.USER;
-
-    } else if(this.state.type === "group") {
-      receiverId = this.state.item.guid;
-      receiverType = CometChat.RECEIVER_TYPE.GROUP;
-    }
-   
-    CometChatManager.call(receiverId, receiverType, CometChat.CALL_TYPE.VIDEO).then(call => {
-
-      this.appendCallMessage(call);
-      this.setState({ outgoingCall: call });
-
-    }).catch(error => {
-      console.log("Call initialization failed with exception:", error);
     });
 
   }
@@ -286,16 +214,15 @@ class CometChatUserListScreen extends React.Component {
     this.setState({composedthreadmessage: message});
   }
 
-  acceptIncomingCall = (call) => {
-
-    this.setState({ incomingCall: call });
+  acceptedIncomingCall = (call) => {
 
     const type = call.receiverType;
-    const id = (type === "user") ? call.sender.uid : call.receiverId;
+    const id = call.receiverId;
 
     CometChat.getConversation(id, type).then(conversation => {
 
       this.itemClicked(conversation.conversationWith, type);
+      this.setState({ incomingCall: call });
 
     }).catch(error => {
 
@@ -304,45 +231,11 @@ class CometChatUserListScreen extends React.Component {
 
   }
 
-  callInitiated = (message) => {
-    this.appendCallMessage(message);
-  }
-
   rejectedIncomingCall = (incomingCallMessage, rejectedCallMessage) => {
 
-    let receiverType = incomingCallMessage.receiverType;
-    let receiverId = (receiverType === "user") ? incomingCallMessage.sender.uid : incomingCallMessage.receiverId;
-
-    //marking the incoming call message as read
-    if (incomingCallMessage.hasOwnProperty("readAt") === false) {
-      CometChat.markAsRead(incomingCallMessage.id, receiverId, receiverType);
+    if (this.messageScreenRef) {
+      this.messageScreenRef.rejectedIncomingCall(incomingCallMessage, rejectedCallMessage);
     }
-
-    //updating unreadcount in chats list
-    this.setState({ messageToMarkRead: incomingCallMessage });
-
-    let item = this.state.item;
-    let type = this.state.type;
-
-    receiverType = rejectedCallMessage.receiverType;
-    receiverId = rejectedCallMessage.receiverId;
-
-    if ((type === 'group' && receiverType === 'group' && receiverId === item.guid)
-      || (type === 'user' && receiverType === 'user' && receiverId === item.uid)) {
-
-      this.appendCallMessage(rejectedCallMessage);
-    }
-  }
-
-  outgoingCallEnded = (message) => {
-
-    this.setState({ outgoingCall: null, incomingCall: null });
-    this.appendCallMessage(message);
-  }
-
-  appendCallMessage = (call) => {
-
-    this.setState({ callmessage: call });
   }
 
   toggleImageView = (message) => {
@@ -383,15 +276,18 @@ class CometChatUserListScreen extends React.Component {
     
     let messageScreen = null;
     if(Object.keys(this.state.item).length) {
-      messageScreen = (<CometChatMessageListScreen
+      messageScreen = (
+      <CometChatMessageListScreen
+      ref={(el) => { this.messageScreenRef = el; }}
       theme={this.props.theme}
       item={this.state.item} 
       tab={this.state.tab}
       type={this.state.type}
       composedthreadmessage={this.state.composedthreadmessage}
-      callmessage={this.state.callmessage}
       loggedInUser={this.loggedInUser}
       lang={this.state.lang}
+      parentComponent="users"
+      incomingCall={this.state.incomingCall}
       actionGenerated={this.actionHandler} />);
     }
 
@@ -415,20 +311,11 @@ class CometChatUserListScreen extends React.Component {
         <div css={userScreenMainStyle(this.state)} className="contacts__main">{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
-        <CallAlert
-        theme={this.props.theme}
-        lang={this.state.lang}
-        actionGenerated={this.actionHandler} />
-        <CallScreen
-        theme={this.props.theme}
-        item={this.state.item} 
-        type={this.state.type}
-        incomingCall={this.state.incomingCall}
-        outgoingCall={this.state.outgoingCall}
-        loggedInUser={this.loggedInUser}
-        lang={this.state.lang}
-        actionGenerated={this.actionHandler} />
         {imageView}
+        <CometChatIncomingCall
+        theme={this.props.theme}
+        lang={this.state.lang}
+        actionGenerated={this.actionHandler} />
       </div>
     );
   }

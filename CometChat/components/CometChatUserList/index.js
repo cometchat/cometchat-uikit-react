@@ -48,10 +48,6 @@ class CometChatUserList extends React.PureComponent {
 
   componentDidMount() {
 
-    window.addEventListener('languagechange', () => {
-      this.setState({ lang: Translator.getLanguage() });
-    });
-
     if(this.props.hasOwnProperty("friendsOnly")) {
       this.friendsOnly = this.props.friendsOnly;
     }

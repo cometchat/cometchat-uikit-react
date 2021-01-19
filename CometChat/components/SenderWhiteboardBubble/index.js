@@ -37,7 +37,8 @@ class SenderWhiteboardBubble extends React.PureComponent {
         const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
 
         this.state = {
-            message: message
+            message: message,
+            isHovering: false
         }
     }
 
@@ -68,6 +69,17 @@ class SenderWhiteboardBubble extends React.PureComponent {
         }
     }
 
+    handleMouseHover = () => {
+        this.setState(this.toggleHoverState);
+    }
+
+    toggleHoverState = (state) => {
+
+        return {
+            isHovering: !state.isHovering,
+        };
+    }
+
     render() {
 
         let messageReactions = null;
@@ -83,11 +95,20 @@ class SenderWhiteboardBubble extends React.PureComponent {
             }
         }
 
+        let toolTipView = null;
+        if (this.state.isHovering) {
+            toolTipView = (<ToolTip {...this.props} message={this.state.message} />);
+        }
+
         const documentTitle = Translator.translate("CREATED_WHITEBOARD", this.props.lang); 
         return (
-            <div css={messageContainerStyle()} className="sender__message__container message__document">
+            <div 
+            css={messageContainerStyle()} 
+            className="sender__message__container message__document"
+            onMouseEnter={this.handleMouseHover}
+            onMouseLeave={this.handleMouseHover}>
 
-                <ToolTip {...this.props} message={this.state.message} />
+                {toolTipView}
                     
                 <div css={messageWrapperStyle()} className="message__wrapper">
                     <div css={messageTxtWrapperStyle(this.props)} className="message__whiteboard__wrapper">

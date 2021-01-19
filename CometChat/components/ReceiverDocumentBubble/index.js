@@ -3,6 +3,7 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 import PropTypes from 'prop-types';
+import { CometChat } from "@cometchat-pro/chat";
 
 import { checkMessageForExtensionsData } from "../../util/common";
 
@@ -43,7 +44,7 @@ class ReceiverDocumentBubble extends React.PureComponent {
         super(props);
         
         const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
-        if (message.receiverType === 'group') {
+        if (message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
             if (!message.sender.avatar) {
 
@@ -55,7 +56,8 @@ class ReceiverDocumentBubble extends React.PureComponent {
         }
 
         this.state = {
-            message: message
+            message: message,
+            isHovering: false
         }
     }
 
@@ -69,6 +71,17 @@ class ReceiverDocumentBubble extends React.PureComponent {
             const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
             this.setState({ message: message })
         }
+    }
+
+    handleMouseHover = () => {
+        this.setState(this.toggleHoverState);
+    }
+
+    toggleHoverState = (state) => {
+
+        return {
+            isHovering: !state.isHovering,
+        };
     }
 
     launchCollaborativeDocument = () => {
@@ -87,7 +100,7 @@ class ReceiverDocumentBubble extends React.PureComponent {
     render() {
 
         let avatar = null, name = null;
-        if (this.state.message.receiverType === 'group') {
+        if (this.state.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
             avatar = (
                 <div css={messageThumbnailStyle} className="message__thumbnail">
@@ -113,16 +126,25 @@ class ReceiverDocumentBubble extends React.PureComponent {
             }
         }
 
+        let toolTipView = null;
+        if (this.state.isHovering) {
+            toolTipView = (<ToolTip {...this.props} message={this.state.message} name={name} />);
+        }
+
         const documentTitle = `${this.state.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_DOCUMENT", this.props.lang)}`;
 
         return (
-            <div css={messageContainerStyle()} className="receiver__message__container message__document">
+            <div 
+            css={messageContainerStyle()} 
+            className="receiver__message__container message__document"
+            onMouseEnter={this.handleMouseHover}
+            onMouseLeave={this.handleMouseHover}>
 
                 <div css={messageWrapperStyle()} className="message__wrapper">
                     {avatar}
                     <div css={messageDetailStyle()} className="message__details">
                         {name}
-                        <ToolTip {...this.props} message={this.state.message} name={name} />
+                        {toolTipView}
                         <div css={messageTxtContainerStyle()} className="message__document__container">
                             <div css={messageTxtWrapperStyle(this.props)} className="message__document__wrapper">
                                 <div css={messageTxtTitleStyle(this.props)} className="message__document__title">

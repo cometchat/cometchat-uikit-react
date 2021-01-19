@@ -3,7 +3,6 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 import PropTypes from 'prop-types';
-
 import { CometChat } from "@cometchat-pro/chat";
 
 import { checkMessageForExtensionsData } from "../../util/common";
@@ -48,7 +47,7 @@ class ReceiverPollBubble extends React.Component {
         super(props);
 
         const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
-        if (message.receiverType === 'group') {
+        if (message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
             if (!message.sender.avatar) {
 
@@ -60,7 +59,8 @@ class ReceiverPollBubble extends React.Component {
         }
 
         this.state = {
-            message: message
+            message: message,
+            isHovering: false
         }
     }
 
@@ -90,6 +90,17 @@ class ReceiverPollBubble extends React.Component {
         });
     }
 
+    handleMouseHover = () => {
+        this.setState(this.toggleHoverState);
+    }
+
+    toggleHoverState = (state) => {
+
+        return {
+            isHovering: !state.isHovering,
+        };
+    }
+
     render() {
 
         if (!this.props.message.hasOwnProperty("metadata")) {
@@ -109,7 +120,7 @@ class ReceiverPollBubble extends React.Component {
         }
 
         let avatar = null, name = null;
-        if (this.props.message.receiverType === 'group') {
+        if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
             avatar = (
                 <div css={messageThumbnailStyle} className="message__thumbnail">
@@ -175,14 +186,23 @@ class ReceiverPollBubble extends React.Component {
             }
         }
 
+        let toolTipView = null;
+        if (this.state.isHovering) {
+            toolTipView = (<ToolTip {...this.props} message={this.state.message} name={name} />);
+        }
+
         return (
-            <div css={messageContainerStyle()} className="receiver__message__container message__poll">
+            <div 
+            css={messageContainerStyle()} 
+            className="receiver__message__container message__poll"
+            onMouseEnter={this.handleMouseHover}
+            onMouseLeave={this.handleMouseHover}>
 
                 <div css={messageWrapperStyle()} className="message__wrapper">
                     {avatar}
                     <div css={messageDetailStyle()} className="message__details">
                         {name}
-                        <ToolTip {...this.props} message={this.state.message} name={name} />    
+                        {toolTipView}
                         <div css={messageTxtContainerStyle()} className="message__poll__container">
                             <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
                                 <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
