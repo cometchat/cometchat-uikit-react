@@ -11,6 +11,9 @@ import MessageHeader from "../MessageHeader";
 import MessageList from "../MessageList";
 import MessageComposer from "../MessageComposer";
 import LiveReaction from "../LiveReaction";
+import CometChatIncomingCall from "../CometChatIncomingCall";
+import CometChatOutgoingCall from "../CometChatOutgoingCall";
+import CometChatDirectCall from "../CometChatDirectCall";
 
 import { theme } from "../../resources/theme";
 
@@ -45,6 +48,9 @@ class CometChatMessageListScreen extends React.PureComponent {
       messageToReact: null,
       lang: props.lang,
       unreadMessages: [],
+      outgoingCall: null,
+      startDirectCall: false,
+      joinDirectCall: false
     }
 
     CometChat.getLoggedInUser().then(user => this.loggedInUser = user).catch((error) => {
@@ -53,13 +59,16 @@ class CometChatMessageListScreen extends React.PureComponent {
 
     this.composerRef = React.createRef();
     this.messageListRef = React.createRef();
+    this.outgoingCallRef = React.createRef();
     
     this.reactionName = props.reaction;
     this.audio = new Audio(incomingMessageAlert);
   }
 
   componentDidMount() {
-    window.addEventListener('languagechange', this.setState({ lang: Translator.getLanguage() }));
+    if (this.props.incomingCall) {
+      this.setState({ incomingCall: this.props.incomingCall });
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -80,10 +89,6 @@ class CometChatMessageListScreen extends React.PureComponent {
 
       this.updateReplyCount(this.props.composedthreadmessage);
 
-    } else if(prevProps.callmessage !== this.props.callmessage) {
-
-      this.actionHandler("callUpdated", this.props.callmessage);
-
     } else if (prevProps.groupmessage !== this.props.groupmessage) {
 
       if (validateWidgetSettings(this.props.widgetsettings, "hide_join_leave_notifications") !== true) {
@@ -93,6 +98,18 @@ class CometChatMessageListScreen extends React.PureComponent {
 
     if (prevProps.lang !== this.props.lang) {
       this.setState({ lang: this.props.lang });
+    }
+
+    if (prevProps.incomingCall !== this.props.incomingCall && this.props.incomingCall) {
+      this.setState({ incomingCall: this.props.incomingCall });
+    }
+
+    if (prevProps.newMessage !== this.props.newMessage) {
+      this.appendMessage(this.props.newMessage);
+    }
+
+    if (prevProps.newCallMessage !== this.props.newCallMessage) {
+      this.appendCallMessage(this.props.newCallMessage);
     }
   }
 
@@ -186,7 +203,7 @@ class CometChatMessageListScreen extends React.PureComponent {
         this.groupUpdated(messages, key, group, options);
       break;
       case "callUpdated":
-        this.callUpdated(messages);
+        this.appendCallMessage(messages);
       break;
       case "pollAnswered": 
         this.updatePollMessage(messages)
@@ -198,7 +215,11 @@ class CometChatMessageListScreen extends React.PureComponent {
         this.props.actionGenerated("viewActualImage", messages);
       break;
       case "audioCall":
+        this.audioCall();
+        break;
       case "videoCall":
+        this.videoCall();
+        break;
       case "viewDetail":
       case "menuClicked":
         this.props.actionGenerated(action);
@@ -218,9 +239,151 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "translateMessage":
         this.translateMessage(messages);
         break;
+      case "acceptedIncomingCall":
+        this.acceptedIncomingCall(messages);
+        break;
+      case "rejectedIncomingCall":
+        this.rejectedIncomingCall(messages, key);
+        break;
+      case "userJoinedCall":
+      case "userLeftCall":
+        this.appendCallMessage(messages);
+        break;
+      case "outgoingCallRejected":
+      case "callError":
+        this.updateCallState();
+        break;
+      case "outgoingCallCancelled":
+      case "callEnded":
+        this.updateCallState();
+        this.appendCallMessage(messages);
+        break;
+      case "joinDirectCall":{
+        
+        //if used in a chat widget, trigger the event
+        if (Object.keys(this.props.widgetsettings).length) {
+          this.props.actionGenerated("joinDirectCall", messages);
+        } else {
+          this.setState({ joinDirectCall: true });
+        }
+      }
+        break;
+      case "directCallEnded":
+        this.setState({ startDirectCall: false, joinDirectCall: false });
+        break;
       default:
       break;
     }
+  }
+
+  acceptedIncomingCall = (call) => {
+    this.setState({ incomingCall: call });
+  }
+
+  rejectedIncomingCall = (incomingCallMessage, rejectedCallMessage) => {
+
+    let receiverType = incomingCallMessage.receiverType;
+    let receiverId = incomingCallMessage.receiverId;
+
+    //marking the incoming call message as read
+    if (incomingCallMessage.hasOwnProperty("readAt") === false) {
+      CometChat.markAsRead(incomingCallMessage.id, receiverId, receiverType);
+    }
+
+    //updating unreadcount in chats list
+    this.props.actionGenerated("messageToMarkRead", incomingCallMessage);
+
+    let item = this.props.item;
+    let type = this.props.type;
+
+    receiverType = rejectedCallMessage.receiverType;
+    receiverId = rejectedCallMessage.receiverId;
+
+    if (type === CometChat.RECEIVER_TYPE.USER && receiverType === CometChat.RECEIVER_TYPE.USER && receiverId === item.uid) {
+      this.appendCallMessage(rejectedCallMessage);
+    }
+  }
+
+  updateCallState = () => {
+    this.setState({ outgoingCall: null, incomingCall: null, directCall: false });
+  }
+  
+  getReceiverDetails = () => {
+
+    let receiverId;
+    let receiverType;
+
+    if (this.props.type === "user") {
+
+      receiverId = this.props.item.uid;
+      receiverType = CometChat.RECEIVER_TYPE.USER;
+
+    } else if (this.props.type === "group") {
+
+      receiverId = this.props.item.guid;
+      receiverType = CometChat.RECEIVER_TYPE.GROUP;
+    }
+
+    return { "receiverId": receiverId, "receiverType": receiverType };
+  }
+
+  audioCall = () => {
+
+    const { receiverId, receiverType } = this.getReceiverDetails();
+
+    const call = new CometChat.Call(receiverId, CometChat.CALL_TYPE.AUDIO, receiverType);
+    CometChat.initiateCall(call).then(outgoingCall => {
+
+      //when this component is part of chat widget trigger an event.. (outgoingcall component is used separately in chat widget)
+      if (Object.keys(this.props.widgetsettings).length) {
+        this.props.actionGenerated("startAudioCall", outgoingCall);
+      } else {
+        this.setState({ outgoingCall: outgoingCall });
+      }
+
+      this.appendCallMessage(outgoingCall);
+
+    }).catch(error => {
+
+      console.log("Call initialization failed with exception:", error);
+    });
+  }
+
+  videoCall = () => {
+
+    if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
+
+      if (Object.keys(this.props.widgetsettings).length) {
+        this.props.actionGenerated("startDirectCall");
+      } else {
+        this.toggleDirectCall(true);
+      }
+
+      return;
+    }
+
+    const { receiverId, receiverType } = this.getReceiverDetails();
+
+    const call = new CometChat.Call(receiverId, CometChat.CALL_TYPE.VIDEO, receiverType);
+    CometChat.initiateCall(call).then(outgoingCall => {
+
+      //when this component is part of chat widget trigger an event.. (outgoingcall component is used separately in chat widget)
+      if (Object.keys(this.props.widgetsettings).length) {
+        this.props.actionGenerated("startVideoCall", outgoingCall);
+      } else {
+        this.setState({ outgoingCall: outgoingCall });
+      }
+
+      this.appendCallMessage(outgoingCall);
+
+    }).catch(error => {
+
+      console.log("Call initialization failed with exception:", error);
+    });
+  }
+
+  toggleDirectCall = (flag) => {
+    this.setState({ startDirectCall: flag });
   }
 
   toggleReaction = (flag) => {
@@ -472,7 +635,7 @@ class CometChatMessageListScreen extends React.PureComponent {
     this.props.actionGenerated("groupUpdated", message, key, group, options);
   }
 
-  callUpdated = (message) => {
+  appendCallMessage = (message) => {
 
     //if call actions messages are disabled in chat widget
     if (validateWidgetSettings(this.props.widgetsettings, "show_call_notifications") === false) {
@@ -577,37 +740,83 @@ class CometChatMessageListScreen extends React.PureComponent {
         </div>
       );
     }
-    
-    return (
-      <div css={chatWrapperStyle(this.props.theme)} className="main__chat" dir={Translator.getDirection(this.state.lang)}>
-        <MessageHeader 
-        sidebar={this.props.sidebar}
-        theme={this.props.theme}
+
+    //if messagelistscreen component is used as standalone component
+    let incomingCallView = null;
+    if (this.props.parentComponent.trim().length === 0) {
+      incomingCallView = (<CometChatIncomingCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />);
+    }
+
+    //don't include it when opened in chat widget
+    let directCallView = null;
+    if (Object.keys(this.props.widgetsettings).length === 0 && (this.state.startDirectCall || this.state.joinDirectCall)) {
+
+      const open = this.state.startDirectCall || this.state.joinDirectCall;
+      directCallView = (
+        <CometChatDirectCall 
+        open={open} 
+        close={() => this.actionHandler("directCallEnded")}
+        theme={this.props.theme} 
         item={this.props.item} 
         type={this.props.type} 
-        lang={this.state.lang}
-        viewdetail={this.props.viewdetail === false ? false : true}
-        audiocall={this.props.audiocall === false ? false : true}
-        videocall={this.props.videocall === false ? false : true}
-        widgetsettings={this.props.widgetsettings}
-        loggedInUser={this.loggedInUser}
-        actionGenerated={this.actionHandler} />
-        <MessageList
-        ref={(el) => { this.messageListRef = el; }}
+        callType={CometChat.CALL_TYPE.VIDEO}
+        joinDirectCall={this.state.joinDirectCall}
+        actionGenerated={this.actionHandler}  />
+      );
+    }
+
+    //don't include it when opened in chat widget
+    let outgoingCallView = null;
+    if (Object.keys(this.props.widgetsettings).length === 0) {
+      outgoingCallView = (
+        <CometChatOutgoingCall
+        ref={(el) => { this.outgoingCallRef = el; }}
         theme={this.props.theme}
-        messages={this.state.messageList} 
-        item={this.props.item} 
+        item={this.props.item}
         type={this.props.type}
         lang={this.state.lang}
-        scrollToBottom={this.state.scrollToBottom}
-        messageconfig={this.props.messageconfig}
-        widgetsettings={this.props.widgetsettings}
-        widgetconfig={this.props.widgetconfig}
+        incomingCall={this.state.incomingCall}
+        outgoingCall={this.state.outgoingCall}
+        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
-        {liveReactionView}
-        {messageComposer}
-        {newMessageIndicator}
-      </div>
+      );
+    }
+    
+    return (
+      <React.Fragment>
+        <div css={chatWrapperStyle(this.props.theme)} className="main__chat" dir={Translator.getDirection(this.state.lang)}>
+          <MessageHeader 
+          sidebar={this.props.sidebar}
+          theme={this.props.theme}
+          item={this.props.item} 
+          type={this.props.type} 
+          lang={this.state.lang}
+          viewdetail={this.props.viewdetail === false ? false : true}
+          audiocall={this.props.audiocall === false ? false : true}
+          videocall={this.props.videocall === false ? false : true}
+          widgetsettings={this.props.widgetsettings}
+          loggedInUser={this.loggedInUser}
+          actionGenerated={this.actionHandler} />
+          <MessageList
+          ref={(el) => { this.messageListRef = el; }}
+          theme={this.props.theme}
+          messages={this.state.messageList} 
+          item={this.props.item} 
+          type={this.props.type}
+          lang={this.state.lang}
+          scrollToBottom={this.state.scrollToBottom}
+          messageconfig={this.props.messageconfig}
+          widgetsettings={this.props.widgetsettings}
+          widgetconfig={this.props.widgetconfig}
+          actionGenerated={this.actionHandler} />
+          {liveReactionView}
+          {messageComposer}
+          {newMessageIndicator}
+        </div>
+        {incomingCallView}
+        {outgoingCallView}
+        {directCallView}
+      </React.Fragment>
     )
   }
 }
@@ -616,13 +825,23 @@ class CometChatMessageListScreen extends React.PureComponent {
 CometChatMessageListScreen.defaultProps = {
   lang: Translator.getDefaultLanguage(),
   theme: theme,
-  reaction: "heart"
+  reaction: "heart",
+  parentComponent: "",
+  incomingCall: null,
+  widgetsettings: {},
+  newMessage: {},
+  newCallMessage: {}
 };
 
 CometChatMessageListScreen.propTypes = {
   lang: PropTypes.string,
   theme: PropTypes.object,
-  reaction: PropTypes.string
+  reaction: PropTypes.string,
+  parentComponent: PropTypes.string,
+  incomingCall: PropTypes.object,
+  widgetsettings: PropTypes.object,
+  newMessage: PropTypes.object,
+  newCallMessage: PropTypes.object
 }
 
 export default CometChatMessageListScreen;

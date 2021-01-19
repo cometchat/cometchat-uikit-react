@@ -19,7 +19,9 @@ import {
   messageReactionsWrapperStyle
 } from "./style";
 
+import Translator from "../../resources/localization/translator";
 import { theme } from "../../resources/theme";
+
 import blueFile from "./resources/senderfile.png";
 
 class SenderFileBubble extends React.Component {
@@ -33,7 +35,8 @@ class SenderFileBubble extends React.Component {
     const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
 
     this.state = {
-      message: message
+      message: message,
+      isHovering: false
     }
   }
 
@@ -47,6 +50,17 @@ class SenderFileBubble extends React.Component {
       const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
       this.setState({ message: message })
     }
+  }
+
+  handleMouseHover = () => {
+    this.setState(this.toggleHoverState);
+  }
+
+  toggleHoverState = (state) => {
+
+    return {
+      isHovering: !state.isHovering,
+    };
   }
 
   render() {
@@ -64,10 +78,19 @@ class SenderFileBubble extends React.Component {
       }
     }
 
-    return (
-      <div css={messageContainerStyle()} className="sender__message__container message__file">
+    let toolTipView = null;
+    if (this.state.isHovering) {
+      toolTipView = (<ToolTip {...this.props} message={this.state.message} />);
+    }
 
-        <ToolTip {...this.props} message={this.state.message} />
+    return (
+      <div 
+      css={messageContainerStyle()} 
+      className="sender__message__container message__file"
+      onMouseEnter={this.handleMouseHover}
+      onMouseLeave={this.handleMouseHover}>
+
+        {toolTipView}
           
         <div css={messageWrapperStyle()} className="message__wrapper">
           <div css={messageFileWrapper(this.props)} className="message__file__wrapper">
@@ -91,6 +114,7 @@ class SenderFileBubble extends React.Component {
 
 // Specifies the default values for props:
 SenderFileBubble.defaultProps = {
+  lang: Translator.getDefaultLanguage(),
   theme: theme
 };
 

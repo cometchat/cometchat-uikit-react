@@ -40,7 +40,8 @@ class SenderMessageBubble extends React.PureComponent {
 
     this.state = {
       message: message,
-      translatedMessage: ""
+      translatedMessage: "",
+      isHovering: false
     }
   }
 
@@ -52,7 +53,7 @@ class SenderMessageBubble extends React.PureComponent {
     if (previousMessageStr !== currentMessageStr) {
 
       const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-      this.setState({ message: message })
+      this.setState({ message: message, translatedMessage: "" })
     }
   }
 
@@ -114,7 +115,7 @@ class SenderMessageBubble extends React.PureComponent {
 
     const messageId = message.id;
     const messageText = message.text;
-    const translateToLanguage = Translator.getDefaultLanguage();
+    const translateToLanguage = Translator.getBrowserLanguage();
 
     let translatedMessage = "";
 
@@ -146,6 +147,17 @@ class SenderMessageBubble extends React.PureComponent {
     });
   }
 
+  handleMouseHover = () => {
+    this.setState(this.toggleHoverState);
+  }
+
+  toggleHoverState = (state) => {
+
+    return {
+      isHovering: !state.isHovering,
+    };
+  }
+
   render() {
 
     let messageText = this.getMessageText();
@@ -173,10 +185,19 @@ class SenderMessageBubble extends React.PureComponent {
       }
     }
 
+    let toolTipView = null;
+    if (this.state.isHovering) {
+      toolTipView = (<ToolTip {...this.props} message={this.state.message} translateMessage={this.translateMessage} />);
+    }
+
     return (
-      <div css={messageContainerStyle()} className="sender__message__container message__text">
+      <div 
+      css={messageContainerStyle()} 
+      className="sender__message__container message__text"
+      onMouseEnter={this.handleMouseHover}
+      onMouseLeave={this.handleMouseHover}>
         
-        <ToolTip {...this.props} message={this.state.message} translateMessage={this.translateMessage} />
+        {toolTipView}
         <div css={messageWrapperStyle()} className="message__wrapper">{messageText}</div>
         
         {messageReactions}

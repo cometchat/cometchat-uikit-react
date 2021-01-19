@@ -38,7 +38,8 @@ class SenderImageBubble extends React.PureComponent {
     this.state = {
       message: message,
       imageUrl: srcIcon,
-      fullScreenView: false
+      fullScreenView: false,
+      isHovering: false
     }
   }
 
@@ -158,6 +159,17 @@ class SenderImageBubble extends React.PureComponent {
     this.props.actionGenerated("viewActualImage", this.state.message);
   }
 
+  handleMouseHover = () => {
+    this.setState(this.toggleHoverState);
+  }
+
+  toggleHoverState = (state) => {
+
+    return {
+      isHovering: !state.isHovering,
+    };
+  }
+
   render() {
 
     let messageReactions = null;
@@ -173,10 +185,19 @@ class SenderImageBubble extends React.PureComponent {
       }
     }
 
-    return (
-      <div css={messageContainerStyle()} className="sender__message__container message__image">
+    let toolTipView = null;
+    if (this.state.isHovering) {
+      toolTipView = (<ToolTip {...this.props} message={this.state.message} />);
+    }
 
-        <ToolTip {...this.props} message={this.state.message} />
+    return (
+      <div 
+      css={messageContainerStyle()} 
+      className="sender__message__container message__image"
+      onMouseEnter={this.handleMouseHover}
+      onMouseLeave={this.handleMouseHover}>
+
+        {toolTipView}
           
         <div css={messageWrapperStyle()} className="message__wrapper">
           <div css={messageImgWrapper(this.props)} onClick={this.open} className="message__img__wrapper">

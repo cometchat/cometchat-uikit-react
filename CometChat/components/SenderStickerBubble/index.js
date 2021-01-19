@@ -33,6 +33,7 @@ class SenderStickerBubble extends React.Component {
         const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
         this.state = {
             message: message,
+            isHovering: false
         }
     }
 
@@ -46,6 +47,17 @@ class SenderStickerBubble extends React.Component {
             const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
             this.setState({ message: message })
         }
+    }
+
+    handleMouseHover = () => {
+        this.setState(this.toggleHoverState);
+    }
+
+    toggleHoverState = (state) => {
+
+        return {
+            isHovering: !state.isHovering,
+        };
     }
 
     render() {
@@ -75,24 +87,31 @@ class SenderStickerBubble extends React.Component {
             }
         }
 
+        let toolTipView = null;
+        if (this.state.isHovering) {
+            toolTipView = (<ToolTip {...this.props} message={this.state.message} />);
+        }
+
         return (
-            <React.Fragment>
-                <div css={messageContainerStyle()} className="sender__message__container message__sticker">
-                    
-                    <ToolTip {...this.props} message={this.state.message} />
-
-                    <div css={messageWrapperStyle()} className="message__wrapper">
-                        <div css={messageImgWrapper(this.props)} className="message__img__wrapper">{stickerImg} </div>
-                    </div>
-
-                    {messageReactions}
-
-                    <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                        <ReplyCount {...this.props} message={this.state.message} />
-                        <ReadReciept {...this.props} message={this.state.message} />
-                    </div>
+            <div 
+            css={messageContainerStyle()} 
+            className="sender__message__container message__sticker"
+            onMouseEnter={this.handleMouseHover}
+            onMouseLeave={this.handleMouseHover}>
+                
+                {toolTipView}
+                
+                <div css={messageWrapperStyle()} className="message__wrapper">
+                    <div css={messageImgWrapper(this.props)} className="message__img__wrapper">{stickerImg} </div>
                 </div>
-            </React.Fragment>
+
+                {messageReactions}
+
+                <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+                    <ReplyCount {...this.props} message={this.state.message} />
+                    <ReadReciept {...this.props} message={this.state.message} />
+                </div>
+            </div>
         )
     }
 }

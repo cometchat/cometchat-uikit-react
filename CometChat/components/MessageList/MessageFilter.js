@@ -25,6 +25,7 @@ class MessageFilter {
             [enums.CUSTOM_TYPE_STICKER]: enums.CUSTOM_TYPE_STICKER,
             [enums.CUSTOM_TYPE_DOCUMENT]: enums.CUSTOM_TYPE_DOCUMENT,
             [enums.CUSTOM_TYPE_WHITEBOARD]: enums.CUSTOM_TYPE_WHITEBOARD,
+            [enums.CUSTOM_TYPE_MEETING]: enums.CUSTOM_TYPE_MEETING,
             [enums.ACTION_TYPE_GROUPMEMBER]: enums.ACTION_TYPE_GROUPMEMBER,
             [enums.CALL_TYPE_AUDIO]: enums.CALL_TYPE_AUDIO,
             [enums.CALL_TYPE_VIDEO]: enums.CALL_TYPE_VIDEO

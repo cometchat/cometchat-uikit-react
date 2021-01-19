@@ -177,6 +177,10 @@
   "SELECT_VIDEO_SOURCE": "حدد مصدر الفيديو",
   "SELECT_INPUT_AUDIO_SOURCE": "حدد مصدر صوت الإدخال",
   "SELECT_OUTPUT_AUDIO_SOURCE": "حدد مصدر الصوت الناتج",
+  "INITIATED_GROUP_CALL": "بدأت مكالمة جماعية",
+  "YOU_INITIATED_GROUP_CALL": "لقد بدأت مكالمة جماعية",
+  "IGNORE": "تجاهل",
+  "ON_ANOTHER_CALL": "هو على مكالمة أخرى",
   "CALLS": "المكالمات",
   "CUSTOM_MESSAGE_LOCATION": "📍 الموقع",
   "OFFLINE": "غير متصل",

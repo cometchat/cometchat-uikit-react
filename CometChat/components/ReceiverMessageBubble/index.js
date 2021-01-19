@@ -1,11 +1,10 @@
 import React from "react";
-import twemoji from "twemoji";
-import ReactHtmlParser from "react-html-parser";
-import PropTypes from 'prop-types';
 
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
-
+import twemoji from "twemoji";
+import ReactHtmlParser from "react-html-parser";
+import PropTypes from 'prop-types';
 import { CometChat } from "@cometchat-pro/chat";
 
 
@@ -44,7 +43,7 @@ class ReceiverMessageBubble extends React.Component {
     super(props);
 
     const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
-    if (message.receiverType === 'group') {
+    if (message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
       if (!message.sender.avatar) {
 
@@ -57,7 +56,8 @@ class ReceiverMessageBubble extends React.Component {
 
     this.state = {
       message: message,
-      translatedMessage: ""
+      translatedMessage: "",
+      isHovering: false
     }
   }
 
@@ -69,7 +69,7 @@ class ReceiverMessageBubble extends React.Component {
     if (previousMessageStr !== currentMessageStr) {
 
       const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-      this.setState({ message: message })
+      this.setState({ message: message, translatedMessage: "" })
     }
   }
 
@@ -132,7 +132,7 @@ class ReceiverMessageBubble extends React.Component {
 
     const messageId = message.id;
     const messageText = message.text;
-    const translateToLanguage = Translator.getDefaultLanguage();
+    const translateToLanguage = Translator.getBrowserLanguage();
 
     let translatedMessage = "";
 
@@ -141,8 +141,6 @@ class ReceiverMessageBubble extends React.Component {
       "text": messageText,
       "languages": [translateToLanguage]
     }).then(result => {
-
-      console.log("translateMessage result", result);
 
       if (result.hasOwnProperty("language_original") && result["language_original"] !== translateToLanguage) {
 
@@ -160,16 +158,25 @@ class ReceiverMessageBubble extends React.Component {
 
     }).catch(error => {
       // Some error occured
-
       console.log("translateMessage error", error);
-
     });
+  }
+
+  handleMouseHover = () => {
+    this.setState(this.toggleHoverState);
+  }
+
+  toggleHoverState = (state) => {
+
+    return {
+      isHovering: !state.isHovering,
+    };
   }
 
   render() {
 
     let avatar = null, name = null;
-    if (this.state.message.receiverType === 'group') {
+    if (this.state.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
       avatar = (
         <div css={messageThumbnailStyle()} className="message__thumbnail">
@@ -206,14 +213,23 @@ class ReceiverMessageBubble extends React.Component {
       }
     }
 
+    let toolTipView = null;
+    if (this.state.isHovering) {
+      toolTipView = (<ToolTip {...this.props} message={this.state.message} name={name} translateMessage={this.translateMessage} />);
+    }
+
     return (
-      <div css={messageContainerStyle()} className="receiver__message__container message__text">
+      <div 
+      css={messageContainerStyle()} 
+      className="receiver__message__container message__text"
+      onMouseEnter={this.handleMouseHover}
+      onMouseLeave={this.handleMouseHover}>
         
         <div css={messageWrapperStyle()} className="message__wrapper">
           {avatar}
           <div css={messageDetailStyle()} className="message__details">
             {name}
-            <ToolTip {...this.props} message={this.state.message} name={name} translateMessage={this.translateMessage} />
+            {toolTipView}
             <div css={messageTxtContainerStyle()} className="message__text__container">{messageText}</div>
 
             {messageReactions}

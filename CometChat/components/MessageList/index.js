@@ -29,6 +29,8 @@ import SenderDocumentBubble from "../SenderDocumentBubble";
 import ReceiverDocumentBubble from "../ReceiverDocumentBubble";
 import SenderWhiteboardBubble from "../SenderWhiteboardBubble";
 import ReceiverWhiteboardBubble from "../ReceiverWhiteboardBubble";
+import SenderDirectCallBubble from "../SenderDirectCallBubble";
+import ReceiverDirectCallBubble from "../ReceiverDirectCallBubble";
 
 import CallMessage from "../CallMessage";
 import ActionMessage from "../ActionMessage";
@@ -248,8 +250,6 @@ class MessageList extends React.PureComponent {
       if (messageKey > -1) {
 
         const messageObj = messageList[messageKey];
-        console.log("onMessageEdited messageObj", messageObj, "message", message);
-
         const newMessageObj = Object.assign({}, messageObj, message);
 
         messageList.splice(messageKey, 1, newMessageObj);
@@ -417,28 +417,28 @@ class MessageList extends React.PureComponent {
   customMessageReceived = (message) => {
 
     //new messages
-    if (this.props.type === 'group'
-      && message.getReceiverType() === 'group'
+    if (this.props.type === CometChat.RECEIVER_TYPE.GROUP
+      && message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
       && this.loggedInUser.uid === message.getSender().uid && message.getReceiverId() === this.props.item.guid
       && (message.type === enums.CUSTOM_TYPE_DOCUMENT || message.type === enums.CUSTOM_TYPE_WHITEBOARD)) {
 
       //showing collaborative document and whiteboard for sender (custom message received listener for sender)
       this.props.actionGenerated("customMessageReceived", [message]);
 
-    } else if (this.props.type === 'group'
-    && message.getReceiverType() === 'group'
+    } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP
+    && message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
     && message.getReceiverId() === this.props.item.guid) {
 
       this.customMessageReceivedHandler(message, "group");
 
-    } else if (this.props.type === 'user'
-    && message.getReceiverType() === 'user'
+    } else if (this.props.type === CometChat.RECEIVER_TYPE.USER
+    && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER
     && message.getSender().uid === this.props.item.uid) {
 
       this.customMessageReceivedHandler(message, "user");
 
-    } else if (this.props.type === 'user'
-    && message.getReceiverType() === 'user'
+    } else if (this.props.type === CometChat.RECEIVER_TYPE.USER
+    && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER
     && this.loggedInUser.uid === message.getSender().uid && message.getReceiverId() === this.props.item.uid
     && (message.type === enums.CUSTOM_TYPE_DOCUMENT || message.type === enums.CUSTOM_TYPE_WHITEBOARD)) {
 
@@ -531,12 +531,12 @@ class MessageList extends React.PureComponent {
 
   callUpdated = (message) => {
 
-    if (validateWidgetSettings(this.props.widgetsettings, "show_call_notifications") === false) {
-      return false;
-    }
+    // if (validateWidgetSettings(this.props.widgetsettings, "show_call_notifications") === false) {
+    //   return false;
+    // }
     
-    if (this.props.type === 'group'
-      && message.getReceiverType() === 'group'
+    if (this.props.type === CometChat.RECEIVER_TYPE.GROUP
+      && message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
       && message.getReceiverId() === this.props.item.guid) {
 
       if (!message.getReadAt()) {
@@ -545,8 +545,8 @@ class MessageList extends React.PureComponent {
       
       this.props.actionGenerated("callUpdated", message);
 
-    } else if (this.props.type === 'user'
-      && message.getReceiverType() === 'user'
+    } else if (this.props.type === CometChat.RECEIVER_TYPE.USER
+      && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER
       && message.getSender().uid === this.props.item.uid) {
 
       if (!message.getReadAt()) {
@@ -682,6 +682,9 @@ class MessageList extends React.PureComponent {
           break; 
         case enums.CUSTOM_TYPE_WHITEBOARD:
           component = <SenderWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
+          break; 
+        case enums.CUSTOM_TYPE_MEETING:
+          component = <SenderDirectCallBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break;
         default:
           break;
@@ -710,6 +713,9 @@ class MessageList extends React.PureComponent {
           break;
         case enums.CUSTOM_TYPE_WHITEBOARD:
           component = <ReceiverWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
+          break;
+        case enums.CUSTOM_TYPE_MEETING:
+          component = <ReceiverDirectCallBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />;
           break;
         default:
           break;

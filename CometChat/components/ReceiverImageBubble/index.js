@@ -3,6 +3,7 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
 import PropTypes from 'prop-types';
+import { CometChat } from "@cometchat-pro/chat";
 
 import { checkMessageForExtensionsData } from "../../util/common";
 import { SvgAvatar } from '../../util/svgavatar';
@@ -42,7 +43,7 @@ class ReceiverImageBubble extends React.PureComponent {
     this.imgRef = React.createRef();
 
     const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
-    if (message.receiverType === 'group') {
+    if (message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
       if (!message.sender.avatar) {
 
@@ -55,7 +56,8 @@ class ReceiverImageBubble extends React.PureComponent {
 
     this.state = {
       message: message,
-      imageUrl: srcIcon
+      imageUrl: srcIcon,
+      isHovering: false
     }
   }
 
@@ -174,10 +176,21 @@ class ReceiverImageBubble extends React.PureComponent {
     this.props.actionGenerated("viewActualImage", this.state.message);
   }
 
+  handleMouseHover = () => {
+    this.setState(this.toggleHoverState);
+  }
+
+  toggleHoverState = (state) => {
+
+    return {
+      isHovering: !state.isHovering,
+    };
+  }
+
   render() {
 
     let avatar = null, name = null;
-    if (this.props.message.receiverType === 'group') {
+    if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
       avatar = (
         <div css={messageThumbnailStyle()} className="message__thumbnail">
@@ -203,14 +216,23 @@ class ReceiverImageBubble extends React.PureComponent {
       }
     }
 
+    let toolTipView = null;
+    if (this.state.isHovering) {
+      toolTipView = (<ToolTip {...this.props} message={this.state.message} name={name} />);
+    }
+
     return (
-      <div css={messageContainerStyle()} className="receiver__message__container message__image">
+      <div 
+      css={messageContainerStyle()} 
+      className="receiver__message__container message__image"
+      onMouseEnter={this.handleMouseHover}
+      onMouseLeave={this.handleMouseHover}>
         
         <div css={messageWrapperStyle()} className="message__wrapper">
           {avatar}
           <div css={messageDetailStyle(name)} className="message__details">
             {name}
-            <ToolTip {...this.props} message={this.state.message} name={name} />
+            {toolTipView}
             <div css={messageImgContainerStyle()} className="message__image__container">
               <div css={messageImgWrapperStyle(this.props)} onClick={this.open} className="message__image__wrapper">
                 <img src={this.state.imageUrl} alt={this.state.imageUrl} ref={el => { this.imgRef = el; }} />

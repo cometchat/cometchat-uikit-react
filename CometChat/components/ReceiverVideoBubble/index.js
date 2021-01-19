@@ -3,6 +3,7 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
 import PropTypes from 'prop-types';
+import { CometChat } from "@cometchat-pro/chat";
 
 import { checkMessageForExtensionsData } from "../../util/common";
 import { SvgAvatar } from '../../util/svgavatar';
@@ -36,7 +37,7 @@ class ReceiverVideoBubble extends React.Component {
     super(props);
 
     const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
-    if (message.receiverType === 'group') {
+    if (message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
       if (!message.sender.avatar) {
 
@@ -48,7 +49,8 @@ class ReceiverVideoBubble extends React.Component {
     }
 
     this.state = {
-      message: message
+      message: message,
+      isHovering: false
     }
   }
 
@@ -64,10 +66,21 @@ class ReceiverVideoBubble extends React.Component {
     }
   }
 
+  handleMouseHover = () => {
+    this.setState(this.toggleHoverState);
+  }
+
+  toggleHoverState = (state) => {
+
+    return {
+      isHovering: !state.isHovering,
+    };
+  }
+
   render() {
 
     let avatar = null, name = null;
-    if (this.props.message.receiverType === 'group') {
+    if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
       if (!this.props.message.sender.avatar) {
 
@@ -101,14 +114,23 @@ class ReceiverVideoBubble extends React.Component {
       }
     }
 
+    let toolTipView = null;
+    if (this.state.isHovering) {
+      toolTipView = (<ToolTip {...this.props} message={this.state.message} name={name} /> );
+    }
+
     return (
-      <div css={messageContainerStyle()} className="receiver__message__container message__video">
+      <div 
+      css={messageContainerStyle()} 
+      className="receiver__message__container message__video"
+      onMouseEnter={this.handleMouseHover}
+      onMouseLeave={this.handleMouseHover}>
 
         <div css={messageWrapperStyle()} className="message__wrapper">
           {avatar}
           <div css={messageDetailStyle(name)} className="message__details">
             {name}
-            <ToolTip {...this.props} message={this.state.message} name={name} /> 
+            {toolTipView}
             <div css={messageVideoContainerStyle()} className="message__video__container">
               <div css={messageVideoWrapperStyle(this.props)} className="message__video__wrapper">
                 <video controls>

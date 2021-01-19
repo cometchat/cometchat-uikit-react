@@ -66,8 +66,6 @@ class CometChatConversationList extends React.Component {
     this.ConversationListManager = new ConversationListManager();
     this.getConversations();
     this.ConversationListManager.attachListeners(this.conversationUpdated);
-
-    window.addEventListener('languagechange', this.setState({ lang: Translator.getLanguage() }));
   }
 
   componentDidUpdate(prevProps) {
@@ -161,8 +159,8 @@ class CometChatConversationList extends React.Component {
           let lastMessageObj = this.makeLastMessage(message, conversationObj);
           
           let newConversationObj = { ...conversationObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount };
-          conversationList.splice(conversationKey, 1);
-          conversationList.unshift(newConversationObj);
+          conversationList.splice(conversationKey, 1, newConversationObj);
+          //conversationList.unshift(newConversationObj);
           this.setState({ conversationlist: conversationList });
 
         }

@@ -42,6 +42,7 @@ export const CUSTOM_TYPE_POLL = "extension_poll";
 export const CUSTOM_TYPE_STICKER = "extension_sticker";
 export const CUSTOM_TYPE_DOCUMENT = "extension_document";
 export const CUSTOM_TYPE_WHITEBOARD = "extension_whiteboard";
+export const CUSTOM_TYPE_MEETING = "meeting";
 
 export const CATEGORY_ACTION = "action";
 export const ACTION_TYPE_GROUPMEMBER = "groupMember";
@@ -55,3 +56,8 @@ export const LIVE_REACTION_KEY = "live_reaction";
 export const LIVE_REACTIONS = { "heart": "./resources/heart.png", "thumbsup": "👍", "clap": "👏", "wink": "😉" };
 export const MAX_MESSAGE_COUNT = 100;
 export const LOCALE_KEY = "cometchat:locale";
+
+
+
+export const CHAT_WITH_USER = "user";
+export const CHAT_WITH_GROUP = "group";

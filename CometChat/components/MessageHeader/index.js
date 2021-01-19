@@ -230,7 +230,7 @@ class MessageHeader extends React.Component {
   render() {
 
     let image, presence;
-    if(this.props.type === "user") {
+    if (this.props.type === enums.CHAT_WITH_USER) {
 
       if(!this.props.item.avatar) {
 
@@ -284,7 +284,7 @@ class MessageHeader extends React.Component {
       viewDetailBtn = null;
     }
 
-    if(this.props.item.blockedByMe === true || this.props.audiocall === false) {
+    if (this.props.item.blockedByMe === true || this.props.audiocall === false || this.props.type === enums.CHAT_WITH_GROUP) {
       audioCallBtn = null;
     }
 
@@ -335,12 +335,16 @@ class MessageHeader extends React.Component {
 // Specifies the default values for props:
 MessageHeader.defaultProps = {
   lang: Translator.getDefaultLanguage(),
-  theme: theme
+  theme: theme,
+  item: {},
+  type: ""
 };
 
 MessageHeader.propTypes = {
   lang: PropTypes.string,
-  theme: PropTypes.object
+  theme: PropTypes.object,
+  item: PropTypes.object,
+  type: PropTypes.string
 }
 
 export default MessageHeader;

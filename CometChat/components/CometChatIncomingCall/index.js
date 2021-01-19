@@ -3,13 +3,11 @@ import React from "react";
 /** @jsx jsx */
 import { jsx, keyframes } from "@emotion/core";
 import PropTypes from 'prop-types';
-
 import { CometChat } from "@cometchat-pro/chat";
 
-import { CometChatManager } from "../../util/controller";
 import * as enums from '../../util/enums.js';
 import { validateWidgetSettings } from "../../util/common";
-import Translator from "../../resources/localization/translator";
+
 import Avatar from "../Avatar";
 import { SvgAvatar } from '../../util/svgavatar';
 
@@ -27,11 +25,14 @@ import {
     ButtonStyle
 } from "./style";
 
+import { theme } from "../../resources/theme";
+import Translator from "../../resources/localization/translator";
+
 import audioCallIcon from "./resources/incomingaudiocall.png";
 import videoCallIcon from "./resources/incomingvideocall.png";
-import { incomingCallAlert } from "../../resources/audio/";
+import { incomingCallAlert } from "../../resources/audio";
 
-class CallAlert extends React.PureComponent {
+class CometChatIncomingCall extends React.PureComponent {
 
     constructor(props) {
 
@@ -98,6 +99,7 @@ class CallAlert extends React.PureComponent {
     incomingCallReceived = (incomingCall) => {
 
         const activeCall = CometChat.getActiveCall();
+        console.log("incomingCallReceived activeCall", activeCall);
         //if there is another call in progress
         if (activeCall) {
 
@@ -149,8 +151,8 @@ class CallAlert extends React.PureComponent {
     rejectCall = () => {
 
         this.pauseIncomingAlert();
-        CometChatManager.rejectCall(this.state.incomingCall.sessionId, CometChat.CALL_STATUS.REJECTED).then(rejectedCall => {
-
+        CometChat.rejectCall(this.state.incomingCall.sessionId, CometChat.CALL_STATUS.REJECTED).then(rejectedCall => {
+            
             this.props.actionGenerated("rejectedIncomingCall", this.state.incomingCall, rejectedCall);
             this.setState({ incomingCall: null });
 
@@ -163,9 +165,32 @@ class CallAlert extends React.PureComponent {
 
     acceptCall = () => {
         
-        this.setState({ incomingCall: null, callInProgress: this.props.callInProgress });
         this.pauseIncomingAlert();
-        this.props.actionGenerated("acceptIncomingCall", this.state.incomingCall);
+        CometChat.acceptCall(this.state.incomingCall.sessionId).then(call => {
+
+            if (call.receiver.hasOwnProperty("uid") && call.receiver.hasOwnProperty("avatar") === false) {
+
+                const uid = call.receiver.uid;
+                const char = call.receiver.name.charAt(0).toUpperCase();
+
+                call.receiver.avatar = SvgAvatar.getAvatar(uid, char);
+
+            } else if (call.receiver.hasOwnProperty("guid") && call.receiver.hasOwnProperty("icon") === false) {
+
+                const guid = call.receiver.guid;
+                const char = call.receiver.name.charAt(0).toUpperCase();
+
+                call.receiver.icon = SvgAvatar.getAvatar(guid, char);
+            }
+
+            this.props.actionGenerated("acceptedIncomingCall", call);
+            this.setState({ incomingCall: null });
+
+        }).catch(error => {
+
+            this.props.actionGenerated("callError", error);
+            this.setState({ incomingCall: null });
+        });
     }
 
     render() {
@@ -212,12 +237,14 @@ class CallAlert extends React.PureComponent {
 }
 
 // Specifies the default values for props:
-CallAlert.defaultProps = {
+CometChatIncomingCall.defaultProps = {
     lang: Translator.getDefaultLanguage(),
+    theme: theme
 };
 
-CallAlert.propTypes = {
+CometChatIncomingCall.propTypes = {
     lang: PropTypes.string,
+    theme: PropTypes.object
 }
 
-export default CallAlert;
+export default CometChatIncomingCall;
