@@ -223,7 +223,7 @@ class CometChatCreatePoll extends React.Component {
                             </tbody>
                             <tfoot css={tableFootStyle(this.props)}>
                                 <tr className="createpoll">
-                                    <td colSpan="2"><button onClick={this.createPoll}>{Translator.translate("CREATE", this.props.lang)}</button></td>
+                                    <td colSpan="2"><button type="button" onClick={this.createPoll}>{Translator.translate("CREATE", this.props.lang)}</button></td>
                                 </tr>
                             </tfoot>
                         </table>

@@ -61,3 +61,13 @@ export const LOCALE_KEY = "cometchat:locale";
 
 export const CHAT_WITH_USER = "user";
 export const CHAT_WITH_GROUP = "group";
+
+export const ACTIONS = {
+    MESSAGE_SENT: "messageSent",
+    MESSAGE_COMPOSED: "messageComposed",
+    ERROR_IN_SENDING_MESSAGE: "errorInSendingMessage",
+    ACCEPT_DIRECT_CALL: "acceptDirectCall",
+    JOIN_DIRECT_CALL: "joinDirectCall",
+    START_DIRECT_CALL: "startDirectCall",
+    END_DIRECT_CALL: "endDirectCall"
+}

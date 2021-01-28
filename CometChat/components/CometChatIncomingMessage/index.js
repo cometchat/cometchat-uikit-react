@@ -3,8 +3,6 @@ import React from "react";
 /** @jsx jsx */
 import { jsx, keyframes } from "@emotion/core";
 import PropTypes from 'prop-types';
-import { CometChat } from "@cometchat-pro/chat";
-
 
 import Avatar from "../Avatar";
 import * as enums from '../../util/enums.js';
@@ -36,7 +34,7 @@ class CometChatIncomingMessage extends React.PureComponent {
     constructor(props) {
 
         super(props);
-
+        this._isMounted = false;
         this.state = {
             incomingMessage: null,
         }
@@ -46,8 +44,14 @@ class CometChatIncomingMessage extends React.PureComponent {
 
     componentDidMount() {
 
+        this._isMounted = true;
+
         this.MessageAlertManager = new messageAlertManager();
         this.MessageAlertManager.attachListeners(this.messageListenerCallback);
+    }
+
+    componentWillUnmount() {
+        this._isMounted = false;
     }
 
     playIncomingAlert = () => {
@@ -93,18 +97,21 @@ class CometChatIncomingMessage extends React.PureComponent {
 
     incomingMessageReceived = (message) => {
 
-        if (message.receiverType !== CometChat.RECEIVER_TYPE.GROUP && message.type !== enums.CUSTOM_TYPE_MEETING) {
-            return false;
-        }
+        if (this._isMounted) {
 
-        this.playIncomingAlert();
-        this.setState({ incomingMessage: message });
+            if (message.type !== enums.CUSTOM_TYPE_MEETING) {
+                return false;
+            }
+
+            this.playIncomingAlert();
+            this.setState({ incomingMessage: message });
+        }
     }
 
     joinDirectCall = () => {
 
         this.pauseIncomingAlert();
-        this.props.actionGenerated("joinDirectCall", { ...this.state.incomingMessage });
+        this.props.actionGenerated(enums.ACTIONS["ACCEPT_DIRECT_CALL"], { ...this.state.incomingMessage });
         this.setState({ incomingMessage: null });
     }
 
@@ -145,8 +152,8 @@ class CometChatIncomingMessage extends React.PureComponent {
                             {avatar}
                         </div>
                         <div css={headerButtonStyle()} className="callalert__buttons">
-                            <button css={ButtonStyle(this.props, 0)} className="button button__ignore" onClick={this.ignoreCall}>{Translator.translate("IGNORE", this.props.lang)}</button>
-                            <button css={ButtonStyle(this.props, 1)} className="button button__join" onClick={this.joinDirectCall}>{Translator.translate("JOIN", this.props.lang)}</button>
+                            <button type="button" css={ButtonStyle(this.props, 0)} className="button button__ignore" onClick={this.ignoreCall}>{Translator.translate("IGNORE", this.props.lang)}</button>
+                            <button type="button" css={ButtonStyle(this.props, 1)} className="button button__join" onClick={this.joinDirectCall}>{Translator.translate("JOIN", this.props.lang)}</button>
                         </div>
                     </div>
                 </div>

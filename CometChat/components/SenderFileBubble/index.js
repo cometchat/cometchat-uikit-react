@@ -83,6 +83,31 @@ class SenderFileBubble extends React.Component {
       toolTipView = (<ToolTip {...this.props} message={this.state.message} />);
     }
 
+    let fileMessage = null;
+    if (this.state.message.data.hasOwnProperty("attachments") && this.state.message.data.attachments.length) {
+      
+      const fileName = this.state.message.data.attachments[0].name;
+      const fileUrl = this.state.message.data.attachments[0].url;
+
+      fileMessage = (
+        <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="message__file">
+          <img src={blueFile} alt="file" />
+          <p>{fileName}</p>
+        </a>
+      );
+
+    } else {
+
+      const fileName = this.state.message.data.name || "";
+
+      fileMessage = (
+        <div className="message__file">
+          <img src={blueFile} alt="file" />
+          <p>{fileName}</p>
+        </div>
+      );
+    }
+
     return (
       <div 
       css={messageContainerStyle()} 
@@ -93,12 +118,7 @@ class SenderFileBubble extends React.Component {
         {toolTipView}
           
         <div css={messageWrapperStyle()} className="message__wrapper">
-          <div css={messageFileWrapper(this.props)} className="message__file__wrapper">
-            <a href={this.props.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">
-              <img src={blueFile} alt="file" />
-              <p>{this.props.message.data.attachments[0].name} </p>
-            </a>
-          </div>
+          <div css={messageFileWrapper(this.props)} className="message__file__wrapper">{fileMessage}</div>
         </div>
 
         {messageReactions}

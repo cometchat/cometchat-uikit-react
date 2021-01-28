@@ -38,6 +38,7 @@ export const messageAudioWrapperStyle = (props) => {
         ' > audio': {
             maxWidth: "250px",
             display: "inherit",
+            outline: "none",        
         }
     }
 }

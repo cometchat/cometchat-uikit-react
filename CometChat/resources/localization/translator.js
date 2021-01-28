@@ -3,8 +3,6 @@ import * as enums from "../../util/enums.js";
 import translationAR from "./locales/ar/translation.json";
 import translationDE from "./locales/de/translation.json";
 import translationEN from "./locales/en/translation.json";
-import translationENGB from "./locales/en-gb/translation.json";
-import translationENUS from "./locales/en-us/translation.json";
 import translationES from "./locales/es/translation.json";
 import translationFR from "./locales/fr/translation.json";
 import translationHI from "./locales/hi/translation.json";
@@ -19,8 +17,6 @@ const translations = {
     "ar": translationAR,
     "de": translationDE,
     "en": translationEN,
-    "en-gb": translationENGB,
-    "en-us": translationENUS,
     "es": translationES,
     "fr": translationFR,
     "hi": translationHI,

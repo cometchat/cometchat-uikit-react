@@ -38,6 +38,11 @@ class Tooltip extends React.PureComponent {
 
   render() {
 
+    //don't show the tooltip while the message is being sent
+    if (this.props.message.hasOwnProperty("sentAt") === false) {
+      return false;
+    }
+
     let reactToMessage = (
       <li css={actionGroupStyle(this.props)} className="action__group">
         <button

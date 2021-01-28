@@ -14,6 +14,7 @@ import LiveReaction from "../LiveReaction";
 import CometChatIncomingCall from "../CometChatIncomingCall";
 import CometChatOutgoingCall from "../CometChatOutgoingCall";
 import CometChatDirectCall from "../CometChatDirectCall";
+import CometChatIncomingMessage from "../CometChatIncomingMessage";
 
 import { theme } from "../../resources/theme";
 
@@ -104,8 +105,19 @@ class CometChatMessageListScreen extends React.PureComponent {
       this.setState({ incomingCall: this.props.incomingCall });
     }
 
-    if (prevProps.newMessage !== this.props.newMessage) {
-      this.appendMessage(this.props.newMessage);
+    //workaround for chat widget, append directcall custom message 
+    const previousMessage = JSON.stringify(prevProps.newMessage);
+    const newMessage = JSON.stringify(this.props.newMessage);
+
+    if (previousMessage !== newMessage) {
+
+      const message = this.props.newMessage[0];
+      if (message.hasOwnProperty("_composedAt")) {
+        this.appendMessage(this.props.newMessage);
+        this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], this.props.newMessage);
+      } else {
+        this.messageSent(message);
+      }
     }
 
     if (prevProps.newCallMessage !== this.props.newCallMessage) {
@@ -130,11 +142,12 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "customMessageReceived":
       case "messageReceived": {
 
-        const message = messages[0];
+        const message = messages[0]; 
         if(message.parentMessageId) {
-          this.updateReplyCount(messages);
-        } else {
 
+          this.updateReplyCount(messages);
+
+        } else {
           this.smartReplyPreview(messages);
           this.appendMessage(messages);
         }
@@ -145,11 +158,15 @@ class CometChatMessageListScreen extends React.PureComponent {
       case "messageRead":
         this.props.actionGenerated(action, messages);
       break;
-      case "messageComposed": {
+      case enums.ACTIONS["MESSAGE_COMPOSED"]: {
         this.appendMessage(messages);
-        this.props.actionGenerated("messageComposed", messages);
+        this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], messages);
         break;
       }
+      case enums.ACTIONS["MESSAGE_SENT"]:
+      case enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"]:
+        this.messageSent(messages);
+        break;
       case "onMessageReadAndDelivered":
         this.updateMessages(messages);
       break;
@@ -258,18 +275,32 @@ class CometChatMessageListScreen extends React.PureComponent {
         this.updateCallState();
         this.appendCallMessage(messages);
         break;
-      case "joinDirectCall":{
-        
-        //if used in a chat widget, trigger the event
+      case enums.ACTIONS["ACCEPT_DIRECT_CALL"]:
+        this.setState({ joinDirectCall: true });
+        break;
+      case enums.ACTIONS["JOIN_DIRECT_CALL"]: {
+
+        //if used in a chat widget, trigger the event to the app component cos directcall component is included outside of iframe
         if (Object.keys(this.props.widgetsettings).length) {
-          this.props.actionGenerated("joinDirectCall", messages);
+          this.props.actionGenerated(action, messages);
         } else {
+          this.props.actionGenerated(action, messages);
           this.setState({ joinDirectCall: true });
         }
+
       }
         break;
-      case "directCallEnded":
-        this.setState({ startDirectCall: false, joinDirectCall: false });
+      case enums.ACTIONS["END_DIRECT_CALL"]: {
+
+        //if used in a chat widget, trigger the event to the app component cos directcall component is included outside of iframe
+        if (Object.keys(this.props.widgetsettings).length) {
+          this.props.actionGenerated(action, messages);
+        } else {
+          this.props.actionGenerated(action);
+          this.setState({ startDirectCall: false, joinDirectCall: false });
+        }
+
+      }
         break;
       default:
       break;
@@ -354,8 +385,9 @@ class CometChatMessageListScreen extends React.PureComponent {
     if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
 
       if (Object.keys(this.props.widgetsettings).length) {
-        this.props.actionGenerated("startDirectCall");
+        this.props.actionGenerated(enums.ACTIONS["START_DIRECT_CALL"]);
       } else {
+        this.props.actionGenerated(enums.ACTIONS["START_DIRECT_CALL"]);
         this.toggleDirectCall(true);
       }
 
@@ -460,6 +492,19 @@ class CometChatMessageListScreen extends React.PureComponent {
         this.props.actionGenerated("messageEdited", [newMessageObj]);
       }
       
+    }
+  }
+
+  messageSent = (message) => {
+
+    const messageList = [...this.state.messageList];
+    let messageKey = messageList.findIndex(m => m._id === message._id);
+    if (messageKey > -1) {
+
+      const newMessageObj = { ...message };
+
+      messageList.splice(messageKey, 1, newMessageObj);
+      this.setState({ messageList: messageList, scrollToBottom: true });
     }
   }
 
@@ -616,8 +661,7 @@ class CometChatMessageListScreen extends React.PureComponent {
   //message is received or composed & sent
   appendMessage = (message) => {
 
-    let messages = [...this.state.messageList];
-    messages = messages.concat(message);
+    let messages = [...this.state.messageList, ...message];
     this.setState({ messageList: messages, scrollToBottom: true });
   }
 
@@ -718,7 +762,7 @@ class CometChatMessageListScreen extends React.PureComponent {
         <div css={messagePaneTopStyle()} className="message_pane__top">
           <div css={messagePaneBannerStyle(this.props)} className="message_pane__banner">
             <div css={messagePaneUnreadBannerStyle()} className="message_pane__unread_banner__banner" title={Translator.translate("JUMP", this.state.lang)}>
-              <button css={messagePaneUnreadBannerMessageStyle(this.props)} className="message_pane__unread_banner__msg" onClick={this.jumpToMessages}>
+              <button type="button" css={messagePaneUnreadBannerMessageStyle(this.props)} className="message_pane__unread_banner__msg" onClick={this.jumpToMessages}>
                 <span css={iconArrowDownStyle()} className="icon--arrow-down">&#x2193; </span>{messageText}
               </button>
             </div>
@@ -747,6 +791,12 @@ class CometChatMessageListScreen extends React.PureComponent {
       incomingCallView = (<CometChatIncomingCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />);
     }
 
+    //if messagelistscreen component is used as standalone component
+    let incomingMessageView = null;
+    if (this.props.parentComponent.trim().length === 0) {
+      incomingMessageView = (<CometChatIncomingMessage theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />);
+    }
+
     //don't include it when opened in chat widget
     let directCallView = null;
     if (Object.keys(this.props.widgetsettings).length === 0 && (this.state.startDirectCall || this.state.joinDirectCall)) {
@@ -758,9 +808,11 @@ class CometChatMessageListScreen extends React.PureComponent {
         close={() => this.actionHandler("directCallEnded")}
         theme={this.props.theme} 
         item={this.props.item} 
-        type={this.props.type} 
+        type={this.props.type}
+        lang={this.state.lang}
         callType={CometChat.CALL_TYPE.VIDEO}
         joinDirectCall={this.state.joinDirectCall}
+        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler}  />
       );
     }
@@ -815,6 +867,7 @@ class CometChatMessageListScreen extends React.PureComponent {
         </div>
         {incomingCallView}
         {outgoingCallView}
+        {incomingMessageView}
         {directCallView}
       </React.Fragment>
     )
@@ -829,7 +882,7 @@ CometChatMessageListScreen.defaultProps = {
   parentComponent: "",
   incomingCall: null,
   widgetsettings: {},
-  newMessage: {},
+  newMessage: [],
   newCallMessage: {}
 };
 
@@ -840,7 +893,7 @@ CometChatMessageListScreen.propTypes = {
   parentComponent: PropTypes.string,
   incomingCall: PropTypes.object,
   widgetsettings: PropTypes.object,
-  newMessage: PropTypes.object,
+  newMessage: PropTypes.array,
   newCallMessage: PropTypes.object
 }
 

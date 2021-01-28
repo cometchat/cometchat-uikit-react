@@ -276,7 +276,7 @@ class CometChatAddMembers extends React.Component {
                             <tbody css={tableBodyStyle(this.props)} onScroll={this.handleScroll}>{users}</tbody>
                             <tfoot css={tableFootStyle(this.props)}>
                                 <tr>
-                                    <td colSpan="2" className="addmembers"><button onClick={this.updateMembers}>{Translator.translate("ADD", this.props.lang)}</button></td>
+                                    <td colSpan="2" className="addmembers"><button type="button" onClick={this.updateMembers}>{Translator.translate("ADD", this.props.lang)}</button></td>
                                 </tr>
                             </tfoot>
                         </table>

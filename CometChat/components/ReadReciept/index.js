@@ -1,10 +1,9 @@
 import React from "react";
-import dateFormat from "dateformat";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 import PropTypes from 'prop-types';
 
-import { validateWidgetSettings } from "../../util/common";
+import { validateWidgetSettings, getMessageSentTime } from "../../util/common";
 
 import { msgTimestampStyle } from "./style";
 
@@ -14,6 +13,9 @@ import { theme } from "../../resources/theme";
 import blueDoubleTick from "./resources/blue-double-tick-icon.png";
 import greyDoubleTick from "./resources/grey-double-tick-icon.png";
 import greyTick from "./resources/grey-tick-icon.png";
+import sendingTick from "./resources/sending.png";
+import errorTick from "./resources/error.png";
+import { CometChat } from "@cometchat-pro/chat";
 
 class ReadReceipt extends React.PureComponent { 
 
@@ -37,18 +39,70 @@ class ReadReceipt extends React.PureComponent {
 
   render() {
 
-    let ticks, receiptText = null;
+    let ticks, receiptText = null, dateField = null;
     if(this.state.message.messageFrom === "sender") {
 
-      ticks = blueDoubleTick;
-      receiptText = "SEEN";
-      if (this.props.message.sentAt && !this.props.message.readAt && !this.props.message.deliveredAt) {
-        ticks = greyTick;
-        receiptText = "SENT";
-      } else if (this.props.message.sentAt && !this.props.message.readAt && this.props.message.deliveredAt) {
-        ticks = greyDoubleTick;
-        receiptText = "DELIVERED";
+      if (this.state.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
+
+        if (this.state.message.hasOwnProperty("error")) {
+
+          ticks = errorTick;
+          receiptText = "ERROR";
+          dateField = this.state.message._composedAt;
+
+        } else {
+
+          ticks = sendingTick;
+          receiptText = "SENDING";
+          dateField = this.state.message._composedAt;
+
+          if (this.state.message.hasOwnProperty("sentAt")) {
+
+            ticks = greyTick;
+            receiptText = "SENT";
+            dateField = this.state.message.sentAt;
+          }
+        }
+
+      } else {
+
+        if (this.state.message.hasOwnProperty("error")) {
+
+          ticks = errorTick;
+          receiptText = "ERROR";
+          dateField = this.state.message._composedAt;
+
+        } else {
+
+          ticks = sendingTick;
+          receiptText = "SENDING";
+          dateField = this.state.message._composedAt;
+
+          if (this.state.message.hasOwnProperty("sentAt")) {
+
+            ticks = greyTick;
+            receiptText = "SENT";
+            dateField = this.state.message.sentAt;
+
+            if (this.state.message.hasOwnProperty("deliveredAt")) {
+
+              ticks = greyDoubleTick;
+              receiptText = "DELIVERED";
+
+              if (this.state.message.hasOwnProperty("readAt")) {
+
+                ticks = blueDoubleTick;
+                receiptText = "SEEN";
+              }
+            }
+          }
+          
+        }
+
       }
+
+    } else {
+      dateField = this.state.message.sentAt;
     }
 
     //if delivery receipts are disabled in chat widget
@@ -58,8 +112,8 @@ class ReadReceipt extends React.PureComponent {
     
     const receipt = (ticks) ? <img src={ticks} alt={Translator.translate(receiptText, this.props.lang)} /> : null;
 
-    const messageDate = (this.state.message.sentAt * 1000);
-    const timestamp = dateFormat(messageDate, "shortTime");
+    //const messageDate = (dateField * 1000);
+    const timestamp = getMessageSentTime(dateField, this.props.lang) //dateFormat(messageDate, "shortTime");
     
     return(
       <span css={msgTimestampStyle(this.props, this.state)} className="message__timestamp">{timestamp}{receipt}</span>

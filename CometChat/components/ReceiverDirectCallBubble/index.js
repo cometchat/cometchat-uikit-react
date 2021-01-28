@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import { CometChat } from "@cometchat-pro/chat";
 
 import { checkMessageForExtensionsData } from "../../util/common";
+import * as enums from "../../util/enums.js";
 
 import ToolTip from "../ToolTip";
 import ReplyCount from "../ReplyCount";
@@ -139,7 +140,7 @@ class ReceiverDirectCallBubble extends React.Component {
                                 </div>
 
                                 <ul css={messageBtnStyle(this.props)} className="directcall__button">
-                                    <li onClick={() => this.props.actionGenerated("joinDirectCall", this.state.message)}>
+                                    <li onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.state.message)}>
                                         <p>{Translator.translate("JOIN", this.props.lang)}</p>
                                     </li>
                                 </ul>

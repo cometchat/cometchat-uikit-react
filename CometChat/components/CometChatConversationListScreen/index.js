@@ -14,6 +14,7 @@ import CometChatUserDetail from "../CometChatUserDetail";
 import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
 import CometChatIncomingCall from "../CometChatIncomingCall";
+import CometChatIncomingMessage from "../CometChatIncomingMessage";
 import ImageView from "../ImageView";
 
 import { theme } from "../../resources/theme";
@@ -54,10 +55,13 @@ class CometChatConversationListScreen extends React.Component {
       groupmessage: {},
       lastmessage: {},
       lang: props.lang,
-      unreadMessages: []
+      unreadMessages: [],
+      ongoingDirectCall: false
     }
 
     this.messageScreenRef = React.createRef();
+    this.chatListRef = React.createRef();
+    this.incomingMessageRef = React.createRef();
 
     CometChat.getLoggedInUser().then((user) => {
       this.loggedInUser = user;
@@ -158,6 +162,8 @@ class CometChatConversationListScreen extends React.Component {
         this.memberScopeChanged(item);
         break;
       case "messageComposed":
+        this.chatListRef.updateLastMessage(item[0]);
+        break;
       case "messageEdited":
       case "messageDeleted":
         this.updateLastMessage(item[0]);
@@ -167,6 +173,18 @@ class CometChatConversationListScreen extends React.Component {
         break;
       case "unreadMessages":
         this.setState({ unreadMessages: [...item] });
+        break;
+      case enums.ACTIONS["ACCEPT_DIRECT_CALL"]:
+        this.acceptDirectCall(item);
+        break;
+      case enums.ACTIONS["JOIN_DIRECT_CALL"]:
+        this.joinDirectCall(item);
+        break;
+      case enums.ACTIONS["START_DIRECT_CALL"]:
+        this.ongoingDirectCall(true);
+        break;
+      case enums.ACTIONS["END_DIRECT_CALL"]:
+        this.ongoingDirectCall(false);
         break;
       default:
       break;
@@ -326,6 +344,39 @@ class CometChatConversationListScreen extends React.Component {
     }
   }
 
+  acceptDirectCall = (call) => {
+
+    const type = call.receiverType;
+    const id = call.receiverId;
+
+    CometChat.getConversation(id, type).then(conversation => {
+
+      this.itemClicked(conversation.conversationWith, type);
+
+      if (this.messageScreenRef) {
+        this.messageScreenRef.actionHandler(enums.ACTIONS["ACCEPT_DIRECT_CALL"]);
+      }
+      this.ongoingDirectCall(true);
+
+    }).catch(error => {
+
+      console.log('error while fetching a conversation', error);
+    });
+  }
+
+  joinDirectCall = () => {
+
+    //pause alert audio and close the alert popup
+    if (this.incomingMessageRef) {
+      this.incomingMessageRef.ignoreCall();
+    }
+    this.ongoingDirectCall(true);
+  }
+
+  ongoingDirectCall = (flag) => {
+    this.setState({ ongoingDirectCall: flag });
+  }
+
   toggleImageView = (message) => {
     this.setState({ imageView: message });
   }
@@ -445,11 +496,17 @@ class CometChatConversationListScreen extends React.Component {
     if (this.state.imageView) {
       imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} lang={this.state.lang} />);
     }
+    
+    let incomingMessageView = (<CometChatIncomingMessage ref={el => this.incomingMessageRef = el} theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />);
+    if (this.state.ongoingDirectCall) {
+      incomingMessageView = null;
+    }
 
     return (
       <div css={chatScreenStyle(this.props.theme)} className="cometchat cometchat--chats" dir={Translator.getDirection(this.state.lang)}>
         <div css={chatScreenSidebarStyle(this.state, this.props.theme)} className="chats__sidebar">
           <CometChatConversationList
+          ref={el => this.chatListRef = el}
           theme={this.props.theme}
           item={this.state.item}
           type={this.state.type}
@@ -468,10 +525,8 @@ class CometChatConversationListScreen extends React.Component {
         {detailScreen}
         {threadMessageView}
         {imageView}
-        <CometChatIncomingCall
-        theme={this.props.theme}
-        lang={this.state.lang}
-        actionGenerated={this.actionHandler} />
+        <CometChatIncomingCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
+        {incomingMessageView}
       </div>
     );
   }

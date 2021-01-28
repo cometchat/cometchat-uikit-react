@@ -1,5 +1,4 @@
 import React from "react";
-import dateFormat from "dateformat";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 import PropTypes from 'prop-types';
@@ -7,7 +6,7 @@ import PropTypes from 'prop-types';
 import { CometChat } from '@cometchat-pro/chat';
 
 import * as enums from "../../util/enums.js";
-import { checkMessageForExtensionsData } from "../../util/common";
+import { checkMessageForExtensionsData, getTimeStampForLastMessage } from "../../util/common";
 
 import Avatar from "../Avatar";
 import BadgeCount from "../BadgeCount";
@@ -109,34 +108,13 @@ class ConversationView extends React.Component {
       return false;
     }
 
-    if (this.props.conversation.lastMessage.hasOwnProperty("sentAt") === false) {
+    if (this.props.conversation.lastMessage.hasOwnProperty("sentAt") === false 
+    && this.props.conversation.lastMessage.hasOwnProperty("_composedAt") === false) {
       return false;
     }
 
-    let timestamp = null;
-
-    const messageTimestamp = new Date(this.props.conversation.lastMessage.sentAt * 1000);
-    const currentTimestamp = Date.now();
-
-    const diffTimestamp = currentTimestamp - messageTimestamp;
-    
-    if (diffTimestamp < 24 * 60 * 60 * 1000) {
-
-      timestamp = dateFormat(messageTimestamp, "shortTime");
-
-    } else if (diffTimestamp < 48 * 60 * 60 * 1000) {
-
-      timestamp = Translator.translate("YESTERDAY", this.props.lang);
-
-    } else if (diffTimestamp < 7 * 24 * 60 * 60 * 1000) {
-
-      timestamp = dateFormat(messageTimestamp, "dddd").toUpperCase();
-      timestamp = Translator.translate(timestamp, this.props.lang);
-
-    } else {
-
-      timestamp = dateFormat(messageTimestamp, "dd/mm/yyyy"); 
-    }
+    let timestamp = this.props.conversation.lastMessage._composedAt || this.props.conversation.lastMessage.sentAt;
+    timestamp = getTimeStampForLastMessage(timestamp, this.props.lang);
 
     return timestamp;
   }

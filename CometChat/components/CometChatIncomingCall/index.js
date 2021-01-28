@@ -99,7 +99,7 @@ class CometChatIncomingCall extends React.PureComponent {
     incomingCallReceived = (incomingCall) => {
 
         const activeCall = CometChat.getActiveCall();
-        console.log("incomingCallReceived activeCall", activeCall);
+        
         //if there is another call in progress
         if (activeCall) {
 
@@ -224,8 +224,8 @@ class CometChatIncomingCall extends React.PureComponent {
                             </div>
                         </div>
                         <div css={headerButtonStyle()} className="callalert__buttons">
-                            <button css={ButtonStyle(this.props, 0)} className="button button__decline" onClick={this.rejectCall}>{Translator.translate("DECLINE", this.props.lang)}</button>
-                            <button css={ButtonStyle(this.props, 1)} className="button button__accept" onClick={this.acceptCall}>{Translator.translate("ACCEPT", this.props.lang)}</button>
+                            <button type="button" css={ButtonStyle(this.props, 0)} className="button button__decline" onClick={this.rejectCall}>{Translator.translate("DECLINE", this.props.lang)}</button>
+                            <button type="button" css={ButtonStyle(this.props, 1)} className="button button__accept" onClick={this.acceptCall}>{Translator.translate("ACCEPT", this.props.lang)}</button>
                         </div>
                     </div>
                 </div>

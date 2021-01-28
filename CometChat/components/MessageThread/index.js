@@ -115,7 +115,7 @@ class MessageThread extends React.PureComponent {
         }
       }
       break;
-      case "messageComposed": {
+      case enums.ACTIONS["MESSAGE_COMPOSED"]: {
 
         const replyCount = (this.state.parentMessage.hasOwnProperty("replyCount")) ? this.state.parentMessage.replyCount : 0;
         const newReplyCount = replyCount + 1;
@@ -128,6 +128,10 @@ class MessageThread extends React.PureComponent {
         this.props.actionGenerated("threadMessageComposed", messages);
       }
       break;
+      case enums.ACTIONS["MESSAGE_SENT"]:
+      case enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"]:
+        this.messageSent(messages);
+        break;
       case "onMessageReadAndDelivered":
         this.updateMessages(messages);
         break;
@@ -160,6 +164,19 @@ class MessageThread extends React.PureComponent {
         break;
       default:
       break;
+    }
+  }
+
+  messageSent = (message) => {
+
+    const messageList = [...this.state.messageList];
+    let messageKey = messageList.findIndex(m => m._id === message._id);
+    if (messageKey > -1) {
+
+      const newMessageObj = { ...message };
+
+      messageList.splice(messageKey, 1, newMessageObj);
+      this.updateMessages(messageList);
     }
   }
 
@@ -446,6 +463,7 @@ class MessageThread extends React.PureComponent {
           type={this.props.type}
           lang={this.props.lang}
           widgetsettings={this.props.widgetsettings}
+          loggedInUser={this.loggedInUser}
           parentMessageId={this.props.parentMessage.id}
           messageToBeEdited={this.state.messageToBeEdited}
           replyPreview={this.state.replyPreview}
