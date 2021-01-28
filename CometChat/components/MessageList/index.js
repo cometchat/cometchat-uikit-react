@@ -8,7 +8,6 @@ import { CometChat } from "@cometchat-pro/chat";
 
 import { MessageListManager } from "./controller";
 import * as enums from "../../util/enums.js";
-import { validateWidgetSettings } from "../../util/common";
 
 import SenderMessageBubble from "../SenderMessageBubble";
 import ReceiverMessageBubble from "../ReceiverMessageBubble";
@@ -131,7 +130,6 @@ class MessageList extends React.PureComponent {
       } else {
         this.scrollToBottom(this.lastScrollTop);
       }
-      
     }
   }
 
@@ -226,14 +224,14 @@ class MessageList extends React.PureComponent {
 
   messageDeleted = (message) => {
 
-    if (this.props.type === 'group' 
-    && message.getReceiverType() === 'group'
+    if (this.props.type === CometChat.RECEIVER_TYPE.GROUP
+    && message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
     && message.getReceiver().guid === this.props.item.guid) {
 
       this.props.actionGenerated("messageDeleted", [message]);
         
-    } else if (this.props.type === 'user' 
-    && message.getReceiverType() === 'user'
+    } else if (this.props.type === CometChat.RECEIVER_TYPE.USER
+    && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER
     && message.getSender().uid === this.props.item.uid) {
 
       this.props.actionGenerated("messageDeleted", [message]);
@@ -278,24 +276,26 @@ class MessageList extends React.PureComponent {
   onMessageReadAndDelivered = (message) => {
 
     //read receipts
-    if (message.getReceiverType() === 'user'
+    if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER
     && message.getSender().getUid() === this.props.item.uid
     && message.getReceiver() === this.loggedInUser.uid) {
 
       let messageList = [...this.props.messages];
       
       if (message.getReceiptType() === "delivery") {
-
+        
         //search for message
+        
         let messageKey = messageList.findIndex(m => m.id === message.messageId);
 
         if (messageKey > -1) {
 
-          let messageObj = { ...messageList[messageKey] };
+          let messageObj = messageList[messageKey];
           let newMessageObj = Object.assign({}, messageObj, { deliveredAt: message.getDeliveredAt() });
-          messageList.splice(messageKey, 1, newMessageObj);
 
+          messageList.splice(messageKey, 1, newMessageObj);
           this.props.actionGenerated("onMessageReadAndDelivered", messageList);
+
         }
 
       } else if (message.getReceiptType() === "read") {
@@ -307,14 +307,13 @@ class MessageList extends React.PureComponent {
 
           let messageObj = { ...messageList[messageKey] };
           let newMessageObj = Object.assign({}, messageObj, { readAt: message.getReadAt() });
-          messageList.splice(messageKey, 1, newMessageObj);
 
+          messageList.splice(messageKey, 1, newMessageObj);
           this.props.actionGenerated("onMessageReadAndDelivered", messageList);
         }
-
       }
 
-    } else if (message.getReceiverType() === 'group' 
+    } else if (message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
       && message.getReceiver().guid === this.props.item.guid) {
       //not implemented
     }
@@ -362,17 +361,17 @@ class MessageList extends React.PureComponent {
   messageReceived = (message) => {
 
     //new messages
-    if (this.props.type === 'group' 
-      && message.getReceiverType() === 'group'
+    if (this.props.type === CometChat.RECEIVER_TYPE.GROUP
+      && message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
       && message.getReceiverId() === this.props.item.guid) {
 
-      this.messageReceivedHandler(message, "group");
+      this.messageReceivedHandler(message, CometChat.RECEIVER_TYPE.GROUP);
         
-    } else if (this.props.type === 'user' 
-      && message.getReceiverType() === 'user'
+    } else if (this.props.type === CometChat.RECEIVER_TYPE.USER
+      && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER
       && message.getSender().uid === this.props.item.uid) {
 
-      this.messageReceivedHandler(message, "user");
+      this.messageReceivedHandler(message, CometChat.RECEIVER_TYPE.USER);
     }
   }
 
@@ -429,13 +428,13 @@ class MessageList extends React.PureComponent {
     && message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
     && message.getReceiverId() === this.props.item.guid) {
 
-      this.customMessageReceivedHandler(message, "group");
+      this.customMessageReceivedHandler(message, CometChat.RECEIVER_TYPE.GROUP);
 
     } else if (this.props.type === CometChat.RECEIVER_TYPE.USER
     && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER
     && message.getSender().uid === this.props.item.uid) {
 
-      this.customMessageReceivedHandler(message, "user");
+      this.customMessageReceivedHandler(message, CometChat.RECEIVER_TYPE.USER);
 
     } else if (this.props.type === CometChat.RECEIVER_TYPE.USER
     && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER
@@ -443,6 +442,7 @@ class MessageList extends React.PureComponent {
     && (message.type === enums.CUSTOM_TYPE_DOCUMENT || message.type === enums.CUSTOM_TYPE_WHITEBOARD)) {
 
       //showing collaborative document and whiteboard for sender (custom message received listener for sender)
+      //const newMessageObj = { ...message, "_id": textMessage._id };
       this.props.actionGenerated("customMessageReceived", [message]);
 
     }
@@ -606,19 +606,19 @@ class MessageList extends React.PureComponent {
 
       switch (message.type) {
         case CometChat.MESSAGE_TYPE.TEXT:
-          component = (message.text ? <SenderMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
+          component = (<SenderMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />);
         break;
         case CometChat.MESSAGE_TYPE.IMAGE:
-          component = (message.data.url ? <SenderImageBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
+          component = (<SenderImageBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />);
         break;
         case CometChat.MESSAGE_TYPE.FILE:
-          component = (message.data.attachments ? <SenderFileBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
+          component = (<SenderFileBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />);
         break;
         case CometChat.MESSAGE_TYPE.VIDEO:
-          component = (message.data.url ? <SenderVideoBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
+          component = (<SenderVideoBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />);
         break;
         case CometChat.MESSAGE_TYPE.AUDIO:
-          component = (message.data.url ? <SenderAudioBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} /> : null);
+          component = (<SenderAudioBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} />);
         break;
         default:
         break;
@@ -786,15 +786,18 @@ class MessageList extends React.PureComponent {
 
       let dateSeparator = null;
 
+      //const key = message.id || message._id;
       const messageDate = (message.sentAt * 1000);
       const messageSentDate = dateFormat(messageDate, "dd/mm/yyyy");
+
       if (cDate !== messageSentDate) {
-        dateSeparator = (<div css={messageDateContainerStyle()} className="message__date">
-          <span css={messageDateStyle(this.props)}>{messageSentDate}</span>
-        </div>);
+        dateSeparator = (
+          <div css={messageDateContainerStyle()} className="message__date">
+            <span css={messageDateStyle(this.props)}>{messageSentDate}</span>
+          </div>);
       }
       cDate = messageSentDate;
-
+      
       return (
         <React.Fragment key={key}>
           {dateSeparator}

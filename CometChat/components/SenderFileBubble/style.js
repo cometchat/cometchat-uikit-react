@@ -39,7 +39,7 @@ export const messageFileWrapper = (props) => {
         padding: "8px 16px",
         alignSelf: "flex-end",
         maxWidth: "100%",
-        "> a": {
+        ".message__file": {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",

@@ -88,9 +88,7 @@ class SenderVideoBubble extends React.PureComponent {
           
         <div css={messageWrapperStyle()} className="message__wrapper">
           <div css={messageVideoWrapperStyle(this.props)} className="message__video__wrapper">
-            <video controls>
-              <source src={this.props.message.data.url} />
-            </video>
+            <video controls src={this.state.message.data.url}></video>
           </div>
         </div>
 

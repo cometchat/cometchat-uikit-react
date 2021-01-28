@@ -92,6 +92,7 @@ export const messageTxtWrapperStyle = (props) => {
         padding: "16px",
         alignSelf: "flex-start",
         width: "100%",
+        minHeight: "106px",
     }
 }
 

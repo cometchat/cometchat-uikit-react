@@ -193,7 +193,7 @@ export const headerButtonStyle = () => {
 
 export const ButtonStyle = (props, action) => {
 
-    const backgroundColor = (action) ? `${props.theme.backgroundColor.blue}` : `${props.theme.backgroundColor.red}`;
+    const backgroundColor = (action) ? `${props.theme.backgroundColor.blue}!important` : `${props.theme.backgroundColor.red}!important`;
 
     return {
         cursor: "pointer",

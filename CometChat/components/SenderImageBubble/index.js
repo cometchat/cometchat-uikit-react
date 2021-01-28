@@ -55,7 +55,8 @@ class SenderImageBubble extends React.PureComponent {
     if (previousMessageStr !== currentMessageStr) {
 
       const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-      this.setState({ message: message })
+      this.setState({ message: message });
+      this.setImage();
     }
   }
 
@@ -77,6 +78,7 @@ class SenderImageBubble extends React.PureComponent {
   setImage = () => {
 
     const thumbnailGenerationData = checkMessageForExtensionsData(this.state.message, "thumbnail-generation");
+    
     if (thumbnailGenerationData) {
 
       const mq = window.matchMedia(this.props.theme.breakPoints[0]);
@@ -110,7 +112,20 @@ class SenderImageBubble extends React.PureComponent {
   setMessageImageUrl = () => {
 
     let img = new Image();
-    img.src = this.state.message.data.url;
+    if (this.state.message.data.hasOwnProperty("url")) {
+      
+      img.src = this.state.message.data.url;
+
+    } else if(this.state.message.data.hasOwnProperty("file")) {
+
+      const reader = new FileReader();
+      reader.onload = function () {
+        img.src = reader.result;
+      }
+
+      reader.readAsDataURL(this.state.message.data.file);
+    }
+     
     img.onload = () => this.setState({ imageUrl: img.src });
   }
 

@@ -41,12 +41,14 @@ const replycount = (props) => {
 // Specifies the default values for props:
 replycount.defaultProps = {
     lang: Translator.getDefaultLanguage(),
-    theme: theme
+    theme: theme,
+    message: {}
 };
 
 replycount.propTypes = {
     lang: PropTypes.string,
-    theme: PropTypes.object
+    theme: PropTypes.object,
+    message: PropTypes.object
 }
 
 export default replycount;

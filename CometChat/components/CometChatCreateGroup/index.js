@@ -195,7 +195,7 @@ class CometChatCreateGroup extends React.Component {
                             </tbody>
                             <tfoot css={tableFootStyle(this.props)}>
                                 <tr className="creategroup">
-                                    <td><button tabIndex="4" onClick={this.createGroup}>{Translator.translate("CREATE", this.props.lang)}</button></td>
+                                    <td><button type="button" tabIndex="4" onClick={this.createGroup}>{Translator.translate("CREATE", this.props.lang)}</button></td>
                                 </tr>
                             </tfoot>
                         </table>

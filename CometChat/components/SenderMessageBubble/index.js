@@ -28,7 +28,7 @@ import {
 import Translator from "../../resources/localization/translator";
 import { theme } from "../../resources/theme";
 
-class SenderMessageBubble extends React.PureComponent {
+class SenderMessageBubble extends React.Component {
 
   messageFrom = "sender";
 
@@ -47,11 +47,7 @@ class SenderMessageBubble extends React.PureComponent {
 
   componentDidUpdate(prevProps) {
 
-    const previousMessageStr = JSON.stringify(prevProps.message);
-    const currentMessageStr = JSON.stringify(this.props.message);
-
-    if (previousMessageStr !== currentMessageStr) {
-
+    if (prevProps.message !== this.props.message) {
       const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
       this.setState({ message: message, translatedMessage: "" })
     }
@@ -203,7 +199,7 @@ class SenderMessageBubble extends React.PureComponent {
         {messageReactions}
 
         <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-          <ReplyCount {...this.props} message={this.state.message} />
+          <ReplyCount {...this.props} message={{...this.state.message}} />
           <ReadReciept {...this.props} message={this.state.message} />
         </div>
       </div>

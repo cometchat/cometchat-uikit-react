@@ -14,7 +14,7 @@ import CometChatCreatePoll from "../CometChatCreatePoll";
 import StickerView from "../StickerView";
 import EmojiView from "../EmojiView";
 
-import { validateWidgetSettings, checkMessageForExtensionsData } from "../../util/common";
+import { validateWidgetSettings, checkMessageForExtensionsData, ID, getUnixTimestamp } from "../../util/common";
 import * as enums from '../../util/enums.js';
 
 import {
@@ -68,7 +68,6 @@ class MessageComposer extends React.PureComponent {
 		this.audioUploaderRef = React.createRef();
     this.videoUploaderRef = React.createRef();
     this.messageInputRef = React.createRef();
-    this.messageSending = false;
 
     this.isTyping = false;
 
@@ -276,10 +275,10 @@ class MessageComposer extends React.PureComponent {
     const uploadedFile = this.imageUploaderRef.current.files["0"];
 
     var reader = new FileReader(); // Creating reader instance from FileReader() API
-    reader.addEventListener("load", () => { // Setting up base64 URL on image
+    reader.addEventListener("load", (event) => { // Setting up base64 URL on image
 
       const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-      this.sendMediaMessage(newFile, "image");
+      this.sendMediaMessage(newFile, CometChat.MESSAGE_TYPE.IMAGE);
 
     }, false);
 
@@ -295,10 +294,10 @@ class MessageComposer extends React.PureComponent {
     const uploadedFile = this.fileUploaderRef.current.files["0"];
 
     var reader = new FileReader(); // Creating reader instance from FileReader() API
-    reader.addEventListener("load", () => { // Setting up base64 URL on image
+    reader.addEventListener("load", (event) => { // Setting up base64 URL on image
 
       const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-      this.sendMediaMessage(newFile, "file");
+      this.sendMediaMessage(newFile, CometChat.MESSAGE_TYPE.FILE);
 
     }, false);
 
@@ -317,7 +316,7 @@ class MessageComposer extends React.PureComponent {
     reader.addEventListener("load", () => { // Setting up base64 URL on image
 
       const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-      this.sendMediaMessage(newFile, "audio");
+      this.sendMediaMessage(newFile, CometChat.MESSAGE_TYPE.AUDIO);
 
     }, false);
 
@@ -336,7 +335,7 @@ class MessageComposer extends React.PureComponent {
     reader.addEventListener("load", () => { // Setting up base64 URL on image
 
       const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-      this.sendMediaMessage(newFile, "video");
+      this.sendMediaMessage(newFile, CometChat.MESSAGE_TYPE.VIDEO);
 
     }, false);
 
@@ -348,12 +347,12 @@ class MessageComposer extends React.PureComponent {
     let receiverId;
     let receiverType;
 
-    if (this.props.type === "user") {
+    if (this.props.type === CometChat.RECEIVER_TYPE.USER) {
 
       receiverId = this.props.item.uid;
       receiverType = CometChat.RECEIVER_TYPE.USER;
 
-    } else if (this.props.type === "group") {
+    } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
 
       receiverId = this.props.item.guid;
       receiverType = CometChat.RECEIVER_TYPE.GROUP;
@@ -362,35 +361,62 @@ class MessageComposer extends React.PureComponent {
     return { "receiverId": receiverId, "receiverType": receiverType };
   }
 
+  getConversationId = () => {
+
+    let conversationId = null;
+    
+    if (this.props.type === CometChat.RECEIVER_TYPE.USER) {
+
+      const users = [this.props.loggedInUser.uid, this.props.item.uid];
+      conversationId = users.sort().join("_user_");
+      
+    } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
+      conversationId = `group_${this.props.item.guid}`
+    }
+
+    return conversationId;
+  }
+
   sendMediaMessage = (messageInput, messageType) => {
 
     this.toggleFilePicker();
-
-    if(this.messageSending) {
-      return false;
-    }
-
-    this.messageSending = true;
-
+    this.endTyping();
+    
     const { receiverId, receiverType } = this.getReceiverDetails();
+    const conversationId = this.getConversationId();
 
     let mediaMessage = new CometChat.MediaMessage(receiverId, messageInput, messageType, receiverType);
     if(this.props.parentMessageId) {
       mediaMessage.setParentMessageId(this.props.parentMessageId);
     }
 
-    this.endTyping();
-    
-    CometChat.sendMessage(mediaMessage).then(response => {
+    mediaMessage.setSender(this.props.loggedInUser);
+    mediaMessage.setReceiver(this.props.type);
+    mediaMessage.setType(messageType);
+    mediaMessage.setConversationId(conversationId);
+    mediaMessage.setData({
+      type: messageType,
+      category: CometChat.CATEGORY_MESSAGE,
+      name: messageInput["name"],
+      file: messageInput
+    });
+    mediaMessage._composedAt = getUnixTimestamp();
+    mediaMessage._id = ID();
 
-      this.messageSending = false;
-      this.playAudio();
-      this.props.actionGenerated("messageComposed", [response]);
+    this.playAudio();
+    this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [mediaMessage]);
+    
+    CometChat.sendMessage(mediaMessage).then(message => {
+
+      const newMessageObj = { ...message, "_id": mediaMessage._id };
+      this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
 
     }).catch(error => {
 
-      this.messageSending = false;
       console.log("Message sending failed with error:", error);
+
+      const newMessageObj = { ...mediaMessage, "error": error };
+      this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
     });
   }
 
@@ -414,69 +440,75 @@ class MessageComposer extends React.PureComponent {
       return false;
     }
 
-    if(this.messageSending) {
-      return false;
-    }
-
-    this.messageSending = true;
-
     if (this.state.messageToBeEdited) {
       this.editMessage();
       return false;
     }
+
+    this.endTyping();
     
     let { receiverId, receiverType } = this.getReceiverDetails();
     let messageInput = this.state.messageInput.trim();
+
+    const conversationId = this.getConversationId();
+
     let textMessage = new CometChat.TextMessage(receiverId, messageInput, receiverType);
     if(this.props.parentMessageId) {
       textMessage.setParentMessageId(this.props.parentMessageId);
     }
+    textMessage.setSender(this.props.loggedInUser);
+    textMessage.setReceiver(this.props.type);
+    textMessage.setText(messageInput);
+    textMessage.setConversationId(conversationId);
+    textMessage._composedAt = getUnixTimestamp();
+    textMessage._id = ID();
 
-    this.endTyping();
+    this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [textMessage]);
+    this.setState({ messageInput: "", replyPreview: false });
+    
+    this.messageInputRef.current.textContent = "";
+    this.playAudio();
     
     CometChat.sendMessage(textMessage).then(message => {
 
-      this.setState({ messageInput: "", replyPreview: false });
-      this.messageSending = false;
-      this.messageInputRef.current.textContent = "";
-      this.playAudio();
-      this.props.actionGenerated("messageComposed", [message]);
+      const newMessageObj = { ...message, "_id": textMessage._id };
+      this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
 
     }).catch(error => {
 
       console.log("Message sending failed with error:", error);
-      this.messageSending = false;
+
+      const newMessageObj = { ...textMessage, "error": error };
+      this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
+
     });
   }
 
   editMessage = () => {
 
+    this.endTyping();
+
     const messageToBeEdited = this.props.messageToBeEdited;
 
     let { receiverId, receiverType } = this.getReceiverDetails();
-    
     let messageText = this.state.messageInput.trim();
     let textMessage = new CometChat.TextMessage(receiverId, messageText, receiverType);
     textMessage.setId(messageToBeEdited.id);
-    
-    this.endTyping();
+
+    const newMessage = Object.assign({}, textMessage, { messageFrom: messageToBeEdited.messageFrom })
+    this.props.actionGenerated("messageEdited", newMessage);
+
+    this.setState({ messageInput: "" });
+    this.messageInputRef.current.textContent = "";
+    this.playAudio();
+
+    this.closeEditPreview();
 
     CometChat.editMessage(textMessage).then(message => {
-      
-      this.setState({ messageInput: "" });
-      this.messageSending = false;
-      this.messageInputRef.current.textContent = "";
-      this.playAudio();
-      
 
-      this.closeEditPreview();
-
-      const newMessage = Object.assign({}, message, { messageFrom: messageToBeEdited.messageFrom })
-      this.props.actionGenerated("messageEdited", newMessage);
+      this.props.actionGenerated("messageEdited", { ...message });
 
     }).catch(error => {
-
-      this.messageSending = false;
       console.log("Message editing failed with error:", error);
     });
   }
@@ -550,7 +582,7 @@ class MessageComposer extends React.PureComponent {
   toggleCollaborativeDocument = () => {
 
     const { receiverId, receiverType } = this.getReceiverDetails();
-
+    
     CometChat.callExtension("document", "POST", "v1/create", {
       "receiver": receiverId,
       "receiverType": receiverType
@@ -567,7 +599,7 @@ class MessageComposer extends React.PureComponent {
 
     CometChat.callExtension("whiteboard", "POST", "v1/create", {
       "receiver": receiverId,
-      "receiverType": receiverType
+      "receiverType": receiverType,
     }).then(response => {
       // Response with board_url
     }).catch(error => {
@@ -608,50 +640,74 @@ class MessageComposer extends React.PureComponent {
 
   sendSticker = (stickerMessage) => {
 
-    this.messageSending = true;
-
     const { receiverId, receiverType } = this.getReceiverDetails();
 
     const customData = { "sticker_url": stickerMessage.stickerUrl, "sticker_name": stickerMessage.stickerName };
     const customType = enums.CUSTOM_TYPE_STICKER;
 
+    const conversationId = this.getConversationId();
+
     const customMessage = new CometChat.CustomMessage(receiverId, receiverType, customType, customData);
     if (this.props.parentMessageId) {
       customMessage.setParentMessageId(this.props.parentMessageId);
     }
+    customMessage.setSender(this.props.loggedInUser);
+    customMessage.setReceiver(this.props.type);
+    customMessage.setConversationId(conversationId);
+    customMessage._composedAt = getUnixTimestamp();
+    customMessage._id = ID();
+
+    this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [customMessage]);
+
+    this.playAudio();
 
     CometChat.sendCustomMessage(customMessage).then(message => {
 
-      this.messageSending = false;
-      this.playAudio();
-      this.props.actionGenerated("messageComposed", [message]);
+      const newMessageObj = { ...message, "_id": customMessage._id };
+      this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
 
     }).catch(error => {
 
-      this.messageSending = false;
       console.log("custom message sending failed with error", error);
 
-    });
+      const newMessageObj = { ...customMessage, "error": error };
+      this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
 
+    });
   }
 
   sendReplyMessage = (messageInput) => {
 
     let { receiverId, receiverType } = this.getReceiverDetails();
+
+    const conversationId = this.getConversationId();
+
     let textMessage = new CometChat.TextMessage(receiverId, messageInput, receiverType);
     if (this.props.parentMessageId) {
       textMessage.setParentMessageId(this.props.parentMessageId);
     }
+    textMessage.setSender(this.props.loggedInUser);
+    textMessage.setReceiver(this.props.type);
+    textMessage.setConversationId(conversationId);
+    textMessage._composedAt = getUnixTimestamp();
+    textMessage._id = ID();
+
+    this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [textMessage]);
+
+    this.playAudio();
+    this.setState({ replyPreview: null })
 
     CometChat.sendMessage(textMessage).then(message => {
 
-      this.playAudio();
-      this.setState({ replyPreview: null })
-      this.props.actionGenerated("messageComposed", [message]);
+      const newMessageObj = { ...message, "_id": textMessage._id };
+      this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
 
     }).catch(error => {
 
       console.log("Message sending failed with error:", error);
+      const newMessageObj = { ...textMessage, "error": error };
+      this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
+
     });
   }
 

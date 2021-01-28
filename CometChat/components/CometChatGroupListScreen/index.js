@@ -13,6 +13,7 @@ import CometChatMessageListScreen from "../CometChatMessageListScreen";
 import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
 import ImageView from "../ImageView";
+import CometChatIncomingMessage from "../CometChatIncomingMessage";
 
 import { theme } from "../../resources/theme";
 
@@ -48,8 +49,12 @@ class CometChatGroupListScreen extends React.Component {
       sidebarview: false,
       imageView: null,
       groupmessage: {},
-      lang: props.lang
+      lang: props.lang,
+      ongoingDirectCall: false
     }
+
+    this.messageScreenRef = React.createRef();
+    this.incomingMessageRef = React.createRef();
 
     CometChat.getLoggedInUser().then((user) => {
       this.loggedInUser = user;
@@ -134,9 +139,54 @@ class CometChatGroupListScreen extends React.Component {
       case "updateThreadMessage":
         this.updateThreadMessage(item[0], count);
         break;
+      case enums.ACTIONS["ACCEPT_DIRECT_CALL"]:
+        this.acceptDirectCall(item);
+        break;
+      case enums.ACTIONS["JOIN_DIRECT_CALL"]:
+        this.joinDirectCall(item);
+        break;
+      case enums.ACTIONS["START_DIRECT_CALL"]:
+        this.ongoingDirectCall(true);
+        break;
+      case enums.ACTIONS["END_DIRECT_CALL"]:
+        this.ongoingDirectCall(false);
+        break;
       default:
       break;
     }
+  }
+
+  acceptDirectCall = (call) => {
+
+    const type = call.receiverType;
+    const id = call.receiverId;
+
+    CometChat.getConversation(id, type).then(conversation => {
+
+      this.itemClicked(conversation.conversationWith, type);
+
+      if (this.messageScreenRef) {
+        this.messageScreenRef.actionHandler(enums.ACTIONS["ACCEPT_DIRECT_CALL"]);
+      }
+      this.ongoingDirectCall(true);
+
+    }).catch(error => {
+
+      console.log('error while fetching a conversation', error);
+    });
+  }
+
+  joinDirectCall = () => {
+
+    //pause alert audio and close the alert popup
+    if (this.incomingMessageRef) {
+      this.incomingMessageRef.ignoreCall();
+    }
+    this.ongoingDirectCall(true);
+  }
+
+  ongoingDirectCall = (flag) => {
+    this.setState({ ongoingDirectCall: flag });
   }
 
   updateThreadMessage = (message, action) => {
@@ -344,6 +394,7 @@ class CometChatGroupListScreen extends React.Component {
     if(Object.keys(this.state.item).length) {
       messageScreen = (
         <CometChatMessageListScreen
+        ref={(el) => { this.messageScreenRef = el; }}
         theme={this.props.theme}
         item={this.state.item} 
         tab={this.state.tab}
@@ -360,6 +411,11 @@ class CometChatGroupListScreen extends React.Component {
     let imageView = null;
     if (this.state.imageView) {
       imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} lang={this.state.lang} />);
+    }
+
+    let incomingMessageView = (<CometChatIncomingMessage ref={el => this.incomingMessageRef = el} theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />);
+    if (this.state.ongoingDirectCall) {
+      incomingMessageView = null;
     }
 
     return (
@@ -381,6 +437,7 @@ class CometChatGroupListScreen extends React.Component {
         {detailScreen}
         {threadMessageView}
         {imageView}
+        {incomingMessageView}
       </div>
     );
   }

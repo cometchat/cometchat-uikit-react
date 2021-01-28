@@ -188,7 +188,12 @@ class CometChatOutgoingCall extends React.PureComponent {
                         .enableDefaultLayout(true)
                         .setMode(CometChat.CALL_MODE.DEFAULT)
                         .setIsAudioOnlyCall(callType === CometChat.CALL_TYPE.AUDIO ? true : false)
-                        .build();
+                        .setLocalizedStringObject({
+                          "SELECT_VIDEO_SOURCE": Translator.translate("SELECT_VIDEO_SOURCE", this.props.lang),
+                          "SELECT_INPUT_AUDIO_SOURCE": Translator.translate("SELECT_INPUT_AUDIO_SOURCE", this.props.lang),
+                          "SELECT_OUTPUT_AUDIO_SOURCE": Translator.translate("SELECT_OUTPUT_AUDIO_SOURCE", this.props.lang)
+                        }).build();
+
 
     const el = this.callScreenFrame;
     CometChat.startCall(

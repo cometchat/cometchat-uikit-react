@@ -77,7 +77,7 @@ class SenderAudioBubble extends React.Component {
     if (this.state.isHovering) {
       toolTipView = (<ToolTip {...this.props} message={this.state.message} />);
     }
-
+    
     return (
       <div 
       css={messageContainerStyle()} 
@@ -88,9 +88,7 @@ class SenderAudioBubble extends React.Component {
         {toolTipView}
         <div css={messageWrapperStyle()} className="message__wrapper">
           <div css={messageAudioWrapperStyle(this.props)} className="message__audio__wrapper">
-            <audio controls>
-              <source src={this.props.message.data.url} />
-            </audio>
+            <audio controls src={this.state.message.data.url}></audio>
           </div>
         </div>
 

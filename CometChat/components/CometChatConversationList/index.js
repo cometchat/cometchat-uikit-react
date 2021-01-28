@@ -218,6 +218,23 @@ class CometChatConversationList extends React.Component {
     }
   }
 
+  updateLastMessage = (lastMessage) => {
+
+    const conversationList = [...this.state.conversationlist];
+    const conversationKey = conversationList.findIndex(c => c.conversationId === lastMessage.conversationId);
+
+    if (conversationKey > -1) {
+
+      const conversationObj = conversationList[conversationKey];
+      let newConversationObj = { ...conversationObj, lastMessage: lastMessage };
+
+      conversationList.splice(conversationKey, 1);
+      conversationList.unshift(newConversationObj);
+      this.setState({ conversationlist: conversationList });
+    }
+
+  }
+
   componentWillUnmount() {
     this.ConversationListManager.removeListeners();
     this.ConversationListManager = null;
