@@ -498,12 +498,14 @@ class CometChatMessageListScreen extends React.PureComponent {
   messageSent = (message) => {
 
     const messageList = [...this.state.messageList];
+    
     let messageKey = messageList.findIndex(m => m._id === message._id);
     if (messageKey > -1) {
 
       const newMessageObj = { ...message };
 
       messageList.splice(messageKey, 1, newMessageObj);
+      messageList.sort((a, b) => a.id - b.id);
       this.setState({ messageList: messageList, scrollToBottom: true });
     }
   }
