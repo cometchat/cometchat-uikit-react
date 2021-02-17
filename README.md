@@ -39,7 +39,27 @@
 
 React UI Kit is a collection of custom **UI Components** and **UI Screens** designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
 
-___
+---
+## Features
+- Private(1-1) & Group Conversations
+- Voice & video calling & conferencing
+- Rich Media Attachments
+- Typing Indicators
+- Text, Media and Custom messages
+- Read receipts
+- Online Presence Indicators
+- Message History
+- Users & Friends List
+- Search by users and groups
+- Groups List
+- Conversations List
+- Threaded Conversations
+
+## Extensions
+
+ [Thumbnail Generation](https://prodocs.cometchat.com/docs/extensions-thumbnail-generation) | [Link Preview](https://prodocs.cometchat.com/docs/extensions-link-preview) | [Rich Media Preview](https://prodocs.cometchat.com/docs/extensions-rich-media-preview) | [Smart Reply](https://prodocs.cometchat.com/docs/extensions-smart-reply)| [Emojis](https://prodocs.cometchat.com/docs/extensions-emojis) | [Polls](https://prodocs.cometchat.com/docs/extensions-polls) | [Reactions](https://prodocs.cometchat.com/docs/extensions-reactions) | [Stickers](https://prodocs.cometchat.com/docs/extensions-stickers)
+
+  ---
 
 ## Prerequisites
 
