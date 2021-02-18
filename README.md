@@ -156,7 +156,7 @@ CometChat.login(uid, authKey).then(
 
 ## 3. Add UI Kit to your project
 
-* Clone this repository `https://github.com/cometchat-pro/cometchat-pro-react-ui-kit`
+* Clone [this](https://github.com/cometchat-pro/cometchat-pro-react-ui-kit) repository
 * Copy the cloned repository to your source folder
 
 <img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
