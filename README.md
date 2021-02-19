@@ -8,7 +8,7 @@
 
 <br/><br/>
 
-# React UI Kit
+# CometChat React UI Kit
 
 <p align="left">
   <a href="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/releases/" alt="Releases">
@@ -37,7 +37,7 @@
 
 </br></br>
 
-React UI Kit is a collection of custom **UI Components** and **UI Screens** designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
+CometChat React UI Kit is a collection of custom **UI Components** and **UI Screens** designed to build chat application with fully customizable UI. It is designed to avoid boilerplate code for building UI. 
 
 ---
 ## Features
@@ -156,7 +156,7 @@ CometChat.login(uid, authKey).then(
 
 ## 3. Add UI Kit to your project
 
-* Clone [this](https://github.com/cometchat-pro/cometchat-pro-react-ui-kit) repository
+* Clone this repository `git clone https://github.com/cometchat-pro/cometchat-pro-react-ui-kit.git`
 * Copy the cloned repository to your source folder
 
 <img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
