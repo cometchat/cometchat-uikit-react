@@ -731,7 +731,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
     setTimeout(() => {
 
-      this.endTyping(typingMetadata);
+      this.endTyping(null, typingMetadata);
       this.props.actionGenerated("stopReaction");
 
     }, typingInterval);
