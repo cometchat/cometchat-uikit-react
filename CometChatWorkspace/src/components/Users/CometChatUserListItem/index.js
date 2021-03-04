@@ -38,7 +38,7 @@ const CometChatUserListItem = (props) => {
   } 
   
   return (
-    <div css={listItem(props)} onClick={() => props.clickeHandler(props.user)} className="list__item">
+    <div css={listItem(props)} onClick={() => props.clickHandler(props.user)} className="list__item">
       <div css={itemThumbnailStyle()} className="list__item__thumbnail">
         <CometChatAvatar user={props.user} />
         {userPresence}

@@ -63,20 +63,32 @@ export const unifiedSidebarStyle = (state, props) => {
 
 export const unifiedMainStyle = (state, props) => {
 
-    const secondaryView = (state.threadmessageview || state.detailview) ? {
-        width: "calc(100% - 680px)"
-    } : {};
-
     const mq = [...props.theme.breakPoints];
+
+    const secondaryViewWidth = (state.threadmessageview || state.viewdetailscreen) ? {
+
+        width: "calc(100% - 680px)!important",
+        [`@media ${mq[1]}, ${mq[2]}`]: {
+            width: "100%!important",
+        },
+        [`@media ${mq[3]}, ${mq[4]}`]: {
+            width: "0!important",
+            display: "none",
+        },
+
+    } : {
+        width: "calc(100% - 280px)!important",
+        [`@media ${mq[1]}, ${mq[2]}`]: {
+            width: "100%!important",
+        },
+
+    };
 
     return {
         width: "calc(100% - 280px)",
         height: "100%",
         order: "2",
-        ...secondaryView,
-        [`@media ${mq[0]}`]: {
-            width: "100%!important",
-        }
+        ...secondaryViewWidth,
     }
 }
 
@@ -92,7 +104,7 @@ export const unifiedSecondaryStyle = (props) => {
         display: "flex",
         flexDirection: "column",
         order: "3",
-        [`@media ${mq[0]}`]: {
+        [`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
             position: "absolute!important",
             right: "0!important",
             top: "0",

@@ -538,7 +538,7 @@ class CometChatGroupDetails extends React.Component {
                 item: this.props.item
                 }}>
                 <div css={headerStyle(this.props)} className="detailpane__header">
-                    <div css={headerCloseStyle(navigateIcon)} className="header__close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
+                    <div css={headerCloseStyle(navigateIcon, this.props)} className="header__close" onClick={() => this.props.actionGenerated("closeDetailClicked")}></div>
                     <h4 css={headerTitleStyle()} className="header__title">{Translator.translate("DETAILS", this.props.lang)}</h4>
                 </div>
                 <div css={detailPaneStyle()} className="detailpane__section">

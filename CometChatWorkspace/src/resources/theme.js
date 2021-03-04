@@ -32,6 +32,10 @@ export const theme = {
         silver: "#c4c4c4"
     },
     breakPoints: [
-        "(min-width: 320px) and (max-width: 767px)"
+        "(min-width: 320px) and (max-width: 767px)",
+        "(min-width: 320px) and (max-width: 480px)",
+        "(min-width: 481px) and (max-width: 768px)",
+        "(min-width: 769px) and (max-width: 1024px)",
+        "(min-width: 1025px) and (max-width: 1200px)",
     ]
 };

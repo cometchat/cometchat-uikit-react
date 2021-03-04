@@ -24,7 +24,7 @@ export const listWrapperStyle = () => {
         transition: "background .3s ease-out .1s",
         width: "100%",
         zIndex: "100",
-        paddingTop: "14px"
+        paddingTop: "16px"
     }
 }
 

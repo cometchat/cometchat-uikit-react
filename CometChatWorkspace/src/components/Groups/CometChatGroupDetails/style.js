@@ -23,9 +23,9 @@ export const headerStyle = (props) => {
     }
 }
 
-export const headerCloseStyle = (img) => {
+export const headerCloseStyle = (img, props) => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+    const mq = [...props.theme.breakPoints];
 
     return {
         cursor: "pointer",
@@ -33,7 +33,7 @@ export const headerCloseStyle = (img) => {
         background: `url(${img}) center center no-repeat`,
         width: "24px",
         height: "24px",
-        [mq[0]]: {
+        [`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
             display: "block"
         },
     }

@@ -67,7 +67,7 @@ class CometChatMessageList extends React.PureComponent {
       this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type);
     }
     
-    this.getMessages();
+    this.messageHandler(this.props.item);
     this.MessageListManager.attachListeners(this.messageUpdated);
   }
 
@@ -88,7 +88,7 @@ class CometChatMessageList extends React.PureComponent {
         this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type);
       }
 
-      this.getMessages();
+      this.messageHandler(this.props.item);
       this.MessageListManager.attachListeners(this.messageUpdated);
 
     } else if (this.props.type === 'group' && prevProps.item.guid !== this.props.item.guid){
@@ -103,7 +103,7 @@ class CometChatMessageList extends React.PureComponent {
         this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type);
       }
       
-      this.getMessages();
+      this.messageHandler(this.props.item);
       this.MessageListManager.attachListeners(this.messageUpdated);
 
     } else if(prevProps.parentMessageId !== this.props.parentMessageId) {
@@ -113,7 +113,7 @@ class CometChatMessageList extends React.PureComponent {
       this.MessageListManager.removeListeners();
 
       this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type, this.props.parentMessageId);
-      this.getMessages();
+      this.messageHandler(this.props.item);
       this.MessageListManager.attachListeners(this.messageUpdated);
 
     } else if (previousMessageStr !== currentMessageStr) {
@@ -133,9 +133,9 @@ class CometChatMessageList extends React.PureComponent {
     }
   }
 
-  getMessages = (actionGenerated = "messageFetched") => {
-          
-    this.MessageListManager.fetchPreviousMessages().then(messageList => {
+  messageHandler = (item, actionGenerated = "messageFetched") => {
+
+    this.fetchMessages().then(messageList => {
 
       if (messageList.length === 0) {
         this.decoratorMessage = Translator.translate("NO_MESSAGES_FOUND", this.props.lang);
@@ -148,12 +148,12 @@ class CometChatMessageList extends React.PureComponent {
 
         //if the sender of the message is not the loggedin user, mark it as read.
         if (message.getSender().getUid() !== this.loggedInUser.getUid() && !message.getReadAt()) {
-          
-          if(message.getReceiverType() === "user") {
+
+          if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER) {
 
             CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
 
-          } else if(message.getReceiverType() === "group") {
+          } else if (message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP) {
 
             CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
           }
@@ -163,14 +163,34 @@ class CometChatMessageList extends React.PureComponent {
       });
 
       this.lastScrollTop = this.messagesEnd.scrollHeight;
-      this.props.actionGenerated(actionGenerated, messageList);
-        
-    }).catch((error) => {
-      //TODO Handle the erros in contact list.
-      console.error("[MessageList] getMessages fetchPrevious error", error);
+
+      //abort(don't return messagelist), when the chat window changes
+      if ((item.hasOwnProperty("uid") && this.props.item.hasOwnProperty("uid") && item.uid === this.props.item.uid)
+      || (item.hasOwnProperty("guid") && this.props.item.hasOwnProperty("guid") && item.guid === this.props.item.guid)) {
+        this.props.actionGenerated(actionGenerated, messageList);
+      }
+
+    }).catch(error => {
+
+      console.error("[MessageList] messageHandler error", error);
       this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
+
+    });
+  }
+
+  fetchMessages = () => {
+
+    const promise = new Promise((resolve, reject) => {
+
+      this.MessageListManager.fetchPreviousMessages().then(messageList => {
+
+        resolve(messageList);
+
+      }).catch(error => reject(error));
+
     });
 
+    return promise;
   }
 
   //callback for listener functions
@@ -331,7 +351,7 @@ class CometChatMessageList extends React.PureComponent {
       this.MessageListManager = new MessageListManager(this.props.widgetsettings, this.props.item, this.props.type);
     }
     
-    this.getMessages("messageRefreshed");
+    this.messageHandler(this.props.item, "messageRefreshed");
     this.MessageListManager.attachListeners(this.messageUpdated);
   }
 
@@ -375,8 +395,9 @@ class CometChatMessageList extends React.PureComponent {
     if (message.hasOwnProperty("parentMessageId") === false && this.props.hasOwnProperty("parentMessageId") === false) {
 
       ++this.messageCount;
+
       //if the user has not scrolled in chat window(scroll is at the bottom of the chat window)
-      if (this.messagesEnd.scrollHeight - this.messagesEnd.scrollTop === this.messagesEnd.clientHeight) {
+      if ((this.messagesEnd.scrollHeight - this.messagesEnd.scrollTop - this.messagesEnd.clientHeight) < 1) {
 
         if (this.messageCount > enums.MAX_MESSAGE_COUNT) {
 
@@ -524,7 +545,7 @@ class CometChatMessageList extends React.PureComponent {
     
     const top = Math.round(scrollTop) === 0;
     if (top && this.props.messages.length) {
-      this.getMessages();
+      this.messageHandler(this.props.item);
     }
   }
 

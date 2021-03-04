@@ -15,10 +15,12 @@ import Translator from "../../../resources/localization/translator";
 import {
     modalWrapperStyle,
     modalCloseStyle,
-    modalBodyCtyle,
-    modalTableStyle,
-    tableCaptionStyle,
-    tableBodyStyle,
+    modalBodyStyle,
+    modalCaptionStyle,
+    modalListStyle,
+    listHeaderStyle,
+    listStyle,
+    nameColumnStyle,
     scopeColumnStyle,
     actionColumnStyle
 } from "./style";
@@ -28,6 +30,30 @@ import clearIcon from "./resources/close.png";
 class CometChatViewGroupMemberList extends React.Component {
 
     static contextType = GroupDetailContext;
+
+    constructor(props) {
+
+        super(props);
+
+        this.mq = window.matchMedia(props.theme.breakPoints[1]);
+        
+        if (props.hasOwnProperty("widgetsettings") && props.widgetsettings) {
+            const parentnode = (props.widgetsettings.hasOwnProperty("parentNode")) ? props.widgetsettings.parentNode : null;
+            if (parentnode) {
+                const window = parentnode.querySelector('iframe').contentWindow;
+                this.mq = window.matchMedia(props.theme.breakPoints[1]);
+            }
+        }
+        
+        let userColumnTitle = Translator.translate("NAME", props.lang);
+        if (this.mq.matches) {
+            userColumnTitle = Translator.translate("AVATAR", props.lang)
+        }
+
+        this.state = {
+            userColumnTitle: userColumnTitle
+        }
+    }
 
     handleScroll = (e) => {
 
@@ -101,6 +127,15 @@ class CometChatViewGroupMemberList extends React.Component {
         });
     }
 
+    setUserColumnTitle = (editAccess) => {
+
+        if (editAccess !== null && this.mq.matches) {
+            this.setState({ userColumnTitle: Translator.translate("AVATAR", this.props.lang) });
+        } else {
+            this.setState({ userColumnTitle: Translator.translate("NAME", this.props.lang) });
+        }
+    }
+
     render() {
 
         const group = this.context;
@@ -124,8 +159,8 @@ class CometChatViewGroupMemberList extends React.Component {
 
             editAccess = (
                 <React.Fragment>
-                    <th css={actionColumnStyle()} className="ban">{Translator.translate("BAN", this.props.lang)}</th>
-                    <th css={actionColumnStyle()} className="kick">{Translator.translate("KICK", this.props.lang)}</th>
+                    <div css={actionColumnStyle(this.props)} className="ban">{Translator.translate("BAN", this.props.lang)}</div>
+                    <div css={actionColumnStyle(this.props)} className="kick">{Translator.translate("KICK", this.props.lang)}</div>
                 </React.Fragment>
             );
 
@@ -140,23 +175,25 @@ class CometChatViewGroupMemberList extends React.Component {
             }
         }
 
+        this.mq.addListener(editAccess => this.setUserColumnTitle(editAccess));
+
         return (
             <React.Fragment>
                 <CometChatBackdrop show={this.props.open} clicked={this.props.close} />
                 <div css={modalWrapperStyle(this.props)} className="modal__viewmembers">
                     <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
-                    <div css={modalBodyCtyle()} className="modal__body">
-                        <table css={modalTableStyle(this.props)}>
-                        <caption css={tableCaptionStyle()} className="modal__title">{Translator.translate("GROUP_MEMBERS", this.props.lang)}</caption>
-                            <thead> 
-                                <tr>
-                                <th className="name">{Translator.translate("NAME", this.props.lang)}</th>
-                                <th css={scopeColumnStyle()} className="scope">{Translator.translate("SCOPE", this.props.lang)}</th>
-                                    {editAccess}
-                                </tr>
-                            </thead>
-                            <tbody css={tableBodyStyle()} onScroll={this.handleScroll}>{groupMembers}</tbody>
-                        </table>
+                    <div css={modalBodyStyle()} className="modal__body">
+                        <div css={modalCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">{Translator.translate("GROUP_MEMBERS", this.props.lang)}</div>
+                        <div css={modalListStyle()} className="modal__content">
+                            <div css={listHeaderStyle(this.props)} className="content__header">
+                                <div css={nameColumnStyle(this.props, editAccess)} className="name">{this.state.userColumnTitle}</div>
+                                <div css={scopeColumnStyle(this.props)} className="scope">{Translator.translate("SCOPE", this.props.lang)}</div>
+                                {editAccess}
+                            </div>
+                            <div css={listStyle(this.props)} className="content__list" onScroll={this.handleScroll}>
+                                {groupMembers}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </React.Fragment>
@@ -167,12 +204,14 @@ class CometChatViewGroupMemberList extends React.Component {
 // Specifies the default values for props:
 CometChatViewGroupMemberList.defaultProps = {
     lang: Translator.getDefaultLanguage(),
-    theme: theme
+    theme: theme,
+    userColumnTitle: "",
 };
 
 CometChatViewGroupMemberList.propTypes = {
     lang: PropTypes.string,
-    theme: PropTypes.object
+    theme: PropTypes.object,
+    userColumnTitle: PropTypes.string
 }
 
 export default CometChatViewGroupMemberList;

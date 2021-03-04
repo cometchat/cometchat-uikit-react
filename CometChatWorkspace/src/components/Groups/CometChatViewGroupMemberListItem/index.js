@@ -10,12 +10,12 @@ import GroupDetailContext from "../CometChatGroupDetails/context";
 import Translator from "../../../resources/localization/translator";
 
 import {
-    tableRowStyle,
-    tableColumnStyle,
+    modalRowStyle,
+    nameColumnStyle,
     avatarStyle,
     nameStyle,
     roleStyle,
-    scopeStyle,
+    scopeColumnStyle,
     actionColumnStyle,
     scopeWrapperStyle,
     scopeSelectionStyle
@@ -32,6 +32,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
     static contextType = GroupDetailContext;
 
     constructor(props) {
+
         super(props);
 
         this.changeScopeDropDown = (
@@ -78,19 +79,21 @@ class CometChatViewGroupMemberListItem extends React.Component {
     toggleTooltip = (event, flag) => {
 
         const elem = event.currentTarget;
-        const nameContainer = elem.lastChild;
-    
-        const scrollWidth = nameContainer.scrollWidth;
-        const clientWidth = nameContainer.clientWidth;
         
-        if(scrollWidth <= clientWidth) {
-          return false;
+        if (elem.classList.contains("name")) {
+
+            const scrollWidth = elem.scrollWidth;
+            const clientWidth = elem.clientWidth;
+            
+            if (scrollWidth <= clientWidth) {
+                return false;
+            }
         }
-    
+
         if(flag) {
-            nameContainer.setAttribute("title", nameContainer.textContent);
+            elem.setAttribute("title", this.props.member.name);
         } else {
-            nameContainer.removeAttribute("title");
+            elem.removeAttribute("title");
         }
     }
 
@@ -196,8 +199,8 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
             editAccess = (
                 <React.Fragment>
-                    <td css={actionColumnStyle()} className="ban"><span>{ban}</span></td>
-                    <td css={actionColumnStyle()} className="kick"><span>{kick}</span></td>
+                    <div css={actionColumnStyle(this.props)} className="ban"><span>{ban}</span></div>
+                    <div css={actionColumnStyle(this.props)} className="kick"><span>{kick}</span></div>
                 </React.Fragment>
             );
 
@@ -225,19 +228,21 @@ class CometChatViewGroupMemberListItem extends React.Component {
         );
         
         return (
-            <tr css={tableRowStyle(this.props)}>
-                <td css={tableColumnStyle(editClassName)} className="userinfo"
-                onMouseEnter={event => this.toggleTooltip(event, true)}
-                onMouseLeave={event => this.toggleTooltip(event, false)}>
-                    <div css={avatarStyle(editClassName)} className="thumbnail">
+            <div css={modalRowStyle(this.props)} className="content__row">
+                <div css={nameColumnStyle(this.props, editClassName)} className="userinfo">
+                    <div css={avatarStyle(this.props, editClassName)} className="thumbnail"
+                    onMouseEnter={event => this.toggleTooltip(event, true)}
+                    onMouseLeave={event => this.toggleTooltip(event, false)}>
                         <CometChatAvatar user={this.props.member} />
                         {userPresence}
                     </div>
-                    <div css={nameStyle(editClassName)} className="name">{name}</div>
-                </td>
-                <td css={scopeStyle()} className="scope">{changescope}</td>
+                    <div css={nameStyle(this.props, editClassName)} className="name"
+                    onMouseEnter={event => this.toggleTooltip(event, true)}
+                    onMouseLeave={event => this.toggleTooltip(event, false)}>{name}</div>
+                </div>
+                <div css={scopeColumnStyle(this.props)} className="scope">{changescope}</div>
                 {editAccess}
-            </tr>
+            </div>
         );
     }
 }

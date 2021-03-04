@@ -230,6 +230,7 @@ class CometChatMessageHeader extends React.Component {
   render() {
 
     let avatar, presence;
+    let chatWithClassName = "chat__user", chatNameClassName = "user__name", chatStatusClassName = "user__status";
     if (this.props.type === enums.CHAT_WITH_USER) {
 
       avatar = (<CometChatAvatar user={this.props.item} />);
@@ -241,11 +242,13 @@ class CometChatMessageHeader extends React.Component {
       );
 
     } else {
+
+      chatWithClassName = "chat__group"; chatNameClassName = "group__name"; chatStatusClassName = "group__members";
       avatar = (<CometChatAvatar group={this.props.item} />);
     }
 
     let status = (
-      <span css={chatStatusStyle(this.props, this.state)} className="user__status">{this.state.status}</span>
+      <span css={chatStatusStyle(this.props, this.state)} className={chatStatusClassName}>{this.state.status}</span>
     );
 
     const audioCallText = Translator.translate("AUDIO_CALL", this.props.lang);
@@ -300,8 +303,8 @@ class CometChatMessageHeader extends React.Component {
             {avatar}
             {presence}
           </div>
-          <div css={chatUserStyle()} className="chat__user">
-            <h6 css={chatNameStyle()} className="user__name"
+          <div css={chatUserStyle()} className={chatWithClassName}>
+            <h6 css={chatNameStyle()} className={chatNameClassName}
             onMouseEnter={event => this.toggleTooltip(event, true)} 
             onMouseLeave={event => this.toggleTooltip(event, false)}>{this.props.item.name}</h6>
             {status}
