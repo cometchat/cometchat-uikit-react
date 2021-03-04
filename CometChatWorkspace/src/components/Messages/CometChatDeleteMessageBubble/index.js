@@ -1,5 +1,6 @@
 import React from "react";
 import dateFormat from "dateformat";
+/** @jsxRuntime classic */
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";

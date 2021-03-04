@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/img-redundant-alt */
 import React from "react";
+/** @jsxRuntime classic */
 /** @jsx jsx */
 import { jsx, keyframes } from "@emotion/core";
 import PropTypes from "prop-types";
