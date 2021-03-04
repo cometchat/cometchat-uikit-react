@@ -44,7 +44,7 @@ export const modalCloseStyle = (img) => {
     }
 }
 
-export const modalBodyCtyle = () => {
+export const modalBodyStyle = () => {
 
     return {
         padding: "24px",
@@ -53,66 +53,127 @@ export const modalBodyCtyle = () => {
     }
 }
 
-export const modalTableStyle = (props) => {
+export const modalCaptionStyle = (dir) => {
 
-    return {
-        borderCollapse: "collapse",
-        margin: "0",
-        padding: "0",
-        width: "100%",
-        height: "90%",
-        "tr": {
-            border: `1px solid ${props.theme.borderColor.primary}`,
-            display: "table",
-            width: "100%",
-            tableLayout: "fixed",
-            "th": {
-                padding: "8px",
-                fontSize: "12px",
-                textAlign: "left"
-            }
-        },
-    }
-}
-
-export const tableCaptionStyle = () => {
+    const textAlignStyle = (dir === "rtl") ? {
+        textAlign: "right",
+        paddingRight: "32px",
+    } : {
+        textAlign: "left",
+    };
 
     return {
         fontSize: "20px",
         marginBottom: "16px",
         fontWeight: "bold",
-        textAlign: "left",
+        ...textAlignStyle,
+        width: "100%",
     }
 }
 
-export const tableBodyStyle = (props) => {
+export const modalListStyle = (props) => {
 
     return {
-        height: "325px",
+        width: "100%",
+        height: "calc(100% - 35px)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
+    }
+}
+
+export const listHeaderStyle = (props) => {
+
+    return {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        fontWeight: "bold",
+        padding: "8px",
+        width: "100%",
+        border: `1px solid ${props.theme.borderColor.primary}`,
+
+    }
+}
+
+export const listStyle = (props) => {
+
+    return {
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
+        width: "100%",
+        height: "calc(100% - 33px)",
         overflowY: "auto",
-        display: "block",
+        border: `1px solid ${props.theme.borderColor.primary}`,
     }
 }
 
-export const scopeColumnStyle = () => {
+export const nameColumnStyle = (props, editAccess) => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+
+    const widthProp = (editAccess === null) ? {
+
+        width: "calc(100% - 180px)",
+        [mq[1]]: {
+            width: "calc(100% - 140px)",
+        },
+        [mq[2]]: {
+            width: "calc(100% - 180px)",
+        }
+
+    } : {
+        width: "calc(100% - 260px)",
+        [mq[1]]: {
+            width: "calc(100% - 220px)",
+        },
+        [mq[2]]: {
+            width: "calc(100% - 260px)",
+        },
+        [mq[3]]: {
+            width: "calc(100% - 240px)",
+        }
+    };
 
     return {
-        [mq[0]]: {
-            width: "170px"
+        ...widthProp
+    }
+}
+
+export const scopeColumnStyle = (props) => {
+
+    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+
+    return {
+        width: "180px",
+        marginRight: "8px",
+        [mq[1]]: {
+            width: "140px"
+        },
+        [mq[2]]: {
+            width: "180px",
+        },
+        [mq[3]]: {
+            width: "120px",
         }
     }
 }
 
-export const actionColumnStyle = () => {
+export const actionColumnStyle = (props) => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
 
     return {
         width: "70px",
-        [mq[0]]: {
-            width: "55px"
+        [mq[1]]: {
+            width: "40px"
+        },
+        [mq[2]]: {
+            width: "40px"
         }
     }
 }

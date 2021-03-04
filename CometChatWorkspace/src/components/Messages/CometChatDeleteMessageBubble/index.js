@@ -48,7 +48,7 @@ const CometChatDeleteMessageBubble = (props) => {
 
             avatar = (
                 <div css={messageThumbnailStyle()} className="message__thumbnail">
-                    <CometChatAvatar group={props.message.sender} />
+                    <CometChatAvatar user={props.message.sender} />
                 </div>
             )
             name = (

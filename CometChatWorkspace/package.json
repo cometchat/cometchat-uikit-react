@@ -1,10 +1,10 @@
 {
   "name": "cometchat-pro-react-ui-kit",
-  "version": "1.2.14",
-  "description":"CometChat UI Kit for React App",
+  "version": "2.2.1-1",
+  "description": "CometChat UI Kit for React App",
   "author": "Inscripts",
   "dependencies": {
-    "@cometchat-pro/chat": "2.2.0",
+    "@cometchat-pro/chat": "2.2.1",
     "node-sass": "^4.12.1",
     "emoji-mart": "^3.0.0",
     "react-html-parser": "^2.0.2",

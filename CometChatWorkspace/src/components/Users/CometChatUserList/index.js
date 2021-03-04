@@ -132,7 +132,7 @@ class CometChatUserList extends React.PureComponent {
     let userlist = [...this.state.userlist];
 
     //search for user
-    let userKey = userlist.findIndex((u, k) => u.uid === user.uid);
+    let userKey = userlist.findIndex(u => u.uid === user.uid);
     
     //if found in the list, update user object
     if(userKey > -1) {
@@ -159,7 +159,7 @@ class CometChatUserList extends React.PureComponent {
       return;
 
     //this.setState({selectedUser: {...user}});
-    this.props.onItemClick(user, 'user');
+    this.props.onItemClick(user, "user");
   }
 
   handleMenuClose = () => {
@@ -244,7 +244,7 @@ class CometChatUserList extends React.PureComponent {
           selectedUser={this.state.selectedUser}
           lang={this.state.lang}
           widgetsettings={this.props.widgetsettings} 
-          clickeHandler={this.handleClick}  />
+          clickHandler={this.handleClick}  />
         </React.Fragment>
       );
 
@@ -282,13 +282,15 @@ class CometChatUserList extends React.PureComponent {
 CometChatUserList.defaultProps = {
   lang: Translator.getDefaultLanguage(),
   theme: theme,
-  userlist: []
+  userlist: [],
+  onItemClick: () => {}
 };
 
 CometChatUserList.propTypes = {
   lang: PropTypes.string,
   theme: PropTypes.object,
-  userlist: PropTypes.arrayOf(PropTypes.shape(CometChat.User))
+  userlist: PropTypes.arrayOf(PropTypes.shape(CometChat.User)),
+  onItemClick: PropTypes.func
 }
 
 export default CometChatUserList;
