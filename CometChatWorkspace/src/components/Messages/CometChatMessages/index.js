@@ -1,4 +1,3 @@
-/* eslint-disable no-lone-blocks */
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
@@ -168,12 +167,11 @@ class CometChatMessages extends React.PureComponent {
         this.updateMessages(messages);
       break;
       case "onMessageEdited": {
-
         this.updateMessages(messages);
         //update the parent message of thread message
         this.props.actionGenerated("updateThreadMessage", [key], "edit");
+        break;
       }
-      break;
       case "messageFetched":
         this.prependMessages(messages);
       break;
@@ -278,9 +276,8 @@ class CometChatMessages extends React.PureComponent {
           this.props.actionGenerated(action, messages);
           this.setState({ joinDirectCall: true });
         }
-
-      }
         break;
+      }
       case enums.ACTIONS["END_DIRECT_CALL"]: {
 
         //if used in a chat widget, trigger the event to the app component cos directcall component is included outside of iframe
@@ -290,9 +287,8 @@ class CometChatMessages extends React.PureComponent {
           this.props.actionGenerated(action);
           this.setState({ startDirectCall: false, joinDirectCall: false });
         }
-
-      }
         break;
+      }
       default:
       break;
     }

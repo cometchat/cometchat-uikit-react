@@ -59,7 +59,7 @@ class CometChatOutgoingDirectCall extends React.Component {
 
             const users = [this.props.loggedInUser.uid, this.props.item.uid];
             conversationId = users.sort().join("_user_");
-            
+
         } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
             conversationId = `group_${this.props.item.guid}`
         }
@@ -73,7 +73,7 @@ class CometChatOutgoingDirectCall extends React.Component {
 
         this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [customMessage]);
         CometChat.sendCustomMessage(customMessage).then(message => {
-            
+
             const newMessageObj = { ...message, "_id": customMessage._id };
             this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
 
@@ -94,14 +94,14 @@ class CometChatOutgoingDirectCall extends React.Component {
         let defaultLayout = true;
 
         let callSettings = new CometChat.CallSettingsBuilder()
-                                .enableDefaultLayout(defaultLayout)
-                                .setSessionID(sessionID)
-                                .setIsAudioOnlyCall(audioOnly)
-                                .setLocalizedStringObject({ 
-                                    "SELECT_VIDEO_SOURCE": Translator.translate("SELECT_VIDEO_SOURCE", this.props.lang),
-                                    "SELECT_INPUT_AUDIO_SOURCE": Translator.translate("SELECT_INPUT_AUDIO_SOURCE", this.props.lang),
-                                    "SELECT_OUTPUT_AUDIO_SOURCE": Translator.translate("SELECT_OUTPUT_AUDIO_SOURCE", this.props.lang)
-                                }).build();
+            .enableDefaultLayout(defaultLayout)
+            .setSessionID(sessionID)
+            .setIsAudioOnlyCall(audioOnly)
+            .setLocalizedStringObject({
+                "SELECT_VIDEO_SOURCE": Translator.translate("SELECT_VIDEO_SOURCE", this.props.lang),
+                "SELECT_INPUT_AUDIO_SOURCE": Translator.translate("SELECT_INPUT_AUDIO_SOURCE", this.props.lang),
+                "SELECT_OUTPUT_AUDIO_SOURCE": Translator.translate("SELECT_OUTPUT_AUDIO_SOURCE", this.props.lang)
+            }).build();
 
         const el = this.callScreenFrame;
         CometChat.startCall(
@@ -137,7 +137,7 @@ CometChatOutgoingDirectCall.defaultProps = {
     theme: theme,
     callType: CometChat.CALL_TYPE.VIDEO,
     open: true,
-    close: () => {},
+    close: () => { },
     item: {},
     type: "",
     joinDirectCall: false
