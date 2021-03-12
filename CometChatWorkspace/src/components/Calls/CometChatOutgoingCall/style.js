@@ -88,7 +88,7 @@ export const thumbnailStyle = () => {
 }
 
 export const headerIconStyle = () => {
-    
+
     return {
         width: "100%",
         height: "15%",

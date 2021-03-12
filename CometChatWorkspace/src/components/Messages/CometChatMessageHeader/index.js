@@ -231,7 +231,12 @@ class CometChatMessageHeader extends React.Component {
   render() {
 
     let avatar, presence;
-    let chatWithClassName = "chat__user", chatNameClassName = "user__name", chatStatusClassName = "user__status";
+    let videoCallClassName = "option__videocall-user";
+    let audioCallClassName = "option__audiocall-user";
+    let viewDetailClassName = "option__viewdetail-user";
+    let chatWithClassName = "chat__user";
+    let chatNameClassName = "user__name";
+    let chatStatusClassName = "user__status";
     if (this.props.type === enums.CHAT_WITH_USER) {
 
       avatar = (<CometChatAvatar user={this.props.item} />);
@@ -245,6 +250,7 @@ class CometChatMessageHeader extends React.Component {
     } else {
 
       chatWithClassName = "chat__group"; chatNameClassName = "group__name"; chatStatusClassName = "group__members";
+      videoCallClassName = "option__videocall-group"; audioCallClassName = "option__audiocall-group"; viewDetailClassName = "option__viewdetail-group";
       avatar = (<CometChatAvatar group={this.props.item} />);
     }
 
@@ -254,18 +260,18 @@ class CometChatMessageHeader extends React.Component {
 
     const audioCallText = Translator.translate("AUDIO_CALL", this.props.lang);
     let audioCallBtn = ( 
-      <div title={audioCallText} onClick={() => this.props.actionGenerated("audioCall")} css={chatOptionStyle(audioCallIcon)}>
+      <div className={audioCallClassName} title={audioCallText} onClick={() => this.props.actionGenerated("audioCall")} css={chatOptionStyle(audioCallIcon)}>
         <img src={audioCallIcon} alt={audioCallText} />
       </div>);
     
     const videoCallText = Translator.translate("VIDEO_CALL", this.props.lang);
     let videoCallBtn = (
-      <div title={videoCallText} onClick={() => this.props.actionGenerated("videoCall")} css={chatOptionStyle(videoCallIcon)}>
+      <div className={videoCallClassName} title={videoCallText} onClick={() => this.props.actionGenerated("videoCall")} css={chatOptionStyle(videoCallIcon)}>
         <img src={videoCallIcon} alt={videoCallText} />
       </div>);
 
     const viewDetailText = Translator.translate("VIEW_DETAIL", this.props.lang);
-    let viewDetailBtn = (<div title={viewDetailText}  onClick={() => this.props.actionGenerated("viewDetail")} css={chatOptionStyle(detailPaneIcon)}>
+    let viewDetailBtn = (<div className={viewDetailClassName} title={viewDetailText}  onClick={() => this.props.actionGenerated("viewDetail")} css={chatOptionStyle(detailPaneIcon)}>
       <img src={detailPaneIcon} alt={viewDetailText} />
     </div>);
     

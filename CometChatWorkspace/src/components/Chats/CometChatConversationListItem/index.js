@@ -420,7 +420,9 @@ class CometChatConversationListItem extends React.Component {
 CometChatConversationListItem.defaultProps = {
   lang: Translator.getDefaultLanguage(),
   theme: theme,
-  conversation: {}
+  conversation: {
+    conversationWith: {}
+  }
 };
 
 CometChatConversationListItem.propTypes = {
