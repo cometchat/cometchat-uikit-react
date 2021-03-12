@@ -197,7 +197,7 @@ Using the **CometChatUI** component, you can launch a fully functional chat appl
 
 # Checkout our sample app
 
-Visit our [React sample app](https://github.com/cometchat-pro/cometchat-pro-react-sample-app) repo to run the React sample app.
+Visit our [React sample app](https://github.com/cometchat-pro/javascript-react-chat-app) repo to run the React sample app.
 
 ---
 
