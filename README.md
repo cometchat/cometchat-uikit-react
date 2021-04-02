@@ -158,7 +158,7 @@ CometChat.login(uid, authKey).then(
 
 ## 3. Add UI Kit to your project
 
-* Clone this repository `git clone https://github.com/cometchat-pro/cometchat-pro-react-ui-kit.git -b v3`
+* Clone this repository `git clone https://github.com/cometchat-pro/cometchat-pro-react-ui-kit.git -b master-v3`
 * Copy the cloned repository to your source folder
 
 <img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
@@ -197,7 +197,7 @@ Using the **CometChatUI** component, you can launch a fully functional chat appl
 
 # Checkout our sample app
 
-Visit our [React sample app](https://github.com/cometchat-pro/javascript-react-chat-app/tree/v3) repo to run the React sample app.
+Visit our [React sample app](https://github.com/cometchat-pro/javascript-react-chat-app/tree/master-v3) repo to run the React sample app.
 
 ---
 
@@ -231,4 +231,4 @@ Contact us via real time support present in [CometChat Dashboard](https://app.co
 
 ---
 
-This project uses the following [license](https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/v3/LICENSE).
+This project uses the following [license](https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master-v3/LICENSE).
