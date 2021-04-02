@@ -1,6 +1,6 @@
 {
   "name": "cometchat-pro-react-ui-kit",
-  "version": "v2.2.1-2",
+  "version": "3.0.0-beta1-1",
   "description": "CometChat UI Kit for React App",
   "author": "Inscripts",
   "dependencies": {
@@ -9,17 +9,17 @@
     "@babel/plugin-transform-runtime": "^7.13.5",
     "@babel/preset-env": "^7.13.5",
     "@babel/preset-react": "^7.12.13",
-    "@cometchat-pro/chat": "2.2.1",
+    "@cometchat-pro/chat": "3.0.0-beta1",
     "@emotion/core": "^10.0.35",
-    "babel-jest": "26.6.0",
     "dateformat": "^4.0.0",
     "emoji-mart": "^3.0.0",
-    "jest": "26.6.0",
-    "jest-canvas-mock": "^2.3.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-html-parser": "^2.0.2",
-    "twemoji": "^13.0.1"
+    "twemoji": "^13.0.1",
+    "jest": "26.6.0",
+    "jest-canvas-mock": "^2.3.1",
+    "babel-jest": "26.6.0"
   },
   "scripts": {
     "test": "jest"

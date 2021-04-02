@@ -149,15 +149,7 @@ class CometChatMessageList extends React.PureComponent {
 
         //if the sender of the message is not the loggedin user, mark it as read.
         if (message.getSender().getUid() !== this.loggedInUser.getUid() && !message.getReadAt()) {
-
-          if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER) {
-
-            CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
-
-          } else if (message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP) {
-
-            CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-          }
+          CometChat.markAsRead(message);
         }
 
         this.props.actionGenerated("messageRead", message);
@@ -329,7 +321,7 @@ class CometChatMessageList extends React.PureComponent {
       }
 
     } else if (message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
-      && message.getReceiver().guid === this.props.item.guid) {
+      && message.getReceiverId() === this.props.item.guid) {
       //not implemented
     }
 
@@ -358,18 +350,8 @@ class CometChatMessageList extends React.PureComponent {
 
   markMessageAsRead = (message, type) => {
 
-    if (type === "user") {
-
-      if (!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
-      }
-
-    } else if (type === "group") {
-
-      if (!message.getReadAt()) {
-        CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-      }
-
+    if (!message.getReadAt()) {
+      CometChat.markAsRead(message);
     }
   }
 
@@ -522,10 +504,10 @@ class CometChatMessageList extends React.PureComponent {
     
     if (this.props.type === 'group' 
     && message.getReceiverType() === 'group'
-    && message.getReceiver().guid === this.props.item.guid) {
+    && message.getReceiverId() === this.props.item.guid) {
 
       // if(!message.getReadAt()) {
-      //   CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
+      //   CometChat.markAsRead(message);
       // }
       
       this.props.actionGenerated("groupUpdated", message, key, group, options);

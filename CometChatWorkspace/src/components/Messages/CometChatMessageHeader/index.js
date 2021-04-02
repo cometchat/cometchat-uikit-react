@@ -173,15 +173,28 @@ class CometChatMessageHeader extends React.Component {
         
         if (this.props.type === "group" && this.props.type === item.receiverType && this.props.item.guid === item.receiverId) {
 
-          const typingText = `${item.sender.name} ${Translator.translate("IS_TYPING", this.props.lang)}`;
-          this.setState({ status: typingText });
-          this.props.actionGenerated("showReaction", item);
+          if (item.hasOwnProperty("metadata") && item.metadata && item.metadata.hasOwnProperty("type") && item.metadata.type === enums.LIVE_REACTION_KEY) {
+
+            this.props.actionGenerated("showReaction", item);
+
+          } else {
+
+            const typingText = `${item.sender.name} ${Translator.translate("IS_TYPING", this.props.lang)}`;
+            this.setState({ status: typingText });
+          }
 
         } else if (this.props.type === "user" && this.props.type === item.receiverType && this.props.item.uid === item.sender.uid) {
 
-          const typingText = `${Translator.translate("TYPING", this.props.lang)}`;
-          this.setState({ status: typingText });
-          this.props.actionGenerated("showReaction", item);
+          if (item.hasOwnProperty("metadata") && item.metadata && item.metadata.hasOwnProperty("type") && item.metadata.type === enums.LIVE_REACTION_KEY) {
+
+            this.props.actionGenerated("showReaction", item);
+
+          } else {
+
+            const typingText = `${Translator.translate("TYPING", this.props.lang)}`;
+            this.setState({ status: typingText });
+          }
+
         }
         
         break;
