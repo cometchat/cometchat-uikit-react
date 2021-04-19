@@ -11,6 +11,8 @@ import translationPT from "./locales/pt/translation.json";
 import translationRU from "./locales/ru/translation.json";
 import translationZH from "./locales/zh/translation.json";
 import translationZHTW from "./locales/zh-tw/translation.json";
+import translationSV from "./locales/sv/translation.json";
+import translationLT from "./locales/lt/translation.json";
 
 // the translations
 const translations = {
@@ -24,7 +26,9 @@ const translations = {
     "pt": translationPT,
     "ru": translationRU,
     "zh": translationZH,
-    "zh-tw": translationZHTW
+    "zh-tw": translationZHTW,
+    "sv": translationSV,
+    "lt": translationLT,
 };
 
 window.addEventListener('languagechange', () => {
@@ -34,7 +38,7 @@ window.addEventListener('languagechange', () => {
 
 class Translator {
 
-    static key = enums["LOCALE_KEY"];
+    static key = enums.CONSTANTS["LOCALE"];
     static rtlLanguages = ["ar"];
     static defaultLanguage = "en";
 

@@ -5,6 +5,7 @@ import { jsx, keyframes } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { ID, getUnixTimestamp } from "../../../util/common";
 import * as enums from "../../../util/enums.js";
 
@@ -18,55 +19,88 @@ import {
 class CometChatOutgoingDirectCall extends React.Component {
 
     sessionID;
-
+    static contextType = CometChatContext;
+    
     constructor(props) {
+
         super(props);
-        this.sessionID = `${props.item.guid}`;
-    }
 
-    componentDidMount() {
-        this.startCall();
-    }
-
-    getReceiverDetails = () => {
-
-        let receiverId;
-        let receiverType;
-
-        if (this.props.type === CometChat.RECEIVER_TYPE.USER) {
-
-            receiverId = this.props.item.uid;
-            receiverType = CometChat.RECEIVER_TYPE.USER;
-
-        } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
-
-            receiverId = this.props.item.guid;
-            receiverType = CometChat.RECEIVER_TYPE.GROUP;
+        this.state = {
+            callInProgress: null,
         }
 
-        return { "receiverId": receiverId, "receiverType": receiverType };
+        CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
+            console.error(error);
+        });
+    }
+
+    getSessionId = () => {
+
+        if (this.props.group === null) {
+            return false;
+        }
+
+        if (this.props.group.hasOwnProperty("guid") === false) {
+            return false;
+        }
+
+        return `${this.props.group.guid}`;
+    }
+
+    startCall = (sessionID) => {
+
+        this.sessionID = sessionID;
+        if (this.sessionID === null) {
+            const errorCode = "ERR_EMPTY_CALL_SESSION_ID";
+            this.context.setToastMessage("error", errorCode);
+            return false;
+        }
+
+        this.setState({ callInProgress: true });
+        if(this.context) {
+            this.context.setCallInProgress({"directCall": true}, enums.CONSTANTS["OUTGOING_DIRECT_CALLING"]);
+        }
+
+        setTimeout(() => {
+
+            this.startDirectCall();
+            this.sendCustomMessage();
+
+        }, 5);
+    }
+
+    joinCall = (sessionID) => {
+
+        this.sessionID = sessionID;
+        if (this.sessionID === null) {
+            const errorCode = "ERR_EMPTY_CALL_SESSION_ID";
+            this.context.setToastMessage("error", errorCode);
+            return false;
+        }
+
+        this.setState({ callInProgress: true });
+        if (this.context) {
+            this.context.setCallInProgress(true, enums.CONSTANTS["OUTGOING_DIRECT_CALLING"]);
+        }
+
+        setTimeout(() => {
+
+            this.startDirectCall();
+
+        }, 5);
     }
 
     sendCustomMessage = () => {
 
-        const { receiverId, receiverType } = this.getReceiverDetails();
-
-        const customData = { "sessionID": this.sessionID, "callType": this.props.callType };
+        const receiverType = CometChat.RECEIVER_TYPE.GROUP;
+        const customData = { "sessionID": this.sessionID, "callType": CometChat.CALL_TYPE.VIDEO };
         const customType = enums.CUSTOM_TYPE_MEETING;
 
-        let conversationId = null;
-        if (this.props.type === CometChat.RECEIVER_TYPE.USER) {
+        const conversationId = `group_${this.sessionID}`
 
-            const users = [this.props.loggedInUser.uid, this.props.item.uid];
-            conversationId = users.sort().join("_user_");
-
-        } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
-            conversationId = `group_${this.props.item.guid}`
-        }
-
-        const customMessage = new CometChat.CustomMessage(receiverId, receiverType, customType, customData);
-        customMessage.setSender(this.props.loggedInUser);
-        customMessage.setReceiver(this.props.type);
+        const customMessage = new CometChat.CustomMessage(this.sessionID, receiverType, customType, customData);
+        customMessage.setSender(this.loggedInUser);
+        customMessage.setReceiver(receiverType);
         customMessage.setConversationId(conversationId);
         customMessage._composedAt = getUnixTimestamp();
         customMessage._id = ID();
@@ -79,23 +113,22 @@ class CometChatOutgoingDirectCall extends React.Component {
 
         }).catch(error => {
 
-            console.log("custom message sending failed with error", error);
-
             const newMessageObj = { ...customMessage, "error": error };
             this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
-        });
 
+            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+            this.context.setToastMessage("error", errorCode);
+        });
     }
 
-    startCall = () => {
+    startDirectCall = () => {
 
-        let sessionID = `${this.props.item.guid}`;
-        let audioOnly = false;
+        let audioOnly = (this.props.callType === CometChat.CALL_TYPE.VIDEO) ? false : true;
         let defaultLayout = true;
 
         let callSettings = new CometChat.CallSettingsBuilder()
             .enableDefaultLayout(defaultLayout)
-            .setSessionID(sessionID)
+            .setSessionID(this.sessionID)
             .setIsAudioOnlyCall(audioOnly)
             .setLocalizedStringObject({
                 "SELECT_VIDEO_SOURCE": Translator.translate("SELECT_VIDEO_SOURCE", this.props.lang),
@@ -109,25 +142,38 @@ class CometChatOutgoingDirectCall extends React.Component {
             el,
             new CometChat.OngoingCallListener({
                 onCallEnded: call => {
-                    this.props.actionGenerated(enums.ACTIONS["END_DIRECT_CALL"]);
+
+                    if (this.context) {
+                        this.context.setCallInProgress(null, "");
+                    }
+                    this.setState({ callInProgress: null });
+                    this.props.actionGenerated(enums.ACTIONS["DIRECT_CALL_ENDED"]);
                 },
                 onError: error => {
-                    console.log("Error :", error);
+
+                    if (this.context) {
+                        this.context.setCallInProgress(null, "");
+                    }
+                    this.setState({ callInProgress: null });
+                    this.props.actionGenerated(enums.ACTIONS["DIRECT_CALL_ERROR"]);
+
+                    const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+                    this.context.setToastMessage("error", errorCode);
                 }
             })
         );
-
-        //send custom message only when someone starts a direct call
-        if (this.props.joinDirectCall === false) {
-            this.sendCustomMessage();
-        }
     }
 
     render() {
 
-        return (
-            <div css={callScreenWrapperStyle(this.props, keyframes)} className="callscreen__wrapper" ref={el => { this.callScreenFrame = el; }}></div>
-        );
+
+        let callScreen = null;
+        if(this.state.callInProgress) {
+            callScreen = (
+                <div css={callScreenWrapperStyle(this.props, keyframes)} className="callscreen__wrapper" ref={el => { this.callScreenFrame = el; }}></div>
+            );
+        }
+        return callScreen;
     }
 }
 
@@ -136,23 +182,14 @@ CometChatOutgoingDirectCall.defaultProps = {
     lang: Translator.getDefaultLanguage(),
     theme: theme,
     callType: CometChat.CALL_TYPE.VIDEO,
-    open: true,
-    close: () => { },
-    item: {},
-    type: "",
-    joinDirectCall: false
+    group: null,
 };
 
 CometChatOutgoingDirectCall.propTypes = {
     lang: PropTypes.string,
     theme: PropTypes.object,
     callType: PropTypes.string,
-    open: PropTypes.bool,
-    close: PropTypes.func,
-    item: PropTypes.object,
-    type: PropTypes.string,
-    joinDirectCall: PropTypes.bool
+    group: PropTypes.oneOfType([PropTypes.object, PropTypes.shape(CometChat.Group)]),
 }
-
 
 export default CometChatOutgoingDirectCall;

@@ -16,12 +16,13 @@ export const userDetailStyle = (props) => {
 export const headerStyle = (props) => {
 
     return {
-        padding: "19px 16px",
+        padding: "16px",
         position: "relative",
         borderBottom: `1px solid ${props.theme.borderColor.primary}`,
         display: "flex",
         justifyContent: "flex-start",
         alignItems: "center",
+        height: "69px",
     }
 }
 

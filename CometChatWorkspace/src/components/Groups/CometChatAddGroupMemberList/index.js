@@ -8,8 +8,10 @@ import { CometChat } from "@cometchat-pro/chat";
 import { AddMembersManager } from "./controller";
 
 import { CometChatAddGroupMemberListItem } from "../";
-import GroupDetailContext from "../CometChatGroupDetails/context";
 import { CometChatBackdrop } from "../../Shared";
+
+import { CometChatContext } from "../../../util/CometChatContext";
+import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
@@ -32,16 +34,22 @@ import clearIcon from "./resources/close.png";
 
 class CometChatAddGroupMemberList extends React.Component {
 
+    loggedInUser = null;
     decoratorMessage = Translator.translate("LOADING", Translator.getDefaultLanguage());
-    static contextType = GroupDetailContext;
+    static contextType = CometChatContext;
 
     constructor(props) {
         super(props);
+
         this.state = {
             userlist: [],
             membersToAdd: [],
             filteredlist: [],
         }
+
+        CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
+            console.error(error);
+        });
     }
 
     componentDidMount() {
@@ -102,36 +110,29 @@ class CometChatAddGroupMemberList extends React.Component {
   
     getUsers = () => {
   
-        CometChat.getLoggedinUser().then((user) => {
-  
-            this.AddMembersManager.fetchNextUsers().then(userList => {
+        this.AddMembersManager.fetchNextUsers().then(userList => {
 
-                const filteredUserList = userList.filter(user => {
+            const filteredUserList = userList.filter(user => {
 
-                    const found = this.context.memberlist.find(member => user.uid === member.uid);
-                    const foundbanned = this.context.bannedmemberlist.find(member => user.uid === member.uid);
-                    if (found || foundbanned) {
-                        return false;
-                    }
-                    return true;
-                });
-
-                if (filteredUserList.length === 0) {
-                    this.decoratorMessage = Translator.translate("NO_USERS_FOUND", this.props.lang);
+                const found = this.context.groupMembers.find(member => user.uid === member.uid);
+                const foundbanned = this.context.bannedGroupMembers.find(member => user.uid === member.uid);
+                if (found || foundbanned) {
+                    return false;
                 }
-
-                this.setState({ userlist: [...this.state.userlist, ...userList], filteredlist: [...this.state.filteredlist, ...filteredUserList] });
-                
-            }).catch((error) => {
-
-                this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
-                console.error("[CometChatAddMembers] getUsers fetchNext error", error);
+                return true;
             });
-  
-        }).catch((error) => {
+
+            if (filteredUserList.length === 0) {
+                this.decoratorMessage = Translator.translate("NO_USERS_FOUND", this.props.lang);
+            }
+
+            this.setState({ userlist: [...this.state.userlist, ...userList], filteredlist: [...this.state.filteredlist, ...filteredUserList] });
+            
+        }).catch(error => {
 
             this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
-            console.log("[CometChatAddMembers] getUsers getLoggedinUser error", error);
+            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
@@ -156,14 +157,12 @@ class CometChatAddGroupMemberList extends React.Component {
 
     updateMembers = () => {
         
-        const group = this.context;
-
-        const guid = this.props.item.guid;
+        const guid = this.context.item.guid;
         const membersList = [];
 
         this.state.membersToAdd.forEach(newmember => {
             //if a selected member is already part of the member list, don't add
-            const IndexFound = group.memberlist.findIndex(member => member.uid === newmember.uid);
+            const IndexFound = this.context.groupMembers.findIndex(member => member.uid === newmember.uid);
             if(IndexFound === -1) {
                 
                 const newMember = new CometChat.GroupMember(newmember.uid, CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT);
@@ -189,19 +188,21 @@ class CometChatAddGroupMemberList extends React.Component {
                             membersToAdd.push(found);
                         }
                     }
-                    this.props.actionGenerated("addGroupParticipants", membersToAdd);
+
+                    this.context.setToastMessage("success", "ADD_GROUP_MEMBER_SUCCESS");
+                    this.props.actionGenerated(enums.ACTIONS["ADD_GROUP_MEMBER_SUCCESS"], membersToAdd);
                 }
                 this.props.close();
 
             }).catch(error => {
-                console.log("addMembersToGroup failed with exception:", error);
+                
+                const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+                this.context.setToastMessage("error", errorCode);
             });
         }
     }
 
     render() {
-
-        const group = this.context;
 
         let messageContainer = null;
         if (this.state.filteredlist.length === 0) {
@@ -215,7 +216,7 @@ class CometChatAddGroupMemberList extends React.Component {
 
         let currentLetter = "";
         const filteredUserList = [...this.state.filteredlist];
-        const users = filteredUserList.map((user, key) => {
+        const users = filteredUserList.map(user => {
 
             const chr = user.name[0].toUpperCase();
             let firstLetter = null;
@@ -230,9 +231,8 @@ class CometChatAddGroupMemberList extends React.Component {
                     theme={this.props.theme}
                     lang={this.props.lang}
                     firstLetter={firstLetter}
-                    loggedinuser={group.loggedinuser}
+                    loggedinuser={this.loggedInUser}
                     user={user}
-                    members={group.memberlist}
                     changed={this.membersUpdated}
                     widgetsettings={this.props.widgetsettings} />
                 </React.Fragment>

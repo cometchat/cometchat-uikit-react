@@ -73,9 +73,11 @@ Before you begin, ensure you have met the following requirements:
 
 - [npm](https://www.npmjs.com/get-npm)
 
-- React `npm install react@16.13.1`
+- React `npm install react@17.0.2`
 
-- React DOM `npm install react-dom@16.13.1`
+- React DOM `npm install react-dom@17.0.2`
+
+- React scripts `npm install react-scripts@4.0.3`
 
 ___
 
@@ -95,7 +97,7 @@ To install React UI Kit, you need to first register on CometChat Dashboard. <a h
 ### iii. Add the CometChat Dependency
 
 ```javascript
-  npm install @cometchat-pro/chat@2.2.1 --save
+  npm install @cometchat-pro/chat@2.3.0 --save
 ```
 
 <br/>
@@ -163,7 +165,7 @@ CometChat.login(uid, authKey).then(
 
 <img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
 
-* Copy all the dependencies from package.json into your project's package.js and install them
+* Copy all the dependencies from package.json into your project's package.json and install them
 
 <img align="center" width="auto" height="auto"  src="./Screenshots/package-dependencies.png" />
 

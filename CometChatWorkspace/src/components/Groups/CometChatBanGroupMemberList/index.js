@@ -1,13 +1,15 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core"
+import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatBanGroupMemberListItem } from "../";
 import { CometChatBackdrop } from "../../Shared";
-import GroupDetailContext from "../CometChatGroupDetails/context";
+
+import { CometChatContext } from "../../../util/CometChatContext";
+import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
@@ -29,40 +31,47 @@ import clearIcon from "./resources/close.png";
 
 class CometChatBanGroupMemberList extends React.Component {
 
-    static contextType = GroupDetailContext;
+    loggedInUser = null;
+    decoratorMessage = Translator.translate("LOADING", Translator.getDefaultLanguage());
+    static contextType = CometChatContext;
 
     constructor(props) {
 
         super(props);
 
-        this.decoratorMessage = Translator.translate("LOADING", props.lang);
-
         this.state = {
             membersToBan: [],
             membersToUnBan: [],
         }
+
+        CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
+            console.error(error);
+        });
     }
 
     unbanMember = (memberToUnBan) => {
 
-        const group = this.context;
-
-        const guid = group.item.guid;
+        const guid = this.context.item.guid;
         CometChat.unbanGroupMember(guid, memberToUnBan.uid).then(response => {
             
             if(response) {
-                console.log("Group member unbanning success with response", response);
-                this.props.actionGenerated("unbanGroupMembers", [memberToUnBan]);
+
+                this.context.setToastMessage("success", "UNBAN_GROUP_MEMBER_SUCCESS");
+                this.props.actionGenerated(enums.ACTIONS["UNBAN_GROUP_MEMBER_SUCCESS"], [memberToUnBan]);
+            } else {
+                this.context.setToastMessage("error", "UNBAN_GROUP_MEMBER_FAIL");
             }
+
         }).catch(error => {
-            console.log("Group member banning failed with error", error);
+            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
     updateMembers = (action, member) => {
 
         switch(action) {
-            case "unban":
+            case enums.ACTIONS["UNBAN_GROUP_MEMBER"]:
                 this.unbanMember(member);
                 break;
             default:
@@ -71,27 +80,27 @@ class CometChatBanGroupMemberList extends React.Component {
     }
 
     handleScroll = (e) => {
+
         const bottom = Math.round(e.currentTarget.scrollHeight - e.currentTarget.scrollTop) === Math.round(e.currentTarget.clientHeight);
         if (bottom) {
-            this.props.actionGenerated("fetchBannedMembers");
+            this.props.actionGenerated(enums.ACTIONS["FETCH_BANNED_GROUP_MEMBERS"]);
         }
     }
     
     render() {
         
-        const group = this.context;
-        const membersList = [...group.bannedmemberlist];
+        const membersList = [...this.context.bannedGroupMembers];
         const bannedMembers = membersList.map((member, key) => {
 
-            return (<CometChatBanGroupMemberListItem 
-                    theme={this.props.theme}
-                    key={key} 
-                    member={member}
-                    item={this.props.item}
-                    loggedinuser={group.loggedinuser}
-                    lang={this.props.lang}
-                    widgetsettings={this.props.widgetsettings}
-                    actionGenerated={this.updateMembers} />);
+            return (
+                <CometChatBanGroupMemberListItem 
+                theme={this.props.theme}
+                key={key} 
+                member={member}
+                loggedinuser={this.loggedInUser}
+                lang={this.props.lang}
+                widgetsettings={this.props.widgetsettings}
+                actionGenerated={this.updateMembers} />);
 
         });
 

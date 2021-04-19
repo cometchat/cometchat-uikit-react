@@ -17,7 +17,7 @@ export const modalWrapperStyle = (props) => {
         left: "50%",
         top: "50%",
         transform: "translate(-50%, -50%)",
-        zIndex: "1002",
+        zIndex: "4",
         margin: "0 auto",
         boxShadow: "rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
         borderRadius: "12px",

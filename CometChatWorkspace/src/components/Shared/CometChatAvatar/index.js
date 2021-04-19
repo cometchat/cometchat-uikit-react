@@ -14,16 +14,18 @@ import srcIcon from "./resources/1px.png";
 class CometChatAvatar extends React.Component {
 
   constructor(props) {
-    
     super(props);
-    this.imgRef = React.createRef();
 
+    this.imgRef = React.createRef();
+    this._isMounted = false;
     this.state = {
       avatarImage: srcIcon
     }
   }
 
   componentDidMount() {
+
+    this._isMounted = true;
     this.setAvatarImage();
   }
 
@@ -33,6 +35,10 @@ class CometChatAvatar extends React.Component {
 
       this.setAvatarImage();
     }
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   setAvatarImage = () => {
@@ -81,58 +87,12 @@ class CometChatAvatar extends React.Component {
     let img = new Image();
     img.src = image;
     img.onload = () => {
-      this.setState({ avatarImage: image });
-    }
-  }
 
-  setAvatar = (generator, data) => {
-
-    const stringToColour = function (str) {
-
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      if (this._isMounted) {
+        this.setState({ avatarImage: image });
       }
-
-      let colour = '#';
-      for (let i = 0; i < 3; i++) {
-        let value = (hash >> (i * 8)) & 0xFF;
-        colour += ('00' + value.toString(16)).substr(-2);
-      }
-      return colour;
     }
-
-    const svg1 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg1.setAttribute("width", "200");
-    svg1.setAttribute("height", "200");
-
-    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    rect.setAttribute('x', '0');
-    rect.setAttribute('y', '0');
-    rect.setAttribute('width', '200');
-    rect.setAttribute('height', '200');
-    rect.setAttribute('fill', stringToColour(generator));
-    svg1.appendChild(rect);
-
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute('x', '50%');
-    text.setAttribute('y', '54%');
-    text.setAttribute('dominant-baseline', 'middle');
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('fill', 'white');
-    text.setAttribute('font-size', '120');
-    text.setAttribute('font-family', "'Inter', sans-serif");
-    text.setAttribute('font-wight', "600");
-    text.textContent = data;
-    svg1.appendChild(text);
-
-    let svgString = new XMLSerializer().serializeToString(svg1);
-
-    let decoded = unescape(encodeURIComponent(svgString));
-    let base64 = btoa(decoded);
-
-    let imgSource = `data:image/svg+xml;base64,${base64}`;
-    return imgSource;
+    
   }
 
   generateAvatar = (generator, data) => {

@@ -1,12 +1,14 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core"
+import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatAvatar, CometChatUserPresence } from "../../Shared";
-import GroupDetailContext from "../CometChatGroupDetails/context";
+
+import { CometChatContext } from "../../../util/CometChatContext";
+import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
 
@@ -30,7 +32,7 @@ import kickIcon from "./resources/delete.png";
 
 class CometChatViewGroupMemberListItem extends React.Component {
 
-    static contextType = GroupDetailContext;
+    static contextType = CometChatContext;
 
     constructor(props) {
 
@@ -73,7 +75,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
     }
 
     updateMemberScope = () => {
-        this.props.actionGenerated("changescope", this.props.member, this.state.scope);
+        this.props.actionGenerated(enums.ACTIONS["CHANGE_SCOPE_GROUP_MEMBER"], this.props.member, this.state.scope);
         this.toggleChangeScope();
     }
 
@@ -100,15 +102,13 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
     render() {
 
-        const group = this.context;
-
         let editClassName = "";
     
         let name = this.props.member.name;
         let scope = (<span css={roleStyle()}>{this.roles[this.props.member.scope]}</span>);
         let changescope = null;
-        let ban = (<img src={banIcon} alt={Translator.translate("BAN", this.props.lang)} onClick={() => {this.props.actionGenerated("ban", this.props.member)}} />);
-        let kick = (<img src={kickIcon} alt={Translator.translate("KICK", this.props.lang)} onClick={() => {this.props.actionGenerated("kick", this.props.member)}} />);
+        let ban = (<img src={banIcon} alt={Translator.translate("BAN", this.props.lang)} onClick={() => { this.props.actionGenerated(enums.ACTIONS["BAN_GROUP_MEMBER"], this.props.member)}} />);
+        let kick = (<img src={kickIcon} alt={Translator.translate("KICK", this.props.lang)} onClick={() => { this.props.actionGenerated(enums.ACTIONS["KICK_GROUP_MEMBER"], this.props.member)}} />);
         
 
         if(this.state.showChangeScope) {
@@ -121,7 +121,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
                 </React.Fragment>
             );
 
-            if (this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR
+            if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR
                 && this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
 
                 options = (
@@ -146,7 +146,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
         } else {
 
-            if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
+            if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
                 changescope = scope;
             } else {
                 changescope = (
@@ -159,7 +159,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
         }
 
         //disable change scope, kick, ban of group owner
-        if(this.props.item.owner === this.props.member.uid) {
+        if (this.context.item.owner === this.props.member.uid) {
             scope = (<span css={roleStyle()}>{Translator.translate("OWNER", this.props.lang)}</span>);
             changescope = scope;
             ban = null;
@@ -167,7 +167,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
         }
 
         //disable change scope, kick, ban of self
-        if(group.loggedinuser.uid === this.props.member.uid) {
+        if (this.props.loggedinuser.uid === this.props.member.uid) {
             name = Translator.translate("YOU", this.props.lang);
             changescope = scope;
             ban = null;
@@ -175,7 +175,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
         }
 
         //if the loggedin user is moderator, don't allow to change scope, ban, kick group moderators or administrators
-        if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
+        if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
         && (this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN || this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR)) {
             changescope = scope;
             ban = null;
@@ -183,8 +183,8 @@ class CometChatViewGroupMemberListItem extends React.Component {
         }
 
         //if the loggedin user is administrator but not group owner, don't allow to change scope, ban, kick group administrators
-        if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN
-        && this.props.item.owner !== group.loggedinuser.uid 
+        if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN
+        && this.context.item.owner !== this.props.loggedinuser.uid 
         && this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
             changescope = scope;
             ban = null;
@@ -193,7 +193,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
         
         let editAccess = null;
         //if the loggedin user is participant, don't show change scope, ban, kick group members
-        if(this.props.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
+        if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
             editAccess = null;
             editClassName = "true";
         } else {
@@ -251,10 +251,12 @@ class CometChatViewGroupMemberListItem extends React.Component {
 // Specifies the default values for props:
 CometChatViewGroupMemberListItem.defaultProps = {
     lang: Translator.getDefaultLanguage(),
+    loggedinuser: {}
 };
 
 CometChatViewGroupMemberListItem.propTypes = {
     lang: PropTypes.string,
+    loggedinuser: PropTypes.shape(CometChat.User)
 }
 
 export default CometChatViewGroupMemberListItem;

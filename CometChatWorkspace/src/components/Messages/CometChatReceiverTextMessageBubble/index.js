@@ -11,7 +11,9 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { linkify, checkMessageForExtensionsData, validateWidgetSettings } from "../../../util/common";
+import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
@@ -32,6 +34,7 @@ import {
 
 class CometChatReceiverTextMessageBubble extends React.Component {
 
+  static contextType = CometChatContext;
   messageFrom = "receiver";
 
   constructor(props) {
@@ -126,7 +129,7 @@ class CometChatReceiverTextMessageBubble extends React.Component {
       "languages": [translateToLanguage]
     }).then(result => {
 
-      if (result.hasOwnProperty("language_original") && result["language_original"] !== translateToLanguage) {
+      if (result && result.hasOwnProperty("language_original") && result["language_original"] !== translateToLanguage) {
 
         if (result.hasOwnProperty("translations") && result.translations.length) {
 
@@ -135,14 +138,27 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 
             translatedMessage = `\n(${messageTranslation["message_translated"]})`;
           }
+        } else {
+          this.context.setToastMessage("error", "MESSAGE_TRANSLATE_FAIL");
         }
+      } else {
+        this.context.setToastMessage("info", "MESSAGE_TRANSLATE_SAME_LANGUAGE");
       }
 
       this.setState({ translatedMessage: translatedMessage })
 
     }).catch(error => {
-      // Some error occured
-      console.log("translateMessage error", error);
+      let errorCode = "ERROR";
+      if (error.hasOwnProperty("code")) {
+
+        errorCode = error.code;
+        if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
+          && error.hasOwnProperty("details")
+          && error.details.hasOwnProperty("code")) {
+          errorCode = error.details.code;
+        }
+      }
+      this.context.setToastMessage("error", errorCode);
     });
   }
 

@@ -9,6 +9,7 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
+import * as enums from "../../../util/enums.js";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
 import { theme } from "../../../resources/theme";
@@ -160,7 +161,7 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
   }
 
   open = () => {
-    this.props.actionGenerated("viewActualImage", this.state.message);
+    this.props.actionGenerated(enums.ACTIONS["VIEW_ORIGINAL_IMAGE"], this.state.message);
   }
 
   handleMouseHover = () => {

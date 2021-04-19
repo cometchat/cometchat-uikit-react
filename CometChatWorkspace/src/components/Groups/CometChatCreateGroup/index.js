@@ -7,6 +7,7 @@ import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatBackdrop } from "../../Shared";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 import Translator from "../../../resources/localization/translator";
 
@@ -26,11 +27,13 @@ import closeIcon from "./resources/close.png";
 
 class CometChatCreateGroup extends React.Component {
 
+    static contextType = CometChatContext;
+
     constructor(props) {
         super(props);
 
         this.state = {
-            error: null,
+            //error: null,
             passwordInput: false,
             name: "",
             type: "",
@@ -54,9 +57,9 @@ class CometChatCreateGroup extends React.Component {
     typeChangeHandler = (event) => {
         
         const type = event.target.value;
-        this.setState({type: event.target.value})
+        this.setState({ type})
 
-        if(type === "protected") {
+        if (type === CometChat.GROUP_TYPE.PASSWORD) {
             this.setState({"passwordInput": true});
         } else {
             this.setState({"passwordInput": false});
@@ -69,21 +72,25 @@ class CometChatCreateGroup extends React.Component {
         const groupType = this.state.type.trim();
 
         if(!groupName) {
-            this.setState({ error: Translator.translate("GROUP_NAME_BLANK", this.props.lang) })
+            
+            this.context.setToastMessage("error", "INVALID_GROUP_NAME");
             return false;
         }
 
         if(!groupType) {
-            this.setState({ error: Translator.translate("GROUP_TYPE_BLANK", this.props.lang) })
+
+            this.context.setToastMessage("error", "INVALID_GROUP_TYPE");
             return false;
         }
 
         let password = "";
-        if(groupType === "protected") {
+        if (groupType === CometChat.GROUP_TYPE.PASSWORD) {
+
             password = this.state.password;
 
             if(!password.length) {
-                this.setState({ error: Translator.translate("GROUP_PASSWORD_BLANK", this.props.lang) })
+
+                this.context.setToastMessage("error", "INVALID_PASSWORD");
                 return false;
             }
         }
@@ -95,7 +102,7 @@ class CometChatCreateGroup extends React.Component {
         if(!this.validate()) {
             return false;
         }
-
+        
         const groupType = this.state.type.trim();
         
         const password = this.state.password;
@@ -110,7 +117,7 @@ class CometChatCreateGroup extends React.Component {
             case "private":
                 type = CometChat.GROUP_TYPE.PRIVATE;
                 break;
-            case "protected":
+            case "password":
                 type = CometChat.GROUP_TYPE.PASSWORD;
                 break;
             default:
@@ -119,16 +126,21 @@ class CometChatCreateGroup extends React.Component {
 
         const group = new CometChat.Group(guid, name, type, password);
 
-        CometChat.createGroup(group).then(group => {
+        CometChat.createGroup(group).then(newGroup => {
 
-            console.log("Group created successfully:", group);
-            this.setState({error: null, name: "", type: "", password: "", passwordInput: ""})
-            this.props.actionGenerated(enums.ACTIONS["GROUP_CREATED"], group);
+            if (typeof newGroup === "object" && Object.keys(newGroup).length) {
+
+                this.context.setToastMessage("success", "GROUP_CREATION_SUCCESS");
+                this.setState({ name: "", type: "", password: "", passwordInput: "" })
+                this.props.actionGenerated(enums.ACTIONS["GROUP_CREATED"], newGroup);
+            } else {
+                this.context.setToastMessage("error", "GROUP_JOIN_FAIL");
+            }
 
         }).catch(error => {
             
-            console.log("Group creation failed with exception:", error);
-            this.setState({error: error })
+            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
@@ -186,9 +198,9 @@ class CometChatCreateGroup extends React.Component {
                                         value={this.state.type}
                                         tabIndex="2">
                                             <option value="">{Translator.translate("SELECT_GROUP_TYPE", this.props.lang)}</option>
-                                            <option value="public">{Translator.translate("PUBLIC", this.props.lang)}</option>
-                                            <option value="private">{Translator.translate("PRIVATE", this.props.lang)}</option>
-                                            <option value="protected">{Translator.translate("PASSWORD_PROTECTED", this.props.lang)}</option>
+                                            <option value={CometChat.GROUP_TYPE.PUBLIC}>{Translator.translate("PUBLIC", this.props.lang)}</option>
+                                            <option value={CometChat.GROUP_TYPE.PRIVATE}>{Translator.translate("PRIVATE", this.props.lang)}</option>
+                                            <option value={CometChat.GROUP_TYPE.PASSWORD}>{Translator.translate("PASSWORD_PROTECTED", this.props.lang)}</option>
                                         </select>
                                     </td>
                                 </tr>

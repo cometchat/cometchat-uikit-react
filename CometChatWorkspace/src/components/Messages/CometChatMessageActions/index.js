@@ -6,6 +6,7 @@ import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { validateWidgetSettings } from "../../../util/common";
+import * as enums from "../../../util/enums.js";
 
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
@@ -51,7 +52,7 @@ class CometChatMessageActions extends React.PureComponent {
           css={groupButtonStyle(this.props, reactIcon)}
           className="group__button button__reacttomessage"
           data-title={Translator.translate("ADD_REACTION", this.props.lang)}
-          onClick={() => this.props.actionGenerated("reactToMessage", this.props.message)}></button>
+          onClick={() => this.props.actionGenerated(enums.ACTIONS["REACT_TO_MESSAGE"], this.props.message)}></button>
       </li>
     );
 
@@ -69,7 +70,7 @@ class CometChatMessageActions extends React.PureComponent {
         css={groupButtonStyle(this.props, replyIcon)}
         className="group__button button__threadedchats" 
         data-title={(this.props.message.replyCount) ? Translator.translate("REPLY_TO_THREAD", this.props.lang) : Translator.translate("REPLY_IN_THREAD", this.props.lang) }
-        onClick={() => this.props.actionGenerated("viewMessageThread", this.props.message)}></button>
+        onClick={() => this.props.actionGenerated(enums.ACTIONS["VIEW_THREADED_MESSAGE"], this.props.message)}></button>
       </li>
     );
 
@@ -89,7 +90,7 @@ class CometChatMessageActions extends React.PureComponent {
         css={groupButtonStyle(this.props, deleteIcon)}
         className="group__button button__delete" 
         data-title={Translator.translate("DELETE_MESSAGE", this.props.lang)}
-        onClick={() => this.props.actionGenerated("deleteMessage", this.props.message)}></button>
+        onClick={() => this.props.actionGenerated(enums.ACTIONS["DELETE_MESSAGE"], this.props.message)}></button>
       </li>
     );
 
@@ -108,7 +109,7 @@ class CometChatMessageActions extends React.PureComponent {
         css={groupButtonStyle(this.props, editIcon)}
         className="group__button button__edit" 
         data-title={Translator.translate("EDIT_MESSAGE", this.props.lang)}
-        onClick={() => this.props.actionGenerated("editMessage", this.props.message)}></button>
+        onClick={() => this.props.actionGenerated(enums.ACTIONS["EDIT_MESSAGE"], this.props.message)}></button>
       </li>
     );
 

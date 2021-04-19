@@ -12,7 +12,7 @@ class MessageFilter {
 
         this.categories = { 
             [CometChat.CATEGORY_MESSAGE]: CometChat.CATEGORY_MESSAGE, 
-            [enums.CATEGORY_CUSTOM]: enums.CATEGORY_CUSTOM,
+            [CometChat.CATEGORY_CUSTOM]: CometChat.CATEGORY_CUSTOM,
             [CometChat.CATEGORY_ACTION]: CometChat.CATEGORY_ACTION,
             [CometChat.CATEGORY_CALL]: CometChat.CATEGORY_CALL,
         };
@@ -28,7 +28,7 @@ class MessageFilter {
             [enums.CUSTOM_TYPE_DOCUMENT]: enums.CUSTOM_TYPE_DOCUMENT,
             [enums.CUSTOM_TYPE_WHITEBOARD]: enums.CUSTOM_TYPE_WHITEBOARD,
             [enums.CUSTOM_TYPE_MEETING]: enums.CUSTOM_TYPE_MEETING,
-            [enums.ACTION_TYPE_GROUPMEMBER]: enums.ACTION_TYPE_GROUPMEMBER,
+            [CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER]: CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER,
             [CometChat.CALL_TYPE.AUDIO]: CometChat.CALL_TYPE.AUDIO,
             [CometChat.CALL_TYPE.VIDEO]: CometChat.CALL_TYPE.VIDEO
         }
@@ -50,7 +50,7 @@ class MessageFilter {
     getTypes = (widgetSettings) => {
 
         if (validateWidgetSettings(widgetSettings, "hide_join_leave_notifications") === true) {
-            delete this.types[enums.ACTION_TYPE_GROUPMEMBER];
+            delete this.types[CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER];
         }
 
         if (validateWidgetSettings(widgetSettings, "show_call_notifications") === false) {
