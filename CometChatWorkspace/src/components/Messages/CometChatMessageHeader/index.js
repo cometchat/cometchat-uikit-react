@@ -10,6 +10,7 @@ import { MessageHeaderManager } from "./controller";
 
 import { CometChatAvatar, CometChatUserPresence } from "../../Shared";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 import { validateWidgetSettings } from "../../../util/common";
 
@@ -35,6 +36,9 @@ import detailPaneIcon from "./resources/detailpane.png";
 
 class CometChatMessageHeader extends React.Component {
 
+  item;
+  static contextType = CometChatContext;
+
   constructor(props) {
     super(props);
 
@@ -42,6 +46,10 @@ class CometChatMessageHeader extends React.Component {
       status: "",
       presence: "offline",
     }
+
+    CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
+      console.error(error);
+    });
   }
 
   componentDidMount() {
@@ -49,63 +57,64 @@ class CometChatMessageHeader extends React.Component {
     this.MessageHeaderManager = new MessageHeaderManager();
     this.MessageHeaderManager.attachListeners(this.updateHeader);
 
-    if (this.props.type === CometChat.RECEIVER_TYPE.USER) {
+    if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER) {
       this.setStatusForUser();
-    } else {
+    } else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP) {
       this.setStatusForGroup();
     }
+
+    this.item = this.context.item;
   }
 
   componentDidUpdate(prevProps, prevState) {
-
+    
     this.MessageHeaderManager.removeListeners();
     this.MessageHeaderManager = new MessageHeaderManager();
     this.MessageHeaderManager.attachListeners(this.updateHeader);
 
-    if (this.props.type === CometChat.RECEIVER_TYPE.USER
-    && (prevProps.item.uid !== this.props.item.uid
-    || (prevProps.item.uid === this.props.item.uid && prevProps.lang !== this.props.lang))) {
+    if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER
+    && (this.item !== this.context.item || prevProps.lang !== this.props.lang)) {
 
       this.setStatusForUser();
 
-    } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP
-    && (prevProps.item.guid !== this.props.item.guid 
-    || (prevProps.item.guid === this.props.item.guid && prevProps.item.membersCount !== this.props.item.membersCount)
-    || (prevProps.item.guid === this.props.item.guid && prevProps.lang !== this.props.lang)) ) {
+    } else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP
+    && (this.item !== this.context.item || prevProps.lang !== this.props.lang)) {
 
       this.setStatusForGroup();
     }
+
+    this.item = this.context.item;
   }
 
   setStatusForUser = () => {
 
     let status = "";
-    const presence = (this.props.item.status === "online") ? "online" : "offline";
+    const presence = (this.context.item.status === "online") ? "online" : "offline";
 
-    if(this.props.item.status === "offline" && this.props.item.lastActiveAt) {
+    if (this.context.item.status === "offline" && this.context.item.lastActiveAt) {
 
-      const lastActive = (this.props.item.lastActiveAt * 1000);
+      const lastActive = (this.context.item.lastActiveAt * 1000);
       const messageDate = dateFormat(lastActive, "dS mmm yyyy, h:MM TT");
 
       status = `${Translator.translate("LAST_ACTIVE_AT", this.props.lang)} : ${messageDate}`;
 
-    } else if(this.props.item.status === "offline") {
+    } else if (this.context.item.status === "offline") {
       
       status = (Translator.translate("OFFLINE", this.props.lang));
 
-    } else if (this.props.item.status === "online") {
+    } else if (this.context.item.status === "online") {
 
       status = (Translator.translate("ONLINE", this.props.lang));
     }
 
-    this.setState({status: status, presence: presence});
+    this.setState({status: status, presence: presence });
   }
 
   setStatusForGroup = () => {
 
     let membersText = (Translator.translate("MEMBERS", this.props.lang));
-    const status = `${this.props.item.membersCount} ${membersText}`;
-    this.setState({status: status});
+    const status = `${this.context.item.membersCount} ${membersText}`;
+    this.setState({ status: status });
   }
 
   componentWillUnmount() {
@@ -120,7 +129,7 @@ class CometChatMessageHeader extends React.Component {
 
       case enums.USER_ONLINE:
       case enums.USER_OFFLINE: {
-        if(this.props.type === "user" && this.props.item.uid === item.uid) {
+        if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.item.uid === item.uid) {
 
           //if user presence is disabled in chat widget
           if (validateWidgetSettings(this.props.widgetsettings, "show_user_presence") === false) {
@@ -128,11 +137,11 @@ class CometChatMessageHeader extends React.Component {
           }
           let status = "";
           
-          if (item.status === "offline") {
+          if (item.status === CometChat.USER_STATUS.OFFLINE) {
 
             status = Translator.translate("OFFLINE", this.props.lang);
 
-          } else if (item.status === "online") {
+          } else if (item.status === CometChat.USER_STATUS.ONLINE) {
 
             status = Translator.translate("ONLINE", this.props.lang);
           }
@@ -144,9 +153,9 @@ class CometChatMessageHeader extends React.Component {
       case enums.GROUP_MEMBER_KICKED:
       case enums.GROUP_MEMBER_BANNED:
       case enums.GROUP_MEMBER_LEFT:
-        if(this.props.type === "group" 
-        && this.props.item.guid === item.guid
-        && this.props.loggedInUser.uid !== groupUser.uid) {
+        if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP
+        && this.context.item.guid === item.guid
+        && this.loggedInUser.uid !== groupUser.uid) {
 
           let membersCount = parseInt(item.membersCount);
           const status = `${membersCount} ${Translator.translate("MEMBERS", this.props.lang)}`;
@@ -154,7 +163,7 @@ class CometChatMessageHeader extends React.Component {
         }
       break;
       case enums.GROUP_MEMBER_JOINED:
-        if(this.props.type === "group" && this.props.item.guid === item.guid) {
+        if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.item.guid === item.guid) {
 
           let membersCount = parseInt(item.membersCount);
           const status = `${membersCount} ${(Translator.translate("MEMBERS", this.props.lang))}`;
@@ -162,38 +171,24 @@ class CometChatMessageHeader extends React.Component {
         }
       break;
       case enums.GROUP_MEMBER_ADDED:
-        if(this.props.type === "group" && this.props.item.guid === item.guid) {
+        if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.item.guid === item.guid) {
 
           let membersCount = parseInt(item.membersCount);
           const status = `${membersCount} ${(Translator.translate("MEMBERS", this.props.lang))}`;
           this.setState({status: status});
         }
       break;
-      case enums.TYPING_STARTED: {
-        
-        if (this.props.type === "group" && this.props.type === item.receiverType && this.props.item.guid === item.receiverId) {
-
-          const typingText = `${item.sender.name} ${Translator.translate("IS_TYPING", this.props.lang)}`;
-          this.setState({ status: typingText });
-          this.props.actionGenerated("showReaction", item);
-
-        } else if (this.props.type === "user" && this.props.type === item.receiverType && this.props.item.uid === item.sender.uid) {
-
-          const typingText = `${Translator.translate("TYPING", this.props.lang)}`;
-          this.setState({ status: typingText });
-          this.props.actionGenerated("showReaction", item);
-        }
-        
-        break;
-      }
+      case enums.TYPING_STARTED:
+        this.onTypingStarted(item);
+      break;
       case enums.TYPING_ENDED: {
 
-        if (this.props.type === "group" && this.props.type === item.receiverType && this.props.item.guid === item.receiverId) {
+        if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.type === item.receiverType && this.context.item.guid === item.receiverId) {
 
           this.setStatusForGroup();
           this.props.actionGenerated("stopReaction", item);
 
-        } else if (this.props.type === "user" && this.props.type === item.receiverType && this.props.item.uid === item.sender.uid) {
+        } else if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.type === item.receiverType && this.context.item.uid === item.sender.uid) {
           
           this.props.actionGenerated("stopReaction", item);
 
@@ -208,6 +203,59 @@ class CometChatMessageHeader extends React.Component {
       default:
       break;
     }
+  }
+
+  onTypingStarted = (item) => {
+
+    const showTyping = (typingText) => {
+
+      if (item.hasOwnProperty("metadata") && item.metadata && item.metadata.hasOwnProperty("type") && item.metadata.type === enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"]) {
+
+        this.props.actionGenerated(enums.ACTIONS["SHOW_LIVE_REACTION"], item);
+
+      } else {
+        this.setState({ status: typingText });
+      }
+    }
+
+    if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.type === item.receiverType && this.context.item.guid === item.receiverId) {
+
+      const typingText = `${item.sender.name} ${Translator.translate("IS_TYPING", this.props.lang)}`;
+      showTyping(typingText);
+
+    } else if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.type === item.receiverType && this.context.item.uid === item.sender.uid) {
+
+      const typingText = `${Translator.translate("TYPING", this.props.lang)}`;
+      showTyping(typingText);
+
+    }
+  }
+
+  onTypingEnded = (item) => {
+
+    const endLiveReaction = () => {
+
+      if (item.hasOwnProperty("metadata") && item.metadata && item.metadata.hasOwnProperty("type") && item.metadata.type === enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"]) {
+        this.props.actionGenerated(enums.ACTIONS["STOP_LIVE_REACTION"], item);
+      }
+    }
+
+    if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.type === item.receiverType && this.context.item.guid === item.receiverId) {
+
+      this.setStatusForGroup();
+      endLiveReaction();
+
+    } else if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.type === item.receiverType && this.context.item.uid === item.sender.uid) {
+
+      if (this.state.presence === CometChat.USER_STATUS.ONLINE) {
+        this.setState({ status: Translator.translate("ONLINE", this.props.lang), presence: CometChat.USER_STATUS.ONLINE });
+      } else {
+        this.setStatusForUser();
+      }
+
+      endLiveReaction();
+    }
+
   }
     
   toggleTooltip = (event, flag) => {
@@ -228,6 +276,12 @@ class CometChatMessageHeader extends React.Component {
     
   }
 
+  resetChat = () => {
+
+    this.context.setItem({});
+    this.props.actionGenerated(enums.ACTIONS["TOGGLE_SIDEBAR"])
+  }
+
   render() {
 
     let avatar, presence;
@@ -237,9 +291,9 @@ class CometChatMessageHeader extends React.Component {
     let chatWithClassName = "chat__user";
     let chatNameClassName = "user__name";
     let chatStatusClassName = "user__status";
-    if (this.props.type === enums.CHAT_WITH_USER) {
+    if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER) {
 
-      avatar = (<CometChatAvatar user={this.props.item} />);
+      avatar = (<CometChatAvatar user={this.context.item} />);
       presence = (
         <CometChatUserPresence
         widgetsettings={this.props.widgetsettings}
@@ -247,31 +301,31 @@ class CometChatMessageHeader extends React.Component {
         borderColor={this.props.theme.borderColor.primary} />
       );
 
-    } else {
+    } else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP) {
 
       chatWithClassName = "chat__group"; chatNameClassName = "group__name"; chatStatusClassName = "group__members";
       videoCallClassName = "option__videocall-group"; audioCallClassName = "option__audiocall-group"; viewDetailClassName = "option__viewdetail-group";
-      avatar = (<CometChatAvatar group={this.props.item} />);
+      avatar = (<CometChatAvatar group={this.context.item} />);
     }
 
     let status = (
-      <span css={chatStatusStyle(this.props, this.state)} className={chatStatusClassName}>{this.state.status}</span>
+      <span css={chatStatusStyle(this.props, this.state, this.context)} className={chatStatusClassName}>{this.state.status}</span>
     );
 
     const audioCallText = Translator.translate("AUDIO_CALL", this.props.lang);
     let audioCallBtn = ( 
-      <div className={audioCallClassName} title={audioCallText} onClick={() => this.props.actionGenerated("audioCall")} css={chatOptionStyle(audioCallIcon)}>
+      <div className={audioCallClassName} title={audioCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_AUDIO_CALL"])} css={chatOptionStyle(audioCallIcon)}>
         <img src={audioCallIcon} alt={audioCallText} />
       </div>);
     
     const videoCallText = Translator.translate("VIDEO_CALL", this.props.lang);
     let videoCallBtn = (
-      <div className={videoCallClassName} title={videoCallText} onClick={() => this.props.actionGenerated("videoCall")} css={chatOptionStyle(videoCallIcon)}>
+      <div className={videoCallClassName} title={videoCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_VIDEO_CALL"])} css={chatOptionStyle(videoCallIcon)}>
         <img src={videoCallIcon} alt={videoCallText} />
       </div>);
 
     const viewDetailText = Translator.translate("VIEW_DETAIL", this.props.lang);
-    let viewDetailBtn = (<div className={viewDetailClassName} title={viewDetailText}  onClick={() => this.props.actionGenerated("viewDetail")} css={chatOptionStyle(detailPaneIcon)}>
+    let viewDetailBtn = (<div className={viewDetailClassName} title={viewDetailText} onClick={() => this.props.actionGenerated(enums.ACTIONS["VIEW_DETAIL"])} css={chatOptionStyle(detailPaneIcon)}>
       <img src={detailPaneIcon} alt={viewDetailText} />
     </div>);
     
@@ -279,11 +333,14 @@ class CometChatMessageHeader extends React.Component {
       viewDetailBtn = null;
     }
 
-    if (this.props.item.blockedByMe === true || this.props.audiocall === false || this.props.type === enums.CHAT_WITH_GROUP) {
+    if ((this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.item.blockedByMe === true) 
+    || this.props.audiocall === false 
+    || this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP) {
       audioCallBtn = null;
     }
 
-    if(this.props.item.blockedByMe === true || this.props.videocall === false) {
+    if ((this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.item.blockedByMe === true) 
+    || this.props.videocall === false) {
       videoCallBtn = null;
     }
 
@@ -298,14 +355,14 @@ class CometChatMessageHeader extends React.Component {
     }
 
     //if user presence is disabled in chat widget
-    if (validateWidgetSettings(this.props.widgetsettings, "show_user_presence") === false && this.props.type === "user") {
+    if (validateWidgetSettings(this.props.widgetsettings, "show_user_presence") === false && this.context.type === CometChat.ACTION_TYPE.TYPE_USER) {
       status = null;
     }
 
     return (
       <div css={chatHeaderStyle(this.props)} className="chat__header">
         <div css={chatDetailStyle()} className="chat__details">
-          <div css={chatSideBarBtnStyle(menuIcon, this.props)} className="chat__sidebar-menu" onClick={() => this.props.actionGenerated("menuClicked")}></div>
+          <div css={chatSideBarBtnStyle(menuIcon, this.props)} className="chat__sidebar-menu" onClick={this.resetChat}></div>
           <div css={chatThumbnailStyle()} className="chat__thumbnail">
             {avatar}
             {presence}
@@ -313,7 +370,7 @@ class CometChatMessageHeader extends React.Component {
           <div css={chatUserStyle()} className={chatWithClassName}>
             <h6 css={chatNameStyle()} className={chatNameClassName}
             onMouseEnter={event => this.toggleTooltip(event, true)} 
-            onMouseLeave={event => this.toggleTooltip(event, false)}>{this.props.item.name}</h6>
+            onMouseLeave={event => this.toggleTooltip(event, false)}>{this.context.item.name}</h6>
             {status}
           </div>
         </div>

@@ -1,3 +1,5 @@
+import { CometChat } from "@cometchat-pro/chat";
+
 export const chatHeaderStyle = (props) => {
 
     return {
@@ -82,12 +84,10 @@ export const chatNameStyle = () => {
     }
 }
 
-export const chatStatusStyle = (props, state) => {
+export const chatStatusStyle = (props, state, context) => {
 
     let status = {};
-    if (props.type === "user") {
-
-
+    if (context.type === CometChat.ACTION_TYPE.TYPE_USER) {
 
         status = {
             color: `${props.theme.color.blue}`,
@@ -110,7 +110,7 @@ export const chatStatusStyle = (props, state) => {
             };
         }
         
-    } else if (props.type === "group") {
+    } else if (context.type === CometChat.ACTION_TYPE.TYPE_GROUP) {
 
         status = {
             color: `${props.theme.color.helpText}`,

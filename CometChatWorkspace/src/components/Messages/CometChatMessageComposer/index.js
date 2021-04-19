@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/img-redundant-alt */
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
@@ -11,12 +10,13 @@ import "emoji-mart/css/emoji-mart.css";
 import { CometChatSmartReplyPreview, CometChatCreatePoll, CometChatStickerKeyboard } from "../Extensions";
 import { CometChatEmojiKeyboard } from "../";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { validateWidgetSettings, checkMessageForExtensionsData, ID, getUnixTimestamp } from "../../../util/common";
 import * as enums from "../../../util/enums.js";
+import { SoundManager } from "../../../util/SoundManager";
 
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
-import { outgoingMessageAlert } from "../../../resources/audio/";
 
 import {
   chatComposerStyle,
@@ -52,8 +52,11 @@ import stickerIcon from "./resources/insertsticker.png"
 import closeIcon from "./resources/close.png";
 import documentIcon from "./resources/launchcollaborativedocument.png";
 import whiteboardIcon from "./resources/launchcollaborativewhiteboard.png";
+import heartIcon from "./resources/heart.png";
 
 class CometChatMessageComposer extends React.PureComponent {
+
+  static contextType = CometChatContext;
 
   constructor(props) {
 
@@ -81,14 +84,20 @@ class CometChatMessageComposer extends React.PureComponent {
       shareWhiteboard: false
     }
 
-    this.audio = new Audio(outgoingMessageAlert);
+    CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
+      console.error(error);
+    });
   }
 
   componentDidMount() {
 
-    if (this.messageInputRef && this.messageInputRef.current) {
-      this.messageInputRef.current.focus();
-    }
+    this.item = (this.context.type === CometChat.ACTION_TYPE.TYPE_USER || this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP) ? this.context.item : null;
+
+    // if (this.messageInputRef && this.messageInputRef.current) {
+    //   this.messageInputRef.current.focus();
+    // }
+
+    SoundManager.setWidgetSettings(this.props.widgetsettings);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -133,7 +142,7 @@ class CometChatMessageComposer extends React.PureComponent {
       this.setState({ messageToReact: this.props.messageToReact });
     }
 
-    if (prevProps.item !== this.props.item) {
+    if (this.context.item !== this.item) {
 
       this.messageInputRef.current.textContent = "";
       this.setState({ stickerViewer: false, emojiViewer: false, replyPreview: null, messageToBeEdited: "", messageInput: "" });
@@ -144,6 +153,8 @@ class CometChatMessageComposer extends React.PureComponent {
     if (prevState.messageInput !== this.state.messageInput) {
       this.focusOnMessageComposer();
     }
+
+    this.item = (this.context.type === CometChat.ACTION_TYPE.TYPE_USER || this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP) ? this.context.item : null;
   }
 
   focusOnMessageComposer = () => {
@@ -151,17 +162,6 @@ class CometChatMessageComposer extends React.PureComponent {
     if (this.messageInputRef && this.messageInputRef.current) {
       this.messageInputRef.current.focus();
     }
-  }
-
-  playAudio = () => {
-
-    //if message sound is disabled for chat wigdet in dashboard
-    if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_messages") === false) {
-      return false;
-    }
-
-    this.audio.currentTime = 0;
-    this.audio.play();
   }
 
   pasteHtmlAtCaret(html, selectPastedContent) {
@@ -352,14 +352,14 @@ class CometChatMessageComposer extends React.PureComponent {
     let receiverId;
     let receiverType;
 
-    if (this.props.type === CometChat.RECEIVER_TYPE.USER) {
+    if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER) {
 
-      receiverId = this.props.item.uid;
+      receiverId = this.context.item.uid;
       receiverType = CometChat.RECEIVER_TYPE.USER;
 
-    } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
+    } else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP) {
 
-      receiverId = this.props.item.guid;
+      receiverId = this.context.item.guid;
       receiverType = CometChat.RECEIVER_TYPE.GROUP;
     }
 
@@ -370,13 +370,13 @@ class CometChatMessageComposer extends React.PureComponent {
 
     let conversationId = null;
     
-    if (this.props.type === CometChat.RECEIVER_TYPE.USER) {
+    if (this.context.type === CometChat.RECEIVER_TYPE.USER) {
 
-      const users = [this.props.loggedInUser.uid, this.props.item.uid];
+      const users = [this.loggedInUser.uid, this.context.item.uid];
       conversationId = users.sort().join("_user_");
       
-    } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
-      conversationId = `group_${this.props.item.guid}`
+    } else if (this.context.type === CometChat.RECEIVER_TYPE.GROUP) {
+      conversationId = `group_${this.context.item.guid}`
     }
 
     return conversationId;
@@ -395,8 +395,8 @@ class CometChatMessageComposer extends React.PureComponent {
       mediaMessage.setParentMessageId(this.props.parentMessageId);
     }
 
-    mediaMessage.setSender(this.props.loggedInUser);
-    mediaMessage.setReceiver(this.props.type);
+    mediaMessage.setSender(this.loggedInUser);
+    mediaMessage.setReceiver(this.context.type);
     mediaMessage.setType(messageType);
     mediaMessage.setConversationId(conversationId);
     mediaMessage.setData({
@@ -408,7 +408,7 @@ class CometChatMessageComposer extends React.PureComponent {
     mediaMessage._composedAt = getUnixTimestamp();
     mediaMessage._id = ID();
 
-    this.playAudio();
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
     this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [mediaMessage]);
     
     CometChat.sendMessage(mediaMessage).then(message => {
@@ -418,10 +418,12 @@ class CometChatMessageComposer extends React.PureComponent {
 
     }).catch(error => {
 
-      console.log("Message sending failed with error:", error);
-
       const newMessageObj = { ...mediaMessage, "error": error };
       this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
+
+      const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+      this.context.setToastMessage("error", errorCode);
+
     });
   }
 
@@ -461,8 +463,8 @@ class CometChatMessageComposer extends React.PureComponent {
     if(this.props.parentMessageId) {
       textMessage.setParentMessageId(this.props.parentMessageId);
     }
-    textMessage.setSender(this.props.loggedInUser);
-    textMessage.setReceiver(this.props.type);
+    textMessage.setSender(this.loggedInUser);
+    textMessage.setReceiver(this.context.type);
     textMessage.setText(messageInput);
     textMessage.setConversationId(conversationId);
     textMessage._composedAt = getUnixTimestamp();
@@ -472,7 +474,7 @@ class CometChatMessageComposer extends React.PureComponent {
     this.setState({ messageInput: "", replyPreview: false });
     
     this.messageInputRef.current.textContent = "";
-    this.playAudio();
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
     
     CometChat.sendMessage(textMessage).then(message => {
 
@@ -481,10 +483,23 @@ class CometChatMessageComposer extends React.PureComponent {
 
     }).catch(error => {
 
-      console.log("Message sending failed with error:", error);
-
       const newMessageObj = { ...textMessage, "error": error };
       this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
+
+
+      let errorCode = "ERROR";
+      if (error && error.hasOwnProperty("code")) {
+
+        errorCode = error.code;
+        if (errorCode === "ERR_GUID_NOT_FOUND") {
+
+          this.context.setToastMessage("error", errorCode);
+          this.context.setDeletedGroupId(this.context.item.guid);
+
+        } else {
+          this.context.setToastMessage("error", errorCode);
+        }
+      }
 
     });
   }
@@ -501,25 +516,26 @@ class CometChatMessageComposer extends React.PureComponent {
     textMessage.setId(messageToBeEdited.id);
 
     const newMessage = Object.assign({}, textMessage, { messageFrom: messageToBeEdited.messageFrom })
-    this.props.actionGenerated("messageEdited", newMessage);
+    this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], newMessage);
 
     this.setState({ messageInput: "" });
     this.messageInputRef.current.textContent = "";
-    this.playAudio();
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
 
     this.closeEditPreview();
 
     CometChat.editMessage(textMessage).then(message => {
 
-      this.props.actionGenerated("messageEdited", { ...message });
+      this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], { ...message });
 
     }).catch(error => {
-      console.log("Message editing failed with error:", error);
+      const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+      this.context.setToastMessage("error", errorCode);
     });
   }
 
   closeEditPreview = () => {
-    this.props.actionGenerated("clearEditPreview");
+    this.props.actionGenerated(enums.ACTIONS["CLEAR_EDIT_PREVIEW"]);
   }
 
   startTyping = (timer, metadata) => {
@@ -597,9 +613,27 @@ class CometChatMessageComposer extends React.PureComponent {
       "receiver": receiverId,
       "receiverType": receiverType
     }).then(response => {
+
       // Response with document url
+      if (response && response.hasOwnProperty("document_url")) {
+        this.context.setToastMessage("success", "DOCUMENT_SUCCESS");
+      } else {
+        this.context.setToastMessage("error", "DOCUMENT_FAIL");
+      }
+
     }).catch(error => {
-      // Some error occured
+
+      let errorCode = "ERROR";
+      if (error.hasOwnProperty("code")) {
+
+        errorCode = error.code;
+        if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
+        && error.hasOwnProperty("details") 
+        && error.details.hasOwnProperty("code")) {
+          errorCode = error.details.code;
+        } 
+      } 
+      this.context.setToastMessage("error", errorCode);
     });
   }
 
@@ -612,8 +646,25 @@ class CometChatMessageComposer extends React.PureComponent {
       "receiverType": receiverType,
     }).then(response => {
       // Response with board_url
+      if (response && response.hasOwnProperty("board_url")) {
+        this.context.setToastMessage("success", "WHITEBOARD_SUCCESS");
+      } else {
+        this.context.setToastMessage("error", "WHITEBOARD_FAIL");
+      }
+
     }).catch(error => {
-      // Some error occured
+
+      let errorCode = "ERROR";
+      if (error.hasOwnProperty("code")) {
+
+        errorCode = error.code;
+        if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
+          && error.hasOwnProperty("details")
+          && error.details.hasOwnProperty("code")) {
+          errorCode = error.details.code;
+        }
+      }
+      this.context.setToastMessage("error", errorCode);
     });
   }
 
@@ -655,15 +706,14 @@ class CometChatMessageComposer extends React.PureComponent {
     if (this.props.parentMessageId) {
       customMessage.setParentMessageId(this.props.parentMessageId);
     }
-    customMessage.setSender(this.props.loggedInUser);
-    customMessage.setReceiver(this.props.type);
+    customMessage.setSender(this.loggedInUser);
+    customMessage.setReceiver(this.context.type);
     customMessage.setConversationId(conversationId);
     customMessage._composedAt = getUnixTimestamp();
     customMessage._id = ID();
 
     this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [customMessage]);
-
-    this.playAudio();
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
 
     CometChat.sendCustomMessage(customMessage).then(message => {
 
@@ -672,10 +722,11 @@ class CometChatMessageComposer extends React.PureComponent {
 
     }).catch(error => {
 
-      console.log("custom message sending failed with error", error);
-
       const newMessageObj = { ...customMessage, "error": error };
       this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
+
+      const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+      this.context.setToastMessage("error", errorCode);
 
     });
   }
@@ -690,15 +741,15 @@ class CometChatMessageComposer extends React.PureComponent {
     if (this.props.parentMessageId) {
       textMessage.setParentMessageId(this.props.parentMessageId);
     }
-    textMessage.setSender(this.props.loggedInUser);
-    textMessage.setReceiver(this.props.type);
+    textMessage.setSender(this.loggedInUser);
+    textMessage.setReceiver(this.context.type);
     textMessage.setConversationId(conversationId);
     textMessage._composedAt = getUnixTimestamp();
     textMessage._id = ID();
 
     this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [textMessage]);
 
-    this.playAudio();
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
     this.setState({ replyPreview: null })
 
     CometChat.sendMessage(textMessage).then(message => {
@@ -708,9 +759,11 @@ class CometChatMessageComposer extends React.PureComponent {
 
     }).catch(error => {
 
-      console.log("Message sending failed with error:", error);
       const newMessageObj = { ...textMessage, "error": error };
       this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
+
+      const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+      this.context.setToastMessage("error", errorCode);
 
     });
   }
@@ -723,24 +776,23 @@ class CometChatMessageComposer extends React.PureComponent {
 
     const typingInterval = 1000;
 
-    const typingMetadata = { "type": enums.LIVE_REACTION_KEY, "reaction": this.props.reaction };
+    const typingMetadata = { "type": enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"], "reaction": this.props.reaction };
 
     this.startTyping(typingInterval, typingMetadata);
-    this.props.actionGenerated("sendReaction");
+    this.props.actionGenerated(enums.ACTIONS["SEND_LIVE_REACTION"]);
 
     event.persist();
 
     setTimeout(() => {
 
       this.endTyping(null, typingMetadata);
-      this.props.actionGenerated("stopReaction");
+      this.props.actionGenerated(enums.ACTIONS["STOP_LIVE_REACTION"]);
 
     }, typingInterval);
   }
 
   reactToMessages = (emoji) => {
 
-    //const message = this.state.messageToReact;
     CometChat.callExtension("reactions", "POST", "v1/react", {
       msgId: this.state.messageToReact.id,
       emoji: emoji.colons,
@@ -748,31 +800,43 @@ class CometChatMessageComposer extends React.PureComponent {
 
       if (response.hasOwnProperty("success") && response["success"] === true) {
         this.toggleEmojiPicker();
+      } else {
+        this.context.setToastMessage("error", "MESSAGE_REACTION_FAIL");
       }
 
     }).catch(error => {
-      // Some error occured
-    });
 
+      let errorCode = "ERROR";
+      if (error.hasOwnProperty("code")) {
+
+        errorCode = error.code;
+        if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
+          && error.hasOwnProperty("details")
+          && error.details.hasOwnProperty("code")) {
+          errorCode = error.details.code;
+        }
+      }
+      this.context.setToastMessage("error", errorCode);
+    });
   }
 
   render() {
 
     let liveReactionBtn = null;
     const liveReactionText = Translator.translate("LIVE_REACTION", this.props.lang);
-    if (enums.LIVE_REACTIONS.hasOwnProperty(this.props.reaction)) {
+    if (enums.CONSTANTS["LIVE_REACTIONS"].hasOwnProperty(this.props.reaction)) {
 
-      const reactionName = this.props.reaction;
-      const imgSrc = enums.LIVE_REACTIONS[reactionName];
+      const reactionName = this.props.reaction; 
+
       liveReactionBtn = (
-        <div title={liveReactionText} css={reactionBtnStyle(imgSrc)} className="button__reactions" onClick={this.sendReaction}>
-          <img src={require(`${imgSrc}`)} alt={reactionName} />
+        <div title={liveReactionText} css={reactionBtnStyle()} className="button__reactions" onClick={this.sendReaction}>
+          <img src={heartIcon} alt={reactionName} />
         </div>
       );
     }
      
     let disabledState = false;
-    if(this.props.item.blockedByMe) {
+    if (this.context.item.blockedByMe) {
       disabledState = true;
     }
 
@@ -942,8 +1006,6 @@ class CometChatMessageComposer extends React.PureComponent {
       createPoll = (
         <CometChatCreatePoll
         theme={this.props.theme}
-        item={this.props.item}
-        type={this.props.type}
         open={this.state.createPoll}
         close={this.closeCreatePoll}
         lang={this.props.lang}
@@ -1017,8 +1079,6 @@ class CometChatMessageComposer extends React.PureComponent {
       stickerViewer = (
         <CometChatStickerKeyboard 
         theme={this.props.theme}
-        item={this.props.item}
-        type={this.props.type}
         lang={this.props.lang}
         widgetsettings={this.props.widgetsettings}
         actionGenerated={this.actionHandler} />
@@ -1070,12 +1130,14 @@ class CometChatMessageComposer extends React.PureComponent {
 // Specifies the default values for props:
 CometChatMessageComposer.defaultProps = {
   lang: Translator.getDefaultLanguage(),
-  theme: theme
+  theme: theme,
+  reaction: "heart"
 };
 
 CometChatMessageComposer.propTypes = {
   lang: PropTypes.string,
-  theme: PropTypes.object
+  theme: PropTypes.object,
+  reaction: PropTypes.string
 }
 
 export default CometChatMessageComposer;

@@ -1,10 +1,15 @@
-export const chatsWrapperStyle = () => {
+export const chatsWrapperStyle = (props) => {
+
+    const borderStyle = (props._parent === "") ? {
+        border: `1px solid ${props.theme.borderColor.primary}`
+    } : {};
 
     return {
         display: "flex",
         flexDirection: "column",
         height: "100%",
         boxSizing: "border-box",
+        ...borderStyle,
         "*": {
             boxSizing: "border-box",
             "::-webkit-scrollbar": {

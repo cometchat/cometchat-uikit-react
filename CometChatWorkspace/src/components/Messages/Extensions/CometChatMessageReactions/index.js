@@ -6,6 +6,8 @@ import PropTypes from "prop-types";
 import { Emoji } from "emoji-mart";
 import { CometChat } from "@cometchat-pro/chat";
 
+import { CometChatContext } from "../../../../util/CometChatContext";
+import * as enums from "../../../../util/enums.js";
 import { checkMessageForExtensionsData, validateWidgetSettings } from "../../../../util/common";
 
 import { theme } from "../../../../resources/theme";
@@ -20,6 +22,8 @@ import {
 import reactIcon from "./resources/add-reaction.png";
 
 class CometChatMessageReactions extends React.Component {
+
+    static contextType = CometChatContext;
 
     constructor(props) {
 
@@ -43,9 +47,25 @@ class CometChatMessageReactions extends React.Component {
             msgId: this.state.message.id,
             emoji: emoji.colons,
         }).then(response => {
-            // Reaction added successfully
+
+            // Reaction failed
+            if (response.hasOwnProperty("success") === false || (response.hasOwnProperty("success") && response["success"] === false)) {
+                this.context.setToastMessage("error", "MESSAGE_REACTION_FAIL");
+            }
+
         }).catch(error => {
-            // Some error occured
+            
+            let errorCode = "ERROR";
+            if (error.hasOwnProperty("code")) {
+
+                errorCode = error.code;
+                if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
+                    && error.hasOwnProperty("details")
+                    && error.details.hasOwnProperty("code")) {
+                    errorCode = error.details.code;
+                }
+            }
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
@@ -123,7 +143,7 @@ class CometChatMessageReactions extends React.Component {
                 type="button"
                 css={emojiButtonStyle(reactIcon)}
                 className="button__reacttomessage"
-                onClick={() => this.props.actionGenerated("reactToMessage", this.props.message)}><span></span></button>
+                onClick={() => this.props.actionGenerated(enums.ACTIONS["REACT_TO_MESSAGE"], this.props.message)}><span></span></button>
             </div>
         );
 

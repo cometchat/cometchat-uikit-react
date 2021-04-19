@@ -39,32 +39,26 @@ class CometChatUserProfile extends React.Component {
     super(props);
 
     this.state = {
-      user: {},
+      loggedInUser: null
     }
   }
-  
-  componentDidMount() {
-    this.getProfile();
-  }
 
-  getProfile() {
+  componentDidMount() {
 
     CometChat.getLoggedinUser().then(user => {
-
-      this.setState({ user: user });
-
+      this.setState({ loggedInUser: user });
     }).catch(error => {
-      console.log("[CometChatUserInfoScreen] getProfile getLoggedinUser error", error);
+      console.error(error);
     });
-
   }
 
   render() {
-
-    let avatar = null;
-    if(Object.keys(this.state.user).length) {
-      avatar = (<CometChatAvatar user={this.state.user} borderColor={this.props.theme.borderColor.primary} />);
+    
+    if (!this.state.loggedInUser) {
+      return null;
     }
+
+    let avatar = (<CometChatAvatar user={this.state.loggedInUser} borderColor={this.props.theme.borderColor.primary} />);
 
     return (
       <div css={userInfoScreenStyle(this.props)} className="userinfo">
@@ -74,7 +68,7 @@ class CometChatUserProfile extends React.Component {
         <div css={detailStyle()} className="userinfo__detail">
           <div css={thumbnailStyle()} className="detail__thumbnail">{avatar}</div>
           <div css={userDetailStyle()} className="detail__user" dir={Translator.getDirection(this.props.lang)}>
-            <div css={userNameStyle()} className="user__name">{this.state.user.name}</div>
+            <div css={userNameStyle()} className="user__name">{this.state.loggedInUser.name}</div>
             <p css={userStatusStyle(this.props)} className="user__status">{Translator.translate("ONLINE", this.props.lang)}</p>
           </div>
         </div>

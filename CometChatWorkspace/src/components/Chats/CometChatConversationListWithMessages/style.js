@@ -1,15 +1,16 @@
-export const chatScreenStyle = (theme) => {
+export const chatScreenStyle = (props) => {
 
     return {
         display: "flex",
         height: "100%",
         width: "100%",
         boxSizing: "border-box",
-        fontFamily: `${theme.fontFamily}`,
         position: "relative",
+        fontFamily: `${props.theme.fontFamily}`,
+        border: `1px solid ${props.theme.borderColor.primary}`,
         "*": {
             boxSizing: "border-box",
-            fontFamily: `${theme.fontFamily}`,
+            fontFamily: `${props.theme.fontFamily}`,
             "::-webkit-scrollbar": {
                 width: "8px",
                 height: "4px",
@@ -64,55 +65,14 @@ export const chatScreenMainStyle = (state, props) => {
 
     const mq = [...props.theme.breakPoints];
 
-    const secondaryViewWidth = (state.threadmessageview || state.viewdetailscreen) ? {
-
-        width: "calc(100% - 680px)!important",
-        [`@media ${mq[1]}, ${mq[2]}`]: {
-            width: "100%!important",
-        },
-        [`@media ${mq[3]}, ${mq[4]}`]: {
-            width: "0!important",
-            display: "none",
-        },
-
-    } : {
-            width: "calc(100% - 280px)!important",
-        [`@media ${mq[1]}, ${mq[2]}`]: {
-            width: "100%!important",
-        },
-
-    };
-
     return {
         width: "calc(100% - 280px)",
-        display: "flex",
-        flexDirection: "column",
         height: "100%",
         order: "2",
-        ...secondaryViewWidth,
-    }
-}
-
-export const chatScreenSecondaryStyle = (props) => {
-
-    const mq = [...props.theme.breakPoints];
-
-    return {
-        float: "right",
-        borderLeft: `1px solid ${props.theme.borderColor.primary}`,
-        height: "100%",
-        width: "400px",
         display: "flex",
-        flexDirection: "column",
-        order: "3",
-        [`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
-            position: "absolute!important",
-            right: "0!important",
-            top: "0",
-            bottom: "0",
-            width: "100%!important",
-            zIndex: "2",
-            backgroundColor: `${props.theme.backgroundColor.white}`,
+        flexDirection: "row",
+        [`@media ${mq[1]}, ${mq[2]}`]: {
+            width: "100%",
         }
     }
 }

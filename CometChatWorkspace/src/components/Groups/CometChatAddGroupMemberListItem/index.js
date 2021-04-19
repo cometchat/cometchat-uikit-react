@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 
 import { CometChatAvatar, CometChatUserPresence } from "../../Shared";
+
+import { CometChatContext } from "../../../util/CometChatContext";
 
 import { theme } from "../../../resources/theme";
 
@@ -22,8 +24,10 @@ import activeIcon from "./resources/checkbox-blue-active.svg";
 
 const CometChatAddGroupMemberListItem = (props) => {
 
+  const { groupMembers } = useContext(CometChatContext);
+
   const [checked, setChecked] = useState(() => {
-    const found = props.members.find(member => member.uid === props.user.uid);
+    const found = groupMembers.find(member => member.uid === props.user.uid);
     const value = (found) ? true : false;
 
     return value;

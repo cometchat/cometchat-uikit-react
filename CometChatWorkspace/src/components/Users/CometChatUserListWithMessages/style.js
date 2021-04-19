@@ -1,14 +1,15 @@
-export const userScreenStyle = (theme) => {
+export const userScreenStyle = (props) => {
 
     return {
         display: "flex",
         height: "100%",
         width: "100%",
         boxSizing: "border-box",
-        fontFamily: `${theme.fontFamily}`,
+        fontFamily: `${props.theme.fontFamily}`,
+        border: `1px solid ${props.theme.borderColor.primary}`,
         "*": {
             boxSizing: "border-box",
-            fontFamily: `${theme.fontFamily}`,
+            fontFamily: `${props.theme.fontFamily}`,
             "::-webkit-scrollbar": {
                 width: "8px",
                 height: "4px",
@@ -62,43 +63,16 @@ export const userScreenSidebarStyle = (state, props) => {
 
 export const userScreenMainStyle = (state, props) => {
 
-    const secondaryView = (state.threadmessageview || state.detailview) ? {
-        width: "calc(100% - 680px)"
-    } : {};
-
     const mq = [...props.theme.breakPoints];
 
     return {
         width: "calc(100% - 280px)",
         height: "100%",
         order: "2",
-        ...secondaryView,
-        [`@media ${mq[0]}`]: {
-            width: "100%!important",
-        }
-    }
-}
-
-export const userScreenSecondaryStyle = (props) => {
-
-    const mq = [...props.theme.breakPoints];
-
-    return {
-        float: "right",
-        borderLeft: `1px solid ${props.theme.borderColor.primary}`,
-        height: "100%",
-        width: "400px",
         display: "flex",
-        flexDirection: "column",
-        order: "3",
-        [`@media ${mq[0]}`]: {
-            position: "absolute!important",
-            right: "0!important",
-            top: "0",
-            bottom: "0",
+        flexDirection: "row",
+        [`@media ${mq[1]}, ${mq[2]}`]: {
             width: "100%!important",
-            zIndex: "2",
-            backgroundColor: `${props.theme.backgroundColor.white}`,
         }
     }
 }
