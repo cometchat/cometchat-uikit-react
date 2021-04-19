@@ -16,7 +16,17 @@ export const linkify = (message) => {
 
     let outputStr = message.replace(phoneNumPattern, "<a target='blank' rel='noopener noreferrer' href='tel:$&'>$&</a>");
     outputStr = outputStr.replace(emailPattern, "<a target='blank' rel='noopener noreferrer' href='mailto:$&'>$&</a>");
-    outputStr = outputStr.replace(urlPattern, "<a target='blank' rel='noopener noreferrer' href='$&'>$&</a>");
+
+    const withHttps = (url) => {
+
+        if (!/^(?:f|ht)tps?:\/\//.test(url)) {
+            url = "https://" + url;
+        }
+        return url;
+    }
+    const link = withHttps(outputStr);
+
+    outputStr = outputStr.replace(urlPattern, "<a target='blank' rel='noopener noreferrer' href='"+link+"'>"+link+"</a>");
 
     return outputStr;
 }

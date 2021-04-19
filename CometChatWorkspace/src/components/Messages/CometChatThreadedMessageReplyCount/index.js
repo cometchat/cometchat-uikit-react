@@ -4,6 +4,7 @@ import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 
 import { validateWidgetSettings } from "../../../util/common";
+import * as enums from "../../../util/enums.js";
 
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
@@ -19,7 +20,7 @@ const CometChatThreadedMessageReplyCount = (props) => {
     <span 
     css={replyCountStyle(props)} 
     className="replycount" 
-    onClick={() => props.actionGenerated("viewMessageThread", props.message)}>{replyText}</span>);
+    onClick={() => props.actionGenerated(enums.ACTIONS["VIEW_THREADED_MESSAGE"], props.message)}>{replyText}</span>);
 
     if(props.message.hasOwnProperty("replyCount") === false) {
         replies = null;

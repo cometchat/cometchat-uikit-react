@@ -46,11 +46,11 @@ class CometChatGroupListItem extends React.PureComponent {
   render() {
 
     let groupTypeIcon = null;
-    if (this.props.group.type === "private") {
+    if (this.props.group.type === CometChat.GROUP_TYPE.PRIVATE) {
 
       groupTypeIcon = (<img src={shieldIcon} alt={Translator.translate("PRIVATE_GROUP", this.props.lang)} />);
 
-    } else if (this.props.group.type === "password") {
+    } else if (this.props.group.type === CometChat.GROUP_TYPE.PASSWORD) {
 
       groupTypeIcon = (<img src={lockIcon} alt={Translator.translate("PROTECTED_GROUP", this.props.lang)} />);
     }

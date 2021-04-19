@@ -9,7 +9,9 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../";
 import { CometChatAvatar } from "../../../Shared";
 
+import { CometChatContext } from "../../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../../util/common";
+import * as enums from "../../../../util/enums.js";
 
 import { theme } from "../../../../resources/theme";
 import Translator from "../../../../resources/localization/translator";
@@ -40,6 +42,7 @@ class CometChatReceiverPollMessageBubble extends React.Component {
     pollId;
     requestInProgress = null;
     messageFrom = "receiver";
+    static contextType = CometChatContext;
 
     constructor(props) {
         super(props);
@@ -59,7 +62,7 @@ class CometChatReceiverPollMessageBubble extends React.Component {
         if (previousMessageStr !== currentMessageStr) {
 
             const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-            this.setState({ message: message })
+            this.setState({ message: message });
         }
     }
 
@@ -70,10 +73,24 @@ class CometChatReceiverPollMessageBubble extends React.Component {
             id: this.pollId,
         })
         .then(response => {
-            console.log("answerPollQuestion response", response);
+
+            if (response.hasOwnProperty("success") === false || (response.hasOwnProperty("success") && response["success"] === false)) {
+                this.context.setToastMessage("error", "POLL_VOTE_FAIL");
+            }
         })
         .catch(error => {
-            console.log("answerPollQuestion error", error);
+
+            let errorCode = "ERROR";
+            if (error.hasOwnProperty("code")) {
+
+                errorCode = error.code;
+                if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
+                    && error.hasOwnProperty("details")
+                    && error.details.hasOwnProperty("code")) {
+                    errorCode = error.details.code;
+                }
+            }
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
@@ -90,38 +107,38 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 
     render() {
 
-        if (!this.props.message.hasOwnProperty("metadata")) {
+        if (!this.state.message.hasOwnProperty("metadata")) {
             return null;
         }
         
-        if (!this.props.message.metadata.hasOwnProperty("@injected")) {
+        if (!this.state.message.metadata.hasOwnProperty("@injected")) {
             return null;
         }
 
-        if (!this.props.message.metadata["@injected"].hasOwnProperty("extensions")) {
+        if (!this.state.message.metadata["@injected"].hasOwnProperty("extensions")) {
             return null;
         }
 
-        if (!this.props.message.metadata["@injected"]["extensions"].hasOwnProperty("polls")) {
+        if (!this.state.message.metadata["@injected"]["extensions"].hasOwnProperty("polls")) {
             return null;
         }
 
         let avatar = null, name = null;
-        if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
+        if (this.state.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 
             avatar = (
                 <div css={messageThumbnailStyle} className="message__thumbnail">
-                    <CometChatAvatar user={this.props.message.sender} />
+                    <CometChatAvatar user={this.state.message.sender} />
                 </div>
             );
 
             name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-                <span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span>
+                <span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span>
             </div>);
         }
 
         const pollOptions = [];
-        const pollExtensionData = this.props.message.metadata["@injected"]["extensions"]["polls"];
+        const pollExtensionData = this.state.message.metadata["@injected"]["extensions"]["polls"];
         
         this.pollId = pollExtensionData.id;
         const total = pollExtensionData.results.total;

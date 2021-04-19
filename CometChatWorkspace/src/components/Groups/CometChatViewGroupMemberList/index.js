@@ -7,7 +7,9 @@ import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatViewGroupMemberListItem } from "../../Groups";
 import { CometChatBackdrop } from "../../Shared";
-import GroupDetailContext from "../CometChatGroupDetails/context";
+
+import * as enums from "../../../util/enums.js";
+import { CometChatContext } from "../../../util/CometChatContext";
 
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
@@ -29,7 +31,7 @@ import clearIcon from "./resources/close.png";
 
 class CometChatViewGroupMemberList extends React.Component {
 
-    static contextType = GroupDetailContext;
+    static contextType = CometChatContext;
 
     constructor(props) {
 
@@ -59,20 +61,20 @@ class CometChatViewGroupMemberList extends React.Component {
 
         const bottom = Math.round(e.currentTarget.scrollHeight - e.currentTarget.scrollTop) === Math.round(e.currentTarget.clientHeight);
         if (bottom) {
-            this.props.actionGenerated("fetchGroupMembers");
+            this.props.actionGenerated(enums.ACTIONS["FETCH_GROUP_MEMBERS"]);
         }
     }
 
     updateMembers = (action, member, scope) => {
 
         switch(action) {
-            case "ban":
+            case enums.ACTIONS["BAN_GROUP_MEMBER"]:
                 this.banMember(member);
                 break;
-            case "kick":
+            case enums.ACTIONS["KICK_GROUP_MEMBER"]:
                 this.kickMember(member);
                 break;
-            case "changescope":
+            case enums.ACTIONS["CHANGE_SCOPE_GROUP_MEMBER"]:
                 this.changeScope(member, scope);
                 break;
             default:
@@ -82,48 +84,64 @@ class CometChatViewGroupMemberList extends React.Component {
 
     banMember = (memberToBan) => {
 
-        const guid = this.props.item.guid;
+        const guid = this.context.item.guid;
         CometChat.banGroupMember(guid, memberToBan.uid).then(response => {
             
             if(response) {
-                console.log("banGroupMember success with response: ", response);
-                this.props.actionGenerated("removeGroupParticipants", memberToBan);
+
+                this.context.setToastMessage("success", "BAN_GROUPMEMBER_SUCCESS");
+                this.props.actionGenerated(enums.ACTIONS["BAN_GROUPMEMBER_SUCCESS"], memberToBan);
+
+            } else {
+                this.context.setToastMessage("error", "BAN_GROUPMEMBER_FAIL");
             }
 
         }).catch(error => {
-            console.log("banGroupMember failed with error: ", error);
+
+            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
     kickMember = (memberToKick) => {
 
-        const guid = this.props.item.guid;
+        const guid = this.context.item.guid;
         CometChat.kickGroupMember(guid, memberToKick.uid).then(response => {
             
             if(response) {
-                console.log("kickGroupMember success with response: ", response);
-                this.props.actionGenerated("removeGroupParticipants", memberToKick);
+
+                this.context.setToastMessage("success", "KICK_GROUPMEMBER_SUCCESS");
+                this.props.actionGenerated(enums.ACTIONS["KICK_GROUPMEMBER_SUCCESS"], memberToKick);
+
+            } else {
+                this.context.setToastMessage("error", "KICK_GROUPMEMBER_FAIL");
             }
             
         }).catch(error => {
-            console.log("kickGroupMember failed with error: ", error);
+
+            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
     changeScope = (member, scope) => {
 
-        const guid = this.props.item.guid;
-
+        const guid = this.context.item.guid;
         CometChat.updateGroupMemberScope(guid, member.uid, scope).then(response => {
             
             if(response) {
-                console.log("updateGroupMemberScope success with response: ", response);
+
+                this.context.setToastMessage("success", "SCOPECHANGE_GROUPMEMBER_SUCCESS");
                 const updatedMember = Object.assign({}, member, {scope: scope});
-                this.props.actionGenerated("updateGroupParticipants", updatedMember);
+                this.props.actionGenerated(enums.ACTIONS["SCOPECHANGE_GROUPMEMBER_SUCCESS"], updatedMember);
+            } else {
+                this.context.setToastMessage("error", "SCOPECHANGE_GROUPMEMBER_FAIL");
             }
             
         }).catch(error => {
-            console.log("updateGroupMemberScope failed with error: ", error);
+
+            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
@@ -138,24 +156,22 @@ class CometChatViewGroupMemberList extends React.Component {
 
     render() {
 
-        const group = this.context;
-
-        const membersList = [...group.memberlist];
-
+        const membersList = [...this.context.groupMembers];
+        
         const groupMembers = membersList.map((member, key) => {
         
             return (<CometChatViewGroupMemberListItem 
+                loggedinuser={this.props.loggedinuser}
                 theme={this.props.theme}
                 key={key} 
                 member={member}
-                item={this.props.item}
                 lang={this.props.lang}
                 widgetsettings={this.props.widgetsettings}
                 actionGenerated={this.updateMembers} />);
         });
 
         let editAccess = null;
-        if(this.props.item.scope !== CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
+        if(this.context.item.scope !== CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
 
             editAccess = (
                 <React.Fragment>

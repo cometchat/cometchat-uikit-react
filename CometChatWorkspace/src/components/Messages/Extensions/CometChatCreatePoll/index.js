@@ -8,6 +8,7 @@ import { CometChat } from "@cometchat-pro/chat";
 import { CometChatBackdrop } from "../../../Shared";
 import { CometChatCreatePollOptions } from "../";
 
+import { CometChatContext } from "../../../../util/CometChatContext";
 import * as enums from "../../../../util/enums.js"; 
 import Translator from "../../../../resources/localization/translator";
 
@@ -31,6 +32,7 @@ import clearIcon from "./resources/close.png";
 class CometChatCreatePoll extends React.Component {
 
     loggedInUser = null;
+    static contextType = CometChatContext;
 
     constructor(props) {
 
@@ -107,11 +109,11 @@ class CometChatCreatePoll extends React.Component {
         })
 
         let receiverId;
-        let receiverType = this.props.type;
-        if (this.props.type === CometChat.RECEIVER_TYPE.USER) {
-            receiverId = this.props.item.uid;
-        } else if (this.props.type === CometChat.RECEIVER_TYPE.GROUP) {
-            receiverId = this.props.item.guid;
+        let receiverType = this.context.type;
+        if (this.context.type === CometChat.RECEIVER_TYPE.USER) {
+            receiverId = this.context.item.uid;
+        } else if (this.context.type === CometChat.RECEIVER_TYPE.GROUP) {
+            receiverId = this.context.item.guid;
         }
         
         this.setState({ creatingPoll: true });
@@ -123,20 +125,30 @@ class CometChatCreatePoll extends React.Component {
             "receiverType": receiverType
         }).then(response => {
 
-            console.log("createPoll response", response);
-            this.setState({ creatingPoll: false });
-            this.props.actionGenerated(enums.ACTIONS["POLL_CREATED"]);
+            if (response && response.hasOwnProperty("success") && response["success"] === true) {
+
+                this.setState({ creatingPoll: false });
+                this.context.setToastMessage("success", "POLL_CREATION_SUCCESS");
+                this.props.actionGenerated(enums.ACTIONS["POLL_CREATED"]);
+
+            } else {
+                this.context.setToastMessage("success", "POLL_CREATION_ERROR");
+            }
 
         }).catch(error => {
 
-            console.log("createPoll error", error);
-
             this.setState({ creatingPoll: false });
-            if (error.hasOwnProperty("message") && error.message.hasOwnProperty("message")) {
-                this.setState({ error: error.message.message });
-            } else {
-                this.setState({ error: "Error" });
+            let errorCode = "ERROR";
+            if (error.hasOwnProperty("code")) {
+
+                errorCode = error.code;
+                if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
+                    && error.hasOwnProperty("details")
+                    && error.details.hasOwnProperty("code")) {
+                    errorCode = error.details.code;
+                }
             }
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
@@ -168,7 +180,7 @@ class CometChatCreatePoll extends React.Component {
 
         return (
             <React.Fragment>
-                <CometChatBackdrop show={this.props.open} clicked={this.props.close} />
+                <CometChatBackdrop show={true} clicked={this.props.close} />
                 <div css={modalWrapperStyle(this.props)} className="modal__createpoll">
                     <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyStyle()} className="modal__body">

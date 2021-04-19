@@ -9,6 +9,8 @@ import { CometChatGroupList } from "../../Groups";
 import { CometChatConversationList } from "../../Chats";
 import { CometChatUserProfile } from "../../UserProfile";
 
+import * as enums from "../../../util/enums.js";
+
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
 
@@ -38,72 +40,39 @@ export class CometChatNavBar extends React.Component {
     this.groupListRef = React.createRef();
   }
 
-  updateLastMessage = (message) => {
-
-    if (this.props.activeTab !== this.props.tabs["CHATS"]) {
-      return false;
-    }
-    
-    this.chatListRef.updateLastMessage(message);
-  }
-
-  removeGroupFromListOnDeleting = (group) => {
-
-    if (this.props.activeTab === this.props.tabs["CHATS"]) {
-
-      this.chatListRef.removeGroupFromListOnDeleting(group);
-
-    } else if (this.props.activeTab === this.props.tabs["GROUPS"]) {
-
-      this.groupListRef.removeGroupFromListOnDeleting(group);
-    }    
-  }
-
   getDefaultComponent = () => {
 
     switch (this.props.activeTab) {
       case "users":
         return <CometChatUserList
           theme={this.props.theme}
-          item={this.props.item}
-          type={this.props.type}
           lang={this.props.lang}
+          _parent="unified"
           actionGenerated={this.props.actionGenerated}
-          enableCloseMenu={this.props.enableCloseMenu}
-          onItemClick={(item, type) => this.props.actionGenerated("itemClicked", type, item)} />;
+          onItemClick={(item, type) => this.props.actionGenerated(enums.ACTIONS["ITEM_CLICKED"], type, item)} />;
       case "calls":
         return "calls";
       case "chats":
         return <CometChatConversationList
           ref={el => this.chatListRef = el}
           theme={this.props.theme}
-          item={this.props.item}
-          type={this.props.type}
           lang={this.props.lang}
-          groupToUpdate={this.props.groupToUpdate}
-          lastMessage={this.props.lastMessage}
-          unreadMessages={this.props.unreadMessages}
+          _parent="unified"
           actionGenerated={this.props.actionGenerated}
-          enableCloseMenu={this.props.enableCloseMenu}
-          onItemClick={(item, type) => this.props.actionGenerated("itemClicked", type, item)} />;
+          onItemClick={(item, type) => this.props.actionGenerated(enums.ACTIONS["ITEM_CLICKED"], type, item)} />;
       case "groups":
         return <CometChatGroupList
           ref={el => this.groupListRef = el}
           theme={this.props.theme}
-          item={this.props.item}
-          type={this.props.type}
           lang={this.props.lang}
-          groupToLeave={this.props.groupToLeave}
-          groupToDelete={this.props.groupToDelete}
-          groupToUpdate={this.props.groupToUpdate}
           actionGenerated={this.props.actionGenerated}
-          enableCloseMenu={this.props.enableCloseMenu}
-          onItemClick={(item, type) => this.props.actionGenerated("itemClicked", type, item)} />;
+          _parent="unified"
+          onItemClick={(item, type) => this.props.actionGenerated(enums.ACTIONS["ITEM_CLICKED"], type, item)} />;
       case "info":
         return <CometChatUserProfile
           theme={this.props.theme}
           lang={this.props.lang}
-          onItemClick={(item, type) => this.props.actionGenerated("itemClicked", type, item)} />;
+          onItemClick={(item, type) => this.props.actionGenerated(enums.ACTIONS["ITEM_CLICKED"], type, item)} />;
       default:
         return null;
     }
@@ -121,25 +90,25 @@ export class CometChatNavBar extends React.Component {
         {this.getDefaultComponent()}
         <div css={footerStyle()} className="sidebar__footer">
           <div css={navbarStyle()} className="footer__navbar">
-            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', this.props.tabs["CHATS"])}>
+            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated(enums.ACTIONS["CHANGE_TAB"], this.props.tabs["CHATS"])}>
               <div 
               css={itemLinkStyle(chatGreyIcon, chatBlueIcon, chatsTabActive, this.props.tabs["CHATS"])} 
               className="item__link item__link__chats"
               title={Translator.translate("CHATS", this.props.lang)}></div>
             </div>
-            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', this.props.tabs["USERS"])}>
+            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated(enums.ACTIONS["CHANGE_TAB"], this.props.tabs["USERS"])}>
               <div 
               css={itemLinkStyle(contactGreyIcon, contactBlueIcon, userTabActive, this.props.tabs["USERS"])} 
               className="item__link item__link__contacts"
               title={Translator.translate("USERS", this.props.lang)}></div>
             </div>
-            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', this.props.tabs["GROUPS"])}>
+            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated(enums.ACTIONS["CHANGE_TAB"], this.props.tabs["GROUPS"])}>
               <div 
               css={itemLinkStyle(groupGreyIcon, groupBlueIcon, groupsTabActive, this.props.tabs["GROUPS"])} 
               className="item__link item__link__groups"
               title={Translator.translate("GROUPS", this.props.lang)}></div>
             </div>
-            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated('tabChanged', this.props.tabs["INFO"])}>
+            <div css={itemStyle()} className="navbar__item" onClick={() => this.props.actionGenerated(enums.ACTIONS["CHANGE_TAB"], this.props.tabs["INFO"])}>
               <div 
               css={itemLinkStyle(moreGreyIcon, moreBlueIcon, moreTabActive, this.props.tabs["INFO"])} 
               className="item__link item__link__info"

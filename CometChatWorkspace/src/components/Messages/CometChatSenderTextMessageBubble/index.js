@@ -10,7 +10,9 @@ import { CometChat } from "@cometchat-pro/chat";
 import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt, CometChatLinkPreview } from "../";
 import { CometChatMessageReactions } from "../Extensions";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { linkify, checkMessageForExtensionsData, validateWidgetSettings } from "../../../util/common";
+import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
@@ -26,6 +28,7 @@ import {
 
 class CometChatSenderTextMessageBubble extends React.Component {
 
+  static contextType = CometChatContext;
   messageFrom = "sender";
 
   constructor(props) {
@@ -126,16 +129,27 @@ class CometChatSenderTextMessageBubble extends React.Component {
 
             translatedMessage = `\n(${messageTranslation["message_translated"]})`;
           }
+        } else {
+          this.context.setToastMessage("error", "MESSAGE_TRANSLATE_FAIL");
         }
+      } else {
+        this.context.setToastMessage("info", "MESSAGE_TRANSLATE_SAME_LANGUAGE");
       }
 
       this.setState({ translatedMessage: translatedMessage })
 
     }).catch(error => {
-      // Some error occured
+      let errorCode = "ERROR";
+      if (error.hasOwnProperty("code")) {
 
-      console.log("translateMessage error", error);
-
+        errorCode = error.code;
+        if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
+          && error.hasOwnProperty("details")
+          && error.details.hasOwnProperty("code")) {
+          errorCode = error.details.code;
+        }
+      }
+      this.context.setToastMessage("error", errorCode);
     });
   }
 

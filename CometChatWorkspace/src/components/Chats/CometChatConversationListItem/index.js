@@ -33,6 +33,7 @@ class CometChatConversationListItem extends React.Component {
       lastMessage: "",
       lastMessageTimestamp: "",
     }
+
   }
 
   componentDidMount() {
@@ -86,7 +87,7 @@ class CometChatConversationListItem extends React.Component {
         case CometChat.CATEGORY_ACTION:
           message = this.getActionMessage(lastMessage);
           break;
-        case enums.CATEGORY_CUSTOM:
+        case CometChat.CATEGORY_CUSTOM:
           message = this.getCustomMessage(lastMessage);
           break;
         default:
@@ -392,7 +393,7 @@ class CometChatConversationListItem extends React.Component {
     }
 
     return (
-      <div css={listItem(this.props)} className="list__item" onClick={() => this.props.handleClick(this.props.conversation, this.props.conversationKey)}>
+      <div css={listItem(this.props)} className="list__item" onClick={() => this.props.handleClick(this.props.conversation)}>
         <div css={itemThumbnailStyle()} className="list__item__thumbnail">
           {avatar}
           {presence}
@@ -420,6 +421,7 @@ class CometChatConversationListItem extends React.Component {
 CometChatConversationListItem.defaultProps = {
   lang: Translator.getDefaultLanguage(),
   theme: theme,
+  loggedInUser: null,
   conversation: {
     conversationWith: {}
   }
@@ -428,6 +430,7 @@ CometChatConversationListItem.defaultProps = {
 CometChatConversationListItem.propTypes = {
   lang: PropTypes.string,
   theme: PropTypes.object,
+  loggedInUser: PropTypes.shape(CometChat.User),
   conversation: PropTypes.shape(CometChat.Conversation)
 }
 

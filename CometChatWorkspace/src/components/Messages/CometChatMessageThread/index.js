@@ -12,6 +12,7 @@ import {
   CometChatSenderFileMessageBubble, CometChatReceiverFileMessageBubble,
   CometChatSenderAudioMessageBubble, CometChatReceiverAudioMessageBubble,
   CometChatSenderVideoMessageBubble, CometChatReceiverVideoMessageBubble,
+  CometChatImageViewer
 } from "../";
 
 import {
@@ -21,6 +22,7 @@ import {
   CometChatSenderWhiteboardBubble, CometChatReceiverWhiteboardBubble,
 } from "../Extensions"
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 import * as enums from "../../../util/enums.js";
 
@@ -46,12 +48,12 @@ import clearIcon from "./resources/close.png";
 class CometChatMessageThread extends React.PureComponent {
 
   loggedInUser = null;
+  static contextType = CometChatContext;
 
   constructor(props) {
 
     super(props);
 
-    this.loggedInUser = props.loggedInUser;
     this.composerRef = React.createRef();
 
     this.state = {
@@ -60,8 +62,14 @@ class CometChatMessageThread extends React.PureComponent {
       replyCount: 0,
       replyPreview: null,
       messageToBeEdited: null,
-      parentMessage: props.parentMessage
+      parentMessage: props.parentMessage,
+      viewOriginalImage: false
     }
+
+    this.loggedInUser = this.props.loggedInUser;
+    CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
+      console.error(error);
+    });
   }
 
   componentDidUpdate(prevProps) {
@@ -91,8 +99,9 @@ class CometChatMessageThread extends React.PureComponent {
   actionHandler = (action, messages) => {
       
     switch(action) {
-      case "customMessageReceived":
-      case "messageReceived": {
+      case enums.ACTIONS["CUSTOM_MESSAGE_RECEIVED"]:
+      case enums.ACTIONS["MESSAGE_RECEIVED"]: {
+        
         const message = messages[0];
         if (message.hasOwnProperty("parentMessageId") && message.parentMessageId === this.state.parentMessage.id) {
 
@@ -118,46 +127,51 @@ class CometChatMessageThread extends React.PureComponent {
         this.setState({ parentMessage: newMessageObj });
 
         this.appendMessage(messages);
-        this.props.actionGenerated("threadMessageComposed", messages);
+        //this.context.setLastMessage(messages[0]);
+        this.props.actionGenerated(enums.ACTIONS["THREAD_MESSAGE_COMPOSED"], messages);
       }
       break;
       case enums.ACTIONS["MESSAGE_SENT"]:
       case enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"]:
         this.messageSent(messages);
         break;
-      case "onMessageReadAndDelivered":
+      case enums.ACTIONS["ON_MESSAGE_READ_DELIVERED"]:
         this.updateMessages(messages);
         break;
-      case "onMessageEdited":
+      case enums.ACTIONS["ON_MESSAGE_EDITED"]:
         this.updateMessages(messages);
       break;
       case "messageFetched":
         this.prependMessages(messages);
       break;
-      case "messageDeleted":
+      case enums.ACTIONS["ON_MESSAGE_DELETED"]:
         this.removeMessages(messages);
       break;
-      case "editMessage":
+      case enums.ACTIONS["EDIT_MESSAGE"]:
         this.editMessage(messages);
         break;
-      case "messageEdited":
+      case enums.ACTIONS["MESSAGE_EDITED"]:
         this.messageEdited(messages);
       break;
-      case "clearEditPreview":
+      case enums.ACTIONS["CLEAR_EDIT_PREVIEW"]:
         this.clearEditPreview();
       break;
-      case "deleteMessage":
+      case enums.ACTIONS["DELETE_MESSAGE"]:
         this.deleteMessage(messages);
         break;
-      case "viewActualImage":
-        this.props.actionGenerated("viewActualImage", messages);
-        break;
-      case "reactToMessage":
+      case enums.ACTIONS["REACT_TO_MESSAGE"]:
         this.reactToMessage(messages);
+        break;
+      case enums.ACTIONS["VIEW_ORIGINAL_IMAGE"]:
+        this.toggleOriginalImageView(messages);
         break;
       default:
       break;
     }
+  }
+
+  toggleOriginalImageView = (message) => {
+    this.setState({ viewOriginalImage: message });
   }
 
   messageSent = (message) => {
@@ -191,7 +205,8 @@ class CometChatMessageThread extends React.PureComponent {
       this.updateMessages(messageList);
 
       if (messageList.length - messageKey === 1) {
-        this.props.actionGenerated("messageEdited", [newMessageObj]);
+        this.context.setLastMessage(newMessageObj);
+        //this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], [newMessageObj]);
       }
 
     }
@@ -212,7 +227,8 @@ class CometChatMessageThread extends React.PureComponent {
       let messageKey = messageList.findIndex(m => m.id === message.id);
 
       if (messageList.length - messageKey === 1 && !message.replyCount) {
-        this.props.actionGenerated("messageDeleted", [deletedMessage]);
+        this.context.setLastMessage(deletedMessage);
+        //this.props.actionGenerated(enums.ACTIONS["MESSAGE_DELETED"], [deletedMessage]);
       }
 
     }).catch(error => {
@@ -424,46 +440,57 @@ class CometChatMessageThread extends React.PureComponent {
       );
     }
 
+    let originalImageView = null;
+    if (this.state.viewOriginalImage) {
+      originalImageView = (
+        <CometChatImageViewer
+          open={true}
+          close={() => this.toggleOriginalImageView(false)}
+          message={this.state.viewOriginalImage}
+          lang={this.props.lang} />
+      );
+    }
+
     return (
-      <div css={wrapperStyle(this.props)} className="thread__chat">
-        <div css={headerStyle(this.props)} className="chat__header">
-          <div css={headerWrapperStyle()} className="header__wrapper">    
-            <div css={headerDetailStyle()} className="header__details">
-              <h6 css={headerTitleStyle()} className="header__title">{Translator.translate("THREAD", this.props.lang)}</h6>
-              <span css={headerNameStyle()} className="header__username">{this.props.item.name}</span>
+      <React.Fragment>
+        <div css={wrapperStyle(this.props)} className="thread__chat">
+          <div css={headerStyle(this.props)} className="chat__header">
+            <div css={headerWrapperStyle()} className="header__wrapper">    
+              <div css={headerDetailStyle()} className="header__details">
+                <h6 css={headerTitleStyle()} className="header__title">{Translator.translate("THREAD", this.props.lang)}</h6>
+                <span css={headerNameStyle()} className="header__username">{this.props.threadItem.name}</span>
+              </div>
+              <div css={headerCloseStyle(clearIcon)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_THREADED_MESSAGE"])}></div>
             </div>
-            <div css={headerCloseStyle(clearIcon)} className="header__close" onClick={() => this.props.actionGenerated("closeThreadClicked")}></div>
+          </div>
+          <div css={messageContainerStyle()} className="chat__message__container">
+            <div css={parentMessageStyle(this.props.parentMessage)} className="parent__message">{parentMessage}</div>
+            {seperator}
+            <CometChatMessageList
+            theme={this.props.theme}
+            messages={this.state.messageList} 
+            item={this.props.threadItem} 
+            type={this.props.threadType}
+            scrollToBottom={this.state.scrollToBottom}
+            config={this.props.config}
+            widgetsettings={this.props.widgetsettings}
+            parentMessageId={this.props.parentMessage.id}
+            lang={this.props.lang}
+            actionGenerated={this.actionHandler} />
+            <CometChatMessageComposer
+            ref={(el) => { this.composerRef = el; }}
+            theme={this.props.theme}
+            lang={this.props.lang}
+            widgetsettings={this.props.widgetsettings}
+            parentMessageId={this.props.parentMessage.id}
+            messageToBeEdited={this.state.messageToBeEdited}
+            replyPreview={this.state.replyPreview}
+            messageToReact={this.state.messageToReact}
+            actionGenerated={this.actionHandler} />
           </div>
         </div>
-        <div css={messageContainerStyle()} className="chat__message__container">
-          <div css={parentMessageStyle(this.props.parentMessage)} className="parent__message">{parentMessage}</div>
-          {seperator}
-          <CometChatMessageList
-          theme={this.props.theme}
-          messages={this.state.messageList} 
-          item={this.props.item} 
-          type={this.props.type}
-          scrollToBottom={this.state.scrollToBottom}
-          config={this.props.config}
-          widgetsettings={this.props.widgetsettings}
-          parentMessageId={this.props.parentMessage.id}
-          lang={this.props.lang}
-          actionGenerated={this.actionHandler} />
-          <CometChatMessageComposer
-          ref={(el) => { this.composerRef = el; }}
-          theme={this.props.theme}
-          item={this.props.item} 
-          type={this.props.type}
-          lang={this.props.lang}
-          widgetsettings={this.props.widgetsettings}
-          loggedInUser={this.loggedInUser}
-          parentMessageId={this.props.parentMessage.id}
-          messageToBeEdited={this.state.messageToBeEdited}
-          replyPreview={this.state.replyPreview}
-          messageToReact={this.state.messageToReact}
-          actionGenerated={this.actionHandler} />
-        </div>
-      </div>
+        {originalImageView}
+      </React.Fragment>
     );
   }
 }

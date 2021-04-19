@@ -29,7 +29,7 @@ const CometChatImageViewer = (props) => {
 
     return(
         <React.Fragment>
-            <CometChatBackdrop show={props.open} clicked={props.close} />
+            <CometChatBackdrop show={true} clicked={props.close} />
             <div css={imageWrapperStyle(closeIcon)} onClick={props.close} className="image__wrapper">
                 <img src={srcIcon} css={imgStyle()} alt={srcIcon} ref={el => { imgRef = el; }} />
             </div>            
