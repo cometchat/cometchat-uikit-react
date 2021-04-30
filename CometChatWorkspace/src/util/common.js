@@ -2,31 +2,56 @@
 /* eslint-disable no-extend-native */
 import dateFormat from "dateformat";
 import Translator from "../resources/localization/translator";
-
-const emailPattern = new RegExp("[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}", "gi");///([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
-const urlPattern = new RegExp("(^|[\\s.:;?\\-\\]<\\(])"+"((https?://|www\\.|pic\\.)[-\\w;/?:@&=+$\\|\\_.!~*\\|'()\\[\\]%#,☺]+[\\w/#](\\(\\))?)"+"(?=$|[\\s',\\|\\(\\).:;?\\-\\[\\]>\\)])", "gi");
-const phoneNumPattern = new RegExp("^\\s*(?:\\+?(\\d{1,3}))?([-. (]*(\\d{3})[-. )]*)?((\\d{3})[-. ]*(\\d{2,4})(?:[-.x ]*(\\d+))?)\\s*", "gi");
 const milliseconds = 1000;
 const seconds = 1 * milliseconds;
 const minute = 60 * seconds;
 const hour = 60 * minute;
 const day = 24 * hour;
 
+const wordBoundary = {
+    start: `(?:^|:|;|'|"|,|{|}|\\.|\\s|\\!|\\?|\\(|\\)|\\[|\\]|\\*)`,
+    end: `(?=$|:|;|'|"|,|{|}|\\.|\\s|\\!|\\?|\\(|\\)|\\[|\\]|\\*)`,
+};
+
+const emailPattern = new RegExp(
+    wordBoundary.start +
+    `[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}` +
+    wordBoundary.end,
+    'gi'
+); 
+const urlPattern = new RegExp(
+    wordBoundary.start +
+    `((https?://|www\\.|pic\\.)[-\\w;/?:@&=+$\\|\\_.!~*\\|'()\\[\\]%#,☺]+[\\w/#](\\(\\))?)` +
+    wordBoundary.end,
+    'gi'
+);
+const phoneNumPattern = new RegExp(
+    wordBoundary.start +
+    `(?:\\+?(\\d{1,3}))?([-. (]*(\\d{3})[-. )]*)?((\\d{3})[-. ]*(\\d{2,4})(?:[-.x ]*(\\d+))?)` +
+    wordBoundary.end,
+    'gi'
+);
+
 export const linkify = (message) => {
 
     let outputStr = message.replace(phoneNumPattern, "<a target='blank' rel='noopener noreferrer' href='tel:$&'>$&</a>");
     outputStr = outputStr.replace(emailPattern, "<a target='blank' rel='noopener noreferrer' href='mailto:$&'>$&</a>");
 
-    const withHttps = (url) => {
+    const results = outputStr.match(urlPattern);
 
-        if (!/^(?:f|ht)tps?:\/\//.test(url)) {
-            url = "https://" + url;
-        }
-        return url;
-    }
-    const link = withHttps(outputStr);
+    results &&
+        results.forEach((url) => {
 
-    outputStr = outputStr.replace(urlPattern, "<a target='blank' rel='noopener noreferrer' href='"+link+"'>"+link+"</a>");
+            url = url.trim();
+            let normalizedURL = url;
+            if (!url.startsWith('http')) {
+                normalizedURL = `//${url}`;
+            }
+            outputStr = outputStr.replace(
+                url,
+                `<a  target='blank' href="${normalizedURL}">${url}</a>`
+            );
+        });
 
     return outputStr;
 }

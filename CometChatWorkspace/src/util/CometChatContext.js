@@ -3,9 +3,10 @@ import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatToastNotification } from "../components/Shared";
+import * as enums from "./enums.js";
 
 import Translator from "../resources/localization/translator";
-import * as enums from "./enums.js";
+
 
 export const CometChatContext = React.createContext({});
 
@@ -51,7 +52,10 @@ export class CometChatContextProvider extends React.Component {
             setUnreadMessages: this.setUnreadMessages,
             clearUnreadMessages: this.clearUnreadMessages,
             setClearedUnreadMessages: this.setClearedUnreadMessages,
-            setDirectCallCustomMessage: this.setDirectCallCustomMessage
+            setDirectCallCustomMessage: this.setDirectCallCustomMessage,
+            checkIfDirectCallIsOngoing: this.checkIfDirectCallIsOngoing,
+            checkIfCallIsOngoing: this.checkIfCallIsOngoing,
+            getActiveCallSessionID: this.getActiveCallSessionID
         }
 
         this.toastRef = React.createRef();
@@ -329,6 +333,49 @@ export class CometChatContextProvider extends React.Component {
 
     setDirectCallCustomMessage = (message, event) => {
         this.setState({ directCallCustomMessage: message, directCallCustomMessageAction: event });
+    }
+
+    checkIfDirectCallIsOngoing = () => {
+        
+        let output = null;
+
+        if (Object.keys(this.state.callInProgress).length
+        && (this.state.callType === enums.CONSTANTS["INCOMING_DIRECT_CALLING"]
+        || this.state.callType === enums.CONSTANTS["OUTGOING_DIRECT_CALLING"])) {
+
+            if (this.state.callInProgress.customData.sessionID === this.state.item.guid) {
+                output = enums.CONSTANTS.CALLS["ONGOING_CALL_SAME_GROUP"];
+            } else {
+                output = enums.CONSTANTS.CALLS["ONGOING_CALL_DIFF_GROUP"];
+            }
+        }
+
+        return output;
+    }
+
+    checkIfCallIsOngoing = () => {
+        
+        if (Object.keys(this.state.callInProgress).length) {
+            return true;
+        }
+
+        return false;
+    }
+
+    getActiveCallSessionID = () => {
+
+        let sessionID;
+        if (this.state.callType === enums.CONSTANTS["INCOMING_DIRECT_CALLING"]
+        || this.state.callType === enums.CONSTANTS["OUTGOING_DIRECT_CALLING"]) {
+
+            sessionID = this.state.callInProgress?.data?.customData?.sessionID;
+
+        } else {
+
+            sessionID = this.state.callInProgress?.sessionId;
+        }
+
+        return sessionID;
     }
 
     render() {

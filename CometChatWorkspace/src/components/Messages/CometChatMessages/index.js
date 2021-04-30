@@ -89,11 +89,11 @@ class CometChatMessages extends React.PureComponent {
 
         let output = false;
 
-        if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.item.uid !== this.item.uid) {
+        if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER && this.getContext().item.uid !== this.item.uid) {
           output = true;
-        } else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.item.guid !== this.item.guid) {
+        } else if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP && this.getContext().item.guid !== this.item.guid) {
           output = true;
-        } else if (this.type !== this.context.type) {
+        } else if (this.type !== this.getContext().type) {
           output = true;
         }
 
@@ -967,6 +967,7 @@ class CometChatMessages extends React.PureComponent {
             parentMessage={this.state.threadmessageparent}
             loggedInUser={this.loggedInUser}
             lang={this.state.lang}
+            widgetsettings={this.props.widgetsettings}
             actionGenerated={this.actionHandler} />
         </div>
       );

@@ -5,7 +5,7 @@ import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
-import { CometChatSharedMediaView } from "../../Shared";
+import CometChatSharedMediaView from "../../Shared/CometChatSharedMediaView/index.js";
 
 import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
