@@ -1,5 +1,30 @@
 export const callScreenWrapperStyle = (props, keyframes) => {
 
+    let styles = {
+        width: "100%",
+        height: "100%",
+        position: "absolute",
+        top: "0",
+        right: "0",
+        bottom: "0",
+        left: "0",
+        zIndex: "999",
+    }
+
+    if (props.widgetsettings) {
+
+        styles = {
+            width: "100%",
+            height: "100%",
+            position: "fixed",
+            top: "0",
+            right: "0",
+            bottom: "0",
+            left: "0",
+            zIndex: "2147483000",
+        }
+    }
+
     const fadeAnimation = keyframes`
     from {
         opacity: 0;
@@ -9,15 +34,8 @@ export const callScreenWrapperStyle = (props, keyframes) => {
     }`;
 
     return {
-        width: "100%",
-        height: "100%",
-        position: "absolute",
-        top: "0",
-        right: "0",
-        bottom: "0",
-        left: "0",
+        ...styles,
         backgroundColor: `${props.theme.backgroundColor.darkGrey}`,
-        zIndex: "999",
         color: `${props.theme.color.white}`,
         textAlign: "center",
         boxSizing: "border-box",

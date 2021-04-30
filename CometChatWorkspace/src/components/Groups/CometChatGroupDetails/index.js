@@ -8,7 +8,7 @@ import { CometChat } from "@cometchat-pro/chat";
 import { GroupDetailManager } from "./controller";
 
 import { CometChatViewGroupMemberList, CometChatAddGroupMemberList, CometChatBanGroupMemberList } from "../../Groups";
-import { CometChatSharedMediaView } from "../../Shared";
+import CometChatSharedMediaView from "../../Shared/CometChatSharedMediaView/index.js";
 
 import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";

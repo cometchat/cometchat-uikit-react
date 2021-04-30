@@ -39,7 +39,7 @@ export const CONSTANTS = {
     MESSAGES_COMPONENT: "messages",
     EMBEDDED_COMPONENT: "embedded",
     OUTGOING_DEFAULT_CALLING: "outgoing_default",
-    INCOMING_DEFAULT_CALLING: "incoming_deafault",
+    INCOMING_DEFAULT_CALLING: "incoming_default",
     INCOMING_DIRECT_CALLING: "incoming_direct",
     OUTGOING_DIRECT_CALLING: "outgoing_direct",
     AUDIO: {
@@ -51,6 +51,12 @@ export const CONSTANTS = {
     },
     ERROR_CODES: {
         "ERR_CHAT_API_FAILURE": "ERR_CHAT_API_FAILURE"
+    },
+    CALLS: {
+        "ONGOING_CALL": "noOngoingCall",
+        "ONGOING_CALL_SAME_GROUP": "ongoingDirectCallInSameGroup",
+        "ONGOING_CALL_DIFF_GROUP": "ongoingDirectCallInDifferentGroup",
+        
     }
 }
 

@@ -33,6 +33,9 @@ import menuIcon from "./resources/menuicon.png";
 import audioCallIcon from "./resources/audiocall.png";
 import videoCallIcon from "./resources/videocall.png";
 import detailPaneIcon from "./resources/detailpane.png";
+import greyAudioCallIcon from "./resources/audiocall-grey.png";
+import greyVideoCallIcon from "./resources/videocall-grey.png";
+
 
 class CometChatMessageHeader extends React.Component {
 
@@ -316,13 +319,31 @@ class CometChatMessageHeader extends React.Component {
     let audioCallBtn = ( 
       <div className={audioCallClassName} title={audioCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_AUDIO_CALL"])} css={chatOptionStyle(audioCallIcon)}>
         <img src={audioCallIcon} alt={audioCallText} />
-      </div>);
+      </div>
+    );
+
+    if (this.context.checkIfCallIsOngoing()) {
+      const audioCallText = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.props.lang);
+      audioCallBtn = (
+        <div className={audioCallClassName} title={audioCallText} css={chatOptionStyle(videoCallIcon)}>
+          <img src={greyAudioCallIcon} alt={audioCallText} />
+        </div>);
+    }
     
     const videoCallText = Translator.translate("VIDEO_CALL", this.props.lang);
     let videoCallBtn = (
       <div className={videoCallClassName} title={videoCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_VIDEO_CALL"])} css={chatOptionStyle(videoCallIcon)}>
         <img src={videoCallIcon} alt={videoCallText} />
+      </div>
+    );
+
+    if (this.context.checkIfCallIsOngoing()) {
+      const videoCallText = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.props.lang);
+      videoCallBtn = (
+      <div className={videoCallClassName} title={videoCallText} css={chatOptionStyle(videoCallIcon)}>
+        <img src={greyVideoCallIcon} alt={videoCallText} />
       </div>);
+    }
 
     const viewDetailText = Translator.translate("VIEW_DETAIL", this.props.lang);
     let viewDetailBtn = (<div className={viewDetailClassName} title={viewDetailText} onClick={() => this.props.actionGenerated(enums.ACTIONS["VIEW_DETAIL"])} css={chatOptionStyle(detailPaneIcon)}>
