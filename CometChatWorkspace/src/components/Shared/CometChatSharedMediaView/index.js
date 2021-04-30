@@ -5,9 +5,10 @@ import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
-import { SharedMediaManager } from "./controller";
 
 import { CometChatContext } from "../../../util/CometChatContext";
+
+import { SharedMediaManager } from "./controller";
 import * as enums from "../../../util/enums.js";
 
 import { theme } from "../../../resources/theme";
@@ -61,6 +62,11 @@ class CometChatSharedMediaView extends React.Component {
             this.getMessages(true);
             this.SharedMediaManager.attachListeners(this.messageUpdated);
         }
+    }
+
+    componentWillUnmount() {
+        this.SharedMediaManager.removeListeners();
+        this.SharedMediaManager = null;
     }
 
     //callback for listener functions
@@ -198,11 +204,6 @@ class CometChatSharedMediaView extends React.Component {
                 </div>
             </div>
         );
-    }
-
-    componentWillUnmount() {
-      this.SharedMediaManager.removeListeners();
-      this.SharedMediaManager = null;
     }
 }
 

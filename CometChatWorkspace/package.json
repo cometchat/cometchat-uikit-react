@@ -1,13 +1,13 @@
 {
   "name": "cometchat-pro-react-ui-kit",
-  "version": "v2.3.0-1",
+  "version": "v2.3.2-1",
   "description": "CometChat UI Kit for React App",
   "author": "CometChat",
   "dependencies": {
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "^4.0.3",
-    "@cometchat-pro/chat": "2.3.0",
+    "@cometchat-pro/chat": "2.3.2",
     "@emotion/core": "^10.0.35",
     "dateformat": "^4.0.0",
     "emoji-mart": "^3.0.0",

@@ -10,7 +10,7 @@ export const incomingCallWrapperStyle = (props, keyframes) => {
     let rightPos = "0";
     let topPos = "0";
     let bottomPos = "unset";
-    let zIndexValue = "999";
+    let zIndexValue = "998";
 
     if (props.hasOwnProperty("widgetsettings")) {
 
@@ -80,6 +80,8 @@ export const incomingCallWrapperStyle = (props, keyframes) => {
                 leftPos = "unset";
                 positionValue = "fixed";
             }
+        } else {
+            zIndexValue = "2147483000";
         }
     }
 
@@ -207,37 +209,5 @@ export const ButtonStyle = (props, action) => {
         width: "45%",
         textOverflow: "ellipsis",
         overflow: "hidden",
-    }
-}
-
-export const callScreenWrapperStyle = (props, keyframes) => {
-
-    const fadeAnimation = keyframes`
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }`;
-
-    return {
-        width: "100%",
-        height: "100%",
-        position: "absolute",
-        top: "0",
-        right: "0",
-        bottom: "0",
-        left: "0",
-        backgroundColor: `${props.theme.backgroundColor.darkGrey}`,
-        zIndex: "999",
-        color: `${props.theme.color.white}`,
-        textAlign: "center",
-        boxSizing: "border-box",
-        animation: `${fadeAnimation} 250ms ease`,
-        fontFamily: `${props.theme.fontFamily}`,
-        "*": {
-            boxSizing: "border-box",
-            fontFamily: `${props.theme.fontFamily}`,
-        },
     }
 }
