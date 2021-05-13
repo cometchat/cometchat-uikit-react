@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatToastNotification } from "../components/Shared";
+import { UIKitSettings } from "./UIKitSettings";
 import * as enums from "./enums.js";
 
 import Translator from "../resources/localization/translator";
@@ -33,6 +34,7 @@ export class CometChatContextProvider extends React.Component {
             clearedUnreadMessages: false,
             directCallCustomMessage: {},
             directCallCustomMessageAction: "",
+            UIKitSettings: new UIKitSettings(),
             setGroupMembers: this.setGroupMembers,
             updateGroupMembers: this.updateGroupMembers,
             setAllGroupMembers: this.setAllGroupMembers,

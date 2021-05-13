@@ -33,19 +33,12 @@ class CometChatViewGroupMemberList extends React.Component {
 
     static contextType = CometChatContext;
 
-    constructor(props) {
+    constructor(props, context) {
 
-        super(props);
-
-        this.mq = window.matchMedia(props.theme.breakPoints[1]);
-        
-        if (props.hasOwnProperty("widgetsettings") && props.widgetsettings) {
-            const parentnode = (props.widgetsettings.hasOwnProperty("parentNode")) ? props.widgetsettings.parentNode : null;
-            if (parentnode) {
-                const window = parentnode.querySelector('iframe').contentWindow;
-                this.mq = window.matchMedia(props.theme.breakPoints[1]);
-            }
-        }
+        super(props, context);
+        this._isMounted = false;
+        const chatWindow = context.UIKitSettings.getChatWindow();
+        this.mq = chatWindow.matchMedia(props.theme.breakPoints[1]);
         
         let userColumnTitle = Translator.translate("NAME", props.lang);
         if (this.mq.matches) {
@@ -55,6 +48,10 @@ class CometChatViewGroupMemberList extends React.Component {
         this.state = {
             userColumnTitle: userColumnTitle
         }
+    }
+
+    componentWillUnmount() {
+        this._isMounted = false;
     }
 
     handleScroll = (e) => {
@@ -147,10 +144,13 @@ class CometChatViewGroupMemberList extends React.Component {
 
     setUserColumnTitle = (editAccess) => {
 
-        if (editAccess !== null && this.mq.matches) {
-            this.setState({ userColumnTitle: Translator.translate("AVATAR", this.props.lang) });
-        } else {
-            this.setState({ userColumnTitle: Translator.translate("NAME", this.props.lang) });
+        if (this._isMounted) {
+            
+            if (editAccess !== null && this.mq.matches) {
+                this.setState({ userColumnTitle: Translator.translate("AVATAR", this.props.lang) });
+            } else {
+                this.setState({ userColumnTitle: Translator.translate("NAME", this.props.lang) });
+            }
         }
     }
 

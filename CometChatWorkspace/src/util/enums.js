@@ -33,6 +33,7 @@ export const CUSTOM_TYPE_MEETING = "meeting";
 
 export const CONSTANTS = {
     LOCALE: "cometchat:locale",
+    ACTIVECALL: "cometchat:activecall",
     MAX_MESSAGE_COUNT: 100,
     METADATA_TYPE_LIVEREACTION: "live_reaction",
     LIVE_REACTIONS: { "heart": "./resources/heart.png", "thumbsup": "👍", "clap": "👏", "wink": "😉" },

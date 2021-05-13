@@ -396,7 +396,9 @@ class CometChatMessageList extends React.PureComponent {
 
   onMessageReceived = (message) => {
 
-    //new messages
+    /**
+     * message receiver is chat window group
+    */
     if (this.context.type === CometChat.RECEIVER_TYPE.GROUP
       && message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
       && message.getReceiverId() === this.context.item.guid) {
@@ -404,10 +406,17 @@ class CometChatMessageList extends React.PureComponent {
       this.messageReceivedHandler(message, CometChat.RECEIVER_TYPE.GROUP);
         
     } else if (this.context.type === CometChat.RECEIVER_TYPE.USER
-      && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER
-      && message.getSender().uid === this.context.item.uid) {
+      && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER) {
 
-      this.messageReceivedHandler(message, CometChat.RECEIVER_TYPE.USER);
+      /**
+       * If the message sender is chat window user and message receiver is logged-in user
+       * OR
+       * If the message sender is logged-in user and message receiver is chat window user
+      */
+      if ( (message.getSender().uid === this.context.item.uid && message.getReceiverId() === this.loggedInUser?.uid) 
+      || (message.getSender().uid === this.loggedInUser?.uid && message.getReceiverId() === this.context.item.uid)) {
+        this.messageReceivedHandler(message, CometChat.RECEIVER_TYPE.USER);
+      }
     }
   }
 

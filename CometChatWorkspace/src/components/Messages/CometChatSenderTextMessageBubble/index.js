@@ -5,6 +5,7 @@ import ReactHtmlParser from "react-html-parser";
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
+
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt, CometChatLinkPreview } from "../";
@@ -34,6 +35,8 @@ class CometChatSenderTextMessageBubble extends React.Component {
   constructor(props) {
 
     super(props);
+
+    this.messageTextRef = React.createRef();
 
     const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
 
@@ -86,11 +89,30 @@ class CometChatSenderTextMessageBubble extends React.Component {
     
     const formattedText = linkify(messageText);
     
-    const emojiParsedMessage = twemoji.parse(formattedText, { folder: "svg", ext: ".svg" });
+    const emojiParsedMessage = twemoji.parse(formattedText, { folder: "svg", ext: ".svg", callback: (icon, options) => {
+
+      //console.log(icon, options);
+      //const imgUrl = options.base + '/' + options.folder + '/' + icon + options.ext; console.log(imgUrl);
+      //return "<img class='emoji' draggable='false' src='" + imgUrl +"' alt='"+imgUrl+"' />";
+
+      
+
+      return ''.concat(
+        options.base, // by default Twitter Inc. CDN
+        options.size, // by default "36x36" string
+        '/',
+        icon,         // the found emoji as code point
+        options.ext   // by default ".png"
+      );
+
+    } });
+
+    
+    
     const parsedMessage = ReactHtmlParser(emojiParsedMessage, { decodeEntities: false });
     
     const emojiMessage = parsedMessage.filter(message => (message instanceof Object && message.type === "img"));
-
+    
     let showVariation = true;
     //if larger size emojis are disabled in chat widget
     if (validateWidgetSettings(this.props.widgetsettings, "show_emojis_in_larger_size") === false) {
@@ -204,7 +226,7 @@ class CometChatSenderTextMessageBubble extends React.Component {
       onMouseLeave={this.handleMouseHover}>
         
         {toolTipView}
-        <div css={messageWrapperStyle()} className="message__wrapper">{messageText}</div>
+        <div css={messageWrapperStyle()} className="message__wrapper" ref={this.messageTextRef}>{messageText}</div>
         
         {messageReactions}
 

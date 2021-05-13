@@ -96,6 +96,7 @@ class CometChatUserListWithMessages extends React.Component {
             _parent="ulwm"
             theme={this.props.theme}
             lang={this.state.lang}
+            friendsOnly={this.props.friendsOnly}
             onItemClick={this.itemClicked}
             actionGenerated={this.actionHandler} />
           </div>
@@ -114,12 +115,14 @@ class CometChatUserListWithMessages extends React.Component {
 CometChatUserListWithMessages.defaultProps = {
   lang: Translator.getDefaultLanguage(),
   theme: theme,
+  friendsOnly: false,
   chatWithUser: "",
 };
 
 CometChatUserListWithMessages.propTypes = {
   lang: PropTypes.string,
   theme: PropTypes.object,
+  friendsOnly: PropTypes.bool,
   chatWithUser: PropTypes.string,
 }
 
