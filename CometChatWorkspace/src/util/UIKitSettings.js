@@ -1,15 +1,35 @@
 export class UIKitSettings {
 
-    static widgetSettings;
+    widgetSettings;
 
-    static setWidgetSettings = (widgetSettings) => {
-
-        if (!this.widgetSettings) {
-            this.widgetSettings = widgetSettings;
-        }
+    static userListFilterOptions = {
+        "ALL": "all",
+        "NONE": "none",
+        "FRIENDS": "friends",
     }
 
-    static validateWidgetSettings = (section, checkAgainst) => {
+    static groupListFilterOptions = {
+        "PUBLIC": "public_groups",
+        "PASSWORD": "password_protected_groups",
+        "PUBLIC_AND_PASSWORD": "public_and_password_protected_groups"
+    }
+    
+    static chatListFilterOptions = {
+        "USERS": "users",
+        "GROUPS": "groups",
+        "USERS_AND_GROUPS": "all_chats"
+    }
+
+    userListMode = UIKitSettings.userListFilterOptions["ALL"];
+    groupListMode = UIKitSettings.groupListFilterOptions["PUBLIC_AND_PASSWORD"];
+    chatListMode = UIKitSettings.chatListFilterOptions["USERS_AND_GROUPS"];
+    enableSoundForMessages = true;
+    enableSoundForCalls = true;
+    chatWindow = window;
+    document = window.document;
+    customCSS = null;
+
+    validateWidgetSettings = (section, checkAgainst) => {
 
         let output = null;
 
@@ -25,28 +45,86 @@ export class UIKitSettings {
         return output;
     }
 
-    static getCallingCustomCSS = () => {
-
-        let customCSS = this.validateWidgetSettings("style", "custom_css");
-
-        //if custom css is added
-        if (customCSS !== null && customCSS !== false && customCSS.trim().length) {
-            return customCSS;
-        }
-
-        return null;
+    getCustomCSS = () => {
+        return this.customCSS
     }
 
-    static getDocument = () => {
+    setCustomCSS = (customCSS) => {
+        this.customCSS = customCSS;
+    }
 
-        let document = window.document;
-        if (this.widgetSettings) {
-            const parentnode = (this.widgetSettings.hasOwnProperty("parentNode")) ? this.widgetSettings.parentNode : null;
-            if (parentnode) {
-                document = parentnode.querySelector('iframe').contentWindow.document;
+    setChatWindow = (chatWindow) => {
+        this.chatWindow = chatWindow;
+    }
+
+    getChatWindow = () => {
+        return this.chatWindow;
+    }
+
+    setDocument = (document) => {
+        this.document = document;
+    }
+
+    getDocument = () => {
+        return this.document;
+    }
+
+    getChatListMode = () => {
+        return this.chatListMode
+    }
+
+    setChatListMode = (option) => {
+
+        if (!option.trim().length) {
+            return false;
+        }
+
+        const chatListFilterKey = this.returnMatchedKey(UIKitSettings.chatListFilterOptions, option);
+        if (chatListFilterKey) {
+            this.chatListMode = UIKitSettings.chatListFilterOptions[chatListFilterKey];
+        }
+    }
+
+    returnMatchedKey = (matchWith, optionToMatch) => {
+
+        for (const [key, value] of Object.entries(matchWith)) {
+            if (value === optionToMatch) {
+                return key;
             }
         }
 
-        return document;
+        return false;
+    }
+
+    getUserListMode = () => {
+        return this.userListMode;
+    }
+
+    setUserListMode = () => {
+
+    }
+
+    getGroupListMode = () => {
+        return this.groupListMode;
+    }
+
+    setGroupListFilter = () => {
+
+    }
+
+    setEnableSoundForMessages = (enableSound) => {
+        this.enableSoundForMessages = enableSound;
+    }
+
+    getEnableSoundForMessages = () => {
+        return this.enableSoundForMessages;
+    }
+
+    setEnableSoundForCalls = (enableSound) => {
+        this.enableSoundForCalls = enableSound;
+    }
+
+    getEnableSoundForCalls = () => {
+        return this.enableSoundForCalls;
     }
 }

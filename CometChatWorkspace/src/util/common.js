@@ -49,7 +49,7 @@ export const linkify = (message) => {
             }
             outputStr = outputStr.replace(
                 url,
-                `<a  target='blank' href="${normalizedURL}">${url}</a>`
+                `<a target='blank' rel='noopener noreferrer' href="${normalizedURL}">${url}</a>`
             );
         });
 

@@ -97,7 +97,7 @@ class CometChatMessageComposer extends React.PureComponent {
     //   this.messageInputRef.current.focus();
     // }
 
-    SoundManager.setWidgetSettings(this.props.widgetsettings);
+    //SoundManager.setWidgetSettings(this.props.widgetsettings);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -166,15 +166,16 @@ class CometChatMessageComposer extends React.PureComponent {
 
   pasteHtmlAtCaret(html, selectPastedContent) {
     var sel, range;
-    if (window.getSelection) {
+    const chatWindow = this.context.UIKitSettings.getChatWindow();
+    if (chatWindow.getSelection) {
       // IE9 and non-IE
-      sel = window.getSelection();
-      if (this.props.widgetsettings && this.props.hasOwnProperty("widgetsettings")) {
-        const parentnode = (this.props.widgetsettings.hasOwnProperty("parentNode")) ? this.props.widgetsettings.parentNode : null;
-        if (parentnode) {
-          sel = parentnode.querySelector('iframe').contentWindow.getSelection();
-        }
-      }
+      sel = chatWindow.getSelection();
+      // if (this.props.widgetsettings && this.props.hasOwnProperty("widgetsettings")) {
+      //   const parentnode = (this.props.widgetsettings.hasOwnProperty("parentNode")) ? this.props.widgetsettings.parentNode : null;
+      //   if (parentnode) {
+      //     sel = parentnode.querySelector('iframe').contentWindow.getSelection();
+      //   }
+      // }
       if (sel.getRangeAt && sel.rangeCount) {
         range = sel.getRangeAt(0);
         range.deleteContents();
@@ -408,7 +409,7 @@ class CometChatMessageComposer extends React.PureComponent {
     mediaMessage._composedAt = getUnixTimestamp();
     mediaMessage._id = ID();
 
-    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
     this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [mediaMessage]);
     
     CometChat.sendMessage(mediaMessage).then(message => {
@@ -474,7 +475,7 @@ class CometChatMessageComposer extends React.PureComponent {
     this.setState({ messageInput: "", replyPreview: false });
     
     this.messageInputRef.current.textContent = "";
-    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
     
     CometChat.sendMessage(textMessage).then(message => {
 
@@ -520,7 +521,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
     this.setState({ messageInput: "" });
     this.messageInputRef.current.textContent = "";
-    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
 
     this.closeEditPreview();
 
@@ -713,7 +714,7 @@ class CometChatMessageComposer extends React.PureComponent {
     customMessage._id = ID();
 
     this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [customMessage]);
-    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
 
     CometChat.sendCustomMessage(customMessage).then(message => {
 
@@ -749,7 +750,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
     this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [textMessage]);
 
-    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]);
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
     this.setState({ replyPreview: null })
 
     CometChat.sendMessage(textMessage).then(message => {

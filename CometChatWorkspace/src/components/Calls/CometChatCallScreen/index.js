@@ -7,7 +7,7 @@ import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatContext } from "../../../util/CometChatContext";
-import { UIKitSettings } from "../../../util/UIKitSettings";
+import { Storage } from "../../../util/Storage";
 import * as enums from "../../../util/enums.js";
 
 import { theme } from "../../../resources/theme";
@@ -43,7 +43,6 @@ export class CometChatCallScreen extends React.PureComponent {
         };
 
         this.loggedInUser = props.loggedInUser;
-        UIKitSettings.setWidgetSettings(props.widgetsettings);
         
         this.callScreenBackgroundEl = React.createRef();
         this.callScreenInnerBackgroundEl = React.createRef();
@@ -53,7 +52,7 @@ export class CometChatCallScreen extends React.PureComponent {
 
     componentDidMount() {
 
-        this.document = UIKitSettings.getDocument();
+        this.document = window.document;
 
         if (this.props.call.type === enums.CUSTOM_TYPE_MEETING) {
             this.startDirectCall(this.props.call);
@@ -305,7 +304,7 @@ export class CometChatCallScreen extends React.PureComponent {
     startDirectCall = (call) => {
 
         const sessionId = call.data.customData.sessionID;
-        const customCSS = UIKitSettings.getCallingCustomCSS();
+        const customCSS = this.context.UIKitSettings.getCustomCSS();
 
         const callSettings = new CometChat.CallSettingsBuilder()
             .enableDefaultLayout(true)
@@ -328,8 +327,7 @@ export class CometChatCallScreen extends React.PureComponent {
                     if (this.context) {
                         this.context.setCallInProgress({}, "");
                     }
-                    
-                    //this.detachDragEvent();
+                    Storage.removeItem(enums.CONSTANTS["ACTIVECALL"]);
                     this.props.actionGenerated(enums.ACTIONS["DIRECT_CALL_ENDED"]);
                 },
                 onError: error => {
@@ -350,7 +348,7 @@ export class CometChatCallScreen extends React.PureComponent {
 
         const sessionId = call.getSessionId();
         const callType = (call.type === CometChat.CALL_TYPE.AUDIO ? true : false);
-        const customCSS = UIKitSettings.getCallingCustomCSS();
+        const customCSS = this.context.UIKitSettings.getCustomCSS();
 
         const callSettings = new CometChat.CallSettingsBuilder()
             .setSessionID(sessionId)
@@ -420,7 +418,7 @@ export class CometChatCallScreen extends React.PureComponent {
                     if (this.context) {
                         this.context.setCallInProgress(null, "");
                     }
-
+                    Storage.removeItem(enums.CONSTANTS["ACTIVECALL"]);
                     this.props.actionGenerated(enums.ACTIONS["OUTGOING_CALL_ENDED"], endedCall);
                     /* hiding/closing the call screen can be done here. */
                 }

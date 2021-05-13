@@ -60,7 +60,7 @@ class CometChatOutgoingCall extends React.PureComponent {
     this.CallScreenManager = new CallScreenManager();
     this.CallScreenManager.attachListeners(this.callScreenUpdated);
 
-    SoundManager.setWidgetSettings(this.props.widgetsettings);
+    //SoundManager.setWidgetSettings(this.props.widgetsettings);
   }
 
   componentWillUnmount() {
@@ -89,7 +89,7 @@ class CometChatOutgoingCall extends React.PureComponent {
 
       this.props.actionGenerated(enums.ACTIONS["OUTGOING_CALL_ACCEPTED"], call);
 
-      SoundManager.pause(enums.CONSTANTS.AUDIO["OUTGOING_CALL"]);
+      SoundManager.pause(enums.CONSTANTS.AUDIO["OUTGOING_CALL"], this.context);
       this.setState({ outgoingCallScreen: false, callInProgress: call, errorScreen: false, errorMessage: null });
       
       if(this.context) {
@@ -101,7 +101,7 @@ class CometChatOutgoingCall extends React.PureComponent {
 
   outgoingCallRejected = (call) => {
 
-    SoundManager.pause(enums.CONSTANTS.AUDIO["OUTGOING_CALL"]);
+    SoundManager.pause(enums.CONSTANTS.AUDIO["OUTGOING_CALL"], this.context);
     if (call.hasOwnProperty("status") && call.status === CometChat.CALL_STATUS.BUSY) {
       
       //show busy message.
@@ -120,7 +120,7 @@ class CometChatOutgoingCall extends React.PureComponent {
 
   startCall = (call) => {
 
-    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_CALL"]);
+    SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_CALL"], this.context);
     this.setState({ outgoingCallScreen: true, callInProgress: call, errorScreen: false, errorMessage: null });
   }
 
@@ -143,7 +143,7 @@ class CometChatOutgoingCall extends React.PureComponent {
   //cancelling an outgoing call
   cancelCall = () => {
 
-    SoundManager.pause(enums.CONSTANTS.AUDIO["OUTGOING_CALL"]);
+    SoundManager.pause(enums.CONSTANTS.AUDIO["OUTGOING_CALL"], this.context);
     //if user busy error, just close the callscreen, no need to reject the call
     if (this.state.errorScreen) {
 

@@ -78,7 +78,7 @@ class CometChatMessages extends React.PureComponent {
 
     this.type = this.getContext().type;
     this.item = this.getContext().item;
-    SoundManager.setWidgetSettings(this.props.widgetsettings);
+    //SoundManager.setWidgetSettings(this.props.widgetsettings);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -174,7 +174,7 @@ class CometChatMessages extends React.PureComponent {
           this.appendMessage(messages);
         }
 
-        SoundManager.play(enums.CONSTANTS.AUDIO["INCOMING_MESSAGE"]);
+        SoundManager.play(enums.CONSTANTS.AUDIO["INCOMING_MESSAGE"], this.getContext());
       }
       break;
       case enums.ACTIONS["MESSAGE_READ"]: {

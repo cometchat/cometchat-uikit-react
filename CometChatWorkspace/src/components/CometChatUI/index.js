@@ -167,6 +167,7 @@ class CometChatUI extends React.Component {
               lang={this.state.lang}
               activeTab={this.state.activeTab}
               tabs={this.tabs}
+              friendsOnly={this.props.friendsOnly}
               unreadMessages={this.state.unreadMessages}
               actionGenerated={this.navBarAction} />
           </div>
@@ -185,6 +186,7 @@ class CometChatUI extends React.Component {
 CometChatUI.defaultProps = {
   lang: Translator.getDefaultLanguage(),
   theme: theme,
+  friendsOnly: false,
   chatWithUser: "",
   chatWithGroup: "",
 };
@@ -192,6 +194,7 @@ CometChatUI.defaultProps = {
 CometChatUI.propTypes = {
   lang: PropTypes.string,
   theme: PropTypes.object,
+  friendsOnly: PropTypes.bool,
   chatWithUser: PropTypes.string,
   chatWithGroup: PropTypes.string,
 }

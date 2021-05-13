@@ -48,6 +48,7 @@ export class CometChatNavBar extends React.Component {
           theme={this.props.theme}
           lang={this.props.lang}
           _parent="unified"
+          friendsOnly={this.props.friendsOnly}
           actionGenerated={this.props.actionGenerated}
           onItemClick={(item, type) => this.props.actionGenerated(enums.ACTIONS["ITEM_CLICKED"], type, item)} />;
       case "calls":
