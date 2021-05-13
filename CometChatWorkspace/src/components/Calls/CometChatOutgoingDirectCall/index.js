@@ -86,7 +86,7 @@ class CometChatOutgoingDirectCall extends React.Component {
     prepareCustomMessageData = () => {
 
         const receiverType = CometChat.RECEIVER_TYPE.GROUP;
-        const customData = { "sessionID": this.sessionID, "callType": CometChat.CALL_TYPE.VIDEO };
+        const customData = { "sessionID": this.sessionID, "sessionId": this.sessionID, "callType": CometChat.CALL_TYPE.VIDEO };
         const customType = enums.CUSTOM_TYPE_MEETING;
         const conversationId = `group_${this.sessionID}`;
 

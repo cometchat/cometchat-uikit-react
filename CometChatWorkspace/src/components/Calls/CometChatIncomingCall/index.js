@@ -13,6 +13,7 @@ import { CometChatAvatar } from "../../Shared";
 import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 import { SoundManager } from "../../../util/SoundManager";
+import { Storage } from "../../../util/Storage";
 
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
@@ -59,11 +60,13 @@ class CometChatIncomingCall extends React.PureComponent {
         this.CallAlertManager = new CallAlertManager();
         this.CallAlertManager.attachListeners(this.callScreenUpdated);
 
-        SoundManager.setWidgetSettings(this.props.widgetsettings);
+        Storage.attachChangeDetection(this.logStorageChange);
     }
 
     componentWillUnmount() {
+
         this._isMounted = false;
+        Storage.detachChangeDetection(this.logStorageChange);
     }
 
     callScreenUpdated = (key, call) => {
@@ -84,32 +87,31 @@ class CometChatIncomingCall extends React.PureComponent {
     incomingCallReceived = (incomingCall) => {
 
         if (this._isMounted) {
-
-            //if there is another call in progress
-            // if (CometChat.getActiveCall()) {
-
-            //     this.rejectCall(incomingCall, CometChat.CALL_STATUS.BUSY);
-
-            // } else 
             
             if (this.state.incomingCall === null) {
 
-                SoundManager.play(enums.CONSTANTS.AUDIO["INCOMING_CALL"]);
-                this.setState({ incomingCall: incomingCall });
+                if (incomingCall?.callInitiator.uid !== this.loggedInUser?.uid) {
+
+                    SoundManager.play(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+                    this.setState({ incomingCall: incomingCall });
+                }
             }
         }   
     }
 
     incomingCallCancelled = (call) => {
 
-        //we are not marking this as read as it will done in messagelist component
-        SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"]);
-        this.setState({ incomingCall: null });
+        if (this._isMounted) {
+
+            //we are not marking this as read as it will done in messagelist component
+            SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+            this.setState({ incomingCall: null });
+        }
     }
 
     rejectCall = () => {
 
-        SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"]);
+        SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
         let callStatus = (this.isCallActive()) ? CometChat.CALL_STATUS.BUSY : CometChat.CALL_STATUS.REJECTED;
 
         CometChat.rejectCall(this.state.incomingCall.sessionId, callStatus).then(rejectedCall => {
@@ -119,7 +121,7 @@ class CometChatIncomingCall extends React.PureComponent {
                 if (this.context) {
                     this.context.setCallInProgress(null, "");
                 }
-                
+                Storage.setItem(enums.CONSTANTS["ACTIVECALL"], rejectedCall);
                 this.props.actionGenerated(enums.ACTIONS["INCOMING_CALL_REJECTED"], rejectedCall);
                 this.setState({ callInProgress: null });
             }
@@ -138,12 +140,13 @@ class CometChatIncomingCall extends React.PureComponent {
         
         this.checkForActiveCallAndEndCall().then(response => {
 
-            SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"]);
+            SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
             CometChat.acceptCall(this.state.incomingCall.sessionId).then(call => {
 
                 if (this.context) {
                     this.context.setCallInProgress(call, enums.CONSTANTS["INCOMING_DEFAULT_CALLING"]);
                 }
+                Storage.setItem(enums.CONSTANTS["ACTIVECALL"], call);
                 this.props.actionGenerated(enums.ACTIONS["INCOMING_CALL_ACCEPTED"], call);
                 this.setState({ incomingCall: null, callInProgress: call });
 
@@ -216,6 +219,29 @@ class CometChatIncomingCall extends React.PureComponent {
                 break;
             default:
                 break;
+        }
+    }
+
+    logStorageChange = (event) => {
+
+        if (event?.key !== enums.CONSTANTS["ACTIVECALL"]) {
+            return false;
+        }
+
+        if (event.newValue || event.oldValue) {
+
+            let call;
+            if (event.newValue) {
+                call = JSON.parse(event.newValue);
+            } else if (event.oldValue) {
+                call = JSON.parse(event.oldValue);
+            }
+            
+            if (this.state.incomingCall?.getSessionId() === call?.sessionId) {
+
+                SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+                this.setState({ incomingCall: null });
+            }   
         }
     }
 

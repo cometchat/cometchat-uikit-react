@@ -11,9 +11,9 @@ import { CometChatAvatar } from "../../Shared";
 import { CometChatCallScreen } from "../CometChatCallScreen";
 
 import { CometChatContext } from "../../../util/CometChatContext";
-import { UIKitSettings } from "../../../util/UIKitSettings";
 import * as enums from "../../../util/enums.js";
 import { SoundManager } from "../../../util/SoundManager";
+import { Storage } from "../../../util/Storage";
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
@@ -46,8 +46,6 @@ class CometChatIncomingDirectCall extends React.PureComponent {
             maximize: true
         }
 
-        UIKitSettings.setWidgetSettings(this.props.widgetsettings);
-
         this.callScreenRef = React.createRef();
 
         CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
@@ -62,11 +60,13 @@ class CometChatIncomingDirectCall extends React.PureComponent {
         this.MessageAlertManager = new messageAlertManager();
         this.MessageAlertManager.attachListeners(this.messageListenerCallback);
 
-        SoundManager.setWidgetSettings(this.props.widgetsettings);
+        Storage.attachChangeDetection(this.logStorageChange);
     }
 
     componentWillUnmount() {
+
         this._isMounted = false;
+        Storage.detachChangeDetection(this.logStorageChange);
     }
 
     messageListenerCallback = (key, message) => {
@@ -96,8 +96,11 @@ class CometChatIncomingDirectCall extends React.PureComponent {
                 }                
             }
 
-            SoundManager.play(enums.CONSTANTS.AUDIO["INCOMING_CALL"]);
-            this.setState({ incomingCall: message });
+            if (message?.sender.uid !== this.loggedInUser?.uid) {
+
+                SoundManager.play(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+                this.setState({ incomingCall: message });
+            }
         }
     }
 
@@ -105,12 +108,13 @@ class CometChatIncomingDirectCall extends React.PureComponent {
 
         this.checkForActiveCallAndEndCall().then(response => {
 
-            SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"]);
+            SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
             this.props.actionGenerated(enums.ACTIONS["ACCEPT_DIRECT_CALL"], true);
 
             if(this.context) {
                 this.context.setCallInProgress(this.state.incomingCall, enums.CONSTANTS["INCOMING_DIRECT_CALLING"]);
             }
+            Storage.setItem(enums.CONSTANTS["ACTIVECALL"], this.state.incomingCall);
             this.setState({ incomingCall: null, callInProgress: this.state.incomingCall });
 
         }).catch(error => {
@@ -122,7 +126,8 @@ class CometChatIncomingDirectCall extends React.PureComponent {
 
     ignoreCall = () => {
 
-        SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"]);
+        SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+        Storage.setItem(enums.CONSTANTS["ACTIVECALL"], this.state.incomingCall);
         this.setState({ incomingCall: null });
     }
 
@@ -174,6 +179,29 @@ class CometChatIncomingDirectCall extends React.PureComponent {
                 break;
             default:
                 break;
+        }
+    }
+
+    logStorageChange = (event) => {
+
+        if (event?.key !== enums.CONSTANTS["ACTIVECALL"]) {
+            return false;
+        }
+
+        if (event.newValue || event.oldValue) {
+
+            let call;
+            if (event.newValue) {
+                call = JSON.parse(event.newValue);
+            } else if (event.oldValue) {
+                call = JSON.parse(event.oldValue);
+            }
+
+            if (this.state.incomingCall?.sessionId === call?.sessionId) {
+
+                SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+                this.setState({ incomingCall: null });
+            }
         }
     }
 

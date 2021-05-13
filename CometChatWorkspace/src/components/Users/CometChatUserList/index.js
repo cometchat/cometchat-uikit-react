@@ -46,7 +46,8 @@ class CometChatUserList extends React.PureComponent {
       userlist: [],
       lang: props.lang
     }
-    
+
+    this.friendsOnly = props.friendsOnly;
     this.contextProviderRef = React.createRef();
     this.decoratorMessage = Translator.translate("LOADING", props.lang);
     this.userListRef = React.createRef();
@@ -59,10 +60,6 @@ class CometChatUserList extends React.PureComponent {
   componentDidMount() {
 
     this.item = (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER) ? this.getContext().item : null;
-
-    if(this.props.hasOwnProperty("friendsOnly")) {
-      this.friendsOnly = this.props.friendsOnly;
-    }
 
     if(this.props.hasOwnProperty("widgetsettings") 
     && this.props.widgetsettings
@@ -77,7 +74,7 @@ class CometChatUserList extends React.PureComponent {
         break;
       }
     }
-
+    
     this.UserListManager = new UserListManager(this.friendsOnly);
     this.getUsers();
     this.UserListManager.attachListeners(this.userUpdated);
@@ -289,6 +286,7 @@ class CometChatUserList extends React.PureComponent {
 CometChatUserList.defaultProps = {
   lang: Translator.getDefaultLanguage(),
   theme: theme,
+  friendsOnly: false,
   onItemClick: () => {},
   _parent: ""
 };
@@ -296,6 +294,7 @@ CometChatUserList.defaultProps = {
 CometChatUserList.propTypes = {
   lang: PropTypes.string,
   theme: PropTypes.object,
+  friendsOnly: PropTypes.bool,
   onItemClick: PropTypes.func,
   _parent: PropTypes.string
 }

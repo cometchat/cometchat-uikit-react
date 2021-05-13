@@ -1,5 +1,5 @@
 import * as enums from "./enums";
-import { validateWidgetSettings } from "./common";
+//import { validateWidgetSettings } from "./common";
 
 export class SoundManager {
 
@@ -10,17 +10,20 @@ export class SoundManager {
     static outgoingMessageAudio = null;
     static incomingOtherMessageAudio = null;
 
-    static setWidgetSettings = (widgetSettings) => {
-        this.widgetSettings = widgetSettings;
-    }
+    // static setWidgetSettings = (widgetSettings) => {
+    //     this.widgetSettings = widgetSettings;
+    // }
 
-    static play = (action) => {
+    static play = (action, context) => {
 
         switch (action) {
             case enums.CONSTANTS.AUDIO["INCOMING_CALL"]: {
 
                 //if call sound is disabled in chat widget
-                if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_calls") === false) {
+                // if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_calls") === false) {
+                //     return false;
+                // }
+                if (context.UIKitSettings.getEnableSoundForCalls() === false) {
                     return false;
                 }
 
@@ -40,7 +43,10 @@ export class SoundManager {
             case enums.CONSTANTS.AUDIO["OUTGOING_CALL"]: {
 
                 //if call sound is disabled in chat widget
-                if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_calls") === false) {
+                // if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_calls") === false) {
+                //     return false;
+                // }
+                if (context.UIKitSettings.getEnableSoundForCalls() === false) {
                     return false;
                 }
 
@@ -59,7 +65,10 @@ export class SoundManager {
             case enums.CONSTANTS.AUDIO["INCOMING_MESSAGE"]: {
 
                 //if message sound is disabled for chat wigdet in dashboard
-                if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_messages") === false) {
+                // if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_messages") === false) {
+                //     return false;
+                // }
+                if (context.UIKitSettings.getEnableSoundForMessages() === false) {
                     return false;
                 }
 
@@ -79,7 +88,10 @@ export class SoundManager {
             case enums.CONSTANTS.AUDIO["INCOMING_OTHER_MESSAGE"]: {
 
                 //if message sound is disabled for chat wigdet in dashboard
-                if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_messages") === false) {
+                // if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_messages") === false) {
+                //     return false;
+                // }
+                if (context.UIKitSettings.getEnableSoundForMessages() === false) {
                     return false;
                 }
 
@@ -99,7 +111,10 @@ export class SoundManager {
             case enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"]: {
 
                 //if message sound is disabled for chat wigdet in dashboard
-                if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_messages") === false) {
+                // if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_messages") === false) {
+                //     return false;
+                // }
+                if (context.UIKitSettings.getEnableSoundForMessages() === false) {
                     return false;
                 }
 
@@ -121,10 +136,13 @@ export class SoundManager {
         }
     }
 
-    static pause = (action) => {
+    static pause = (action, context) => {
 
         //if audio sound is disabled in chat widget
-        if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_calls") === false) {
+        // if (validateWidgetSettings(this.widgetSettings, "enable_sound_for_calls") === false) {
+        //     return false;
+        // }
+        if (context.UIKitSettings.getEnableSoundForCalls() === false) {
             return false;
         }
 
