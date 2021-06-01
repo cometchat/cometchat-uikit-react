@@ -37,7 +37,7 @@ class CometChatViewGroupMemberList extends React.Component {
 
         super(props, context);
         this._isMounted = false;
-        const chatWindow = context.UIKitSettings.getChatWindow();
+        const chatWindow = context.UIKitSettings.chatWindow;
         this.mq = chatWindow.matchMedia(props.theme.breakPoints[1]);
         
         let userColumnTitle = Translator.translate("NAME", props.lang);
@@ -160,14 +160,19 @@ class CometChatViewGroupMemberList extends React.Component {
         
         const groupMembers = membersList.map((member, key) => {
         
-            return (<CometChatViewGroupMemberListItem 
-                loggedinuser={this.props.loggedinuser}
-                theme={this.props.theme}
-                key={key} 
-                member={member}
-                lang={this.props.lang}
-                widgetsettings={this.props.widgetsettings}
-                actionGenerated={this.updateMembers} />);
+            return (
+                <CometChatViewGroupMemberListItem
+                    loggedinuser={this.props.loggedinuser}
+                    theme={this.props.theme}
+                    key={key}
+                    member={member}
+                    lang={this.props.lang}
+                    enableChangeScope={this.props.enableChangeScope}
+                    enableBanGroupMembers={this.props.enableBanGroupMembers}
+                    enableKickGroupMembers={this.props.enableKickGroupMembers}
+                    actionGenerated={this.updateMembers}
+                />
+            );
         });
 
         let editAccess = null;
@@ -180,14 +185,8 @@ class CometChatViewGroupMemberList extends React.Component {
                 </React.Fragment>
             );
 
-            if(this.props.hasOwnProperty("widgetsettings") && this.props.widgetsettings && this.props.widgetsettings.hasOwnProperty("main")) {
-
-                //if kick_ban_members && promote_demote_members are disabled in chatwidget
-                if(this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members") 
-                && this.props.widgetsettings.main["allow_kick_ban_members"] === false) {
-
-                    editAccess = null;
-                }
+            if (this.props.enableKickGroupMembers === false && this.props.enableBanGroupMembers === false) {
+                editAccess = null;
             }
         }
 
@@ -219,15 +218,21 @@ class CometChatViewGroupMemberList extends React.Component {
 
 // Specifies the default values for props:
 CometChatViewGroupMemberList.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
-    theme: theme,
-    userColumnTitle: "",
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+	userColumnTitle: "",
+	enableChangeScope: false,
+	enableKickGroupMembers: false,
+	enableBanGroupMembers: false
 };
 
 CometChatViewGroupMemberList.propTypes = {
-    lang: PropTypes.string,
-    theme: PropTypes.object,
-    userColumnTitle: PropTypes.string
-}
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	userColumnTitle: PropTypes.string,
+	enableChangeScope: PropTypes.bool,
+	enableKickGroupMembers: PropTypes.bool,
+	enableBanGroupMembers: PropTypes.bool
+};
 
-export default CometChatViewGroupMemberList;
+export { CometChatViewGroupMemberList };

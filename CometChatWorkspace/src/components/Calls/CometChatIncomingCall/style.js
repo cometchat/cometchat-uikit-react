@@ -92,7 +92,7 @@ export const incomingCallWrapperStyle = (props, keyframes) => {
         bottom: bottomPos,
         right: rightPos,
         borderRadius: "10px",
-        margin: "15px",
+        margin: "16px",
         backgroundColor: `${props.theme.backgroundColor.callScreenGrey}`,
         zIndex: zIndexValue,
         color: `${props.theme.color.white}`,
@@ -100,7 +100,7 @@ export const incomingCallWrapperStyle = (props, keyframes) => {
         boxSizing: "border-box",
         fontFamily: `${props.theme.fontFamily}`,
         animation: `${slideDown} 250ms ease`,
-        width: "250px",
+        width: "248px",
         "*": {
             boxSizing: "border-box",
             fontFamily: `${props.theme.fontFamily}`,
@@ -114,7 +114,7 @@ export const callContainerStyle = () => {
         display: "flex",
         flexDirection: "column",
         width: "100%",
-        padding: "15px",
+        padding: "16px",
     }
 }
 
@@ -199,15 +199,14 @@ export const ButtonStyle = (props, action) => {
 
     return {
         cursor: "pointer",
-        padding: "6px 20px",
+        padding: "8px 16px",
         backgroundColor: backgroundColor,
         borderRadius: "5px",
         color: `${props.theme.color.white}`,
-        fontSize: "14px",
+        fontSize: "100%",
         outline: "0",
         border: "0",
-        width: "45%",
-        textOverflow: "ellipsis",
-        overflow: "hidden",
+        width: "49%",
+        overflow: "hidden"
     }
 }

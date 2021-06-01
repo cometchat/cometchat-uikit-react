@@ -35,7 +35,6 @@ class CometChatUserList extends React.PureComponent {
 
   item;
   timeout;
-  friendsOnly = false;
   static contextType = CometChatContext;
 
   constructor(props) {
@@ -44,10 +43,10 @@ class CometChatUserList extends React.PureComponent {
 
     this.state = {
       userlist: [],
-      lang: props.lang
+      lang: props.lang,
+      enableSearchUser: false
     }
 
-    this.friendsOnly = props.friendsOnly;
     this.contextProviderRef = React.createRef();
     this.decoratorMessage = Translator.translate("LOADING", props.lang);
     this.userListRef = React.createRef();
@@ -60,24 +59,18 @@ class CometChatUserList extends React.PureComponent {
   componentDidMount() {
 
     this.item = (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER) ? this.getContext().item : null;
-
-    if(this.props.hasOwnProperty("widgetsettings") 
-    && this.props.widgetsettings
-    && this.props.widgetsettings.hasOwnProperty("sidebar") 
-    && this.props.widgetsettings.sidebar.hasOwnProperty("user_listing")) {
-
-      switch(this.props.widgetsettings.sidebar["user_listing"]) {
-        case "friends":
-          this.friendsOnly = true;
-        break;
-        default:
-        break;
-      }
-    }
+    this.toggleUserSearch();
     
-    this.UserListManager = new UserListManager(this.friendsOnly);
-    this.getUsers();
-    this.UserListManager.attachListeners(this.userUpdated);
+    this.UserListManager = new UserListManager(this.getContext())
+    this.UserListManager.initializeUsersRequest()
+      .then(response => {
+        this.getUsers();
+        this.UserListManager.attachListeners(this.userUpdated);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+    
   }
 
   componentDidUpdate(prevProps) {
@@ -102,17 +95,38 @@ class CometChatUserList extends React.PureComponent {
       }
     }
 
-    this.item = (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER) ? this.getContext().item : null;
-
     if (prevProps.lang !== this.props.lang) {
-      this.setState({ lang: this.props.lang });
-    }
+			this.setState({ lang: this.props.lang })
+		}
+
+    this.item = (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER) ? this.getContext().item : null;
+    this.toggleUserSearch();
   }
 
   componentWillUnmount() {
 
     this.UserListManager.removeListeners();
     this.UserListManager = null;
+  }
+
+  toggleUserSearch = () => {
+
+    this.getContext().FeatureRestriction.isUserSearchEnabled().then(response => {
+
+      /**
+       * Don't update state if the response has the same value
+       */
+      if (response !== this.state.enableSearchUser) {
+				this.setState({enableSearchUser: response});
+			}
+
+    }).catch(error => {
+
+      if (this.state.enableSearchUser !== false) {
+				this.setState({enableSearchUser: false});
+			}
+
+    });
   }
 
   userUpdated = (user) => {
@@ -164,12 +178,14 @@ class CometChatUserList extends React.PureComponent {
     }
 
     let val = e.target.value;
-    this.timeout = setTimeout(() => {
-
-      this.UserListManager = new UserListManager(this.friendsOnly, val);
-      this.setState({ userlist: [] }, () => this.getUsers())
-    }, 500)
-
+    this.UserListManager = new UserListManager(this.getContext(), val);
+    this.UserListManager.initializeUsersRequest().then(response => {
+      this.timeout = setTimeout(() => {
+        this.setState({userlist: []}, () => this.getUsers());
+      }, 500);
+    }).catch(error => {
+      console.log(error);
+    });
   }
 
   getUsers = () => {
@@ -248,26 +264,31 @@ class CometChatUserList extends React.PureComponent {
       closeBtn = null;
     }
 
+    let searchUser = null;
+    if (this.state.enableSearchUser) {
+			searchUser = (
+				<div css={contactSearchStyle()} className="contacts__search">
+					<input type="text" autoComplete="off" css={contactSearchInputStyle(this.props, searchIcon)} className="search__input" placeholder={Translator.translate("SEARCH", this.state.lang)} onChange={this.searchUsers} />
+				</div>
+			);
+		}
+
     const userListTemplate = (
-      <div css={contactWrapperStyle(this.props)} className="contacts">
-        <div css={contactHeaderStyle(this.props.theme)} className="contacts__header">
-          {closeBtn}
-          <h4 css={contactHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>{Translator.translate("USERS", this.state.lang)}</h4>
-          <div></div>
-        </div>
-        <div css={contactSearchStyle()} className="contacts__search">
-          <input
-            type="text"
-            autoComplete="off"
-            css={contactSearchInputStyle(this.props, searchIcon)}
-            className="search__input"
-            placeholder={Translator.translate("SEARCH", this.state.lang)}
-            onChange={this.searchUsers} />
-        </div>
-        {messageContainer}
-        <div css={contactListStyle()} className="contacts__list" onScroll={this.handleScroll} ref={el => this.userListRef = el}>{users}</div>
-      </div>
-    );
+			<div css={contactWrapperStyle(this.props)} className="contacts">
+				<div css={contactHeaderStyle(this.props.theme)} className="contacts__header">
+					{closeBtn}
+					<h4 css={contactHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>
+						{Translator.translate("USERS", this.state.lang)}
+					</h4>
+					<div></div>
+				</div>
+				{searchUser}
+				{messageContainer}
+				<div css={contactListStyle()} className="contacts__list" onScroll={this.handleScroll} ref={el => (this.userListRef = el)}>
+					{users}
+				</div>
+			</div>
+		)
 
     let userListWrapper = (userListTemplate);
     if (this.props._parent === "") {
@@ -286,7 +307,6 @@ class CometChatUserList extends React.PureComponent {
 CometChatUserList.defaultProps = {
   lang: Translator.getDefaultLanguage(),
   theme: theme,
-  friendsOnly: false,
   onItemClick: () => {},
   _parent: ""
 };
@@ -294,9 +314,8 @@ CometChatUserList.defaultProps = {
 CometChatUserList.propTypes = {
   lang: PropTypes.string,
   theme: PropTypes.object,
-  friendsOnly: PropTypes.bool,
   onItemClick: PropTypes.func,
   _parent: PropTypes.string
 }
 
-export default CometChatUserList;
+export { CometChatUserList };

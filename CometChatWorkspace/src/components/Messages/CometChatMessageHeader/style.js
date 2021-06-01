@@ -101,12 +101,11 @@ export const chatStatusStyle = (props, state, context) => {
             }
         } 
 
-        if (state.status.includes("typing")) {
-
+        if (state.typing) {
             status = {
                 color: `${props.theme.color.helpText}`,
                 textTransform: "none",
-                fontStyle: "italic"
+                fontStyle: "italic",
             };
         }
         
@@ -116,11 +115,10 @@ export const chatStatusStyle = (props, state, context) => {
             color: `${props.theme.color.helpText}`,
         }
 
-        if (state.status.includes("typing")) {
-
+        if (state.typing) {
             status = {
                 color: `${props.theme.color.helpText}`,
-                fontStyle: "italic"
+                fontStyle: "italic",
             };
         }
     }

@@ -1,4 +1,4 @@
-export { default as CometChatIncomingCall } from "./CometChatIncomingCall";
-export { default as CometChatOutgoingCall } from "./CometChatOutgoingCall";
-export { default as CometChatIncomingDirectCall } from "./CometChatIncomingDirectCall";
-export { default as CometChatOutgoingDirectCall } from "./CometChatOutgoingDirectCall";
+export { CometChatIncomingCall } from "./CometChatIncomingCall";
+export { CometChatOutgoingCall } from "./CometChatOutgoingCall";
+export { CometChatIncomingDirectCall } from "./CometChatIncomingDirectCall";
+export { CometChatOutgoingDirectCall } from "./CometChatOutgoingDirectCall";

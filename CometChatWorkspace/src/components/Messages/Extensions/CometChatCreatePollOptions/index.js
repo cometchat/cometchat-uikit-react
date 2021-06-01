@@ -41,4 +41,4 @@ CometChatCreatePollOptions.propTypes = {
     lang: PropTypes.string,
 }
 
-export default CometChatCreatePollOptions;
+export { CometChatCreatePollOptions };
