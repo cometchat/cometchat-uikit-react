@@ -16,155 +16,155 @@ import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
 
 import {
-  groupScreenStyle,
-  groupScreenSidebarStyle,
-  groupScreenMainStyle,
+	groupScreenStyle,
+	groupScreenSidebarStyle,
+	groupScreenMainStyle,
 } from "./style"
 
 class CometChatGroupListWithMessages extends React.Component {
 
-  loggedInUser = null;
+	loggedInUser = null;
 
-  constructor(props) {
+	constructor(props) {
 
 		super(props);
 
-    this.state = {
-      tab: "groups",
-      sidebarview: false,
-      lang: props.lang,
-    }
+		this.state = {
+			tab: "groups",
+			sidebarview: false,
+			lang: props.lang,
+		}
 
-    this.groupListRef = React.createRef();
+		this.groupListRef = React.createRef();
 
-    CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
-      console.error(error);
-    });
-  }
+		CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
+			console.error(error);
+		});
+	}
 
-  componentDidMount() {
+	componentDidMount() {
 
-    if (this.props.chatWithGroup.length === 0) {
-      this.toggleSideBar();
-    }
-  }
+		if (this.props.chatWithGroup.length === 0) {
+			this.toggleSideBar();
+		}
+	}
 
-  componentDidUpdate(prevProps) {
+	componentDidUpdate(prevProps) {
 
-    if (prevProps.lang !== this.props.lang) {
-      this.setState({ lang: this.props.lang });
-    }
-  }
+		if (prevProps.lang !== this.props.lang) {
+			this.setState({ lang: this.props.lang });
+		}
+	}
 
-  itemClicked = (group, type) => {
-    
-    this.contextProviderRef.setTypeAndItem(type, group);
-    this.toggleSideBar()
-  }
+	itemClicked = (group, type) => {
+		
+		this.contextProviderRef.setTypeAndItem(type, group);
+		this.toggleSideBar()
+	}
 
-  actionHandler = (action, item, count, ...otherProps) => {
-    
-    switch(action) {
-      case enums.ACTIONS["TOGGLE_SIDEBAR"]:
-        this.toggleSideBar();
-      break;
-      case enums.GROUP_MEMBER_SCOPE_CHANGED:
-      case enums.GROUP_MEMBER_KICKED:
-      case enums.GROUP_MEMBER_BANNED:
-        this.groupUpdated(action, item, count, ...otherProps);
-        break;
-      default:
-      break;
-    }
-  }
+	actionHandler = (action, item, count, ...otherProps) => {
+		
+		switch(action) {
+			case enums.ACTIONS["TOGGLE_SIDEBAR"]:
+				this.toggleSideBar();
+			break;
+			case enums.GROUP_MEMBER_SCOPE_CHANGED:
+			case enums.GROUP_MEMBER_KICKED:
+			case enums.GROUP_MEMBER_BANNED:
+				this.groupUpdated(action, item, count, ...otherProps);
+				break;
+			default:
+			break;
+		}
+	}
 
-  toggleSideBar = () => {
+	toggleSideBar = () => {
 
-    const sidebarview = this.state.sidebarview;
-    this.setState({ sidebarview: !sidebarview });
-  }
+		const sidebarview = this.state.sidebarview;
+		this.setState({ sidebarview: !sidebarview });
+	}
 
 /**
  If the logged in user is banned, kicked or scope changed, update the chat window accordingly
  */
-  groupUpdated = (key, message, group, options) => {
-    
-    switch(key) {
-      case enums.GROUP_MEMBER_BANNED:
-      case enums.GROUP_MEMBER_KICKED: {
+	groupUpdated = (key, message, group, options) => {
+		
+		switch(key) {
+			case enums.GROUP_MEMBER_BANNED:
+			case enums.GROUP_MEMBER_KICKED: {
 
-        if (this.contextProviderRef.type === CometChat.ACTION_TYPE.TYPE_GROUP
-        && this.contextProviderRef.item.guid === group.guid
-        && options.user.uid === this.loggedInUser.uid) {
+				if (this.contextProviderRef.type === CometChat.ACTION_TYPE.TYPE_GROUP
+				&& this.contextProviderRef.item.guid === group.guid
+				&& options.user.uid === this.loggedInUser.uid) {
 
-          this.contextProviderRef.setItem({});
-          this.contextProviderRef.setType("");
-        }
-        break;
-      }
-      case enums.GROUP_MEMBER_SCOPE_CHANGED: {
-        
-        if (this.contextProviderRef.type === CometChat.ACTION_TYPE.TYPE_GROUP
-        && this.contextProviderRef.item.guid === group.guid
-        && options.user.uid === this.loggedInUser.uid) {
+					this.contextProviderRef.setItem({});
+					this.contextProviderRef.setType("");
+				}
+				break;
+			}
+			case enums.GROUP_MEMBER_SCOPE_CHANGED: {
+				
+				if (this.contextProviderRef.type === CometChat.ACTION_TYPE.TYPE_GROUP
+				&& this.contextProviderRef.item.guid === group.guid
+				&& options.user.uid === this.loggedInUser.uid) {
 
-          const newObject = Object.assign({}, this.contextProviderRef.item, {"scope": options["scope"]})
-          this.contextProviderRef.setItem(newObject);
-          this.contextProviderRef.setType(CometChat.ACTION_TYPE.TYPE_GROUP);
+					const newObject = Object.assign({}, this.contextProviderRef.item, {"scope": options["scope"]})
+					this.contextProviderRef.setItem(newObject);
+					this.contextProviderRef.setType(CometChat.ACTION_TYPE.TYPE_GROUP);
 
-        }
-        break;
-      }
-      default:
-      break;
-    }
-  }
+				}
+				break;
+			}
+			default:
+			break;
+		}
+	}
 
-  render() {
+	render() {
 
-    let messageScreen = (
-      <CometChatMessages
-      theme={this.props.theme}
-      tab={this.state.tab}
-      lang={this.state.lang}
-      _parent="groups"
-      actionGenerated={this.actionHandler} />
-    );
+		let messageScreen = (
+			<CometChatMessages
+			theme={this.props.theme}
+			tab={this.state.tab}
+			lang={this.state.lang}
+			_parent="groups"
+			actionGenerated={this.actionHandler} />
+		);
 
-    return (
-      <CometChatContextProvider ref={el => this.contextProviderRef = el} group={this.props.chatWithGroup}>
-        <div css={groupScreenStyle(this.props)} className="cometchat cometchat--groups">
-          <div css={groupScreenSidebarStyle(this.state, this.props)} className="groups__sidebar">
-            <CometChatGroupList 
-            ref={el => this.groupListRef = el}
-            _parent="glwm"
-            theme={this.props.theme}
-            lang={this.state.lang}
-            onItemClick={this.itemClicked}
-            actionGenerated={this.actionHandler} />
-          </div>
-          <div css={groupScreenMainStyle(this.state, this.props)} className="groups__main">{messageScreen}</div>
-          <CometChatIncomingDirectCall 
-          theme={this.props.theme} 
-          lang={this.state.lang} 
-          actionGenerated={this.actionHandler} />
-        </div>
-      </CometChatContextProvider>
-    );
-  }
+		return (
+			<CometChatContextProvider ref={el => this.contextProviderRef = el} group={this.props.chatWithGroup}>
+				<div css={groupScreenStyle(this.props)} className="cometchat cometchat--groups">
+					<div css={groupScreenSidebarStyle(this.state, this.props)} className="groups__sidebar">
+						<CometChatGroupList 
+						ref={el => this.groupListRef = el}
+						_parent="glwm"
+						theme={this.props.theme}
+						lang={this.state.lang}
+						onItemClick={this.itemClicked}
+						actionGenerated={this.actionHandler} />
+					</div>
+					<div css={groupScreenMainStyle(this.state, this.props)} className="groups__main">{messageScreen}</div>
+					<CometChatIncomingDirectCall 
+					theme={this.props.theme} 
+					lang={this.state.lang} 
+					actionGenerated={this.actionHandler} />
+				</div>
+			</CometChatContextProvider>
+		);
+	}
 }
 
 // Specifies the default values for props:
 CometChatGroupListWithMessages.defaultProps = {
-  lang: Translator.getDefaultLanguage(),
-  theme: theme,
-  chatWithGroup: "",
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+	chatWithGroup: "",
 };
 
 CometChatGroupListWithMessages.propTypes = {
-  lang: PropTypes.string,
-  theme: PropTypes.object,
-  chatWithGroup: PropTypes.string,
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	chatWithGroup: PropTypes.string,
 }
 
-export default CometChatGroupListWithMessages;
+export { CometChatGroupListWithMessages };

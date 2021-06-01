@@ -92,4 +92,4 @@ CometChatDeleteMessageBubble.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatDeleteMessageBubble;
+export { CometChatDeleteMessageBubble };

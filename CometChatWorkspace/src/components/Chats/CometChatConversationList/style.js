@@ -9,6 +9,7 @@ export const chatsWrapperStyle = (props) => {
         flexDirection: "column",
         height: "100%",
         boxSizing: "border-box",
+        position: "relative",
         ...borderStyle,
         "*": {
             boxSizing: "border-box",

@@ -143,4 +143,4 @@ CometChatOutgoingDirectCall.propTypes = {
     theme: PropTypes.object,
 }
 
-export default CometChatOutgoingDirectCall;
+export { CometChatOutgoingDirectCall };

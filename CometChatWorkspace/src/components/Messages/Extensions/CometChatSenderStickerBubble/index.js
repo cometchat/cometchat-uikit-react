@@ -125,4 +125,4 @@ CometChatSenderStickerBubble.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatSenderStickerBubble;
+export { CometChatSenderStickerBubble };

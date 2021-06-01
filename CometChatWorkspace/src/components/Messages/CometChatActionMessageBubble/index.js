@@ -205,4 +205,4 @@ CometChatActionMessageBubble.propTypes = {
     theme: PropTypes.object,
 }
 
-export default CometChatActionMessageBubble; 
+export { CometChatActionMessageBubble };

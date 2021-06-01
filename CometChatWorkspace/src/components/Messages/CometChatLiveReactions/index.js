@@ -113,4 +113,4 @@ class CometChatLiveReactions extends React.PureComponent {
     }
 }
 
-export default CometChatLiveReactions;
+export { CometChatLiveReactions };

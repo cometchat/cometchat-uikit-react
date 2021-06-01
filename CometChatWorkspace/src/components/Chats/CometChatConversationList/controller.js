@@ -14,7 +14,7 @@ export class ConversationListManager {
 
     constructor(context) {
 
-        const chatListMode = context.UIKitSettings.getChatListMode();
+        const chatListMode = context.UIKitSettings.chatListMode;
         const chatListFilterOptions = UIKitSettings.chatListFilterOptions;
 
         switch (chatListMode) {

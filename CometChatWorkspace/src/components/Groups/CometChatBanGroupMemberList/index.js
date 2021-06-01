@@ -151,4 +151,4 @@ CometChatBanGroupMemberList.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatBanGroupMemberList;
+export { CometChatBanGroupMemberList };

@@ -27,7 +27,7 @@ import {
 import minimizeIcon from "./resources/minimize.png";
 import maximizeIcon from "./resources/maximize.png";
 
-export class CometChatCallScreen extends React.PureComponent {
+class CometChatCallScreen extends React.PureComponent {
 
     static contextType = CometChatContext;
 
@@ -304,7 +304,7 @@ export class CometChatCallScreen extends React.PureComponent {
     startDirectCall = (call) => {
 
         const sessionId = call.data.customData.sessionID;
-        const customCSS = this.context.UIKitSettings.getCustomCSS();
+        const customCSS = this.context.UIKitSettings.customCSS;
 
         const callSettings = new CometChat.CallSettingsBuilder()
             .enableDefaultLayout(true)
@@ -348,7 +348,7 @@ export class CometChatCallScreen extends React.PureComponent {
 
         const sessionId = call.getSessionId();
         const callType = (call.type === CometChat.CALL_TYPE.AUDIO ? true : false);
-        const customCSS = this.context.UIKitSettings.getCustomCSS();
+        const customCSS = this.context.UIKitSettings.customCSS;
 
         const callSettings = new CometChat.CallSettingsBuilder()
             .setSessionID(sessionId)
@@ -472,3 +472,5 @@ CometChatCallScreen.propTypes = {
     maxHeight: PropTypes.string,
     style: PropTypes.object,
 }
+
+export { CometChatCallScreen }

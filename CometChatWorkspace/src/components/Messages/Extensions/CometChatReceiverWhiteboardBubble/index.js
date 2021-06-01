@@ -32,7 +32,7 @@ import {
 
 import whiteboardIcon from "./resources/receiverwhiteboard.png";
 
-class ReceiverWhiteboardBubble extends React.PureComponent {
+class CometChatReceiverWhiteboardBubble extends React.PureComponent {
 
     messageFrom = "receiver";
 
@@ -162,14 +162,14 @@ class ReceiverWhiteboardBubble extends React.PureComponent {
 }
 
 // Specifies the default values for props:
-ReceiverWhiteboardBubble.defaultProps = {
+CometChatReceiverWhiteboardBubble.defaultProps = {
     lang: Translator.getDefaultLanguage(),
     theme: theme
 };
 
-ReceiverWhiteboardBubble.propTypes = {
+CometChatReceiverWhiteboardBubble.propTypes = {
     lang: PropTypes.string,
     theme: PropTypes.object
 }
 
-export default ReceiverWhiteboardBubble;
+export { CometChatReceiverWhiteboardBubble };
