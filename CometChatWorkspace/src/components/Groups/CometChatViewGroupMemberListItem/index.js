@@ -192,7 +192,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
         }
         
         let editAccess = null;
-        //if the loggedin user is participant, don't show change scope, ban, kick group members
+        //if the loggedin user is participant, don't show the option to change scope, ban, or kick group members
         if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
             editAccess = null;
             editClassName = "true";
@@ -200,30 +200,44 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
             editAccess = (
                 <React.Fragment>
-                    <div css={actionColumnStyle(this.props)} className="ban"><span>{ban}</span></div>
-                    <div css={actionColumnStyle(this.props)} className="kick"><span>{kick}</span></div>
+                    <div css={actionColumnStyle(this.props)} className="ban">
+                        <span>{ban}</span>
+                    </div>
+                    <div css={actionColumnStyle(this.props)} className="kick">
+                        <span>{kick}</span>
+                    </div>
                 </React.Fragment>
             );
 
-            if(this.props.hasOwnProperty("widgetsettings") && this.props.widgetsettings && this.props.widgetsettings.hasOwnProperty("main")) {
-    
-                //if kick_ban_members is disabled in chatwidget
-                if (this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members")
-                && this.props.widgetsettings.main["allow_kick_ban_members"] === false) {
-                    editAccess = null;
-                }
+            /**
+             * if kick and ban feature is disabled
+             */
+            if (this.props.enableBanGroupMembers === false && this.props.enableKickGroupMembers === false) {
+                editAccess = null;
+            } else if (this.props.enableBanGroupMembers === false) { //if ban feature is disabled
+                editAccess = (
+                    <div css={actionColumnStyle(this.props)} className="kick">
+                        <span>{kick}</span>
+                    </div>
+                );
+            } else if (this.props.enableKickGroupMembers === false) { //if kick feature is disabled
+                editAccess = (
+                    <div css={actionColumnStyle(this.props)} className="ban">
+                        <span>{ban}</span>
+                    </div>
+                );
+            }
 
-                //if promote_demote_members is disabled in chatwidget
-                if (this.props.widgetsettings.main.hasOwnProperty("allow_promote_demote_members")
-                && this.props.widgetsettings.main["allow_promote_demote_members"] === false) {
-                    changescope = scope;
-                }
+            /**
+             * if promote_demote_members feature is disabled
+             */
+            if (this.props.enableChangeScope === false) {
+                changescope = scope;
             }
         }
 
         let userPresence = (
             <CometChatUserPresence
-            widgetsettings={this.props.widgetsettings}
             status={this.props.member.status}
             borderColor={this.props.theme.borderColor.primary} />
         );
@@ -250,13 +264,15 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
 // Specifies the default values for props:
 CometChatViewGroupMemberListItem.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
-    loggedinuser: {}
+	lang: Translator.getDefaultLanguage(),
+	loggedinuser: {},
+	enableChangeScope: false,
 };
 
 CometChatViewGroupMemberListItem.propTypes = {
-    lang: PropTypes.string,
-    loggedinuser: PropTypes.shape(CometChat.User)
-}
+	lang: PropTypes.string,
+	loggedinuser: PropTypes.shape(CometChat.User),
+	enableChangeScope: PropTypes.bool
+};
 
-export default CometChatViewGroupMemberListItem;
+export { CometChatViewGroupMemberListItem };

@@ -6,20 +6,20 @@ import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { 
-  CometChatMessageList, CometChatMessageComposer,
-  CometChatSenderTextMessageBubble, CometChatReceiverTextMessageBubble,
-  CometChatSenderImageMessageBubble, CometChatReceiverImageMessageBubble,
-  CometChatSenderFileMessageBubble, CometChatReceiverFileMessageBubble,
-  CometChatSenderAudioMessageBubble, CometChatReceiverAudioMessageBubble,
-  CometChatSenderVideoMessageBubble, CometChatReceiverVideoMessageBubble,
-  CometChatImageViewer
+	CometChatMessageList, CometChatMessageComposer,
+	CometChatSenderTextMessageBubble, CometChatReceiverTextMessageBubble,
+	CometChatSenderImageMessageBubble, CometChatReceiverImageMessageBubble,
+	CometChatSenderFileMessageBubble, CometChatReceiverFileMessageBubble,
+	CometChatSenderAudioMessageBubble, CometChatReceiverAudioMessageBubble,
+	CometChatSenderVideoMessageBubble, CometChatReceiverVideoMessageBubble,
+	CometChatImageViewer
 } from "../";
 
 import {
-  CometChatSenderPollMessageBubble, CometChatReceiverPollMessageBubble,
-  CometChatSenderStickerBubble, CometChatReceiverStickerMessageBubble,
-  CometChatSenderDocumentBubble, CometChatReceiverDocumentBubble,
-  CometChatSenderWhiteboardBubble, CometChatReceiverWhiteboardBubble,
+	CometChatSenderPollMessageBubble, CometChatReceiverPollMessageBubble,
+	CometChatSenderStickerBubble, CometChatReceiverStickerMessageBubble,
+	CometChatSenderDocumentBubble, CometChatReceiverDocumentBubble,
+	CometChatSenderWhiteboardBubble, CometChatReceiverWhiteboardBubble,
 } from "../Extensions"
 
 import { CometChatContext } from "../../../util/CometChatContext";
@@ -30,480 +30,542 @@ import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
 
 import {
-  wrapperStyle,
-  headerStyle,
-  headerWrapperStyle,
-  headerDetailStyle,
-  headerTitleStyle,
-  headerNameStyle,
-  headerCloseStyle,
-  messageContainerStyle,
-  parentMessageStyle,
-  messageSeparatorStyle,
-  messageReplyStyle,
+	wrapperStyle,
+	headerStyle,
+	headerWrapperStyle,
+	headerDetailStyle,
+	headerTitleStyle,
+	headerNameStyle,
+	headerCloseStyle,
+	messageContainerStyle,
+	parentMessageStyle,
+	messageSeparatorStyle,
+	messageReplyStyle,
 } from "./style";
 
 import clearIcon from "./resources/close.png";
 
 class CometChatMessageThread extends React.PureComponent {
-
-  loggedInUser = null;
-  static contextType = CometChatContext;
-
-  constructor(props) {
-
-    super(props);
-
-    this.composerRef = React.createRef();
-
-    this.state = {
-      messageList: [],
-      scrollToBottom: false,
-      replyCount: 0,
-      replyPreview: null,
-      messageToBeEdited: null,
-      parentMessage: props.parentMessage,
-      viewOriginalImage: false
-    }
-
-    this.loggedInUser = this.props.loggedInUser;
-    CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
-      console.error(error);
-    });
-  }
-
-  componentDidUpdate(prevProps) {
-
-    if (prevProps.parentMessage !== this.props.parentMessage) {
-
-      if (prevProps.parentMessage.id !== this.props.parentMessage.id) {
-        this.setState({ messageList: [], scrollToBottom: true, parentMessage: this.props.parentMessage });
-      } else if (prevProps.parentMessage.data !== this.props.parentMessage.data) {
-        this.setState({ parentMessage: this.props.parentMessage });
-      } 
-      
-    } 
-  }
-
-  parentMessageEdited = (message) => {
-
-    const parentMessage = { ...this.props.parentMessage };
-
-    if (parentMessage.id === message.id) {
-      const newMessageObj = { ...message };
-      this.setState({ parentMessage: newMessageObj });
-    }
-
-  }
-
-  actionHandler = (action, messages) => {
-      
-    switch(action) {
-      case enums.ACTIONS["CUSTOM_MESSAGE_RECEIVED"]:
-      case enums.ACTIONS["MESSAGE_RECEIVED"]: {
-        
-        const message = messages[0];
-        if (message.hasOwnProperty("parentMessageId") && message.parentMessageId === this.state.parentMessage.id) {
-
-          const replyCount = (this.state.parentMessage.hasOwnProperty("replyCount")) ? this.state.parentMessage.replyCount : 0;
-          const newReplyCount = replyCount + 1;
-
-          let messageObj = { ...this.state.parentMessage };
-          let newMessageObj = Object.assign({}, messageObj, { replyCount: newReplyCount });
-          this.setState({ parentMessage: newMessageObj });
-
-          this.smartReplyPreview(messages);
-          this.appendMessage(messages);
-        }
-      }
-      break;
-      case enums.ACTIONS["MESSAGE_COMPOSED"]: {
-
-        const replyCount = (this.state.parentMessage.hasOwnProperty("replyCount")) ? this.state.parentMessage.replyCount : 0;
-        const newReplyCount = replyCount + 1;
-
-        let messageObj = { ...this.state.parentMessage };
-        let newMessageObj = Object.assign({}, messageObj, { replyCount: newReplyCount });
-        this.setState({ parentMessage: newMessageObj });
-
-        this.appendMessage(messages);
-        //this.context.setLastMessage(messages[0]);
-        this.props.actionGenerated(enums.ACTIONS["THREAD_MESSAGE_COMPOSED"], messages);
-      }
-      break;
-      case enums.ACTIONS["MESSAGE_SENT"]:
-      case enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"]:
-        this.messageSent(messages);
-        break;
-      case enums.ACTIONS["ON_MESSAGE_READ_DELIVERED"]:
-        this.updateMessages(messages);
-        break;
-      case enums.ACTIONS["ON_MESSAGE_EDITED"]:
-        this.updateMessages(messages);
-      break;
-      case "messageFetched":
-        this.prependMessages(messages);
-      break;
-      case enums.ACTIONS["ON_MESSAGE_DELETED"]:
-        this.removeMessages(messages);
-      break;
-      case enums.ACTIONS["EDIT_MESSAGE"]:
-        this.editMessage(messages);
-        break;
-      case enums.ACTIONS["MESSAGE_EDITED"]:
-        this.messageEdited(messages);
-      break;
-      case enums.ACTIONS["CLEAR_EDIT_PREVIEW"]:
-        this.clearEditPreview();
-      break;
-      case enums.ACTIONS["DELETE_MESSAGE"]:
-        this.deleteMessage(messages);
-        break;
-      case enums.ACTIONS["REACT_TO_MESSAGE"]:
-        this.reactToMessage(messages);
-        break;
-      case enums.ACTIONS["VIEW_ORIGINAL_IMAGE"]:
-        this.toggleOriginalImageView(messages);
-        break;
-      default:
-      break;
-    }
-  }
-
-  toggleOriginalImageView = (message) => {
-    this.setState({ viewOriginalImage: message });
-  }
-
-  messageSent = (message) => {
-
-    const messageList = [...this.state.messageList];
-    let messageKey = messageList.findIndex(m => m._id === message._id);
-    if (messageKey > -1) {
-
-      const newMessageObj = { ...message };
-
-      messageList.splice(messageKey, 1, newMessageObj);
-      this.updateMessages(messageList);
-    }
-  }
-
-  editMessage = (message) => {
-    this.setState({ "messageToBeEdited": message });
-  }
-
-  messageEdited = (message) => {
-
-    const messageList = [...this.state.messageList];
-    let messageKey = messageList.findIndex(m => m.id === message.id);
-    if (messageKey > -1) {
-
-      const messageObj = messageList[messageKey];
-
-      const newMessageObj = { ...messageObj, ...message };
-
-      messageList.splice(messageKey, 1, newMessageObj);
-      this.updateMessages(messageList);
-
-      if (messageList.length - messageKey === 1) {
-        this.context.setLastMessage(newMessageObj);
-        //this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], [newMessageObj]);
-      }
-
-    }
-  }
-
-  clearEditPreview = () => {
-    this.setState({ "messageToBeEdited": "" });
-  }
-
-  deleteMessage = (message) => {
-
-    const messageId = message.id;
-    CometChat.deleteMessage(messageId).then(deletedMessage => {
-
-      this.removeMessages([deletedMessage]);
-
-      const messageList = [...this.state.messageList];
-      let messageKey = messageList.findIndex(m => m.id === message.id);
-
-      if (messageList.length - messageKey === 1 && !message.replyCount) {
-        this.context.setLastMessage(deletedMessage);
-        //this.props.actionGenerated(enums.ACTIONS["MESSAGE_DELETED"], [deletedMessage]);
-      }
-
-    }).catch(error => {
-      console.log("Message delete failed with error:", error);
-    });
-  }
-
-  smartReplyPreview = (messages) => {
-
-    const message = messages[0];
-
-    const smartReplyData = checkMessageForExtensionsData(message, "smart-reply");
-    if (smartReplyData && smartReplyData.hasOwnProperty("error") === false) {
-      this.setState({ replyPreview: message });
-    } else {
-      this.setState({ replyPreview: null });
-    }
-  }
-
-  //message is received or composed & sent
-  appendMessage = (message) => {
-    let messages = [...this.state.messageList];
-    messages = messages.concat(message);
-    this.setState({ messageList: messages, scrollToBottom: true });
-  }
-
-  //message status is updated
-  updateMessages = (messages) => {
-    this.setState({ messageList: messages });
-  }
-
-  //messages are fetched from backend
-  prependMessages = (messages) => {
-    const messageList = [...messages, ...this.state.messageList];
-    this.setState({ messageList: messageList, scrollToBottom: false });
-  }
-
-  //messages are deleted
-  removeMessages = (messages) => {
-  
-      const deletedMessage = messages[0];
-      const messagelist = [...this.state.messageList];
-
-      let messageKey = messagelist.findIndex(message => message.id === deletedMessage.id);
-      if (messageKey > -1) {
-
-        let messageObj = { ...messagelist[messageKey] };
-        let newMessageObj = Object.assign({}, messageObj, deletedMessage);
-
-        messagelist.splice(messageKey, 1, newMessageObj);
-        this.setState({ messageList: messagelist, scrollToBottom: false });
-      }
-  }
-
-  getSenderMessageComponent = (message, key) => {
-
-    let component;
-
-    switch (message.type) {
-      case CometChat.MESSAGE_TYPE.TEXT:
-        component = <CometChatSenderTextMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      case CometChat.MESSAGE_TYPE.IMAGE:
-        component = <CometChatSenderImageMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      case CometChat.MESSAGE_TYPE.FILE:
-        component = <CometChatSenderFileMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      case CometChat.MESSAGE_TYPE.VIDEO:
-        component = <CometChatSenderVideoMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      case CometChat.MESSAGE_TYPE.AUDIO:
-        component = <CometChatSenderAudioMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      default:
-        break;
-    }
-
-    return component;
-  }
-
-  getReceiverMessageComponent = (message, key) => {
-
-    let component;
-
-    switch (message.type) {
-      case "message":
-      case CometChat.MESSAGE_TYPE.TEXT:
-        component = <CometChatReceiverTextMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      case CometChat.MESSAGE_TYPE.IMAGE:
-        component = <CometChatReceiverImageMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      case CometChat.MESSAGE_TYPE.FILE:
-        component = <CometChatReceiverFileMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      case CometChat.MESSAGE_TYPE.AUDIO:
-        component = <CometChatReceiverAudioMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      case CometChat.MESSAGE_TYPE.VIDEO:
-        component = <CometChatReceiverVideoMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
-        break;
-      default:
-        break;
-    }
-
-    return component;
-  }
-
-  getSenderCustomMessageComponent = (message, key) => {
-
-    let component;
-
-    switch (message.type) {
-      case enums.CUSTOM_TYPE_POLL:
-        component = <CometChatSenderPollMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
-        break;
-      case enums.CUSTOM_TYPE_STICKER:
-        component = <CometChatSenderStickerBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
-        break;
-      case enums.CUSTOM_TYPE_DOCUMENT:
-        component = <CometChatSenderDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
-        break;
-      case enums.CUSTOM_TYPE_WHITEBOARD:
-        component = <CometChatSenderWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
-        break;
-      default:
-        break;
-    }
-
-    return component;
-  }
-
-  getReceiverCustomMessageComponent = (message, key) => {
-
-    let component;
-    switch (message.type) {
-      case enums.CUSTOM_TYPE_POLL:
-        component = <CometChatReceiverPollMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
-        break;
-      case enums.CUSTOM_TYPE_STICKER:
-        component = <CometChatReceiverStickerMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
-        break;
-      case enums.CUSTOM_TYPE_DOCUMENT:
-        component = <CometChatReceiverDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
-        break;
-      case enums.CUSTOM_TYPE_WHITEBOARD:
-        component = <CometChatReceiverWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
-        break;
-      default:
-        break;
-    }
-
-    return component;
-  }
-
-  getParentMessageComponent = (message) => {
-
-    let component = null;
-    const key = 1;
-
-    switch (message.category) {
-
-      case "message":
-        if (this.loggedInUser.uid === message.sender.uid) {
-          component = this.getSenderMessageComponent(message, key);
-        } else {
-          component = this.getReceiverMessageComponent(message, key);
-        }
-      break;
-      case "custom":
-        if (this.loggedInUser.uid === message.sender.uid) {
-          component = this.getSenderCustomMessageComponent(message, key);
-        } else {
-          component = this.getReceiverCustomMessageComponent(message, key);
-        }
-      break;
-      default:
-      break;
-    }
-
-    return component;
-  }
-
-  reactToMessage = (message) => {
-
-    this.setState({ "messageToReact": message });
-
-    if (this.composerRef) {
-      this.composerRef.toggleEmojiPicker();
-    }
-  }
-
-  render() {
-
-    let parentMessage = this.getParentMessageComponent(this.state.parentMessage);
-    
-    let seperator = (<div css={messageSeparatorStyle(this.props)}><hr/></div>);
-    if (this.state.parentMessage.hasOwnProperty("replyCount")) {
-
-      const replyCount = this.state.parentMessage.replyCount;
-      const replyText = (replyCount === 1) ? (`${replyCount} ${Translator.translate("REPLY", this.props.lang)}`) : (`${replyCount} ${Translator.translate("REPLIES", this.props.lang)}`);
-
-      seperator = (
-        <div css={messageSeparatorStyle(this.props)} className="message__separator">
-          <span css={messageReplyStyle()} className="message__replies">{replyText}</span>
-          <hr/>
-        </div>
-      );
-    }
-
-    let originalImageView = null;
-    if (this.state.viewOriginalImage) {
-      originalImageView = (
-        <CometChatImageViewer
-          open={true}
-          close={() => this.toggleOriginalImageView(false)}
-          message={this.state.viewOriginalImage}
-          lang={this.props.lang} />
-      );
-    }
-
-    return (
-      <React.Fragment>
-        <div css={wrapperStyle(this.props)} className="thread__chat">
-          <div css={headerStyle(this.props)} className="chat__header">
-            <div css={headerWrapperStyle()} className="header__wrapper">    
-              <div css={headerDetailStyle()} className="header__details">
-                <h6 css={headerTitleStyle()} className="header__title">{Translator.translate("THREAD", this.props.lang)}</h6>
-                <span css={headerNameStyle()} className="header__username">{this.props.threadItem.name}</span>
-              </div>
-              <div css={headerCloseStyle(clearIcon)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_THREADED_MESSAGE"])}></div>
-            </div>
-          </div>
-          <div css={messageContainerStyle()} className="chat__message__container">
-            <div css={parentMessageStyle(this.props.parentMessage)} className="parent__message">{parentMessage}</div>
-            {seperator}
-            <CometChatMessageList
-            theme={this.props.theme}
-            messages={this.state.messageList} 
-            item={this.props.threadItem} 
-            type={this.props.threadType}
-            scrollToBottom={this.state.scrollToBottom}
-            config={this.props.config}
-            widgetsettings={this.props.widgetsettings}
-            parentMessageId={this.props.parentMessage.id}
-            lang={this.props.lang}
-            actionGenerated={this.actionHandler} />
-            <CometChatMessageComposer
-            ref={(el) => { this.composerRef = el; }}
-            theme={this.props.theme}
-            lang={this.props.lang}
-            widgetsettings={this.props.widgetsettings}
-            parentMessageId={this.props.parentMessage.id}
-            messageToBeEdited={this.state.messageToBeEdited}
-            replyPreview={this.state.replyPreview}
-            messageToReact={this.state.messageToReact}
-            actionGenerated={this.actionHandler} />
-          </div>
-        </div>
-        {originalImageView}
-      </React.Fragment>
-    );
-  }
+	loggedInUser = null;
+	static contextType = CometChatContext;
+
+	constructor(props) {
+		super(props);
+
+		this.composerRef = React.createRef();
+
+		this.state = {
+			messageList: [],
+			scrollToBottom: false,
+			replyCount: 0,
+			replyPreview: null,
+			messageToBeEdited: null,
+			parentMessage: props.parentMessage,
+			viewOriginalImage: false,
+			enableSendingOneOnOneMessage: false,
+			enableSendingGroupMessage: false,
+			enableHideDeletedMessages: false,
+		};
+
+		this.loggedInUser = this.props.loggedInUser;
+		CometChat.getLoggedinUser()
+			.then(user => (this.loggedInUser = user))
+			.catch(error => {
+				console.error(error);
+			});
+	}
+
+	componentDidMount() {
+
+		this.enableSendingOneOnOneMessage();
+		this.enableSendingGroupMessage();
+		this.enableHideDeletedMessages();
+	}
+
+	componentDidUpdate(prevProps) {
+
+		this.enableSendingOneOnOneMessage();
+		this.enableSendingGroupMessage();
+		this.enableHideDeletedMessages();
+
+		if (prevProps.parentMessage !== this.props.parentMessage) {
+			if (prevProps.parentMessage.id !== this.props.parentMessage.id) {
+				this.setState({messageList: [], scrollToBottom: true, parentMessage: this.props.parentMessage});
+			} else if (prevProps.parentMessage.data !== this.props.parentMessage.data) {
+				this.setState({parentMessage: this.props.parentMessage});
+			}
+		}
+	}
+
+	enableSendingOneOnOneMessage = () => {
+		this.context
+			.FeatureRestriction.isOneOnOneChatEnabled()
+			.then(response => {
+				if (response !== this.state.enableSendingOneOnOneMessage) {
+					this.setState({enableSendingOneOnOneMessage: response});
+				}
+			})
+			.catch(error => {
+				if (this.state.enableSendingOneOnOneMessage !== false) {
+					this.setState({enableSendingOneOnOneMessage: false});
+				}
+			});
+	};
+
+	enableSendingGroupMessage = () => {
+		this.context
+			.FeatureRestriction.isGroupChatEnabled()
+			.then(response => {
+				if (response !== this.state.enableSendingGroupMessage) {
+					this.setState({enableSendingGroupMessage: response});
+				}
+			})
+			.catch(error => {
+				if (this.state.enableSendingGroupMessage !== false) {
+					this.setState({enableSendingGroupMessage: false});
+				}
+			});
+	};
+
+	enableHideDeletedMessages = () => {
+		this.context
+			.FeatureRestriction.isHideDeletedMessagesEnabled()
+			.then(response => {
+
+				if (response !== this.state.enableHideDeletedMessages) {
+					this.setState({enableHideDeletedMessages: response});
+				}
+			})
+			.catch(error => {
+				if (this.state.enableHideDeletedMessages !== false) {
+					this.setState({enableHideDeletedMessages: false});
+				}
+			});
+	};
+
+	parentMessageEdited = message => {
+		const parentMessage = {...this.props.parentMessage};
+
+		if (parentMessage.id === message.id) {
+			const newMessageObj = {...message};
+			this.setState({parentMessage: newMessageObj});
+		}
+	};
+
+	actionHandler = (action, messages) => {
+		switch (action) {
+			case enums.ACTIONS["CUSTOM_MESSAGE_RECEIVED"]:
+			case enums.ACTIONS["MESSAGE_RECEIVED"]:
+				{
+					const message = messages[0];
+					if (message.hasOwnProperty("parentMessageId") && message.parentMessageId === this.state.parentMessage.id) {
+						const replyCount = this.state.parentMessage.hasOwnProperty("replyCount") ? this.state.parentMessage.replyCount : 0;
+						const newReplyCount = replyCount + 1;
+
+						let messageObj = {...this.state.parentMessage};
+						let newMessageObj = Object.assign({}, messageObj, {replyCount: newReplyCount});
+						this.setState({parentMessage: newMessageObj});
+
+						this.smartReplyPreview(messages);
+						this.appendMessage(messages);
+					}
+				}
+				break;
+			case enums.ACTIONS["MESSAGE_COMPOSED"]:
+				{
+					const replyCount = this.state.parentMessage.hasOwnProperty("replyCount") ? this.state.parentMessage.replyCount : 0;
+					const newReplyCount = replyCount + 1;
+
+					let messageObj = {...this.state.parentMessage};
+					let newMessageObj = Object.assign({}, messageObj, {replyCount: newReplyCount});
+					this.setState({parentMessage: newMessageObj});
+
+					this.appendMessage(messages);
+					//this.context.setLastMessage(messages[0]);
+					this.props.actionGenerated(enums.ACTIONS["THREAD_MESSAGE_COMPOSED"], messages);
+				}
+				break;
+			case enums.ACTIONS["MESSAGE_SENT"]:
+			case enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"]:
+				this.messageSent(messages);
+				break;
+			case enums.ACTIONS["ON_MESSAGE_READ_DELIVERED"]:
+				this.updateMessages(messages);
+				break;
+			case enums.ACTIONS["ON_MESSAGE_EDITED"]:
+				this.updateMessages(messages);
+				break;
+			case "messageFetched":
+				this.prependMessages(messages);
+				break;
+			case enums.ACTIONS["ON_MESSAGE_DELETED"]:
+				this.removeMessages(messages);
+				break;
+			case enums.ACTIONS["EDIT_MESSAGE"]:
+				this.editMessage(messages);
+				break;
+			case enums.ACTIONS["MESSAGE_EDITED"]:
+				this.messageEdited(messages);
+				break;
+			case enums.ACTIONS["CLEAR_EDIT_PREVIEW"]:
+				this.clearEditPreview();
+				break;
+			case enums.ACTIONS["DELETE_MESSAGE"]:
+				this.deleteMessage(messages);
+				break;
+			case enums.ACTIONS["REACT_TO_MESSAGE"]:
+				this.reactToMessage(messages);
+				break;
+			case enums.ACTIONS["VIEW_ORIGINAL_IMAGE"]:
+				this.toggleOriginalImageView(messages);
+				break;
+			default:
+				break;
+		}
+	};
+
+	toggleOriginalImageView = message => {
+		this.setState({viewOriginalImage: message});
+	};
+
+	messageSent = message => {
+		const messageList = [...this.state.messageList];
+		let messageKey = messageList.findIndex(m => m._id === message._id);
+		if (messageKey > -1) {
+			const newMessageObj = {...message};
+
+			messageList.splice(messageKey, 1, newMessageObj);
+			this.updateMessages(messageList);
+		}
+	};
+
+	editMessage = message => {
+		this.setState({messageToBeEdited: message});
+	};
+
+	messageEdited = message => {
+		const messageList = [...this.state.messageList];
+		let messageKey = messageList.findIndex(m => m.id === message.id);
+		if (messageKey > -1) {
+			const messageObj = messageList[messageKey];
+
+			const newMessageObj = {...messageObj, ...message};
+
+			messageList.splice(messageKey, 1, newMessageObj);
+			this.updateMessages(messageList);
+
+			if (messageList.length - messageKey === 1) {
+				this.context.setLastMessage(newMessageObj);
+				//this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], [newMessageObj]);
+			}
+		}
+	};
+
+	clearEditPreview = () => {
+		this.setState({messageToBeEdited: ""});
+	};
+
+	deleteMessage = message => {
+		const messageId = message.id;
+		CometChat.deleteMessage(messageId)
+			.then(deletedMessage => {
+				this.removeMessages([deletedMessage]);
+
+				const messageList = [...this.state.messageList];
+				let messageKey = messageList.findIndex(m => m.id === message.id);
+
+				if (messageList.length - messageKey === 1 && !message.replyCount) {
+					this.context.setLastMessage(deletedMessage);
+					//this.props.actionGenerated(enums.ACTIONS["MESSAGE_DELETED"], [deletedMessage]);
+				}
+			})
+			.catch(error => {
+				console.log("Message delete failed with error:", error);
+			});
+	};
+
+	smartReplyPreview = messages => {
+		const message = messages[0];
+
+		const smartReplyData = checkMessageForExtensionsData(message, "smart-reply");
+		if (smartReplyData && smartReplyData.hasOwnProperty("error") === false) {
+			this.setState({replyPreview: message});
+		} else {
+			this.setState({replyPreview: null});
+		}
+	};
+
+	//message is received or composed & sent
+	appendMessage = message => {
+		let messages = [...this.state.messageList];
+		messages = messages.concat(message);
+		this.setState({messageList: messages, scrollToBottom: true});
+	};
+
+	//message status is updated
+	updateMessages = messages => {
+		this.setState({messageList: messages});
+	};
+
+	//messages are fetched from backend
+	prependMessages = messages => {
+		const messageList = [...messages, ...this.state.messageList];
+		this.setState({messageList: messageList, scrollToBottom: false});
+	};
+
+	//messages are deleted
+	removeMessages = messages => {
+		const deletedMessage = messages[0];
+		const messagelist = [...this.state.messageList];
+
+		let messageKey = messagelist.findIndex(message => message.id === deletedMessage.id);
+		if (messageKey > -1) {
+			console.log("this.state.enableHideDeletedMessages", this.state.enableHideDeletedMessages);
+			if (this.state.enableHideDeletedMessages) {
+
+				messagelist.splice(messageKey, 1);
+
+			} else {
+				let messageObj = {...messagelist[messageKey]};
+				let newMessageObj = Object.assign({}, messageObj, deletedMessage);
+				messagelist.splice(messageKey, 1, newMessageObj);
+			}
+			
+			this.setState({messageList: messagelist, scrollToBottom: false});
+		}
+	};
+
+	getSenderMessageComponent = (message, key) => {
+		let component;
+
+		switch (message.type) {
+			case CometChat.MESSAGE_TYPE.TEXT:
+				component = <CometChatSenderTextMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			case CometChat.MESSAGE_TYPE.IMAGE:
+				component = <CometChatSenderImageMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			case CometChat.MESSAGE_TYPE.FILE:
+				component = <CometChatSenderFileMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			case CometChat.MESSAGE_TYPE.VIDEO:
+				component = <CometChatSenderVideoMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			case CometChat.MESSAGE_TYPE.AUDIO:
+				component = <CometChatSenderAudioMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			default:
+				break;
+		}
+
+		return component;
+	};
+
+	getReceiverMessageComponent = (message, key) => {
+		let component;
+
+		switch (message.type) {
+			case "message":
+			case CometChat.MESSAGE_TYPE.TEXT:
+				component = <CometChatReceiverTextMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			case CometChat.MESSAGE_TYPE.IMAGE:
+				component = <CometChatReceiverImageMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			case CometChat.MESSAGE_TYPE.FILE:
+				component = <CometChatReceiverFileMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			case CometChat.MESSAGE_TYPE.AUDIO:
+				component = <CometChatReceiverAudioMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			case CometChat.MESSAGE_TYPE.VIDEO:
+				component = <CometChatReceiverVideoMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				break;
+			default:
+				break;
+		}
+
+		return component;
+	};
+
+	getSenderCustomMessageComponent = (message, key) => {
+		let component;
+
+		switch (message.type) {
+			case enums.CUSTOM_TYPE_POLL:
+				component = <CometChatSenderPollMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				break;
+			case enums.CUSTOM_TYPE_STICKER:
+				component = <CometChatSenderStickerBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				break;
+			case enums.CUSTOM_TYPE_DOCUMENT:
+				component = <CometChatSenderDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				break;
+			case enums.CUSTOM_TYPE_WHITEBOARD:
+				component = <CometChatSenderWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				break;
+			default:
+				break;
+		}
+
+		return component;
+	};
+
+	getReceiverCustomMessageComponent = (message, key) => {
+		let component;
+		switch (message.type) {
+			case enums.CUSTOM_TYPE_POLL:
+				component = <CometChatReceiverPollMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				break;
+			case enums.CUSTOM_TYPE_STICKER:
+				component = <CometChatReceiverStickerMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				break;
+			case enums.CUSTOM_TYPE_DOCUMENT:
+				component = <CometChatReceiverDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				break;
+			case enums.CUSTOM_TYPE_WHITEBOARD:
+				component = <CometChatReceiverWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				break;
+			default:
+				break;
+		}
+
+		return component;
+	};
+
+	getParentMessageComponent = message => {
+		let component = null;
+		const key = 1;
+
+		switch (message.category) {
+			case "message":
+				if (this.loggedInUser.uid === message.sender.uid) {
+					component = this.getSenderMessageComponent(message, key);
+				} else {
+					component = this.getReceiverMessageComponent(message, key);
+				}
+				break;
+			case "custom":
+				if (this.loggedInUser.uid === message.sender.uid) {
+					component = this.getSenderCustomMessageComponent(message, key);
+				} else {
+					component = this.getReceiverCustomMessageComponent(message, key);
+				}
+				break;
+			default:
+				break;
+		}
+
+		return component;
+	};
+
+	reactToMessage = message => {
+		this.setState({messageToReact: message});
+
+		if (this.composerRef) {
+			this.composerRef.toggleEmojiPicker();
+		}
+	};
+
+	render() {
+		let parentMessage = this.getParentMessageComponent(this.state.parentMessage);
+
+		let seperator = (
+			<div css={messageSeparatorStyle(this.props)}>
+				<hr />
+			</div>
+		);
+		if (this.state.parentMessage.hasOwnProperty("replyCount")) {
+			const replyCount = this.state.parentMessage.replyCount;
+			const replyText = replyCount === 1 ? `${replyCount} ${Translator.translate("REPLY", this.props.lang)}` : `${replyCount} ${Translator.translate("REPLIES", this.props.lang)}`;
+
+			seperator = (
+				<div css={messageSeparatorStyle(this.props)} className="message__separator">
+					<span css={messageReplyStyle()} className="message__replies">
+						{replyText}
+					</span>
+					<hr />
+				</div>
+			);
+		}
+
+		let originalImageView = null;
+		if (this.state.viewOriginalImage) {
+			originalImageView = <CometChatImageViewer open={true} close={() => this.toggleOriginalImageView(false)} message={this.state.viewOriginalImage} lang={this.props.lang} />;
+		}
+
+		let messageComposer = (
+			<CometChatMessageComposer
+				ref={el => {
+					this.composerRef = el;
+				}}
+				theme={this.props.theme}
+				lang={this.props.lang}
+				widgetsettings={this.props.widgetsettings}
+				parentMessageId={this.props.parentMessage.id}
+				messageToBeEdited={this.state.messageToBeEdited}
+				replyPreview={this.state.replyPreview}
+				messageToReact={this.state.messageToReact}
+				actionGenerated={this.actionHandler}
+			/>
+		);
+
+		//if send messages feature is disabled
+		if ((this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.state.enableSendingOneOnOneMessage === false) 
+		|| (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.state.enableSendingGroupMessage === false)) {
+			messageComposer = null;
+		}
+
+		return (
+			<React.Fragment>
+				<div css={wrapperStyle(this.props)} className="thread__chat">
+					<div css={headerStyle(this.props)} className="chat__header">
+						<div css={headerWrapperStyle()} className="header__wrapper">
+							<div css={headerDetailStyle()} className="header__details">
+								<h6 css={headerTitleStyle()} className="header__title">
+									{Translator.translate("THREAD", this.props.lang)}
+								</h6>
+								<span css={headerNameStyle()} className="header__username">
+									{this.props.threadItem.name}
+								</span>
+							</div>
+							<div css={headerCloseStyle(clearIcon)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_THREADED_MESSAGE"])}></div>
+						</div>
+					</div>
+					<div css={messageContainerStyle()} className="chat__message__container">
+						<div css={parentMessageStyle(this.props.parentMessage)} className="parent__message">
+							{parentMessage}
+						</div>
+						{seperator}
+						<CometChatMessageList
+							theme={this.props.theme}
+							messages={this.state.messageList}
+							item={this.props.threadItem}
+							type={this.props.threadType}
+							scrollToBottom={this.state.scrollToBottom}
+							config={this.props.config}
+							widgetsettings={this.props.widgetsettings}
+							parentMessageId={this.props.parentMessage.id}
+							lang={this.props.lang}
+							actionGenerated={this.actionHandler} />
+						{messageComposer}
+					</div>
+				</div>
+				{originalImageView}
+			</React.Fragment>
+		);
+	}
 }
 
 // Specifies the default values for props:
 CometChatMessageThread.defaultProps = {
-  lang: Translator.getDefaultLanguage(),
-  theme: theme
+	lang: Translator.getDefaultLanguage(),
+	theme: theme
 };
 
 CometChatMessageThread.propTypes = {
-  lang: PropTypes.string,
-  theme: PropTypes.object
+	lang: PropTypes.string,
+	theme: PropTypes.object
 }
 
-export default CometChatMessageThread;
+export { CometChatMessageThread };

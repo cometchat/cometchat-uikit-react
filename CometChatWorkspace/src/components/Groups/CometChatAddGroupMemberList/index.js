@@ -53,14 +53,13 @@ class CometChatAddGroupMemberList extends React.Component {
     }
 
     componentDidMount() {
-  
-        if(this.props?.friendsOnly) {
-            this.friendsOnly = this.props.friendsOnly;
-        }
 
-        this.AddMembersManager = new AddMembersManager(this.friendsOnly);
-        this.getUsers();
-        this.AddMembersManager.attachListeners(this.userUpdated);
+        this.AddMembersManager = new AddMembersManager(this.context);
+        this.AddMembersManager.initializeMembersRequest().then(() => {
+
+            this.getUsers();
+            this.AddMembersManager.attachListeners(this.userUpdated);
+        });
     }
 
     componentWillUnmount() {
@@ -100,12 +99,15 @@ class CometChatAddGroupMemberList extends React.Component {
         }
 
         let val = e.target.value;
-        this.timeout = setTimeout(() => {
+        
+        this.AddMembersManager = new AddMembersManager(this.context, val);
+        this.AddMembersManager.initializeMembersRequest().then(() => {
 
-        this.AddMembersManager = new AddMembersManager(this.friendsOnly, val);
-            this.setState({ userlist: [], membersToAdd: [], membersToRemove: [], filteredlist: [] }, () => this.getUsers())
-        }, 500);
-  
+            this.timeout = setTimeout(() => {
+                this.setState({userlist: [], membersToAdd: [], membersToRemove: [], filteredlist: []}, () => this.getUsers());
+            }, 500);
+							
+        });
     }
   
     getUsers = () => {
@@ -278,4 +280,4 @@ CometChatAddGroupMemberList.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatAddGroupMemberList;
+export { CometChatAddGroupMemberList };

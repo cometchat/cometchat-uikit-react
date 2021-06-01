@@ -130,10 +130,14 @@ export const messageInputStyle = (disabled) => {
     }
 }
 
-export const inputStickyStyle = (props, disabled) => {
+export const inputStickyStyle = (props, disabled, attachments) => {
 
     const disabledState = (disabled) ? {
         pointerEvents: "none",
+    } : {};
+
+    const flexDirectionProp = (attachments === null) ? {
+        flexDirection: "row-reverse",
     } : {};
 
     return {
@@ -143,6 +147,7 @@ export const inputStickyStyle = (props, disabled) => {
         backgroundColor: `${props.theme.backgroundColor.grey}`,
         display: "flex",
         justifyContent: "space-between",
+        ...flexDirectionProp,
         ...disabledState,
         '&:empty:before': {
             pointerEvents: "none",

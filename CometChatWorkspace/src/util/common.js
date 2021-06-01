@@ -56,22 +56,6 @@ export const linkify = (message) => {
     return outputStr;
 }
 
-export const validateWidgetSettings = (wSettings, checkAgainst) => {
-
-    let output = null;
-
-    if (wSettings && wSettings.hasOwnProperty("main")) {
-
-        if (wSettings.main.hasOwnProperty(checkAgainst)) {
-            output = wSettings.main[checkAgainst];
-        } else {
-            output = false;
-        }
-    } 
-    
-    return output;
-}
-
 export const checkMessageForExtensionsData = (message, extensionKey) => {
 
     let output = null;
@@ -152,16 +136,6 @@ export const getMessageSentTime = (timestamp, lang) => {
     let oTimestamp = null;
 
     const messageTimestamp = new Date(timestamp) * 1000;
-    //const currentTimestamp = Date.now();
-
-    //const diffTimestamp = Math.floor((currentTimestamp - messageTimestamp) / seconds); 
-
-    // if (diffTimestamp < 2) {
-    //     oTimestamp = Translator.translate("JUST_NOW", lang);
-    // } else {
-    //     oTimestamp = dateFormat(messageTimestamp, "shortTime");
-    // }
-
     oTimestamp = dateFormat(messageTimestamp, "shortTime");
 
     return oTimestamp;

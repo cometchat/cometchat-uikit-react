@@ -5,7 +5,8 @@ import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
-import { validateWidgetSettings, getMessageSentTime } from "../../../util/common";
+import { getMessageSentTime } from "../../../util/common";
+import { CometChatContext } from "../../../util/CometChatContext"
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
@@ -18,107 +19,125 @@ import greyTick from "./resources/grey-tick-icon.png";
 import sendingTick from "./resources/sending.png";
 import errorTick from "./resources/error.png";
 
-class CometChatReadReceipt extends React.PureComponent { 
+class CometChatReadReceipt extends React.PureComponent {
 
-  constructor(props) {
+	static contextType = CometChatContext;
 
-    super(props);
-    this.state = {
-      message: props.message
-    }
-  }
+	constructor(props) {
 
-  componentDidUpdate(prevProps) {
+		super(props)
+		this.state = {
+			message: props.message,
+			receipts: false,
+		};
+	}
 
-    const previousMessageStr = JSON.stringify(prevProps.message);
-    const currentMessageStr = JSON.stringify(this.props.message);
+	componentDidMount() {
+		this.toggleReadReceipts();
+	}
 
-    if (previousMessageStr !== currentMessageStr) {
-      this.setState({ message: this.props.message })
-    }
-  }
+	componentDidUpdate(prevProps) {
 
-  render() {
+		const previousMessageStr = JSON.stringify(prevProps.message)
+		const currentMessageStr = JSON.stringify(this.props.message)
 
-    let ticks, receiptText = null, dateField = null;
-    if(this.state.message.messageFrom === "sender") {
+		if (previousMessageStr !== currentMessageStr) {
+			this.setState({ message: this.props.message })
+		}
 
-      if (this.state.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
+    	this.toggleReadReceipts();
+	}
 
-        if (this.state.message.hasOwnProperty("error")) {
+  	toggleReadReceipts = () => {
 
-          ticks = errorTick;
-          receiptText = "ERROR";
-          dateField = this.state.message._composedAt;
+		/**
+		 * if delivery receipts feature is disabled
+		 */
+		this.context.FeatureRestriction.isDeliveryReceiptsEnabled().then(response => {
 
-        } else {
+			if (response !== this.state.receipts) {
+				this.setState({receipts: response});
+			}
 
-          ticks = sendingTick;
-          receiptText = "SENDING";
-          dateField = this.state.message._composedAt;
+		}).catch(error => {
 
-          if (this.state.message.hasOwnProperty("sentAt")) {
+			if (this.state.receipts !== false) {
+				this.setState({ receipts: false })
+			}
 
-            ticks = greyTick;
-            receiptText = "SENT";
-            dateField = this.state.message.sentAt;
-          }
-        }
+		});
+	}
 
-      } else {
+	render() {
 
-        if (this.state.message.hasOwnProperty("error")) {
-
-          ticks = errorTick;
-          receiptText = "ERROR";
-          dateField = this.state.message._composedAt;
-
-        } else {
-
-          ticks = sendingTick;
-          receiptText = "SENDING";
-          dateField = this.state.message._composedAt;
-
-          if (this.state.message.hasOwnProperty("sentAt")) {
-
-            ticks = greyTick;
-            receiptText = "SENT";
-            dateField = this.state.message.sentAt;
-
-            if (this.state.message.hasOwnProperty("deliveredAt")) {
-
-              ticks = greyDoubleTick;
-              receiptText = "DELIVERED";
-
-              if (this.state.message.hasOwnProperty("readAt")) {
-
-                ticks = blueDoubleTick;
-                receiptText = "SEEN";
-              }
-            }
-          }
-          
-        }
-
-      }
-
-    } else {
-      dateField = this.state.message.sentAt;
-    }
-
-    //if delivery receipts are disabled in chat widget
-    if (validateWidgetSettings(this.props.widgetsettings, "show_delivery_read_indicators") === false) {
-      ticks = null;
-    }
+		let ticks, receiptText = null, dateField = null;
     
-    const receipt = (ticks) ? <img src={ticks} alt={Translator.translate(receiptText, this.props.lang)} /> : null;
+		if (this.state.message?.sender?.uid === this.props?.loggedInUser?.uid) {
 
-    const timestamp = getMessageSentTime(dateField, this.props.lang);
-    
-    return(
-      <span css={msgTimestampStyle(this.props, this.state)} className="message__timestamp">{timestamp}{receipt}</span>
-    )
-  }
+			if (this.state.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
+				if (this.state.message.hasOwnProperty("error")) {
+					ticks = errorTick
+					receiptText = "ERROR"
+					dateField = this.state.message._composedAt
+				} else {
+					ticks = sendingTick
+					receiptText = "SENDING"
+					dateField = this.state.message._composedAt
+
+					if (this.state.message.hasOwnProperty("sentAt")) {
+						ticks = greyTick
+						receiptText = "SENT"
+						dateField = this.state.message.sentAt
+					}
+				}
+			} else {
+				if (this.state.message.hasOwnProperty("error")) {
+					ticks = errorTick
+					receiptText = "ERROR"
+					dateField = this.state.message._composedAt
+				} else {
+					ticks = sendingTick
+					receiptText = "SENDING"
+					dateField = this.state.message._composedAt
+
+					if (this.state.message.hasOwnProperty("sentAt")) {
+						ticks = greyTick
+						receiptText = "SENT"
+						dateField = this.state.message.sentAt
+
+						if (this.state.message.hasOwnProperty("deliveredAt")) {
+							ticks = greyDoubleTick
+							receiptText = "DELIVERED"
+
+							if (this.state.message.hasOwnProperty("readAt")) {
+								ticks = blueDoubleTick
+								receiptText = "SEEN"
+							}
+						}
+					}
+				}
+			}
+
+		} else {
+			dateField = this.state.message.sentAt
+		}
+
+		//if delivery receipts are disabled
+		if (this.state.receipts === false) {
+			ticks = null
+		}
+
+		const receipt = ticks ? <img src={ticks} alt={Translator.translate(receiptText, this.props.lang)} /> : null
+
+		const timestamp = getMessageSentTime(dateField, this.props.lang)
+
+		return (
+			<span css={msgTimestampStyle(this.props, this.state)} className="message__timestamp">
+				{timestamp}
+				{receipt}
+			</span>
+		)
+	}
 }
 
 // Specifies the default values for props:
@@ -132,4 +151,4 @@ CometChatReadReceipt.propTypes = {
   theme: PropTypes.object
 }
 
-export default CometChatReadReceipt;
+export { CometChatReadReceipt };

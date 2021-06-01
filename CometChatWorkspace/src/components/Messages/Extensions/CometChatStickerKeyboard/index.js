@@ -204,4 +204,4 @@ CometChatStickerKeyboard.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatStickerKeyboard;
+export { CometChatStickerKeyboard };

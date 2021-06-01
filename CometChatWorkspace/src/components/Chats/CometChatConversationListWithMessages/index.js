@@ -16,155 +16,155 @@ import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
 
 import {
-  chatScreenStyle,
-  chatScreenSidebarStyle,
-  chatScreenMainStyle,
+	chatScreenStyle,
+	chatScreenSidebarStyle,
+	chatScreenMainStyle,
 } from "./style";
 
 class CometChatConversationListWithMessages extends React.Component {
 
-  loggedInUser = null;
-  
-  constructor(props) {
+	loggedInUser = null;
+	
+	constructor(props) {
 		super(props);
 
-    this.state = {
-      tab: "conversations",
-      sidebarview: false,
-      lang: props.lang,
-    }
+		this.state = {
+			tab: "conversations",
+			sidebarview: false,
+			lang: props.lang,
+		}
 
-    this.contextProviderRef = React.createRef();
-    this.chatListRef = React.createRef();
+		this.contextProviderRef = React.createRef();
+		this.chatListRef = React.createRef();
 
-    CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
-      console.error(error);
-    });
-  }
-  
-  componentDidMount() {
+		CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
+			console.error(error);
+		});
+	}
+	
+	componentDidMount() {
 
-    if (this.props.chatWithUser.length === 0 && this.props.chatWithGroup.length === 0) {
-      this.toggleSideBar();
-    }
-  }
+		if (this.props.chatWithUser.length === 0 && this.props.chatWithGroup.length === 0) {
+			this.toggleSideBar();
+		}
+	}
 
-  componentDidUpdate(prevProps) {
+	componentDidUpdate(prevProps) {
 
-    if (prevProps.lang !== this.props.lang) {
-      this.setState({ lang: this.props.lang });
-    }
-  }
+		if (prevProps.lang !== this.props.lang) {
+			this.setState({ lang: this.props.lang });
+		}
+	}
 
-  itemClicked = (item, type) => {
+	itemClicked = (item, type) => {
 
-    this.contextProviderRef.setTypeAndItem(type, item);
-    this.toggleSideBar()
-  }
+		this.contextProviderRef.setTypeAndItem(type, item);
+		this.toggleSideBar()
+	}
 
-  actionHandler = (action, item, count, ...otherProps) => {
-    
-    switch(action) {
+	actionHandler = (action, item, count, ...otherProps) => {
+		
+		switch(action) {
 
-      case enums.ACTIONS["TOGGLE_SIDEBAR"]:
-        this.toggleSideBar();
-      break;
-      case enums.GROUP_MEMBER_SCOPE_CHANGED:
-      case enums.GROUP_MEMBER_KICKED:
-      case enums.GROUP_MEMBER_BANNED:
-        this.groupUpdated(action, item, count, ...otherProps);
-      break;
-      default:
-      break;
-    }
-  }
+			case enums.ACTIONS["TOGGLE_SIDEBAR"]:
+				this.toggleSideBar();
+			break;
+			case enums.GROUP_MEMBER_SCOPE_CHANGED:
+			case enums.GROUP_MEMBER_KICKED:
+			case enums.GROUP_MEMBER_BANNED:
+				this.groupUpdated(action, item, count, ...otherProps);
+			break;
+			default:
+			break;
+		}
+	}
 
-  toggleSideBar = () => {
+	toggleSideBar = () => {
 
-    const sidebarview = this.state.sidebarview;
-    this.setState({ sidebarview: !sidebarview });
-  }
+		const sidebarview = this.state.sidebarview;
+		this.setState({ sidebarview: !sidebarview });
+	}
 
 /**
  If the logged in user is banned, kicked or scope changed, update the chat window accordingly
  */
-  groupUpdated = (key, message, group, options) => {
+	groupUpdated = (key, message, group, options) => {
 
-    switch (key) {
-      case enums.GROUP_MEMBER_BANNED:
-      case enums.GROUP_MEMBER_KICKED: {
+		switch (key) {
+			case enums.GROUP_MEMBER_BANNED:
+			case enums.GROUP_MEMBER_KICKED: {
 
-        if (this.contextProviderRef.type === CometChat.ACTION_TYPE.TYPE_GROUP
-        && this.contextProviderRef.item.guid === group.guid
-        && options.user.uid === this.loggedInUser.uid) {
+				if (this.contextProviderRef.type === CometChat.ACTION_TYPE.TYPE_GROUP
+				&& this.contextProviderRef.item.guid === group.guid
+				&& options.user.uid === this.loggedInUser.uid) {
 
-          this.contextProviderRef.setItem({});
-          this.contextProviderRef.setType("");
-        }
-        break;
-      }
-      case enums.GROUP_MEMBER_SCOPE_CHANGED: {
+					this.contextProviderRef.setItem({});
+					this.contextProviderRef.setType("");
+				}
+				break;
+			}
+			case enums.GROUP_MEMBER_SCOPE_CHANGED: {
 
-        if (this.contextProviderRef.type === CometChat.ACTION_TYPE.TYPE_GROUP
-        && this.contextProviderRef.item.guid === group.guid
-        && options.user.uid === this.loggedInUser.uid) {
+				if (this.contextProviderRef.type === CometChat.ACTION_TYPE.TYPE_GROUP
+				&& this.contextProviderRef.item.guid === group.guid
+				&& options.user.uid === this.loggedInUser.uid) {
 
-          const newObject = Object.assign({}, this.contextProviderRef.item, { "scope": options["scope"] })
-          this.contextProviderRef.setItem(newObject);
-          this.contextProviderRef.setType(CometChat.ACTION_TYPE.TYPE_GROUP);
+					const newObject = Object.assign({}, this.contextProviderRef.item, { "scope": options["scope"] })
+					this.contextProviderRef.setItem(newObject);
+					this.contextProviderRef.setType(CometChat.ACTION_TYPE.TYPE_GROUP);
 
-        }
-        break;
-      }
-      default:
-        break;
-    }
-  }
+				}
+				break;
+			}
+			default:
+				break;
+		}
+	}
 
-  render() {
+	render() {
 
-    let messageScreen = (
-      <CometChatMessages
-      theme={this.props.theme}
-      lang={this.state.lang}
-      _parent="conversations"
-      actionGenerated={this.actionHandler} />
-    );
+		let messageScreen = (
+			<CometChatMessages
+			theme={this.props.theme}
+			lang={this.state.lang}
+			_parent="conversations"
+			actionGenerated={this.actionHandler} />
+		);
 
-    return (
-      <CometChatContextProvider ref={el => this.contextProviderRef = el} user={this.props.chatWithUser} group={this.props.chatWithGroup}>
-        <div css={chatScreenStyle(this.props)} className="cometchat cometchat--chats" dir={Translator.getDirection(this.state.lang)}>
-          <div css={chatScreenSidebarStyle(this.state, this.props)} className="chats__sidebar">
-            <CometChatConversationList
-            ref={el => this.chatListRef = el}
-            _parent="clwm"
-            theme={this.props.theme}
-            lang={this.state.lang}
-            onItemClick={this.itemClicked}
-            actionGenerated={this.actionHandler} />
-          </div>
-          <div css={chatScreenMainStyle(this.state, this.props)} className="chats__main">{messageScreen}</div>
-          <CometChatIncomingCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
-          <CometChatIncomingDirectCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
-        </div>
-      </CometChatContextProvider>
-    );
-  }
+		return (
+			<CometChatContextProvider ref={el => this.contextProviderRef = el} user={this.props.chatWithUser} group={this.props.chatWithGroup}>
+				<div css={chatScreenStyle(this.props)} className="cometchat cometchat--chats" dir={Translator.getDirection(this.state.lang)}>
+					<div css={chatScreenSidebarStyle(this.state, this.props)} className="chats__sidebar">
+						<CometChatConversationList
+						ref={el => this.chatListRef = el}
+						_parent="clwm"
+						theme={this.props.theme}
+						lang={this.state.lang}
+						onItemClick={this.itemClicked}
+						actionGenerated={this.actionHandler} />
+					</div>
+					<div css={chatScreenMainStyle(this.state, this.props)} className="chats__main">{messageScreen}</div>
+					<CometChatIncomingCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
+					<CometChatIncomingDirectCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
+				</div>
+			</CometChatContextProvider>
+		);
+	}
 }
 
 // Specifies the default values for props:
 CometChatConversationListWithMessages.defaultProps = {
-  lang: Translator.getDefaultLanguage(),
-  theme: theme,
-  chatWithUser: "",
-  chatWithGroup: "",
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+	chatWithUser: "",
+	chatWithGroup: "",
 };
 
 CometChatConversationListWithMessages.propTypes = {
-  lang: PropTypes.string,
-  theme: PropTypes.object,
-  chatWithUser: PropTypes.string,
-  chatWithGroup: PropTypes.string,
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	chatWithUser: PropTypes.string,
+	chatWithGroup: PropTypes.string,
 }
 
-export default CometChatConversationListWithMessages;
+export { CometChatConversationListWithMessages };

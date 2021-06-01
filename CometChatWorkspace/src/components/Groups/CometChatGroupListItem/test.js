@@ -3,7 +3,8 @@ import ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import "jest-canvas-mock";
 
-import CometChatGroupListItem from "./";
+import { CometChatContextProvider } from "../../../util/CometChatContext";
+import { CometChatGroupListItem } from "./";
 
 describe("CometChatGroupListItem", () => {
 
@@ -11,7 +12,12 @@ describe("CometChatGroupListItem", () => {
 
     it("renders without crashing", () => {
         container = document.createElement("div");
-        ReactDOM.render(<CometChatGroupListItem />, container);
+        ReactDOM.render(
+            <CometChatContextProvider group="">
+                <CometChatGroupListItem />
+            </CometChatContextProvider>,
+            container,
+        );
     });
 
     it("renders group data", async () => {
@@ -29,7 +35,12 @@ describe("CometChatGroupListItem", () => {
 
         // Use the asynchronous version of act to apply resolved promises
         await act(async () => {
-            ReactDOM.render(<CometChatGroupListItem group={fakeGroup} />, container);
+            ReactDOM.render(
+                <CometChatContextProvider group="">
+                    <CometChatGroupListItem group={fakeGroup} />
+                </CometChatContextProvider>,
+                container,
+            );
         });
 
         expect(container.querySelector(".item__details__name > p").textContent).toBe(fakeGroup.name);

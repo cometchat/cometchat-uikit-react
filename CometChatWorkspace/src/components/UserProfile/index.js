@@ -1,1 +1,1 @@
-export { default as CometChatUserProfile } from "./CometChatUserProfile";
+export { CometChatUserProfile } from "./CometChatUserProfile";

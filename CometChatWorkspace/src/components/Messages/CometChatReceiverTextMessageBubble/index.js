@@ -12,237 +12,233 @@ import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
 import { CometChatContext } from "../../../util/CometChatContext";
-import { linkify, checkMessageForExtensionsData, validateWidgetSettings } from "../../../util/common";
+import { linkify, checkMessageForExtensionsData } from "../../../util/common";
 import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
 
 import {
-  messageContainerStyle,
-  messageWrapperStyle,
-  messageThumbnailStyle,
-  messageDetailStyle,
-  nameWrapperStyle,
-  nameStyle,
-  messageTxtContainerStyle,
-  messageTxtWrapperStyle,
-  messageTxtStyle,
-  messageInfoWrapperStyle,
-  messageReactionsWrapperStyle
+	messageContainerStyle,
+	messageWrapperStyle,
+	messageThumbnailStyle,
+	messageDetailStyle,
+	nameWrapperStyle,
+	nameStyle,
+	messageTxtContainerStyle,
+	messageTxtWrapperStyle,
+	messageTxtStyle,
+	messageInfoWrapperStyle,
+	messageReactionsWrapperStyle
 } from "./style";
 
 class CometChatReceiverTextMessageBubble extends React.Component {
+	static contextType = CometChatContext;
+	messageFrom = "receiver";
 
-  static contextType = CometChatContext;
-  messageFrom = "receiver";
+	constructor(props) {
+		super(props);
 
-  constructor(props) {
-    super(props);
+		const message = Object.assign({}, props.message, {messageFrom: this.messageFrom});
+		this.state = {
+			message: message,
+			translatedMessage: "",
+			isHovering: false,
+			enableLargerSizeEmojis: false,
+		};
+	}
 
-    const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
-    this.state = {
-      message: message,
-      translatedMessage: "",
-      isHovering: false
-    }
-  }
+	componentDidMount() {
+		this.enableLargerSizeEmojis();
+	}
 
-  componentDidUpdate(prevProps) {
+	componentDidUpdate(prevProps) {
+		const previousMessageStr = JSON.stringify(prevProps.message);
+		const currentMessageStr = JSON.stringify(this.props.message);
 
-    const previousMessageStr = JSON.stringify(prevProps.message);
-    const currentMessageStr = JSON.stringify(this.props.message);
+		if (previousMessageStr !== currentMessageStr) {
+			const message = Object.assign({}, this.props.message, {messageFrom: this.messageFrom});
+			this.setState({message: message, translatedMessage: ""});
+		}
 
-    if (previousMessageStr !== currentMessageStr) {
+		this.enableLargerSizeEmojis();
+	}
 
-      const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-      this.setState({ message: message, translatedMessage: "" })
-    }
-  }
+	getMessageText = () => {
+		let messageText = this.state.message.text;
 
-  getMessageText = () => {
+		//xss extensions data
+		const xssData = checkMessageForExtensionsData(this.state.message, "xss-filter");
+		if (xssData && xssData.hasOwnProperty("sanitized_text") && xssData.hasOwnProperty("hasXSS") && xssData.hasXSS === "yes") {
+			messageText = xssData.sanitized_text;
+		}
 
-    let messageText = this.state.message.text;
+		//datamasking extensions data
+		const maskedData = checkMessageForExtensionsData(this.state.message, "data-masking");
+		if (maskedData && maskedData.hasOwnProperty("data") && maskedData.data.hasOwnProperty("sensitive_data") && maskedData.data.hasOwnProperty("message_masked") && maskedData.data.sensitive_data === "yes") {
+			messageText = maskedData.data.message_masked;
+		}
 
-    //xss extensions data
-    const xssData = checkMessageForExtensionsData(this.state.message, "xss-filter");
-    if (xssData 
-    && xssData.hasOwnProperty("sanitized_text")
-    && xssData.hasOwnProperty("hasXSS")
-    && xssData.hasXSS === "yes") {
-      messageText = xssData.sanitized_text;
-    }
+		//profanity extensions data
+		const profaneData = checkMessageForExtensionsData(this.state.message, "profanity-filter");
+		if (profaneData && profaneData.hasOwnProperty("profanity") && profaneData.hasOwnProperty("message_clean") && profaneData.profanity === "yes") {
+			messageText = profaneData.message_clean;
+		}
 
-    //datamasking extensions data
-    const maskedData = checkMessageForExtensionsData(this.state.message, "data-masking");
-    if (maskedData
-    && maskedData.hasOwnProperty("data")
-    && maskedData.data.hasOwnProperty("sensitive_data")
-    && maskedData.data.hasOwnProperty("message_masked")
-    && maskedData.data.sensitive_data === "yes") {
+		const formattedText = linkify(messageText);
 
-      messageText = maskedData.data.message_masked;
-    }
+		const emojiParsedMessage = twemoji.parse(formattedText, {folder: "svg", ext: ".svg"});
+		const parsedMessage = ReactHtmlParser(emojiParsedMessage, {decodeEntities: false});
+		const emojiMessage = parsedMessage.filter(message => message instanceof Object && message.type === "img");
 
-    //profanity extensions data
-    const profaneData = checkMessageForExtensionsData(this.state.message, "profanity-filter");
-    if (profaneData
-    && profaneData.hasOwnProperty("profanity")
-    && profaneData.hasOwnProperty("message_clean")
-    && profaneData.profanity === "yes") {
+		let showVariation = true;
+		//if larger size emojis feature is disabled
+		if (this.state.enableLargerSizeEmojis === false) {
+			showVariation = false;
+		}
 
-      messageText = profaneData.message_clean;
-    }
+		messageText = (
+			<div css={messageTxtWrapperStyle(this.props)} className="message__txt__wrapper">
+				<p css={messageTxtStyle(parsedMessage, emojiMessage, showVariation)} className="message__txt">
+					{parsedMessage}
+					{this.state.translatedMessage}
+				</p>
+			</div>
+		);
 
-    const formattedText = linkify(messageText);
+		return messageText;
+	};
 
-    const emojiParsedMessage = twemoji.parse(formattedText, { folder: "svg", ext: ".svg" });
-    const parsedMessage = ReactHtmlParser(emojiParsedMessage, { decodeEntities: false });
-    const emojiMessage = parsedMessage.filter(message => (message instanceof Object && message.type === "img"));
+	translateMessage = message => {
+		const messageId = message.id;
+		const messageText = message.text;
+		const translateToLanguage = Translator.getBrowserLanguage();
 
-    let showVariation = true;
-    //if larger size emojis are disabled in chat widget
-    if (validateWidgetSettings(this.props.widgetsettings, "show_emojis_in_larger_size") === false) {
-      showVariation = false;
-    }
+		let translatedMessage = "";
 
-    messageText = (
-      <div css={messageTxtWrapperStyle(this.props)} className="message__txt__wrapper">
-        <p css={messageTxtStyle(parsedMessage, emojiMessage, showVariation)} className="message__txt">{parsedMessage}{this.state.translatedMessage}</p>
-      </div>
-    );
+		CometChat.callExtension("message-translation", "POST", "v2/translate", {
+			msgId: messageId,
+			text: messageText,
+			languages: [translateToLanguage],
+		})
+			.then(result => {
+				if (result && result.hasOwnProperty("language_original") && result["language_original"] !== translateToLanguage) {
+					if (result.hasOwnProperty("translations") && result.translations.length) {
+						const messageTranslation = result.translations[0];
+						if (messageTranslation.hasOwnProperty("message_translated")) {
+							translatedMessage = `\n(${messageTranslation["message_translated"]})`;
+						}
+					} else {
+						this.context.setToastMessage("error", "MESSAGE_TRANSLATE_FAIL");
+					}
+				} else {
+					this.context.setToastMessage("info", "MESSAGE_TRANSLATE_SAME_LANGUAGE");
+				}
 
-    return messageText;
-  }  
-  
-  translateMessage = (message) => {
+				this.setState({translatedMessage: translatedMessage});
+			})
+			.catch(error => {
+				let errorCode = "ERROR";
+				if (error.hasOwnProperty("code")) {
+					errorCode = error.code;
+					if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"] && error.hasOwnProperty("details") && error.details.hasOwnProperty("code")) {
+						errorCode = error.details.code;
+					}
+				}
+				this.context.setToastMessage("error", errorCode);
+			});
+	};
 
-    const messageId = message.id;
-    const messageText = message.text;
-    const translateToLanguage = Translator.getBrowserLanguage();
+	enableLargerSizeEmojis = () => {
+		this.context.FeatureRestriction.isLargerSizeEmojisEnabled()
+			.then(response => {
+				if (response !== this.state.enableLargerSizeEmojis) {
+					this.setState({enableLargerSizeEmojis: response});
+				}
+			})
+			.catch(error => {
+				if (this.state.enableLargerSizeEmojis !== false) {
+					this.setState({enableLargerSizeEmojis: false});
+				}
+			});
+	};
 
-    let translatedMessage = "";
+	handleMouseHover = () => {
+		this.setState(this.toggleHoverState);
+	};
 
-    CometChat.callExtension('message-translation', 'POST', 'v2/translate', {
-      "msgId": messageId,
-      "text": messageText,
-      "languages": [translateToLanguage]
-    }).then(result => {
+	toggleHoverState = state => {
+		return {
+			isHovering: !state.isHovering,
+		};
+	};
 
-      if (result && result.hasOwnProperty("language_original") && result["language_original"] !== translateToLanguage) {
+	render() {
+		let avatar = null,
+			name = null;
+		if (this.state.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
+			avatar = (
+				<div css={messageThumbnailStyle()} className="message__thumbnail">
+					<CometChatAvatar user={this.state.message.sender} />
+				</div>
+			);
 
-        if (result.hasOwnProperty("translations") && result.translations.length) {
+			name = (
+				<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
+					<span css={nameStyle(this.props)} className="message__name">
+						{this.state.message.sender.name}
+					</span>
+				</div>
+			);
+		}
 
-          const messageTranslation = result.translations[0];
-          if (messageTranslation.hasOwnProperty("message_translated")) {
+		let messageText = this.getMessageText();
+		//linkpreview extensions data
+		const linkPreviewData = checkMessageForExtensionsData(this.state.message, "link-preview");
+		if (linkPreviewData && linkPreviewData.hasOwnProperty("links") && linkPreviewData["links"].length) {
+			messageText = <CometChatLinkPreview {...this.props} message={this.state.message} messageText={messageText} />;
+		}
 
-            translatedMessage = `\n(${messageTranslation["message_translated"]})`;
-          }
-        } else {
-          this.context.setToastMessage("error", "MESSAGE_TRANSLATE_FAIL");
-        }
-      } else {
-        this.context.setToastMessage("info", "MESSAGE_TRANSLATE_SAME_LANGUAGE");
-      }
+		//messagereactions extensions data
+		let messageReactions = null;
+		const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
+		if (reactionsData) {
+			if (Object.keys(reactionsData).length) {
+				messageReactions = (
+					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
+						<CometChatMessageReactions {...this.props} message={this.state.message} reaction={reactionsData} />
+					</div>
+				);
+			}
+		}
 
-      this.setState({ translatedMessage: translatedMessage })
+		let toolTipView = null;
+		if (this.state.isHovering) {
+			toolTipView = <CometChatMessageActions {...this.props} message={this.state.message} name={name} translateMessage={this.translateMessage} />;
+		}
 
-    }).catch(error => {
-      let errorCode = "ERROR";
-      if (error.hasOwnProperty("code")) {
+		return (
+			<div css={messageContainerStyle()} className="receiver__message__container message__text" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
+				<div css={messageWrapperStyle()} className="message__wrapper">
+					{avatar}
+					<div css={messageDetailStyle()} className="message__details">
+						{name}
+						{toolTipView}
+						<div css={messageTxtContainerStyle()} className="message__text__container">
+							{messageText}
+						</div>
 
-        errorCode = error.code;
-        if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
-          && error.hasOwnProperty("details")
-          && error.details.hasOwnProperty("code")) {
-          errorCode = error.details.code;
-        }
-      }
-      this.context.setToastMessage("error", errorCode);
-    });
-  }
+						{messageReactions}
 
-  handleMouseHover = () => {
-    this.setState(this.toggleHoverState);
-  }
-
-  toggleHoverState = (state) => {
-
-    return {
-      isHovering: !state.isHovering,
-    };
-  }
-
-  render() {
-
-    let avatar = null, name = null;
-    if (this.state.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
-
-      avatar = (
-        <div css={messageThumbnailStyle()} className="message__thumbnail">
-          <CometChatAvatar user={this.state.message.sender} />
-        </div>
-      );
-
-      name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-        <span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span>
-        </div>);
-    }
-
-    let messageText = this.getMessageText();
-    //linkpreview extensions data
-    const linkPreviewData = checkMessageForExtensionsData(this.state.message, "link-preview");
-    if (linkPreviewData && linkPreviewData.hasOwnProperty("links") && linkPreviewData["links"].length) {
-
-      messageText = (
-        <CometChatLinkPreview {...this.props} message={this.state.message} messageText={messageText} />
-      );
-    }
-
-    //messagereactions extensions data
-    let messageReactions = null;
-    const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
-    if (reactionsData) {
-
-      if (Object.keys(reactionsData).length) {
-        messageReactions = (
-          <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-            <CometChatMessageReactions {...this.props} message={this.state.message} reaction={reactionsData} />
-          </div>
-        );
-      }
-    }
-
-    let toolTipView = null;
-    if (this.state.isHovering) {
-      toolTipView = (<CometChatMessageActions {...this.props} message={this.state.message} name={name} translateMessage={this.translateMessage} />);
-    }
-
-    return (
-      <div 
-      css={messageContainerStyle()} 
-      className="receiver__message__container message__text"
-      onMouseEnter={this.handleMouseHover}
-      onMouseLeave={this.handleMouseHover}>
-        
-        <div css={messageWrapperStyle()} className="message__wrapper">
-          {avatar}
-          <div css={messageDetailStyle()} className="message__details">
-            {name}
-            {toolTipView}
-            <div css={messageTxtContainerStyle()} className="message__text__container">{messageText}</div>
-
-            {messageReactions}
-
-            <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-              <CometChatReadReceipt {...this.props} message={this.state.message} />
-              <CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+						<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+							<CometChatReadReceipt {...this.props} message={this.state.message} />
+							<CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
 }
 
 // Specifies the default values for props:
@@ -256,4 +252,4 @@ CometChatReceiverTextMessageBubble.propTypes = {
   theme: PropTypes.object
 }
 
-export default CometChatReceiverTextMessageBubble;
+export { CometChatReceiverTextMessageBubble };

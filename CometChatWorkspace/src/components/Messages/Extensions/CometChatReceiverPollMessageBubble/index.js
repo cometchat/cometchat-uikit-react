@@ -241,4 +241,4 @@ CometChatReceiverPollMessageBubble.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatReceiverPollMessageBubble;
+export { CometChatReceiverPollMessageBubble };

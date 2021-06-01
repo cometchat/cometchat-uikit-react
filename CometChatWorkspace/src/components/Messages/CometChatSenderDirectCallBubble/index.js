@@ -163,4 +163,4 @@ CometChatSenderDirectCallBubble.propTypes = {
     loggedInUser: PropTypes.object
 }
 
-export default CometChatSenderDirectCallBubble;
+export { CometChatSenderDirectCallBubble };

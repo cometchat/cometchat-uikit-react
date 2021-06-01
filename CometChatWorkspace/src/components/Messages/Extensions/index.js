@@ -1,16 +1,16 @@
-export { default as CometChatSmartReplyPreview } from "./CometChatSmartReplyPreview";
-export { default as CometChatStickerKeyboard } from "./CometChatStickerKeyboard";
-export { default as CometChatMessageReactions } from "./CometChatMessageReactions";
+export { CometChatSmartReplyPreview } from "./CometChatSmartReplyPreview";
+export { CometChatStickerKeyboard } from "./CometChatStickerKeyboard";
+export { CometChatMessageReactions } from "./CometChatMessageReactions";
 
-export { default as CometChatCreatePoll } from "./CometChatCreatePoll";
-export { default as CometChatCreatePollOptions } from "./CometChatCreatePollOptions";
+export { CometChatCreatePoll } from "./CometChatCreatePoll";
+export { CometChatCreatePollOptions } from "./CometChatCreatePollOptions";
 
-export { default as CometChatReceiverDocumentBubble } from "./CometChatReceiverDocumentBubble";
-export { default as CometChatReceiverPollMessageBubble } from "./CometChatReceiverPollMessageBubble";
-export { default as CometChatReceiverStickerMessageBubble } from "./CometChatReceiverStickerMessageBubble";
-export { default as CometChatReceiverWhiteboardBubble } from "./CometChatReceiverWhiteboardBubble";
+export { CometChatReceiverDocumentBubble } from "./CometChatReceiverDocumentBubble";
+export { CometChatReceiverPollMessageBubble } from "./CometChatReceiverPollMessageBubble";
+export { CometChatReceiverStickerMessageBubble } from "./CometChatReceiverStickerMessageBubble";
+export { CometChatReceiverWhiteboardBubble } from "./CometChatReceiverWhiteboardBubble";
 
-export { default as CometChatSenderDocumentBubble } from "./CometChatSenderDocumentBubble";
-export { default as CometChatSenderPollMessageBubble } from "./CometChatSenderPollMessageBubble";
-export { default as CometChatSenderStickerBubble } from "./CometChatSenderStickerBubble";
-export { default as CometChatSenderWhiteboardBubble } from "./CometChatSenderWhiteboardBubble";
+export { CometChatSenderDocumentBubble } from "./CometChatSenderDocumentBubble";
+export { CometChatSenderPollMessageBubble } from "./CometChatSenderPollMessageBubble";
+export { CometChatSenderStickerBubble } from "./CometChatSenderStickerBubble";
+export { CometChatSenderWhiteboardBubble } from "./CometChatSenderWhiteboardBubble";

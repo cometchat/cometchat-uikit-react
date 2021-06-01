@@ -16,14 +16,18 @@ export const navbarStyle = () => {
     }
 }
 
-export const itemStyle = () => {
-
-    return {
-        display: "inline-block",
-        padding: "8px",
-        cursor: "pointer"
-    }
-}
+export const itemStyle = props => {
+	return {
+		padding: "8px",
+		cursor: "pointer",
+		display: "flex",
+		flexDirection: "column",
+		justifyContent: "center",
+		alignItems: "center",
+		fontSize: "12px",
+		color: `${props.theme.color.helpText}`,
+	};
+};
 
 export const itemLinkStyle = (icon, activeStateIcon, isActive, key) => {
 
@@ -31,13 +35,13 @@ export const itemLinkStyle = (icon, activeStateIcon, isActive, key) => {
 
     let widthProp = {};
 
-    if(key === "groups") {
-        widthProp = { width: "31px" }
-    } else if (key === "chats") {
-        widthProp = { width: "22px" }
-    } else {
-        widthProp = { width: "20px" }
-    }
+    if (key === "SIDEBAR_GROUPS") {
+			widthProp = {width: "31px"};
+		} else if (key === "SIDEBAR_CHATS") {
+			widthProp = {width: "22px"};
+		} else {
+			widthProp = {width: "20px"};
+		}
 
     return {
         height: "20px",
