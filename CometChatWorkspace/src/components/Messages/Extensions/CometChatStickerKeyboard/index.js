@@ -5,6 +5,9 @@ import { jsx, keyframes } from '@emotion/core';
 import PropTypes from 'prop-types';
 import { CometChat } from "@cometchat-pro/chat";
 
+import { CometChatContext } from "../../../../util/CometChatContext";
+import * as enums from "../../../../util/enums.js";
+
 import { theme } from "../../../../resources/theme";
 import Translator from "../../../../resources/localization/translator";
 
@@ -22,6 +25,8 @@ import {
 import closeIcon from "./resources/close.png";
 
 class CometChatStickerKeyboard extends React.PureComponent {
+
+    static contextType = CometChatContext;
 
     constructor(props) {
 
@@ -97,12 +102,20 @@ class CometChatStickerKeyboard extends React.PureComponent {
 
         }).catch(error => {
             
-            // Some error occured
-            console.warn("Error: ", error);
             this.decoratorMessage = Translator.translate("NO_STICKERS_FOUND", this.props.lang);
-
             this.setState({ "activestickerlist": [], "stickerset": {} });
 
+            let errorCode = "ERROR";
+            if (error.hasOwnProperty("code")) {
+
+                errorCode = error.code;
+                if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
+                    && error.hasOwnProperty("details")
+                    && error.details.hasOwnProperty("code")) {
+                    errorCode = error.details.code;
+                }
+            }
+            this.context.setToastMessage("error", errorCode);
         });
     }
 
@@ -191,4 +204,4 @@ CometChatStickerKeyboard.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatStickerKeyboard;
+export { CometChatStickerKeyboard };

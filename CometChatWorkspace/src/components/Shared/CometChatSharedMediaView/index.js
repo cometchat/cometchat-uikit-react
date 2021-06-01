@@ -5,8 +5,10 @@ import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
-import { SharedMediaManager } from "./controller";
 
+import { CometChatContext } from "../../../util/CometChatContext";
+
+import { SharedMediaManager } from "./controller";
 import * as enums from "../../../util/enums.js";
 
 import { theme } from "../../../resources/theme";
@@ -27,20 +29,27 @@ import fileIcon from "./resources/file.png";
 
 class CometChatSharedMediaView extends React.Component {
 
+    static contextType = CometChatContext;
+
     constructor(props) {
         super(props);
-
+        this._isMounted = false;
         this.state = {
             messagetype: "image",
             messageList: []
         }
 
         this.messageContainer = React.createRef();
+
+        CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
+            console.error(error);
+        });
     }
 
     componentDidMount() {
 
-        this.SharedMediaManager = new SharedMediaManager(this.props.item, this.props.type, this.state.messagetype);
+        this._isMounted = true;
+        this.SharedMediaManager = new SharedMediaManager(this.context.item, this.context.type, this.state.messagetype);
         this.getMessages(true);
         this.SharedMediaManager.attachListeners(this.messageUpdated);
     }
@@ -50,10 +59,16 @@ class CometChatSharedMediaView extends React.Component {
         if(prevState.messagetype !== this.state.messagetype) {
 
             this.SharedMediaManager = null;
-            this.SharedMediaManager = new SharedMediaManager(this.props.item, this.props.type, this.state.messagetype);
+            this.SharedMediaManager = new SharedMediaManager(this.context.item, this.context.type, this.state.messagetype);
             this.getMessages(true);
             this.SharedMediaManager.attachListeners(this.messageUpdated);
         }
+    }
+
+    componentWillUnmount() {
+        this.SharedMediaManager.removeListeners();
+        this.SharedMediaManager = null;
+        this._isMounted = false;
     }
 
     //callback for listener functions
@@ -75,9 +90,9 @@ class CometChatSharedMediaView extends React.Component {
     messageDeleted = (deletedMessage) => {
   
         const messageType = deletedMessage.data.type;
-        if (this.props.type === 'group' 
-        && deletedMessage.getReceiverType() === 'group'
-        && deletedMessage.getReceiver().guid === this.props.item.guid
+        if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP
+        && deletedMessage.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
+        && deletedMessage.getReceiver().guid === this.context.item.guid
         && messageType === this.state.messagetype) {
 
             const messageList = [...this.state.messageList];
@@ -90,9 +105,9 @@ class CometChatSharedMediaView extends React.Component {
     messageReceived = (message) => {
 
         const messageType = message.data.type;
-        if (this.props.type === 'group' 
-        && message.getReceiverType() === 'group'
-        && message.getReceiver().guid === this.props.item.guid
+        if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP
+        && message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP
+        && message.getReceiver().guid === this.context.item.guid
         && messageType === this.state.messagetype) {
 
             let messages = [...this.state.messageList];
@@ -103,28 +118,22 @@ class CometChatSharedMediaView extends React.Component {
 
     getMessages = (scrollToBottom = false) => {
         
-        CometChat.getLoggedinUser().then((user) => {
-          
-          this.loggedInUser = user;
-          
-          this.SharedMediaManager.fetchPreviousMessages().then((messages) => {
+        this.SharedMediaManager.fetchPreviousMessages().then(messages => {
     
             const messageList = [...messages, ...this.state.messageList];
-            this.setState({ messageList: messageList });
+            if (this._isMounted) {
 
-            if(scrollToBottom) {
-                this.scrollToBottom();
-            }
+                this.setState({messageList: messageList});
+                if(scrollToBottom) {
+                    this.scrollToBottom();
+                }
+            } 
     
-        }).catch((error) => {
-            //TODO Handle the erros in contact list.
-            console.error("[SharedMediaView] getMessages fetchPrevious error", error);
-          });
-    
-        }).catch((error) => {
-            console.log("[SharedMediaView] getMessages getLoggedinUser error", error);
+        }).catch(error => {
+
+            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
+            this.context.setToastMessage("error", errorCode);
         });
-    
     }
 
     scrollToBottom = () => {
@@ -200,11 +209,6 @@ class CometChatSharedMediaView extends React.Component {
             </div>
         );
     }
-
-    componentWillUnmount() {
-      this.SharedMediaManager.removeListeners();
-      this.SharedMediaManager = null;
-    }
 }
 
 // Specifies the default values for props:
@@ -218,4 +222,4 @@ CometChatSharedMediaView.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatSharedMediaView;
+export { CometChatSharedMediaView };

@@ -9,6 +9,7 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 import * as enums from "../../../util/enums.js";
 
@@ -36,6 +37,7 @@ import callIcon from "./resources/receivervideocall.png";
 class CometChatReceiverDirectCallBubble extends React.Component {
 
     messageFrom = "receiver";
+    static contextType = CometChatContext;
 
     constructor(props) {
 
@@ -107,6 +109,32 @@ class CometChatReceiverDirectCallBubble extends React.Component {
 
         const messageTitle = `${this.state.message.sender.name} ${Translator.translate("INITIATED_GROUP_CALL", this.props.lang)}`;
 
+        let callMessage = null;
+        const joinCallMessage = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.props.lang);
+
+        if (this.context.checkIfDirectCallIsOngoing() === enums.CONSTANTS.CALLS["ONGOING_CALL_SAME_GROUP"]) {//ongoing call in same group
+            callMessage = (
+                <li title={joinCallMessage}><p>{Translator.translate("JOIN", this.props.lang)}</p></li>
+            );
+        } else if (this.context.checkIfDirectCallIsOngoing() === enums.CONSTANTS.CALLS["ONGOING_CALL_DIFF_GROUP"]) {//ongoing call in different group
+
+            callMessage = (
+                <li title={joinCallMessage}><p>{Translator.translate("JOIN", this.props.lang)}</p></li>
+            );
+        } else if (this.context.checkIfCallIsOngoing()) {//ongoing call
+
+            callMessage = (
+                <li title={joinCallMessage}><p>{Translator.translate("JOIN", this.props.lang)}</p></li>
+            );
+
+        } else {
+            callMessage = (
+                <li onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.state.message)}>
+                    <p>{Translator.translate("JOIN", this.props.lang)}</p>
+                </li>
+            );
+        }
+
         return (
             <div css={messageContainerStyle()} 
             className="receiver__message__container message__directcall"
@@ -126,9 +154,10 @@ class CometChatReceiverDirectCallBubble extends React.Component {
                                 </div>
 
                                 <ul css={messageBtnStyle(this.props)} className="directcall__button">
-                                    <li onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.state.message)}>
+                                    {/* <li onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.state.message)}>
                                         <p>{Translator.translate("JOIN", this.props.lang)}</p>
-                                    </li>
+                                    </li> */}
+                                    {callMessage}
                                 </ul>
                             </div>
                         </div>
@@ -161,4 +190,4 @@ CometChatReceiverDirectCallBubble.propTypes = {
     loggedInUser: PropTypes.object
 }
 
-export default CometChatReceiverDirectCallBubble;
+export { CometChatReceiverDirectCallBubble };

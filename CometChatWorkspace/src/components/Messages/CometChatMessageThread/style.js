@@ -16,11 +16,13 @@ export const wrapperStyle = (props) => {
 export const headerStyle = (props) => {
 
     return {
-        padding: "12px 16px",
+        padding: "16px",
         width: "100%",
         backgroundColor: `${props.theme.backgroundColor.white}`,
         zIndex: "1",
         borderBottom: `1px solid ${props.theme.borderColor.primary}`,
+        height:" 69px",
+        display: "flex",
     }
 }
 

@@ -13,11 +13,11 @@ import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
 
 import {
-  messageContainerStyle,
-  messageWrapperStyle,
-  messageFileWrapper,
-  messageInfoWrapperStyle,
-  messageReactionsWrapperStyle
+	messageContainerStyle,
+	messageWrapperStyle,
+	messageFileWrapper,
+	messageInfoWrapperStyle,
+	messageReactionsWrapperStyle
 } from "./style";
 
 
@@ -25,121 +25,121 @@ import blueFile from "./resources/senderfile.png";
 
 class CometChatSenderFileMessageBubble extends React.Component {
 
-  messageFrom = "sender";
+	messageFrom = "sender";
 
-  constructor(props) {
+	constructor(props) {
 
-    super(props);
+		super(props);
 
-    const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
+		const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
 
-    this.state = {
-      message: message,
-      isHovering: false
-    }
-  }
+		this.state = {
+			message: message,
+			isHovering: false
+		}
+	}
 
-  componentDidUpdate(prevProps) {
+	componentDidUpdate(prevProps) {
 
-    const previousMessageStr = JSON.stringify(prevProps.message);
-    const currentMessageStr = JSON.stringify(this.props.message);
+		const previousMessageStr = JSON.stringify(prevProps.message);
+		const currentMessageStr = JSON.stringify(this.props.message);
 
-    if (previousMessageStr !== currentMessageStr) {
+		if (previousMessageStr !== currentMessageStr) {
 
-      const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-      this.setState({ message: message })
-    }
-  }
+			const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
+			this.setState({ message: message })
+		}
+	}
 
-  handleMouseHover = () => {
-    this.setState(this.toggleHoverState);
-  }
+	handleMouseHover = () => {
+		this.setState(this.toggleHoverState);
+	}
 
-  toggleHoverState = (state) => {
+	toggleHoverState = (state) => {
 
-    return {
-      isHovering: !state.isHovering,
-    };
-  }
+		return {
+			isHovering: !state.isHovering,
+		};
+	}
 
-  render() {
+	render() {
 
-    let messageReactions = null;
-    const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
-    if (reactionsData) {
+		let messageReactions = null;
+		const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
+		if (reactionsData) {
 
-      if (Object.keys(reactionsData).length) {
-        messageReactions = (
-          <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-            <CometChatMessageReactions {...this.props} message={this.state.message} reaction={reactionsData}  />
-          </div>
-        );
-      }
-    }
+			if (Object.keys(reactionsData).length) {
+				messageReactions = (
+					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
+						<CometChatMessageReactions {...this.props} message={this.state.message} reaction={reactionsData}  />
+					</div>
+				);
+			}
+		}
 
-    let toolTipView = null;
-    if (this.state.isHovering) {
-      toolTipView = (<CometChatMessageActions {...this.props} message={this.state.message} />);
-    }
+		let toolTipView = null;
+		if (this.state.isHovering) {
+			toolTipView = (<CometChatMessageActions {...this.props} message={this.state.message} />);
+		}
 
-    let fileMessage = null;
-    if (this.state.message.data.hasOwnProperty("attachments") && this.state.message.data.attachments.length) {
-      
-      const fileName = this.state.message.data.attachments[0].name;
-      const fileUrl = this.state.message.data.attachments[0].url;
+		let fileMessage = null;
+		if (this.state.message.data.hasOwnProperty("attachments") && this.state.message.data.attachments.length) {
+			
+			const fileName = this.state.message.data.attachments[0].name;
+			const fileUrl = this.state.message.data.attachments[0].url;
 
-      fileMessage = (
-        <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="message__file">
-          <img src={blueFile} alt="file" />
-          <p>{fileName}</p>
-        </a>
-      );
+			fileMessage = (
+				<a href={fileUrl} target="_blank" rel="noopener noreferrer" className="message__file">
+					<img src={blueFile} alt="file" />
+					<p>{fileName}</p>
+				</a>
+			);
 
-    } else {
+		} else {
 
-      const fileName = this.state.message.data.name || "";
+			const fileName = this.state.message.data.name || "";
 
-      fileMessage = (
-        <div className="message__file">
-          <img src={blueFile} alt="file" />
-          <p>{fileName}</p>
-        </div>
-      );
-    }
+			fileMessage = (
+				<div className="message__file">
+					<img src={blueFile} alt="file" />
+					<p>{fileName}</p>
+				</div>
+			);
+		}
 
-    return (
-      <div 
-      css={messageContainerStyle()} 
-      className="sender__message__container message__file"
-      onMouseEnter={this.handleMouseHover}
-      onMouseLeave={this.handleMouseHover}>
+		return (
+			<div 
+			css={messageContainerStyle()} 
+			className="sender__message__container message__file"
+			onMouseEnter={this.handleMouseHover}
+			onMouseLeave={this.handleMouseHover}>
 
-        {toolTipView}
-          
-        <div css={messageWrapperStyle()} className="message__wrapper">
-          <div css={messageFileWrapper(this.props)} className="message__file__wrapper">{fileMessage}</div>
-        </div>
+				{toolTipView}
+					
+				<div css={messageWrapperStyle()} className="message__wrapper">
+					<div css={messageFileWrapper(this.props)} className="message__file__wrapper">{fileMessage}</div>
+				</div>
 
-        {messageReactions}
+				{messageReactions}
 
-        <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-          <CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
-          <CometChatReadReceipt {...this.props} message={this.state.message} />
-        </div>
-      </div>
-    )
-  }
+				<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+					<CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
+					<CometChatReadReceipt {...this.props} message={this.state.message} />
+				</div>
+			</div>
+		)
+	}
 }
 
 // Specifies the default values for props:
 CometChatSenderFileMessageBubble.defaultProps = {
-  lang: Translator.getDefaultLanguage(),
-  theme: theme
+	lang: Translator.getDefaultLanguage(),
+	theme: theme
 };
 
 CometChatSenderFileMessageBubble.propTypes = {
-  lang: PropTypes.string,
-  theme: PropTypes.object
+	lang: PropTypes.string,
+	theme: PropTypes.object
 }
 
-export default CometChatSenderFileMessageBubble;
+export { CometChatSenderFileMessageBubble };

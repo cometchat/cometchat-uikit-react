@@ -89,4 +89,4 @@ CometChatEmojiKeyboard.propTypes = {
     lang: PropTypes.string,
 }
 
-export default CometChatEmojiKeyboard;
+export { CometChatEmojiKeyboard };

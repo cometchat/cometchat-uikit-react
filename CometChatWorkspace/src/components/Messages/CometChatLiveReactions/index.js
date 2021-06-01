@@ -10,6 +10,8 @@ import {
     reactionEmojiStyle
 } from "./style";
 
+import heartIcon from "./resources/heart.png";
+
 class CometChatLiveReactions extends React.PureComponent {
 
     constructor(props) {
@@ -24,8 +26,8 @@ class CometChatLiveReactions extends React.PureComponent {
 
         this.before = Date.now();
 
-        const reaction = (props.reaction) ? enums.LIVE_REACTIONS[props.reaction] : enums.LIVE_REACTIONS["heart"];
-        const reactionImg = (<img src={require(`${reaction}`)} alt={props.reaction} />);
+        const reaction = (props.reaction) ? enums.CONSTANTS["LIVE_REACTIONS"][props.reaction] : enums.CONSTANTS["LIVE_REACTIONS"]["heart"];
+        const reactionImg = (<img src={heartIcon} alt={reaction} />);
         this.emojis = Array(6).fill(reactionImg);
     }
 
@@ -111,4 +113,4 @@ class CometChatLiveReactions extends React.PureComponent {
     }
 }
 
-export default CometChatLiveReactions;
+export { CometChatLiveReactions };

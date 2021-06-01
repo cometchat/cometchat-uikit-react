@@ -3,17 +3,20 @@ import React from "react";
 /** @jsx jsx */
 import { jsx, keyframes } from "@emotion/core";
 import PropTypes from "prop-types";
+import { CometChat } from "@cometchat-pro/chat";
 
 import { messageAlertManager } from "./controller";
 
 import { CometChatAvatar } from "../../Shared";
+import { CometChatCallScreen } from "../CometChatCallScreen";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
-import { validateWidgetSettings } from "../../../util/common";
+import { SoundManager } from "../../../util/SoundManager";
+import { Storage } from "../../../util/Storage";
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
-import { incomingCallAlert } from "../../../resources/audio";
 
 import {
     incomingCallWrapperStyle,
@@ -24,155 +27,260 @@ import {
     callTypeStyle,
     thumbnailStyle,
     headerButtonStyle,
-    ButtonStyle
+    ButtonStyle,
 } from "./style";
 
 import videoCallIcon from "./resources/incomingvideocall.png";
 
 class CometChatIncomingDirectCall extends React.PureComponent {
+	static contextType = CometChatContext;
 
-    constructor(props) {
+	constructor(props) {
+		super(props);
+		this._isMounted = false;
+		this.state = {
+			incomingCall: null,
+			callInProgress: null,
+			maximize: true,
+		};
 
-        super(props);
-        this._isMounted = false;
-        this.state = {
-            incomingMessage: null,
-        }
+		this.callButtonRef = React.createRef();
 
-        this.incomingAlert = new Audio(incomingCallAlert);
-    }
+		CometChat.getLoggedinUser()
+			.then(user => (this.loggedInUser = user))
+			.catch(error => {
+				console.error(error);
+			});
+	}
 
-    componentDidMount() {
+	componentDidMount() {
+		this._isMounted = true;
 
-        this._isMounted = true;
+		this.MessageAlertManager = new messageAlertManager();
+		this.MessageAlertManager.attachListeners(this.messageListenerCallback);
 
-        this.MessageAlertManager = new messageAlertManager();
-        this.MessageAlertManager.attachListeners(this.messageListenerCallback);
-    }
+		Storage.attachChangeDetection(this.logStorageChange);
+	}
 
-    componentWillUnmount() {
-        this._isMounted = false;
-    }
+	componentDidUpdate() {
+		if (this.state.incomingCall) {
+			this.adjustFontSize();
+		}
+	}
 
-    playIncomingAlert = () => {
+	componentWillUnmount() {
+		this._isMounted = false;
+		Storage.detachChangeDetection(this.logStorageChange);
+	}
 
-        //if audio sound is disabled in chat widget
-        if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_calls") === false) {
-            return false;
-        }
+	adjustFontSize = () => {
+		if (this.callButtonRef && this.callButtonRef.current) {
+			let reduceFontSize = false;
+			const buttonNodeList = this.callButtonRef.current.querySelectorAll("button");
 
-        this.incomingAlert.currentTime = 0;
-        if (typeof this.incomingAlert.loop == 'boolean') {
-            this.incomingAlert.loop = true;
-        } else {
-            this.incomingAlert.addEventListener('ended', function () {
-                this.currentTime = 0;
-                this.play();
-            }, false);
-        }
-        this.incomingAlert.play();
-    }
+			buttonNodeList.forEach(buttonNode => {
+				const parentContainerWidth = buttonNode.clientWidth;
+				const currentTextWidth = buttonNode.scrollWidth;
 
-    pauseIncomingAlert = () => {
+				if (parentContainerWidth < currentTextWidth) {
+					reduceFontSize = true;
+				}
+			});
 
-        //if audio sound is disabled in chat widget
-        if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_calls") === false) {
-            return false;
-        }
+			if (reduceFontSize) {
+				buttonNodeList.forEach(buttonNode => {
+					buttonNode.style.fontSize = "85%";
+				});
+			}
+		}
+	};
 
-        this.incomingAlert.pause();
-    }
+	messageListenerCallback = (key, message) => {
+		switch (key) {
+			case enums.CUSTOM_MESSAGE_RECEIVED: //occurs at the callee end
+				this.incomingCallReceived(message);
+				break;
+			default:
+				break;
+		}
+	};
 
-    messageListenerCallback = (key, message) => {
+	incomingCallReceived = message => {
+		if (this._isMounted) {
+			if (message.type !== enums.CUSTOM_TYPE_MEETING) {
+				return false;
+			}
 
-        switch (key) {
+			if (Object.keys(this.context.callInProgress).length) {
+				if (this.context.checkIfDirectCallIsOngoing() && this.context.getActiveCallSessionID() === message.data.customData.sessionID) {
+					return false;
+				}
+			}
 
-            case enums.CUSTOM_MESSAGE_RECEIVED://occurs at the callee end
-                this.incomingMessageReceived(message);
-                break;
-            default:
-                break;
-        }
-    }
+			if (message?.sender.uid !== this.loggedInUser?.uid) {
+				SoundManager.play(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+				this.setState({incomingCall: message});
+			}
+		}
+	};
 
-    incomingMessageReceived = (message) => {
+	joinCall = () => {
+		this.checkForActiveCallAndEndCall()
+			.then(response => {
+				SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+				this.props.actionGenerated(enums.ACTIONS["ACCEPT_DIRECT_CALL"], true);
 
-        if (this._isMounted) {
+				if (this.context) {
+					this.context.setCallInProgress(this.state.incomingCall, enums.CONSTANTS["INCOMING_DIRECT_CALLING"]);
+				}
+				Storage.setItem(enums.CONSTANTS["ACTIVECALL"], this.state.incomingCall);
+				this.setState({incomingCall: null, callInProgress: this.state.incomingCall});
+			})
+			.catch(error => {
+				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
+				this.context.setToastMessage("error", errorCode);
+			});
+	};
 
-            if (message.type !== enums.CUSTOM_TYPE_MEETING) {
-                return false;
-            }
+	ignoreCall = () => {
+		SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+		Storage.setItem(enums.CONSTANTS["ACTIVECALL"], this.state.incomingCall);
+		this.setState({incomingCall: null});
+	};
 
-            this.playIncomingAlert();
-            this.setState({ incomingMessage: message });
-        }
-    }
+	checkForActiveCallAndEndCall = () => {
+		const promise = new Promise((resolve, reject) => {
+			if (this.isCallActive() === false) {
+				return resolve({success: true});
+			}
 
-    joinDirectCall = () => {
+			let sessionID = this.getActiveCallSessionID();
+			CometChat.endCall(sessionID)
+				.then(response => {
+					return resolve(response);
+				})
+				.catch(error => {
+					return reject(error);
+				});
+		});
 
-        this.pauseIncomingAlert();
-        this.props.actionGenerated(enums.ACTIONS["ACCEPT_DIRECT_CALL"], { ...this.state.incomingMessage });
-        this.setState({ incomingMessage: null });
-    }
+		return promise;
+	};
 
-    ignoreCall = () => {
+	isCallActive = () => {
+		if (Object.keys(this.context.callInProgress).length === 0) {
+			return false;
+		}
 
-        this.pauseIncomingAlert();
-        this.setState({ incomingMessage: null });
-    }
+		let sessionID = this.getActiveCallSessionID();
+		if (!sessionID) {
+			return false;
+		}
 
-    render() {
+		return true;
+	};
 
-        let messageScreen = null;
-        if (this.state.incomingMessage) {
+	getActiveCallSessionID = () => {
+		return this.context.getActiveCallSessionID();
+	};
 
-            let avatar = null;
-            if (this.state.incomingMessage) {
-                avatar = (
-                    <div css={thumbnailStyle()} className="header__thumbnail">
-                        <CometChatAvatar cornerRadius="50%" image={this.state.incomingMessage.sender.avatar} />
-                    </div>
-                );
-            }
+	actionHandler = action => {
+		switch (action) {
+			case enums.ACTIONS["DIRECT_CALL_ENDED"]:
+			case enums.ACTIONS["DIRECT_CALL_ERROR"]:
+				this.setState({callInProgress: null});
+				break;
+			default:
+				break;
+		}
+	};
 
-            const callType = (
-                <React.Fragment>
-                    <img src={videoCallIcon} alt={Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)} /><span>{Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}</span>
-                </React.Fragment>
-            );
+	logStorageChange = event => {
+		if (event?.key !== enums.CONSTANTS["ACTIVECALL"]) {
+			return false;
+		}
 
-            messageScreen = (
-                <div css={incomingCallWrapperStyle(this.props, keyframes)} className="callalert__wrapper">
-                    <div css={callContainerStyle()} className="callalert__container">
-                        <div css={headerWrapperStyle()} className="callalert__header">
-                            <div css={callDetailStyle()} className="header__detail">
-                                <div css={nameStyle()} className="name">{this.state.incomingMessage.sender.name}</div>
-                                <div css={callTypeStyle(this.props)} className="calltype">{callType}</div>
-                            </div>
-                            {avatar}
-                        </div>
-                        <div css={headerButtonStyle()} className="callalert__buttons">
-                            <button type="button" css={ButtonStyle(this.props, 0)} className="button button__ignore" onClick={this.ignoreCall}>{Translator.translate("IGNORE", this.props.lang)}</button>
-                            <button type="button" css={ButtonStyle(this.props, 1)} className="button button__join" onClick={this.joinDirectCall}>{Translator.translate("JOIN", this.props.lang)}</button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-        
-        return messageScreen;
-    }
+		if (event.newValue || event.oldValue) {
+			let call;
+			if (event.newValue) {
+				call = JSON.parse(event.newValue);
+			} else if (event.oldValue) {
+				call = JSON.parse(event.oldValue);
+			}
+
+			if (this.state.incomingCall?.sessionId === call?.sessionId) {
+				SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+				this.setState({incomingCall: null});
+			}
+		}
+	};
+
+	render() {
+		let callScreen = null,
+			incomingCallAlert = null;
+		if (this.state.incomingCall) {
+			let avatar = (
+				<div css={thumbnailStyle()} className="header__thumbnail">
+					<CometChatAvatar cornerRadius="50%" image={this.state.incomingCall.sender.avatar} />
+				</div>
+			);
+
+			const callType = (
+				<React.Fragment>
+					<img src={videoCallIcon} alt={Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)} />
+					<span>{Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}</span>
+				</React.Fragment>
+			);
+
+			incomingCallAlert = (
+				<div css={incomingCallWrapperStyle(this.props, keyframes)} className="callalert__wrapper">
+					<div css={callContainerStyle()} className="callalert__container">
+						<div css={headerWrapperStyle()} className="callalert__header">
+							<div css={callDetailStyle()} className="header__detail">
+								<div css={nameStyle()} className="name">
+									{this.state.incomingCall.sender.name}
+								</div>
+								<div css={callTypeStyle(this.props)} className="calltype">
+									{callType}
+								</div>
+							</div>
+							{avatar}
+						</div>
+						<div css={headerButtonStyle()} className="callalert__buttons" ref={this.callButtonRef}>
+							<button type="button" css={ButtonStyle(this.props, 0)} className="button button__ignore" onClick={this.ignoreCall}>
+								{Translator.translate("IGNORE", this.props.lang)}
+							</button>
+							<button type="button" css={ButtonStyle(this.props, 1)} className="button button__join" onClick={this.joinCall}>
+								{Translator.translate("JOIN", this.props.lang)}
+							</button>
+						</div>
+					</div>
+				</div>
+			);
+		}
+
+		if (this.state.callInProgress) {
+			callScreen = <CometChatCallScreen loggedInUser={this.loggedInUser} call={this.state.callInProgress} actionGenerated={this.actionHandler} />;
+		}
+
+		return (
+			<React.Fragment>
+				{incomingCallAlert}
+				{callScreen}
+			</React.Fragment>
+		);
+	}
 }
 
 // Specifies the default values for props:
 CometChatIncomingDirectCall.defaultProps = {
     lang: Translator.getDefaultLanguage(),
-    theme: theme
+    theme: theme,
 };
 
 CometChatIncomingDirectCall.propTypes = {
     lang: PropTypes.string,
-    theme: PropTypes.object
+    theme: PropTypes.object,
 }
 
-export default CometChatIncomingDirectCall;
+export { CometChatIncomingDirectCall };

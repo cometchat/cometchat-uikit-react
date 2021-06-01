@@ -12,6 +12,7 @@ export const listItem = (props) => {
         cursor: "pointer",
         width: "100%",
         padding: "8px 16px",
+        position: "relative",
         ...selectedState,
         '&:hover': {
             backgroundColor: `${props.theme.backgroundColor.primary}`

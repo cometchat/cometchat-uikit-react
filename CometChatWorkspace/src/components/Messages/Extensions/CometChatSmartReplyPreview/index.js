@@ -41,4 +41,4 @@ CometChatSmartReplyPreview.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatSmartReplyPreview;
+export { CometChatSmartReplyPreview };
