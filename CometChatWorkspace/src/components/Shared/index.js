@@ -1,5 +1,6 @@
-export { default as CometChatAvatar } from "./CometChatAvatar";
-export { default as CometChatBackdrop } from "./CometChatBackdrop";
-export { default as CometChatBadgeCount } from "./CometChatBadgeCount";
-export { default as CometChatSharedMediaView } from "./CometChatSharedMediaView";
-export { default as CometChatUserPresence } from "./CometChatUserPresence";
+export { CometChatAvatar } from "./CometChatAvatar";
+export { CometChatBackdrop } from "./CometChatBackdrop";
+export { CometChatBadgeCount } from "./CometChatBadgeCount";
+export { CometChatUserPresence } from "./CometChatUserPresence";
+export { CometChatToastNotification } from "./CometChatToastNotification";
+export { CometChatConfirmDialog } from "./CometChatConfirmDialog";

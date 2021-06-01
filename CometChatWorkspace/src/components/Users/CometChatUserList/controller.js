@@ -1,17 +1,44 @@
 import { CometChat } from "@cometchat-pro/chat";
 
+import {UIKitSettings} from "../../../util/UIKitSettings";
+
 export class UserListManager {
 
     userRequest = null;
     userListenerId = "userlist_" + new Date().getTime();
 
-    constructor(friendsOnly, searchKey) {
+    constructor(context, searchKey) {
 
-        if (searchKey) {
-            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).friendsOnly(friendsOnly).setSearchKeyword(searchKey).build();
-        } else {
-            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).friendsOnly(friendsOnly).build();
-        }
+        this.context = context;
+        this.searchKey = searchKey;
+    }
+
+    initializeUsersRequest = () => {
+
+        const userListMode = this.context.UIKitSettings.userListMode;
+		const userListModeOptions = UIKitSettings.userListFilterOptions;
+
+        return new Promise((resolve, reject) => {
+            if (userListMode === userListModeOptions["ALL"]) {
+                if (this.searchKey) {
+                    this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).setSearchKeyword(this.searchKey).build();
+                } else {
+                    this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).build();
+                }
+
+                return resolve(this.usersRequest);
+            } else if (userListMode === userListModeOptions["FRIENDS"]) {
+                if (this.searchKey) {
+                    this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).friendsOnly(true).setSearchKeyword(this.searchKey).build();
+                } else {
+                    this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(30).friendsOnly(true).build();
+                }
+
+                return resolve(this.usersRequest);
+            } else {
+                return reject({message: "Invalid filter for userlist"});
+            }
+        });
     }
 
     fetchNextUsers() {

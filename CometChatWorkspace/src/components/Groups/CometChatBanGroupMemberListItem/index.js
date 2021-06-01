@@ -1,3 +1,4 @@
+import { useContext } from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
@@ -5,6 +6,9 @@ import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatAvatar, CometChatUserPresence } from "../../Shared";
+
+import { CometChatContext } from "../../../util/CometChatContext";
+import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
@@ -21,6 +25,8 @@ import unban from "./resources/block.png";
 
 const CometChatBanGroupMemberListItem = (props) => {
 
+    const context = useContext(CometChatContext);
+
     const roles = {}
     roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN] = Translator.translate("ADMINISTRATOR", props.lang);
     roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR] = Translator.translate("MODERATOR", props.lang);
@@ -28,17 +34,17 @@ const CometChatBanGroupMemberListItem = (props) => {
 
     let name = props.member.name;
     let scope = roles[props.member.scope];
-    let unBan = (<img src={unban} alt={Translator.translate("UNBAN", props.lang)} onClick={() => {props.actionGenerated("unban", props.member)}} />);
+    let unBan = (<img src={unban} alt={Translator.translate("UNBAN", props.lang)} onClick={() => { props.actionGenerated(enums.ACTIONS["UNBAN_GROUP_MEMBER"], props.member)}} />);
 
     //if the loggedin user is moderator, don't allow unban of banned moderators or administrators
-    if(props.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
+    if (context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
     && (props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN || props.member.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR)) {
         unBan = null;
     }
 
     //if the loggedin user is administrator, don't allow unban of banned administrators
-    if(props.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN && props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
-        if(props.item.owner !== props.loggedinuser.uid) {
+    if (context.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN && props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
+        if (context.item.owner !== props.loggedinuser.uid) {
             unBan = null;
         }
     }
@@ -93,4 +99,4 @@ CometChatBanGroupMemberListItem.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatBanGroupMemberListItem;
+export { CometChatBanGroupMemberListItem };

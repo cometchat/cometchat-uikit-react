@@ -1,3 +1,3 @@
-export { default as CometChatConversationList } from "./CometChatConversationList";
-export { default as CometChatConversationListItem } from "./CometChatConversationListItem";
-export { default as CometChatConversationListWithMessages } from "./CometChatConversationListWithMessages";
+export { CometChatConversationList } from "./CometChatConversationList";
+export { CometChatConversationListItem } from "./CometChatConversationListItem";
+export { CometChatConversationListWithMessages } from "./CometChatConversationListWithMessages";

@@ -22,4 +22,4 @@ CometChatBackdrop.propTypes = {
     clicked: PropTypes.func,
 }
 
-export default CometChatBackdrop;
+export { CometChatBackdrop };

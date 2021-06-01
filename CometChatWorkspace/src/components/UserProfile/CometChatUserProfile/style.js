@@ -93,7 +93,7 @@ export const userStatusStyle = (props) => {
 export const optionsStyle = () => {
 
     return {
-        height: "calc(100% - 196px)",
+        height: "calc(100% - 145px)",
         overflowY: "auto",
         padding: "0 16px",
         display: "flex",

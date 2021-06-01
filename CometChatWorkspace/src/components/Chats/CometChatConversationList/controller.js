@@ -1,6 +1,7 @@
 import { CometChat } from "@cometchat-pro/chat";
 
 import * as enums from "../../../util/enums.js";
+import { UIKitSettings } from "../../../util/UIKitSettings";
 
 export class ConversationListManager {
 
@@ -11,8 +12,22 @@ export class ConversationListManager {
     groupListenerId = "chatlist_group_" + new Date().getTime();
     callListenerId = "chatlist_call_" + new Date().getTime();
 
-    constructor() {
-        this.conversationRequest = new CometChat.ConversationsRequestBuilder().setLimit(30).build();
+    constructor(context) {
+
+        const chatListMode = context.UIKitSettings.chatListMode;
+        const chatListFilterOptions = UIKitSettings.chatListFilterOptions;
+
+        switch (chatListMode) {
+            case chatListFilterOptions["USERS"]:
+                this.conversationRequest = new CometChat.ConversationsRequestBuilder().setConversationType(CometChat.ACTION_TYPE.TYPE_USER).setLimit(30).build();
+            break;
+            case chatListFilterOptions["GROUPS"]:
+                this.conversationRequest = new CometChat.ConversationsRequestBuilder().setConversationType(CometChat.ACTION_TYPE.TYPE_GROUP).setLimit(30).build();
+                break;
+            default:
+                this.conversationRequest = new CometChat.ConversationsRequestBuilder().setLimit(30).build();
+            break;
+        }
     }
 
     fetchNextConversation() {
@@ -79,6 +94,9 @@ export class ConversationListManager {
                 },
                 onMessageEdited: editedMessage => {
                     callback(enums.MESSAGE_EDITED, null, editedMessage);
+                },
+                onMessagesRead: messageReceipt => {
+                    callback(enums.MESSAGE_READ, null, messageReceipt);
                 }
             })
         );

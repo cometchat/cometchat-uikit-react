@@ -13,201 +13,161 @@ import srcIcon from "./resources/1px.png";
 
 class CometChatAvatar extends React.Component {
 
-  constructor(props) {
-    
-    super(props);
-    this.imgRef = React.createRef();
+	constructor(props) {
+		super(props);
 
-    this.state = {
-      avatarImage: srcIcon
-    }
-  }
+		this.imgRef = React.createRef();
+		this._isMounted = false;
+		this.state = {
+			avatarImage: srcIcon
+		}
+	}
 
-  componentDidMount() {
-    this.setAvatarImage();
-  }
+	componentDidMount() {
 
-  componentDidUpdate(prevProps) {
+		this._isMounted = true;
+		this.setAvatarImage();
+	}
 
-    if(prevProps !== this.props) {
+	componentDidUpdate(prevProps) {
 
-      this.setAvatarImage();
-    }
-  }
+		if(prevProps !== this.props) {
 
-  setAvatarImage = () => {
+			this.setAvatarImage();
+		}
+	}
 
-    if ((this.props.image).trim().length) {
+	componentWillUnmount() {
+		this._isMounted = false;
+	}
 
-      this.getImage(this.props.image);
+	setAvatarImage = () => {
 
-    } else if (Object.keys(this.props.user).length) {
+		if ((this.props.image).trim().length) {
 
-      if (this.props.user.hasOwnProperty("avatar")) {
+			this.getImage(this.props.image);
 
-        const avatarImage = this.props.user.avatar;
-        this.getImage(avatarImage);
+		} else if (Object.keys(this.props.user).length) {
 
-      } else {
+			if (this.props.user.hasOwnProperty("avatar")) {
 
-        const uid = this.props.user.uid;
-        const char = this.props.user.name.charAt(0).toUpperCase();
+				const avatarImage = this.props.user.avatar;
+				this.getImage(avatarImage);
 
-        const avatarImage = this.generateAvatar(uid, char);
-        this.getImage(avatarImage);
-      }
+			} else {
 
-    } else if (Object.keys(this.props.group).length) {
+				const uid = this.props.user.uid;
+				const char = this.props.user.name.charAt(0).toUpperCase();
 
-      if (this.props.group.hasOwnProperty("icon")) {
+				const avatarImage = this.generateAvatar(uid, char);
+				this.getImage(avatarImage);
+			}
 
-        const avatarImage = this.props.group.icon;
-        this.getImage(avatarImage);
+		} else if (Object.keys(this.props.group).length) {
 
-      } else {
+			if (this.props.group.hasOwnProperty("icon")) {
 
-        const guid = this.props.group.guid;
-        const char = this.props.group.name.charAt(0).toUpperCase();
+				const avatarImage = this.props.group.icon;
+				this.getImage(avatarImage);
 
-        const avatarImage = this.generateAvatar(guid, char);
-        this.getImage(avatarImage);
+			} else {
 
-      }
-    }
-  }
+				const guid = this.props.group.guid;
+				const char = this.props.group.name.charAt(0).toUpperCase();
 
-  getImage = (image) => {
+				const avatarImage = this.generateAvatar(guid, char);
+				this.getImage(avatarImage);
 
-    let img = new Image();
-    img.src = image;
-    img.onload = () => {
-      this.setState({ avatarImage: image });
-    }
-  }
+			}
+		}
+	}
 
-  setAvatar = (generator, data) => {
+	getImage = (image) => {
 
-    const stringToColour = function (str) {
+		let img = new Image();
+		img.src = image;
+		img.onload = () => {
 
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      }
+			if (this._isMounted) {
+				this.setState({ avatarImage: image });
+			}
+		}
+		
+	}
 
-      let colour = '#';
-      for (let i = 0; i < 3; i++) {
-        let value = (hash >> (i * 8)) & 0xFF;
-        colour += ('00' + value.toString(16)).substr(-2);
-      }
-      return colour;
-    }
+	generateAvatar = (generator, data) => {
 
-    const svg1 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg1.setAttribute("width", "200");
-    svg1.setAttribute("height", "200");
+		const stringToColour = function (str) {
 
-    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    rect.setAttribute('x', '0');
-    rect.setAttribute('y', '0');
-    rect.setAttribute('width', '200');
-    rect.setAttribute('height', '200');
-    rect.setAttribute('fill', stringToColour(generator));
-    svg1.appendChild(rect);
+			let hash = 0;
+			for (let i = 0; i < str.length; i++) {
+				hash = str.charCodeAt(i) + ((hash << 5) - hash);
+			}
 
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute('x', '50%');
-    text.setAttribute('y', '54%');
-    text.setAttribute('dominant-baseline', 'middle');
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('fill', 'white');
-    text.setAttribute('font-size', '120');
-    text.setAttribute('font-family', "'Inter', sans-serif");
-    text.setAttribute('font-wight', "600");
-    text.textContent = data;
-    svg1.appendChild(text);
+			let colour = '#';
+			for (let i = 0; i < 3; i++) {
+				let value = (hash >> (i * 8)) & 0xFF;
+				colour += ('00' + value.toString(16)).substr(-2);
+			}
+			return colour;
+		}
 
-    let svgString = new XMLSerializer().serializeToString(svg1);
+		const canvas = document.createElement("canvas");
+		const context = canvas.getContext("2d");
 
-    let decoded = unescape(encodeURIComponent(svgString));
-    let base64 = btoa(decoded);
+		canvas.width = 200;
+		canvas.height = 200;
 
-    let imgSource = `data:image/svg+xml;base64,${base64}`;
-    return imgSource;
-  }
+		// Draw background
+		context.fillStyle = stringToColour(generator);
+		context.fillRect(0, 0, canvas.width, canvas.height);
 
-  generateAvatar = (generator, data) => {
+		// Draw text
+		context.font = "bold 100px 'Inter', sans-serif";
+		context.fillStyle = "white";//foregroundColor;
+		context.textAlign = "center";
+		context.textBaseline = "middle";
+		context.fillText(data, canvas.width / 2, canvas.height / 2);
 
-    const stringToColour = function (str) {
+		return canvas.toDataURL("image/png");
+	}
 
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      }
+	render() {
 
-      let colour = '#';
-      for (let i = 0; i < 3; i++) {
-        let value = (hash >> (i * 8)) & 0xFF;
-        colour += ('00' + value.toString(16)).substr(-2);
-      }
-      return colour;
-    }
+		const borderWidth = this.props.borderWidth;
+		const borderStyle = this.props.borderStyle;
+		const borderColor = this.props.borderColor;
+		const cornerRadius = this.props.cornerRadius;
 
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
+		const getStyle = () => ({ borderWidth: borderWidth, borderStyle: borderStyle, borderColor: borderColor, borderRadius: cornerRadius });
 
-    canvas.width = 200;
-    canvas.height = 200;
-
-    // Draw background
-    context.fillStyle = stringToColour(generator);
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw text
-    context.font = "bold 100px 'Inter', sans-serif";
-    context.fillStyle = "white";//foregroundColor;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(data, canvas.width / 2, canvas.height / 2);
-
-    return canvas.toDataURL("image/png");
-  }
-
-  render() {
-
-    const borderWidth = this.props.borderWidth;
-    const borderStyle = this.props.borderStyle;
-    const borderColor = this.props.borderColor;
-    const cornerRadius = this.props.cornerRadius;
-
-    const getStyle = () => ({ borderWidth: borderWidth, borderStyle: borderStyle, borderColor: borderColor, borderRadius: cornerRadius });
-
-    return (
-      <img src={this.state.avatarImage} css={imgStyle()} alt={this.state.avatarImage} style={getStyle()} ref={el => { this.imgRef = el;}} />
-    );
-  }
+		return (
+			<img src={this.state.avatarImage} css={imgStyle()} alt={this.state.avatarImage} style={getStyle()} ref={el => { this.imgRef = el;}} />
+		);
+	}
 }
 
 // Specifies the default values for props:
 CometChatAvatar.defaultProps = {
-  borderWidth: "1px",
-  borderStyle: "solid",
-  borderColor: theme.borderColor.primary,
-  cornerRadius: "50%",
-  theme: theme,
-  image: "",
-  user: {},
-  group: {},
+	borderWidth: "1px",
+	borderStyle: "solid",
+	borderColor: theme.borderColor.primary,
+	cornerRadius: "50%",
+	theme: theme,
+	image: "",
+	user: {},
+	group: {},
 };
 
 CometChatAvatar.propTypes = {
-  borderWidth: PropTypes.string,
-  borderStyle: PropTypes.string,
-  borderColor: PropTypes.string,
-  cornerRadius: PropTypes.string,
-  image: PropTypes.string,
-  theme: PropTypes.object,
-  user: PropTypes.oneOfType([PropTypes.object, PropTypes.shape(CometChat.User)]),
-  group: PropTypes.oneOfType([PropTypes.object, PropTypes.shape(CometChat.Group)])
+	borderWidth: PropTypes.string,
+	borderStyle: PropTypes.string,
+	borderColor: PropTypes.string,
+	cornerRadius: PropTypes.string,
+	image: PropTypes.string,
+	theme: PropTypes.object,
+	user: PropTypes.oneOfType([PropTypes.object, PropTypes.shape(CometChat.User)]),
+	group: PropTypes.oneOfType([PropTypes.object, PropTypes.shape(CometChat.Group)])
 }
 
-export default CometChatAvatar;
+export { CometChatAvatar };

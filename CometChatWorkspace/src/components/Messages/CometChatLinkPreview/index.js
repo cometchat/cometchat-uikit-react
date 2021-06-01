@@ -69,4 +69,4 @@ CometChatLinkPreview.propTypes = {
     theme: PropTypes.object
 }
 
-export default CometChatLinkPreview;
+export { CometChatLinkPreview };
