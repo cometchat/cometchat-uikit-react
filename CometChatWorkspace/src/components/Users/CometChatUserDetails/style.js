@@ -2,11 +2,12 @@ import {CometChat} from "@cometchat-pro/chat";
 
 export const userDetailStyle = props => {
 	return {
-		"display": "flex",
-		"flexDirection": "column",
-		"height": "100%",
-		"boxSizing": "border-box",
-		"fontFamily": `${props.theme.fontFamily}`,
+		display: "flex",
+		flexDirection: "column",
+		height: "100%",
+		position: "relative",
+		boxSizing: "border-box",
+		fontFamily: `${props.theme.fontFamily}`,
 		"*": {
 			boxSizing: "border-box",
 			fontFamily: `${props.theme.fontFamily}`,

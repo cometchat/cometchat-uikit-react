@@ -53,13 +53,14 @@ export const modalBodyStyle = () => {
     }
 }
 
-export const modalErrorStyle = () => {
+export const modalErrorStyle = (context) => {
 
     return {
         fontSize: "12px",
-        color: "red",
-        textAlign: "center",
-        height: "30px"
+		color: `${context.theme.color.red}`,
+		textAlign: "center",
+		margin: "8px 0",
+		width: "100%",
     }
 }
 
@@ -138,7 +139,6 @@ export const tableFootStyle = (props, state, img) => {
             marginRight: "24px",
         }
     }
-
 
     return {
         display: "inline-block",

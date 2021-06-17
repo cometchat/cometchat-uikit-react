@@ -8,6 +8,9 @@ export const modalRowStyle = (props) => {
         flexDirection: "row",
         justifyContent: "flex-start",
         alignItems: "center",
+        "&:not(:last-child)": {
+            borderBottom: "none"
+        }
     }
 }
 

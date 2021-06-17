@@ -46,7 +46,7 @@ class CometChatConversationListItem extends React.Component {
 		this.enableUnreadCount();
 		this.enableHideDeletedMessages();
 
-		this.setState({lastMessage: message, lastMessageTimestamp: timestamp});
+		this.setState({ lastMessage: message, lastMessageTimestamp: timestamp });
 	}
 
 	componentDidUpdate(prevProps) {
@@ -57,7 +57,7 @@ class CometChatConversationListItem extends React.Component {
 			const message = this.getLastMessage();
 			const timestamp = this.getLastMessageTimestamp();
 
-			this.setState({lastMessage: message, lastMessageTimestamp: timestamp});
+			this.setState({ lastMessage: message, lastMessageTimestamp: timestamp });
 		}
 
 		this.enableUnreadCount();
@@ -77,8 +77,7 @@ class CometChatConversationListItem extends React.Component {
 		const lastMessage = this.props.conversation.lastMessage;
 
 		if (lastMessage.hasOwnProperty("deletedAt")) {
-
-			if(this.state.enableHideDeletedMessages) {
+			if (this.state.enableHideDeletedMessages) {
 				message = "";
 			} else {
 				message = this.props.loggedInUser.uid === lastMessage.sender.uid ? `${Translator.translate("YOU_DELETED_THIS_MESSAGE", this.props.lang)}` : `${Translator.translate("THIS_MESSAGE_DELETED", this.props.lang)}`;
@@ -360,12 +359,12 @@ class CometChatConversationListItem extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableUnreadCount) {
-					this.setState({enableUnreadCount: response});
+					this.setState({ enableUnreadCount: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableUnreadCount !== false) {
-					this.setState({enableUnreadCount: false});
+					this.setState({ enableUnreadCount: false });
 				}
 			});
 	};
@@ -374,24 +373,22 @@ class CometChatConversationListItem extends React.Component {
 		this.context.FeatureRestriction.isHideDeletedMessagesEnabled()
 			.then(response => {
 				if (response !== this.state.enableHideDeletedMessages) {
-					this.setState({enableHideDeletedMessages: response});
+					this.setState({ enableHideDeletedMessages: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableHideDeletedMessages !== false) {
-					this.setState({enableHideDeletedMessages: false});
+					this.setState({ enableHideDeletedMessages: false });
 				}
 			});
 	};
 
-	handleMouseHover = () => {
-		this.setState(this.toggleHoverState);
-	};
-
-	toggleHoverState = state => {
-		return {
-			isHovering: !state.isHovering,
-		};
+	handleMouseHover = toggleFlag => {
+		if (toggleFlag && !this.state.isHovering) {
+			this.setState({ isHovering: true });
+		} else if (!toggleFlag && this.state.isHovering) {
+			this.setState({ isHovering: false });
+		}
 	};
 
 	render() {
@@ -428,7 +425,7 @@ class CometChatConversationListItem extends React.Component {
 		}
 
 		return (
-			<div css={listItem(this.props)} className="list__item" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover} onClick={() => this.props.handleClick(this.props.conversation)}>
+			<div css={listItem(this.props)} className="list__item" onMouseEnter={() => this.handleMouseHover(true)} onMouseLeave={() => this.handleMouseHover(false)} onClick={() => this.props.handleClick(this.props.conversation)}>
 				<div css={itemThumbnailStyle()} className="list__item__thumbnail">
 					{avatar}
 					{presence}

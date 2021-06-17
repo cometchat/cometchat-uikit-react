@@ -67,9 +67,7 @@ const CometChatAddGroupMemberListItem = (props) => {
 				<div css={avatarStyle()} className="avatar">
 					<CometChatAvatar user={props.user} />
 					<CometChatUserPresence
-					widgetsettings={props.widgetsettings}
-					status={props.user.status}
-					borderColor={props.theme.borderColor.primary} />
+					status={props.user.status}  />
 				</div>
 				<div css={nameStyle()} className="name">{props.user.name}</div>
 			</div>

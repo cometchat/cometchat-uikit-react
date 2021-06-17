@@ -1,15 +1,17 @@
 export const tableRowStyle = (props) => {
 
     return {
-        border: `1px solid ${props.theme.borderColor.primary}`,
+        borderLeft: `1px solid ${props.theme.borderColor.primary}`,
+        borderRight: `1px solid ${props.theme.borderColor.primary}`,
+        borderBottom: `1px solid ${props.theme.borderColor.primary}`,
         display: "table",
         width: "100%",
         tableLayout: "fixed",
         fontSize: "14px",
-        "td": {
+        td: {
             padding: ".625em",
-        }
-    }
+        },
+    };
 }
 
 export const avatarStyle = () => {

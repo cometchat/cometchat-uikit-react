@@ -34,10 +34,6 @@ class CometChatUI extends React.Component {
 
 		this.navBarRef = React.createRef();
 		this.contextProviderRef = React.createRef();
-
-		CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
-			console.error(error);
-		});
 	}
 	
 	componentDidMount() {

@@ -50,23 +50,10 @@ class CometChatMessageReactions extends React.Component {
 
             // Reaction failed
             if (response.hasOwnProperty("success") === false || (response.hasOwnProperty("success") && response["success"] === false)) {
-                this.context.setToastMessage("error", "MESSAGE_REACTION_FAIL");
+                this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
             }
 
-        }).catch(error => {
-            
-            let errorCode = "ERROR";
-            if (error.hasOwnProperty("code")) {
-
-                errorCode = error.code;
-                if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
-                    && error.hasOwnProperty("details")
-                    && error.details.hasOwnProperty("code")) {
-                    errorCode = error.details.code;
-                }
-            }
-            this.context.setToastMessage("error", errorCode);
-        });
+        }).catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
     }
 
     triggerEmojiClick = (event) => {

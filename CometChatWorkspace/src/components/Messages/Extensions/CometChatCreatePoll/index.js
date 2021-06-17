@@ -25,7 +25,7 @@ import {
     addOptionIconStyle
 } from "./style";
 
-import ringIcon from "./resources/creating.svg";
+import creatingIcon from "./resources/creating.svg";
 import addIcon from "./resources/add.png";
 import clearIcon from "./resources/close.png";
 
@@ -38,7 +38,7 @@ class CometChatCreatePoll extends React.Component {
 
         super(props);
         this.state = {
-            error: null,
+            errorMessage: "",
             options: [],
             creatingPoll: false
         }
@@ -47,12 +47,6 @@ class CometChatCreatePoll extends React.Component {
         this.optionOneRef = React.createRef();
         this.optionTwoRef = React.createRef();
         this.optionRef = React.createRef();
-
-        CometChat.getLoggedinUser().then(user => {
-            this.loggedInUser = user;
-        }).catch((error) => {
-            console.error("[CometChatCreatePoll] getLoggedinUser error", error);
-        });
     }
 
     addPollOption = () => {
@@ -94,13 +88,13 @@ class CometChatCreatePoll extends React.Component {
 
         if (question.length === 0) {
 
-            this.setState({ error: Translator.translate("POLL_QUESTION_BLANK", this.props.lang) })
+            this.setState({ errorMessage: Translator.translate("INVALID_POLL_QUESTION", this.props.lang) });
             return false;
         }
 
         if (firstOption.length === 0 || secondOption.length === 0) {
 
-            this.setState({ error: Translator.translate("POLL_OPTION_BLANK", this.props.lang) })
+            this.setState({ errorMessage: Translator.translate("INVALID_POLL_OPTION", this.props.lang) });
             return false;
         }
 
@@ -116,7 +110,7 @@ class CometChatCreatePoll extends React.Component {
             receiverId = this.context.item.guid;
         }
         
-        this.setState({ creatingPoll: true });
+        this.setState({ creatingPoll: true, errorMessage: "" });
 
         CometChat.callExtension('polls', 'POST', 'v2/create', {
             "question": question,
@@ -128,27 +122,16 @@ class CometChatCreatePoll extends React.Component {
             if (response && response.hasOwnProperty("success") && response["success"] === true) {
 
                 this.setState({ creatingPoll: false });
-                this.context.setToastMessage("success", "POLL_CREATION_SUCCESS");
                 this.props.actionGenerated(enums.ACTIONS["POLL_CREATED"]);
 
             } else {
-                this.context.setToastMessage("success", "POLL_CREATION_ERROR");
+                this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
             }
 
         }).catch(error => {
 
             this.setState({ creatingPoll: false });
-            let errorCode = "ERROR";
-            if (error.hasOwnProperty("code")) {
-
-                errorCode = error.code;
-                if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
-                    && error.hasOwnProperty("details")
-                    && error.details.hasOwnProperty("code")) {
-                    errorCode = error.details.code;
-                }
-            }
-            this.context.setToastMessage("error", errorCode);
+            this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
         });
     }
 
@@ -167,17 +150,7 @@ class CometChatCreatePoll extends React.Component {
             );
         });
 
-        let errorContainer = null;
-        if (this.state.error) {
-            errorContainer = (
-                <tr className="error">
-                    <td colSpan="3"><div css={modalErrorStyle()}>{this.state.error}</div></td>
-                </tr>
-            );
-        }
-
         const createText = (this.state.creatingPoll) ? Translator.translate("CREATING", this.props.lang) : Translator.translate("CREATE", this.props.lang);
-
         return (
             <React.Fragment>
                 <CometChatBackdrop show={true} clicked={this.props.close} />
@@ -187,7 +160,9 @@ class CometChatCreatePoll extends React.Component {
                         <table css={modalTableStyle(this.props)}>
                             <caption css={tableCaptionStyle()} className="modal__title">{Translator.translate("CREATE_POLL", this.props.lang)}</caption>
                             <tbody css={tableBodyStyle()}>
-                                {errorContainer}
+                                <tr className="error">
+                                    <td colSpan="3"><div css={modalErrorStyle(this.context)}>{this.state.errorMessage}</div></td>
+                                </tr>
                                 <tr className="poll__question">
                                     <td><label>{Translator.translate("QUESTION", this.props.lang)}</label></td>
                                     <td colSpan="2">
@@ -195,7 +170,9 @@ class CometChatCreatePoll extends React.Component {
                                     </td>
                                 </tr>
                                 <tr className="poll__options">
-                                    <td><label>{Translator.translate("OPTIONS", this.props.lang)}</label></td>
+                                    <td>
+                                        <label>{Translator.translate("OPTIONS", this.props.lang)}</label>
+                                    </td>
                                     <td colSpan="2">
                                         <input type="text" tabIndex="2" placeholder={Translator.translate("ENTER_YOUR_OPTION", this.props.lang)} ref={this.optionOneRef} />
                                     </td>
@@ -209,16 +186,20 @@ class CometChatCreatePoll extends React.Component {
                                 {pollOptionView}
                                 <tr>
                                     <td>&nbsp;</td>
-                                    <td><label>{Translator.translate("ADD_NEW_OPTION", this.props.lang)}</label></td>
+                                    <td>
+                                        <label>{Translator.translate("ADD_NEW_OPTION", this.props.lang)}</label>
+                                    </td>
                                     <td css={iconWrapperStyle()}>
                                         <span tabIndex="100" css={addOptionIconStyle(addIcon)} className="option__add" onClick={this.addPollOption}></span>
                                     </td>
                                 </tr>
                             </tbody>
-                            <tfoot css={tableFootStyle(this.props, this.state, ringIcon)}>
+                            <tfoot css={tableFootStyle(this.props, this.state, creatingIcon)}>
                                 <tr className="createpoll">
                                     <td colSpan="2">
-                                        <button type="button" onClick={this.createPoll}><span>{createText}</span></button>
+                                        <button type="button" onClick={this.createPoll}>
+                                            <span>{createText}</span>
+                                        </button>
                                     </td>
                                 </tr>
                             </tfoot>
@@ -226,7 +207,7 @@ class CometChatCreatePoll extends React.Component {
                     </div>
                 </div>
             </React.Fragment>
-        )
+        );
     }
 }
 

@@ -1,7 +1,7 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core"
+import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -24,7 +24,8 @@ import {
     listStyle,
     nameColumnStyle,
     scopeColumnStyle,
-    actionColumnStyle
+    actionColumnStyle,
+    modalErrorStyle
 } from "./style";
 
 import clearIcon from "./resources/close.png";
@@ -46,7 +47,8 @@ class CometChatViewGroupMemberList extends React.Component {
         }
 
         this.state = {
-            userColumnTitle: userColumnTitle
+            userColumnTitle: userColumnTitle,
+            errorMessage: ""
         }
     }
 
@@ -90,14 +92,10 @@ class CometChatViewGroupMemberList extends React.Component {
                 this.props.actionGenerated(enums.ACTIONS["BAN_GROUPMEMBER_SUCCESS"], memberToBan);
 
             } else {
-                this.context.setToastMessage("error", "BAN_GROUPMEMBER_FAIL");
+                this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
             }
 
-        }).catch(error => {
-
-            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
-            this.context.setToastMessage("error", errorCode);
-        });
+        }).catch(error => this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
     }
 
     kickMember = (memberToKick) => {
@@ -111,14 +109,10 @@ class CometChatViewGroupMemberList extends React.Component {
                 this.props.actionGenerated(enums.ACTIONS["KICK_GROUPMEMBER_SUCCESS"], memberToKick);
 
             } else {
-                this.context.setToastMessage("error", "KICK_GROUPMEMBER_FAIL");
+                this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
             }
             
-        }).catch(error => {
-
-            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
-            this.context.setToastMessage("error", errorCode);
-        });
+        }).catch(error => this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
     }
 
     changeScope = (member, scope) => {
@@ -132,14 +126,10 @@ class CometChatViewGroupMemberList extends React.Component {
                 const updatedMember = Object.assign({}, member, {scope: scope});
                 this.props.actionGenerated(enums.ACTIONS["SCOPECHANGE_GROUPMEMBER_SUCCESS"], updatedMember);
             } else {
-                this.context.setToastMessage("error", "SCOPECHANGE_GROUPMEMBER_FAIL");
+                this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
             }
             
-        }).catch(error => {
-
-            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
-            this.context.setToastMessage("error", errorCode);
-        });
+        }).catch(error => this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
     }
 
     setUserColumnTitle = (editAccess) => {
@@ -170,8 +160,7 @@ class CometChatViewGroupMemberList extends React.Component {
                     enableChangeScope={this.props.enableChangeScope}
                     enableBanGroupMembers={this.props.enableBanGroupMembers}
                     enableKickGroupMembers={this.props.enableKickGroupMembers}
-                    actionGenerated={this.updateMembers}
-                />
+                    actionGenerated={this.updateMembers} />
             );
         });
 
@@ -194,11 +183,12 @@ class CometChatViewGroupMemberList extends React.Component {
 
         return (
             <React.Fragment>
-                <CometChatBackdrop show={this.props.open} clicked={this.props.close} />
+                <CometChatBackdrop show={true} clicked={this.props.close} />
                 <div css={modalWrapperStyle(this.props)} className="modal__viewmembers">
                     <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyStyle()} className="modal__body">
                         <div css={modalCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">{Translator.translate("GROUP_MEMBERS", this.props.lang)}</div>
+                        <div css={modalErrorStyle(this.context)} className="modal__error">{this.state.errorMessage}</div>
                         <div css={modalListStyle()} className="modal__content">
                             <div css={listHeaderStyle(this.props)} className="content__header">
                                 <div css={nameColumnStyle(this.props, editAccess)} className="name">{this.state.userColumnTitle}</div>

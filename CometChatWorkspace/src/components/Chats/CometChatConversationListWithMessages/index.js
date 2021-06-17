@@ -36,10 +36,6 @@ class CometChatConversationListWithMessages extends React.Component {
 
 		this.contextProviderRef = React.createRef();
 		this.chatListRef = React.createRef();
-
-		CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
-			console.error(error);
-		});
 	}
 	
 	componentDidMount() {
