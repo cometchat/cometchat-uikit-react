@@ -1,6 +1,8 @@
 export const modalRowStyle = (props) => {
 
     return {
+        borderLeft: `1px solid ${props.theme.borderColor.primary}`,
+        borderRight: `1px solid ${props.theme.borderColor.primary}`,
         borderBottom: `1px solid ${props.theme.borderColor.primary}`,
         display: "flex",
         width: "100%",
@@ -27,7 +29,7 @@ export const nameColumnStyle = (props, participantView) => {
         }
 
     } : {
-        width: "calc(100% - 300px)",
+        width: "calc(100% - 260px)",
         [mq[1]]: {
             width: "calc(100% - 220px)",
         },

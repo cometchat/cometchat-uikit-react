@@ -11,6 +11,7 @@ export const conversationActionStyle = context => {
 		justifyContent: "flex-end",
 		position: "absolute",
 		right: "16px",
+		height: "100%",
 	};
 };
 

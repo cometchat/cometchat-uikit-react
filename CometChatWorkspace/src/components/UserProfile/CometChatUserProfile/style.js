@@ -3,7 +3,7 @@ export const userInfoScreenStyle = (props) =>{
     return {
         display: "flex",
         flexDirection: "column!important",
-        height: "calc(100% - 40px)",
+        height: "calc(100% - 50px)",
         fontFamily: `${props.theme.fontFamily}`,
         "*": {
             boxSizing: "border-box",

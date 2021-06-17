@@ -18,11 +18,12 @@ import {
     modalTableStyle,
     tableCaptionStyle,
     tableBodyStyle,
-    tableErrorStyle,
     inputStyle,
     tableFootStyle,
+	modalErrorStyle,
 } from "./style";
 
+import creatingIcon from "./resources/creating.svg";
 import closeIcon from "./resources/close.png";
 
 class CometChatCreateGroup extends React.Component {
@@ -32,11 +33,12 @@ class CometChatCreateGroup extends React.Component {
 		super(props);
 
 		this.state = {
-			//error: null,
+			errorMessage: "",
 			passwordInput: false,
 			name: "",
 			type: "",
 			password: "",
+			creatingGroup: false,
 			enablePublicGroup: false,
 			enablePasswordGroup: false,
 			enablePrivateGroup: false,
@@ -44,12 +46,14 @@ class CometChatCreateGroup extends React.Component {
 	}
 
     componentDidMount() {
+
         this.enablePublicGroup();
         this.enablePasswordGroup();
         this.enablePrivateGroup();
     }
 
     componentDidUpdate() {
+
         this.enablePublicGroup();
         this.enablePasswordGroup();
         this.enablePrivateGroup();
@@ -130,12 +134,12 @@ class CometChatCreateGroup extends React.Component {
 		const groupType = this.state.type.trim();
 
 		if (!groupName) {
-			this.context.setToastMessage("error", "INVALID_GROUP_NAME");
+			this.setState({ errorMessage: Translator.translate("INVALID_GROUP_NAME", this.props.lang) });
 			return false;
 		}
 
 		if (!groupType) {
-			this.context.setToastMessage("error", "INVALID_GROUP_TYPE");
+			this.setState({ errorMessage: Translator.translate("INVALID_GROUP_TYPE", this.props.lang) });
 			return false;
 		}
 
@@ -144,7 +148,7 @@ class CometChatCreateGroup extends React.Component {
 			password = this.state.password;
 
 			if (!password.length) {
-				this.context.setToastMessage("error", "INVALID_PASSWORD");
+				this.setState({ errorMessage: Translator.translate("INVALID_PASSWORD", this.props.lang) });
 				return false;
 			}
 		}
@@ -152,9 +156,12 @@ class CometChatCreateGroup extends React.Component {
 	};
 
 	createGroup = () => {
+
 		if (!this.validate()) {
 			return false;
 		}
+
+		this.setState({ creatingGroup: true });
 
 		const groupType = this.state.type.trim();
 
@@ -178,20 +185,20 @@ class CometChatCreateGroup extends React.Component {
 		}
 
 		const group = new CometChat.Group(guid, name, type, password);
-
 		CometChat.createGroup(group)
 			.then(newGroup => {
+				this.setState({ creatingGroup: false });
+
 				if (typeof newGroup === "object" && Object.keys(newGroup).length) {
 					this.context.setToastMessage("success", "GROUP_CREATION_SUCCESS");
-					this.setState({name: "", type: "", password: "", passwordInput: ""});
+					this.setState({ name: "", type: "", password: "", passwordInput: "" });
 					this.props.actionGenerated(enums.ACTIONS["GROUP_CREATED"], newGroup);
 				} else {
-					this.context.setToastMessage("error", "GROUP_JOIN_FAIL");
+					this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
 				}
 			})
 			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.context.setToastMessage("error", errorCode);
+				this.setState({ creatingGroup: false, errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
 			});
 	};
 
@@ -249,8 +256,6 @@ class CometChatCreateGroup extends React.Component {
             }
         }
 
-        
-    
 		let password = null;
 		if (this.state.passwordInput) {
 			password = (
@@ -262,21 +267,19 @@ class CometChatCreateGroup extends React.Component {
 			);
 		}
 
+		const createText = this.state.creatingGroup ? Translator.translate("CREATING", this.props.lang) : Translator.translate("CREATE", this.props.lang);
+
 		return (
 			<React.Fragment>
-				<CometChatBackdrop show={this.props.open} clicked={this.props.close} />
+				<CometChatBackdrop show={true} clicked={this.props.close} />
 				<div css={modalWrapperStyle(this.props)} className="modal__creategroup">
 					<span css={modalCloseStyle(closeIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
 					<div css={modalBodyStyle()} className="modal__body">
 						<table css={modalTableStyle(this.props)}>
-							<caption css={tableCaptionStyle()} className="modal__title">
-								{Translator.translate("CREATE_GROUP", this.props.lang)}
-							</caption>
+							<caption css={tableCaptionStyle()} className="modal__title"> {Translator.translate("CREATE_GROUP", this.props.lang)} </caption>
 							<tbody css={tableBodyStyle()} className="modal__search">
-								<tr className="error">
-									<td>
-										<div css={tableErrorStyle()}>{this.state.error}</div>
-									</td>
+								<tr>
+									<td><div css={modalErrorStyle(this.context)}>{this.state.errorMessage}</div></td>
 								</tr>
 								<tr>
 									<td>
@@ -286,13 +289,9 @@ class CometChatCreateGroup extends React.Component {
 								{groupTypeSelect}
 								{password}
 							</tbody>
-							<tfoot css={tableFootStyle(this.props)}>
+							<tfoot css={tableFootStyle(this.props, this.state, creatingIcon)}>
 								<tr className="creategroup">
-									<td>
-										<button type="button" tabIndex="4" onClick={this.createGroup}>
-											{Translator.translate("CREATE", this.props.lang)}
-										</button>
-									</td>
+									<td><button type="button" tabIndex="4" onClick={this.createGroup}><span>{createText}</span></button></td>
 								</tr>
 							</tfoot>
 						</table>

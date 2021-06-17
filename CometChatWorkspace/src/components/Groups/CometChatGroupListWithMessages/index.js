@@ -30,16 +30,11 @@ class CometChatGroupListWithMessages extends React.Component {
 		super(props);
 
 		this.state = {
-			tab: "groups",
 			sidebarview: false,
 			lang: props.lang,
 		}
 
 		this.groupListRef = React.createRef();
-
-		CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
-			console.error(error);
-		});
 	}
 
 	componentDidMount() {
@@ -125,7 +120,6 @@ class CometChatGroupListWithMessages extends React.Component {
 		let messageScreen = (
 			<CometChatMessages
 			theme={this.props.theme}
-			tab={this.state.tab}
 			lang={this.state.lang}
 			_parent="groups"
 			actionGenerated={this.actionHandler} />

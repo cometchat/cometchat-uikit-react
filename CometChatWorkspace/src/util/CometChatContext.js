@@ -41,6 +41,11 @@ export class CometChatContextProvider extends React.Component {
 			FeatureRestriction: featureRestriction,
 			theme: theme,
 			language: props.language,
+			roles: {
+				[CometChat.GROUP_MEMBER_SCOPE.ADMIN]: Translator.translate("ADMINISTRATOR", props.language),
+				[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]: Translator.translate("MODERATOR", props.language),
+				[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]: Translator.translate("PARTICIPANT", props.language),
+			},
 			setGroupMembers: this.setGroupMembers,
 			updateGroupMembers: this.updateGroupMembers,
 			setAllGroupMembers: this.setAllGroupMembers,
@@ -65,6 +70,7 @@ export class CometChatContextProvider extends React.Component {
 			checkIfCallIsOngoing: this.checkIfCallIsOngoing,
 			getActiveCallSessionID: this.getActiveCallSessionID,
 			setConversationToBeDeleted: this.setConversationToBeDeleted,
+			hasKeyValue: this.hasKeyValue,
 		};
 
 		this.toastRef = React.createRef();
@@ -98,6 +104,7 @@ export class CometChatContextProvider extends React.Component {
 	}
 
 	componentDidUpdate(prevProps) {
+		
 		if (this.props.user.trim().length && prevProps.user !== this.props.user) {
 			this.getUser(this.props.user)
 				.then(user => {
@@ -346,6 +353,15 @@ export class CometChatContextProvider extends React.Component {
 	setConversationToBeDeleted = conversation => {
 		this.setState({ conversationToBeDeleted: conversation });
 	};
+
+	hasKeyValue = (data, key) => {
+
+		if(data.hasOwnProperty(key) === false || data[key] === null || data[key] === undefined) {
+			return false;
+		}
+
+		return true;
+	}
 
 	render() {
 		return (

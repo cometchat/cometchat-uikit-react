@@ -49,9 +49,9 @@ const CometChatUserPresence = props => {
 // Specifies the default values for props:
 CometChatUserPresence.defaultProps = {
 	borderWidth: "1px",
-	borderColor: "#AAA",
+	borderColor: "#eaeaea",
 	cornerRadius: "50%",
-}
+};
 
 CometChatUserPresence.propTypes = {
 	borderWidth: PropTypes.string,

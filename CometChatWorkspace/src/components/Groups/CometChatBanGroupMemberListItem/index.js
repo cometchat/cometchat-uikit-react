@@ -27,13 +27,8 @@ const CometChatBanGroupMemberListItem = (props) => {
 
     const context = useContext(CometChatContext);
 
-    const roles = {}
-    roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN] = Translator.translate("ADMINISTRATOR", props.lang);
-    roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR] = Translator.translate("MODERATOR", props.lang);
-    roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT] = Translator.translate("PARTICIPANT", props.lang);
-
     let name = props.member.name;
-    let scope = roles[props.member.scope];
+    let scope = context.roles[props.member.scope];
     let unBan = (<img src={unban} alt={Translator.translate("UNBAN", props.lang)} onClick={() => { props.actionGenerated(enums.ACTIONS["UNBAN_GROUP_MEMBER"], props.member)}} />);
 
     //if the loggedin user is moderator, don't allow unban of banned moderators or administrators
@@ -76,7 +71,6 @@ const CometChatBanGroupMemberListItem = (props) => {
                 <div css={avatarStyle()} className="avatar">
                     <CometChatAvatar user={props.member} />
                     <CometChatUserPresence
-                    widgetsettings={props.widgetsettings}
                     status={props.member.status}
                     borderColor={props.theme.borderColor.primary} />
                 </div>

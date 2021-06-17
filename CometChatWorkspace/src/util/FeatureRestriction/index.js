@@ -109,8 +109,6 @@ export class FeatureRestriction {
 	static emojis = "emojis";
 	static mentions = "mentions";
 
-	static UIKitSettings;
-
 	static isExtensionEnabled = extensionKey => {
 		return new Promise(resolve =>
 			CometChat.isExtensionEnabled(extensionKey)
@@ -119,40 +117,42 @@ export class FeatureRestriction {
 		);
 	};
 
+	UIKitSettings;
+
 	constructor(UIKitSettings) {
-		FeatureRestriction.UIKitSettings = UIKitSettings;
+		this.UIKitSettings = UIKitSettings;
 	}
 
-	isRecentChatListEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.chats));
-	isGroupListEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.groups));
-	isUserSettingsEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.userSettings));
-	isEditMessageEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.editMessage));
-	isQNAModeEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.setGroupInQnaModeByModerators));
-	isHighlightMessagesEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.highlightMessageFromModerators));
-	isJoinLeaveGroupsEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.joinOrLeaveGroup));
-	isLargerSizeEmojisEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.sendEmojisInLargerSize));
-	isGifsEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.sendGifs));
-	isShareCopyForwardMessageEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.shareCopyForwardMessage));
-	isSharedMediaEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.viewShareMedia));
-	isMessagesSoundEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.enableSoundForMessages));
-	isCallsSoundEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.enableSoundForCalls));
-	isViewingGroupMembersEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.viewGroupMembers));
-	isCallActionMessagesEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.callNotifications));
-	isGroupDeletionEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.allowDeleteGroup));
-	isChangingGroupMemberScopeEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.allowPromoteDemoteMembers));
-	isAddingGroupMembersEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.allowAddMembers));
-	isLocationSharingEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.shareLocation));
-	isGroupActionMessagesEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.joinLeaveNotifications));
-	isGroupCreationEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.groupCreation));
-	isDeleteMessageEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.deleteMessage));
-	isHideDeletedMessagesEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.hideDeletedMessages));
-	isViewProfileEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.viewProfile));
-	isMessageInPrivateEnabled = () => new Promise(resolve => resolve(FeatureRestriction.UIKitSettings.messageInPrivate));
+	isRecentChatListEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.chats));
+	isGroupListEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.groups));
+	isUserSettingsEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.userSettings));
+	isEditMessageEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.editMessage));
+	isQNAModeEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.setGroupInQnaModeByModerators));
+	isHighlightMessagesEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.highlightMessageFromModerators));
+	isJoinLeaveGroupsEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.joinOrLeaveGroup));
+	isLargerSizeEmojisEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.sendEmojisInLargerSize));
+	isGifsEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.sendGifs));
+	isShareCopyForwardMessageEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.shareCopyForwardMessage));
+	isSharedMediaEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.viewShareMedia));
+	isMessagesSoundEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.enableSoundForMessages));
+	isCallsSoundEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.enableSoundForCalls));
+	isViewingGroupMembersEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.viewGroupMembers));
+	isCallActionMessagesEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.callNotifications));
+	isGroupDeletionEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.allowDeleteGroup));
+	isChangingGroupMemberScopeEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.allowPromoteDemoteMembers));
+	isAddingGroupMembersEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.allowAddMembers));
+	isLocationSharingEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.shareLocation));
+	isGroupActionMessagesEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.joinLeaveNotifications));
+	isGroupCreationEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.groupCreation));
+	isDeleteMessageEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.deleteMessage));
+	isHideDeletedMessagesEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.hideDeletedMessages));
+	isViewProfileEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.viewProfile));
+	isMessageInPrivateEnabled = () => new Promise(resolve => resolve(this.UIKitSettings.messageInPrivate));
 
 	isCallListEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.calls_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.calls))
+				.then(response => resolve(response && this.UIKitSettings.calls))
 				.catch(error => resolve(false));
 		});
 	};
@@ -160,7 +160,7 @@ export class FeatureRestriction {
 	isUserListEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_users_list_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.users))
+				.then(response => resolve(response && this.UIKitSettings.users))
 				.catch(error => resolve(false));
 		});
 	};
@@ -168,7 +168,7 @@ export class FeatureRestriction {
 	isOneOnOneVideoCallEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.call_one_on_one_video_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.userVideoCall))
+				.then(response => resolve(response && this.UIKitSettings.userVideoCall))
 				.catch(error => resolve(false));
 		});
 	};
@@ -176,7 +176,7 @@ export class FeatureRestriction {
 	isGroupVideoCallEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.call_groups_video_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.groupVideoCall))
+				.then(response => resolve(response && this.UIKitSettings.groupVideoCall))
 				.catch(error => resolve(false));
 		});
 	};
@@ -184,7 +184,7 @@ export class FeatureRestriction {
 	isOneOnOneAudioCallEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.call_one_on_one_audio_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.userAudioCall))
+				.then(response => resolve(response && this.UIKitSettings.userAudioCall))
 				.catch(error => resolve(false));
 		});
 	};
@@ -192,7 +192,7 @@ export class FeatureRestriction {
 	isGroupAudioCallEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.call_groups_audio_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.groupAudioCall))
+				.then(response => resolve(response && this.UIKitSettings.groupAudioCall))
 				.catch(error => resolve(false));
 		});
 	};
@@ -200,7 +200,7 @@ export class FeatureRestriction {
 	isOneOnOneChatEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_one_on_one_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendMessageInOneOnOne))
+				.then(response => resolve(response && this.UIKitSettings.sendMessageInOneOnOne))
 				.catch(error => resolve(false));
 		});
 	};
@@ -208,7 +208,7 @@ export class FeatureRestriction {
 	isGroupChatEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_groups_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendMessageInGroup))
+				.then(response => resolve(response && this.UIKitSettings.sendMessageInGroup))
 				.catch(error => resolve(false));
 		});
 	};
@@ -216,7 +216,7 @@ export class FeatureRestriction {
 	isDeleteMemberMessageEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_groups_moderators_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.allowModeratorToDeleteMemberMessages))
+				.then(response => resolve(response && this.UIKitSettings.allowModeratorToDeleteMemberMessages))
 				.catch(error => resolve(false));
 		});
 	};
@@ -224,7 +224,7 @@ export class FeatureRestriction {
 	isBlockUserEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_users_block_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.blockUser))
+				.then(response => resolve(response && this.UIKitSettings.blockUser))
 				.catch(error => resolve(false));
 		});
 	};
@@ -232,7 +232,7 @@ export class FeatureRestriction {
 	isEmojisEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.emojis_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendEmojis))
+				.then(response => resolve(response && this.UIKitSettings.sendEmojis))
 				.catch(error => resolve(false));
 		});
 	};
@@ -240,7 +240,7 @@ export class FeatureRestriction {
 	isFilesEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_messages_media_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendFiles))
+				.then(response => resolve(response && this.UIKitSettings.sendFiles))
 				.catch(error => resolve(false));
 		});
 	};
@@ -248,7 +248,7 @@ export class FeatureRestriction {
 	isPhotosVideosEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_messages_media_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendPhotoVideos))
+				.then(response => resolve(response && this.UIKitSettings.sendPhotoVideos))
 				.catch(error => resolve(false));
 		});
 	};
@@ -256,7 +256,7 @@ export class FeatureRestriction {
 	isKickingGroupMembersEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_groups_kick_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.kickMember))
+				.then(response => resolve(response && this.UIKitSettings.kickMember))
 				.catch(error => resolve(false));
 		});
 	};
@@ -264,7 +264,7 @@ export class FeatureRestriction {
 	isBanningGroupMembersEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_groups_ban_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.banMember))
+				.then(response => resolve(response && this.UIKitSettings.banMember))
 				.catch(error => resolve(false));
 		});
 	};
@@ -272,7 +272,7 @@ export class FeatureRestriction {
 	isVoiceNotesEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_voice_notes_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendVoiceNotes))
+				.then(response => resolve(response && this.UIKitSettings.sendVoiceNotes))
 				.catch(error => resolve(false));
 		});
 	};
@@ -280,7 +280,7 @@ export class FeatureRestriction {
 	isTypingIndicatorsEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_typing_indicator_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendTypingIndicator))
+				.then(response => resolve(response && this.UIKitSettings.sendTypingIndicator))
 				.catch(error => resolve(false));
 		});
 	};
@@ -288,7 +288,7 @@ export class FeatureRestriction {
 	isUserPresenceEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_users_presence_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.showUserPresence))
+				.then(response => resolve(response && this.UIKitSettings.showUserPresence))
 				.catch(error => resolve(false));
 		});
 	};
@@ -296,7 +296,7 @@ export class FeatureRestriction {
 	isThreadedMessagesEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_messages_threads_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.threadedChats))
+				.then(response => resolve(response && this.UIKitSettings.threadedChats))
 				.catch(error => resolve(false));
 		});
 	};
@@ -304,7 +304,7 @@ export class FeatureRestriction {
 	isMessageRepliesEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_messages_replies_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.replyingToMessage))
+				.then(response => resolve(response && this.UIKitSettings.replyingToMessage))
 				.catch(error => resolve(false));
 		});
 	};
@@ -312,7 +312,7 @@ export class FeatureRestriction {
 	isDeliveryReceiptsEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_messages_receipts_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.showReadDeliveryReceipts))
+				.then(response => resolve(response && this.UIKitSettings.showReadDeliveryReceipts))
 				.catch(error => resolve(false));
 		});
 	};
@@ -320,7 +320,7 @@ export class FeatureRestriction {
 	isLiveReactionsEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.live_reactions_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendLiveReaction))
+				.then(response => resolve(response && this.UIKitSettings.sendLiveReaction))
 				.catch(error => resolve(false));
 		});
 	};
@@ -328,7 +328,7 @@ export class FeatureRestriction {
 	isPublicGroupEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_groups_public_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.publicGroup))
+				.then(response => resolve(response && this.UIKitSettings.publicGroup))
 				.catch(error => resolve(false));
 		});
 	};
@@ -336,7 +336,7 @@ export class FeatureRestriction {
 	isPrivateGroupEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_groups_private_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.privateGroup))
+				.then(response => resolve(response && this.UIKitSettings.privateGroup))
 				.catch(error => resolve(false));
 		});
 	};
@@ -344,7 +344,7 @@ export class FeatureRestriction {
 	isPasswordGroupEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_groups_password_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.passwordGroup))
+				.then(response => resolve(response && this.UIKitSettings.passwordGroup))
 				.catch(error => resolve(false));
 		});
 	};
@@ -352,7 +352,7 @@ export class FeatureRestriction {
 	isUnreadCountEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_messages_unread_count_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.unreadCount))
+				.then(response => resolve(response && this.UIKitSettings.unreadCount))
 				.catch(error => resolve(false));
 		});
 	};
@@ -360,7 +360,7 @@ export class FeatureRestriction {
 	isUserSearchEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_users_search_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.searchUsers))
+				.then(response => resolve(response && this.UIKitSettings.searchUsers))
 				.catch(error => resolve(false));
 		});
 	};
@@ -368,7 +368,7 @@ export class FeatureRestriction {
 	isGroupSearchEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_groups_search_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.searchGroups))
+				.then(response => resolve(response && this.UIKitSettings.searchGroups))
 				.catch(error => resolve(false));
 		});
 	};
@@ -376,7 +376,7 @@ export class FeatureRestriction {
 	isMessageSearchEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_messages_search_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.searchMessages))
+				.then(response => resolve(response && this.UIKitSettings.searchMessages))
 				.catch(error => resolve(false));
 		});
 	};
@@ -384,7 +384,7 @@ export class FeatureRestriction {
 	isCallRecordingEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.call_recording_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.callRecording))
+				.then(response => resolve(response && this.UIKitSettings.callRecording))
 				.catch(error => resolve(false));
 		});
 	};
@@ -392,7 +392,7 @@ export class FeatureRestriction {
 	isCallLiveStreamingEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.call_live_streaming_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.callLiveStreaming))
+				.then(response => resolve(response && this.UIKitSettings.callLiveStreaming))
 				.catch(error => resolve(false));
 		});
 	};
@@ -400,7 +400,7 @@ export class FeatureRestriction {
 	isCallTranscriptEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.call_transcript_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.callTranscription))
+				.then(response => resolve(response && this.UIKitSettings.callTranscription))
 				.catch(error => resolve(false));
 		});
 	};
@@ -408,7 +408,7 @@ export class FeatureRestriction {
 	isMessageHistoryEnabled = () => {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.chat_messages_history_enabled)
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.messageHistory))
+				.then(response => resolve(response && this.UIKitSettings.messageHistory))
 				.catch(error => resolve(false));
 		});
 	};
@@ -417,7 +417,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.message_translation_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.messageTranslation))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.messageTranslation))
+				.then(response => resolve(response && this.UIKitSettings.messageTranslation))
 				.catch(error => resolve(false));
 		});
 	};
@@ -426,7 +426,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.reactions_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.reactions))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendMessageReaction))
+				.then(response => resolve(response && this.UIKitSettings.sendMessageReaction))
 				.catch(error => resolve(false));
 		});
 	};
@@ -435,7 +435,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.collaboration_whiteboard_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.collaborationWhiteboard))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.collaborativeWhiteboard))
+				.then(response => resolve(response && this.UIKitSettings.collaborativeWhiteboard))
 				.catch(error => resolve(false));
 		});
 	};
@@ -444,7 +444,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.collaboration_document_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.collaborationDocument))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.collaborativeDocument))
+				.then(response => resolve(response && this.UIKitSettings.collaborativeDocument))
 				.catch(error => resolve(false));
 		});
 	};
@@ -453,7 +453,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.stickers_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.sticker))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sendStickers))
+				.then(response => resolve(response && this.UIKitSettings.sendStickers))
 				.catch(error => resolve(false));
 		});
 	};
@@ -462,7 +462,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.email_replies_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.emailReplies))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.emailReplies))
+				.then(response => resolve(response && this.UIKitSettings.emailReplies))
 				.catch(error => resolve(false));
 		});
 	};
@@ -471,7 +471,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.polls_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.polls))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.polls))
+				.then(response => resolve(response && this.UIKitSettings.polls))
 				.catch(error => resolve(false));
 		});
 	};
@@ -480,7 +480,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.smart_replies_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.smartReplies))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.smartReplies))
+				.then(response => resolve(response && this.UIKitSettings.smartReplies))
 				.catch(error => resolve(false));
 		});
 	};
@@ -489,7 +489,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.thumbnail_generation_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.thumbnailGeneration))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.thumbnailGeneration))
+				.then(response => resolve(response && this.UIKitSettings.thumbnailGeneration))
 				.catch(error => resolve(false));
 		});
 	};
@@ -498,7 +498,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.link_preview_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.linkPreview))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.linkPreview))
+				.then(response => resolve(response && this.UIKitSettings.linkPreview))
 				.catch(error => resolve(false));
 		});
 	};
@@ -507,7 +507,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.messages_saved_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.saveMessages))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.saveMessages))
+				.then(response => resolve(response && this.UIKitSettings.saveMessages))
 				.catch(error => resolve(false));
 		});
 	};
@@ -516,7 +516,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.messages_pinned_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.pinMessages))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.pinMessages))
+				.then(response => resolve(response && this.UIKitSettings.pinMessages))
 				.catch(error => resolve(false));
 		});
 	};
@@ -525,7 +525,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.rich_media_preview_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.richMediaPreview))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.richMediaPreview))
+				.then(response => resolve(response && this.UIKitSettings.richMediaPreview))
 				.catch(error => resolve(false));
 		});
 	};
@@ -534,7 +534,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.voice_transcription_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.voiceTranscription))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.voiceTranscription))
+				.then(response => resolve(response && this.UIKitSettings.voiceTranscription))
 				.catch(error => resolve(false));
 		});
 	};
@@ -543,7 +543,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.mentions_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.mentions))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.mentions))
+				.then(response => resolve(response && this.UIKitSettings.mentions))
 				.catch(error => resolve(false));
 		});
 	};
@@ -552,7 +552,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_xss_filter_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.xssFilter))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.xssFilter))
+				.then(response => resolve(response && this.UIKitSettings.xssFilter))
 				.catch(error => resolve(false));
 		});
 	};
@@ -561,7 +561,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_profanity_filter_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.profanityFilter))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.profanityFilter))
+				.then(response => resolve(response && this.UIKitSettings.profanityFilter))
 				.catch(error => resolve(false));
 		});
 	};
@@ -570,7 +570,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_image_moderation_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.imageModeration))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.imageModeration))
+				.then(response => resolve(response && this.UIKitSettings.imageModeration))
 				.catch(error => resolve(false));
 		});
 	};
@@ -579,7 +579,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_data_masking_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.dataMasking))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.dataMasking))
+				.then(response => resolve(response && this.UIKitSettings.dataMasking))
 				.catch(error => resolve(false));
 		});
 	};
@@ -588,7 +588,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_malware_scanner_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.malwareScanner))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.malwareScanner))
+				.then(response => resolve(response && this.UIKitSettings.malwareScanner))
 				.catch(error => resolve(false));
 		});
 	};
@@ -597,7 +597,7 @@ export class FeatureRestriction {
 		return new Promise(resolve => {
 			CometChat.isFeatureEnabled(FeatureRestriction.moderation_sentiment_analysis_enabled)
 				.then(response => response && FeatureRestriction.isExtensionEnabled(FeatureRestriction.sentimentAnalysis))
-				.then(response => resolve(response && FeatureRestriction.UIKitSettings.sentimentAnalysis))
+				.then(response => resolve(response && this.UIKitSettings.sentimentAnalysis))
 				.catch(error => resolve(false));
 		});
 	};
@@ -611,7 +611,7 @@ export class FeatureRestriction {
 
 	//                 return response
 	//                     && FeatureRestriction.isExtensionEnabled(FeatureRestriction.sentimentAnalysis)
-	//                     && FeatureRestriction.UIKitSettings.inflightMessageModeration;
+	//                     && this.UIKitSettings.inflightMessageModeration;
 	//             })
 	//             .catch(error => resolve(false));
 	//     });
