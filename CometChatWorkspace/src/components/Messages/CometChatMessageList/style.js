@@ -67,7 +67,7 @@ export const decoratorMessageTxtStyle = (props) => {
         margin: "0",
         height: "36px",
         color: `${props.theme.color.secondary}`,
-        fontSize: "24px!important",
+        fontSize: "20px!important",
         fontWeight: "600",
         lineHeight: "30px",
     }

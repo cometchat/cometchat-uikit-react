@@ -1,9 +1,5 @@
 export const modalWrapperStyle = (props) => {
 
-    const show = (props.open) ? {
-        display: "block",
-    } : {};
-
     const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
 
     return {
@@ -21,8 +17,7 @@ export const modalWrapperStyle = (props) => {
         margin: "0 auto",
         boxShadow: "rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
         borderRadius: "12px",
-        display: "none",
-        ...show,
+        display: "block",
         [mq[0]]: {
             width: "100%",
             height: "100%"
@@ -71,11 +66,22 @@ export const modalCaptionStyle = (dir) => {
     }
 }
 
+export const modalErrorStyle = context => {
+	return {
+		fontSize: "12px",
+		color: `${context.theme.color.red}`,
+		textAlign: "center",
+		padding: "8px 0",
+		width: "100%",
+        height: "31px"
+	};
+};
+
 export const modalListStyle = (props) => {
 
     return {
         width: "100%",
-        height: "calc(100% - 35px)",
+        height: "calc(100% - 48px)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-start",
@@ -94,7 +100,6 @@ export const listHeaderStyle = (props) => {
         padding: "8px",
         width: "100%",
         border: `1px solid ${props.theme.borderColor.primary}`,
-
     }
 }
 
@@ -108,7 +113,6 @@ export const listStyle = (props) => {
         width: "100%",
         height: "calc(100% - 33px)",
         overflowY: "auto",
-        border: `1px solid ${props.theme.borderColor.primary}`,
     }
 }
 

@@ -9,3 +9,5 @@ export { CometChatAddGroupMemberListItem } from "./CometChatAddGroupMemberListIt
 export { CometChatBanGroupMemberList } from "./CometChatBanGroupMemberList";
 export { CometChatBanGroupMemberListItem } from "./CometChatBanGroupMemberListItem";
 export { CometChatGroupListWithMessages } from "./CometChatGroupListWithMessages";
+export { CometChatTransferOwnershipMemberList } from "./CometChatTransferOwnershipMemberList";
+export { CometChatTransferOwnershipMemberListItem } from "./CometChatTransferOwnershipMemberListItem";

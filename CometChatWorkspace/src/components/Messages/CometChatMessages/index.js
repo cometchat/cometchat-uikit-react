@@ -23,6 +23,7 @@ import {
 
 import {CometChatUserDetails} from "../../Users";
 import {CometChatGroupDetails} from "../../Groups";
+import { CometChatToastNotification } from "../../Shared";
 
 import {CometChatContextProvider, CometChatContext} from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
@@ -72,22 +73,21 @@ class CometChatMessages extends React.PureComponent {
 			enableHideDeletedMessages: false,
 		};
 
-		CometChat.getLoggedinUser()
-			.then(user => (this.loggedInUser = user))
-			.catch(error => {
-				console.error(error);
-			});
-
 		this.contextProviderRef = React.createRef();
 		this.composerRef = React.createRef();
 		this.messageListRef = React.createRef();
 		this.outgoingCallRef = React.createRef();
 		this.outgoingDirectCallRef = React.createRef();
+		this.toastRef = React.createRef();
 
 		this.reactionName = "heart";
 	}
 
 	componentDidMount() {
+		CometChat.getLoggedinUser()
+			.then(user => (this.loggedInUser = user))
+			.catch(error => this.errorHandler("SOMETHING_WRONG"));
+
 		this.type = this.getContext().type;
 		this.item = this.getContext().item;
 
@@ -115,7 +115,7 @@ class CometChatMessages extends React.PureComponent {
 			};
 
 			if (ifChatWindowChanged() === true) {
-				this.setState({messageList: [], scrollToBottom: true, messageToBeEdited: "", threadmessageview: false, viewdetailscreen: false});
+				this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "", threadmessageview: false, viewdetailscreen: false });
 			}
 		}
 
@@ -129,7 +129,7 @@ class CometChatMessages extends React.PureComponent {
 		this.enableHideDeletedMessages();
 
 		if (prevProps.lang !== this.props.lang) {
-			this.setState({lang: this.props.lang});
+			this.setState({ lang: this.props.lang });
 		}
 
 		/**
@@ -151,6 +151,7 @@ class CometChatMessages extends React.PureComponent {
 					case enums.ACTIONS["MESSAGE_SENT"]:
 					case enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"]: {
 						this.messageSent(customMessage);
+						this.getContext().setLastMessage(customMessage[0]);
 						setTimeout(() => {
 							this.getContext().setDirectCallCustomMessage({}, "");
 						}, 1000);
@@ -175,12 +176,12 @@ class CometChatMessages extends React.PureComponent {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableGroupActionMessages) {
-					this.setState({enableGroupActionMessages: response});
+					this.setState({ enableGroupActionMessages: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableGroupActionMessages !== false) {
-					this.setState({enableGroupActionMessages: false});
+					this.setState({ enableGroupActionMessages: false });
 				}
 			});
 	};
@@ -193,12 +194,12 @@ class CometChatMessages extends React.PureComponent {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableCallActionMessages) {
-					this.setState({enableCallActionMessages: response});
+					this.setState({ enableCallActionMessages: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableCallActionMessages !== false) {
-					this.setState({enableCallActionMessages: false});
+					this.setState({ enableCallActionMessages: false });
 				}
 			});
 	};
@@ -208,12 +209,12 @@ class CometChatMessages extends React.PureComponent {
 			.FeatureRestriction.isOneOnOneChatEnabled()
 			.then(response => {
 				if (response !== this.state.enableSendingOneOnOneMessage) {
-					this.setState({enableSendingOneOnOneMessage: response});
+					this.setState({ enableSendingOneOnOneMessage: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableSendingOneOnOneMessage !== false) {
-					this.setState({enableSendingOneOnOneMessage: false});
+					this.setState({ enableSendingOneOnOneMessage: false });
 				}
 			});
 	};
@@ -223,12 +224,12 @@ class CometChatMessages extends React.PureComponent {
 			.FeatureRestriction.isGroupChatEnabled()
 			.then(response => {
 				if (response !== this.state.enableSendingGroupMessage) {
-					this.setState({enableSendingGroupMessage: response});
+					this.setState({ enableSendingGroupMessage: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableSendingGroupMessage !== false) {
-					this.setState({enableSendingGroupMessage: false});
+					this.setState({ enableSendingGroupMessage: false });
 				}
 			});
 	};
@@ -238,12 +239,12 @@ class CometChatMessages extends React.PureComponent {
 			.FeatureRestriction.isHideDeletedMessagesEnabled()
 			.then(response => {
 				if (response !== this.state.enableHideDeletedMessages) {
-					this.setState({enableHideDeletedMessages: response});
+					this.setState({ enableHideDeletedMessages: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableHideDeletedMessages !== false) {
-					this.setState({enableHideDeletedMessages: false});
+					this.setState({ enableHideDeletedMessages: false });
 				}
 			});
 	};
@@ -281,10 +282,12 @@ class CometChatMessages extends React.PureComponent {
 			}
 			case enums.ACTIONS["MESSAGE_COMPOSED"]: {
 				this.appendMessage(messages);
-				this.getContext().setLastMessage(messages[0]);
 				break;
 			}
 			case enums.ACTIONS["MESSAGE_SENT"]:
+				this.messageSent(messages);
+				this.getContext().setLastMessage(messages[0]);
+				break;
 			case enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"]:
 				this.messageSent(messages);
 				break;
@@ -416,10 +419,28 @@ class CometChatMessages extends React.PureComponent {
 			case enums.ACTIONS["SCOPECHANGE_GROUPMEMBER_SUCCESS"]:
 				this.appendMemberScopeChangedMessage(messages);
 				break;
+			case enums.ACTIONS["ERROR"]:
+				this.errorHandler(key);
+				break;
+			case enums.ACTIONS["INFO"]:
+				this.infoMessageHandler(key);
+				break;
 			default:
 				break;
 		}
 	};
+
+	errorHandler = errorCode => {
+		if (typeof this.toastRef.setError === "function") {
+			this.toastRef?.setError(errorCode);
+		}
+	};
+
+	infoMessageHandler = (infoCode) => {
+		if (typeof this.toastRef.setInfo === "function") {
+			this.toastRef?.setInfo(infoCode);
+		}
+	}
 
 	appendMemberAddedMessage = messages => {
 		//if group action messages are disabled
@@ -431,17 +452,17 @@ class CometChatMessages extends React.PureComponent {
 		messages.forEach(eachMember => {
 			const sentAt = (new Date() / 1000) | 0;
 			const messageObj = {
-				receiver: {...this.context.item},
+				receiver: { ...this.context.item },
 				receiverId: this.context.item.guid,
 				receiverType: CometChat.RECEIVER_TYPE.GROUP,
-				sender: {...this.loggedInUser},
+				sender: { ...this.loggedInUser },
 				category: CometChat.CATEGORY_ACTION,
 				type: CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER,
 				sentAt: sentAt,
 				action: CometChat.ACTION_TYPE.MEMBER_ADDED,
-				actionBy: {...this.loggedInUser},
-				actionOn: {...eachMember},
-				actionFor: {...this.context.item},
+				actionBy: { ...this.loggedInUser },
+				actionOn: { ...eachMember },
+				actionFor: { ...this.context.item },
 			};
 
 			messageList.push(messageObj);
@@ -460,16 +481,16 @@ class CometChatMessages extends React.PureComponent {
 		messages.forEach(eachMember => {
 			const sentAt = (new Date() / 1000) | 0;
 			const messageObj = {
-				receiver: {...this.context.item},
+				receiver: { ...this.context.item },
 				receiverId: this.context.item.guid,
 				receiverType: CometChat.RECEIVER_TYPE.GROUP,
-				sender: {...this.loggedInUser},
+				sender: { ...this.loggedInUser },
 				category: CometChat.CATEGORY_ACTION,
 				type: CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER,
 				sentAt: sentAt,
 				action: CometChat.ACTION_TYPE.MEMBER_UNBANNED,
-				actionBy: {...this.loggedInUser},
-				actionOn: {...eachMember},
+				actionBy: { ...this.loggedInUser },
+				actionOn: { ...eachMember },
 			};
 
 			messageList.push(messageObj);
@@ -491,16 +512,16 @@ class CometChatMessages extends React.PureComponent {
 
 			const sentAt = (new Date() / 1000) | 0;
 			const messageObj = {
-				receiver: {...this.context.item},
+				receiver: { ...this.context.item },
 				receiverId: this.context.item.guid,
 				receiverType: CometChat.RECEIVER_TYPE.GROUP,
-				sender: {...this.loggedInUser},
+				sender: { ...this.loggedInUser },
 				category: CometChat.CATEGORY_ACTION,
 				type: CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER,
 				sentAt: sentAt,
 				action: CometChat.ACTION_TYPE.MEMBER_SCOPE_CHANGED,
-				actionBy: {...this.loggedInUser},
-				actionOn: {...eachMember},
+				actionBy: { ...this.loggedInUser },
+				actionOn: { ...eachMember },
 				newScope: newScope,
 			};
 			messageList.push(messageObj);
@@ -510,17 +531,17 @@ class CometChatMessages extends React.PureComponent {
 	};
 
 	toggleOriginalImageView = message => {
-		this.setState({viewOriginalImage: message});
+		this.setState({ viewOriginalImage: message });
 	};
 
 	toggleDetailView = () => {
 		let viewdetail = !this.state.viewdetailscreen;
-		this.setState({viewdetailscreen: viewdetail, threadmessageview: false});
+		this.setState({ viewdetailscreen: viewdetail, threadmessageview: false });
 	};
 
 	viewThreadedMessage = parentMessage => {
-		const message = {...parentMessage};
-		const threaditem = {...this.getContext().item};
+		const message = { ...parentMessage };
+		const threaditem = { ...this.getContext().item };
 		this.setState({
 			threadmessageview: true,
 			threadmessageparent: message,
@@ -540,25 +561,24 @@ class CometChatMessages extends React.PureComponent {
 		}
 
 		this.updateReplyCount(messages);
-		this.getContext().setLastMessage(messages[0]);
 	};
 
 	closeThreadedMessage = () => {
-		this.setState({threadmessageview: false, viewdetailscreen: false});
+		this.setState({ threadmessageview: false, viewdetailscreen: false });
 	};
 
 	/*
-  Updating parent message of threaded conversation, when the message is edited or deleted
-  */
+	Updating parent message of threaded conversation, when the message is edited or deleted
+	*/
 	updateParentThreadedMessage = (message, action) => {
 		if (this.state.threadmessageview === false || message.id !== this.state.threadmessageparent.id) {
 			return false;
 		}
 
 		if (action === "delete") {
-			this.setState({threadmessageparent: {...message}, threadmessageview: false});
+			this.setState({ threadmessageparent: { ...message }, threadmessageview: false });
 		} else {
-			this.setState({threadmessageparent: {...message}});
+			this.setState({ threadmessageparent: { ...message } });
 		}
 	};
 
@@ -574,11 +594,11 @@ class CometChatMessages extends React.PureComponent {
 			receiverType = CometChat.RECEIVER_TYPE.GROUP;
 		}
 
-		return {receiverId: receiverId, receiverType: receiverType};
+		return { receiverId: receiverId, receiverType: receiverType };
 	};
 
 	audioCall = () => {
-		const {receiverId, receiverType} = this.getReceiverDetails();
+		const { receiverId, receiverType } = this.getReceiverDetails();
 		const call = new CometChat.Call(receiverId, CometChat.CALL_TYPE.AUDIO, receiverType);
 		CometChat.initiateCall(call)
 			.then(outgoingCall => {
@@ -590,16 +610,13 @@ class CometChatMessages extends React.PureComponent {
 					this.appendCallMessage(outgoingCall);
 				}
 			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
-			});
+			.catch(error => this.errorHandler("SOMETHING_WRONG"));
 	};
 
 	videoCall = () => {
 		/*
-    Direct calling for groups
-    */
+		Direct calling for groups
+		*/
 		if (this.getContext().type === CometChat.RECEIVER_TYPE.GROUP) {
 			if (Object.keys(this.props.widgetsettings).length) {
 				this.props.actionGenerated(enums.ACTIONS["START_DIRECT_CALL"]);
@@ -611,9 +628,9 @@ class CometChatMessages extends React.PureComponent {
 		}
 
 		/*
-    Default calling for one-on-one
-    */
-		const {receiverId, receiverType} = this.getReceiverDetails();
+		Default calling for one-on-one
+		*/
+		const { receiverId, receiverType } = this.getReceiverDetails();
 		const call = new CometChat.Call(receiverId, CometChat.CALL_TYPE.VIDEO, receiverType);
 		CometChat.initiateCall(call)
 			.then(outgoingCall => {
@@ -624,20 +641,17 @@ class CometChatMessages extends React.PureComponent {
 					this.outgoingCallRef.startCall(outgoingCall);
 				}
 			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
-			});
+			.catch(error => this.errorHandler("SOMETHING_WRONG"));
 	};
 
 	toggleReaction = flag => {
-		this.setState({liveReaction: flag});
+		this.setState({ liveReaction: flag });
 	};
 
 	showReaction = reaction => {
 		if (reaction.metadata.type === enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"]) {
 			this.reactionName = reaction.metadata.reaction;
-			this.setState({liveReaction: true});
+			this.setState({ liveReaction: true });
 		}
 	};
 
@@ -647,7 +661,7 @@ class CometChatMessages extends React.PureComponent {
 			.then(deletedMessage => {
 				//remove edit preview when message is deleted
 				if (deletedMessage.id === this.state.messageToBeEdited.id) {
-					this.setState({messageToBeEdited: ""});
+					this.setState({ messageToBeEdited: "" });
 				}
 
 				const messageList = [...this.state.messageList];
@@ -660,14 +674,11 @@ class CometChatMessages extends React.PureComponent {
 				this.removeMessages([deletedMessage]);
 				this.updateParentThreadedMessage(deletedMessage, "delete");
 			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
-			});
+			.catch(error => this.errorHandler("SOMETHING_WRONG"));
 	};
 
 	editMessage = message => {
-		this.setState({messageToBeEdited: message, replyPreview: null});
+		this.setState({ messageToBeEdited: message, replyPreview: null });
 	};
 
 	messageEdited = message => {
@@ -689,27 +700,28 @@ class CometChatMessages extends React.PureComponent {
 		}
 	};
 
-	messageSent = message => {
+	messageSent = messages => {
+		const message = messages[0];
 		const messageList = [...this.state.messageList];
 
 		let messageKey = messageList.findIndex(m => m._id === message._id);
 		if (messageKey > -1) {
-			const newMessageObj = {...message};
+			const newMessageObj = { ...message };
 
 			messageList.splice(messageKey, 1, newMessageObj);
 			messageList.sort((a, b) => a.id - b.id);
-			this.setState({messageList: messageList, scrollToBottom: true});
+			this.setState({ messageList: messageList, scrollToBottom: true });
 		}
 	};
 
 	refreshingMessages = () => {
-		this.setState({messageList: [], messageToBeEdited: "", replyPreview: null, liveReaction: false, messageToReact: null});
+		this.setState({ messageList: [], messageToBeEdited: "", replyPreview: null, liveReaction: false, messageToReact: null });
 		this.getContext().clearUnreadMessages();
 	};
 
 	messageRefreshed = messages => {
 		const messageList = [...messages];
-		this.setState({messageList: messageList, scrollToBottom: true});
+		this.setState({ messageList: messageList, scrollToBottom: true });
 	};
 
 	newMessagesArrived = newMessage => {
@@ -741,7 +753,7 @@ class CometChatMessages extends React.PureComponent {
 		this.getContext().clearUnreadMessages();
 		//this.props.actionGenerated("unreadMessages", []);
 
-		this.setState({messageList: messageList, scrollToBottom: scrollToBottom});
+		this.setState({ messageList: messageList, scrollToBottom: scrollToBottom });
 	};
 
 	jumpToMessages = () => {
@@ -775,36 +787,36 @@ class CometChatMessages extends React.PureComponent {
 			if (this.state.enableHideDeletedMessages) {
 				messagelist.splice(messageKey, 1);
 			} else {
-				let messageObj = {...messagelist[messageKey]};
+				let messageObj = { ...messagelist[messageKey] };
 				let newMessageObj = Object.assign({}, messageObj, deletedMessage);
 
 				messagelist.splice(messageKey, 1, newMessageObj);
 			}
 
-			this.setState({messageList: messagelist, scrollToBottom: false});
+			this.setState({ messageList: messagelist, scrollToBottom: false });
 		}
 	};
 
 	//messages are fetched from backend
 	prependMessages = messages => {
 		const messageList = [...messages, ...this.state.messageList];
-		this.setState({messageList: messageList, scrollToBottom: false});
+		this.setState({ messageList: messageList, scrollToBottom: false });
 	};
 
 	//message is received or composed & sent
 	appendMessage = message => {
 		let messages = [...this.state.messageList, ...message];
-		this.setState({messageList: messages, scrollToBottom: true});
+		this.setState({ messageList: messages, scrollToBottom: true });
 	};
 
 	//message status is updated
 	updateMessages = messages => {
-		this.setState({messageList: messages, scrollToBottom: false});
+		this.setState({ messageList: messages, scrollToBottom: false });
 	};
 
 	groupUpdated = (action, message, group, options) => {
 		//if group action messages are disabled
-		if (this.state.enableGroupActionMessages === false) {
+		if (this.state.enableGroupActionMessages === true) {
 			this.appendMessage([message]);
 		}
 
@@ -829,10 +841,10 @@ class CometChatMessages extends React.PureComponent {
 			const messageObj = messageList[messageKey];
 			let replyCount = messageObj.hasOwnProperty("replyCount") ? messageObj.replyCount : 0;
 			replyCount = replyCount + 1;
-			const newMessageObj = Object.assign({}, messageObj, {replyCount: replyCount});
+			const newMessageObj = Object.assign({}, messageObj, { replyCount: replyCount });
 
 			messageList.splice(messageKey, 1, newMessageObj);
-			this.setState({messageList: messageList, scrollToBottom: false});
+			this.setState({ messageList: messageList, scrollToBottom: false });
 		}
 	};
 
@@ -851,20 +863,20 @@ class CometChatMessages extends React.PureComponent {
 				if (response === true) {
 					const smartReplyData = checkMessageForExtensionsData(message, "smart-reply");
 					if (smartReplyData && smartReplyData.hasOwnProperty("error") === false) {
-						this.setState({replyPreview: message});
+						this.setState({ replyPreview: message });
 					} else {
-						this.setState({replyPreview: null});
+						this.setState({ replyPreview: null });
 					}
 				}
 			});
 	};
 
 	clearEditPreview = () => {
-		this.setState({messageToBeEdited: ""});
+		this.setState({ messageToBeEdited: "" });
 	};
 
 	reactToMessage = message => {
-		this.setState({messageToReact: message});
+		this.setState({ messageToReact: message });
 
 		if (this.composerRef) {
 			this.composerRef.toggleEmojiPicker();
@@ -1016,6 +1028,7 @@ class CometChatMessages extends React.PureComponent {
 					{messageComposer}
 					{newMessageIndicator}
 				</div>
+				<CometChatToastNotification ref={el => (this.toastRef = el)} />
 				{originalImageView}
 				{detailScreen}
 				{threadMessageView}
@@ -1028,8 +1041,8 @@ class CometChatMessages extends React.PureComponent {
 
 		let messageWrapper = messageComponent;
 		/*
-    If used as a standalone component
-    **/
+		If used as a standalone component
+		**/
 		if (this.props._parent.trim().length === 0) {
 			messageWrapper = (
 				<CometChatContextProvider ref={el => (this.contextProviderRef = el)} user={this.props.chatWithUser} group={this.props.chatWithGroup}>

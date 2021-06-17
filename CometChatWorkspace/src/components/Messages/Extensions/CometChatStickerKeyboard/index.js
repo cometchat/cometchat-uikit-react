@@ -102,25 +102,13 @@ class CometChatStickerKeyboard extends React.PureComponent {
 
         }).catch(error => {
             
-            this.decoratorMessage = Translator.translate("NO_STICKERS_FOUND", this.props.lang);
+            this.decoratorMessage = Translator.translate("SOMETHING_WRONG", this.props.lang);
             this.setState({ "activestickerlist": [], "stickerset": {} });
-
-            let errorCode = "ERROR";
-            if (error.hasOwnProperty("code")) {
-
-                errorCode = error.code;
-                if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"]
-                    && error.hasOwnProperty("details")
-                    && error.details.hasOwnProperty("code")) {
-                    errorCode = error.details.code;
-                }
-            }
-            this.context.setToastMessage("error", errorCode);
         });
     }
 
     sendStickerMessage = (stickerItem) => {
-        this.props.actionGenerated("sendSticker", stickerItem);
+        this.props.actionGenerated(enums.ACTIONS["SEND_STICKER"], stickerItem);
     }
 
     onStickerSetClicked = (sectionItem) => {
@@ -176,12 +164,16 @@ class CometChatStickerKeyboard extends React.PureComponent {
             }
 
             stickers = (
-                <React.Fragment>
-                    <div css={stickerCloseStyle(closeIcon)} className="stickers__close" onClick={() => this.props.actionGenerated("closeSticker")}></div>
-                    <div css={stickerListStyle(this.props)} className="stickers__list">{activeStickerList}</div>
-                    <div css={stickerSectionListStyle(this.props)} className="stickers__sections">{sectionItems}</div>
-                </React.Fragment>
-            );
+							<React.Fragment>
+								<div css={stickerCloseStyle(closeIcon)} className="stickers__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_STICKER_KEYBOARD"])}></div>
+								<div css={stickerListStyle(this.props)} className="stickers__list">
+									{activeStickerList}
+								</div>
+								<div css={stickerSectionListStyle(this.props)} className="stickers__sections">
+									{sectionItems}
+								</div>
+							</React.Fragment>
+						);
         }
 
         return (

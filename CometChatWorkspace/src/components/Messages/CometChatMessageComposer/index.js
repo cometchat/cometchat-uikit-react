@@ -90,15 +90,14 @@ class CometChatMessageComposer extends React.PureComponent {
 			enableCollaborativeDocument: false,
 			enableCollaborativeWhiteboard: false,
 		};
-
-		CometChat.getLoggedinUser()
-			.then(user => (this.loggedInUser = user))
-			.catch(error => {
-				console.error(error);
-			});
 	}
 
 	componentDidMount() {
+
+		CometChat.getLoggedinUser()
+			.then(user => (this.loggedInUser = user))
+			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
+
 		this.item = this.context.type === CometChat.ACTION_TYPE.TYPE_USER || this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP ? this.context.item : null;
 		this.enableLiveReaction();
 		this.enablePolls();
@@ -532,25 +531,11 @@ class CometChatMessageComposer extends React.PureComponent {
 		return {receiverId: receiverId, receiverType: receiverType};
 	};
 
-	getConversationId = () => {
-		let conversationId = null;
-
-		if (this.context.type === CometChat.RECEIVER_TYPE.USER) {
-			const users = [this.loggedInUser.uid, this.context.item.uid];
-			conversationId = users.sort().join("_user_");
-		} else if (this.context.type === CometChat.RECEIVER_TYPE.GROUP) {
-			conversationId = `group_${this.context.item.guid}`;
-		}
-
-		return conversationId;
-	};
-
 	sendMediaMessage = (messageInput, messageType) => {
 		this.toggleFilePicker();
 		this.endTyping(null, null);
 
 		const {receiverId, receiverType} = this.getReceiverDetails();
-		const conversationId = this.getConversationId();
 
 		let mediaMessage = new CometChat.MediaMessage(receiverId, messageInput, messageType, receiverType);
 		if (this.props.parentMessageId) {
@@ -560,7 +545,6 @@ class CometChatMessageComposer extends React.PureComponent {
 		mediaMessage.setSender(this.loggedInUser);
 		mediaMessage.setReceiver(this.context.type);
 		mediaMessage.setType(messageType);
-		mediaMessage.setConversationId(conversationId);
 		mediaMessage.setData({
 			type: messageType,
 			category: CometChat.CATEGORY_MESSAGE,
@@ -576,14 +560,11 @@ class CometChatMessageComposer extends React.PureComponent {
 		CometChat.sendMessage(mediaMessage)
 			.then(message => {
 				const newMessageObj = {...message, _id: mediaMessage._id};
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
+				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], [newMessageObj]);
 			})
 			.catch(error => {
 				const newMessageObj = {...mediaMessage, error: error};
-				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
-
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.context.setToastMessage("error", errorCode);
+				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], [newMessageObj]);
 			});
 	};
 
@@ -614,8 +595,6 @@ class CometChatMessageComposer extends React.PureComponent {
 		let {receiverId, receiverType} = this.getReceiverDetails();
 		let messageInput = this.state.messageInput.trim();
 
-		const conversationId = this.getConversationId();
-
 		let textMessage = new CometChat.TextMessage(receiverId, messageInput, receiverType);
 		if (this.props.parentMessageId) {
 			textMessage.setParentMessageId(this.props.parentMessageId);
@@ -623,7 +602,6 @@ class CometChatMessageComposer extends React.PureComponent {
 		textMessage.setSender(this.loggedInUser);
 		textMessage.setReceiver(this.context.type);
 		textMessage.setText(messageInput);
-		textMessage.setConversationId(conversationId);
 		textMessage._composedAt = getUnixTimestamp();
 		textMessage._id = ID();
 
@@ -636,21 +614,14 @@ class CometChatMessageComposer extends React.PureComponent {
 		CometChat.sendMessage(textMessage)
 			.then(message => {
 				const newMessageObj = {...message, _id: textMessage._id};
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
+				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], [newMessageObj]);
 			})
 			.catch(error => {
 				const newMessageObj = {...textMessage, error: error};
-				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
+				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], [newMessageObj]);
 
-				let errorCode = "ERROR";
-				if (error && error.hasOwnProperty("code")) {
-					errorCode = error.code;
-					if (errorCode === "ERR_GUID_NOT_FOUND") {
-						this.context.setToastMessage("error", errorCode);
-						this.context.setDeletedGroupId(this.context.item.guid);
-					} else {
-						this.context.setToastMessage("error", errorCode);
-					}
+				if (error && error.hasOwnProperty("code") && error.code === "ERR_GUID_NOT_FOUND") {
+					//this.context.setDeletedGroupId(this.context.item.guid);
 				}
 			});
 	};
@@ -676,12 +647,9 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		CometChat.editMessage(textMessage)
 			.then(message => {
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], {...message});
+				this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], { ...message });
 			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.context.setToastMessage("error", errorCode);
-			});
+			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
 	};
 
 	closeEditPreview = () => {
@@ -707,7 +675,7 @@ class CometChatMessageComposer extends React.PureComponent {
 		CometChat.startTyping(typingNotification);
 
 		this.isTyping = setTimeout(() => {
-			this.endTyping(null, null);
+			this.endTyping(null, typingMetadata);
 		}, typingInterval);
 	};
 
@@ -749,57 +717,39 @@ class CometChatMessageComposer extends React.PureComponent {
 	};
 
 	toggleCollaborativeDocument = () => {
-		const {receiverId, receiverType} = this.getReceiverDetails();
 
+		const {receiverId, receiverType} = this.getReceiverDetails();
 		CometChat.callExtension("document", "POST", "v1/create", {
 			receiver: receiverId,
 			receiverType: receiverType,
 		})
-			.then(response => {
-				// Response with document url
-				if (response && response.hasOwnProperty("document_url")) {
-					this.context.setToastMessage("success", "DOCUMENT_SUCCESS");
-				} else {
-					this.context.setToastMessage("error", "DOCUMENT_FAIL");
-				}
-			})
-			.catch(error => {
-				let errorCode = "ERROR";
-				if (error.hasOwnProperty("code")) {
-					errorCode = error.code;
-					if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"] && error.hasOwnProperty("details") && error.details.hasOwnProperty("code")) {
-						errorCode = error.details.code;
-					}
-				}
-				this.context.setToastMessage("error", errorCode);
-			});
+		.then(response => {
+			// Response with document url
+			if (response && response.hasOwnProperty("document_url")) {
+				this.context.setToastMessage("success", "DOCUMENT_SUCCESS");
+			} else {
+				this.context.setToastMessage("error", "DOCUMENT_FAIL");
+			}
+		})
+		.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
 	};
 
 	toggleCollaborativeBoard = () => {
-		const {receiverId, receiverType} = this.getReceiverDetails();
 
+		const {receiverId, receiverType} = this.getReceiverDetails();
 		CometChat.callExtension("whiteboard", "POST", "v1/create", {
 			receiver: receiverId,
 			receiverType: receiverType,
 		})
-			.then(response => {
-				// Response with board_url
-				if (response && response.hasOwnProperty("board_url")) {
-					this.context.setToastMessage("success", "WHITEBOARD_SUCCESS");
-				} else {
-					this.context.setToastMessage("error", "WHITEBOARD_FAIL");
-				}
-			})
-			.catch(error => {
-				let errorCode = "ERROR";
-				if (error.hasOwnProperty("code")) {
-					errorCode = error.code;
-					if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"] && error.hasOwnProperty("details") && error.details.hasOwnProperty("code")) {
-						errorCode = error.details.code;
-					}
-				}
-				this.context.setToastMessage("error", errorCode);
-			});
+		.then(response => {
+			// Response with board_url
+			if (response && response.hasOwnProperty("board_url")) {
+				this.context.setToastMessage("success", "WHITEBOARD_SUCCESS");
+			} else {
+				this.context.setToastMessage("error", "WHITEBOARD_FAIL");
+			}
+		})
+		.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
 	};
 
 	closeCreatePoll = () => {
@@ -813,10 +763,10 @@ class CometChatMessageComposer extends React.PureComponent {
 				this.toggleCreatePoll();
 				this.toggleFilePicker();
 				break;
-			case "sendSticker":
+			case enums.ACTIONS["SEND_STICKER"]:
 				this.sendSticker(message);
 				break;
-			case "closeSticker":
+			case enums.ACTIONS["CLOSE_STICKER_KEYBOARD"]:
 				this.toggleStickerPicker();
 				break;
 			default:
@@ -830,15 +780,13 @@ class CometChatMessageComposer extends React.PureComponent {
 		const customData = {sticker_url: stickerMessage.stickerUrl, sticker_name: stickerMessage.stickerName};
 		const customType = enums.CUSTOM_TYPE_STICKER;
 
-		const conversationId = this.getConversationId();
-
 		const customMessage = new CometChat.CustomMessage(receiverId, receiverType, customType, customData);
 		if (this.props.parentMessageId) {
 			customMessage.setParentMessageId(this.props.parentMessageId);
 		}
 		customMessage.setSender(this.loggedInUser);
 		customMessage.setReceiver(this.context.type);
-		customMessage.setConversationId(conversationId);
+		customMessage.setMetadata({ incrementUnreadCount: true });
 		customMessage._composedAt = getUnixTimestamp();
 		customMessage._id = ID();
 
@@ -848,21 +796,16 @@ class CometChatMessageComposer extends React.PureComponent {
 		CometChat.sendCustomMessage(customMessage)
 			.then(message => {
 				const newMessageObj = {...message, _id: customMessage._id};
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
+				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], [newMessageObj]);
 			})
 			.catch(error => {
 				const newMessageObj = {...customMessage, error: error};
-				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
-
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.context.setToastMessage("error", errorCode);
+				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], [newMessageObj]);
 			});
 	};
 
 	sendReplyMessage = messageInput => {
 		let {receiverId, receiverType} = this.getReceiverDetails();
-
-		const conversationId = this.getConversationId();
 
 		let textMessage = new CometChat.TextMessage(receiverId, messageInput, receiverType);
 		if (this.props.parentMessageId) {
@@ -870,7 +813,6 @@ class CometChatMessageComposer extends React.PureComponent {
 		}
 		textMessage.setSender(this.loggedInUser);
 		textMessage.setReceiver(this.context.type);
-		textMessage.setConversationId(conversationId);
 		textMessage._composedAt = getUnixTimestamp();
 		textMessage._id = ID();
 
@@ -882,14 +824,11 @@ class CometChatMessageComposer extends React.PureComponent {
 		CometChat.sendMessage(textMessage)
 			.then(message => {
 				const newMessageObj = {...message, _id: textMessage._id};
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
+				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], [newMessageObj]);
 			})
 			.catch(error => {
 				const newMessageObj = {...textMessage, error: error};
-				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
-
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.context.setToastMessage("error", errorCode);
+				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], [newMessageObj]);
 			});
 	};
 
@@ -908,36 +847,29 @@ class CometChatMessageComposer extends React.PureComponent {
 		event.persist();
 
 		setTimeout(() => {
-			this.endTyping(null, typingMetadata);
+			//this.endTyping(null, typingMetadata);
 			this.props.actionGenerated(enums.ACTIONS["STOP_LIVE_REACTION"]);
 		}, typingInterval);
 	};
 
 	reactToMessages = emoji => {
+
 		CometChat.callExtension("reactions", "POST", "v1/react", {
 			msgId: this.state.messageToReact.id,
 			emoji: emoji.colons,
 		})
-			.then(response => {
-				if (response.hasOwnProperty("success") && response["success"] === true) {
-					this.toggleEmojiPicker();
-				} else {
-					this.context.setToastMessage("error", "MESSAGE_REACTION_FAIL");
-				}
-			})
-			.catch(error => {
-				let errorCode = "ERROR";
-				if (error.hasOwnProperty("code")) {
-					errorCode = error.code;
-					if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"] && error.hasOwnProperty("details") && error.details.hasOwnProperty("code")) {
-						errorCode = error.details.code;
-					}
-				}
-				this.context.setToastMessage("error", errorCode);
-			});
+		.then(response => {
+			if (response.hasOwnProperty("success") && response["success"] === true) {
+				this.toggleEmojiPicker();
+			} else {
+				this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
+			}
+		})
+		.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
 	};
 
 	render() {
+		
 		let liveReactionBtn = null;
 		const liveReactionText = Translator.translate("LIVE_REACTION", this.props.lang);
 		if (enums.CONSTANTS["LIVE_REACTIONS"].hasOwnProperty(this.props.reaction)) {
@@ -1189,8 +1121,7 @@ class CometChatMessageComposer extends React.PureComponent {
 				{emojiViewer}
 				<div css={composerInputStyle()} className="composer__input">
 					<div tabIndex="-1" css={inputInnerStyle(this.props, this.state)} className="input__inner">
-						<div
-							css={messageInputStyle(disabledState)}
+						<div css={messageInputStyle(disabledState)}
 							className="input__message-input"
 							contentEditable="true"
 							placeholder={Translator.translate("ENTER_YOUR_MESSAGE_HERE", this.props.lang)}

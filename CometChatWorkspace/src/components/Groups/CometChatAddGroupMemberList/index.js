@@ -27,15 +27,15 @@ import {
     modalFootStyle,
     contactMsgStyle,
     contactMsgTxtStyle,
+    modalErrorStyle
 } from "./style";
 
+import addingIcon from "./resources/adding.svg";
 import searchIcon from "./resources/search-grey-icon.png";
 import clearIcon from "./resources/close.png";
 
 class CometChatAddGroupMemberList extends React.Component {
 
-    loggedInUser = null;
-    decoratorMessage = Translator.translate("LOADING", Translator.getDefaultLanguage());
     static contextType = CometChatContext;
 
     constructor(props) {
@@ -45,11 +45,10 @@ class CometChatAddGroupMemberList extends React.Component {
             userlist: [],
             membersToAdd: [],
             filteredlist: [],
+            addingMembers: false,
+            decoratorMessage: Translator.translate("LOADING", Translator.getDefaultLanguage()),
+            errorMessage: ""
         }
-
-        CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
-            console.error(error);
-        });
     }
 
     componentDidMount() {
@@ -78,7 +77,7 @@ class CometChatAddGroupMemberList extends React.Component {
         //if found in the list, update user object
         if(userKey > -1) {
 
-            let userObj = userlist[userKey];//{...userlist[userKey]};
+            let userObj = userlist[userKey];
             let newUserObj = Object.assign({}, userObj, user);
             userlist.splice(userKey, 1, newUserObj);
     
@@ -104,7 +103,7 @@ class CometChatAddGroupMemberList extends React.Component {
         this.AddMembersManager.initializeMembersRequest().then(() => {
 
             this.timeout = setTimeout(() => {
-                this.setState({userlist: [], membersToAdd: [], membersToRemove: [], filteredlist: []}, () => this.getUsers());
+                this.setState({ userlist: [], membersToAdd: [], membersToRemove: [], filteredlist: [], decoratorMessage: Translator.translate("LOADING", this.props.lang) }, () => this.getUsers());
             }, 500);
 							
         });
@@ -112,30 +111,24 @@ class CometChatAddGroupMemberList extends React.Component {
   
     getUsers = () => {
   
-        this.AddMembersManager.fetchNextUsers().then(userList => {
+        this.AddMembersManager.fetchNextUsers()
+            .then(userList => {
+                const filteredUserList = userList.filter(user => {
+                    const found = this.context.groupMembers.find(member => user.uid === member.uid);
+                    const foundbanned = this.context.bannedGroupMembers.find(member => user.uid === member.uid);
+                    if (found || foundbanned) {
+                        return false;
+                    }
+                    return true;
+                });
 
-            const filteredUserList = userList.filter(user => {
-
-                const found = this.context.groupMembers.find(member => user.uid === member.uid);
-                const foundbanned = this.context.bannedGroupMembers.find(member => user.uid === member.uid);
-                if (found || foundbanned) {
-                    return false;
+                if (filteredUserList.length === 0) {
+                    this.setState({ decoratorMessage: Translator.translate("NO_USERS_FOUND", this.props.lang) });
                 }
-                return true;
-            });
 
-            if (filteredUserList.length === 0) {
-                this.decoratorMessage = Translator.translate("NO_USERS_FOUND", this.props.lang);
-            }
-
-            this.setState({ userlist: [...this.state.userlist, ...userList], filteredlist: [...this.state.filteredlist, ...filteredUserList] });
-            
-        }).catch(error => {
-
-            this.decoratorMessage = Translator.translate("ERROR", this.props.lang);
-            const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
-            this.context.setToastMessage("error", errorCode);
-        });
+                this.setState({ userlist: [...this.state.userlist, ...userList], filteredlist: [...this.state.filteredlist, ...filteredUserList] });
+            })
+            .catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
     }
 
     membersUpdated = (user, userState) => {
@@ -176,6 +169,8 @@ class CometChatAddGroupMemberList extends React.Component {
 
         if(membersList.length) {
 
+            this.setState({ addingMembers: true });
+
             const membersToAdd = [];
             CometChat.addMembersToGroup(guid, membersList, []).then(response => {
 
@@ -191,29 +186,37 @@ class CometChatAddGroupMemberList extends React.Component {
                         }
                     }
 
-                    this.context.setToastMessage("success", "ADD_GROUP_MEMBER_SUCCESS");
                     this.props.actionGenerated(enums.ACTIONS["ADD_GROUP_MEMBER_SUCCESS"], membersToAdd);
                 }
+                this.setState({ addingMembers: false });
                 this.props.close();
 
             }).catch(error => {
                 
-                const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
-                this.context.setToastMessage("error", errorCode);
+                this.setState({ addingMembers: false, errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
+                
             });
         }
     }
 
     render() {
 
+        const createText = this.state.addingMembers ? Translator.translate("ADDING", this.props.lang) : Translator.translate("ADD", this.props.lang);
+        let addGroupMemberBtn = (
+            <div css={modalFootStyle(this.props, this.state, addingIcon)} className="modal__addmembers">
+                <button type="button" onClick={this.updateMembers}><span>{createText}</span></button>
+            </div>
+        );
+
         let messageContainer = null;
         if (this.state.filteredlist.length === 0) {
 
             messageContainer = (
                 <div css={contactMsgStyle()} className="members__decorator-message">
-                    <p css={contactMsgTxtStyle(this.props)} className="decorator-message">{this.decoratorMessage}</p>
+                    <p css={contactMsgTxtStyle(this.props)} className="decorator-message">{this.state.decoratorMessage}</p>
                 </div>
             );
+            addGroupMemberBtn = null;
         }
 
         let currentLetter = "";
@@ -233,21 +236,20 @@ class CometChatAddGroupMemberList extends React.Component {
                     theme={this.props.theme}
                     lang={this.props.lang}
                     firstLetter={firstLetter}
-                    loggedinuser={this.loggedInUser}
                     user={user}
-                    changed={this.membersUpdated}
-                    widgetsettings={this.props.widgetsettings} />
+                    changed={this.membersUpdated} />
                 </React.Fragment>
             )
         });
 
         return (
             <React.Fragment>
-                <CometChatBackdrop show={this.props.open} clicked={this.props.close} />
+                <CometChatBackdrop show={true} clicked={this.props.close} />
                 <div css={modalWrapperStyle(this.props)} className="modal__addmembers">
                     <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyStyle()} className="modal__body">
                         <div css={modalCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">{Translator.translate("USERS", this.props.lang)}</div>
+                        <div css={modalErrorStyle(this.context)} className="modal__error">{this.state.errorMessage}</div>
                         <div css={modalSearchStyle()} className="modal__search">
                             <input
                             type="text"
@@ -259,9 +261,7 @@ class CometChatAddGroupMemberList extends React.Component {
                         </div>
                         {messageContainer}
                         <div css={modalListStyle(this.props)} onScroll={this.handleScroll} className="modal__content">{users}</div>
-                        <div css={modalFootStyle(this.props)} className="modal__addmembers">
-                            <button type="button" onClick={this.updateMembers}>{Translator.translate("ADD", this.props.lang)}</button>
-                        </div>
+                        {addGroupMemberBtn}
                     </div>
                 </div>
             </React.Fragment>
