@@ -63,15 +63,14 @@ class CometChatMessageHeader extends React.Component {
 			enableBlockUser: false,
 			enableTypingIndicator: false,
 		};
-
-		CometChat.getLoggedinUser()
-			.then(user => (this.loggedInUser = user))
-			.catch(error => {
-				console.error(error);
-			});
 	}
 
 	componentDidMount() {
+
+		CometChat.getLoggedinUser()
+			.then(user => (this.loggedInUser = user))
+			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
+
 		this.MessageHeaderManager = new MessageHeaderManager();
 		this.MessageHeaderManager.attachListeners(this.updateHeader);
 

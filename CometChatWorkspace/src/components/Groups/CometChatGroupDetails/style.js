@@ -1,7 +1,8 @@
 export const detailStyle = (props) => {
 
     return {
-        "height": "100%",
+        height: "100%",
+        position: "relative",
         boxSizing: "border-box",
         fontFamily: `${props.theme.fontFamily}`,
         "*": {

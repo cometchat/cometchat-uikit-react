@@ -57,8 +57,10 @@ export const CONSTANTS = {
         "ONGOING_CALL": "noOngoingCall",
         "ONGOING_CALL_SAME_GROUP": "ongoingDirectCallInSameGroup",
         "ONGOING_CALL_DIFF_GROUP": "ongoingDirectCallInDifferentGroup",
-        
-    }
+    },
+	GROUPS: {
+		"OWNER": "owner"
+	}
 }
 
 export const ACTIONS = {
@@ -127,5 +129,15 @@ export const ACTIONS = {
 	USER_JOINED_CALL: "userJoinedCall",
 	USER_LEFT_CALL: "userLeftCall",
 	DELETE_CONVERSATION: "deleteConversation",
-	CONVERSATION_DELETED: "conversationDeleted"
+	CONVERSATION_DELETED: "conversationDeleted",
+	SEND_STICKER: "sendSticker",
+	CLOSE_STICKER_KEYBOARD: "closeStickerKeyboard",
+	ERROR: "errorOccurred",
+	INFO: "infoMessage"
+};
+
+
+export const KEYS = {
+	METADATA: "metadata",
+	INCREMENT_UNREAD_COUNT: "incrementUnreadCount",
 };

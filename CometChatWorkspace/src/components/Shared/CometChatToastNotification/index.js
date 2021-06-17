@@ -140,18 +140,18 @@ CometChatToastNotification.defaultProps = {
     type: "",
     message: "",
     icon: "",
-    position: "top-right",
+    position: "center",
     autoDelete: true,
     dismissTime: 3000,
     lang: Translator.getDefaultLanguage(),
 }
 
 CometChatToastNotification.propTypes = {
-    type: PropTypes.oneOf(Object.values(CometChatToastNotification.types).concat("")),
-    message: PropTypes.string.isRequired,
-    icon: PropTypes.string.isRequired,
-    position: PropTypes.oneOf(["top-right", "bottom-right", "top-left", "bottom-left"]),
-    autoDelete: PropTypes.bool,
-    dismissTime: PropTypes.number,
-    lang: PropTypes.string,
-}
+	type: PropTypes.oneOf(Object.values(CometChatToastNotification.types).concat("")),
+	message: PropTypes.string.isRequired,
+	icon: PropTypes.string.isRequired,
+	position: PropTypes.oneOf(["top-right", "bottom-right", "top-left", "bottom-left", "center"]),
+	autoDelete: PropTypes.bool,
+	dismissTime: PropTypes.number,
+	lang: PropTypes.string,
+};

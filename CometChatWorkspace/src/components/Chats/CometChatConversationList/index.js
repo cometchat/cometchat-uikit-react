@@ -7,7 +7,7 @@ import { CometChat } from "@cometchat-pro/chat";
 
 import { ConversationListManager } from "./controller";
 
-import { CometChatConfirmDialog } from "../../Shared";
+import { CometChatConfirmDialog, CometChatToastNotification } from "../../Shared";
 import { CometChatConversationListItem } from "../";
 
 import { CometChatContextProvider, CometChatContext } from "../../../util/CometChatContext";
@@ -44,18 +44,16 @@ class CometChatConversationList extends React.Component {
 			lang: props.lang,
 			hideGroupActionMessages: false,
 			showConfirmDialog: false,
+			decoratorMessage: Translator.translate("LOADING", props.lang),
 		};
 
 		this.contextProviderRef = React.createRef();
-		this.decoratorMessage = Translator.translate("LOADING", props.lang);
 		this.chatListRef = React.createRef();
+		this.toastRef = React.createRef();
 
 		CometChat.getLoggedinUser()
 			.then(user => (this.loggedInUser = user))
-			.catch(error => {
-				this.decoratorMessage = Translator.translate("ERROR", this.state.lang);
-				console.error(error);
-			});
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
 	}
 
 	componentDidMount() {
@@ -86,10 +84,10 @@ class CometChatConversationList extends React.Component {
 
 			if (conversationObj) {
 				let conversationKey = conversationlist.indexOf(conversationObj);
-				let newConversationObj = {...conversationObj, unreadMessageCount: 0};
+				let newConversationObj = { ...conversationObj, unreadMessageCount: 0 };
 
 				conversationlist.splice(conversationKey, 1, newConversationObj);
-				this.setState({conversationlist: conversationlist});
+				this.setState({ conversationlist: conversationlist });
 			}
 
 			if (Object.keys(this.getContext().item).length === 0) {
@@ -106,13 +104,13 @@ class CometChatConversationList extends React.Component {
 			if (convKey > -1) {
 				const convObj = conversationlist[convKey];
 
-				let convWithObj = {...convObj.conversationWith};
-				let newConvWithObj = Object.assign({}, convWithObj, {blockedByMe: this.getContext().item.blockedByMe});
+				let convWithObj = { ...convObj.conversationWith };
+				let newConvWithObj = Object.assign({}, convWithObj, { blockedByMe: this.getContext().item.blockedByMe });
 
-				let newConvObj = Object.assign({}, convObj, {conversationWith: newConvWithObj});
+				let newConvObj = Object.assign({}, convObj, { conversationWith: newConvWithObj });
 
 				conversationlist.splice(convKey, 1, newConvObj);
-				this.setState({conversationlist: conversationlist});
+				this.setState({ conversationlist: conversationlist });
 			}
 		}
 
@@ -124,13 +122,13 @@ class CometChatConversationList extends React.Component {
 			if (convKey > -1) {
 				const convObj = conversationlist[convKey];
 
-				let convWithObj = {...convObj.conversationWith};
-				let newConvWithObj = Object.assign({}, convWithObj, {membersCount: this.getContext().item.membersCount});
+				let convWithObj = { ...convObj.conversationWith };
+				let newConvWithObj = Object.assign({}, convWithObj, { membersCount: this.getContext().item.membersCount });
 
-				let newConvObj = Object.assign({}, convObj, {conversationWith: newConvWithObj});
+				let newConvObj = Object.assign({}, convObj, { conversationWith: newConvWithObj });
 
 				conversationlist.splice(convKey, 1, newConvObj);
-				this.setState({conversationlist: conversationlist});
+				this.setState({ conversationlist: conversationlist });
 			}
 		}
 
@@ -143,7 +141,20 @@ class CometChatConversationList extends React.Component {
 
 			if (conversationKey > -1) {
 				conversationlist.splice(conversationKey, 1);
-				this.setState({conversationlist: conversationlist});
+				this.setState({ conversationlist: conversationlist });
+			}
+		}
+
+		//upon user leaving a group, remove group from conversation list
+		if (this.getContext().leftGroupId.trim().length) {
+			const guid = this.getContext().leftGroupId.trim();
+			const conversationlist = [...this.state.conversationlist];
+
+			let conversationKey = conversationlist.findIndex(c => c.conversationType === CometChat.ACTION_TYPE.TYPE_GROUP && c.conversationWith.guid === guid);
+
+			if (conversationKey > -1) {
+				conversationlist.splice(conversationKey, 1);
+				this.setState({ conversationlist: conversationlist });
 			}
 		}
 
@@ -156,7 +167,7 @@ class CometChatConversationList extends React.Component {
 
 			if (conversationKey > -1) {
 				const conversationObj = conversationList[conversationKey];
-				let newConversationObj = {...conversationObj, lastMessage: {...lastMessage}};
+				let newConversationObj = { ...conversationObj, lastMessage: { ...lastMessage } };
 
 				if (conversationKey === 0) {
 					conversationList.splice(conversationKey, 1, newConversationObj);
@@ -165,7 +176,7 @@ class CometChatConversationList extends React.Component {
 					conversationList.unshift(newConversationObj);
 				}
 
-				this.setState({conversationlist: conversationList});
+				this.setState({ conversationlist: conversationList });
 				this.getContext().setLastMessage({});
 			} else {
 				const chatListMode = this.getContext().UIKitSettings.chatListMode;
@@ -196,13 +207,13 @@ class CometChatConversationList extends React.Component {
 				newConversation.setUnreadMessageCount(0);
 
 				conversationList.unshift(newConversation);
-				this.setState({conversationlist: conversationList});
+				this.setState({ conversationlist: conversationList });
 				this.getContext().setLastMessage({});
 			}
 		}
 
 		if (prevProps.lang !== this.props.lang) {
-			this.setState({lang: this.props.lang});
+			this.setState({ lang: this.props.lang });
 		}
 
 		if (this.getContext().clearedUnreadMessages === true && this.selectedConversation) {
@@ -211,13 +222,13 @@ class CometChatConversationList extends React.Component {
 			let conversationKey = conversationList.findIndex(c => c.conversationId === this.selectedConversation.conversationId);
 
 			if (conversationKey > -1) {
-				let conversationObj = {...conversationList[conversationKey]};
+				let conversationObj = { ...conversationList[conversationKey] };
 				let unreadMessageCount = this.getContext().unreadMessages.length;
-				let newConversationObj = {...conversationObj, unreadMessageCount: unreadMessageCount};
+				let newConversationObj = { ...conversationObj, unreadMessageCount: unreadMessageCount };
 
 				conversationList.splice(conversationKey, 1);
 				conversationList.unshift(newConversationObj);
-				this.setState({conversationlist: conversationList});
+				this.setState({ conversationlist: conversationList });
 				this.getContext().setClearedUnreadMessages(false);
 			}
 		}
@@ -271,6 +282,7 @@ class CometChatConversationList extends React.Component {
 	};
 
 	conversationUpdated = (key, message, options) => {
+
 		const chatListMode = this.getContext().UIKitSettings.chatListMode;
 		const chatListFilterOptions = UIKitSettings.chatListFilterOptions;
 
@@ -345,6 +357,8 @@ class CometChatConversationList extends React.Component {
 	};
 
 	playAudio = message => {
+
+		
 		if (message.category === CometChat.CATEGORY_ACTION && message.type === CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER && this.state.hideGroupActionMessages === true) {
 			return false;
 		}
@@ -388,7 +402,7 @@ class CometChatConversationList extends React.Component {
 	};
 
 	makeConversation = message => {
-		const promise = new Promise((resolve, reject) => {
+		const promise = new Promise(resolve => {
 			CometChat.CometChatHelper.getConversationFromMessage(message)
 				.then(conversation => {
 					let conversationList = [...this.state.conversationlist];
@@ -400,14 +414,17 @@ class CometChatConversationList extends React.Component {
 					}
 
 					resolve({conversationKey: conversationKey, conversationObj: conversationObj, conversationList: conversationList});
-				})
-				.catch(error => reject(error));
+				});
 		});
 
 		return promise;
 	};
 
-	makeUnreadMessageCount = (message, conversation = {}, listenerEvent = null) => {
+	makeUnreadMessageCount = (message, conversation = {}) => {
+		
+		/**
+		 * If the received message is sent by the logged in user, don't increment the unread count
+		 */
 		if (Object.keys(conversation).length === 0) {
 			if (message.sender.uid === this.loggedInUser?.uid) {
 				return 0;
@@ -418,16 +435,16 @@ class CometChatConversationList extends React.Component {
 
 		let unreadMessageCount = parseInt(conversation.unreadMessageCount);
 		if (this.selectedConversation && this.selectedConversation.conversationId === conversation.conversationId) {
+
 			if (this.getContext().unreadMessages.length) {
 				const unreadMessage = this.getContext().unreadMessages[0];
 				const selectedConversation = this.selectedConversation;
 
 				if (unreadMessage.hasOwnProperty("conversationId") && unreadMessage.conversationId === selectedConversation.conversationId) {
+
 					unreadMessageCount = 0;
 					this.getContext().unreadMessages.forEach(message => {
-						if (message.category === CometChat.CATEGORY_MESSAGE) {
-							++unreadMessageCount;
-						}
+						unreadMessageCount = this.shouldIncrementCount(message) ? ++unreadMessageCount : unreadMessageCount;
 					});
 				}
 			} else {
@@ -439,13 +456,27 @@ class CometChatConversationList extends React.Component {
 		) {
 			unreadMessageCount = 0;
 		} else {
-			if (listenerEvent && (listenerEvent === enums.TEXT_MESSAGE_RECEIVED || listenerEvent === enums.MEDIA_MESSAGE_RECEIVED) && message.sender.uid !== this.loggedInUser?.uid) {
-				unreadMessageCount = unreadMessageCount + 1;
-			}
+			unreadMessageCount = this.shouldIncrementCount(message) ? ++unreadMessageCount : unreadMessageCount;
 		}
 
 		return unreadMessageCount;
 	};
+
+	shouldIncrementCount = (incomingMessage) => {
+
+		let output = false;
+		if (
+			(incomingMessage.category === CometChat.CATEGORY_MESSAGE && incomingMessage.sender.uid !== this.loggedInUser?.uid) 
+			|| (this.getContext().hasKeyValue(incomingMessage, enums.KEYS["METADATA"]) 
+			&& this.getContext().hasKeyValue(incomingMessage[enums.KEYS["METADATA"]], enums.KEYS["INCREMENT_UNREAD_COUNT"]) 
+			&& incomingMessage[enums.KEYS["METADATA"]][enums.KEYS["INCREMENT_UNREAD_COUNT"]] === true 
+			&& incomingMessage.sender.uid !== this.loggedInUser?.uid)
+		) {
+			output = true;
+		}
+
+		return output;
+	}
 
 	makeLastMessage = (message, conversation = {}) => {
 		const newMessage = Object.assign({}, message);
@@ -453,12 +484,13 @@ class CometChatConversationList extends React.Component {
 	};
 
 	updateConversation = (key, message) => {
+
 		this.makeConversation(message)
 			.then(response => {
 				const {conversationKey, conversationObj, conversationList} = response;
 
 				if (conversationKey > -1) {
-					let unreadMessageCount = this.makeUnreadMessageCount(message, conversationObj, key);
+					let unreadMessageCount = this.makeUnreadMessageCount(message, conversationObj);
 					let lastMessageObj = this.makeLastMessage(message, conversationObj);
 
 					let newConversationObj = {...conversationObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount};
@@ -470,7 +502,7 @@ class CometChatConversationList extends React.Component {
 						this.playAudio(message);
 					}
 				} else {
-					let unreadMessageCount = this.makeUnreadMessageCount(message, {}, key);
+					let unreadMessageCount = this.makeUnreadMessageCount(message, {});
 					let lastMessageObj = this.makeLastMessage(message);
 
 					let newConversationObj = {...conversationObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount};
@@ -481,10 +513,6 @@ class CometChatConversationList extends React.Component {
 						this.playAudio(message);
 					}
 				}
-			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
 			});
 	};
 
@@ -503,10 +531,6 @@ class CometChatConversationList extends React.Component {
 						this.setState({conversationlist: conversationList});
 					}
 				}
-			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
 			});
 	};
 
@@ -551,10 +575,6 @@ class CometChatConversationList extends React.Component {
 						this.playAudio(message);
 					}
 				}
-			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
 			});
 	};
 
@@ -585,10 +605,6 @@ class CometChatConversationList extends React.Component {
 						this.playAudio(message);
 					}
 				}
-			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
 			});
 	};
 
@@ -615,10 +631,6 @@ class CometChatConversationList extends React.Component {
 					this.setState({conversationlist: conversationList});
 					this.playAudio(message);
 				}
-			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
 			});
 	};
 
@@ -644,10 +656,6 @@ class CometChatConversationList extends React.Component {
 						this.playAudio(message);
 					}
 				}
-			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
 			});
 	};
 
@@ -676,7 +684,9 @@ class CometChatConversationList extends React.Component {
 		this.ConversationListManager.fetchNextConversation()
 			.then(conversationList => {
 				if (conversationList.length === 0) {
-					this.decoratorMessage = Translator.translate("NO_CHATS_FOUND", this.state.lang);
+					this.setState({ decoratorMessage: Translator.translate("NO_CHATS_FOUND", this.state.lang) });
+				} else {
+					this.setState({ decoratorMessage: "" });
 				}
 
 				conversationList.forEach(conversation => {
@@ -687,13 +697,9 @@ class CometChatConversationList extends React.Component {
 					}
 				});
 
-				this.setState({conversationlist: [...this.state.conversationlist, ...conversationList]});
+				this.setState({ conversationlist: [...this.state.conversationlist, ...conversationList] });
 			})
-			.catch(error => {
-				this.decoratorMessage = Translator.translate("ERROR", this.state.lang);
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.getContext().setToastMessage("error", errorCode);
-			});
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
 	};
 
 	getContext = () => {
@@ -718,7 +724,7 @@ class CometChatConversationList extends React.Component {
 	};
 
 	deleteConversation = conversation => {
-
+		
 		if (!this.state.showConfirmDialog) {
 			this.setState({showConfirmDialog: true});
 		}
@@ -738,9 +744,7 @@ class CometChatConversationList extends React.Component {
 					this.context.setConversationToBeDeleted(null);
 					this.conversationDeleted(conversation);
 				})
-				.catch(error => {
-					console.log(error);
-				});
+				.catch(error => this.toastRef.setError("SOMETHING_WRONG"));
 		} else {
 			this.context.setConversationToBeDeleted(null);
 			this.setState({showConfirmDialog: false});
@@ -784,17 +788,16 @@ class CometChatConversationList extends React.Component {
 					selectedConversation={selectedConversation}
 					loggedInUser={this.loggedInUser}
 					handleClick={this.handleClick}
-					actionGenerated={this.actionHandler}
-				/>
+					actionGenerated={this.actionHandler} />
 			);
 		});
 
 		let messageContainer = null;
-		if (this.state.conversationlist.length === 0) {
+		if (this.state.decoratorMessage.length !== 0) {
 			messageContainer = (
 				<div css={chatsMsgStyle()} className="chats__decorator-message">
 					<p css={chatsMsgTxtStyle(this.props)} className="decorator-message">
-						{this.decoratorMessage}
+						{this.state.decoratorMessage}
 					</p>
 				</div>
 			);
@@ -807,7 +810,11 @@ class CometChatConversationList extends React.Component {
 
 		let showConfirmDialog = null;
 		if (this.state.showConfirmDialog) {
-			showConfirmDialog = <CometChatConfirmDialog {...this.props} onClick={this.onDeleteConfirm} message="Are you sure you want to delete?" />;
+			showConfirmDialog = <CometChatConfirmDialog {...this.props} 
+			onClick={this.onDeleteConfirm} 
+			message={Translator.translate("DELETE_CONFIRM", this.getContext().language)}
+			confirmButtonText={Translator.translate("DELETE", this.getContext().language)}
+			cancelButtonText={Translator.translate("CANCEL", this.getContext().language)} />;
 		}
 
 		const chatList = (
@@ -823,6 +830,7 @@ class CometChatConversationList extends React.Component {
 					{conversationList}
 				</div>
 				{showConfirmDialog}
+				<CometChatToastNotification ref={el => (this.toastRef = el)} />
 			</div>
 		);
 
