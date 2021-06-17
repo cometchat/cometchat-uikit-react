@@ -7,7 +7,14 @@ import { CometChat } from "@cometchat-pro/chat";
 
 import { GroupDetailManager } from "./controller";
 
-import { CometChatViewGroupMemberList, CometChatAddGroupMemberList, CometChatBanGroupMemberList } from "../../Groups";
+import { CometChatConfirmDialog, CometChatToastNotification } from "../../Shared";
+import { 
+	CometChatViewGroupMemberList, 
+	CometChatAddGroupMemberList, 
+	CometChatBanGroupMemberList, 
+	CometChatTransferOwnershipMemberList
+} from "../../Groups";
+
 import { CometChatSharedMediaView } from "../../Shared/CometChatSharedMediaView/index.js";
 
 import { CometChatContext } from "../../../util/CometChatContext";
@@ -33,16 +40,15 @@ import navigateIcon from "./resources/navigate.png";
 
 class CometChatGroupDetails extends React.Component {
 	item;
-	loggedInUser = null;
 	static contextType = CometChatContext;
 
-	constructor(props) {
-		super(props);
+	constructor(props, context) {
+		super(props, context);
 
 		this._isMounted = false;
 
 		this.state = {
-			user: {},
+			loggedInUser: null,
 			memberlist: [],
 			bannedmemberlist: [],
 			administratorslist: [],
@@ -60,16 +66,25 @@ class CometChatGroupDetails extends React.Component {
 			enableViewGroupMembers: false,
 			enableLeaveGroup: false,
 			enableSharedMedia: false,
+			showDeleteConfirmDialog: false,
+			showLeaveGroupConfirmDialog: false,
+			showTransferOwnershipConfirmDialog: false,
+			transferOwnership: false,
 		};
 
-		CometChat.getLoggedinUser()
-			.then(user => (this.loggedInUser = user))
-			.catch(error => {
-				console.error(error);
-			});
+		this.toastRef = React.createRef();
 	}
 
 	componentDidMount() {
+
+		CometChat.getLoggedinUser()
+			.then(user => {
+
+				if (this._isMounted) {
+					this.setState({ loggedInUser: user });
+				}
+			})
+			.catch(error => this.toastRef.setError("SOMETHING_WRONG"));
 
 		this._isMounted = true;
 		this.context.clearGroupMembers();
@@ -128,12 +143,12 @@ class CometChatGroupDetails extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableAddGroupMembers && this._isMounted) {
-					this.setState({enableAddGroupMembers: response});
+					this.setState({ enableAddGroupMembers: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableAddGroupMembers !== false && this._isMounted) {
-					this.setState({enableAddGroupMembers: false});
+					this.setState({ enableAddGroupMembers: false });
 				}
 			});
 	};
@@ -145,12 +160,12 @@ class CometChatGroupDetails extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableChangeScope && this._isMounted) {
-					this.setState({enableChangeScope: response});
+					this.setState({ enableChangeScope: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableChangeScope !== false && this._isMounted) {
-					this.setState({enableChangeScope: false});
+					this.setState({ enableChangeScope: false });
 				}
 			});
 	};
@@ -162,12 +177,12 @@ class CometChatGroupDetails extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableKickGroupMembers && this._isMounted) {
-					this.setState({enableKickGroupMembers: response});
+					this.setState({ enableKickGroupMembers: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableKickGroupMembers !== false && this._isMounted) {
-					this.setState({enableKickGroupMembers: false});
+					this.setState({ enableKickGroupMembers: false });
 				}
 			});
 	};
@@ -179,12 +194,12 @@ class CometChatGroupDetails extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableBanGroupMembers && this._isMounted) {
-					this.setState({enableBanGroupMembers: response});
+					this.setState({ enableBanGroupMembers: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableBanGroupMembers !== false && this._isMounted) {
-					this.setState({enableBanGroupMembers: false});
+					this.setState({ enableBanGroupMembers: false });
 				}
 			});
 	};
@@ -196,12 +211,12 @@ class CometChatGroupDetails extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableDeleteGroup && this._isMounted) {
-					this.setState({enableDeleteGroup: response});
+					this.setState({ enableDeleteGroup: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableDeleteGroup !== false && this._isMounted) {
-					this.setState({enableDeleteGroup: false});
+					this.setState({ enableDeleteGroup: false });
 				}
 			});
 	};
@@ -213,12 +228,12 @@ class CometChatGroupDetails extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableViewGroupMembers && this._isMounted) {
-					this.setState({enableViewGroupMembers: response});
+					this.setState({ enableViewGroupMembers: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableViewGroupMembers !== false && this._isMounted) {
-					this.setState({enableViewGroupMembers: false});
+					this.setState({ enableViewGroupMembers: false });
 				}
 			});
 	};
@@ -230,12 +245,12 @@ class CometChatGroupDetails extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableLeaveGroup && this._isMounted) {
-					this.setState({enableLeaveGroup: response});
+					this.setState({ enableLeaveGroup: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableLeaveGroup !== false && this._isMounted) {
-					this.setState({enableLeaveGroup: false});
+					this.setState({ enableLeaveGroup: false });
 				}
 			});
 	};
@@ -247,12 +262,12 @@ class CometChatGroupDetails extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableSharedMedia && this._isMounted) {
-					this.setState({enableSharedMedia: response});
+					this.setState({ enableSharedMedia: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableSharedMedia !== false && this._isMounted) {
-					this.setState({enableSharedMedia: false});
+					this.setState({ enableSharedMedia: false });
 				}
 			});
 	};
@@ -264,12 +279,12 @@ class CometChatGroupDetails extends React.Component {
 				 * Don't update state if the response has the same value
 				 */
 				if (response !== this.state.enableBlockUser && this._isMounted) {
-					this.setState({enableBlockUser: response});
+					this.setState({ enableBlockUser: response });
 				}
 			})
 			.catch(error => {
 				if (this.state.enableBlockUser !== false && this._isMounted) {
-					this.setState({enableBlockUser: false});
+					this.setState({ enableBlockUser: false });
 				}
 			});
 	};
@@ -289,7 +304,7 @@ class CometChatGroupDetails extends React.Component {
 			case enums.GROUP_MEMBER_JOINED:
 				{
 					const member = options.user;
-					const updatedMember = Object.assign({}, member, {scope: CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT});
+					const updatedMember = Object.assign({}, member, { scope: CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT });
 
 					this.addParticipants([updatedMember], false);
 				}
@@ -318,7 +333,7 @@ class CometChatGroupDetails extends React.Component {
 			case enums.GROUP_MEMBER_SCOPE_CHANGED:
 				{
 					const member = options.user;
-					const updatedMember = Object.assign({}, member, {scope: options["scope"]});
+					const updatedMember = Object.assign({}, member, { scope: options["scope"] });
 					this.updateParticipants(updatedMember);
 				}
 				break;
@@ -373,10 +388,7 @@ class CometChatGroupDetails extends React.Component {
 
 				this.context.setAllGroupMembers(groupMembers, administratorslist, moderatorslist);
 			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.context.setToastMessage("error", errorCode);
-			});
+			.catch(error => this.toastRef.setError("SOMETHING_WRONG"));
 	};
 
 	getBannedGroupMembers = () => {
@@ -388,13 +400,22 @@ class CometChatGroupDetails extends React.Component {
 			.then(bannedMembers => {
 				this.context.setBannedGroupMembers(bannedMembers);
 			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.context.setToastMessage("error", errorCode);
-			});
+			.catch(error => this.toastRef.setError("SOMETHING_WRONG"));
 	};
 
 	deleteGroup = () => {
+		this.setState({ showDeleteConfirmDialog: true, showLeaveGroupConfirmDialog: false, showTransferOwnershipConfirmDialog: false });
+	};
+
+	onDeleteConfirm = e => {
+
+		const optionSelected = e.target.value;
+		this.setState({ showDeleteConfirmDialog: false });
+
+		if (optionSelected === "no") {
+			return false;
+		}
+
 		const guid = this.context.item.guid;
 		CometChat.deleteGroup(guid)
 			.then(response => {
@@ -402,42 +423,69 @@ class CometChatGroupDetails extends React.Component {
 					this.context.setToastMessage("success", "GROUP_DELETION_SUCCESS");
 					this.context.setDeletedGroupId(guid);
 				} else {
-					this.context.setToastMessage("error", "GROUP_DELETION_FAIL");
+					this.toastRef.setError("SOMETHING_WRONG");
 				}
 			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.context.setToastMessage("error", errorCode);
-			});
+			.catch(error => this.toastRef.setError("SOMETHING_WRONG"));
 	};
 
-	leaveGroup = () => {
+	onLeaveConfirm = e => {
+
+		const optionSelected = e.target.value;
+		this.setState({ showLeaveGroupConfirmDialog: false });
+
+		if (optionSelected === "no") {
+			return false;
+		}
+
 		const guid = this.context.item.guid;
 		CometChat.leaveGroup(guid)
 			.then(response => {
 				if (response) {
-					this.context.setToastMessage("success", "GROUP_LEFT_SUCCESS");
 					this.context.setLeftGroupId(guid);
 				} else {
-					this.context.setToastMessage("error", "GROUP_LEFT_FAIL");
+					this.toastRef.setError("SOMETHING_WRONG");
 				}
 			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
-				this.context.setToastMessage("error", errorCode);
-			});
+			.catch(error => this.toastRef.setError("SOMETHING_WRONG"));
+	};
+
+	onTransferConfirm = e => {
+
+		const optionSelected = e.target.value;
+		this.setState({ showTransferOwnershipConfirmDialog: false });
+		if (optionSelected === "no") {
+			return false;
+		}
+
+		this.setState({ transferOwnership: true });
+	};
+
+	leaveGroup = () => {
+
+		/**
+		 * If loggeduser is the owner of the group; ask him to transfer ownership before leaving the group else show leave group confirmtion dialog
+		 */
+		if (this.context.item?.owner === this.state.loggedInUser?.uid) {
+			this.setState({ showTransferOwnershipConfirmDialog: true, showDeleteConfirmDialog: false, showLeaveGroupConfirmDialog: false });
+		} else {
+			this.setState({ showLeaveGroupConfirmDialog: true, showTransferOwnershipConfirmDialog: false, showDeleteConfirmDialog: false });
+		}
 	};
 
 	clickHandler = (action, flag) => {
 		switch (action) {
 			case "viewmember":
-				this.setState({viewMember: flag});
+				this.setState({ viewMember: flag });
 				break;
 			case "addmember":
-				this.setState({addMember: flag});
+				this.setState({ addMember: flag });
 				break;
 			case "banmember":
-				this.setState({banMember: flag});
+				this.setState({ banMember: flag });
+				break;
+			case "transferownership":
+				this.setState({ transferOwnership: flag });
 				break;
 			default:
 				break;
@@ -464,6 +512,9 @@ class CometChatGroupDetails extends React.Component {
 				break;
 			case enums.ACTIONS["SCOPECHANGE_GROUPMEMBER_SUCCESS"]:
 				this.updateParticipants(members);
+				break;
+			case enums.ACTIONS["OWNERSHIP_TRANSFERRED"]:
+				this.updateOwnership(members);
 				break;
 			default:
 				break;
@@ -496,7 +547,7 @@ class CometChatGroupDetails extends React.Component {
 
 		this.props.actionGenerated(enums.ACTIONS["ADD_GROUP_MEMBER_SUCCESS"], members);
 		if (triggerUpdate) {
-			const newItem = {...this.context.item, membersCount: this.context.groupMembers.length};
+			const newItem = { ...this.context.item, membersCount: this.context.groupMembers.length };
 			this.context.setItem(newItem);
 		}
 	};
@@ -513,7 +564,7 @@ class CometChatGroupDetails extends React.Component {
 		this.context.updateGroupMembers(filteredMembers);
 
 		if (triggerUpdate) {
-			const newItem = {...this.context.item, membersCount: filteredMembers.length};
+			const newItem = { ...this.context.item, membersCount: filteredMembers.length };
 			this.context.setItem(newItem);
 		}
 	};
@@ -524,7 +575,7 @@ class CometChatGroupDetails extends React.Component {
 		const memberKey = memberlist.findIndex(member => member.uid === updatedMember.uid);
 		if (memberKey > -1) {
 			const memberObj = memberlist[memberKey];
-			const newMemberObj = Object.assign({}, memberObj, updatedMember, {scope: updatedMember["scope"]});
+			const newMemberObj = Object.assign({}, memberObj, updatedMember, { scope: updatedMember["scope"] });
 
 			memberlist.splice(memberKey, 1, newMemberObj);
 			this.props.actionGenerated(enums.ACTIONS["SCOPECHANGE_GROUPMEMBER_SUCCESS"], [newMemberObj]);
@@ -532,11 +583,25 @@ class CometChatGroupDetails extends React.Component {
 		}
 	};
 
+	updateOwnership = uid => {
+
+		const item = { ...this.context.item, owner: uid };
+		const type = CometChat.RECEIVER_TYPE.GROUP;
+		
+		this.setState({ transferOwnership: false });
+		this.context.setTypeAndItem(type, item);
+	};
+
 	render() {
+
+		if(this.state.loggedInUser === null) {
+			return null;
+		}
+
 		let viewMembersBtn = (
 			<div css={contentItemStyle()} className="content__item">
 				<div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("viewmember", true)}>
-					{Translator.translate("VIEW_MEMBERS", this.props.lang)}
+					{Translator.translate("VIEW_MEMBERS", this.context.language)}
 				</div>
 			</div>
 		);
@@ -548,7 +613,7 @@ class CometChatGroupDetails extends React.Component {
 			addMembersBtn = (
 				<div css={contentItemStyle()} className="content__item">
 					<div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("addmember", true)}>
-						{Translator.translate("ADD_MEMBERS", this.props.lang)}
+						{Translator.translate("ADD_MEMBERS", this.context.language)}
 					</div>
 				</div>
 			);
@@ -556,7 +621,7 @@ class CometChatGroupDetails extends React.Component {
 			deleteGroupBtn = (
 				<div css={contentItemStyle()} className="content__item">
 					<span css={itemLinkStyle(this.props, 1)} className="item__link" onClick={this.deleteGroup}>
-						{Translator.translate("DELETE_AND_EXIT", this.props.lang)}
+						{Translator.translate("DELETE_AND_EXIT", this.context.language)}
 					</span>
 				</div>
 			);
@@ -566,7 +631,7 @@ class CometChatGroupDetails extends React.Component {
 			bannedMembersBtn = (
 				<div css={contentItemStyle()} className="content__item">
 					<div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("banmember", true)}>
-						{Translator.translate("BANNED_MEMBERS", this.props.lang)}
+						{Translator.translate("BANNED_MEMBERS", this.context.language)}
 					</div>
 				</div>
 			);
@@ -575,29 +640,26 @@ class CometChatGroupDetails extends React.Component {
 		let leaveGroupBtn = (
 			<div css={contentItemStyle()} className="content__item">
 				<span css={itemLinkStyle(this.props, 0)} className="item__link" onClick={this.leaveGroup}>
-					{Translator.translate("LEAVE_GROUP", this.props.lang)}
+					{Translator.translate("LEAVE_GROUP", this.context.language)}
 				</span>
 			</div>
 		);
 
-		let sharedmediaView = <CometChatSharedMediaView theme={this.props.theme} lang={this.props.lang} containerHeight="225px" widgetsettings={this.props.widgetsettings} />;
+		let sharedmediaView = (
+			<CometChatSharedMediaView containerHeight="225px" />
+		);
 
 		if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
 			//if viewing group membersfeature is disabled
 			if (this.state.enableViewGroupMembers === false) {
 				viewMembersBtn = null;
 			}
-		} else if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
-			|| this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
-
+		} else if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR || this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
 			if (this.state.enableViewGroupMembers === false && this.state.enableKickGroupMembers === false && this.state.enableBanGroupMembers === false && this.state.enableChangeScope === false) {
 				//if viewing, kicking/banning, promoting/demoting group membersare feature is disabled
 				viewMembersBtn = null;
 			}
 		}
-
-
-			
 
 		//if adding group members feature is disabled
 		if (this.state.enableAddGroupMembers === false) {
@@ -615,7 +677,7 @@ class CometChatGroupDetails extends React.Component {
 		}
 
 		//if leaving group feature is disabled
-		if (this.state.enableLeaveGroup === false) {
+		if (this.state.enableLeaveGroup === false || this.context?.item?.membersCount === 1) {
 			leaveGroupBtn = null;
 		}
 
@@ -627,7 +689,7 @@ class CometChatGroupDetails extends React.Component {
 		let members = (
 			<div css={sectionStyle()} className="section section__members">
 				<h6 css={sectionHeaderStyle(this.props)} className="section__header">
-					{Translator.translate("MEMBERS", this.props.lang)}
+					{Translator.translate("MEMBERS", this.context.language)}
 				</h6>
 				<div css={sectionContentStyle()} className="section__content">
 					{viewMembersBtn}
@@ -640,7 +702,7 @@ class CometChatGroupDetails extends React.Component {
 		let options = (
 			<div css={sectionStyle()} className="section section__options">
 				<h6 css={sectionHeaderStyle(this.props)} className="section__header">
-					{Translator.translate("OPTIONS", this.props.lang)}
+					{Translator.translate("OPTIONS", this.context.language)}
 				</h6>
 				<div css={sectionContentStyle()} className="section__content">
 					{leaveGroupBtn}
@@ -661,29 +723,79 @@ class CometChatGroupDetails extends React.Component {
 		if (this.state.viewMember) {
 			viewMembers = (
 				<CometChatViewGroupMemberList
-					loggedinuser={this.loggedInUser}
-					theme={this.props.theme}
-					item={this.props.item}
-					lang={this.props.lang}
-					open={this.state.viewMember}
-					enableChangeScope={this.state.enableChangeScope}
-					enableKickGroupMembers={this.state.enableKickGroupMembers}
-					enableBanGroupMembers={this.state.enableBanGroupMembers}
-					close={() => this.clickHandler("viewmember", false)}
-					widgetsettings={this.props.widgetsettings}
-					actionGenerated={this.membersActionHandler}
-				/>
+				loggedinuser={this.state.loggedInUser}
+				enableChangeScope={this.state.enableChangeScope}
+				enableKickGroupMembers={this.state.enableKickGroupMembers}
+				enableBanGroupMembers={this.state.enableBanGroupMembers}
+				close={() => this.clickHandler("viewmember", false)}
+				actionGenerated={this.membersActionHandler} />
 			);
 		}
 
 		let addMembers = null;
 		if (this.state.addMember) {
-			addMembers = <CometChatAddGroupMemberList theme={this.props.theme} lang={this.props.lang} open={this.state.addMember} close={() => this.clickHandler("addmember", false)} widgetsettings={this.props.widgetsettings} actionGenerated={this.membersActionHandler} />;
+			addMembers = (
+				<CometChatAddGroupMemberList 
+				close={() => this.clickHandler("addmember", false)} 
+				actionGenerated={this.membersActionHandler} />
+			);
 		}
 
 		let bannedMembers = null;
 		if (this.state.banMember) {
-			bannedMembers = <CometChatBanGroupMemberList theme={this.props.theme} lang={this.props.lang} open={this.state.banMember} close={() => this.clickHandler("banmember", false)} widgetsettings={this.props.widgetsettings} actionGenerated={this.membersActionHandler} />;
+			bannedMembers = (
+				<CometChatBanGroupMemberList 
+				loggedinuser={this.state.loggedInUser}
+				close={() => this.clickHandler("banmember", false)} 
+				actionGenerated={this.membersActionHandler} />
+			);
+		}
+
+		let showDeleteConfirmDialog = null;
+		if (this.state.showDeleteConfirmDialog) {
+			showDeleteConfirmDialog = (
+				<CometChatConfirmDialog 
+				{...this.props} 
+				onClick={this.onDeleteConfirm} 
+				message={Translator.translate("DELETE_CONFIRM", this.context.language)} 
+				confirmButtonText={Translator.translate("DELETE", this.context.language)} 
+				cancelButtonText={Translator.translate("CANCEL", this.context.language)} />
+			);
+		}
+
+		let showLeaveGroupConfirmDialog = null;
+		if (this.state.showLeaveGroupConfirmDialog) {
+			showLeaveGroupConfirmDialog = (
+				<CometChatConfirmDialog 
+				{...this.props} 
+				onClick={this.onLeaveConfirm} 
+				message={Translator.translate("LEAVE_CONFIRM", this.context.language)} 
+				confirmButtonText={Translator.translate("LEAVE", this.context.language)} 
+				cancelButtonText={Translator.translate("CANCEL", this.context.language)} />
+			);
+		}
+
+		let showTransferOwnershipConfirmDialog = null;
+		if (this.state.showTransferOwnershipConfirmDialog) {
+			showTransferOwnershipConfirmDialog = (
+				<CometChatConfirmDialog
+				{...this.props}
+				onClick={this.onTransferConfirm}
+				message={Translator.translate("TRANSFER_CONFIRM", this.context.language)}
+				confirmButtonText={Translator.translate("TRANSFER", this.context.language)}
+				cancelButtonText={Translator.translate("CANCEL", this.context.language)} />
+			);
+		}
+
+		let transferOwnership = null;
+		if (this.state.transferOwnership) {
+			transferOwnership = (
+				<CometChatTransferOwnershipMemberList 
+				roles={this.roles} 
+				loggedinuser={this.state.loggedInUser} 
+				actionGenerated={this.membersActionHandler} 
+				close={() => this.clickHandler("transferownership", false)} />
+			);
 		}
 
 		return (
@@ -691,7 +803,7 @@ class CometChatGroupDetails extends React.Component {
 				<div css={headerStyle(this.props)} className="detailpane__header">
 					<div css={headerCloseStyle(navigateIcon, this.props)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_GROUP_DETAIL"])}></div>
 					<h4 css={headerTitleStyle()} className="header__title">
-						{Translator.translate("DETAILS", this.props.lang)}
+						{Translator.translate("DETAILS", this.context.language)}
 					</h4>
 				</div>
 				<div css={detailPaneStyle()} className="detailpane__section">
@@ -702,6 +814,11 @@ class CometChatGroupDetails extends React.Component {
 				{viewMembers}
 				{addMembers}
 				{bannedMembers}
+				{transferOwnership}
+				{showDeleteConfirmDialog}
+				{showLeaveGroupConfirmDialog}
+				{showTransferOwnershipConfirmDialog}
+				<CometChatToastNotification ref={el => (this.toastRef = el)} />
 			</div>
 		);
 	}

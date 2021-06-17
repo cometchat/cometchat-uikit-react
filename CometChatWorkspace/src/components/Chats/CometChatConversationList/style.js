@@ -9,7 +9,6 @@ export const chatsWrapperStyle = (props) => {
         flexDirection: "column",
         height: "100%",
         boxSizing: "border-box",
-        position: "relative",
         ...borderStyle,
         "*": {
             boxSizing: "border-box",
@@ -94,11 +93,13 @@ export const chatsMsgTxtStyle = (props) => {
 
     return {
         margin: "0",
-        height: "36px",
+        minHeight: "36px",
         color: `${props.theme.color.secondary}`,
-        fontSize: "24px!important",
+        fontSize: "20px!important",
         fontWeight: "600",
         lineHeight: "30px",
+        wordWrap: "break-word",
+        padding: "0 16px"
     }
 }
 

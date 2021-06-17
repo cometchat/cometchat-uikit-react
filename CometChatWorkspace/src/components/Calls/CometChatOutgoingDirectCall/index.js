@@ -104,15 +104,16 @@ class CometChatOutgoingDirectCall extends React.Component {
 
         const customMessage = this.prepareCustomMessageData();
         this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [customMessage]);
+
         CometChat.sendCustomMessage(customMessage).then(message => {
 
             const newMessageObj = { ...message, "_id": customMessage._id };
-            this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], newMessageObj);
+            this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], [newMessageObj]);
 
         }).catch(error => {
 
             const newMessageObj = { ...customMessage, "error": error };
-            this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], newMessageObj);
+            this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], [newMessageObj]);
 
             const errorCode = (error && error.hasOwnProperty("code")) ? error.code : "ERROR";
             this.context.setToastMessage("error", errorCode);

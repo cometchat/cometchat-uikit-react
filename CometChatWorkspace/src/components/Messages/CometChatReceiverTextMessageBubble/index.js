@@ -112,10 +112,16 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 	translateMessage = message => {
 		const messageId = message.id;
 		const messageText = message.text;
-		const translateToLanguage = Translator.getBrowserLanguage();
+
+
+		const browserLanguageCode = Translator.getBrowserLanguage().toLowerCase();
+		let translateToLanguage = browserLanguageCode;
+		if (browserLanguageCode.indexOf("-") !== -1) {
+			const browserLanguageArray = browserLanguageCode.split("-");
+			translateToLanguage = browserLanguageArray[0];
+		}
 
 		let translatedMessage = "";
-
 		CometChat.callExtension("message-translation", "POST", "v2/translate", {
 			msgId: messageId,
 			text: messageText,
@@ -129,24 +135,15 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 							translatedMessage = `\n(${messageTranslation["message_translated"]})`;
 						}
 					} else {
-						this.context.setToastMessage("error", "MESSAGE_TRANSLATE_FAIL");
+						this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
 					}
 				} else {
-					this.context.setToastMessage("info", "MESSAGE_TRANSLATE_SAME_LANGUAGE");
+					this.props.actionGenerated(enums.ACTIONS["INFO"], [], "SAME_LANGUAGE_MESSAGE");
 				}
 
-				this.setState({translatedMessage: translatedMessage});
+				this.setState({ translatedMessage: translatedMessage });
 			})
-			.catch(error => {
-				let errorCode = "ERROR";
-				if (error.hasOwnProperty("code")) {
-					errorCode = error.code;
-					if (error.code === enums.CONSTANTS.ERROR_CODES["ERR_CHAT_API_FAILURE"] && error.hasOwnProperty("details") && error.details.hasOwnProperty("code")) {
-						errorCode = error.details.code;
-					}
-				}
-				this.context.setToastMessage("error", errorCode);
-			});
+			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
 	};
 
 	enableLargerSizeEmojis = () => {

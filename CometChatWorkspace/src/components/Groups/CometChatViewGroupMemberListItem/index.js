@@ -34,9 +34,9 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
     static contextType = CometChatContext;
 
-    constructor(props) {
+    constructor(props, context) {
 
-        super(props);
+        super(props, context);
 
         this.changeScopeDropDown = (
             <select 
@@ -50,20 +50,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
             scope: null
         }
 
-        this.roles = {}
-        this.roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN] = Translator.translate("ADMINISTRATOR", props.lang);
-        this.roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR] = Translator.translate("MODERATOR", props.lang);
-        this.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT] = Translator.translate("PARTICIPANT", props.lang);
-    }
-
-    componentDidUpdate(prevProps) {
-
-        if (prevProps.lang !== this.props.lang) {
-
-            this.roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN] = Translator.translate("ADMINISTRATOR", this.props.lang);
-            this.roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR] = Translator.translate("MODERATOR", this.props.lang);
-            this.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT] = Translator.translate("PARTICIPANT", this.props.lang);
-        }
+        this.roles = context.roles;
     }
 
     toggleChangeScope = (flag) => {
@@ -238,8 +225,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
         let userPresence = (
             <CometChatUserPresence
-            status={this.props.member.status}
-            borderColor={this.props.theme.borderColor.primary} />
+            status={this.props.member.status} />
         );
         
         return (

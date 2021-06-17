@@ -15,9 +15,7 @@ const CometChatUserListItem = (props) => {
 
 	let userPresence = (
 		<CometChatUserPresence
-		widgetsettings={props.widgetsettings}
-		status={props.user.status}
-		borderColor={props.theme.borderColor.primary} />
+		status={props.user.status} />
 	);
 
   	const toggleTooltip = (event, flag) => {

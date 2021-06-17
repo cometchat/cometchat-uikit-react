@@ -1,9 +1,5 @@
 export const modalWrapperStyle = (props) => {
 
-    const show = (props.open) ? {
-        display: "block",
-    } : {};
-
     const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
 
     return {
@@ -21,8 +17,7 @@ export const modalWrapperStyle = (props) => {
         margin: "0 auto",
         boxShadow: "rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
         borderRadius: "12px",
-        display: "none",
-        ...show,
+        display: "block",
         [mq[0]]: {
             width: "100%",
             height: "100%"
@@ -75,6 +70,17 @@ export const modalCaptionStyle = (dir) => {
     }
 }
 
+export const modalErrorStyle = (context) => {
+
+    return {
+			fontSize: "12px",
+			color: `${context.theme.color.red}`,
+			textAlign: "center",
+			margin: "8px 0",
+            width: "100%",
+		};
+}
+
 export const modalSearchStyle = () => {
 
     return {
@@ -117,7 +123,15 @@ export const modalListStyle = (props) => {
     }
 }
 
-export const modalFootStyle = (props) => {
+export const modalFootStyle = (props, state, img) => {
+
+    const loadingState = (state.addingMembers) ? {
+        disabled: "true",
+        pointerEvents: "none",
+        background: `url(${img}) no-repeat right 10px center ${props.theme.backgroundColor.blue}`,
+    } : {};
+
+    const textMargin = state.addingMembers ? { marginRight: "24px" } : {};
 
     return {
         margin: "24px auto 0 auto",
@@ -130,6 +144,10 @@ export const modalFootStyle = (props) => {
             fontSize: "14px",
             outline: "0",
             border: "0",
+            ...loadingState,
+            "span": {
+                ...textMargin
+            }
         },
     }
 }
@@ -152,7 +170,7 @@ export const contactMsgTxtStyle = (props) => {
         margin: "0",
         height: "30px",
         color: `${props.theme.color.secondary}`,
-        fontSize: "24px!important",
+        fontSize: "20px!important",
         fontWeight: "600"
     }
 }

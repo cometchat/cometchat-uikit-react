@@ -3,7 +3,6 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
-import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatUserList } from "../";
 import { CometChatMessages } from "../../Messages";
@@ -30,16 +29,11 @@ class CometChatUserListWithMessages extends React.Component {
 		super(props);
 
 		this.state = {
-			tab: "contacts",
 			sidebarview: false,
 			lang: props.lang,
 		}
 
 		this.contextProviderRef = React.createRef();
-
-		CometChat.getLoggedinUser().then(user => this.loggedInUser = user).catch(error => {
-			console.error(error);
-		});
   	}
   
 	componentDidMount() {
@@ -83,27 +77,19 @@ class CometChatUserListWithMessages extends React.Component {
 
 		let messageScreen = (
 		<CometChatMessages
-		theme={this.props.theme}
-		lang={this.state.lang}
 		_parent="userscreen"
 		actionGenerated={this.actionHandler} />);
 
 		return (
-			<CometChatContextProvider ref={el => this.contextProviderRef = el} user={this.props.chatWithUser}>
+			<CometChatContextProvider ref={el => (this.contextProviderRef = el)} user={this.props.chatWithUser}>
 				<div css={userScreenStyle(this.props)} className="cometchat cometchat--contacts" dir={Translator.getDirection(this.state.lang)}>
-				<div css={userScreenSidebarStyle(this.state, this.props)} className="contacts__sidebar">
-					<CometChatUserList
-					_parent="ulwm"
-					theme={this.props.theme}
-					lang={this.state.lang}
-					onItemClick={this.itemClicked}
-					actionGenerated={this.actionHandler} />
-				</div>
-				<div css={userScreenMainStyle(this.state, this.props)} className="contacts__main">{messageScreen}</div>
-					<CometChatIncomingCall
-					theme={this.props.theme}
-					lang={this.state.lang}
-					actionGenerated={this.actionHandler} />
+					<div css={userScreenSidebarStyle(this.state, this.props)} className="contacts__sidebar">
+						<CometChatUserList _parent="ulwm" theme={this.props.theme} lang={this.state.lang} onItemClick={this.itemClicked} actionGenerated={this.actionHandler} />
+					</div>
+					<div css={userScreenMainStyle(this.state, this.props)} className="contacts__main">
+						{messageScreen}
+					</div>
+					<CometChatIncomingCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
 				</div>
 			</CometChatContextProvider>
 		);
