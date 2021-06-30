@@ -26,7 +26,7 @@ import {
 	modalErrorStyle
 } from "./style";
 
-import clearIcon from "./resources/close.png";
+import clearIcon from "./resources/close.svg";
 import transferIcon from "./resources/transferring.svg";
 
 class CometChatTransferOwnershipMemberList extends React.Component {
@@ -122,7 +122,7 @@ class CometChatTransferOwnershipMemberList extends React.Component {
 
 			const transferText = this.state.transferringOwnership ? Translator.translate("TRANSFERRING", this.props.lang) : Translator.translate("TRANSFER", this.props.lang);
 			transferBtn = (
-				<div css={modalFootStyle(this.props, this.state, this.context, transferIcon)} className="modal__transferownership">
+				<div css={modalFootStyle(this.state, this.context, transferIcon)} className="modal__transferownership">
 					<button type="button" onClick={this.transferOwnership}>
 						<span>{transferText}</span>
 					</button>
@@ -134,7 +134,7 @@ class CometChatTransferOwnershipMemberList extends React.Component {
 			<React.Fragment>
 				<CometChatBackdrop show={true} clicked={this.props.close} />
 				<div css={modalWrapperStyle(this.props, this.context)} className="modal__groupmembers">
-					<span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.context.language)}></span>
+					<span css={modalCloseStyle(clearIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.context.language)}></span>
 					<div css={modalBodyStyle()} className="modal__body">
 						<div css={modalCaptionStyle(Translator.getDirection(this.context.language))} className="modal__title">{Translator.translate("GROUP_MEMBERS", this.context.language)}</div>
 						<div css={modalErrorStyle(this.context)} className="modal__error">{this.state.errorMessage}</div>
@@ -143,7 +143,7 @@ class CometChatTransferOwnershipMemberList extends React.Component {
 								<div css={nameColumnStyle(this.props, this.context)} className="name">
 									{this.state.userColumnTitle}
 								</div>
-								<div css={scopeColumnStyle(this.props, this.context)} className="scope">
+								<div css={scopeColumnStyle(this.context)} className="scope">
 									{Translator.translate("SCOPE", this.context.language)}
 								</div>
 							</div>

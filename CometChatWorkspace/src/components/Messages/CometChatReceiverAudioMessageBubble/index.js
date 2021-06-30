@@ -9,6 +9,7 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
 import { theme } from "../../../resources/theme";
@@ -28,6 +29,7 @@ import {
 
 class CometChatReceiverAudioMessageBubble extends React.Component {
 
+	static contextType = CometChatContext;
 	messageFrom = "receiver";
 
 	constructor(props) {
@@ -77,7 +79,7 @@ class CometChatReceiverAudioMessageBubble extends React.Component {
 			);
 
 			name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-				<span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span>
+				<span css={nameStyle(this.context)} className="message__name">{this.state.message.sender.name}</span>
 				</div>);
 		}
 
@@ -112,7 +114,7 @@ class CometChatReceiverAudioMessageBubble extends React.Component {
 						{name}
 						{toolTipView}
 						<div css={messageAudioContainerStyle(this.props)} className="message__audio__container">
-							<div css={messageAudioWrapperStyle(this.props)} className="message__audio__wrapper">
+							<div css={messageAudioWrapperStyle()} className="message__audio__wrapper">
 								<audio controls>
 									<source src={this.props.message.data.url} />
 								</audio>

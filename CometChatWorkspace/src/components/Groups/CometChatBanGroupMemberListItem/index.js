@@ -14,14 +14,15 @@ import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
 
 import {
-    tableRowStyle,
+    modalRowStyle,
+    userStyle,
     avatarStyle,
     nameStyle,
     roleStyle,
     actionStyle
 } from "./style";
 
-import unban from "./resources/block.png";
+import unban from "./resources/ban-member.svg";
 
 const CometChatBanGroupMemberListItem = (props) => {
 
@@ -29,7 +30,7 @@ const CometChatBanGroupMemberListItem = (props) => {
 
     let name = props.member.name;
     let scope = context.roles[props.member.scope];
-    let unBan = (<img src={unban} alt={Translator.translate("UNBAN", props.lang)} onClick={() => { props.actionGenerated(enums.ACTIONS["UNBAN_GROUP_MEMBER"], props.member)}} />);
+    let unBan = (<i title={Translator.translate("UNBAN", props.lang)} onClick={() => { props.actionGenerated(enums.ACTIONS["UNBAN_GROUP_MEMBER"], props.member)}} />);
 
     //if the loggedin user is moderator, don't allow unban of banned moderators or administrators
     if (context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
@@ -64,8 +65,8 @@ const CometChatBanGroupMemberListItem = (props) => {
     }
     
     return (
-        <tr css={tableRowStyle(props)}>
-            <td 
+        <div css={modalRowStyle(context)}>
+            <div css={userStyle(context)} className="userinfo"
             onMouseEnter={event => toggleTooltip(event, true)}
             onMouseLeave={event => toggleTooltip(event, false)}>
                 <div css={avatarStyle()} className="avatar">
@@ -75,10 +76,10 @@ const CometChatBanGroupMemberListItem = (props) => {
                     borderColor={props.theme.borderColor.primary} />
                 </div>
                 <div css={nameStyle()} className="name">{name}</div>
-            </td>
-            <td css={roleStyle()} className="role">{scope}</td>
-            <td css={actionStyle()} className="unban">{unBan}</td>
-        </tr>
+            </div>
+            <div css={roleStyle(context)} className="role">{scope}</div>
+            <div css={actionStyle(unban, context)} className="unban">{unBan}</div>
+        </div>
     );
 }
 

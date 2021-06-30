@@ -8,8 +8,8 @@ import { CometChatAvatar, CometChatUserPresence } from "../../Shared";
 
 import { modalRowStyle, modalColumnStyle, avatarStyle, nameStyle, selectionColumnStyle, selectionBoxStyle } from "./style";
 
-import inactiveIcon from "./resources/checkbox-inactive.svg";
-import activeIcon from "./resources/checkbox-blue-active.svg";
+import inactiveIcon from "./resources/group-member-unselect.svg";
+import activeIcon from "./resources/group-member-select.svg";
 
 class CometChatTransferOwnershipMemberListItem extends React.Component {
 	static contextType = CometChatContext;
@@ -65,7 +65,7 @@ class CometChatTransferOwnershipMemberListItem extends React.Component {
 				</div>
 				<div css={selectionColumnStyle(this.context)} className="selection">
 					<span>{this.context.roles[this.props.member.scope]}</span>
-					<input css={selectionBoxStyle(inactiveIcon, activeIcon)} type="radio" name="transferOwnership" checked={this.state.checked} id={this.props.member.uid + "sel"} onChange={this.handleCheck} />
+					<input css={selectionBoxStyle(inactiveIcon, activeIcon, this.context)} type="radio" name="transferOwnership" checked={this.state.checked} id={this.props.member.uid + "sel"} onChange={this.handleCheck} />
 					<label htmlFor={this.props.member.uid + "sel"}>&nbsp;</label>
 				</div>
 			</div>

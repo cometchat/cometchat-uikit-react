@@ -85,7 +85,7 @@ class CometChatSenderVideoMessageBubble extends React.PureComponent {
 				{toolTipView}
 					
 				<div css={messageWrapperStyle()} className="message__wrapper">
-					<div css={messageVideoWrapperStyle(this.props)} className="message__video__wrapper">
+					<div css={messageVideoWrapperStyle()} className="message__video__wrapper">
 						<video controls src={this.state.message.data.url}></video>
 					</div>
 				</div>

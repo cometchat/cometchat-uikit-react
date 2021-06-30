@@ -29,25 +29,28 @@ export const messageWrapperStyle = () => {
     }
 }
 
-export const messageTxtWrapperStyle = (props) => {
+export const messageTxtWrapperStyle = context => {
 
-    return {
-        display: "inline-block",
-        borderRadius: "12px",
-        backgroundColor: `${props.theme.backgroundColor.blue}`,
-        color: `${props.theme.color.white}`,
-        padding: "16px",
-        alignSelf: "flex-end",
-        width: "auto",
-    }
-}
+	return {
+		display: "inline-block",
+		borderRadius: "12px",
+		backgroundColor: `${context.theme.primaryColor}`,
+		color: `${context.theme.color.white}`,
+		padding: "16px",
+		alignSelf: "flex-end",
+		width: "auto",
+	};
+};
 
 export const messageTxtContainerStyle = () => {
 
     return {
         display: "flex",
         justifyContent: "center",
-        alignItems: "center"
+        alignItems: "center",
+        "> img": {
+            backgroundColor: "white"
+        }
     }
 }
 
@@ -58,47 +61,61 @@ export const messageTxtStyle = () => {
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",
         textAlign: "left",
-        width: "100%",
+        width: "calc(100% - 24px)",
         fontSize: "14px",
-        marginLeft: "8px"
+        paddingLeft: "8px"
     }
 }
 
-export const messageBtnStyle = (props) => {
+export const messageTxtIconStyle = (img, context) => {
 
     return {
-        listStyleType: "none",
-        padding: "0",
-        margin: "0",
-        width: "100%",
-        "li": {
-            backgroundColor: `${props.theme.backgroundColor.white}`,
-            borderRadius: "8px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-            position: "relative",
-            margin: "16px 0 0 0",
-            padding: "8px",
-            cursor: "pointer",
-            "> p": {
-                background: "0 0",
-                textAlign: "center",
-                color: `${props.theme.color.primary}`,
-                width: "100%",
-                display: "inline-block",
-                fontSize: "14px",
-                margin: "0",
-            }
-        }
+        mask: `url(${img}) no-repeat left center`,
+        backgroundColor: `${context.theme.color.white}`,
+        width: "24px",
+        height: "24px"
     }
 }
+
+export const messageBtnStyle = context => {
+
+	return {
+		listStyleType: "none",
+		padding: "0",
+		margin: "0",
+		width: "100%",
+		li: {
+			backgroundColor: `${context.theme.backgroundColor.white}`,
+			borderRadius: "8px",
+			display: "flex",
+			justifyContent: "center",
+			alignItems: "center",
+			width: "100%",
+			position: "relative",
+			margin: "16px 0 0 0",
+			padding: "8px",
+			cursor: "pointer",
+			"> p": {
+				background: "0 0",
+				textAlign: "center",
+				color: `${context.theme.primaryColor}`,
+				width: "100%",
+                fontWeight: "600",
+				display: "inline-block",
+				fontSize: "14px",
+				margin: "0",
+			},
+		},
+	};
+};
 
 export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-end",
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center"
     }
 }
 

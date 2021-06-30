@@ -127,9 +127,9 @@ export const optionStyle = (img) => {
 
     return {
         width: "100%",
-        padding: "15px 15px 15px 48px",
+        padding: "16px 16px 16px 36px",
         fontWeight: 600,
-        background: `url(${img}) 16px center no-repeat`,
+        background: `url(${img}) left center no-repeat`,
     }
 }
 

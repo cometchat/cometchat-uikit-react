@@ -9,6 +9,7 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
 import { theme } from "../../../resources/theme";
@@ -28,6 +29,7 @@ import {
 
 class CometChatReceiverVideoMessageBubble extends React.Component {
 
+	static contextType = CometChatContext;
 	messageFrom = "receiver";
 
 	constructor(props) {
@@ -75,7 +77,7 @@ class CometChatReceiverVideoMessageBubble extends React.Component {
 			);
 
 			name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-				<span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span>
+				<span css={nameStyle(this.context)} className="message__name">{this.props.message.sender.name}</span>
 				</div>);
 		}
 
@@ -110,7 +112,7 @@ class CometChatReceiverVideoMessageBubble extends React.Component {
 						{name}
 						{toolTipView}
 						<div css={messageVideoContainerStyle()} className="message__video__container">
-							<div css={messageVideoWrapperStyle(this.props)} className="message__video__wrapper">
+							<div css={messageVideoWrapperStyle()} className="message__video__wrapper">
 								<video controls>
 									<source src={this.props.message.data.url} />
 								</video>

@@ -100,7 +100,7 @@ export const mediaItemStyle = () => {
     }
 }
 
-export const itemStyle = (state, props, img) => {
+export const itemStyle = (state, props, img, context) => {
 
     let itemTypeStyle = {};
     let bgColor = `${props.theme.backgroundColor.lightGrey}`;
@@ -137,18 +137,25 @@ export const itemStyle = (state, props, img) => {
                 maxWidth: "100%",
                 maxHeight: "100%",
                 margin: "auto",
-                backgroundColor: bgColor,
-                display: "inline-block",
-                padding: "10px",
-                paddingLeft: "40px",
-                fontSize: "13px",
-                color: `${props.theme.color.primary}`,
-                background: `url(${img}) no-repeat 10px center`,
-                whiteSpace: "pre-wrap",
-                wordWrap: "break-word",
-                textAlign: "left",
+                display: "flex",
+                padding: "8px",
                 "&:hover, &:visited": {
-                    color: `${props.theme.color.primary}`,
+                    color: `${props.theme.secondaryTextColor}`,
+                },
+                "> i": {
+                    width: "30px",
+                    height: "24px",
+                    display: "inline-block",
+                    mask: `url(${img}) left center no-repeat`,
+		            backgroundColor: `${context.theme.secondaryTextColor}`,
+                },
+                "> span": {
+                    fontSize: "13px",
+                    color: `${props.theme.secondaryTextColor}`,
+                    whiteSpace: "pre-wrap",
+                    wordWrap: "break-word",
+                    textAlign: "left",
+                    width: "calc(100% - 30px)"
                 }
 
             }

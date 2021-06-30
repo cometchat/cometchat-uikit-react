@@ -1,14 +1,14 @@
-export const removeOptionIconStyle = (img) => {
+export const removeOptionIconStyle = (img, context) => {
 
-    return {
-        background: `url(${img}) right center no-repeat`,
-        backgroundSize: "28px 28px",
-        cursor: "pointer",
-        display: "block",
-        height: "28px",
-        width: "28px",
-    };
-}
+	return {
+		mask: `url(${img}) center center no-repeat`,
+		backgroundColor: `${context.theme.color.red}`,
+		cursor: "pointer",
+		display: "block",
+		height: "24px",
+		width: "24px",
+	};
+};
 
 export const iconWrapperStyle = () => {
     return {

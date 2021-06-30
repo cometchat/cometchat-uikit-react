@@ -94,8 +94,9 @@ export const notificationStyle = (props, state, keyframes, CometChatToastNotific
         position: "relative",
         pointerEvents: "auto",
         overflow: "hidden",
-        padding: "16px",
+        padding: "8px",
         marginBottom: "16px",
+        fontSize: "13px",
         width: "100%",
         minHeight: "50px",
         boxShadow: "0 0 10px #999",
@@ -155,4 +156,15 @@ export const notificationCloseButtonStyle = () => {
             maxWidth: "100%"
         }
     }
+}
+
+export const iconStyle = (img, theme) => {
+
+    return {
+        width: "24px",
+        height: "24px",
+        display: "inline-block",
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${theme.color.white}`,
+    };
 }

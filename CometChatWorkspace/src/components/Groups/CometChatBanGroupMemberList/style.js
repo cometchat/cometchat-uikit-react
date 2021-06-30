@@ -1,6 +1,6 @@
-export const modalWrapperStyle = (props) => {
+export const modalWrapperStyle = (context) => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+    const mq = context.theme.breakPoints.map(x => `${x}`);
 
     return {
         minWidth: "350px",
@@ -8,7 +8,7 @@ export const modalWrapperStyle = (props) => {
         width: "40%",
         height: "40%",
         overflow: "hidden",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
+        backgroundColor: `${context.theme.backgroundColor.white}`,
         position: "fixed",
         left: "50%",
         top: "50%",
@@ -18,14 +18,14 @@ export const modalWrapperStyle = (props) => {
         boxShadow: "rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
         borderRadius: "12px",
         display: "block",
-        [mq[0]]: {
+        [`@media ${mq[1]}, ${mq[2]}`]: {
             width: "100%",
             height: "100%"
         }
     }
 }
 
-export const modalCloseStyle = (img) => {
+export const modalCloseStyle = (img, context) => {
 
     return {
         position: "absolute",
@@ -34,7 +34,8 @@ export const modalCloseStyle = (img) => {
         borderRadius: "50%",
         top: "16px",
         right: "16px",
-        background: `url(${img}) center center no-repeat`,
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${context.theme.primaryColor}`,
         cursor: "pointer",
     }
 }
@@ -48,39 +49,7 @@ export const modalBodyStyle = () => {
     }
 }
 
-export const modalErrorStyle = context => {
-	return {
-		fontSize: "12px",
-		color: `${context.theme.color.red}`,
-		textAlign: "center",
-		margin: "8px 0",
-		width: "100%",
-	};
-};
-
-export const modalTableStyle = (props) => {
-
-    return {
-        borderCollapse: "collapse",
-        margin: "0",
-        padding: "0",
-        width: "100%",
-        height: "90%",
-        "thead > tr": {
-            border: `1px solid ${props.theme.borderColor.primary}`,
-            display: "table",
-            width: "100%",
-            tableLayout: "fixed",
-        },
-        "th": {
-            padding: "8px",
-            fontSize: "12px",
-            textAlign: "left"
-        }
-    }
-}
-
-export const tableCaptionStyle = (dir) => {
+export const modalCaptionStyle = (dir) => {
 
     const textAlignStyle = (dir === "rtl") ? {
         textAlign: "right",
@@ -89,40 +58,106 @@ export const tableCaptionStyle = (dir) => {
         textAlign: "left",
     };
 
-
     return {
         fontSize: "20px",
-        marginBottom: "16px",
+        marginBottom: "8px",
         fontWeight: "bold",
-        ...textAlignStyle
+        ...textAlignStyle,
+        width: "100%",
     }
 }
 
-export const tableBodyStyle = () => {
+export const modalErrorStyle = context => {
+
+	return {
+		fontSize: "12px",
+		color: `${context.theme.color.red}`,
+		textAlign: "center",
+		padding: "8px 0",
+		width: "100%",
+		height: "31px",
+	};
+};
+
+export const modalListStyle = () => {
 
     return {
-        height: "340px",
-        overflowY: "auto",
-        display: "block"
+        width: "100%",
+        height: "calc(100% - 70px)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
     }
 }
 
-export const roleColumnStyle = () => {
-
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+export const listHeaderStyle = (context) => {
 
     return {
-        width: "150px",
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        fontWeight: "bold",
+        padding: "8px",
+        width: "100%",
+        border: `1px solid ${context.theme.borderColor.primary}`,
+    };
+}
+
+export const nameColumnStyle = (context) => {
+
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
+
+    return {
+        width: "calc(100% - 220px)",
         [mq[0]]: {
-            width: "115px"
-        }
-    }
+            width: "calc(100% - 185px)",
+        },
+        [mq[1]]: {
+            width: "calc(100% - 185px)",
+        },
+        [mq[2]]: {
+            width: "calc(100% - 185px)",
+        },
+    };
 }
+
+export const roleColumnStyle = context => {
+
+	const mq = context.theme.breakPoints.map(x => `@media ${x}`);
+
+	return {
+		width: "150px",
+		[mq[0]]: {
+			width: "115px",
+		},
+		[mq[1]]: {
+			width: "115px",
+		},
+		[mq[2]]: {
+			width: "115px",
+		},
+	};
+};
 
 export const actionColumnStyle = () => {
 
     return {
         width: "70px"
+    }
+}
+
+export const listStyle = () => {
+
+    return {
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
+        width: "100%",
+        height: "calc(100% - 33px)",
+        overflowY: "auto",        
     }
 }
 
@@ -138,12 +173,12 @@ export const contactMsgStyle = () => {
     }
 }
 
-export const contactMsgTxtStyle = (props) => {
+export const contactMsgTxtStyle = (context) => {
 
     return {
         margin: "0",
         height: "30px",
-        color: `${props.theme.color.secondary}`,
+        color: `${context.theme.color.secondary}`,
         fontSize: "20px!important",
         fontWeight: "600"
     }

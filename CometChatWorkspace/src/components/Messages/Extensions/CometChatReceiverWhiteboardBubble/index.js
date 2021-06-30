@@ -9,31 +9,34 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../";
 import { CometChatAvatar } from "../../../Shared";
 
+import { CometChatContext } from "../../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../../util/common";
 
 import { theme } from "../../../../resources/theme";
 import Translator from "../../../../resources/localization/translator";
 
 import {
-    messageContainerStyle,
-    messageWrapperStyle,
-    messageThumbnailStyle,
-    messageDetailStyle,
-    nameWrapperStyle,
-    nameStyle,
-    messageTxtContainerStyle,
-    messageTxtWrapperStyle,
-    messageTxtTitleStyle,
-    messageTxtStyle,
-    messageBtnStyle,
-    messageInfoWrapperStyle,
-    messageReactionsWrapperStyle
+	messageContainerStyle,
+	messageWrapperStyle,
+	messageThumbnailStyle,
+	messageDetailStyle,
+	nameWrapperStyle,
+	nameStyle,
+	messageTxtContainerStyle,
+	messageTxtWrapperStyle,
+	messageTxtTitleStyle,
+	messageTxtStyle,
+	messageBtnStyle,
+	messageInfoWrapperStyle,
+	messageReactionsWrapperStyle,
+	iconStyle,
 } from "./style";
 
-import whiteboardIcon from "./resources/receiverwhiteboard.png";
+import whiteboardIcon from "./resources/collaborative-whiteboard.svg";
 
 class CometChatReceiverWhiteboardBubble extends React.PureComponent {
 
+    static contextType = CometChatContext;
     messageFrom = "receiver";
 
     constructor(props) {
@@ -97,7 +100,7 @@ class CometChatReceiverWhiteboardBubble extends React.PureComponent {
             );
 
             name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-                <span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span>
+                <span css={nameStyle(this.context)} className="message__name">{this.props.message.sender.name}</span>
             </div>);
         }
 
@@ -122,42 +125,39 @@ class CometChatReceiverWhiteboardBubble extends React.PureComponent {
         const documentTitle = `${this.state.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_WHITEBOARD", this.props.lang)}`;
 
         return (
-            <div 
-            css={messageContainerStyle()} 
-            className="receiver__message__container message__whiteboard"
-            onMouseEnter={this.handleMouseHover}
-            onMouseLeave={this.handleMouseHover}>
+					<div css={messageContainerStyle()} className="receiver__message__container message__whiteboard" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
+						<div css={messageWrapperStyle()} className="message__wrapper">
+							{avatar}
+							<div css={messageDetailStyle()} className="message__details">
+								{name}
+								{toolTipView}
+								<div css={messageTxtContainerStyle()} className="message__whiteboard__container">
+									<div css={messageTxtWrapperStyle(this.context)} className="message__whiteboard__wrapper">
+										<div css={messageTxtTitleStyle(this.context)} className="message__whiteboard__title">
+											<i css={iconStyle(whiteboardIcon, this.context)} title={Translator.translate("COLLABORATIVE_WHITEBOARD", this.props.lang)}></i>
+											<p css={messageTxtStyle()} className="whiteboard__title">
+												{documentTitle}
+											</p>
+										</div>
 
-                <div css={messageWrapperStyle()} className="message__wrapper">
-                    {avatar}
-                    <div css={messageDetailStyle()} className="message__details">
-                        {name}
-                        {toolTipView}
-                        <div css={messageTxtContainerStyle()} className="message__whiteboard__container">
-                            <div css={messageTxtWrapperStyle(this.props)} className="message__whiteboard__wrapper">
-                                <div css={messageTxtTitleStyle(this.props)} className="message__whiteboard__title">
-                                    <img src={whiteboardIcon} alt={Translator.translate("COLLABORATIVE_WHITEBOARD", this.props.lang)} />
-                                    <p css={messageTxtStyle()} className="whiteboard__title">{documentTitle}</p>
-                                </div>
-                                
-                                <ul css={messageBtnStyle(this.props)} className="whiteboard__button">
-                                    <li onClick={this.launchCollaborativeWhiteboard}>
-                                        <p>{Translator.translate("JOIN", this.props.lang)}</p>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+										<ul css={messageBtnStyle(this.context)} className="whiteboard__button">
+											<li onClick={this.launchCollaborativeWhiteboard}>
+												<p>{Translator.translate("JOIN", this.props.lang)}</p>
+											</li>
+										</ul>
+									</div>
+								</div>
 
-                        {messageReactions}
+								{messageReactions}
 
-                        <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                            <CometChatReadReceipt {...this.props} message={this.state.message} />
-                            <CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
+								<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+									<CometChatReadReceipt {...this.props} message={this.state.message} />
+									<CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
+								</div>
+							</div>
+						</div>
+					</div>
+				);
     }
 }
 

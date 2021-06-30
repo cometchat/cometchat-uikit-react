@@ -29,7 +29,7 @@ export const messageWrapperStyle = () => {
     }
 }
 
-export const messageAudioWrapperStyle = (props) => {
+export const messageAudioWrapperStyle = () => {
 
     return {
         display: "inline-block",
@@ -47,6 +47,9 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-end",
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center"
     }
 }
 

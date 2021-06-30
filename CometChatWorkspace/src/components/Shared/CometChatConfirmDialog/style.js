@@ -36,11 +36,11 @@ export const alertButtonStyle = (props) => {
 			borderRadius: "4px",
 			fontSize: "12px",
 			fontWeight: "600",
-			border: `1px solid ${props.theme.borderColor.blue}`,
+			border: `1px solid ${props.theme.primaryColor}`,
 		},
 		"> button[value=yes]": {
-			backgroundColor: `${props.theme.backgroundColor.blue}`,
-			color: `${props.theme.color.white}`
+			backgroundColor: `${props.theme.primaryColor}`,
+			color: `${props.theme.color.white}`,
 		},
 		"> button[value=no]": {
 			backgroundColor: `${props.theme.backgroundColor.secondary}`,

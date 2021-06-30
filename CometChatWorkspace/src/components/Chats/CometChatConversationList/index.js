@@ -28,7 +28,7 @@ import {
   chatsListStyle
 } from "./style";
 
-import navigateIcon from "./resources/navigate.png";
+import navigateIcon from "./resources/back.svg";
 
 class CometChatConversationList extends React.Component {
 	loggedInUser = null;
@@ -673,6 +673,7 @@ class CometChatConversationList extends React.Component {
 	};
 
 	handleMenuClose = () => {
+		
 		if (!this.props.actionGenerated) {
 			return false;
 		}
@@ -684,7 +685,10 @@ class CometChatConversationList extends React.Component {
 		this.ConversationListManager.fetchNextConversation()
 			.then(conversationList => {
 				if (conversationList.length === 0) {
-					this.setState({ decoratorMessage: Translator.translate("NO_CHATS_FOUND", this.state.lang) });
+
+					if (this.state.conversationlist.length === 0) {
+						this.setState({ decoratorMessage: Translator.translate("NO_CHATS_FOUND", this.state.lang) });
+					}
 				} else {
 					this.setState({ decoratorMessage: "" });
 				}
@@ -803,7 +807,7 @@ class CometChatConversationList extends React.Component {
 			);
 		}
 
-		let closeBtn = <div css={chatsHeaderCloseStyle(navigateIcon, this.props)} className="header__close" onClick={this.handleMenuClose}></div>;
+		let closeBtn = <div css={chatsHeaderCloseStyle(navigateIcon, this.getContext())} className="header__close" onClick={this.handleMenuClose}></div>;
 		if (this.getContext() && Object.keys(this.getContext().item).length === 0) {
 			closeBtn = null;
 		}
@@ -846,17 +850,17 @@ class CometChatConversationList extends React.Component {
 
 // Specifies the default values for props:
 CometChatConversationList.defaultProps = {
-  lang: Translator.getDefaultLanguage(),
-  theme: theme,
-  onItemClick: () => { },
-  _parent: ""
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+	onItemClick: () => { },
+	_parent: ""
 };
 
 CometChatConversationList.propTypes = {
-  lang: PropTypes.string,
-  theme: PropTypes.object,
-  onItemClick: PropTypes.func,
-  _parent: PropTypes.string
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	onItemClick: PropTypes.func,
+	_parent: PropTypes.string
 }
 
 export { CometChatConversationList };
