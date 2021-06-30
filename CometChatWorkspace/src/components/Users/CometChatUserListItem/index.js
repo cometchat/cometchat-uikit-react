@@ -6,12 +6,16 @@ import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatAvatar, CometChatUserPresence } from "../../Shared";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
 
 import { listItem, itemThumbnailStyle, itemDetailStyle, itemNameStyle, itemDescStyle } from "./style";
+import { useContext } from "react";
 
 const CometChatUserListItem = (props) => {
+
+	const context = useContext(CometChatContext);
 
 	let userPresence = (
 		<CometChatUserPresence
@@ -37,7 +41,7 @@ const CometChatUserListItem = (props) => {
 	} 
   
 	return (
-		<div css={listItem(props)} onClick={() => props.clickHandler(props.user)} className="list__item">
+		<div css={listItem(props, context)} onClick={() => props.clickHandler(props.user)} className="list__item">
 			<div css={itemThumbnailStyle()} className="list__item__thumbnail">
 				<CometChatAvatar user={props.user} />
 				{userPresence}
@@ -46,7 +50,7 @@ const CometChatUserListItem = (props) => {
 				<div css={itemNameStyle()} className="item__details__name"  
 				onMouseEnter={event => toggleTooltip(event, true)} 
 				onMouseLeave={event => toggleTooltip(event, false)}>{props.user.name}</div>
-				<div css={itemDescStyle(props.theme)} className="item__details__desc"></div>
+				<div css={itemDescStyle(context)} className="item__details__desc"></div>
 			</div>
 		</div>
 	)

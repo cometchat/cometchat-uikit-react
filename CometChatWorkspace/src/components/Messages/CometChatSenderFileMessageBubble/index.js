@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt } from "../";
 import { CometChatMessageReactions } from "../Extensions";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
 import Translator from "../../../resources/localization/translator";
@@ -17,14 +18,16 @@ import {
 	messageWrapperStyle,
 	messageFileWrapper,
 	messageInfoWrapperStyle,
-	messageReactionsWrapperStyle
+	messageReactionsWrapperStyle,
+	iconStyle
 } from "./style";
 
 
-import blueFile from "./resources/senderfile.png";
+import fileIcon from "./resources/file-upload.svg";
 
 class CometChatSenderFileMessageBubble extends React.Component {
 
+	static contextType = CometChatContext;
 	messageFrom = "sender";
 
 	constructor(props) {
@@ -90,7 +93,7 @@ class CometChatSenderFileMessageBubble extends React.Component {
 
 			fileMessage = (
 				<a href={fileUrl} target="_blank" rel="noopener noreferrer" className="message__file">
-					<img src={blueFile} alt="file" />
+					<i css={iconStyle(fileIcon, this.context)}></i>
 					<p>{fileName}</p>
 				</a>
 			);
@@ -101,7 +104,7 @@ class CometChatSenderFileMessageBubble extends React.Component {
 
 			fileMessage = (
 				<div className="message__file">
-					<img src={blueFile} alt="file" />
+					<i css={iconStyle(fileIcon, this.context)}></i>
 					<p>{fileName}</p>
 				</div>
 			);
@@ -117,7 +120,7 @@ class CometChatSenderFileMessageBubble extends React.Component {
 				{toolTipView}
 					
 				<div css={messageWrapperStyle()} className="message__wrapper">
-					<div css={messageFileWrapper(this.props)} className="message__file__wrapper">{fileMessage}</div>
+					<div css={messageFileWrapper(this.context)} className="message__file__wrapper">{fileMessage}</div>
 				</div>
 
 				{messageReactions}

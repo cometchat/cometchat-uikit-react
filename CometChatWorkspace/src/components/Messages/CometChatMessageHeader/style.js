@@ -1,18 +1,18 @@
 import { CometChat } from "@cometchat-pro/chat";
 
-export const chatHeaderStyle = (props) => {
+export const chatHeaderStyle = context => {
 
-    return {
-        padding: "16px",
-        width: "100%",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
-        zIndex: "1",
-        borderBottom: `1px solid ${props.theme.borderColor.primary}`,
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-    }
-}
+	return {
+		padding: "16px",
+		width: "100%",
+		backgroundColor: `${context.theme.backgroundColor.white}`,
+		zIndex: "1",
+		borderBottom: `1px solid ${context.theme.borderColor.primary}`,
+		display: "flex",
+		flexDirection: "row",
+		justifyContent: "space-between",
+	};
+};
 
 export const chatDetailStyle = () => {
 
@@ -24,22 +24,23 @@ export const chatDetailStyle = () => {
     }
 }
 
-export const chatSideBarBtnStyle = (img, props) => {
+export const chatSideBarBtnStyle = (img, props, context) => {
 
     const displayValue = (props.hasOwnProperty("sidebar") && props.sidebar === 0) ? { display: "none!important"} : {};
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+    const mq = [...context.theme.breakPoints];
 
     return {
         cursor: "pointer",
         display: "none",
-        background: `url(${img}) center center no-repeat`,
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${context.theme.primaryColor}`,
         width: "24px",
         height: "24px",
         float: "left",
-        [mq[0]]: {
-            display: "block"
-        },
+        [`@media ${mq[1]}, ${mq[2]}`]: {
+			display: "block"
+		},
         ...displayValue
     }
 }
@@ -55,21 +56,21 @@ export const chatThumbnailStyle = () => {
     }
 }
 
-export const chatUserStyle = () => {
+export const chatUserStyle = context => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+    const mq = [...context.theme.breakPoints];
 
-    return {
-        width: "calc(100% - 50px)",
-        padding: "0",
-        flexGrow: "1",
-        display: "flex",
-        flexDirection: "column",
-        [mq[0]]: {
-            width: "calc(100% - 80px)!important"
-        }
-    }
-}
+	return {
+		width: "calc(100% - 50px)",
+		padding: "0",
+		flexGrow: "1",
+		display: "flex",
+		flexDirection: "column",
+		[`@media ${mq[1]}, ${mq[2]}`]: {
+			width: "calc(100% - 80px)!important",
+		},
+	};
+};
 
 export const chatNameStyle = () => {
 
@@ -84,26 +85,26 @@ export const chatNameStyle = () => {
     }
 }
 
-export const chatStatusStyle = (props, state, context) => {
+export const chatStatusStyle = (state, context) => {
 
     let status = {};
     if (context.type === CometChat.ACTION_TYPE.TYPE_USER) {
 
         status = {
-            color: `${props.theme.color.blue}`,
+            color: `${context.theme.color.blue}`,
             textTransform: "capitalize",
         };
 
         if (state.presence === "offline") {
             status = {
-                color: `${props.theme.color.helpText}`,
+                color: `${context.theme.color.helpText}`,
                 textTransform: "capitalize",
             }
         } 
 
         if (state.typing) {
             status = {
-                color: `${props.theme.color.helpText}`,
+                color: `${context.theme.color.helpText}`,
                 textTransform: "none",
                 fontStyle: "italic",
             };
@@ -112,12 +113,12 @@ export const chatStatusStyle = (props, state, context) => {
     } else if (context.type === CometChat.ACTION_TYPE.TYPE_GROUP) {
 
         status = {
-            color: `${props.theme.color.helpText}`,
+            color: `${context.theme.color.helpText}`,
         }
 
         if (state.typing) {
             status = {
-                color: `${props.theme.color.helpText}`,
+                color: `${context.theme.color.helpText}`,
                 fontStyle: "italic",
             };
         }
@@ -126,7 +127,6 @@ export const chatStatusStyle = (props, state, context) => {
     return {
         fontSize: "13px",
         width: "100%",
-
         ...status
     }
 }
@@ -142,8 +142,14 @@ export const chatOptionWrapStyle = () => {
     }
 }
 
-export const chatOptionStyle = (img) => {
+export const chatOptionStyle = (img, context, ongoingCall) => {
 
+    const bgColor = (ongoingCall) ? {
+        backgroundColor: `${context.theme.secondaryTextColor}`
+    } : {
+        backgroundColor: `${context.theme.primaryColor}`
+    };
+    
     return {
         width: "24px",
         height: "24px",
@@ -151,5 +157,12 @@ export const chatOptionStyle = (img) => {
         display: "flex",
         alignItems: "center",
         margin: "0 0 0 16px",
+        "i": {
+            width: "24px",
+            height: "24px",
+            display: "inline-block",
+            mask: `url(${img}) center center no-repeat`,
+            ...bgColor
+        }
     }
 }

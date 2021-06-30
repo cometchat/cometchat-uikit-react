@@ -61,13 +61,13 @@ export const nameWrapperStyle = (avatar) => {
     }
 }
 
-export const nameStyle = (props) => {
+export const nameStyle = context => {
 
-    return {
-        fontSize: "10px",
-        color: `${props.theme.color.helpText}`,
-    }
-}
+	return {
+		fontSize: "10px",
+		color: `${context.theme.color.helpText}`,
+	};
+};
 
 export const messageVideoContainerStyle = () => {
 
@@ -79,7 +79,7 @@ export const messageVideoContainerStyle = () => {
     }
 }
 
-export const messageVideoWrapperStyle = (props) => {
+export const messageVideoWrapperStyle = () => {
 
     return {
         display: "inline-block",

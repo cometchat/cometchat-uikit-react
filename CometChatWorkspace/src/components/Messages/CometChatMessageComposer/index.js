@@ -40,18 +40,18 @@ import {
 	stickerBtnStyle
 } from "./style";
 
-import roundedPlus from "./resources/attach.png";
-import videoIcon from "./resources/attachvideo.png";
-import audioIcon from "./resources/attachaudio.png";
-import docIcon from "./resources/attachfile.png";
-import imageIcon from "./resources/attachimage.png";
-import insertEmoticon from "./resources/insertemoji.png"
-import sendBlue from "./resources/sendmessage.png";
-import pollIcon from "./resources/createpoll.png";
-import stickerIcon from "./resources/insertsticker.png"
-import closeIcon from "./resources/close.png";
-import documentIcon from "./resources/launchcollaborativedocument.png";
-import whiteboardIcon from "./resources/launchcollaborativewhiteboard.png";
+import roundedPlus from "./resources/add-circle-filled.svg";
+import videoIcon from "./resources/video.svg";
+import audioIcon from "./resources/audio-file.svg";
+import docIcon from "./resources/file-upload.svg";
+import imageIcon from "./resources/image.svg";
+import insertEmoticon from "./resources/emoji.svg";
+import sendBlue from "./resources/send-message.svg";
+import pollIcon from "./resources/polls.svg";
+import stickerIcon from "./resources/stickers.svg";
+import closeIcon from "./resources/close.svg";
+import documentIcon from "./resources/collaborative-document.svg";
+import whiteboardIcon from "./resources/collaborative-whiteboard.svg";
 import heartIcon from "./resources/heart.png";
 
 class CometChatMessageComposer extends React.PureComponent {
@@ -890,12 +890,12 @@ class CometChatMessageComposer extends React.PureComponent {
 		let docs = (
 			<div
 				title={docText}
-				css={fileItemStyle()}
+				css={fileItemStyle(docIcon, this.context)}
 				className="filelist__item item__file"
 				onClick={() => {
 					this.openFileDialogue("file");
 				}}>
-				<img src={docIcon} alt={docText} />
+				<i></i>
 				<input onChange={this.onFileChange} type="file" id="file" ref={this.fileUploaderRef} />
 			</div>
 		);
@@ -907,32 +907,32 @@ class CometChatMessageComposer extends React.PureComponent {
 			<React.Fragment>
 				<div
 					title={videoText}
-					css={fileItemStyle()}
+					css={fileItemStyle(videoIcon, this.context)}
 					className="filelist__item item__video"
 					onClick={() => {
 						this.openFileDialogue("video");
 					}}>
-					<img src={videoIcon} alt={videoText} />
+					<i></i>
 					<input onChange={this.onVideoChange} accept="video/*" type="file" ref={this.videoUploaderRef} />
 				</div>
 				<div
 					title={audioText}
-					css={fileItemStyle()}
+					css={fileItemStyle(audioIcon, this.context)}
 					className="filelist__item item__audio"
 					onClick={() => {
 						this.openFileDialogue("audio");
 					}}>
-					<img src={audioIcon} alt={audioText} />
+					<i></i>
 					<input onChange={this.onAudioChange} accept="audio/*" type="file" ref={this.audioUploaderRef} />
 				</div>
 				<div
 					title={imageText}
-					css={fileItemStyle()}
+					css={fileItemStyle(imageIcon, this.context)}
 					className="filelist__item item__image"
 					onClick={() => {
 						this.openFileDialogue("image");
 					}}>
-					<img src={imageIcon} alt={imageText} />
+					<i></i>
 					<input onChange={this.onImageChange} accept="image/*" type="file" ref={this.imageUploaderRef} />
 				</div>
 			</React.Fragment>
@@ -940,22 +940,22 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		const pollText = Translator.translate("CREATE_POLL", this.props.lang);
 		let createPollBtn = (
-			<div title={pollText} css={fileItemStyle()} className="filelist__item item__poll" onClick={this.toggleCreatePoll}>
-				<img src={pollIcon} alt={pollText} />
+			<div title={pollText} css={fileItemStyle(pollIcon, this.context)} className="filelist__item item__poll" onClick={this.toggleCreatePoll}>
+				<i></i>
 			</div>
 		);
 
 		const collaborativeDocText = Translator.translate("COLLABORATE_USING_DOCUMENT", this.props.lang);
 		let collaborativeDocBtn = (
-			<div title={collaborativeDocText} css={fileItemStyle()} className="filelist__item item__document" onClick={this.toggleCollaborativeDocument}>
-				<img src={documentIcon} alt={collaborativeDocText} />
+			<div title={collaborativeDocText} css={fileItemStyle(documentIcon, this.context)} className="filelist__item item__document" onClick={this.toggleCollaborativeDocument}>
+				<i></i>
 			</div>
 		);
 
 		const collaborativeBoardText = Translator.translate("COLLABORATE_USING_WHITEBOARD", this.props.lang);
 		let collaborativeBoardBtn = (
-			<div title={collaborativeBoardText} css={fileItemStyle()} className="filelist__item item__whiteboard" onClick={this.toggleCollaborativeBoard}>
-				<img src={whiteboardIcon} alt={collaborativeBoardText} />
+			<div title={collaborativeBoardText} css={fileItemStyle(whiteboardIcon, this.context)} className="filelist__item item__whiteboard" onClick={this.toggleCollaborativeBoard}>
+				<i></i>
 			</div>
 		);
 
@@ -963,28 +963,27 @@ class CometChatMessageComposer extends React.PureComponent {
 		let emojiBtn = (
 			<div
 				title={emojiText}
-				css={emojiButtonStyle()}
+				css={emojiButtonStyle(insertEmoticon, this.context)}
 				className="button__emoji"
 				onClick={() => {
 					this.toggleEmojiPicker();
-					this.setState({messageToReact: ""});
+					this.setState({ messageToReact: "" });
 				}}>
-				<img src={insertEmoticon} alt={emojiText} />
+				<i></i>
 			</div>
 		);
 
 		const StickerText = Translator.translate("STICKER", this.props.lang);
 		let stickerBtn = (
-			<div title={StickerText} css={stickerBtnStyle()} className="button__sticker" onClick={this.toggleStickerPicker}>
-				{" "}
-				<img src={stickerIcon} alt={StickerText} />
+			<div title={StickerText} css={stickerBtnStyle(stickerIcon, this.context)} className="button__sticker" onClick={this.toggleStickerPicker}>
+				<i></i>
 			</div>
 		);
 
 		const sendMessageText = Translator.translate("SEND_MESSAGE", this.props.lang);
 		let sendBtn = (
-			<div title={sendMessageText} css={sendButtonStyle()} className="button__send" onClick={this.sendTextMessage}>
-				<img src={sendBlue} alt={sendMessageText} />
+			<div title={sendMessageText} css={sendButtonStyle(sendBlue, this.context)} className="button__send" onClick={this.sendTextMessage}>
+				<i></i>
 			</div>
 		);
 
@@ -1035,8 +1034,8 @@ class CometChatMessageComposer extends React.PureComponent {
 		const attachText = Translator.translate("ATTACH", this.props.lang);
 		let attach = (
 			<div css={stickyAttachmentStyle()} className="input__sticky__attachment">
-				<div css={stickyAttachButtonStyle()} className="attachment__icon" onClick={this.toggleFilePicker} title={attachText}>
-					<img src={roundedPlus} alt={attachText} />
+				<div css={stickyAttachButtonStyle(roundedPlus, this.context)} className="attachment__icon" onClick={this.toggleFilePicker} title={attachText}>
+					<i></i>
 				</div>
 				<div css={filePickerStyle(this.state)} className="attachment__filepicker" dir={Translator.getDirection(this.props.lang)}>
 					<div css={fileListStyle()} className="filepicker__filelist">
@@ -1082,10 +1081,10 @@ class CometChatMessageComposer extends React.PureComponent {
 			}
 
 			editPreview = (
-				<div css={editPreviewContainerStyle(this.props, keyframes)}>
+				<div css={editPreviewContainerStyle(this.context, keyframes)}>
 					<div css={previewHeadingStyle()}>
 						<div css={previewTextStyle()}>{Translator.translate("EDIT_MESSAGE", this.props.lang)}</div>
-						<span css={previewCloseStyle(closeIcon)} onClick={this.closeEditPreview}></span>
+						<span css={previewCloseStyle(closeIcon, this.context)} onClick={this.closeEditPreview}></span>
 					</div>
 					<div>{messageText}</div>
 				</div>
@@ -1114,25 +1113,25 @@ class CometChatMessageComposer extends React.PureComponent {
 		}
 
 		return (
-			<div css={chatComposerStyle(this.props)} className="chat__composer">
+			<div css={chatComposerStyle(this.context)} className="chat__composer">
 				{editPreview}
 				{smartReplyPreview}
 				{stickerViewer}
 				{emojiViewer}
 				<div css={composerInputStyle()} className="composer__input">
-					<div tabIndex="-1" css={inputInnerStyle(this.props, this.state)} className="input__inner">
+					<div tabIndex="-1" css={inputInnerStyle(this.props, this.state, this.context)} className="input__inner">
 						<div css={messageInputStyle(disabledState)}
-							className="input__message-input"
-							contentEditable="true"
-							placeholder={Translator.translate("ENTER_YOUR_MESSAGE_HERE", this.props.lang)}
-							dir={Translator.getDirection(this.props.lang)}
-							onInput={this.changeHandler}
-							onBlur={event => this.endTyping(event)}
-							onKeyDown={this.sendMessageOnEnter}
-							ref={this.messageInputRef}></div>
-						<div css={inputStickyStyle(this.props, disabledState, attach)} className="input__sticky">
+						className="input__message-input"
+						contentEditable="true"
+						placeholder={Translator.translate("ENTER_YOUR_MESSAGE_HERE", this.props.lang)}
+						dir={Translator.getDirection(this.props.lang)}
+						onInput={this.changeHandler}
+						onBlur={event => this.endTyping(event)}
+						onKeyDown={this.sendMessageOnEnter}
+						ref={this.messageInputRef}></div>
+						<div css={inputStickyStyle(disabledState, attach, this.context)} className="input__sticky">
 							{attach}
-							<div css={stickyButtonStyle(this.props, this.state)} className="input__sticky__buttons">
+							<div css={stickyButtonStyle(this.state)} className="input__sticky__buttons">
 								{stickerBtn}
 								{emojiBtn}
 								{sendBtn}

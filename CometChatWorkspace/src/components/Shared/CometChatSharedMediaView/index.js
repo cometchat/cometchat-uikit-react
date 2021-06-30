@@ -25,7 +25,7 @@ import {
 
 } from "./style";
 
-import fileIcon from "./resources/file.png";
+import fileIcon from "./resources/file-upload.svg";
 
 class CometChatSharedMediaView extends React.Component {
 
@@ -162,7 +162,7 @@ class CometChatSharedMediaView extends React.Component {
             if(this.state.messagetype === "image" && message.data.url) {
 
                 return (
-                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__image">
+                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon, this.context)} className="item item__image">
                         <img src={message.data.url} alt={Translator.translate("SHARED_MEDIA", this.props.lang)} />
                     </div>
                 );
@@ -170,7 +170,7 @@ class CometChatSharedMediaView extends React.Component {
             } else if (this.state.messagetype === "video" && message.data.url) {
 
                 return (
-                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__video">
+                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon, this.context)} className="item item__video">
                         <video src={message.data.url} />
                     </div>
                 );
@@ -178,10 +178,13 @@ class CometChatSharedMediaView extends React.Component {
             } else if (this.state.messagetype === "file" && message.data.attachments) {
 
                 return (
-                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__file">
-                    <a href={message.data.attachments[0].url} 
-                    target="_blank" 
-                    rel="noopener noreferrer">{message.data.attachments[0].name}</a>
+                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon, this.context)} className="item item__file">
+                        <a href={message.data.attachments[0].url} 
+                        target="_blank" 
+                        rel="noopener noreferrer">
+                            <i></i>
+                           <span>{message.data.attachments[0].name}</span>
+                        </a>
                     </div>
                 );
             }

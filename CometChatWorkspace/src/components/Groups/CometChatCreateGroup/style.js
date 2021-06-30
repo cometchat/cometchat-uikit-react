@@ -1,13 +1,13 @@
-export const modalWrapperStyle = (props) => {
+export const modalWrapperStyle = (context) => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
     return {
         minWidth: "350px",
         minHeight: "350px",
         width: "40%",
         height: "40%",
         overflow: "hidden",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
+        backgroundColor: `${context.theme.backgroundColor.white}`,
         position: "fixed",
         left: "50%",
         top: "50%",
@@ -20,11 +20,19 @@ export const modalWrapperStyle = (props) => {
         [mq[0]]: {
             width: "100%",
             height: "100%",
+        },
+        [mq[1]]: {
+            width: "100%",
+            height: "100%",
+        },
+        [mq[2]]: {
+            width: "100%",
+            height: "100%",
         }
     }
 }
 
-export const modalCloseStyle = (img) => {
+export const modalCloseStyle = (img, context) => {
 
     return {
         position: "absolute",
@@ -33,7 +41,8 @@ export const modalCloseStyle = (img) => {
         borderRadius: "50%",
         top: "16px",
         right: "16px",
-        background: `url(${img}) center center no-repeat`,
+        mask: `url(${img}) center center no-repeat`,
+		backgroundColor: `${context.theme.primaryColor}`,
         cursor: "pointer",
     }
 }
@@ -109,12 +118,12 @@ export const tableBodyStyle = () => {
     }
 }
 
-export const tableFootStyle = (props, state, img) => {
+export const tableFootStyle = (context, state, img) => {
 
     const loadingState = (state.creatingGroup) ? {
         disabled: "true",
         pointerEvents: "none",
-        background: `url(${img}) no-repeat right 10px center ${props.theme.backgroundColor.blue}`,
+        background: `url(${img}) no-repeat right 10px center ${context.theme.primaryColor}`,
     } : {};
 
     const textMargin = (state.creatingGroup) ? { marginRight: "24px", } : {};
@@ -124,9 +133,9 @@ export const tableFootStyle = (props, state, img) => {
         "button": {
             cursor: "pointer",
             padding: "8px 16px",
-            backgroundColor: `${props.theme.backgroundColor.blue}`,
+            backgroundColor: `${context.theme.primaryColor}`,
             borderRadius: "5px",
-            color: `${props.theme.color.white}`,
+            color: `${context.theme.color.white}`,
             fontSize: "14px",
             outline: "0",
             border: "0",
@@ -144,7 +153,7 @@ export const tableFootStyle = (props, state, img) => {
     }
 }
 
-export const inputStyle = (props) => {
+export const inputStyle = (context) => {
 
     return {
         display: "block",
@@ -152,8 +161,8 @@ export const inputStyle = (props) => {
         border: '0',
         boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
         borderRadius: "8px",
-        backgroundColor: `${props.theme.backgroundColor.grey}`,
-        color: `${props.theme.color.helpText}`,
+        backgroundColor: `${context.theme.backgroundColor.grey}`,
+        color: `${context.theme.color.helpText}`,
         fontSize: "14px",
     }
 }

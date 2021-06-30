@@ -36,7 +36,7 @@ import {
     itemLinkStyle
 } from "./style";
 
-import navigateIcon from "./resources/navigate.png";
+import navigateIcon from "./resources/back.svg";
 
 class CometChatGroupDetails extends React.Component {
 	item;
@@ -600,7 +600,7 @@ class CometChatGroupDetails extends React.Component {
 
 		let viewMembersBtn = (
 			<div css={contentItemStyle()} className="content__item">
-				<div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("viewmember", true)}>
+				<div css={itemLinkStyle(this.context, 0)} className="item__link" onClick={() => this.clickHandler("viewmember", true)}>
 					{Translator.translate("VIEW_MEMBERS", this.context.language)}
 				</div>
 			</div>
@@ -612,7 +612,7 @@ class CometChatGroupDetails extends React.Component {
 		if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
 			addMembersBtn = (
 				<div css={contentItemStyle()} className="content__item">
-					<div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("addmember", true)}>
+					<div css={itemLinkStyle(this.context, 0)} className="item__link" onClick={() => this.clickHandler("addmember", true)}>
 						{Translator.translate("ADD_MEMBERS", this.context.language)}
 					</div>
 				</div>
@@ -620,7 +620,7 @@ class CometChatGroupDetails extends React.Component {
 
 			deleteGroupBtn = (
 				<div css={contentItemStyle()} className="content__item">
-					<span css={itemLinkStyle(this.props, 1)} className="item__link" onClick={this.deleteGroup}>
+					<span css={itemLinkStyle(this.context, 1)} className="item__link" onClick={this.deleteGroup}>
 						{Translator.translate("DELETE_AND_EXIT", this.context.language)}
 					</span>
 				</div>
@@ -630,7 +630,7 @@ class CometChatGroupDetails extends React.Component {
 		if (this.context.item.scope !== CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
 			bannedMembersBtn = (
 				<div css={contentItemStyle()} className="content__item">
-					<div css={itemLinkStyle(this.props, 0)} className="item__link" onClick={() => this.clickHandler("banmember", true)}>
+					<div css={itemLinkStyle(this.context, 0)} className="item__link" onClick={() => this.clickHandler("banmember", true)}>
 						{Translator.translate("BANNED_MEMBERS", this.context.language)}
 					</div>
 				</div>
@@ -639,7 +639,7 @@ class CometChatGroupDetails extends React.Component {
 
 		let leaveGroupBtn = (
 			<div css={contentItemStyle()} className="content__item">
-				<span css={itemLinkStyle(this.props, 0)} className="item__link" onClick={this.leaveGroup}>
+				<span css={itemLinkStyle(this.context, 0)} className="item__link" onClick={this.leaveGroup}>
 					{Translator.translate("LEAVE_GROUP", this.context.language)}
 				</span>
 			</div>
@@ -688,7 +688,7 @@ class CometChatGroupDetails extends React.Component {
 
 		let members = (
 			<div css={sectionStyle()} className="section section__members">
-				<h6 css={sectionHeaderStyle(this.props)} className="section__header">
+				<h6 css={sectionHeaderStyle(this.context)} className="section__header">
 					{Translator.translate("MEMBERS", this.context.language)}
 				</h6>
 				<div css={sectionContentStyle()} className="section__content">
@@ -701,7 +701,7 @@ class CometChatGroupDetails extends React.Component {
 
 		let options = (
 			<div css={sectionStyle()} className="section section__options">
-				<h6 css={sectionHeaderStyle(this.props)} className="section__header">
+				<h6 css={sectionHeaderStyle(this.context)} className="section__header">
 					{Translator.translate("OPTIONS", this.context.language)}
 				</h6>
 				<div css={sectionContentStyle()} className="section__content">
@@ -799,9 +799,9 @@ class CometChatGroupDetails extends React.Component {
 		}
 
 		return (
-			<div css={detailStyle(this.props)} className="detailpane">
-				<div css={headerStyle(this.props)} className="detailpane__header">
-					<div css={headerCloseStyle(navigateIcon, this.props)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_GROUP_DETAIL"])}></div>
+			<div css={detailStyle(this.context)} className="detailpane">
+				<div css={headerStyle(this.context)} className="detailpane__header">
+					<div css={headerCloseStyle(navigateIcon, this.context)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_GROUP_DETAIL"])}></div>
 					<h4 css={headerTitleStyle()} className="header__title">
 						{Translator.translate("DETAILS", this.context.language)}
 					</h4>

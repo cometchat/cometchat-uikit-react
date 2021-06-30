@@ -21,11 +21,12 @@ import {
     callScreenWrapperStyle,
     headerTitleStyle,
     headerButtonStyle,
-    callScreenResizerStyle
+    callScreenResizerStyle,
+    iconStyle
 } from "./style";
 
-import minimizeIcon from "./resources/minimize.png";
-import maximizeIcon from "./resources/maximize.png";
+import minimizeIcon from "./resources/reduce-size.svg";
+import maximizeIcon from "./resources/increase-size.svg";
 
 class CometChatCallScreen extends React.PureComponent {
 
@@ -429,9 +430,9 @@ class CometChatCallScreen extends React.PureComponent {
     render() {
 
         const resizeText = Translator.translate("RESIZE", this.props.lang);
-        let iconView = (<img src={minimizeIcon} alt={resizeText} />);
+        let iconView = (<i css={iconStyle(minimizeIcon)} title={resizeText}></i>);
         if (this.state.maximized === false) {
-            iconView = (<img src={maximizeIcon} alt={resizeText} />);
+            iconView = (<i css={iconStyle(maximizeIcon)} title={resizeText}></i>);
         }
 
         return (

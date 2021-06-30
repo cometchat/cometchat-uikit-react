@@ -20,17 +20,18 @@ import {
   footerStyle,
   navbarStyle,
   itemStyle,
-  itemLinkStyle
+  itemLinkStyle,
+  itemLinkTextStyle
 } from "./style";
 
-import chatGreyIcon from "./resources/chats-grey.png";
-import chatBlueIcon from "./resources/chats-blue.png";
-import contactGreyIcon from "./resources/contacts-grey.png";
-import contactBlueIcon from "./resources/contacts-blue.png";
-import groupGreyIcon from "./resources/groups-grey.png";
-import groupBlueIcon from "./resources/groups-blue.png";
-import moreGreyIcon from "./resources/userinfo-grey.png";
-import moreBlueIcon from "./resources/userinfo-blue.png";
+import chatGreyIcon from "./resources/chats.svg";
+//import chatBlueIcon from "./resources/chats-selected.svg";
+import contactGreyIcon from "./resources/users.svg";
+//import contactBlueIcon from "./resources/users-selected.svg";
+import groupGreyIcon from "./resources/groups.svg";
+//import groupBlueIcon from "./resources/groups-selected.svg";
+import moreGreyIcon from "./resources/more.svg";
+//import moreBlueIcon from "./resources/more-selected.svg";
 
 export class CometChatNavBar extends React.Component {
 	static contextType = CometChatContext;
@@ -156,29 +157,29 @@ export class CometChatNavBar extends React.Component {
 				case "SIDEBAR_CHATS":
 					return (
 						<div key={tab} css={itemStyle(this.props)} className="navbar__item" onClick={() => this.tabChanged("SIDEBAR_CHATS")}>
-							<div css={itemLinkStyle(chatGreyIcon, chatBlueIcon, chatsTabActive, "SIDEBAR_CHATS")} className="item__link item__link__chats" title={Translator.translate("CHATS", this.props.lang)}></div>
-							<div>{Translator.translate("CHATS", this.props.lang)}</div>
+							<div css={itemLinkStyle(chatGreyIcon, chatsTabActive, this.context)} className="item__link item__link__chats" title={Translator.translate("CHATS", this.props.lang)}></div>
+							<div css={itemLinkTextStyle(chatsTabActive, this.context)} className="item__label">{Translator.translate("CHATS", this.props.lang)}</div>
 						</div>
 					);
 				case "SIDEBAR_USERS":
 					return (
 						<div key={tab} css={itemStyle(this.props)} className="navbar__item" onClick={() => this.tabChanged("SIDEBAR_USERS")}>
-							<div css={itemLinkStyle(contactGreyIcon, contactBlueIcon, userTabActive, "SIDEBAR_USERS")} className="item__link item__link__contacts" title={Translator.translate("USERS", this.props.lang)}></div>
-							<div>{Translator.translate("USERS", this.props.lang)}</div>
+							<div css={itemLinkStyle(contactGreyIcon, userTabActive, this.context)} className="item__link item__link__contacts" title={Translator.translate("USERS", this.props.lang)}></div>
+							<div css={itemLinkTextStyle(userTabActive, this.context)} className="item__label">{Translator.translate("USERS", this.props.lang)}</div>
 						</div>
 					);
 				case "SIDEBAR_GROUPS":
 					return (
 						<div key={tab} css={itemStyle(this.props)} className="navbar__item" onClick={() => this.tabChanged("SIDEBAR_GROUPS")}>
-							<div css={itemLinkStyle(groupGreyIcon, groupBlueIcon, groupsTabActive, "SIDEBAR_GROUPS")} className="item__link item__link__groups" title={Translator.translate("GROUPS", this.props.lang)}></div>
-							<div>{Translator.translate("GROUPS", this.props.lang)}</div>
+							<div css={itemLinkStyle(groupGreyIcon, groupsTabActive, this.context)} className="item__link item__link__groups" title={Translator.translate("GROUPS", this.props.lang)}></div>
+							<div css={itemLinkTextStyle(groupsTabActive, this.context)} className="item__label">{Translator.translate("GROUPS", this.props.lang)}</div>
 						</div>
 					);
 				case "SIDEBAR_MOREINFO":
 					return (
 						<div key={tab} css={itemStyle(this.props)} className="navbar__item" onClick={() => this.tabChanged("SIDEBAR_MOREINFO")}>
-							<div css={itemLinkStyle(moreGreyIcon, moreBlueIcon, moreTabActive, "SIDEBAR_MOREINFO")} className="item__link item__link__info" title={Translator.translate("MORE", this.props.lang)}></div>
-							<div>{Translator.translate("SETTINGS", this.props.lang)}</div>
+							<div css={itemLinkStyle(moreGreyIcon, moreTabActive, this.context)} className="item__link item__link__info" title={Translator.translate("MORE", this.props.lang)}></div>
+							<div css={itemLinkTextStyle(moreTabActive, this.context)} className="item__label">{Translator.translate("MORE", this.props.lang)}</div>
 						</div>
 					);
 				default:

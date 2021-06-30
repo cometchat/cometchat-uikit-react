@@ -919,9 +919,9 @@ class CometChatMessages extends React.PureComponent {
 			const messageText = unreadMessageCount > 1 ? `${unreadMessageCount} ${Translator.translate("NEW_MESSAGES", this.state.lang)}` : `${unreadMessageCount} ${Translator.translate("NEW_MESSAGE", this.state.lang)}`;
 			newMessageIndicator = (
 				<div css={messagePaneTopStyle()} className="message_pane__top">
-					<div css={messagePaneBannerStyle(this.props)} className="message_pane__banner">
+					<div css={messagePaneBannerStyle(this.context)} className="message_pane__banner">
 						<div css={messagePaneUnreadBannerStyle()} className="message_pane__unread_banner__banner" title={Translator.translate("JUMP", this.state.lang)}>
-							<button type="button" css={messagePaneUnreadBannerMessageStyle(this.props)} className="message_pane__unread_banner__msg" onClick={this.jumpToMessages}>
+							<button type="button" css={messagePaneUnreadBannerMessageStyle(this.context)} className="message_pane__unread_banner__msg" onClick={this.jumpToMessages}>
 								<span css={iconArrowDownStyle()} className="icon--arrow-down">
 									&#x2193;{" "}
 								</span>
@@ -970,13 +970,13 @@ class CometChatMessages extends React.PureComponent {
 		if (this.state.viewdetailscreen) {
 			if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER) {
 				detailScreen = (
-					<div css={chatSecondaryStyle(this.props)} className="chat__secondary-view">
+					<div css={chatSecondaryStyle(this.props, this.context)} className="chat__secondary-view">
 						<CometChatUserDetails theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
 					</div>
 				);
 			} else if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP) {
 				detailScreen = (
-					<div css={chatSecondaryStyle(this.props)} className="chat__secondary-view">
+					<div css={chatSecondaryStyle(this.props, this.context)} className="chat__secondary-view">
 						<CometChatGroupDetails theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
 					</div>
 				);
@@ -986,7 +986,7 @@ class CometChatMessages extends React.PureComponent {
 		let threadMessageView = null;
 		if (this.state.threadmessageview) {
 			threadMessageView = (
-				<div css={chatSecondaryStyle(this.props)} className="chat__secondary-view">
+				<div css={chatSecondaryStyle(this.props, this.context)} className="chat__secondary-view">
 					<CometChatMessageThread
 						theme={this.props.theme}
 						activeTab={this.state.activeTab}
@@ -1009,7 +1009,7 @@ class CometChatMessages extends React.PureComponent {
 
 		let messageComponent = (
 			<React.Fragment>
-				<div css={chatWrapperStyle(this.props, this.state)} className="main__chat" dir={Translator.getDirection(this.state.lang)}>
+				<div css={chatWrapperStyle(this.props, this.state, this.context)} className="main__chat" dir={Translator.getDirection(this.state.lang)}>
 					<CometChatMessageHeader sidebar={this.props.sidebar} theme={this.props.theme} lang={this.state.lang} viewdetail={this.props.viewdetail === false ? false : true} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />
 					<CometChatMessageList
 						ref={el => {

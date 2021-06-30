@@ -31,7 +31,7 @@ import {
 	errorContainerStyle
 } from "./style"; 
 
-import callIcon from "./resources/call-end-white-icon.svg";
+import callIcon from "./resources/end-call.svg";
 
 class CometChatOutgoingCall extends React.PureComponent {
 
@@ -197,7 +197,7 @@ class CometChatOutgoingCall extends React.PureComponent {
 							{errorScreen}
 							<div css={headerIconStyle()} className="callscreen__icons">
 								<div css={iconWrapperStyle()} className="icon__block" onClick={this.cancelCall}>
-									<div css={iconStyle(callIcon, 0)} className="icon icon__end"></div>
+									<div css={iconStyle(callIcon)} className="icon icon__end"><i></i></div>
 								</div>
 							</div>
 						</div>

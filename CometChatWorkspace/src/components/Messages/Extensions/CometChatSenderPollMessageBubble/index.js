@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt } from "../../";
 import { CometChatMessageReactions } from "../";
 
+import { CometChatContext } from "../../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../../util/common";
 
 import { theme } from "../../../../resources/theme";
@@ -29,6 +30,7 @@ class CometChatSenderPollMessageBubble extends React.Component {
     pollId;
     requestInProgress = null;
     messageFrom = "sender";
+    static contextType = CometChatContext;
 
     constructor(props) {
         
@@ -112,8 +114,8 @@ class CometChatSenderPollMessageBubble extends React.Component {
 
             const template = (
                 <li key={option}>
-                    <div css={pollPercentStyle(this.props, width)}> </div>
-                    <div css={answerWrapperStyle(this.props, width)}>
+                    <div css={pollPercentStyle(this.context, width)}> </div>
+                    <div css={answerWrapperStyle(this.context, width)}>
                         <span>{width}</span>
                         <p>{optionData.text}</p>
                     </div>
@@ -150,9 +152,9 @@ class CometChatSenderPollMessageBubble extends React.Component {
                 {toolTipView}
                     
                 <div css={messageWrapperStyle()} className="message__wrapper">
-                    <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
+                    <div css={messageTxtWrapperStyle(this.context)} className="message__poll__wrapper">
                         <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
-                        <ul css={pollAnswerStyle(this.props)} className="poll__options">
+                        <ul css={pollAnswerStyle(this.context)} className="poll__options">
                             {pollOptions}
                         </ul>
                         <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>

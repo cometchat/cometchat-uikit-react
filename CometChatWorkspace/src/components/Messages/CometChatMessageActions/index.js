@@ -17,12 +17,12 @@ import {
 	groupButtonStyle
 } from "./style";
 
-import startThreadIcon from "./resources/startthread.png";
-import deleteIcon from "./resources/deletemessage.png";
-import editIcon from "./resources/edit.png";
-import reactIcon from "./resources/add-reaction.png";
-import translateIcon from "./resources/translate.png";
-import sendMessageInPrivateIcon from "./resources/sendmessageinprivate.png";
+import startThreadIcon from "./resources/threaded-message.svg";
+import deleteIcon from "./resources/delete.svg";
+import editIcon from "./resources/edit.svg";
+import reactIcon from "./resources/reactions.svg";
+import translateIcon from "./resources/message-translate.svg";
+import sendMessageInPrivateIcon from "./resources/send-message-in-private.svg";
 
 
 class CometChatMessageActions extends React.PureComponent {
@@ -208,15 +208,15 @@ class CometChatMessageActions extends React.PureComponent {
 		let reactToMessage = null;
 		if (this.state.enableMessageReaction) {
 			reactToMessage = (
-				<li css={actionGroupStyle(this.props)} className="action__group">
+				<li css={actionGroupStyle()} className="action__group">
 					<button
-						type="button"
-						onMouseEnter={event => this.toggleTooltip(event, true)}
-						onMouseLeave={event => this.toggleTooltip(event, false)}
-						css={groupButtonStyle(this.props, reactIcon)}
-						className="group__button button__reacttomessage"
-						data-title={Translator.translate("ADD_REACTION", this.props.lang)}
-						onClick={() => this.props.actionGenerated(enums.ACTIONS["REACT_TO_MESSAGE"], this.props.message)}></button>
+					type="button"
+					onMouseEnter={event => this.toggleTooltip(event, true)}
+					onMouseLeave={event => this.toggleTooltip(event, false)}
+					css={groupButtonStyle(reactIcon, this.context)}
+					className="group__button button__reacttomessage"
+					data-title={Translator.translate("ADD_REACTION", this.props.lang)}
+					onClick={() => this.props.actionGenerated(enums.ACTIONS["REACT_TO_MESSAGE"], this.props.message)}></button>
 				</li>
 			);
 		}
@@ -224,15 +224,15 @@ class CometChatMessageActions extends React.PureComponent {
 		let threadedChats = null;
 		if (this.state.enableThreadedChats) {
 			threadedChats = (
-				<li css={actionGroupStyle(this.props)} className="action__group">
+				<li css={actionGroupStyle()} className="action__group">
 					<button
-						type="button"
-						onMouseEnter={event => this.toggleTooltip(event, true)}
-						onMouseLeave={event => this.toggleTooltip(event, false)}
-						css={groupButtonStyle(this.props, startThreadIcon)}
-						className="group__button button__threadedchats"
-						data-title={this.props.message.replyCount ? Translator.translate("REPLY_TO_THREAD", this.props.lang) : Translator.translate("REPLY_IN_THREAD", this.props.lang)}
-						onClick={() => this.props.actionGenerated(enums.ACTIONS["VIEW_THREADED_MESSAGE"], this.props.message)}></button>
+					type="button"
+					onMouseEnter={event => this.toggleTooltip(event, true)}
+					onMouseLeave={event => this.toggleTooltip(event, false)}
+					css={groupButtonStyle(startThreadIcon, this.context)}
+					className="group__button button__threadedchats"
+					data-title={this.props.message.replyCount ? Translator.translate("REPLY_TO_THREAD", this.props.lang) : Translator.translate("REPLY_IN_THREAD", this.props.lang)}
+					onClick={() => this.props.actionGenerated(enums.ACTIONS["VIEW_THREADED_MESSAGE"], this.props.message)}></button>
 				</li>
 			);
 		}
@@ -252,15 +252,15 @@ class CometChatMessageActions extends React.PureComponent {
 				this.state.enableDeleteMessage)
 		) {
 			deleteMessage = (
-				<li css={actionGroupStyle(this.props)} className="action__group">
+				<li css={actionGroupStyle()} className="action__group">
 					<button
-						type="button"
-						onMouseEnter={event => this.toggleTooltip(event, true)}
-						onMouseLeave={event => this.toggleTooltip(event, false)}
-						css={groupButtonStyle(this.props, deleteIcon)}
-						className="group__button button__delete"
-						data-title={Translator.translate("DELETE_MESSAGE", this.props.lang)}
-						onClick={() => this.props.actionGenerated(enums.ACTIONS["DELETE_MESSAGE"], this.props.message)}></button>
+					type="button"
+					onMouseEnter={event => this.toggleTooltip(event, true)}
+					onMouseLeave={event => this.toggleTooltip(event, false)}
+					css={groupButtonStyle(deleteIcon, this.context, 1)}
+					className="group__button button__delete"
+					data-title={Translator.translate("DELETE_MESSAGE", this.props.lang)}
+					onClick={() => this.props.actionGenerated(enums.ACTIONS["DELETE_MESSAGE"], this.props.message)}></button>
 				</li>
 			);
 		}
@@ -268,15 +268,15 @@ class CometChatMessageActions extends React.PureComponent {
 		let editMessage = null;
 		if (this.state.enableEditMessage) {
 			editMessage = (
-				<li css={actionGroupStyle(this.props)} className="action__group">
+				<li css={actionGroupStyle()} className="action__group">
 					<button
-						type="button"
-						onMouseEnter={event => this.toggleTooltip(event, true)}
-						onMouseLeave={event => this.toggleTooltip(event, false)}
-						css={groupButtonStyle(this.props, editIcon)}
-						className="group__button button__edit"
-						data-title={Translator.translate("EDIT_MESSAGE", this.props.lang)}
-						onClick={() => this.props.actionGenerated(enums.ACTIONS["EDIT_MESSAGE"], this.props.message)}></button>
+					type="button"
+					onMouseEnter={event => this.toggleTooltip(event, true)}
+					onMouseLeave={event => this.toggleTooltip(event, false)}
+					css={groupButtonStyle(editIcon, this.context)}
+					className="group__button button__edit"
+					data-title={Translator.translate("EDIT_MESSAGE", this.props.lang)}
+					onClick={() => this.props.actionGenerated(enums.ACTIONS["EDIT_MESSAGE"], this.props.message)}></button>
 				</li>
 			);
 		}
@@ -284,15 +284,15 @@ class CometChatMessageActions extends React.PureComponent {
 		let translateMessage = null;
 		if (this.state.enableTranslateMessage) {
 			translateMessage = (
-				<li css={actionGroupStyle(this.props)} className="action__group">
+				<li css={actionGroupStyle()} className="action__group">
 					<button
-						type="button"
-						onMouseEnter={event => this.toggleTooltip(event, true)}
-						onMouseLeave={event => this.toggleTooltip(event, false)}
-						css={groupButtonStyle(this.props, translateIcon)}
-						className="group__button button__translate"
-						data-title={Translator.translate("TRANSLATE_MESSAGE", this.props.lang)}
-						onClick={() => this.props.translateMessage(this.props.message)}></button>
+					type="button"
+					onMouseEnter={event => this.toggleTooltip(event, true)}
+					onMouseLeave={event => this.toggleTooltip(event, false)}
+					css={groupButtonStyle(translateIcon, this.context)}
+					className="group__button button__translate"
+					data-title={Translator.translate("TRANSLATE_MESSAGE", this.props.lang)}
+					onClick={() => this.props.translateMessage(this.props.message)}></button>
 				</li>
 			);
 		}
@@ -305,19 +305,19 @@ class CometChatMessageActions extends React.PureComponent {
 			messageInPrivate = (
 				<li>
 					<button
-						type="button"
-						onMouseEnter={event => this.toggleTooltip(event, true)}
-						onMouseLeave={event => this.toggleTooltip(event, false)}
-						css={groupButtonStyle(this.props, sendMessageInPrivateIcon)}
-						className="group__button button__translate"
-						data-title={Translator.translate("SEND_MESSAGE_IN_PRIVATE", this.props.lang)}
-						onClick={this.sendMessageInPrivate}></button>
+					type="button"
+					onMouseEnter={event => this.toggleTooltip(event, true)}
+					onMouseLeave={event => this.toggleTooltip(event, false)}
+					css={groupButtonStyle(sendMessageInPrivateIcon, this.context)}
+					className="group__button button__translate"
+					data-title={Translator.translate("SEND_MESSAGE_IN_PRIVATE", this.props.lang)}
+					onClick={this.sendMessageInPrivate}></button>
 				</li>
 			);
 		}
 
 		let tooltip = (
-			<ul css={messageActionStyle(this.props)} className="message__actions">
+			<ul css={messageActionStyle(this.props, this.context)} className="message__actions">
 				{reactToMessage}
 				{threadedChats}
 				{editMessage}

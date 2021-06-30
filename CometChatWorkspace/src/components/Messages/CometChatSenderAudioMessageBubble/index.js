@@ -86,7 +86,7 @@ class CometChatSenderAudioMessageBubble extends React.Component {
 
 				{toolTipView}
 				<div css={messageWrapperStyle()} className="message__wrapper">
-					<div css={messageAudioWrapperStyle(this.props)} className="message__audio__wrapper">
+					<div css={messageAudioWrapperStyle()} className="message__audio__wrapper">
 						<audio controls src={this.state.message.data.url}></audio>
 					</div>
 				</div>

@@ -210,3 +210,15 @@ export const ButtonStyle = (props, action) => {
         overflow: "hidden"
     }
 }
+
+export const callIconStyle = (img, context) => {
+
+    return {
+        width: "24px",
+        height: "24px",
+        display: "inline-block",
+        cursor: "pointer",
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${context.theme.secondaryTextColor}`,
+    }
+}

@@ -107,7 +107,7 @@ export const callScreenHeaderStyle = (state) => {
 export const headerTitleStyle = () => {
 
     return {
-        width: "calc(100% - 50px)",
+        width: "calc(100% - 55px)",
         padding: "16px",
     }
 }
@@ -115,7 +115,7 @@ export const headerTitleStyle = () => {
 export const headerButtonStyle = () => {
 
     return {
-        width: "50px",
+        width: "55px",
         padding: "16px",
         display: "flex",
         justifyContent: "center",
@@ -156,5 +156,17 @@ export const callScreenResizerStyle = (state) => {
         bottom: "0",
         zIndex: "2147483004", 
         ...backgroundStyle
+    }
+}
+
+export const iconStyle = (img) => {
+
+    return {
+        width: "24px",
+        height: "24px",
+        display: "inline-block",
+        cursor: "pointer",
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `white`,
     }
 }

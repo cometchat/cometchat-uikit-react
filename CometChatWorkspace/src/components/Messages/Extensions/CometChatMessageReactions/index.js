@@ -19,7 +19,7 @@ import {
     emojiButtonStyle,
 } from "./style";
 
-import reactIcon from "./resources/add-reaction.png";
+import reactIcon from "./resources/reactions.svg";
 
 class CometChatMessageReactions extends React.Component {
 
@@ -96,7 +96,7 @@ class CometChatMessageReactions extends React.Component {
             return (
                 <div
                 key={key}
-                css={messageReactionsStyle(this.props, reactionData)}
+                css={messageReactionsStyle(this.props, reactionData, this.context)}
                 className={reactionClassName}
                 title={reactionTitle}
                 onClick={this.triggerEmojiClick}>
@@ -105,7 +105,7 @@ class CometChatMessageReactions extends React.Component {
                     size={16}
                     native
                     onClick={this.reactToMessages} />
-                    <span css={reactionCountStyle(this.props)} className="reaction__count">{reactionCount}</span>
+                    <span css={reactionCountStyle(this.context)} className="reaction__count">{reactionCount}</span>
                 </div>
             );
         });
@@ -121,9 +121,9 @@ class CometChatMessageReactions extends React.Component {
         }
 
         const addReactionEmoji = (
-            <div key="-1" css={messageReactionsStyle(this.props, {})} className="reaction reaction__add" title={Translator.translate("ADD_REACTION", this.props.lang)}>
-                <button type="button" css={emojiButtonStyle(reactIcon)} className="button__reacttomessage" onClick={() => this.props.actionGenerated(enums.ACTIONS["REACT_TO_MESSAGE"], this.props.message)}>
-                    <span></span>
+            <div key="-1" css={messageReactionsStyle(this.props, {}, this.context)} className="reaction reaction__add" title={Translator.translate("ADD_REACTION", this.props.lang)}>
+                <button type="button" css={emojiButtonStyle(reactIcon, this.context)} className="button__reacttomessage" onClick={() => this.props.actionGenerated(enums.ACTIONS["REACT_TO_MESSAGE"], this.props.message)}>
+                    <i></i>
                 </button>
             </div>
         );
