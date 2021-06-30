@@ -393,11 +393,7 @@ class CometChatGroupList extends React.PureComponent {
 
 	markMessagesRead = message => {
 		if (!(message.getReadAt() || message.getReadByMeAt())) {
-			if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER) {
-				CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
-			} else {
-				CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-			}
+			CometChat.markAsRead(message);
 		}
 	};
 

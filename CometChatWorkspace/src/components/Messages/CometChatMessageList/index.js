@@ -184,13 +184,8 @@ class CometChatMessageList extends React.PureComponent {
 				messageList.forEach(message => {
 					//if the sender of the message is not the loggedin user, mark the message as read.
 					if (message.getSender().getUid() !== this.loggedInUser.getUid() && message.hasOwnProperty("readAt") === false) {
-						if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER) {
-							CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
-							this.props.actionGenerated(enums.ACTIONS["MESSAGE_READ"], message);
-						} else if (message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP) {
-							CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-							this.props.actionGenerated(enums.ACTIONS["MESSAGE_READ"], message);
-						}
+						CometChat.markAsRead(message);
+						this.props.actionGenerated(enums.ACTIONS["MESSAGE_READ"], message);
 					}
 				});
 
@@ -354,11 +349,7 @@ class CometChatMessageList extends React.PureComponent {
 
 	markMessageAsRead = (message, type) => {
 		if (message.hasOwnProperty("readAt") === false) {
-			if (type === CometChat.ACTION_TYPE.TYPE_USER) {
-				CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
-			} else if (type === CometChat.ACTION_TYPE.TYPE_GROUP) {
-				CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-			}
+			CometChat.markAsRead(message);
 		}
 	};
 
