@@ -1,6 +1,6 @@
-export const modalWrapperStyle = (props) => {
+export const modalWrapperStyle = (context) => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     return {
         minWidth: "350px",
@@ -8,7 +8,7 @@ export const modalWrapperStyle = (props) => {
         width: "50%",
         height: "40%",
         overflow: "hidden",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
+        backgroundColor: `${context.theme.backgroundColor.white}`,
         position: "fixed",
         left: "50%",
         top: "50%",
@@ -18,14 +18,22 @@ export const modalWrapperStyle = (props) => {
         boxShadow: "rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
         borderRadius: "12px",
         display: "block",
-        [mq[0]]: {
+        [mq[1]]: {
+            width: "100%",
+            height: "100%"
+        },
+        [mq[2]]: {
+            width: "100%",
+            height: "100%"
+        },
+        [mq[3]]: {
             width: "100%",
             height: "100%"
         }
     }
 }
 
-export const modalCloseStyle = (img) => {
+export const modalCloseStyle = (img, context) => {
 
     return {
         position: "absolute",
@@ -34,7 +42,8 @@ export const modalCloseStyle = (img) => {
         borderRadius: "50%",
         top: "16px",
         right: "16px",
-        background: `url(${img}) center center no-repeat`,
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${context.theme.primaryColor}`,
         cursor: "pointer",
     }
 }
@@ -77,11 +86,11 @@ export const modalErrorStyle = context => {
 	};
 };
 
-export const modalListStyle = (props) => {
+export const modalListStyle = () => {
 
     return {
         width: "100%",
-        height: "calc(100% - 48px)",
+        height: "calc(100% - 70px)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-start",
@@ -89,7 +98,7 @@ export const modalListStyle = (props) => {
     }
 }
 
-export const listHeaderStyle = (props) => {
+export const listHeaderStyle = (context) => {
 
     return {
         display: "flex",
@@ -99,11 +108,11 @@ export const listHeaderStyle = (props) => {
         fontWeight: "bold",
         padding: "8px",
         width: "100%",
-        border: `1px solid ${props.theme.borderColor.primary}`,
+        border: `1px solid ${context.theme.borderColor.primary}`,
     }
 }
 
-export const listStyle = (props) => {
+export const listStyle = () => {
 
     return {
         display: "flex",
@@ -116,9 +125,9 @@ export const listStyle = (props) => {
     }
 }
 
-export const nameColumnStyle = (props, editAccess) => {
+export const nameColumnStyle = (context, editAccess) => {
 
-    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     const widthProp = (editAccess === null) ? {
 
@@ -148,9 +157,9 @@ export const nameColumnStyle = (props, editAccess) => {
     }
 }
 
-export const scopeColumnStyle = (props) => {
+export const scopeColumnStyle = (context) => {
 
-    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     return {
         width: "180px",
@@ -167,9 +176,9 @@ export const scopeColumnStyle = (props) => {
     }
 }
 
-export const actionColumnStyle = (props) => {
+export const actionColumnStyle = (context) => {
 
-    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     return {
         width: "70px",

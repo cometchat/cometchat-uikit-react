@@ -1,14 +1,14 @@
-export const chatListStyle = (props) => {
+export const chatListStyle = context => {
 
-    return {
-        backgroundColor: `${props.theme.backgroundColor.white}`,
-        zIndex: "1",
-        width: "100%",
-        flex: "1 1 0",
-        order: "2",
-        position: "relative",
-    }
-}
+	return {
+		backgroundColor: `${context.theme.backgroundColor.white}`,
+		zIndex: "1",
+		width: "100%",
+		flex: "1 1 0",
+		order: "2",
+		position: "relative",
+	};
+};
 
 export const listWrapperStyle = () => {
 
@@ -38,15 +38,15 @@ export const messageDateContainerStyle = () => {
     }
 }
 
-export const messageDateStyle = (props) => {
+export const messageDateStyle = context => {
 
-    return {
-        padding: "8px 12px",
-        backgroundColor: `${props.theme.backgroundColor.secondary}`,
-        color: `${props.theme.color.primary}`,
-        borderRadius: "10px"
-    }
-}
+	return {
+		padding: "8px 12px",
+		backgroundColor: `${context.theme.backgroundColor.secondary}`,
+		color: `${context.theme.color.primary}`,
+		borderRadius: "10px",
+	};
+};
 
 export const decoratorMessageStyle = () => {
 
@@ -61,14 +61,14 @@ export const decoratorMessageStyle = () => {
     }
 }
 
-export const decoratorMessageTxtStyle = (props) => {
+export const decoratorMessageTxtStyle = context => {
 
-    return {
-        margin: "0",
-        height: "36px",
-        color: `${props.theme.color.secondary}`,
-        fontSize: "20px!important",
-        fontWeight: "600",
-        lineHeight: "30px",
-    }
-}
+	return {
+		margin: "0",
+		height: "36px",
+		color: `${context.theme.color.secondary}`,
+		fontSize: "20px!important",
+		fontWeight: "600",
+		lineHeight: "30px",
+	};
+};

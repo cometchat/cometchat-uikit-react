@@ -26,8 +26,8 @@ import {
 } from "./style";
 
 import creatingIcon from "./resources/creating.svg";
-import addIcon from "./resources/add.png";
-import clearIcon from "./resources/close.png";
+import addIcon from "./resources/add-circle-filled.svg";
+import clearIcon from "./resources/close.svg";
 
 class CometChatCreatePoll extends React.Component {
 
@@ -154,10 +154,10 @@ class CometChatCreatePoll extends React.Component {
         return (
             <React.Fragment>
                 <CometChatBackdrop show={true} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)} className="modal__createpoll">
-                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
+                <div css={modalWrapperStyle(this.context)} className="modal__createpoll">
+                    <span css={modalCloseStyle(clearIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyStyle()} className="modal__body">
-                        <table css={modalTableStyle(this.props)}>
+                        <table css={modalTableStyle(this.context)}>
                             <caption css={tableCaptionStyle()} className="modal__title">{Translator.translate("CREATE_POLL", this.props.lang)}</caption>
                             <tbody css={tableBodyStyle()}>
                                 <tr className="error">
@@ -190,11 +190,11 @@ class CometChatCreatePoll extends React.Component {
                                         <label>{Translator.translate("ADD_NEW_OPTION", this.props.lang)}</label>
                                     </td>
                                     <td css={iconWrapperStyle()}>
-                                        <span tabIndex="100" css={addOptionIconStyle(addIcon)} className="option__add" onClick={this.addPollOption}></span>
+                                        <i tabIndex="100" css={addOptionIconStyle(addIcon, this.context)} className="option__add" onClick={this.addPollOption}></i>
                                     </td>
                                 </tr>
                             </tbody>
-                            <tfoot css={tableFootStyle(this.props, this.state, creatingIcon)}>
+                            <tfoot css={tableFootStyle(this.context, this.state, creatingIcon)}>
                                 <tr className="createpoll">
                                     <td colSpan="2">
                                         <button type="button" onClick={this.createPoll}>

@@ -6,6 +6,8 @@ import PropTypes from "prop-types";
 
 import { checkMessageForExtensionsData } from "../../../util/common";
 
+import { CometChatContext } from "../../../util/CometChatContext";
+
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
 
@@ -21,6 +23,8 @@ import {
 } from "./style";
 
 class CometChatLinkPreview extends React.PureComponent {
+
+    static contextType = CometChatContext;
 
     constructor(props) {
 
@@ -41,15 +45,15 @@ class CometChatLinkPreview extends React.PureComponent {
         const linkText = (linkObject["url"].match(pattern)) ? Translator.translate("VIEW_ON_YOUTUBE", this.props.lang) : Translator.translate("VISIT", this.props.lang);
 
         return (
-            <div css={messagePreviewContainerStyle(this.props)} className="message__preview">
+            <div css={messagePreviewContainerStyle(this.context)} className="message__preview">
                 <div css={messagePreviewWrapperStyle()} className="preview__card">
                     <div css={previewImageStyle(linkObject["image"])} className="card__image"></div>
-                    <div css={previewDataStyle(this.props)} className="card__info">
-                        <div css={previewTitleStyle(this.props)} className="card__title"><span>{linkObject["title"]}</span></div>
-                        <div css={previewDescStyle(this.props)} className="card__desc"><span>{linkObject["description"]}</span></div>
-                        <div css={previewTextStyle(this.props)} className="card__text">{this.state.messageText}</div>
+                    <div css={previewDataStyle(this.context)} className="card__info">
+                        <div css={previewTitleStyle(this.context)} className="card__title"><span>{linkObject["title"]}</span></div>
+                        <div css={previewDescStyle(this.context)} className="card__desc"><span>{linkObject["description"]}</span></div>
+                        <div css={previewTextStyle(this.context)} className="card__text">{this.state.messageText}</div>
                     </div>
-                    <div css={previewLinkStyle(this.props)} className="card__link">
+                    <div css={previewLinkStyle(this.context)} className="card__link">
                         <a href={linkObject["url"]} target="_blank" rel="noopener noreferrer">{linkText}</a>
                     </div>
                 </div>

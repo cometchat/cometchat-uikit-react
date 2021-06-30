@@ -61,13 +61,13 @@ export const nameWrapperStyle = (avatar) => {
     }
 }
 
-export const nameStyle = (props) => {
+export const nameStyle = context => {
 
-    return {
-        fontSize: "10px",
-        color: `${props.theme.color.helpText}`,
-    }
-}
+	return {
+		fontSize: "10px",
+		color: `${context.theme.color.helpText}`,
+	};
+};
 
 export const messageTxtContainerStyle = () => {
 
@@ -79,16 +79,16 @@ export const messageTxtContainerStyle = () => {
     }
 }
 
-export const messageTxtWrapperStyle = (props) => {
+export const messageTxtWrapperStyle = context => {
 
-    return {
-        display: "inline-block",
-        borderRadius: "12px",
-        backgroundColor: `${props.theme.backgroundColor.secondary}`,
-        padding: "8px 16px",
-        width: "auto",
-    }
-}
+	return {
+		display: "inline-block",
+		borderRadius: "12px",
+		backgroundColor: `${context.theme.backgroundColor.secondary}`,
+		padding: "8px 16px",
+		width: "auto",
+	};
+};
 
 export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation) => {
 

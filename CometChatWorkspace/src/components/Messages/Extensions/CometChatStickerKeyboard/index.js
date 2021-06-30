@@ -22,7 +22,7 @@ import {
     stickerCloseStyle
 } from "./style";
 
-import closeIcon from "./resources/close.png";
+import closeIcon from "./resources/close.svg";
 
 class CometChatStickerKeyboard extends React.PureComponent {
 
@@ -127,7 +127,7 @@ class CometChatStickerKeyboard extends React.PureComponent {
         if (this.state.activestickerlist.length === 0) {
             messageContainer = (
                 <div css={stickerMsgStyle()} className="stickers__decorator-message">
-                    <p css={stickerMsgTxtStyle(this.props.theme)} className="decorator-message">{this.decoratorMessage}</p>
+                    <p css={stickerMsgTxtStyle(this.context)} className="decorator-message">{this.decoratorMessage}</p>
                 </div>
             );
         }
@@ -138,12 +138,7 @@ class CometChatStickerKeyboard extends React.PureComponent {
             const sectionItems = Object.keys(this.state.stickerset).map((sectionItem, key) => {
 
                 const stickerSetThumbnail = this.state.stickerset[sectionItem][0]["stickerUrl"];
-                return(
-                <div 
-                key={key} 
-                className="stickers__sectionitem"
-                css={sectionListItemStyle(this.props)} 
-                onClick={() => this.onStickerSetClicked(sectionItem)}>
+                return( <div  key={key}  className="stickers__sectionitem" css={sectionListItemStyle()}  onClick={() => this.onStickerSetClicked(sectionItem)}>
                     <img src={stickerSetThumbnail} alt={sectionItem} />
                 </div>
                 );
@@ -156,7 +151,7 @@ class CometChatStickerKeyboard extends React.PureComponent {
                 activeStickerList = stickerList.map((stickerItem, key) => {
 
                     return (
-                        <div key={key} css={stickerItemStyle(this.props)} onClick={() => this.sendStickerMessage(stickerItem)} className="stickers__listitem">
+                        <div key={key} css={stickerItemStyle(this.context)} onClick={() => this.sendStickerMessage(stickerItem)} className="stickers__listitem">
                             <img src={stickerItem.stickerUrl} alt={stickerItem.stickerName} />
                         </div>
                     );
@@ -164,20 +159,20 @@ class CometChatStickerKeyboard extends React.PureComponent {
             }
 
             stickers = (
-							<React.Fragment>
-								<div css={stickerCloseStyle(closeIcon)} className="stickers__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_STICKER_KEYBOARD"])}></div>
-								<div css={stickerListStyle(this.props)} className="stickers__list">
-									{activeStickerList}
-								</div>
-								<div css={stickerSectionListStyle(this.props)} className="stickers__sections">
-									{sectionItems}
-								</div>
-							</React.Fragment>
-						);
+                <React.Fragment>
+                    <div css={stickerCloseStyle(closeIcon, this.context)} className="stickers__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_STICKER_KEYBOARD"])}></div>
+                    <div css={stickerListStyle(this.props)} className="stickers__list">
+                        {activeStickerList}
+                    </div>
+                    <div css={stickerSectionListStyle(this.context)} className="stickers__sections">
+                        {sectionItems}
+                    </div>
+                </React.Fragment>
+            );
         }
 
         return (
-            <div css={stickerWrapperStyle(this.props, keyframes)} className="stickers">
+            <div css={stickerWrapperStyle(this.context, keyframes)} className="stickers">
                 {messageContainer}
                 {stickers}
             </div>

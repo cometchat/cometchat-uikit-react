@@ -1,25 +1,25 @@
 import {CometChat} from "@cometchat-pro/chat";
 
-export const userDetailStyle = props => {
+export const userDetailStyle = context => {
 	return {
 		display: "flex",
 		flexDirection: "column",
 		height: "100%",
 		position: "relative",
 		boxSizing: "border-box",
-		fontFamily: `${props.theme.fontFamily}`,
+		fontFamily: `${context.theme.fontFamily}`,
 		"*": {
 			boxSizing: "border-box",
-			fontFamily: `${props.theme.fontFamily}`,
+			fontFamily: `${context.theme.fontFamily}`,
 		},
 	};
 };
 
-export const headerStyle = props => {
+export const headerStyle = context => {
 	return {
 		padding: "16px",
 		position: "relative",
-		borderBottom: `1px solid ${props.theme.borderColor.primary}`,
+		borderBottom: `1px solid ${context.theme.borderColor.primary}`,
 		display: "flex",
 		justifyContent: "flex-start",
 		alignItems: "center",
@@ -27,13 +27,15 @@ export const headerStyle = props => {
 	};
 };
 
-export const headerCloseStyle = (img, props) => {
-	const mq = [...props.theme.breakPoints];
+export const headerCloseStyle = (img, context) => {
+	
+	const mq = [...context.theme.breakPoints];
 
 	return {
 		cursor: "pointer",
 		display: "none",
-		background: `url(${img}) center center no-repeat`,
+		mask: `url(${img}) center center no-repeat`,
+		backgroundColor: `${context.theme.primaryColor}`,
 		width: "24px",
 		height: "24px",
 		[`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
@@ -61,25 +63,25 @@ export const sectionStyle = () => {
 	};
 };
 
-export const actionSectionStyle = props => {
+export const actionSectionStyle = context => {
 	return {
-		"width": "100%",
+		width: "100%",
 		"> div": {
 			fontWeight: "600",
 			cursor: "pointer",
 			fontSize: "12px",
 		},
 		".item__link": {
-			color: `${props.theme.color.blue}`,
+			color: `${context.theme.color.blue}`,
 		},
 	};
 };
 
-export const privacySectionStyle = props => {
+export const privacySectionStyle = context => {
 	return {
-		"width": "100%",
+		width: "100%",
 		"> div": {
-			color: `${props.theme.color.red}`,
+			color: `${context.theme.color.red}`,
 			fontWeight: "600",
 			cursor: "pointer",
 			fontSize: "12px",
@@ -100,14 +102,14 @@ export const mediaSectionStyle = () => {
 	};
 };
 
-export const sectionHeaderStyle = props => {
+export const sectionHeaderStyle = context => {
 	return {
 		margin: "0",
 		width: "100%",
 		fontSize: "12px",
 		fontWeight: "500!important",
 		lineHeight: "20px",
-		color: `${props.theme.color.secondary}`,
+		color: `${context.theme.color.secondary}`,
 		textTransform: "uppercase",
 	};
 };
@@ -128,17 +130,17 @@ export const contentItemStyle = () => {
 	};
 };
 
-export const itemLinkStyle = props => {
+export const itemLinkStyle = context => {
 	return {
 		fontSize: "15px",
 		lineHeight: "20px",
 		fontWeight: "600",
 		display: "inline-block",
-		color: `${props.theme.color.red}`,
+		color: `${context.theme.color.red}`,
 	};
 };
 
-export const userInfoSectionStyle = props => {
+export const userInfoSectionStyle = () => {
 	return {
 		display: "flex",
 		alignItems: "center",
@@ -146,7 +148,7 @@ export const userInfoSectionStyle = props => {
 	};
 };
 
-export const userThumbnailStyle = props => {
+export const userThumbnailStyle = () => {
 	return {
 		width: "35px",
 		height: "35px",
@@ -156,7 +158,7 @@ export const userThumbnailStyle = props => {
 	};
 };
 
-export const userNameStyle = props => {
+export const userNameStyle = () => {
 	return {
 		margin: "0",
 		fontSize: "15px",
@@ -168,16 +170,16 @@ export const userNameStyle = props => {
 	};
 };
 
-export const userStatusStyle = props => {
+export const userStatusStyle = () => {
 	return {
 		width: "calc(100% - 50px)",
 	};
 };
 
-export const userPresenceStyle = (props, state) => {
-
-	let status = (state.status) ? state.status.toLowerCase() : "";
-	status = status === CometChat.USER_STATUS.ONLINE ? {color: `${props.theme.color.blue}`} : {color: `${props.theme.color.helpText}`};
+export const userPresenceStyle = (context, state) => {
+	
+	let status = state.status ? state.status.toLowerCase() : "";
+	status = status === CometChat.USER_STATUS.ONLINE ? { color: `${context.theme.color.blue}` } : { color: `${context.theme.color.helpText}` };
 
 	return {
 		width: "calc(100% - 50px)",

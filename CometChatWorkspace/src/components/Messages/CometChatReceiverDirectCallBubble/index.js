@@ -17,22 +17,23 @@ import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
 
 import {
-    messageContainerStyle,
-    messageWrapperStyle,
-    messageThumbnailStyle,
-    messageDetailStyle,
-    nameWrapperStyle,
-    nameStyle,
-    messageTxtContainerStyle,
-    messageTxtWrapperStyle,
-    messageTxtTitleStyle,
-    messageTxtStyle,
-    messageBtnStyle,
-    messageInfoWrapperStyle,
-    messageReactionsWrapperStyle
+	messageContainerStyle,
+	messageWrapperStyle,
+	messageThumbnailStyle,
+	messageDetailStyle,
+	nameWrapperStyle,
+	nameStyle,
+	messageTxtContainerStyle,
+	messageTxtWrapperStyle,
+	messageTxtTitleStyle,
+	messageTxtStyle,
+	messageBtnStyle,
+	messageInfoWrapperStyle,
+	messageReactionsWrapperStyle,
+	iconStyle,
 } from "./style";
 
-import callIcon from "./resources/receivervideocall.png";
+import callIcon from "./resources/video-call.svg";
 
 class CometChatReceiverDirectCallBubble extends React.Component {
 
@@ -85,7 +86,7 @@ class CometChatReceiverDirectCallBubble extends React.Component {
             );
 
             name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-                <span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span>
+                <span css={nameStyle(this.context)} className="message__name">{this.props.message.sender.name}</span>
             </div>);
         }
 
@@ -136,27 +137,22 @@ class CometChatReceiverDirectCallBubble extends React.Component {
         }
 
         return (
-            <div css={messageContainerStyle()} 
-            className="receiver__message__container message__directcall"
-            onMouseEnter={this.handleMouseHover}
-            onMouseLeave={this.handleMouseHover}>
-
+            <div css={messageContainerStyle()} className="receiver__message__container message__directcall" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
                 <div css={messageWrapperStyle()} className="message__wrapper">
                     {avatar}
                     <div css={messageDetailStyle()} className="message__details">
                         {name}
                         {toolTipView}
                         <div css={messageTxtContainerStyle()} className="message__directcall__container">
-                            <div css={messageTxtWrapperStyle(this.props)} className="message__directcall__wrapper">
-                                <div css={messageTxtTitleStyle(this.props)} className="message__directcall__title">
-                                    <img src={callIcon} alt={Translator.translate("VIDEO_CALL", this.props.lang)} />
-                                    <p css={messageTxtStyle()} className="directcall__title">{messageTitle}</p>
+                            <div css={messageTxtWrapperStyle(this.context)} className="message__directcall__wrapper">
+                                <div css={messageTxtTitleStyle(this.context)} className="message__directcall__title">
+                                    <i css={iconStyle(callIcon, this.context)} title={Translator.translate("VIDEO_CALL", this.props.lang)}></i>
+                                    <p css={messageTxtStyle()} className="directcall__title">
+                                        {messageTitle}
+                                    </p>
                                 </div>
 
-                                <ul css={messageBtnStyle(this.props)} className="directcall__button">
-                                    {/* <li onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.state.message)}>
-                                        <p>{Translator.translate("JOIN", this.props.lang)}</p>
-                                    </li> */}
+                                <ul css={messageBtnStyle(this.context)} className="directcall__button">
                                     {callMessage}
                                 </ul>
                             </div>
@@ -171,7 +167,7 @@ class CometChatReceiverDirectCallBubble extends React.Component {
                     </div>
                 </div>
             </div>
-        )
+        );
     }
 }
 

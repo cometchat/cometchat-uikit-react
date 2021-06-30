@@ -5,6 +5,7 @@ import { jsx, keyframes } from "@emotion/core";
 import PropTypes from "prop-types";
 
 import Translator from "../../../resources/localization/translator";
+import { theme } from "../../../resources/theme";
 
 import {
     notificationContainerStyle,
@@ -12,14 +13,15 @@ import {
     notificationIconStyle,
     notificationMessageContainerStyle,
     notificationMessageStyle,
-    notificationCloseButtonStyle
+    notificationCloseButtonStyle,
+    iconStyle
 } from "./style";
 
-import closeIcon from "./resources/toast_close.png";
-import successIcon from "./resources/toast_success.png";
-import errorIcon from "./resources/toast_error.png";
-import infoIcon from "./resources/toast_info.png";
-import warningIcon from "./resources/toast_warning.png";
+import closeIcon from "./resources/close-circle-filled.svg";
+import successIcon from "./resources/checkmark-filled.svg";
+import errorIcon from "./resources/warning-filled.svg";
+import infoIcon from "./resources/info-filled.svg";
+import warningIcon from "./resources/warning-filled.svg";
 
 export class CometChatToastNotification extends React.Component {
 
@@ -116,7 +118,7 @@ export class CometChatToastNotification extends React.Component {
         let toastIcon = (this.state.icon.trim().length) ? (
 
             <div css={notificationIconStyle()} className={iconClassName}>
-                <img src={this.state.icon} alt="" />
+                <i css={iconStyle(this.state.icon, this.props.theme)} title={Translator.translate("CLOSE", this.props.lang)}></i>
             </div>
         ) : null;
 
@@ -128,7 +130,7 @@ export class CometChatToastNotification extends React.Component {
                         <p css={notificationMessageStyle()}>{Translator.translate(this.state.message, this.props.lang)}</p>
                     </div>
                     <button css={notificationCloseButtonStyle()} type="button" onClick={this.deleteToast} className="toast__close">
-                        <img src={closeIcon} alt={Translator.translate("CLOSE", this.props.lang)} />
+                        <i css={iconStyle(closeIcon, this.props.theme)} title={Translator.translate("CLOSE", this.props.lang)}></i>
                     </button>
                 </div>
             </div>
@@ -137,14 +139,15 @@ export class CometChatToastNotification extends React.Component {
 }
 
 CometChatToastNotification.defaultProps = {
-    type: "",
-    message: "",
-    icon: "",
-    position: "center",
-    autoDelete: true,
-    dismissTime: 3000,
-    lang: Translator.getDefaultLanguage(),
-}
+	type: "",
+	message: "",
+	icon: "",
+	position: "center",
+	autoDelete: true,
+	dismissTime: 3000,
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+};
 
 CometChatToastNotification.propTypes = {
 	type: PropTypes.oneOf(Object.values(CometChatToastNotification.types).concat("")),
@@ -154,4 +157,5 @@ CometChatToastNotification.propTypes = {
 	autoDelete: PropTypes.bool,
 	dismissTime: PropTypes.number,
 	lang: PropTypes.string,
+	theme: PropTypes.object,
 };

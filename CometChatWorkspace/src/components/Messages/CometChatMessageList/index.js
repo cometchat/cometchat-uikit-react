@@ -651,7 +651,7 @@ class CometChatMessageList extends React.PureComponent {
 		if (this.state.decoratorMessage.length !== 0 && this.props.messages.length === 0) {
 			messageContainer = (
 				<div css={decoratorMessageStyle()} className="messages__decorator-message">
-					<p css={decoratorMessageTxtStyle(this.props)} className="decorator-message">
+					<p css={decoratorMessageTxtStyle(this.context)} className="decorator-message">
 						{this.state.decoratorMessage}
 					</p>
 				</div>
@@ -670,7 +670,7 @@ class CometChatMessageList extends React.PureComponent {
 			if (cDate !== messageSentDate) {
 				dateSeparator = (
 					<div css={messageDateContainerStyle()} className="message__date">
-						<span css={messageDateStyle(this.props)}>{getMessageDate(dateField, this.props.lang)}</span>
+						<span css={messageDateStyle(this.context)}>{getMessageDate(dateField, this.props.lang)}</span>
 					</div>
 				);
 			}
@@ -685,7 +685,7 @@ class CometChatMessageList extends React.PureComponent {
 		});
 
 		return (
-			<div className="chat__list" css={chatListStyle(this.props)}>
+			<div className="chat__list" css={chatListStyle(this.context)}>
 				{messageContainer}
 				<div
 					className="list__wrapper"

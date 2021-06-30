@@ -1,9 +1,9 @@
-export const modalRowStyle = (props) => {
+export const modalRowStyle = (context) => {
 
     return {
-        borderLeft: `1px solid ${props.theme.borderColor.primary}`,
-        borderRight: `1px solid ${props.theme.borderColor.primary}`,
-        borderBottom: `1px solid ${props.theme.borderColor.primary}`,
+        borderLeft: `1px solid ${context.theme.borderColor.primary}`,
+        borderRight: `1px solid ${context.theme.borderColor.primary}`,
+        borderBottom: `1px solid ${context.theme.borderColor.primary}`,
         display: "flex",
         width: "100%",
         fontSize: "14px",
@@ -14,9 +14,9 @@ export const modalRowStyle = (props) => {
     }
 }
 
-export const nameColumnStyle = (props, participantView) => {
+export const nameColumnStyle = (context, participantView) => {
 
-    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     const widthProp = (participantView) ? {
 
@@ -50,9 +50,9 @@ export const nameColumnStyle = (props, participantView) => {
     }
 }
 
-export const avatarStyle = (props, participantView) => {
+export const avatarStyle = (context, participantView) => {
 
-    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     const marginProp = (participantView) ? {
         marginRight: "8px",
@@ -71,9 +71,9 @@ export const avatarStyle = (props, participantView) => {
     }
 }
 
-export const nameStyle = (props, participantView) => {
+export const nameStyle = (context, participantView) => {
 
-    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     const widthProp = (participantView) ? {
         width: "100%"
@@ -104,9 +104,9 @@ export const nameStyle = (props, participantView) => {
     }
 }
 
-export const scopeColumnStyle = (props) => {
+export const scopeColumnStyle = (context) => {
 
-    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     return {
         display: "flex",
@@ -114,10 +114,9 @@ export const scopeColumnStyle = (props) => {
         alignItems: "center",
         justifyContent: "flex-start",
         width: "180px",
-        marginRight: "8px",
         "img": {
-            width: "20px",
-            height: "20px",
+            width: "24px",
+            height: "24px",
             cursor: "pointer",
         },
         [mq[1]]: {
@@ -155,36 +154,38 @@ export const scopeSelectionStyle = () => {
         boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
         borderRadius: "8px",
         backgroundColor: `rgba(20, 20, 20, 0.04)`,
-        padding: "6px",
+        padding: "8px",
         color: `rgba(20, 20, 20, 0.6)`,
         float: "left",
     }
 }
 
+export const scopeIconStyle = (img, context) => {
+
+    return {
+        width: "24px",
+        height: "24px",
+        display: "inline-block",
+        cursor: "pointer",
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${context.theme.secondaryTextColor}`,
+    };
+}
+
 export const roleStyle = () => {
 
     return {
-        marginRight: "8px",
         fontSize: "12px",
         maxWidth: "calc(100% - 20px)"
     }
 }
 
-export const actionColumnStyle = (props) => {
+export const actionColumnStyle = (context) => {
 
-    const mq = props.theme.breakPoints.map(x => `@media ${x}`);
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     return {
         width: "70px",
-        "img": {
-            width: "20px",
-            height: "20px",
-            cursor: "pointer",
-        },
-        "span": {
-            width: "100%",
-            display: "inline-block"
-        },
         [mq[1]]: {
             width: "40px"
         },
@@ -193,3 +194,25 @@ export const actionColumnStyle = (props) => {
         }
     }
 }
+
+export const banIconStyle = (img, context) => {
+
+    return {
+        width: "24px",
+        height: "24px",
+        display: "inline-block",
+        cursor: "pointer",
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${context.theme.secondaryTextColor}`,
+    };
+}
+
+export const kickIconStyle = (img, context) => {
+	return {
+		width: "24px",
+		height: "24px",
+		display: "inline-block",
+		cursor: "pointer",
+		background: `url(${img}) center center no-repeat`,
+	};
+};

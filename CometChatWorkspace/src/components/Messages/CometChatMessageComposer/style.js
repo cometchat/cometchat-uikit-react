@@ -1,19 +1,19 @@
-export const chatComposerStyle = (props) => {
+export const chatComposerStyle = context => {
 
-    return {
-        padding: "16px",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
-        zIndex: "1",
-        order: "3",
-        position: "relative",
-        flex: "none",
-        minHeight: "105px",
-    }
-}
+	return {
+		padding: "16px",
+		backgroundColor: `${context.theme.backgroundColor.white}`,
+		zIndex: "1",
+		order: "3",
+		position: "relative",
+		flex: "none",
+		minHeight: "105px",
+	};
+};
 
-export const editPreviewContainerStyle = (props, keyframes) => {
+export const editPreviewContainerStyle = (context, keyframes) => {
 
-    const slideAnimation = keyframes`
+	const slideAnimation = keyframes`
     from {
         bottom: -60px
     }
@@ -21,18 +21,18 @@ export const editPreviewContainerStyle = (props, keyframes) => {
         bottom: 0px
     }`;
 
-    return {
-        padding: "7px",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
-        borderColor: `${props.theme.borderColor.primary}`,
-        borderWidth: "1px 1px 1px 5px",
-        borderStyle: "solid",
-        color: `${props.theme.color.helpText}`,
-        fontSize: "13px",
-        animation: `${slideAnimation} 0.5s ease-out`,
-        position: "relative",
-    }
-}
+	return {
+		padding: "7px",
+		backgroundColor: `${context.theme.backgroundColor.white}`,
+		borderColor: `${context.theme.borderColor.primary}`,
+		borderWidth: "1px 1px 1px 5px",
+		borderStyle: "solid",
+		color: `${context.theme.color.helpText}`,
+		fontSize: "13px",
+		animation: `${slideAnimation} 0.5s ease-out`,
+		position: "relative",
+	};
+};
 
 export const previewHeadingStyle = () => {
 
@@ -50,14 +50,15 @@ export const previewTextStyle = () => {
     }
 }
 
-export const previewCloseStyle = (img) => {
+export const previewCloseStyle = (img, context) => {
 
     return {
         width: "24px",
         height: "24px",
         borderRadius: "50%",
-        background: `url(${img}) center center no-repeat`,
         cursor: "pointer",
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${context.theme.primaryColor}`
     }
 }
 
@@ -75,7 +76,7 @@ export const composerInputStyle = () => {
     }
 }
 
-export const inputInnerStyle = (props, state) => {
+export const inputInnerStyle = (props, state, context) => {
 
     const borderRadiusVal = (state.emojiViewer || state.stickerViewer) ? {
         borderRadius: "0 0 8px 8px",
@@ -87,8 +88,8 @@ export const inputInnerStyle = (props, state) => {
         flex: "1 1 auto",
         position: "relative",
         outline: "none",
-        border: `1px solid ${props.theme.borderColor.primary}`,
-        backgroundColor: `${props.theme.backgroundColor.white}`,
+        border: `1px solid ${context.theme.borderColor.primary}`,
+        backgroundColor: `${context.theme.backgroundColor.white}`,
         display: "flex",
         flexDirection: "column",
         width: "100%",
@@ -130,7 +131,7 @@ export const messageInputStyle = (disabled) => {
     }
 }
 
-export const inputStickyStyle = (props, disabled, attachments) => {
+export const inputStickyStyle = (disabled, attachments, context) => {
 
     const disabledState = (disabled) ? {
         pointerEvents: "none",
@@ -142,9 +143,9 @@ export const inputStickyStyle = (props, disabled, attachments) => {
 
     return {
         padding: "8px 16px",
-        height: "40px",
-        borderTop: `1px solid ${props.theme.borderColor.primary}`,
-        backgroundColor: `${props.theme.backgroundColor.grey}`,
+        // height: "40px",
+        borderTop: `1px solid ${context.theme.borderColor.primary}`,
+        backgroundColor: `${context.theme.backgroundColor.grey}`,
         display: "flex",
         justifyContent: "space-between",
         ...flexDirectionProp,
@@ -202,8 +203,7 @@ export const fileListStyle = () => {
     }
 }
 
-export const fileItemStyle = () => {
-
+export const fileItemStyle = (img, context) => {
 
     return {
         height: "24px",
@@ -212,24 +212,38 @@ export const fileItemStyle = () => {
         justifyContent: "center",
         alignItems: "center",
         margin: "0 16px 0 0",
+        " > i": {
+            width: "24px",
+            height: "24px",
+            display: "inline-block",
+            mask: `url(${img}) center center no-repeat`,
+            backgroundColor: `${context.theme.secondaryTextColor}`
+        },
         ' > input': {
             display: "none",
         },
     }
 }
 
-export const stickyAttachButtonStyle = () => {
+export const stickyAttachButtonStyle = (img, context) => {
 
     return {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer",
-        width: "20px",
+        width: "24px",
+        "i": {
+            width: "24px",
+            height: "24px",
+            display: "inline-block",
+            mask: `url(${img}) center center no-repeat`,
+            backgroundColor: `${context.theme.secondaryTextColor}`
+        }
     }
 }
 
-export const stickyButtonStyle = (props, state) => {
+export const stickyButtonStyle = (state) => {
 
     const active = (state.showFilePicker) ? {
         display: "none",
@@ -247,7 +261,7 @@ export const stickyButtonStyle = (props, state) => {
     }
 }
 
-export const emojiButtonStyle = () => {
+export const emojiButtonStyle = (img, context) => {
 
     return {
         height: "24px",
@@ -256,10 +270,17 @@ export const emojiButtonStyle = () => {
         alignItems: "center",
         justifyContent: "center",
         margin: "0 0 0 16px",
+        "i": {
+            width: "24px",
+            height: "24px",
+            display: "inline-block",
+            mask: `url(${img}) center center no-repeat`,
+            backgroundColor: `${context.theme.secondaryTextColor}`
+        }
     }
 }
 
-export const sendButtonStyle = () => {
+export const sendButtonStyle = (img, context) => {
 
     return {
         height: "24px",
@@ -268,6 +289,13 @@ export const sendButtonStyle = () => {
         alignItems: "center",
         justifyContent: "center",
         margin: "0 0 0 16px",
+        "i": {
+            width: "24px",
+            height: "24px",
+            display: "inline-block",
+            mask: `url(${img}) center center no-repeat`,
+            backgroundColor: `${context.theme.primaryColor}`
+        }
     }
 }
 
@@ -283,7 +311,7 @@ export const reactionBtnStyle = () => {
     }
 }
 
-export const stickerBtnStyle = () => {
+export const stickerBtnStyle = (img, context) => {
 
     return {
         cursor: "pointer",
@@ -292,5 +320,12 @@ export const stickerBtnStyle = () => {
         alignItems: "center",
         justifyContent: "center",
         margin: "0 0 0 16px",
+        "i": {
+            width: "24px",
+            height: "24px",
+            display: "inline-block",
+            mask: `url(${img}) center center no-repeat`,
+            backgroundColor: `${context.theme.secondaryTextColor}`
+        }
     }
 }

@@ -13,6 +13,7 @@ import Translator from "../../../resources/localization/translator";
 import {replyCountStyle} from "./style";
 
 const CometChatThreadedMessageReplyCount = props => {
+
 	const context = React.useContext(CometChatContext);
 	const [reply, setReply] = React.useState(false);
 
@@ -36,7 +37,7 @@ const CometChatThreadedMessageReplyCount = props => {
 	const replyText = replyCount === 1 ? `${replyCount} ${Translator.translate("REPLY", props.lang)}` : `${replyCount} ${Translator.translate("REPLIES", props.lang)}`;
 
 	let replies = (
-		<span css={replyCountStyle(props)} className="replycount" onClick={() => props.actionGenerated(enums.ACTIONS["VIEW_THREADED_MESSAGE"], props.message)}>
+		<span css={replyCountStyle(context)} className="replycount" onClick={() => props.actionGenerated(enums.ACTIONS["VIEW_THREADED_MESSAGE"], props.message)}>
 			{replyText}
 		</span>
 	);

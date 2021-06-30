@@ -1,36 +1,31 @@
-export const modalWrapperStyle = (props) => {
+export const modalWrapperStyle = context => {
 
-    const show = (props.open) ? {
-        display: "block",
-    } : {};
+	const mq = [...context.theme.breakPoints];
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+	return {
+		minWidth: "350px",
+		minHeight: "450px",
+		width: "50%",
+		height: "40%",
+		overflow: "hidden",
+		backgroundColor: `${context.theme.backgroundColor.white}`,
+		position: "fixed",
+		left: "50%",
+		top: "50%",
+		transform: "translate(-50%, -50%)",
+		zIndex: "1002",
+		margin: "0 auto",
+		boxShadow: "rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
+		borderRadius: "12px",
+		display: "block",
+		[`@media ${mq[1]}, ${mq[2]}`]: {
+			width: "100%",
+			height: "100%",
+		},
+	};
+};
 
-    return {
-        minWidth: "350px",
-        minHeight: "450px",
-        width: "50%",
-        height: "40%",
-        overflow: "hidden",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
-        position: "fixed",
-        left: "50%",
-        top: "50%",
-        transform: "translate(-50%, -50%)",
-        zIndex: "1002",
-        margin: "0 auto",
-        boxShadow: "rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
-        borderRadius: "12px",
-        display: "none",
-        ...show,
-        [mq[0]]: {
-            width: "100%",
-            height: "100%"
-        }
-    }
-}
-
-export const modalCloseStyle = (img) => {
+export const modalCloseStyle = (img, context) => {
 
     return {
         position: "absolute",
@@ -39,7 +34,8 @@ export const modalCloseStyle = (img) => {
         borderRadius: "50%",
         top: "16px",
         right: "16px",
-        background: `url(${img}) center center no-repeat`,
+        mask: `url(${img}) center center no-repeat`,
+		backgroundColor: `${context.theme.primaryColor}`,
         cursor: "pointer",
     }
 }
@@ -64,22 +60,22 @@ export const modalErrorStyle = (context) => {
     }
 }
 
-export const modalTableStyle = (props) => {
+export const modalTableStyle = context => {
 
-    return {
-        borderCollapse: "collapse",
-        margin: "0",
-        padding: "0",
-        width: "100%",
-        height: "90%",
-        "tr": {
-            borderBottom: `1px solid ${props.theme.borderColor.primary}`,
-            display: "table",
-            width: "100%",
-            tableLayout: "fixed",
-        }
-    }
-}
+	return {
+		borderCollapse: "collapse",
+		margin: "0",
+		padding: "0",
+		width: "100%",
+		height: "90%",
+		tr: {
+			borderBottom: `1px solid ${context.theme.borderColor.primary}`,
+			display: "table",
+			width: "100%",
+			tableLayout: "fixed",
+		},
+	};
+};
 
 export const tableCaptionStyle = () => {
 
@@ -122,48 +118,47 @@ export const tableBodyStyle = () => {
 }
 
 
-export const tableFootStyle = (props, state, img) => {
+export const tableFootStyle = (context, state, img) => {
 
-    let loadingState =  {};
-    let textMargin = {};
+	let loadingState = {};
+	let textMargin = {};
 
-    if (state.creatingPoll) {
+	if (state.creatingPoll) {
+		loadingState = {
+			disabled: "true",
+			pointerEvents: "none",
+			background: `url(${img}) no-repeat right 10px center ${context.theme.primaryColor}`,
+		};
 
-        loadingState = {
-            disabled: "true",
-            pointerEvents: "none",
-            background: `url(${img}) no-repeat right 10px center ${props.theme.backgroundColor.blue}`,
-        };
+		textMargin = {
+			marginRight: "24px",
+		};
+	}
 
-        textMargin = {
-            marginRight: "24px",
-        }
-    }
-
-    return {
-        display: "inline-block",
-        "tr": {
-            border: "none",
-            "td": {
-                textAlign: "center",
-                "button": {
-                    cursor: "pointer",
-                    padding: "8px 16px",
-                    backgroundColor: `${props.theme.backgroundColor.blue}`,
-                    borderRadius: "5px",
-                    color: `${props.theme.color.white}`,
-                    fontSize: "14px",
-                    outline: "0",
-                    border: "0",
-                    ...loadingState,
-                    "span": {
-                        ...textMargin
-                    }
-                },
-            }
-        },
-    }
-}
+	return {
+		display: "inline-block",
+		tr: {
+			border: "none",
+			td: {
+				textAlign: "center",
+				button: {
+					cursor: "pointer",
+					padding: "8px 16px",
+					backgroundColor: `${context.theme.primaryColor}`,
+					borderRadius: "5px",
+					color: `${context.theme.color.white}`,
+					fontSize: "14px",
+					outline: "0",
+					border: "0",
+					...loadingState,
+					span: {
+						...textMargin,
+					},
+				},
+			},
+		},
+	};
+};
 
 export const iconWrapperStyle = () => {
 
@@ -172,14 +167,15 @@ export const iconWrapperStyle = () => {
     }
 }
 
-export const addOptionIconStyle = (img) => {
+export const addOptionIconStyle = (img, context) => {
 
     return {
-        background: `url(${img}) right center no-repeat`,
         backgroundSize: "28px 28px",
         cursor: "pointer",
         display: "block",
-        height: "28px",
-        width: "28px",
+        height: "24px",
+        width: "24px",
+		mask: `url(${img}) center center no-repeat`,
+		backgroundColor: `${context.theme.secondaryTextColor}`,
     }
 }

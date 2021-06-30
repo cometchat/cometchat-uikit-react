@@ -28,9 +28,10 @@ import {
     thumbnailStyle,
     headerButtonStyle,
     ButtonStyle,
+	callIconStyle
 } from "./style";
 
-import videoCallIcon from "./resources/incomingvideocall.png";
+import videoCallIcon from "./resources/incoming-video-call.svg";
 
 class CometChatIncomingDirectCall extends React.PureComponent {
 	static contextType = CometChatContext;
@@ -227,7 +228,7 @@ class CometChatIncomingDirectCall extends React.PureComponent {
 
 			const callType = (
 				<React.Fragment>
-					<img src={videoCallIcon} alt={Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)} />
+					<i css={callIconStyle(videoCallIcon, this.context)} title={Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}></i>
 					<span>{Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}</span>
 				</React.Fragment>
 			);

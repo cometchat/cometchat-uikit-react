@@ -24,7 +24,7 @@ export const modalWrapperStyle = (props, context) => {
 	};
 };
 
-export const modalCloseStyle = img => {
+export const modalCloseStyle = (img, context) => {
 	return {
 		position: "absolute",
 		width: "32px",
@@ -32,7 +32,8 @@ export const modalCloseStyle = img => {
 		borderRadius: "50%",
 		top: "16px",
 		right: "16px",
-		background: `url(${img}) center center no-repeat`,
+		mask: `url(${img}) center center no-repeat`,
+		backgroundColor: `${context.theme.primaryColor}`,
 		cursor: "pointer",
 	};
 };
@@ -128,7 +129,7 @@ export const nameColumnStyle = (props, context) => {
 	};
 };
 
-export const scopeColumnStyle = (props, context) => {
+export const scopeColumnStyle = (context) => {
 
 	const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 	return {
@@ -147,7 +148,7 @@ export const scopeColumnStyle = (props, context) => {
 
 
 
-export const modalFootStyle = (props, state, context, img) => {
+export const modalFootStyle = (state, context, img) => {
 
 	const btnState = !state.newGroupOwner || state.transferringOwnership ? { 
 		disabled: "true",

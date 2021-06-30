@@ -1,4 +1,4 @@
-export const messageActionStyle = (props) => {
+export const messageActionStyle = (props, context) => {
 
     const topPos = (props.name) ? { top: "-4px"} : { top: "-30px" };
     const alignment = (props.message.messageFrom === "receiver") ? { alignSelf: "flex-start" } : { alignSelf: "flex-end" };
@@ -22,8 +22,8 @@ export const messageActionStyle = (props) => {
         padding: "8px",
         margin: "0",
         height: "35px",
-        border: `1px solid ${props.theme.borderColor.primary}`,
-        backgroundColor: `${props.theme.backgroundColor.white}`,
+        border: `1px solid ${context.theme.borderColor.primary}`,
+        backgroundColor: `${context.theme.backgroundColor.white}`,
         borderRadius: "4px",
         alignItems: "center",
         justifyContent: "center",
@@ -41,7 +41,13 @@ export const actionGroupStyle = (props) => {
     }
 }
 
-export const groupButtonStyle = (props, img) => {
+export const groupButtonStyle = (img, context, deleteOption) => {
+
+    const backgroundProp = (deleteOption) ? {
+        backgroundColor: `${context.theme.color.red}!important`
+    } : {
+        backgroundColor: `${context.theme.secondaryTextColor}!important`
+    };
 
     return {
         outline: "0",
@@ -53,6 +59,7 @@ export const groupButtonStyle = (props, img) => {
         display: "inline-flex",
         justifyContent: "center",
         position: "relative",
-        background: `url(${img}) center center / 20px 19px no-repeat`,
+        mask: `url(${img}) center center no-repeat`,
+        ...backgroundProp
     }
 }

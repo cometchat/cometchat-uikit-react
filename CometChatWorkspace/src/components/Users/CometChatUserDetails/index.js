@@ -35,7 +35,7 @@ import {
 	userPresenceStyle,
 } from "./style";
 
-import navigateIcon from "./resources/navigate.png";
+import navigateIcon from "./resources/back.svg";
 
 class CometChatUserDetails extends React.Component {
 	static contextType = CometChatContext;
@@ -243,13 +243,13 @@ class CometChatUserDetails extends React.Component {
 		if (this.state.enableViewProfile === true && this.context.item.hasOwnProperty("link") && this.context.item.link && this.context.item.link.trim().length) {
 			viewProfile = (
 				<div css={sectionStyle()} className="detailpane__section">
-					<div css={actionSectionStyle(this.props)} className="section section__viewprofile">
+					<div css={actionSectionStyle(this.context)} className="section section__viewprofile">
 						<h6 css={sectionHeaderStyle(this.props)} className="section__header">
 							{Translator.translate("ACTIONS", this.context.language)}
 						</h6>
 						<div css={sectionContentStyle()} className="section__content">
 							<div css={contentItemStyle()} className="content__item">
-								<div css={itemLinkStyle(this.props)} className="item__link" onClick={this.viewProfile}>
+								<div css={itemLinkStyle(this.context)} className="item__link" onClick={this.viewProfile}>
 									{Translator.translate("VIEW_PROFILE", this.context.language)}
 								</div>
 							</div>
@@ -262,13 +262,13 @@ class CometChatUserDetails extends React.Component {
 		let blockUserText;
 		if (this.context.item.blockedByMe) {
 			blockUserText = (
-				<div css={itemLinkStyle(this.props)} className="item__link" onClick={this.unblockUser}>
+				<div css={itemLinkStyle(this.context)} className="item__link" onClick={this.unblockUser}>
 					{Translator.translate("UNBLOCK_USER", this.context.language)}
 				</div>
 			);
 		} else {
 			blockUserText = (
-				<div css={itemLinkStyle(this.props)} className="item__link" onClick={this.blockUser}>
+				<div css={itemLinkStyle(this.context)} className="item__link" onClick={this.blockUser}>
 					{Translator.translate("BLOCK_USER", this.context.language)}
 				</div>
 			);
@@ -276,8 +276,8 @@ class CometChatUserDetails extends React.Component {
 
 		let blockUserView = (
 			<div css={sectionStyle()} className="detailpane__section">
-				<div css={privacySectionStyle(this.props)} className="section section__privacy">
-					<h6 css={sectionHeaderStyle(this.props)} className="section__header">
+				<div css={privacySectionStyle(this.context)} className="section section__privacy">
+					<h6 css={sectionHeaderStyle(this.context)} className="section__header">
 						{Translator.translate("OPTIONS", this.context.language)}
 					</h6>
 					<div css={sectionContentStyle()} className="section__content">
@@ -306,21 +306,21 @@ class CometChatUserDetails extends React.Component {
 		}
 
 		return (
-			<div css={userDetailStyle(this.props)} className="detailpane detailpane--user">
-				<div css={headerStyle(this.props)} className="detailpane__header">
-					<div css={headerCloseStyle(navigateIcon, this.props)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_USER_DETAIL"])}></div>
+			<div css={userDetailStyle(this.context)} className="detailpane detailpane--user">
+				<div css={headerStyle(this.context)} className="detailpane__header">
+					<div css={headerCloseStyle(navigateIcon, this.context)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_USER_DETAIL"])}></div>
 					<h4 css={headerTitleStyle()} className="header__title">
 						{Translator.translate("DETAILS", this.context.language)}
 					</h4>
 				</div>
 				<div css={sectionStyle()} className="detailpane__section">
-					<div css={userInfoSectionStyle(this.props)} className="section section__userinfo">
-						<div css={userThumbnailStyle(this.props)} className="user__thumbnail">
+					<div css={userInfoSectionStyle()} className="section section__userinfo">
+						<div css={userThumbnailStyle()} className="user__thumbnail">
 							<CometChatAvatar user={this.context.item} />
 						</div>
-						<div css={userStatusStyle(this.props)} className="user__status">
+						<div css={userStatusStyle()} className="user__status">
 							<h6 css={userNameStyle()}>{this.context.item.name}</h6>
-							<span css={userPresenceStyle(this.props, this.state)}>{this.state.status}</span>
+							<span css={userPresenceStyle(this.context, this.state)}>{this.state.status}</span>
 						</div>
 					</div>
 				</div>
