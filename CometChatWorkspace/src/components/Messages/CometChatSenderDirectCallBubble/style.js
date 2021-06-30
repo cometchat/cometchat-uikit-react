@@ -29,19 +29,19 @@ export const messageWrapperStyle = () => {
     }
 }
 
-export const messageTxtWrapperStyle = (props) => {
+export const messageTxtWrapperStyle = context => {
 
-    return {
-        display: "inline-block",
-        borderRadius: "12px",
-        backgroundColor: `${props.theme.backgroundColor.blue}`,
-        color: `${props.theme.color.white}`,
-        padding: "16px",
-        alignSelf: "flex-end",
-        width: "auto",
-        minHeight: "106px",
-    }
-}
+	return {
+		display: "inline-block",
+		borderRadius: "12px",
+		backgroundColor: `${context.theme.primaryColor}`,
+		color: `${context.theme.color.white}`,
+		padding: "16px",
+		alignSelf: "flex-end",
+		width: "auto",
+		minHeight: "106px",
+	};
+};
 
 export const messageTxtContainerStyle = () => {
 
@@ -58,51 +58,55 @@ export const messageTxtContainerStyle = () => {
 export const messageTxtStyle = () => {
 
     return {
-        margin: "0",
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-        textAlign: "left",
-        width: "100%",
-        fontSize: "14px",
-        marginLeft: "8px"
-    }
+			margin: "0",
+			whiteSpace: "pre-wrap",
+			wordBreak: "break-word",
+			textAlign: "left",
+			width: "calc(100% - 30px)",
+			fontSize: "14px",
+			marginLeft: "8px",
+		};
 }
 
-export const messageBtnStyle = (props) => {
+export const messageBtnStyle = context => {
 
-    return {
-        listStyleType: "none",
-        padding: "0",
-        margin: "0",
-        width: "100%",
-        "li": {
-            backgroundColor: `${props.theme.backgroundColor.white}`,
-            borderRadius: "8px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-            position: "relative",
-            margin: "16px 0 0 0",
-            padding: "8px",
-            cursor: "pointer",
-            "> p": {
-                background: "0 0",
-                textAlign: "center",
-                color: `${props.theme.color.primary}`,
-                width: "100%",
-                display: "inline-block",
-                fontSize: "14px",
-                margin: "0",
-            }
-        }
-    }
-}
+	return {
+		listStyleType: "none",
+		padding: "0",
+		margin: "0",
+		width: "100%",
+		li: {
+			backgroundColor: `${context.theme.backgroundColor.white}`,
+			borderRadius: "8px",
+			display: "flex",
+			justifyContent: "center",
+			alignItems: "center",
+			width: "100%",
+			position: "relative",
+			margin: "16px 0 0 0",
+			padding: "8px",
+			cursor: "pointer",
+			"> p": {
+				background: "0 0",
+				textAlign: "center",
+				color: `${context.theme.primaryColor}`,
+				width: "100%",
+				fontWeight: "600",
+				display: "inline-block",
+				fontSize: "14px",
+				margin: "0",
+			},
+		},
+	};
+};
 
 export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-end",
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center"
     }
 }
 
@@ -116,3 +120,13 @@ export const messageReactionsWrapperStyle = () => {
         justifyContent: "flex-end",
     }
 }
+
+export const iconStyle = (img, context) => {
+	return {
+		width: "30px",
+		height: "24px",
+		display: "inline-block",
+		mask: `url(${img}) center center no-repeat`,
+		backgroundColor: `${context.theme.color.white}`,
+	};
+};

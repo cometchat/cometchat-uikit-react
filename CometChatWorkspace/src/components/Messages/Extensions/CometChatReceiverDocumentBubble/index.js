@@ -9,6 +9,7 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../";
 import { CometChatAvatar } from "../../../Shared";
 
+import { CometChatContext } from "../../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../../util/common";
 
 import { theme } from "../../../../resources/theme";
@@ -27,14 +28,16 @@ import {
     messageTxtStyle,
     messageBtnStyle,
     messageInfoWrapperStyle,
-    messageReactionsWrapperStyle
+    messageReactionsWrapperStyle,
+    iconStyle
 } from "./style";
 
 
-import documentIcon from "./resources/receiverdocument.png";
+import documentIcon from "./resources/collaborative-document.svg";
 
 class CometChatReceiverDocumentBubble extends React.PureComponent {
 
+    static contextType = CometChatContext;
     messageFrom = "receiver";
 
     constructor(props) {
@@ -96,7 +99,7 @@ class CometChatReceiverDocumentBubble extends React.PureComponent {
             );
 
             name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-                <span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span>
+                <span css={nameStyle(this.context)} className="message__name">{this.props.message.sender.name}</span>
                 </div>);
         }
 
@@ -133,13 +136,13 @@ class CometChatReceiverDocumentBubble extends React.PureComponent {
                         {name}
                         {toolTipView}
                         <div css={messageTxtContainerStyle()} className="message__document__container">
-                            <div css={messageTxtWrapperStyle(this.props)} className="message__document__wrapper">
-                                <div css={messageTxtTitleStyle(this.props)} className="message__document__title">
-                                    <img src={documentIcon} alt={Translator.translate("COLLABORATIVE_DOCUMENT", this.props.lang)} />
+                            <div css={messageTxtWrapperStyle(this.context)} className="message__document__wrapper">
+                                <div css={messageTxtTitleStyle(this.context)} className="message__document__title">
+                                    <i css={iconStyle(documentIcon, this.context)} title={Translator.translate("COLLABORATIVE_DOCUMENT", this.props.lang)}></i>
                                     <p css={messageTxtStyle()} className="document__title">{documentTitle}</p>
                                 </div>
                                 
-                                <ul css={messageBtnStyle(this.props)} className="document__button">
+                                <ul css={messageBtnStyle(this.context)} className="document__button">
                                     <li onClick={this.launchCollaborativeDocument}>
                                         <p>{Translator.translate("JOIN", this.props.lang)}</p>
                                     </li>

@@ -61,13 +61,13 @@ export const nameWrapperStyle = (avatar) => {
     }
 }
 
-export const nameStyle = (props) => {
+export const nameStyle = context => {
 
-    return {
-        fontSize: "10px",
-        color: `${props.theme.color.helpText}`,
-    }
-}
+	return {
+		fontSize: "10px",
+		color: `${context.theme.color.helpText}`,
+	};
+};
 
 export const messageImgContainerStyle = () => {
 
@@ -79,23 +79,23 @@ export const messageImgContainerStyle = () => {
     }
 }
 
-export const messageImgWrapperStyle = (props) => {
+export const messageImgWrapperStyle = context => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+	const mq = [...context.theme.breakPoints];
 
-    return {
-        display: "inline-block",
-        alignSelf: "flex-start",
-        maxWidth: "128px",
-        height: "128px",
-        cursor: "pointer",
-        [mq[0]]: {
-            maxWidth: "128px",
-            height: "128px",
-            padding: "2px 2px",
-        }
-    }
-}
+	return {
+		display: "inline-block",
+		alignSelf: "flex-start",
+		maxWidth: "128px",
+		height: "128px",
+		cursor: "pointer",
+		[`@media ${mq[1]}, ${mq[2]}`]: {
+			maxWidth: "128px",
+			height: "128px",
+			padding: "2px 2px",
+		},
+	};
+};
 
 export const messageInfoWrapperStyle = () => {
 

@@ -1,6 +1,6 @@
-export const modalWrapperStyle = (props) => {
+export const modalWrapperStyle = (context) => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
+    const mq = context.theme.breakPoints.map(x => `@media ${x}`);
 
     return {
         minWidth: "350px",
@@ -8,7 +8,7 @@ export const modalWrapperStyle = (props) => {
         width: "40%",
         height: "40%",
         overflow: "hidden",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
+        backgroundColor: `${context.theme.backgroundColor.white}`,
         position: "fixed",
         left: "50%",
         top: "50%",
@@ -21,11 +21,19 @@ export const modalWrapperStyle = (props) => {
         [mq[0]]: {
             width: "100%",
             height: "100%"
+        },
+        [mq[1]]: {
+            width: "100%",
+            height: "100%"
+        },
+        [mq[2]]: {
+            width: "100%",
+            height: "100%"
         }
     }
 }
 
-export const modalCloseStyle = (img) => {
+export const modalCloseStyle = (img, context) => {
 
     return {
         position: "absolute",
@@ -34,7 +42,8 @@ export const modalCloseStyle = (img) => {
         borderRadius: "50%",
         top: "16px",
         right: "16px",
-        background: `url(${img}) center center no-repeat`,
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${context.theme.primaryColor}`,
         cursor: "pointer",
     }
 }
@@ -73,42 +82,58 @@ export const modalCaptionStyle = (dir) => {
 export const modalErrorStyle = (context) => {
 
     return {
-			fontSize: "12px",
-			color: `${context.theme.color.red}`,
-			textAlign: "center",
-			margin: "8px 0",
-            width: "100%",
-		};
+        fontSize: "12px",
+        color: `${context.theme.color.red}`,
+        textAlign: "center",
+        margin: "8px 0",
+        width: "100%",
+    };
 }
 
 export const modalSearchStyle = () => {
+	return {
+		fontWeight: "normal",
+		marginBottom: "16px",
+		width: "100%",
+        height: "35px",
+		borderRadius: "8px",
+		boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
+		backgroundColor: "rgba(20, 20, 20, 0.04)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+	};
+};
+
+export const searchButtonStyle = (img, context) => {
 
     return {
-        fontWeight: "normal",
-        marginBottom: "16px",
-        width: "100%",
+        width: "30px",
+        height: "100%",
+        padding: "8px",
+        cursor: "default",
+        mask: `url(${img}) 10px center no-repeat`,
+        backgroundColor: `${context.theme.secondaryTextColor}!important`,
     }
 }
 
-export const searchInputStyle = (props, img) => {
+export const searchInputStyle = () => {
 
     return {
-        width: "100%",
-        border: "0",
-        boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
-        borderRadius: "8px",
-        padding: "8px 8px 8px 40px",
+        width: "calc(100% - 30px)",
+        height: "100%",
+        padding: "8px",
         fontSize: "15px",
         outline: "none",
-        color: `${props.theme.color.primary}`,
-        background: `url(${img}) 10px center no-repeat ${props.theme.backgroundColor.grey}`,
-    }
+        border: "none",
+        backgroundColor: "transparent",
+    };
 }
 
-export const modalListStyle = (props) => {
+export const modalListStyle = (context) => {
 
-    const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
-    
+    const mq = [...context.theme.breakPoints];
+
     return {
         height: "calc(100% - 125px)",
         overflowY: "auto",
@@ -117,30 +142,30 @@ export const modalListStyle = (props) => {
         flexDirection: "column",
         justifyContent: "flex-start",
         alignItems: "flex-start",
-        [mq[0]]: {
+        [`@media ${mq[1]}, ${mq[2]}`]: {
             height: "100%"
         }
     }
 }
 
-export const modalFootStyle = (props, state, img) => {
+export const modalFootStyle = (props, state, img, context) => {
 
     const loadingState = (state.addingMembers) ? {
         disabled: "true",
         pointerEvents: "none",
-        background: `url(${img}) no-repeat right 10px center ${props.theme.backgroundColor.blue}`,
+        background: `url(${img}) ${context.theme.primaryColor} no-repeat right 10px center`,
     } : {};
 
     const textMargin = state.addingMembers ? { marginRight: "24px" } : {};
-
+    
     return {
         margin: "24px auto 0 auto",
         "button": {
             cursor: "pointer",
             padding: "8px 16px",
-            backgroundColor: `${props.theme.backgroundColor.blue}`,
+            backgroundColor: `${context.theme.primaryColor}`,
             borderRadius: "5px",
-            color: `${props.theme.color.white}`,
+            color: "white",
             fontSize: "14px",
             outline: "0",
             border: "0",
@@ -164,13 +189,12 @@ export const contactMsgStyle = () => {
     }
 }
 
-export const contactMsgTxtStyle = (props) => {
-
-    return {
-        margin: "0",
-        height: "30px",
-        color: `${props.theme.color.secondary}`,
-        fontSize: "20px!important",
-        fontWeight: "600"
-    }
-}
+export const contactMsgTxtStyle = context => {
+	return {
+		margin: "0",
+		height: "30px",
+		color: `${context.theme.color.secondary}`,
+		fontSize: "20px!important",
+		fontWeight: "600",
+	};
+};

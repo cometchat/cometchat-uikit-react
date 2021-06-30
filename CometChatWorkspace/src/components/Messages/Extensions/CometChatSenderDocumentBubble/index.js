@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt } from "../../";
 import { CometChatMessageReactions } from "../";
 
+import { CometChatContext } from "../../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../../util/common";
 
 import { theme } from "../../../../resources/theme";
@@ -21,12 +22,14 @@ import {
     messageBtnStyle,
     messageInfoWrapperStyle,
     messageReactionsWrapperStyle,
+    iconStyle,
 } from "./style";
 
-import documentIcon from "./resources/senderdocument.png";
+import documentIcon from "./resources/collaborative-document.svg";
 
 class CometChatSenderDocumentBubble extends React.PureComponent {
 
+    static contextType = CometChatContext;
     messageFrom = "sender";
 
     constructor(props) {
@@ -98,21 +101,18 @@ class CometChatSenderDocumentBubble extends React.PureComponent {
 
         const documentTitle = Translator.translate("CREATED_DOCUMENT", this.props.lang); 
         return (
-            <div 
-            css={messageContainerStyle()} 
-            className="sender__message__container message__document"
-            onMouseEnter={this.handleMouseHover}
-            onMouseLeave={this.handleMouseHover}>
-
+            <div css={messageContainerStyle()} className="sender__message__container message__document" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
                 {toolTipView}
-                    
+
                 <div css={messageWrapperStyle()} className="message__wrapper">
-                    <div css={messageTxtWrapperStyle(this.props)} className="message__document__wrapper">
+                    <div css={messageTxtWrapperStyle(this.context)} className="message__document__wrapper">
                         <div css={messageTxtContainerStyle()} className="message__document__container">
-                            <img src={documentIcon} alt={Translator.translate("COLLABORATIVE_DOCUMENT", this.props.lang)} />
-                            <p css={messageTxtStyle()} className="document__title">{documentTitle}</p>
+                            <i css={iconStyle(documentIcon, this.context)} title={Translator.translate("COLLABORATIVE_DOCUMENT", this.props.lang)}></i>
+                            <p css={messageTxtStyle()} className="document__title">
+                                {documentTitle}
+                            </p>
                         </div>
-                        <ul css={messageBtnStyle(this.props)} className="document__button">
+                        <ul css={messageBtnStyle(this.context)} className="document__button">
                             <li onClick={this.launchCollaborativeDocument}>
                                 <p>{Translator.translate("LAUNCH", this.props.lang)}</p>
                             </li>
@@ -126,9 +126,8 @@ class CometChatSenderDocumentBubble extends React.PureComponent {
                     <CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
                     <CometChatReadReceipt {...this.props} message={this.state.message} />
                 </div>
-
             </div>
-        )
+        );
     }
 }
 

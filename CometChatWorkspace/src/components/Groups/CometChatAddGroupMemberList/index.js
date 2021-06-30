@@ -22,6 +22,7 @@ import {
     modalBodyStyle,
     modalCaptionStyle,
     modalSearchStyle,
+    searchButtonStyle,
     searchInputStyle,
     modalListStyle,
     modalFootStyle,
@@ -31,8 +32,8 @@ import {
 } from "./style";
 
 import addingIcon from "./resources/adding.svg";
-import searchIcon from "./resources/search-grey-icon.png";
-import clearIcon from "./resources/close.png";
+import searchIcon from "./resources/search.svg";
+import clearIcon from "./resources/close.svg";
 
 class CometChatAddGroupMemberList extends React.Component {
 
@@ -203,7 +204,7 @@ class CometChatAddGroupMemberList extends React.Component {
 
         const createText = this.state.addingMembers ? Translator.translate("ADDING", this.props.lang) : Translator.translate("ADD", this.props.lang);
         let addGroupMemberBtn = (
-            <div css={modalFootStyle(this.props, this.state, addingIcon)} className="modal__addmembers">
+            <div css={modalFootStyle(this.props, this.state, addingIcon, this.context)} className="modal__addmembers">
                 <button type="button" onClick={this.updateMembers}><span>{createText}</span></button>
             </div>
         );
@@ -213,7 +214,7 @@ class CometChatAddGroupMemberList extends React.Component {
 
             messageContainer = (
                 <div css={contactMsgStyle()} className="members__decorator-message">
-                    <p css={contactMsgTxtStyle(this.props)} className="decorator-message">{this.state.decoratorMessage}</p>
+                    <p css={contactMsgTxtStyle(this.context)} className="decorator-message">{this.state.decoratorMessage}</p>
                 </div>
             );
             addGroupMemberBtn = null;
@@ -245,22 +246,23 @@ class CometChatAddGroupMemberList extends React.Component {
         return (
             <React.Fragment>
                 <CometChatBackdrop show={true} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)} className="modal__addmembers">
-                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
+                <div css={modalWrapperStyle(this.context)} className="modal__addmembers">
+                    <span css={modalCloseStyle(clearIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyStyle()} className="modal__body">
                         <div css={modalCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">{Translator.translate("USERS", this.props.lang)}</div>
                         <div css={modalErrorStyle(this.context)} className="modal__error">{this.state.errorMessage}</div>
                         <div css={modalSearchStyle()} className="modal__search">
+                            <button type="button" className="search__button" css={searchButtonStyle(searchIcon, this.context)} />
                             <input
                             type="text"
                             autoComplete="off"
-                            css={searchInputStyle(this.props, searchIcon)}
+                            css={searchInputStyle()}
                             className="search__input"
                             placeholder={Translator.translate("SEARCH", this.props.lang)}
                             onChange={this.searchUsers} />
                         </div>
                         {messageContainer}
-                        <div css={modalListStyle(this.props)} onScroll={this.handleScroll} className="modal__content">{users}</div>
+                        <div css={modalListStyle(this.context)} onScroll={this.handleScroll} className="modal__content">{users}</div>
                         {addGroupMemberBtn}
                     </div>
                 </div>

@@ -1,7 +1,7 @@
-export const listItem = (props) => {
+export const listItem = (props, context) => {
 
     const selectedState = (props.selectedGroup && props.selectedGroup.guid === props.group.guid) ? {
-        backgroundColor: `${props.theme.backgroundColor.primary}`
+        backgroundColor: `${context.theme.backgroundColor.primary}`
     } : {};
 
     return {
@@ -14,7 +14,7 @@ export const listItem = (props) => {
         padding: "8px 16px",
         ...selectedState,
         '&:hover': {
-            backgroundColor: `${props.theme.backgroundColor.primary}`
+            backgroundColor: `${context.theme.backgroundColor.primary}`
         }
     }
 }
@@ -33,10 +33,21 @@ export const listItemName = () => {
 export const listItemIcon = () => {
 
     return {
-        width: "14px",
+        width: "24px",
         height: "auto",
         margin: "0 8px",
     }
+}
+
+export const itemIconStyle = (img, context) => {
+
+    return {
+        display: "inline-block",
+        width: "24px",
+        height: "24px",
+        mask: `url(${img}) center center no-repeat`,
+        backgroundColor: `${context.theme.secondaryTextColor}`,
+    };
 }
 
 export const itemThumbnailStyle = () => {
@@ -74,15 +85,15 @@ export const itemNameWrapperStyle = () => {
     }
 }
 
-export const itemDescStyle = (props) => { 
+export const itemDescStyle = (context) => { 
 
     return {
-        borderBottom: `1px solid ${props.theme.borderColor.primary}`,
+        borderBottom: `1px solid ${context.theme.borderColor.primary}`,
         padding: "0 0 5px 0",
         fontSize: "12px",
-        color: `${props.theme.color.helpText}`,
+        color: `${context.theme.color.helpText}`,
         "&:hover": {
-            borderBottom: `1px solid ${props.theme.borderColor.primary}`,
+            borderBottom: `1px solid ${context.theme.borderColor.primary}`,
         }
     }
 }

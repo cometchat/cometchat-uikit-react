@@ -19,12 +19,12 @@ import {
 	selectionBoxStyle
 } from "./style";
 
-import inactiveIcon from "./resources/checkbox-inactive.svg";
-import activeIcon from "./resources/checkbox-blue-active.svg";
+import inactiveIcon from "./resources/group-member-unselect.svg";
+import activeIcon from "./resources/group-member-select.svg";
 
 const CometChatAddGroupMemberListItem = (props) => {
 
-	const { groupMembers } = useContext(CometChatContext);
+	const { groupMembers, theme } = useContext(CometChatContext);
 
 	const [checked, setChecked] = useState(() => {
 		const found = groupMembers.find(member => member.uid === props.user.uid);
@@ -60,28 +60,22 @@ const CometChatAddGroupMemberListItem = (props) => {
 	}
 	
 	return (
-		<div css={modalRowStyle(props)}>
-			<div css={modalColumnStyle()} className="userinfo"
-			onMouseEnter={event => toggleTooltip(event, true)}
-			onMouseLeave={event => toggleTooltip(event, false)}>
+		<div css={modalRowStyle(theme)}>
+			<div css={modalColumnStyle()} className="userinfo" onMouseEnter={event => toggleTooltip(event, true)} onMouseLeave={event => toggleTooltip(event, false)}>
 				<div css={avatarStyle()} className="avatar">
 					<CometChatAvatar user={props.user} />
-					<CometChatUserPresence
-					status={props.user.status}  />
+					<CometChatUserPresence status={props.user.status} />
 				</div>
-				<div css={nameStyle()} className="name">{props.user.name}</div>
+				<div css={nameStyle()} className="name">
+					{props.user.name}
+				</div>
 			</div>
 			<div css={selectionColumnStyle()} className="selection">
-					<input 
-					css={selectionBoxStyle(inactiveIcon, activeIcon)}
-					type="checkbox" 
-					checked={checked}
-					id={props.user.uid+"sel"} 
-					onChange={handleCheck}  />
-					<label htmlFor={props.user.uid+"sel"}>&nbsp;</label>
+				<input css={selectionBoxStyle(inactiveIcon, activeIcon, theme)} type="checkbox" checked={checked} id={props.user.uid + "sel"} onChange={handleCheck} />
+				<label htmlFor={props.user.uid + "sel"}>&nbsp;</label>
 			</div>
 		</div>
-	)
+	);
 }
 
 // Specifies the default values for props:

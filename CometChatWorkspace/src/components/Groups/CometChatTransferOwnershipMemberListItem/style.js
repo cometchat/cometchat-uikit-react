@@ -61,6 +61,7 @@ export const selectionColumnStyle = context => {
 		"span": {
 			fontSize: "12px",
 			display: "block",
+			paddingRight: "8px",
 		},
 		[mq[1]]: {
 			width: "140px",
@@ -75,20 +76,21 @@ export const selectionColumnStyle = context => {
 
 };
 
-export const selectionBoxStyle = (inactiveStateImg, activeStateImg) => {
+export const selectionBoxStyle = (inactiveStateImg, activeStateImg, context) => {
 	return {
 		display: "none",
 		" + label": {
 			display: "block",
 			cursor: "pointer",
-			background: `url(${inactiveStateImg}) right center / 16px no-repeat`,
+			mask: `url(${inactiveStateImg}) center center no-repeat`,
+			backgroundColor: `${context.theme.secondaryTextColor}`,
 			userSelect: "none",
-			float: "right",
 			padding: "8px",
 		},
 		"&:checked + label": {
-			background: `url(${activeStateImg}) no-repeat right center`,
-			backgroundSize: "16px",
+			mask: `url(${activeStateImg}) center center no-repeat`,
+			backgroundColor: `${context.theme.secondaryTextColor}`,
+			padding: "8px",
 		},
 	};
 };

@@ -6,7 +6,7 @@ export const badgeStyle = (props) => {
         width: "auto",
         height: "18px",
         borderRadius: "16px",
-        backgroundColor: `${props.theme.backgroundColor.blue}`,
+        backgroundColor: `${props.theme.primaryColor}`,
         color: `${props.theme.color.white}`,
         textAlign: "center",
         fontWeight: "700",

@@ -32,7 +32,8 @@ export const messageWrapperStyle = (props) => {
     }
 }
 
-export const messageTxtWrapperStyle = (props) => {
+export const messageTxtWrapperStyle = (props, context) => {
+
 
     const alignment = (props.messageOf === "sender") ? {
         alignSelf: "flex-end",
@@ -46,21 +47,21 @@ export const messageTxtWrapperStyle = (props) => {
         padding: "8px 12px",
         alignSelf: "flex-end",
         Width: "100%",
-        backgroundColor: `${props.theme.backgroundColor.secondary}`,
+        backgroundColor: `${context.theme.backgroundColor.secondary}`,
         fontStyle: "italic",
         ...alignment
     }
 }
 
-export const messageTxtStyle = (props) => {
+export const messageTxtStyle = context => {
 
-    return {
-        fontSize: "14px!important",
-        margin: "0",
-        lineHeight: "20px!important",
-        color: `${props.theme.color.helpText}`
-    }
-}
+	return {
+		fontSize: "14px!important",
+		margin: "0",
+		lineHeight: "20px!important",
+		color: `${context.theme.color.helpText}`,
+	};
+};
 
 export const messageInfoWrapperStyle = (props) => {
 
@@ -70,20 +71,22 @@ export const messageInfoWrapperStyle = (props) => {
         alignSelf: "flex-start",
     };
 
-    return alignment
-}
-
-export const messageTimeStampStyle = (props) => {
-
     return {
-        display: "inline-block",
-        fontSize: "11px",
-        fontWeight: 500,
-        lineHeight: "12px",
-        textTransform: "uppercase",
-        color: `${props.theme.color.helpText}`,
+        ...alignment,
     }
 }
+
+export const messageTimeStampStyle = context => {
+
+	return {
+		display: "inline-block",
+		fontSize: "11px",
+		fontWeight: 500,
+		lineHeight: "12px",
+		textTransform: "uppercase",
+		color: `${context.theme.color.helpText}`,
+	};
+};
 
 export const messageThumbnailStyle = () => {
 
@@ -130,9 +133,9 @@ export const nameWrapperStyle = (props) => {
     }
 }
 
-export const nameStyle = (props) => {
-    return {
-        fontSize: "10px",
-        color: `${props.theme.color.helpText}`,
-    }
-}
+export const nameStyle = context => {
+	return {
+		fontSize: "10px",
+		color: `${context.theme.color.helpText}`,
+	};
+};

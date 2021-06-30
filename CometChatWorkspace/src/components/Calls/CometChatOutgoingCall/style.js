@@ -123,20 +123,26 @@ export const iconWrapperStyle = () => {
     }
 }
 
-export const iconStyle = (img, callAction) => {
-
-    const bgColor = (callAction) ? "#008000" : "#ff3b30";
+export const iconStyle = (img) => {
 
     return {
         width: "50px",
         height: "50px",
         borderRadius: "27px",
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        display: "block",
+        backgroundColor: "red",
+        display: "flex",
         margin: "auto 10px",
         cursor: "pointer",
-        background: `url(${img}) center center no-repeat ${bgColor}`,
-    }
+        justifyContent: "center",
+        alignItems: "center",
+        "i": {
+            mask: `url(${img}) center center no-repeat`,
+            backgroundColor: `white`,
+            display: "inline-block",
+            width: "24px",
+            height: "24px",
+        },
+    };
 }
 
 export const errorContainerStyle = () => {

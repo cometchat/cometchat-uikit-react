@@ -29,7 +29,7 @@ export const messageWrapperStyle = () => {
     }
 }
 
-export const messageVideoWrapperStyle = (props) => {
+export const messageVideoWrapperStyle = () => {
 
     return {
         display: "inline-block",
@@ -46,6 +46,9 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-end",
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center"
     }
 }
 

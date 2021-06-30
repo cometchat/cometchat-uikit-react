@@ -185,10 +185,10 @@ class CometChatMessageList extends React.PureComponent {
 					//if the sender of the message is not the loggedin user, mark the message as read.
 					if (message.getSender().getUid() !== this.loggedInUser.getUid() && message.hasOwnProperty("readAt") === false) {
 						if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER) {
-							CometChat.markAsRead(message);
+							CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
 							this.props.actionGenerated(enums.ACTIONS["MESSAGE_READ"], message);
 						} else if (message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP) {
-							CometChat.markAsRead(message);
+							CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
 							this.props.actionGenerated(enums.ACTIONS["MESSAGE_READ"], message);
 						}
 					}
@@ -355,9 +355,9 @@ class CometChatMessageList extends React.PureComponent {
 	markMessageAsRead = (message, type) => {
 		if (message.hasOwnProperty("readAt") === false) {
 			if (type === CometChat.ACTION_TYPE.TYPE_USER) {
-				CometChat.markAsRead(message);
+				CometChat.markAsRead(message.getId().toString(), message.getSender().uid, message.getReceiverType());
 			} else if (type === CometChat.ACTION_TYPE.TYPE_GROUP) {
-				CometChat.markAsRead(message);
+				CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
 			}
 		}
 	};
@@ -651,7 +651,7 @@ class CometChatMessageList extends React.PureComponent {
 		if (this.state.decoratorMessage.length !== 0 && this.props.messages.length === 0) {
 			messageContainer = (
 				<div css={decoratorMessageStyle()} className="messages__decorator-message">
-					<p css={decoratorMessageTxtStyle(this.props)} className="decorator-message">
+					<p css={decoratorMessageTxtStyle(this.context)} className="decorator-message">
 						{this.state.decoratorMessage}
 					</p>
 				</div>
@@ -670,7 +670,7 @@ class CometChatMessageList extends React.PureComponent {
 			if (cDate !== messageSentDate) {
 				dateSeparator = (
 					<div css={messageDateContainerStyle()} className="message__date">
-						<span css={messageDateStyle(this.props)}>{getMessageDate(dateField, this.props.lang)}</span>
+						<span css={messageDateStyle(this.context)}>{getMessageDate(dateField, this.props.lang)}</span>
 					</div>
 				);
 			}
@@ -685,7 +685,7 @@ class CometChatMessageList extends React.PureComponent {
 		});
 
 		return (
-			<div className="chat__list" css={chatListStyle(this.props)}>
+			<div className="chat__list" css={chatListStyle(this.context)}>
 				{messageContainer}
 				<div
 					className="list__wrapper"

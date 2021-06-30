@@ -9,6 +9,7 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
 import { theme } from "../../../resources/theme";
@@ -24,13 +25,15 @@ import {
 	messageFileContainerStyle,
 	messageFileWrapperStyle,
 	messageInfoWrapperStyle,
-	messageReactionsWrapperStyle
+	messageReactionsWrapperStyle,
+	iconStyle
 } from "./style";
 
-import blueFile from "./resources/receiverfile.png";
+import fileIcon from "./resources/file-upload.svg";
 
 class CometChatReceiverFileMessageBubble extends React.Component {
 
+	static contextType = CometChatContext;
 	messageFrom = "receiver";
 
 	constructor(props) {
@@ -79,7 +82,7 @@ class CometChatReceiverFileMessageBubble extends React.Component {
 			);
 
 			name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-				<span css={nameStyle(this.props)} className="message__name">{this.state.message.sender.name}</span>
+				<span css={nameStyle(this.context)} className="message__name">{this.state.message.sender.name}</span>
 				</div>);
 		}
 
@@ -107,16 +110,15 @@ class CometChatReceiverFileMessageBubble extends React.Component {
 			className="receiver__message__container message__file"
 			onMouseEnter={this.handleMouseHover}
 			onMouseLeave={this.handleMouseHover}>
-				
 				<div css={messageWrapperStyle()} className="message__wrapper">
 					{avatar}
 					<div css={messageDetailStyle()} className="message__details">
 						{name}
 						{toolTipView}
 						<div css={messageFileContainerStyle(this.props)} className="message__file__container">
-							<div css={messageFileWrapperStyle(this.props)} className="message__file__wrapper">
+							<div css={messageFileWrapperStyle(this.context)} className="message__file__wrapper">
 								<a href={this.state.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">
-									<img src={blueFile} alt={this.state.message.data.attachments[0].url} />
+									<i css={iconStyle(fileIcon, this.context)}></i>
 									<label>{this.state.message.data.attachments[0].name}</label>
 								</a>
 							</div>

@@ -29,25 +29,32 @@ export const itemStyle = props => {
 	};
 };
 
-export const itemLinkStyle = (icon, activeStateIcon, isActive, key) => {
+export const itemLinkStyle = (icon, isActive, context) => {
 
-    let activeStateBg = (isActive) ? { background: `url(${activeStateIcon}) center center no-repeat`, } : {};
-
-    let widthProp = {};
-
-    if (key === "SIDEBAR_GROUPS") {
-			widthProp = {width: "31px"};
-		} else if (key === "SIDEBAR_CHATS") {
-			widthProp = {width: "22px"};
-		} else {
-			widthProp = {width: "20px"};
-		}
+    let activeStateBg = (isActive) ? { 
+        backgroundColor: `${context.theme.primaryColor}`,
+    } : {
+        backgroundColor: `${context.theme.secondaryTextColor}`,
+    };
 
     return {
-        height: "20px",
-        ...widthProp,
+        height: "24px",
+        width: "24px",
         display: "inline-block",
-        background: `url(${icon}) center center no-repeat`,
+        mask: `url(${icon}) no-repeat center center`,
         ...activeStateBg
     }
 }
+
+export const itemLinkTextStyle = (isActive, context) => {
+
+    const colorProp = (isActive) ? {
+        color: `${context.theme.primaryColor}`
+    } : {
+        color: `${context.theme.secondaryTextColor}`,
+    };
+
+    return {
+        ...colorProp
+    }
+};

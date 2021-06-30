@@ -107,7 +107,7 @@ class CometChatSenderTextMessageBubble extends React.Component {
 		}
 
 		messageText = (
-			<div css={messageTxtWrapperStyle(this.props)} className="message__txt__wrapper">
+			<div css={messageTxtWrapperStyle(this.context)} className="message__txt__wrapper">
 				<p css={messageTxtStyle(this.props, parsedMessage, emojiMessage, showVariation)} className="message__txt">{parsedMessage}{this.state.translatedMessage}</p>
 			</div>
 		);

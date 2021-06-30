@@ -26,11 +26,11 @@ import {
 	optionNameStyle
 } from "./style";
 
-import notificationIcon from "./resources/notification-black-icon.svg";
-import privacyIcon from "./resources/privacy-black-icon.svg";
-import chatIcon from "./resources/chat-black-icon.svg";
-import helpIcon from "./resources/help-black-icon.svg";
-import reportIcon from "./resources/report-black-icon.svg";
+import notificationIcon from "./resources/notify.svg";
+import privacyIcon from "./resources/privacy.svg";
+import chatIcon from "./resources/chats.svg";
+import helpIcon from "./resources/help.svg";
+import reportIcon from "./resources/warning.svg";
 
 class CometChatUserProfile extends React.Component {
 
