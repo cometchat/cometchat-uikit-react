@@ -28,13 +28,10 @@ import {
   chatOptionStyle
 } from "./style";
 
-import menuIcon from "./resources/menuicon.png";
-import audioCallIcon from "./resources/audiocall.svg";
-import videoCallIcon from "./resources/videocall.svg";
-import detailPaneIcon from "./resources/detailpane.svg";
-import greyAudioCallIcon from "./resources/audiocall-grey.png";
-import greyVideoCallIcon from "./resources/videocall-grey.png";
-
+import menuIcon from "./resources/menu.svg";
+import audioCallIcon from "./resources/audio-call.svg";
+import videoCallIcon from "./resources/video-call.svg";
+import detailPaneIcon from "./resources/info.svg";
 
 class CometChatMessageHeader extends React.Component {
 	item;
@@ -533,6 +530,7 @@ class CometChatMessageHeader extends React.Component {
 	};
 
 	render() {
+
 		let avatar, presence;
 		let videoCallClassName = "option__videocall-user";
 		let audioCallClassName = "option__audiocall-user";
@@ -543,7 +541,7 @@ class CometChatMessageHeader extends React.Component {
 
 		if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER) {
 			avatar = <CometChatAvatar user={this.context.item} />;
-			presence = <CometChatUserPresence widgetsettings={this.props.widgetsettings} status={this.state.presence} borderColor={this.props.theme.borderColor.primary} />;
+			presence = <CometChatUserPresence status={this.state.presence} borderColor={this.props.theme.borderColor.primary} />;
 		} else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP) {
 			chatWithClassName = "chat__group";
 			chatNameClassName = "group__name";
@@ -557,54 +555,54 @@ class CometChatMessageHeader extends React.Component {
 		let typing = null;
 		if(this.state.typing) {
 			typing = (
-				<span css={chatStatusStyle(this.props, this.state, this.context)} className={chatStatusClassName}>
+				<span css={chatStatusStyle(this.state, this.context)} className={chatStatusClassName}>
 					{this.state.typing}
 				</span>
 			);
 		}
 
 		let status = (
-			<span css={chatStatusStyle(this.props, this.state, this.context)} className={chatStatusClassName}>
+			<span css={chatStatusStyle(this.state, this.context)} className={chatStatusClassName}>
 				{this.state.status}
 			</span>
 		);
 
 		const audioCallText = Translator.translate("AUDIO_CALL", this.props.lang);
 		let audioCallBtn = (
-			<div className={audioCallClassName} title={audioCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_AUDIO_CALL"])} css={chatOptionStyle(audioCallIcon)}>
-				<img src={audioCallIcon} alt={audioCallText} />
+			<div className={audioCallClassName} css={chatOptionStyle(audioCallIcon, this.context, 0)} title={audioCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_AUDIO_CALL"])}>
+				<i></i>
 			</div>
 		);
 
 		if (this.context.checkIfCallIsOngoing()) {
 			const audioCallText = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.props.lang);
 			audioCallBtn = (
-				<div className={audioCallClassName} title={audioCallText} css={chatOptionStyle(videoCallIcon)}>
-					<img src={greyAudioCallIcon} alt={audioCallText} />
+				<div className={audioCallClassName} css={chatOptionStyle(audioCallIcon, this.context, 1)} title={audioCallText}>
+					<i></i>
 				</div>
 			);
 		}
 
 		const videoCallText = Translator.translate("VIDEO_CALL", this.props.lang);
 		let videoCallBtn = (
-			<div className={videoCallClassName} title={videoCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_VIDEO_CALL"])} css={chatOptionStyle(videoCallIcon)}>
-				<img src={videoCallIcon} alt={videoCallText} />
+			<div className={videoCallClassName} css={chatOptionStyle(videoCallIcon, this.context, 0)} title={videoCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_VIDEO_CALL"])}>
+				<i></i>
 			</div>
 		);
 
 		if (this.context.checkIfCallIsOngoing()) {
 			const videoCallText = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.props.lang);
 			videoCallBtn = (
-				<div className={videoCallClassName} title={videoCallText} css={chatOptionStyle(videoCallIcon)}>
-					<img src={greyVideoCallIcon} alt={videoCallText} />
+				<div className={videoCallClassName} css={chatOptionStyle(videoCallIcon, this.context, 1)} title={videoCallText}>
+					<i></i>
 				</div>
 			);
 		}
 
 		const viewDetailText = Translator.translate("VIEW_DETAIL", this.props.lang);
 		let viewDetailBtn = (
-			<div className={viewDetailClassName} title={viewDetailText} onClick={() => this.props.actionGenerated(enums.ACTIONS["VIEW_DETAIL"])} css={chatOptionStyle(detailPaneIcon)}>
-				<img src={detailPaneIcon} alt={viewDetailText} />
+			<div className={viewDetailClassName} css={chatOptionStyle(detailPaneIcon, this.context, 0)} title={viewDetailText} onClick={() => this.props.actionGenerated(enums.ACTIONS["VIEW_DETAIL"])}>
+				<i></i>
 			</div>
 		);
 
@@ -668,14 +666,14 @@ class CometChatMessageHeader extends React.Component {
 		}
 
 		return (
-			<div css={chatHeaderStyle(this.props)} className="chat__header">
+			<div css={chatHeaderStyle(this.context)} className="chat__header">
 				<div css={chatDetailStyle()} className="chat__details">
-					<div css={chatSideBarBtnStyle(menuIcon, this.props)} className="chat__sidebar-menu" onClick={this.resetChat}></div>
+					<div css={chatSideBarBtnStyle(menuIcon, this.props, this.context)} className="chat__sidebar-menu" onClick={this.resetChat}></div>
 					<div css={chatThumbnailStyle()} className="chat__thumbnail">
 						{avatar}
 						{presence}
 					</div>
-					<div css={chatUserStyle()} className={chatWithClassName}>
+					<div css={chatUserStyle(this.context)} className={chatWithClassName}>
 						<h6 css={chatNameStyle()} className={chatNameClassName} onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
 							{this.context.item.name}
 						</h6>

@@ -9,6 +9,7 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
@@ -31,6 +32,8 @@ import {
 import srcIcon from "./resources/1px.png";
 
 class CometChatReceiverImageMessageBubble extends React.PureComponent {
+
+	static contextType = CometChatContext;
 	messageFrom = "receiver";
 
 	constructor(props) {
@@ -174,7 +177,7 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 
 			name = (
 				<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-					<span css={nameStyle(this.props)} className="message__name">
+					<span css={nameStyle(this.context)} className="message__name">
 						{this.state.message.sender.name}
 					</span>
 				</div>
@@ -206,14 +209,8 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 						{name}
 						{toolTipView}
 						<div css={messageImgContainerStyle()} className="message__image__container">
-							<div css={messageImgWrapperStyle(this.props)} onClick={this.open} className="message__image__wrapper">
-								<img
-									src={this.state.imageUrl}
-									alt={this.state.imageUrl}
-									ref={el => {
-										this.imgRef = el;
-									}}
-								/>
+							<div css={messageImgWrapperStyle(this.context)} onClick={this.open} className="message__image__wrapper">
+								<img src={this.state.imageUrl} alt={this.state.imageUrl} ref={el => { this.imgRef = el; }} />
 							</div>
 						</div>
 

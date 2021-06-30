@@ -24,7 +24,7 @@ import {
 } from "./style";
 
 import creatingIcon from "./resources/creating.svg";
-import closeIcon from "./resources/close.png";
+import closeIcon from "./resources/close.svg";
 
 class CometChatCreateGroup extends React.Component {
 	static contextType = CometChatContext;
@@ -261,7 +261,7 @@ class CometChatCreateGroup extends React.Component {
 			password = (
 				<tr>
 					<td>
-						<input autoComplete="off" css={inputStyle(this.props)} placeholder={Translator.translate("ENTER_GROUP_PASSWORD", this.props.lang)} type="password" tabIndex="3" onChange={this.passwordChangeHandler} value={this.state.password} />
+						<input autoComplete="off" css={inputStyle(this.context)} placeholder={Translator.translate("ENTER_GROUP_PASSWORD", this.props.lang)} type="password" tabIndex="3" onChange={this.passwordChangeHandler} value={this.state.password} />
 					</td>
 				</tr>
 			);
@@ -272,8 +272,8 @@ class CometChatCreateGroup extends React.Component {
 		return (
 			<React.Fragment>
 				<CometChatBackdrop show={true} clicked={this.props.close} />
-				<div css={modalWrapperStyle(this.props)} className="modal__creategroup">
-					<span css={modalCloseStyle(closeIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
+				<div css={modalWrapperStyle(this.context)} className="modal__creategroup">
+					<span css={modalCloseStyle(closeIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
 					<div css={modalBodyStyle()} className="modal__body">
 						<table css={modalTableStyle(this.props)}>
 							<caption css={tableCaptionStyle()} className="modal__title"> {Translator.translate("CREATE_GROUP", this.props.lang)} </caption>
@@ -289,7 +289,7 @@ class CometChatCreateGroup extends React.Component {
 								{groupTypeSelect}
 								{password}
 							</tbody>
-							<tfoot css={tableFootStyle(this.props, this.state, creatingIcon)}>
+							<tfoot css={tableFootStyle(this.context, this.state, creatingIcon)}>
 								<tr className="creategroup">
 									<td><button type="button" tabIndex="4" onClick={this.createGroup}><span>{createText}</span></button></td>
 								</tr>

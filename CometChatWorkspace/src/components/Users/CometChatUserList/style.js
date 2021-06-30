@@ -1,7 +1,7 @@
-export const contactWrapperStyle = (props) => {
+export const contactWrapperStyle = (props, context) => {
 
     const borderStyle = (props._parent === "") ? {
-        border: `1px solid ${props.theme.borderColor.primary}`
+        border: `1px solid ${context.theme.borderColor.primary}`
     } : {};
 
 
@@ -30,29 +30,30 @@ export const contactWrapperStyle = (props) => {
     }
 }
 
-export const contactHeaderStyle = (theme) => {
+export const contactHeaderStyle = context => {
 
-    return {
-        padding: "16px",
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        borderBottom: `1px solid ${theme.borderColor.primary}`,
-        height: "70px",
-    }
-}
+	return {
+		padding: "16px",
+		position: "relative",
+		display: "flex",
+		alignItems: "center",
+		borderBottom: `1px solid ${context.theme.borderColor.primary}`,
+		height: "70px",
+	};
+};
 
-export const contactHeaderCloseStyle = (img, props) => {
+export const contactHeaderCloseStyle = (img, context) => {
 
-    const mq = [...props.theme.breakPoints];
+    const mq = [...context.theme.breakPoints];
 
     return {
         cursor: "pointer",
         display: "none",
-        background: `url(${img}) left center no-repeat`,
+        mask: `url(${img}) left center no-repeat`,
+        backgroundColor: `${context.theme.secondaryTextColor}`,
         height: "24px",
         width: "33%",
-        [`@media ${mq[0]}`]: {
+        [`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
             display: "block!important"
         }
     }
@@ -82,24 +83,39 @@ export const contactHeaderTitleStyle = (props) => {
 export const contactSearchStyle = () => {
     
     return {
-        padding: "16px",
-        position: "relative"
+        margin: "16px",
+        position: "relative",
+        borderRadius: "8px",
+		boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
+        backgroundColor: "rgba(20, 20, 20, 0.04)",
+        height: "35px",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
     }
 }
 
-export const contactSearchInputStyle = (props, img) => {
+export const contactSearchButtonStyle = (img, context) => {
+	return {
+		width: "30px",
+		height: "100%",
+		padding: "8px 0 8px 8px",
+		cursor: "default",
+		mask: `url(${img}) 10px center no-repeat`,
+		backgroundColor: `${context.theme.secondaryTextColor}!important`,
+	};
+};
+
+export const contactSearchInputStyle = () => {
 
     return {
-        display: "block",
-        width: "100%",
-        border: "0",
-        boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
-        borderRadius: "8px",
-        padding: "8px 8px 8px 40px",
+        width: "calc(100% - 30px)",
+        padding: "8px",
         fontSize: "15px",
         outline: "none",
-        color: `${props.theme.color.primary}`,
-        background: `url(${img}) 10px center no-repeat ${props.theme.backgroundColor.grey}`,
+        border: "none",
+        height: "100%",
+        backgroundColor: "transparent",
     }
 }
 
@@ -116,12 +132,12 @@ export const contactMsgStyle = () => {
     }
 }
 
-export const contactMsgTxtStyle = (props) => {
+export const contactMsgTxtStyle = (context) => {
 
     return {
         margin: "0",
         minHeight: "36px",
-        color: `${props.theme.color.secondary}`,
+        color: `${context.theme.color.secondary}`,
         fontSize: "20px!important",
         fontWeight: "600",
         lineHeight: "30px",

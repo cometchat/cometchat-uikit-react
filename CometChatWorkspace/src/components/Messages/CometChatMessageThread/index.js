@@ -12,6 +12,7 @@ import {
 	CometChatSenderFileMessageBubble, CometChatReceiverFileMessageBubble,
 	CometChatSenderAudioMessageBubble, CometChatReceiverAudioMessageBubble,
 	CometChatSenderVideoMessageBubble, CometChatReceiverVideoMessageBubble,
+	CometChatSenderDirectCallBubble, CometChatReceiverDirectCallBubble,
 	CometChatImageViewer
 } from "../";
 
@@ -43,7 +44,7 @@ import {
 	messageReplyStyle,
 } from "./style";
 
-import clearIcon from "./resources/close.png";
+import clearIcon from "./resources/close.svg";
 
 class CometChatMessageThread extends React.PureComponent {
 	loggedInUser = null;
@@ -398,6 +399,9 @@ class CometChatMessageThread extends React.PureComponent {
 			case enums.CUSTOM_TYPE_WHITEBOARD:
 				component = <CometChatSenderWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
 				break;
+			case enums.CUSTOM_TYPE_MEETING:
+				component = <CometChatSenderDirectCallBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				break;
 			default:
 				break;
 		}
@@ -420,6 +424,9 @@ class CometChatMessageThread extends React.PureComponent {
 			case enums.CUSTOM_TYPE_WHITEBOARD:
 				component = <CometChatReceiverWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
 				break;
+			case enums.CUSTOM_TYPE_MEETING:
+				component = <CometChatReceiverDirectCallBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} enableMessageReaction={this.state.enableMessageReaction} />;
+				break;
 			default:
 				break;
 		}
@@ -432,14 +439,14 @@ class CometChatMessageThread extends React.PureComponent {
 		const key = 1;
 
 		switch (message.category) {
-			case "message":
+			case CometChat.CATEGORY_MESSAGE:
 				if (this.loggedInUser.uid === message.sender.uid) {
 					component = this.getSenderMessageComponent(message, key);
 				} else {
 					component = this.getReceiverMessageComponent(message, key);
 				}
 				break;
-			case "custom":
+			case CometChat.CATEGORY_CUSTOM:
 				if (this.loggedInUser.uid === message.sender.uid) {
 					component = this.getSenderCustomMessageComponent(message, key);
 				} else {
@@ -474,7 +481,7 @@ class CometChatMessageThread extends React.PureComponent {
 			const replyText = replyCount === 1 ? `${replyCount} ${Translator.translate("REPLY", this.props.lang)}` : `${replyCount} ${Translator.translate("REPLIES", this.props.lang)}`;
 
 			seperator = (
-				<div css={messageSeparatorStyle(this.props)} className="message__separator">
+				<div css={messageSeparatorStyle(this.context)} className="message__separator">
 					<span css={messageReplyStyle()} className="message__replies">
 						{replyText}
 					</span>
@@ -500,8 +507,7 @@ class CometChatMessageThread extends React.PureComponent {
 				messageToBeEdited={this.state.messageToBeEdited}
 				replyPreview={this.state.replyPreview}
 				messageToReact={this.state.messageToReact}
-				actionGenerated={this.actionHandler}
-			/>
+				actionGenerated={this.actionHandler} />
 		);
 
 		//if send messages feature is disabled
@@ -511,8 +517,8 @@ class CometChatMessageThread extends React.PureComponent {
 
 		return (
 			<React.Fragment>
-				<div css={wrapperStyle(this.props)} className="thread__chat">
-					<div css={headerStyle(this.props)} className="chat__header">
+				<div css={wrapperStyle(this.context)} className="thread__chat">
+					<div css={headerStyle(this.context)} className="chat__header">
 						<div css={headerWrapperStyle()} className="header__wrapper">
 							<div css={headerDetailStyle()} className="header__details">
 								<h6 css={headerTitleStyle()} className="header__title">
@@ -522,7 +528,7 @@ class CometChatMessageThread extends React.PureComponent {
 									{this.props.threadItem.name}
 								</span>
 							</div>
-							<div css={headerCloseStyle(clearIcon)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_THREADED_MESSAGE"])}></div>
+							<div css={headerCloseStyle(clearIcon, this.context)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_THREADED_MESSAGE"])}></div>
 						</div>
 					</div>
 					<div css={messageContainerStyle()} className="chat__message__container">
@@ -540,8 +546,7 @@ class CometChatMessageThread extends React.PureComponent {
 							widgetsettings={this.props.widgetsettings}
 							parentMessageId={this.props.parentMessage.id}
 							lang={this.props.lang}
-							actionGenerated={this.actionHandler}
-						/>
+							actionGenerated={this.actionHandler} />
 						{messageComposer}
 					</div>
 				</div>

@@ -18,17 +18,19 @@ import {
     modalWrapperStyle,
     modalCloseStyle,
     modalBodyStyle,
-    modalTableStyle,
-    tableCaptionStyle,
-    tableBodyStyle,
-    roleColumnStyle,
-    actionColumnStyle,
     contactMsgStyle,
     contactMsgTxtStyle,
-    modalErrorStyle
+    modalErrorStyle,
+    modalCaptionStyle,
+    modalListStyle,
+    listHeaderStyle,
+    nameColumnStyle,
+    roleColumnStyle,
+    actionColumnStyle,
+    listStyle,
 } from "./style";
 
-import clearIcon from "./resources/close.png";
+import clearIcon from "./resources/close.svg";
 
 class CometChatBanGroupMemberList extends React.Component {
 
@@ -115,35 +117,48 @@ class CometChatBanGroupMemberList extends React.Component {
         if (this.state.decoratorMessage.length !== 0) {
 
             messageContainer = (
-                <caption css={contactMsgStyle()} className="bannedmembers__decorator-message">
-                    <p css={contactMsgTxtStyle(this.props)} className="decorator-message">{this.state.decoratorMessage}</p>
-                </caption>
+                <div css={contactMsgStyle()} className="bannedmembers__decorator-message">
+                    <p css={contactMsgTxtStyle(this.context)} className="decorator-message">{this.state.decoratorMessage}</p>
+                </div>
             );
         }
         
         return (
-            <React.Fragment>
-                <CometChatBackdrop show={true} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)} className="modal__bannedmembers">
-                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
-                    <div css={modalBodyStyle()} className="modal__body">
-                         <div css={modalErrorStyle(this.context)} className="modal__error">{this.state.errorMessage}</div>
-                        <table css={modalTableStyle(this.props)}>
-                            <caption css={tableCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">{Translator.translate("BANNED_MEMBERS", this.props.lang)}</caption>
-                            <thead>
-                                <tr>
-                                    <th className="name">{Translator.translate("NAME", this.props.lang)}</th>
-                                    <th css={roleColumnStyle()} className="role">{Translator.translate("SCOPE", this.props.lang)}</th>
-                                    <th css={actionColumnStyle()} className="unban">{Translator.translate("UNBAN", this.props.lang)}</th>
-                                </tr>
-                            </thead>
-                            {messageContainer}
-                            <tbody css={tableBodyStyle()} onScroll={this.handleScroll}>{bannedMembers}</tbody>
-                        </table>
-                    </div>
-                </div>
-            </React.Fragment>
-        );
+					<React.Fragment>
+						<CometChatBackdrop show={true} clicked={this.props.close} />
+						<div css={modalWrapperStyle(this.context)} className="modal__bannedmembers">
+							<span css={modalCloseStyle(clearIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
+
+							<div css={modalBodyStyle()} className="modal__body">
+								<div css={modalCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">
+									{Translator.translate("BANNED_MEMBERS", this.props.lang)}
+								</div>
+								<div css={modalErrorStyle(this.context)} className="modal__error">
+									{this.state.errorMessage}
+								</div>
+
+								<div css={modalListStyle()} className="modal__content">
+									<div css={listHeaderStyle(this.context)} className="content__header">
+										<div css={nameColumnStyle(this.props)} className="name">
+											{Translator.translate("NAME", this.props.lang)}
+										</div>
+										<div css={roleColumnStyle(this.context)} className="role">
+											{Translator.translate("SCOPE", this.props.lang)}
+										</div>
+										<div css={actionColumnStyle(this.context)} className="unban">
+											{Translator.translate("UNBAN", this.props.lang)}
+										</div>
+									</div>
+									{messageContainer}
+									<div css={listStyle(this.props)} className="content__list" onScroll={this.handleScroll}>
+										{bannedMembers}
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</React.Fragment>
+				);
     }
 }
 

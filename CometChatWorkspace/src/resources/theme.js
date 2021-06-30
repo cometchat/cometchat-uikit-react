@@ -2,6 +2,7 @@ export const theme = {
     fontFamily: "Inter, sans-serif",
     fontSize: "14px",
     primaryColor: "#39f",
+    secondaryTextColor: "#808080",
     color: {
         primary: "#141414",
         secondary: "#cccccc",

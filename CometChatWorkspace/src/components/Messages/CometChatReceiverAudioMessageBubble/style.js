@@ -61,13 +61,13 @@ export const nameWrapperStyle = (avatar) => {
     }
 }
 
-export const nameStyle = (props) => {
+export const nameStyle = context => {
 
-    return {
-        fontSize: "10px",
-        color: `${props.theme.color.helpText}`,
-    }
-}
+	return {
+		fontSize: "10px",
+		color: `${context.theme.color.helpText}`,
+	};
+};
 
 export const messageAudioContainerStyle = () => {
 
@@ -79,7 +79,7 @@ export const messageAudioContainerStyle = () => {
     }
 }
 
-export const messageAudioWrapperStyle = (props) => {
+export const messageAudioWrapperStyle = () => {
 
     return {
         display: "inline-block",
@@ -97,7 +97,7 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-start",
-        padding: "3px 5px",
+        padding: "4px 8px",
     }
 }
 

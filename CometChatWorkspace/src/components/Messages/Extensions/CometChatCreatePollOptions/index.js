@@ -1,16 +1,21 @@
+import { useContext } from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
+
+import { CometChatContext } from "../../../../util/CometChatContext";
 
 import { iconWrapperStyle } from "../CometChatCreatePoll/style";
 
 import Translator from "../../../../resources/localization/translator";
 
 import { removeOptionIconStyle } from "./style";
-import removeIcon from "./resources/remove.png";
+import removeIcon from "./resources/remove.svg";
 
 const CometChatCreatePollOptions = (props) => {
+
+    const context = useContext(CometChatContext);
 
     return (
         <tr className="poll__options">
@@ -26,7 +31,7 @@ const CometChatCreatePollOptions = (props) => {
                 onChange={(event) => props.optionChangeHandler(event, props.option)} />
             </td>
             <td css={iconWrapperStyle()} className="option__remove">
-                <span css={removeOptionIconStyle(removeIcon)} onClick={() => props.removePollOption(props.option)}></span>
+                <span css={removeOptionIconStyle(removeIcon, context)} onClick={() => props.removePollOption(props.option)}></span>
             </td>
         </tr>
     );

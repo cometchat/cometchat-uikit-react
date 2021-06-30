@@ -6,6 +6,7 @@ import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatAvatar } from "../../Shared";
+import { CometChatContext } from "../../../util/CometChatContext";
 
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
@@ -13,6 +14,7 @@ import Translator from "../../../resources/localization/translator";
 import {
 	listItem,
 	listItemIcon,
+	itemIconStyle,
 	itemThumbnailStyle,
 	itemDetailStyle,
 	itemNameWrapperStyle,
@@ -20,11 +22,13 @@ import {
 	listItemName  
 } from "./style";
 
-import shieldIcon from "./resources/shield.png";
-import lockIcon from "./resources/lock.png";
+import shieldIcon from "./resources/password-protected-group.svg";
+import lockIcon from "./resources/private-group.svg";
 
 class CometChatGroupListItem extends React.PureComponent {
 
+	static contextType = CometChatContext;
+	
 	toggleTooltip = (event, flag) => {
 
 		const elem = event.target;
@@ -48,15 +52,15 @@ class CometChatGroupListItem extends React.PureComponent {
 		let groupTypeIcon = null;
 		if (this.props.group.type === CometChat.GROUP_TYPE.PRIVATE) {
 
-			groupTypeIcon = (<img src={shieldIcon} alt={Translator.translate("PRIVATE_GROUP", this.props.lang)} />);
+			groupTypeIcon = (<i css={itemIconStyle(shieldIcon, this.context)} title={Translator.translate("PRIVATE_GROUP", this.props.lang)}></i>);
 
 		} else if (this.props.group.type === CometChat.GROUP_TYPE.PASSWORD) {
 
-			groupTypeIcon = (<img src={lockIcon} alt={Translator.translate("PROTECTED_GROUP", this.props.lang)} />);
+			groupTypeIcon = (<i css={itemIconStyle(lockIcon, this.context)} title={Translator.translate("PROTECTED_GROUP", this.props.lang)}></i>);
 		}
 
 		return (
-			<div css={listItem(this.props)} className="list__item" onClick={() => this.props.clickHandler(this.props.group)}>
+			<div css={listItem(this.props, this.context)} className="list__item" onClick={() => this.props.clickHandler(this.props.group)}>
 				<div css={itemThumbnailStyle()} className="list__item__thumbnail">
 					<CometChatAvatar group={this.props.group} />
 				</div>
@@ -67,7 +71,7 @@ class CometChatGroupListItem extends React.PureComponent {
 						<p css={listItemName()}>{this.props.group.name}</p>
 						<div css={listItemIcon()}>{groupTypeIcon}</div>
 					</div>
-					<div css={itemDescStyle(this.props)} className="item__details__desc">{`${this.props.group.membersCount} ${Translator.translate("MEMBERS", this.props.lang)}`}</div>
+					<div css={itemDescStyle(this.context)} className="item__details__desc">{`${this.props.group.membersCount} ${Translator.translate("MEMBERS", this.props.lang)}`}</div>
 				</div>
 			</div>
 		);

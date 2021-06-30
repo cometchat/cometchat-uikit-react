@@ -23,9 +23,10 @@ import {
     messageBtnStyle,
     messageInfoWrapperStyle,
     messageReactionsWrapperStyle,
+    iconStyle
 } from "./style";
 
-import callIcon from "./resources/sendervideocall.png";
+import callIcon from "./resources/video-call.svg";
 
 class CometChatSenderDirectCallBubble extends React.Component {
 
@@ -122,15 +123,12 @@ class CometChatSenderDirectCallBubble extends React.Component {
                 {toolTipView}
 
                 <div css={messageWrapperStyle()} className="message__wrapper">
-                    <div css={messageTxtWrapperStyle(this.props)} className="message__directcall__wrapper">
+                    <div css={messageTxtWrapperStyle(this.context)} className="message__directcall__wrapper">
                         <div css={messageTxtContainerStyle()} className="message__directcall__container">
-                            <img src={callIcon} alt={Translator.translate("VIDEO_CALL", this.props.lang)} />
+                            <i css={iconStyle(callIcon, this.context)} alt={Translator.translate("VIDEO_CALL", this.props.lang)}></i>
                             <p css={messageTxtStyle()} className="directcall__title">{messageTitle}</p>
                         </div>
-                        <ul css={messageBtnStyle(this.props)} className="directcall__button">
-                            {/* <li onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.state.message)}>
-                                <p>{Translator.translate("JOIN", this.props.lang)}</p>
-                            </li> */}
+                        <ul css={messageBtnStyle(this.context)} className="directcall__button">
                             {callMessage}
                         </ul>
                     </div>

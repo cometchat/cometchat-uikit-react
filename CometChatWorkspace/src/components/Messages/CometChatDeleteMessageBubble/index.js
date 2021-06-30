@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import dateFormat from "dateformat";
 /** @jsxRuntime classic */
 /** @jsx jsx */
@@ -7,6 +7,8 @@ import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatAvatar } from "../../Shared";
+
+import { CometChatContext } from "../../../util/CometChatContext";
 
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
@@ -26,17 +28,19 @@ import {
 
 const CometChatDeleteMessageBubble = (props) => {
 
+    const context = useContext(CometChatContext);
+
     let message = null;
     const messageDate = (props.message.sentAt * 1000);
     if(props.messageOf === "sender") {
 
         message = (
             <React.Fragment>
-                <div css={messageTxtWrapperStyle(props)} className="message__txt__wrapper">
-                    <p css={messageTxtStyle(props)} className="message__txt">{Translator.translate("YOU_DELETED_THIS_MESSAGE", props.lang)}</p>                         
+                <div css={messageTxtWrapperStyle(props, context)} className="message__txt__wrapper">
+                    <p css={messageTxtStyle(context)} className="message__txt">{Translator.translate("YOU_DELETED_THIS_MESSAGE", props.lang)}</p>                         
                 </div>
                 <div css={messageInfoWrapperStyle(props)} className="message__info__wrapper">
-                    <span css={messageTimeStampStyle(props)} className="message__timestamp">{dateFormat(messageDate, "shortTime")}</span>
+                    <span css={messageTimeStampStyle(context)} className="message__timestamp">{dateFormat(messageDate, "shortTime")}</span>
                 </div>
             </React.Fragment>
         );
@@ -54,7 +58,7 @@ const CometChatDeleteMessageBubble = (props) => {
             )
             name = (
             <div css={nameWrapperStyle(props)} className="message__name__wrapper">
-                <span css={nameStyle(props)} className="message__name">{props.message.sender.name}</span>
+                <span css={nameStyle(context)} className="message__name">{props.message.sender.name}</span>
             </div>);
         } 
 
@@ -63,11 +67,11 @@ const CometChatDeleteMessageBubble = (props) => {
                 {avatar}
                 <div css={messageDetailStyle(props)} className="message__details">
                     {name}
-                    <div css={messageTxtWrapperStyle(props)} className="message__txt__wrapper">
-                        <p css={messageTxtStyle(props)} className="message__txt">{Translator.translate("THIS_MESSAGE_DELETED", props.lang)}</p>
+                    <div css={messageTxtWrapperStyle(props, context)} className="message__txt__wrapper">
+                        <p css={messageTxtStyle(context)} className="message__txt">{Translator.translate("THIS_MESSAGE_DELETED", props.lang)}</p>
                     </div>
                     <div css={messageInfoWrapperStyle(props)} className="message__info__wrapper">
-                        <span css={messageTimeStampStyle(props)} className="message__timestamp">{dateFormat(messageDate, "shortTime")}</span>
+                        <span css={messageTimeStampStyle(context)} className="message__timestamp">{dateFormat(messageDate, "shortTime")}</span>
                     </div>
                 </div>
             </React.Fragment>

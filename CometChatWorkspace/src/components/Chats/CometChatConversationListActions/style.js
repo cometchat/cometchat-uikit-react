@@ -18,6 +18,7 @@ export const conversationActionStyle = context => {
 export const groupButtonStyle = (actionInProgress, progressIcon, actionIcon) => {
 
 	const backgroundImage = actionInProgress ? progressIcon : actionIcon;
+
 	return {
 		outline: "0",
 		border: "0",
@@ -28,7 +29,6 @@ export const groupButtonStyle = (actionInProgress, progressIcon, actionIcon) => 
 		display: "inline-flex",
 		justifyContent: "center",
 		position: "relative",
-		background: `url(${backgroundImage}) center center / 20px 19px no-repeat`,
-		color: "white"
+		background: `url(${backgroundImage}) center center no-repeat`,
 	};
 };

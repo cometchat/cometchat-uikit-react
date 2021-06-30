@@ -28,10 +28,11 @@ import {
     thumbnailStyle,
     headerButtonStyle,
     ButtonStyle,
+	callIconStyle
 } from "./style";
 
-import audioCallIcon from "./resources/incomingaudiocall.png";
-import videoCallIcon from "./resources/incomingvideocall.png";
+import audioCallIcon from "./resources/incoming-call.svg";
+import videoCallIcon from "./resources/incoming-video-call.svg";
 
 class CometChatIncomingCall extends React.PureComponent {
 	static contextType = CometChatContext;
@@ -258,14 +259,14 @@ class CometChatIncomingCall extends React.PureComponent {
 		if (this.state.incomingCall) {
 			let callType = (
 				<React.Fragment>
-					<img src={audioCallIcon} alt={Translator.translate("INCOMING_AUDIO_CALL", this.props.lang)} />
+					<i css={callIconStyle(audioCallIcon, this.context)} title={Translator.translate("INCOMING_AUDIO_CALL", this.props.lang)}></i>
 					<span>{Translator.translate("INCOMING_AUDIO_CALL", this.props.lang)}</span>
 				</React.Fragment>
 			);
 			if (this.state.incomingCall.type === CometChat.CALL_TYPE.VIDEO) {
 				callType = (
 					<React.Fragment>
-						<img src={videoCallIcon} alt={Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)} />
+						<i css={callIconStyle(videoCallIcon, this.context)} title={Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}></i>
 						<span>{Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}</span>
 					</React.Fragment>
 				);

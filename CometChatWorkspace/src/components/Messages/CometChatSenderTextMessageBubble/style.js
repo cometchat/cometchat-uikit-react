@@ -29,17 +29,17 @@ export const messageWrapperStyle = () => {
     }
 }
 
-export const messageTxtWrapperStyle = (props) => {
+export const messageTxtWrapperStyle = context => {
 
-    return {
-        display: "inline-block",
-        borderRadius: "12px",
-        backgroundColor: `${props.theme.backgroundColor.blue}`,
-        color: `${props.theme.color.white}`,
-        padding: "8px 16px",
-        width: "auto",
-    }
-}
+	return {
+		display: "inline-block",
+		borderRadius: "12px",
+		backgroundColor: `${context.theme.primaryColor}`,
+		color: `${context.theme.color.white}`,
+		padding: "8px 16px",
+		width: "auto",
+	};
+};
 
 export const messageTxtStyle = (props, parsedMessage, emojiMessage, showVariation) => {
 
@@ -122,6 +122,9 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-end",
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center"
     }
 }
 

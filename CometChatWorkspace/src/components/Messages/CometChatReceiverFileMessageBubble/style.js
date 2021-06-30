@@ -61,13 +61,13 @@ export const nameWrapperStyle = (avatar) => {
     }
 }
 
-export const nameStyle = (props) => {
+export const nameStyle = context => {
 
-    return {
-        fontSize: "10px",
-        color: `${props.theme.color.helpText}`,
-    }
-}
+	return {
+		fontSize: "10px",
+		color: `${context.theme.color.helpText}`,
+	};
+};
 
 export const messageFileContainerStyle = () => {
 
@@ -79,39 +79,36 @@ export const messageFileContainerStyle = () => {
     }
 }
 
-export const messageFileWrapperStyle = (props) => {
+export const messageFileWrapperStyle = context => {
 
-    return {
-        display: "inline-block",
-        borderRadius: "12px",
-        color: `${props.theme.color.secondary}`,
-        backgroundColor: `${props.theme.backgroundColor.secondary}`,
-        padding: "8px 16px",
-        alignSelf: "flex-start",
-        width: "auto",
-        "> a": {
-            background: "0 0",
-            textDecoration: "none",
-            backgroundColor: "transparent",
-            color: `${props.theme.color.primary}`,
-            width: "auto",
-            fontSize: "14px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            "&:visited, &:active, &:hover": {
-                color: `${props.theme.color.primary}`,
-                textDecoration: "none",
-            },
-            "img": {
-                marginRight: "8px",
-            },
-            "label": {
-                cursor: "pointer"
-            }
-        }
-    }
-}
+	return {
+		display: "inline-block",
+		borderRadius: "12px",
+		color: `${context.theme.color.secondary}`,
+		backgroundColor: `${context.theme.backgroundColor.secondary}`,
+		padding: "8px 16px",
+		alignSelf: "flex-start",
+		width: "auto",
+		"> a": {
+			background: "0 0",
+			textDecoration: "none",
+			backgroundColor: "transparent",
+			color: `${context.theme.color.primary}`,
+			width: "auto",
+			fontSize: "14px",
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+			"&:visited, &:active, &:hover": {
+				color: `${context.theme.color.primary}`,
+				textDecoration: "none",
+			},
+			label: {
+				cursor: "pointer",
+			},
+		},
+	};
+};
 
 export const messageInfoWrapperStyle = () => {
 
@@ -131,3 +128,14 @@ export const messageReactionsWrapperStyle = () => {
         justifyContent: "flex-start",
     }
 }
+
+export const iconStyle = (img, context) => {
+	return {
+		width: "24px",
+		height: "24px",
+		display: "inline-block",
+		mask: `url(${img}) center center no-repeat`,
+		backgroundColor: `${context.theme.secondaryTextColor}`,
+		marginRight: "8px",
+	};
+};

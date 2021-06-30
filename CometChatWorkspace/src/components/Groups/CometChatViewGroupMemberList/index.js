@@ -28,7 +28,7 @@ import {
     modalErrorStyle
 } from "./style";
 
-import clearIcon from "./resources/close.png";
+import clearIcon from "./resources/close.svg";
 
 class CometChatViewGroupMemberList extends React.Component {
 
@@ -39,7 +39,7 @@ class CometChatViewGroupMemberList extends React.Component {
         super(props, context);
         this._isMounted = false;
         const chatWindow = context.UIKitSettings.chatWindow;
-        this.mq = chatWindow.matchMedia(props.theme.breakPoints[1]);
+        this.mq = chatWindow.matchMedia(this.context.theme.breakPoints[1]);
         
         let userColumnTitle = Translator.translate("NAME", props.lang);
         if (this.mq.matches) {
@@ -169,8 +169,8 @@ class CometChatViewGroupMemberList extends React.Component {
 
             editAccess = (
                 <React.Fragment>
-                    <div css={actionColumnStyle(this.props)} className="ban">{Translator.translate("BAN", this.props.lang)}</div>
-                    <div css={actionColumnStyle(this.props)} className="kick">{Translator.translate("KICK", this.props.lang)}</div>
+                    <div css={actionColumnStyle(this.context)} className="ban">{Translator.translate("BAN", this.props.lang)}</div>
+                    <div css={actionColumnStyle(this.context)} className="kick">{Translator.translate("KICK", this.props.lang)}</div>
                 </React.Fragment>
             );
 
@@ -184,18 +184,18 @@ class CometChatViewGroupMemberList extends React.Component {
         return (
             <React.Fragment>
                 <CometChatBackdrop show={true} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)} className="modal__viewmembers">
-                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
+                <div css={modalWrapperStyle(this.context)} className="modal__viewmembers">
+                    <span css={modalCloseStyle(clearIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
                     <div css={modalBodyStyle()} className="modal__body">
                         <div css={modalCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">{Translator.translate("GROUP_MEMBERS", this.props.lang)}</div>
                         <div css={modalErrorStyle(this.context)} className="modal__error">{this.state.errorMessage}</div>
                         <div css={modalListStyle()} className="modal__content">
-                            <div css={listHeaderStyle(this.props)} className="content__header">
-                                <div css={nameColumnStyle(this.props, editAccess)} className="name">{this.state.userColumnTitle}</div>
-                                <div css={scopeColumnStyle(this.props)} className="scope">{Translator.translate("SCOPE", this.props.lang)}</div>
+                            <div css={listHeaderStyle(this.context)} className="content__header">
+                                <div css={nameColumnStyle(this.context, editAccess)} className="name">{this.state.userColumnTitle}</div>
+                                <div css={scopeColumnStyle(this.context)} className="scope">{Translator.translate("SCOPE", this.props.lang)}</div>
                                 {editAccess}
                             </div>
-                            <div css={listStyle(this.props)} className="content__list" onScroll={this.handleScroll}>
+                            <div css={listStyle()} className="content__list" onScroll={this.handleScroll}>
                                 {groupMembers}
                             </div>
                         </div>

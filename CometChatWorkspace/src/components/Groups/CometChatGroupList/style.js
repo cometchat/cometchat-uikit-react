@@ -1,7 +1,7 @@
-export const groupWrapperStyle = (props) => {
+export const groupWrapperStyle = (props, context) => {
     
     const borderStyle = (props._parent === "") ? {
-        border: `1px solid ${props.theme.borderColor.primary}`
+        border: `1px solid ${context.theme.borderColor.primary}`
     } : {};
 
     return {
@@ -29,33 +29,34 @@ export const groupWrapperStyle = (props) => {
     }
 }
 
-export const groupHeaderStyle = (props) => {
+export const groupHeaderStyle = context => {
 
-    return {
-        padding: "16px",
-        position: "relative",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        borderBottom: `1px solid ${props.theme.borderColor.primary}`,
-        height: "70px",
-    }
-}
+	return {
+		padding: "16px",
+		position: "relative",
+		display: "flex",
+		justifyContent: "space-between",
+		alignItems: "center",
+		borderBottom: `1px solid ${context.theme.borderColor.primary}`,
+		height: "70px",
+	};
+};
 
-export const groupHeaderCloseStyle = (img, props) => {
+export const groupHeaderCloseStyle = (img, context) => {
 
-    const mq = [...props.theme.breakPoints];
+    const mq = [...context.theme.breakPoints];
 
     return {
         cursor: "pointer",
         display: "none",
-        background: `url(${ img}) left center no-repeat`,
+        mask: `url(${img}) left center no-repeat`,
+        backgroundColor: `${context.theme.primaryColor}`,
         height: "24px",
         width: "33%",
         [`@media ${mq[0]}`]: {
-            display: "block!important"
-        }
-    }
+            display: "block!important",
+        },
+    };
 }
 
 export const groupHeaderTitleStyle = (props) => {
@@ -79,38 +80,59 @@ export const groupHeaderTitleStyle = (props) => {
     }
 }
 
-export const groupAddStyle = (img) => {
-    
-    return {
-        display: "block",
-        height: "24px",
-        cursor: "pointer",
-    }
-}
+export const groupAddStyle = (img, context) => {
+
+	return {
+		height: "24px",
+		cursor: "pointer",
+		"i": {
+            display: "inline-block",
+			width: "24px",
+			height: "24px",
+			mask: `url(${img}) center center no-repeat`,
+			backgroundColor: `${context.theme.primaryColor}`,
+		},
+	};
+};
 
 export const groupSearchStyle = () => {
     
     return {
-        padding: "16px 16px",
+        margin: "16px",
         position: "relative",
+        borderRadius: "8px",
+		boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
+        backgroundColor: "rgba(20, 20, 20, 0.04)",
+        height: "35px",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
     }
 }
 
-export const groupSearchInputStyle = (props, img) => {
+export const groupSearchButtonStyle = (img, context) => {
+
+	return {
+		width: "30px",
+		height: "100%",
+		padding: "8px 0 8px 8px",
+		cursor: "default",
+		mask: `url(${img}) 10px center no-repeat`,
+		backgroundColor: `${context.theme.secondaryTextColor}!important`,
+	};
+};
+
+export const groupSearchInputStyle = () => {
 
     return {
-        display: "block",
-        width: "100%",
-        border: "0",
-        boxShadow: "rgba(20, 20, 20, 0.04) 0 0 0 1px inset",
-        borderRadius: "8px",
-        lineHeight: "20px",
-        padding: "8px 8px 8px 40px",
+        width: "calc(100% - 30px)",
+        height: "100%",
+        padding: "8px",
         fontSize: "15px",
         outline: "none",
-        color: `${props.theme.color.primary}`,
-        background: `url(${img}) 10px center no-repeat ${props.theme.backgroundColor.grey}`,
-    }
+        border: "none",
+        backgroundColor: "transparent",
+    };
 }
 
 export const groupMsgStyle = () => {
@@ -126,12 +148,12 @@ export const groupMsgStyle = () => {
     }
 }
 
-export const groupMsgTxtStyle = (props) => {
+export const groupMsgTxtStyle = (context) => {
 
     return {
         margin: "0",
         minHeight: "36px",
-        color: `${props.theme.color.secondary}`,
+        color: `${context.theme.color.secondary}`,
         fontSize: "20px!important",
         fontWeight: "600",
         lineHeight: "30px",

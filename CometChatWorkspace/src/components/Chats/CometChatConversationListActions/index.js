@@ -11,7 +11,7 @@ import Translator from "../../../resources/localization/translator";
 import {conversationActionStyle, groupButtonStyle} from "./style.js";
 
 import loadingIcon from "./resources/progress.svg";
-import deleteIcon from "./resources/deleteconversation.svg";
+import deleteIcon from "./resources/delete.svg";
 
 class CometChatConversationListActions extends React.PureComponent {
 	static contextType = CometChatContext;
@@ -54,14 +54,13 @@ class CometChatConversationListActions extends React.PureComponent {
 		const deleteConversation = (
 			<li>
 				<button
-					type="button"
-					css={groupButtonStyle(this.state.deleteInProgress, loadingIcon, deleteIcon)}
-					className="group__button button__delete"
-					data-title={Translator.translate("DELETE", this.context.lang)}
-					onMouseEnter={event => this.toggleTooltip(event, true)}
-					onMouseLeave={event => this.toggleTooltip(event, false)}
-					onClick={this.deleteConversation}
-				/>
+				type="button"
+				css={groupButtonStyle(this.state.deleteInProgress, loadingIcon, deleteIcon)}
+				className="group__button button__delete"
+				data-title={Translator.translate("DELETE", this.context.lang)}
+				onMouseEnter={event => this.toggleTooltip(event, true)}
+				onMouseLeave={event => this.toggleTooltip(event, false)}
+				onClick={this.deleteConversation} />
 			</li>
 		);
 

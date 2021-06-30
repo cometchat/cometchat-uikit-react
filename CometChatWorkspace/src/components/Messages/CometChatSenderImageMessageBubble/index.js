@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt } from "../";
 import { CometChatMessageReactions } from "../Extensions";
 
+import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
@@ -23,6 +24,8 @@ import {
 import srcIcon from "./resources/1px.png";
 
 class CometChatSenderImageMessageBubble extends React.PureComponent {
+	
+	static contextType = CometChatContext;
 	timer = null;
 	messageFrom = "sender";
 
@@ -83,7 +86,12 @@ class CometChatSenderImageMessageBubble extends React.PureComponent {
 				const imageToDownload = this.chooseImage(thumbnailGenerationData);
 				let img = new Image();
 				img.src = imageToDownload;
-				img.onload = () => this.setState({imageUrl: img.src});
+				img.onload = () => {
+
+					if (this._isMounted) {
+						this.setState({ imageUrl: img.src });
+					}
+				}
 			});
 
 			const imageToDownload = this.chooseImage(thumbnailGenerationData);
@@ -92,7 +100,10 @@ class CometChatSenderImageMessageBubble extends React.PureComponent {
 					let img = new Image();
 					img.src = imageToDownload;
 					img.onload = () => {
-						this.setState({imageUrl: img.src});
+
+						if (this._isMounted) {
+							this.setState({imageUrl: img.src});
+						}
 					};
 				})
 				.catch(error => console.error(error));
@@ -191,7 +202,7 @@ class CometChatSenderImageMessageBubble extends React.PureComponent {
 				{toolTipView}
 
 				<div css={messageWrapperStyle()} className="message__wrapper">
-					<div css={messageImgWrapper(this.props)} onClick={this.open} className="message__img__wrapper">
+					<div css={messageImgWrapper(this.context)} onClick={this.open} className="message__img__wrapper">
 						<img
 							src={this.state.imageUrl}
 							alt={this.state.imageUrl}

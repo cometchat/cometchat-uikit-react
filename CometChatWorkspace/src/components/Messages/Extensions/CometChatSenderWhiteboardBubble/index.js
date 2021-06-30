@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt } from "../../";
 import { CometChatMessageReactions } from "../";
 
+import { CometChatContext } from "../../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../../util/common";
 
 import { theme } from "../../../../resources/theme";
@@ -18,15 +19,17 @@ import {
     messageTxtWrapperStyle,
     messageTxtContainerStyle,
     messageTxtStyle,
+    messageTxtIconStyle,
     messageBtnStyle,
     messageInfoWrapperStyle,
     messageReactionsWrapperStyle,
 } from "./style";
 
-import whiteboardIcon from "./resources/senderwhiteboard.png";
+import whiteboardIcon from "./resources/collaborative-whiteboard.svg";
 
 class CometChatSenderWhiteboardBubble extends React.PureComponent {
 
+    static contextType = CometChatContext;
     messageFrom = "sender";
 
     constructor(props) {
@@ -109,12 +112,12 @@ class CometChatSenderWhiteboardBubble extends React.PureComponent {
                 {toolTipView}
                     
                 <div css={messageWrapperStyle()} className="message__wrapper">
-                    <div css={messageTxtWrapperStyle(this.props)} className="message__whiteboard__wrapper">
+                    <div css={messageTxtWrapperStyle(this.context)} className="message__whiteboard__wrapper">
                         <div css={messageTxtContainerStyle()} className="message__whiteboard__container">
-                            <img src={whiteboardIcon} alt={Translator.translate("COLLABORATIVE_WHITEBOARD", this.props.lang)} />
+                            <i css={messageTxtIconStyle(whiteboardIcon, this.context)}></i>
                             <p css={messageTxtStyle()} className="document__title">{documentTitle}</p>
                         </div>
-                        <ul css={messageBtnStyle(this.props)} className="document__button">
+                        <ul css={messageBtnStyle(this.context)} className="document__button">
                             <li onClick={this.launchCollaborativeWhiteboard}>
                                 <p>{Translator.translate("LAUNCH", this.props.lang)}</p>
                             </li>
