@@ -1,7 +1,7 @@
-export const groupWrapperStyle = (props, context) => {
+export const groupWrapperStyle = (props, theme) => {
     
     const borderStyle = (props._parent === "") ? {
-        border: `1px solid ${context.theme.borderColor.primary}`
+        border: `1px solid ${theme.borderColor.primary}`
     } : {};
 
     return {
@@ -29,7 +29,7 @@ export const groupWrapperStyle = (props, context) => {
     }
 }
 
-export const groupHeaderStyle = context => {
+export const groupHeaderStyle = theme => {
 
 	return {
 		padding: "16px",
@@ -37,27 +37,27 @@ export const groupHeaderStyle = context => {
 		display: "flex",
 		justifyContent: "space-between",
 		alignItems: "center",
-		borderBottom: `1px solid ${context.theme.borderColor.primary}`,
+		borderBottom: `1px solid ${theme.borderColor.primary}`,
 		height: "70px",
 	};
 };
 
-export const groupHeaderCloseStyle = (img, context) => {
+export const groupHeaderCloseStyle = (img, theme) => {
 
-    const mq = [...context.theme.breakPoints];
+	const mq = [...theme.breakPoints];
 
-    return {
-        cursor: "pointer",
-        display: "none",
-        mask: `url(${img}) left center no-repeat`,
-        backgroundColor: `${context.theme.primaryColor}`,
-        height: "24px",
-        width: "33%",
-        [`@media ${mq[0]}`]: {
-            display: "block!important",
-        },
-    };
-}
+	return {
+		cursor: "pointer",
+		display: "none",
+		mask: `url(${img}) left center no-repeat`,
+		backgroundColor: `${theme.primaryColor}`,
+		height: "24px",
+		width: "33%",
+		[`@media ${mq[0]}`]: {
+			display: "block!important",
+		},
+	};
+};
 
 export const groupHeaderTitleStyle = (props) => {
 
@@ -80,17 +80,17 @@ export const groupHeaderTitleStyle = (props) => {
     }
 }
 
-export const groupAddStyle = (img, context) => {
+export const groupAddStyle = (img, theme) => {
 
 	return {
 		height: "24px",
 		cursor: "pointer",
-		"i": {
-            display: "inline-block",
+		i: {
+			display: "inline-block",
 			width: "24px",
 			height: "24px",
 			mask: `url(${img}) center center no-repeat`,
-			backgroundColor: `${context.theme.primaryColor}`,
+			backgroundColor: `${theme.primaryColor}`,
 		},
 	};
 };
@@ -148,19 +148,19 @@ export const groupMsgStyle = () => {
     }
 }
 
-export const groupMsgTxtStyle = (context) => {
+export const groupMsgTxtStyle = theme => {
 
-    return {
-        margin: "0",
-        minHeight: "36px",
-        color: `${context.theme.color.secondary}`,
-        fontSize: "20px!important",
-        fontWeight: "600",
-        lineHeight: "30px",
-        wordWrap: "break-word",
-        padding: "0 16px"
-    }
-}
+	return {
+		margin: "0",
+		minHeight: "36px",
+		color: `${theme.color.secondary}`,
+		fontSize: "20px!important",
+		fontWeight: "600",
+		lineHeight: "30px",
+		wordWrap: "break-word",
+		padding: "0 16px",
+	};
+};
 
 export const groupListStyle = () => {
 

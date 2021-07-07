@@ -36,7 +36,7 @@ export const headerCloseStyle = (img, context) => {
         backgroundColor: `${context.theme.primaryColor}`,
         width: "24px",
         height: "24px",
-        [`@media ${mq[1]}, ${mq[2]}, ${mq[3]}`]: {
+        [`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, , ${mq[4]}`]: {
             display: "block"
         },
     }
