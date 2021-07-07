@@ -1,22 +1,22 @@
-export const chatWrapperStyle = (props, state, context) => {
+export const chatWrapperStyle = (props, state) => {
 
 	let borderStyle = {};
 	if (props._parent.trim().length === 0) {
 		if (state.viewdetailscreen || state.threadmessageview) {
 			borderStyle = {
-				borderLeft: `1px solid ${context.theme.borderColor.primary}`,
-				borderBottom: `1px solid ${context.theme.borderColor.primary}`,
+				borderLeft: `1px solid ${props.theme.borderColor.primary}`,
+				borderBottom: `1px solid ${props.theme.borderColor.primary}`,
 			};
 		} else {
 			borderStyle = {
-				borderLeft: `1px solid ${context.theme.borderColor.primary}`,
-				borderRight: `1px solid ${context.theme.borderColor.primary}`,
-				borderBottom: `1px solid ${context.theme.borderColor.primary}`,
+				borderLeft: `1px solid ${props.theme.borderColor.primary}`,
+				borderRight: `1px solid ${props.theme.borderColor.primary}`,
+				borderBottom: `1px solid ${props.theme.borderColor.primary}`,
 			};
 		}
 	}
 
-	const mq = [...context.theme.breakPoints];
+	const mq = [...props.theme.breakPoints];
 
 	const secondaryViewWidth = (state.threadmessageview || state.viewdetailscreen) ? {
         width: "calc(100% - 400px)",
@@ -37,12 +37,12 @@ export const chatWrapperStyle = (props, state, context) => {
 		height: "100%",
 		boxSizing: "border-box",
 		position: "relative",
-		fontFamily: `${context.theme.fontFamily}`,
+		fontFamily: `${props.theme.fontFamily}`,
 		...borderStyle,
 		...secondaryViewWidth,
 		"*": {
 			boxSizing: "border-box",
-			fontFamily: `${context.theme.fontFamily}`,
+			fontFamily: `${props.theme.fontFamily}`,
 			"::-webkit-scrollbar": {
 				width: "8px",
 				height: "4px",
@@ -60,18 +60,18 @@ export const chatWrapperStyle = (props, state, context) => {
 	};
 };
 
-export const chatSecondaryStyle = (props, context) => {
+export const chatSecondaryStyle = (props) => {
 
     const borderStyle = (props._parent.trim().length === 0) ? {
-        borderRight: `1px solid ${context.theme.borderColor.primary}`,
-        borderBottom: `1px solid ${context.theme.borderColor.primary}`
+        borderRight: `1px solid ${props.theme.borderColor.primary}`,
+        borderBottom: `1px solid ${props.theme.borderColor.primary}`
     } : {};
 
-    const mq = [...context.theme.breakPoints];
+    const mq = [...props.theme.breakPoints];
 
     return {
         float: "right",
-        borderLeft: `1px solid ${context.theme.borderColor.primary}`,
+        borderLeft: `1px solid ${props.theme.borderColor.primary}`,
         height: "100%",
         width: "400px",
         display: "flex",
@@ -85,7 +85,7 @@ export const chatSecondaryStyle = (props, context) => {
             bottom: "0",
             width: "100%!important",
             zIndex: "2",
-            backgroundColor: `${context.theme.backgroundColor.white}`,
+            backgroundColor: `${props.theme.backgroundColor.white}`,
         }
     }
 }
@@ -120,14 +120,14 @@ export const messagePaneTopStyle = () => {
     }
 }
 
-export const messagePaneBannerStyle = context => {
+export const messagePaneBannerStyle = props => {
 
 	return {
 		marginBottom: "0",
 		display: "block",
 		fontSize: "13px",
 		flex: "1",
-		background: `${context.theme.color.blue}`,
+		background: `${props.theme.color.blue}`,
 		borderRadius: "6px",
 		zIndex: 200,
 	};
@@ -144,7 +144,7 @@ export const messagePaneUnreadBannerStyle = () => {
     }
 }
 
-export const messagePaneUnreadBannerMessageStyle = context => {
+export const messagePaneUnreadBannerMessageStyle = props => {
 
 	return {
 		padding: "0 16px",
@@ -154,7 +154,7 @@ export const messagePaneUnreadBannerMessageStyle = context => {
 		whiteSpace: "nowrap",
 		overflow: "hidden",
 		textOverflow: "ellipsis",
-		color: `${context.theme.color.white}`,
+		color: `${props.theme.color.white}`,
 	};
 };
 

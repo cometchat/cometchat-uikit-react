@@ -46,7 +46,7 @@ export const unifiedSidebarStyle = (state, props) => {
         display: "flex",
         flexDirection: "column",
         "> .contacts, .chats, .groups, .userinfo": {
-            height: "calc(100% - 54px)",
+            height: "calc(100% - 64px)",
         },
         [`@media ${mq[0]}`]: {
             position: "absolute!important",

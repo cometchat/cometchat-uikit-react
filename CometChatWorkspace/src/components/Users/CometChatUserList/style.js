@@ -1,7 +1,7 @@
-export const contactWrapperStyle = (props, context) => {
+export const contactWrapperStyle = (props, theme) => {
 
     const borderStyle = (props._parent === "") ? {
-        border: `1px solid ${context.theme.borderColor.primary}`
+        border: `1px solid ${theme.borderColor.primary}`
     } : {};
 
 
@@ -30,34 +30,34 @@ export const contactWrapperStyle = (props, context) => {
     }
 }
 
-export const contactHeaderStyle = context => {
+export const contactHeaderStyle = theme => {
 
 	return {
 		padding: "16px",
 		position: "relative",
 		display: "flex",
 		alignItems: "center",
-		borderBottom: `1px solid ${context.theme.borderColor.primary}`,
+		borderBottom: `1px solid ${theme.borderColor.primary}`,
 		height: "70px",
 	};
 };
 
-export const contactHeaderCloseStyle = (img, context) => {
+export const contactHeaderCloseStyle = (img, theme) => {
 
-    const mq = [...context.theme.breakPoints];
+	const mq = [...theme.breakPoints];
 
-    return {
-        cursor: "pointer",
-        display: "none",
-        mask: `url(${img}) left center no-repeat`,
-        backgroundColor: `${context.theme.secondaryTextColor}`,
-        height: "24px",
-        width: "33%",
-        [`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
-            display: "block!important"
-        }
-    }
-}
+	return {
+		cursor: "pointer",
+		display: "none",
+		mask: `url(${img}) left center no-repeat`,
+		backgroundColor: `${theme.secondaryTextColor}`,
+		height: "24px",
+		width: "33%",
+		[`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
+			display: "block!important",
+		},
+	};
+};
 
 export const contactHeaderTitleStyle = (props) => {
 
@@ -95,14 +95,15 @@ export const contactSearchStyle = () => {
     }
 }
 
-export const contactSearchButtonStyle = (img, context) => {
+export const contactSearchButtonStyle = (img, theme) => {
+
 	return {
 		width: "30px",
 		height: "100%",
 		padding: "8px 0 8px 8px",
 		cursor: "default",
 		mask: `url(${img}) 10px center no-repeat`,
-		backgroundColor: `${context.theme.secondaryTextColor}!important`,
+		backgroundColor: `${theme.secondaryTextColor}!important`,
 	};
 };
 
@@ -132,19 +133,19 @@ export const contactMsgStyle = () => {
     }
 }
 
-export const contactMsgTxtStyle = (context) => {
+export const contactMsgTxtStyle = theme => {
 
-    return {
-        margin: "0",
-        minHeight: "36px",
-        color: `${context.theme.color.secondary}`,
-        fontSize: "20px!important",
-        fontWeight: "600",
-        lineHeight: "30px",
-        wordWrap: "break-word",
-        padding: "0 16px"
-    }
-}
+	return {
+		margin: "0",
+		minHeight: "36px",
+		color: `${theme.color.secondary}`,
+		fontSize: "20px!important",
+		fontWeight: "600",
+		lineHeight: "30px",
+		wordWrap: "break-word",
+		padding: "0 16px",
+	};
+};
 
 export const contactListStyle = () => {
     

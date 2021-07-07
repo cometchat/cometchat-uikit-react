@@ -84,7 +84,7 @@ export class CometChatContextProvider extends React.Component {
 					this.setItem(user);
 				})
 				.catch(error => {
-					const errorCode = error && error.hasOwnProperty("code") ? error.code : "UID_NOT_AVAILABLE";
+					const errorCode = error && error.hasOwnProperty("code") ? error.code : "uid not available";
 					this.toastRef.setError(errorCode);
 				});
 		} else if (this.props.group.trim().length) {
@@ -94,7 +94,7 @@ export class CometChatContextProvider extends React.Component {
 					this.setItem(group);
 				})
 				.catch(error => {
-					const errorCode = error && error.hasOwnProperty("code") ? error.code : "GUID_NOT_AVAILABLE";
+					const errorCode = error && error.hasOwnProperty("code") ? error.code : "guid not available";
 					this.toastRef.setError(errorCode);
 				});
 		} else if (this.props.user.trim().length === 0 && this.props.group.trim().length === 0 && this.props._component === enums.CONSTANTS["MESSAGES_COMPONENT"]) {
@@ -114,7 +114,7 @@ export class CometChatContextProvider extends React.Component {
 					this.setClearedUnreadMessages(false);
 				})
 				.catch(error => {
-					const errorCode = error && error.hasOwnProperty("code") ? error.code : "UID_NOT_AVAILABLE";
+					const errorCode = error && error.hasOwnProperty("code") ? error.code : "uid not available";
 					this.toastRef.setError(errorCode);
 				});
 		} else if (this.props.group.trim().length && prevProps.group !== this.props.group) {
@@ -126,7 +126,7 @@ export class CometChatContextProvider extends React.Component {
 					this.setClearedUnreadMessages(false);
 				})
 				.catch(error => {
-					const errorCode = error && error.hasOwnProperty("code") ? error.code : "UID_NOT_AVAILABLE";
+					const errorCode = error && error.hasOwnProperty("code") ? error.code : "guid not available";
 					this.toastRef.setError(errorCode);
 				});
 		}
@@ -148,7 +148,7 @@ export class CometChatContextProvider extends React.Component {
 	getUser = uid => {
 		const promise = new Promise((resolve, reject) => {
 			if (!uid) {
-				const error = {code: "UID_NOT_AVAILABLE"};
+				const error = { code: "uid not available" };
 				reject(error);
 			}
 
@@ -163,7 +163,7 @@ export class CometChatContextProvider extends React.Component {
 	getGroup = guid => {
 		const promise = new Promise((resolve, reject) => {
 			if (!guid) {
-				const error = {code: "GUID_NOT_AVAILABLE"};
+				const error = { code: "guid not available" };
 				reject(error);
 			}
 
@@ -174,15 +174,12 @@ export class CometChatContextProvider extends React.Component {
 						const groupType = group.type;
 						let password = "";
 						if (groupType === CometChat.GROUP_TYPE.PASSWORD) {
-							const promptMessage = Translator.translate("ENTER_PASSWORD_JOIN_GROUP", this.props.lang);
+							const promptMessage = Translator.translate("Enter password", this.props.lang);
 							password = prompt(promptMessage);
 						}
 
 						CometChat.joinGroup(guid, groupType, password)
-							.then(group => {
-								this.setToastMessage("success", "GROUP_JOIN_SUCCESS");
-								resolve(group);
-							})
+							.then(group => resolve(group))
 							.catch(error => reject(error));
 					} else {
 						resolve(group);

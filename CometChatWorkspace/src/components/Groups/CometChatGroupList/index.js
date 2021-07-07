@@ -447,7 +447,7 @@ class CometChatGroupList extends React.PureComponent {
 		if (this.state.decoratorMessage.length !== 0) {
 			messageContainer = (
 				<div css={groupMsgStyle()} className="groups__decorator-message">
-					<p css={groupMsgTxtStyle(this.getContext())} className="decorator-message">
+					<p css={groupMsgTxtStyle(theme)} className="decorator-message">
 						{this.state.decoratorMessage}
 					</p>
 				</div>
@@ -457,11 +457,11 @@ class CometChatGroupList extends React.PureComponent {
 		const groups = this.state.grouplist.map(group => {
 			let selectedGroup = this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP && this.getContext().item.guid === group.guid ? group : null;
 
-			return <CometChatGroupListItem key={group.guid} theme={this.props.theme} group={group} lang={this.state.lang} selectedGroup={selectedGroup} clickHandler={this.handleClick} />;
+			return <CometChatGroupListItem key={group.guid} group={group} lang={this.state.lang} selectedGroup={selectedGroup} clickHandler={this.handleClick} />;
 		});
 
 		let createGroupBtn = (
-			<div css={groupAddStyle(addIcon, this.context)} title={Translator.translate("CREATE_GROUP", this.state.lang)} onClick={() => this.createGroupHandler(true)}>
+			<div css={groupAddStyle(addIcon, theme)} title={Translator.translate("CREATE_GROUP", this.state.lang)} onClick={() => this.createGroupHandler(true)}>
 				<i></i>
 			</div>
 		);
@@ -471,7 +471,7 @@ class CometChatGroupList extends React.PureComponent {
 			createGroupBtn = null;
 		}
 
-		let closeBtn = <div css={groupHeaderCloseStyle(navigateIcon, this.props)} className="header__close" onClick={this.handleMenuClose}></div>;
+		let closeBtn = <div css={groupHeaderCloseStyle(navigateIcon, theme)} className="header__close" onClick={this.handleMenuClose}></div>;
 		if (this.getContext() && Object.keys(this.getContext().item).length === 0) {
 			closeBtn = null;
 		}
@@ -496,8 +496,8 @@ class CometChatGroupList extends React.PureComponent {
 
 		const groupListTemplate = (
 			<React.Fragment>
-				<div css={groupWrapperStyle(this.props, this.getContext())} className="groups">
-					<div css={groupHeaderStyle(this.getContext())} className="groups__header">
+				<div css={groupWrapperStyle(this.props, theme)} className="groups">
+					<div css={groupHeaderStyle(theme)} className="groups__header">
 						{closeBtn}
 						<h4 css={groupHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>
 							{Translator.translate("GROUPS", this.state.lang)}
@@ -511,7 +511,7 @@ class CometChatGroupList extends React.PureComponent {
 					</div>
 				</div>
 				{createGroup}
-				<CometChatToastNotification ref={el => (this.toastRef = el)} context={this.getContext()}  />
+				<CometChatToastNotification ref={el => (this.toastRef = el)} context={this.getContext()} />
 			</React.Fragment>
 		);
 
