@@ -11,11 +11,6 @@ export const messageContainerStyle = () => {
         display: "flex",
         flexDirection: "column",
         flexShrink: "0",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 
@@ -73,7 +68,7 @@ export const messageBtnStyle = context => {
 	return {
 		listStyleType: "none",
 		padding: "0",
-		margin: "0",
+		margin: "16px 0 0 0",
 		width: "100%",
 		li: {
 			backgroundColor: `${context.theme.backgroundColor.white}`,
@@ -83,7 +78,7 @@ export const messageBtnStyle = context => {
 			alignItems: "center",
 			width: "100%",
 			position: "relative",
-			margin: "16px 0 0 0",
+			margin: "0",
 			padding: "8px",
 			cursor: "pointer",
 			"> p": {

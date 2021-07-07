@@ -56,6 +56,7 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 	}
 
 	componentDidUpdate(prevProps) {
+
 		const previousMessageStr = JSON.stringify(prevProps.message);
 		const currentMessageStr = JSON.stringify(this.props.message);
 
@@ -91,7 +92,12 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 				const imageToDownload = this.chooseImage(thumbnailGenerationData);
 				let img = new Image();
 				img.src = imageToDownload;
-				img.onload = () => this.setState({imageUrl: img.src});
+				img.onload = () => {
+
+					if (this._isMounted) {
+						this.setState({imageUrl: img.src});
+					}
+				};
 			});
 
 			const imageToDownload = this.chooseImage(thumbnailGenerationData);
@@ -100,7 +106,10 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 					let img = new Image();
 					img.src = imageToDownload;
 					img.onload = () => {
-						this.setState({imageUrl: img.src});
+
+						if (this._isMounted) {
+							this.setState({imageUrl: img.src});
+						}
 					};
 				})
 				.catch(error => console.error(error));
