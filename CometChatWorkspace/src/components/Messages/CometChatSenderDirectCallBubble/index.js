@@ -92,23 +92,23 @@ class CometChatSenderDirectCallBubble extends React.Component {
 
         if (this.context.checkIfDirectCallIsOngoing() === enums.CONSTANTS.CALLS["ONGOING_CALL_SAME_GROUP"]) {//ongoing call in same group
             callMessage = (
-                <li title={joinCallMessage}><p>{Translator.translate("JOIN", this.props.lang)}</p></li>
+                <li className="directcall__row" title={joinCallMessage}><p className="directcall__text">{Translator.translate("JOIN", this.props.lang)}</p></li>
             );
         } else if (this.context.checkIfDirectCallIsOngoing() === enums.CONSTANTS.CALLS["ONGOING_CALL_DIFF_GROUP"]) {//ongoing call in different group
 
             callMessage = (
-                <li title={joinCallMessage}><p>{Translator.translate("JOIN", this.props.lang)}</p></li>
+                <li className="directcall__row" title={joinCallMessage}><p className="directcall__text">{Translator.translate("JOIN", this.props.lang)}</p></li>
             );
         } else if (this.context.checkIfCallIsOngoing()) {//ongoing call
 
             callMessage = (
-                <li title={joinCallMessage}><p>{Translator.translate("JOIN", this.props.lang)}</p></li>
+                <li className="directcall__row" title={joinCallMessage}><p className="directcall__text">{Translator.translate("JOIN", this.props.lang)}</p></li>
             );
 
         } else {
             callMessage = (
-                <li onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.state.message)}>
-                    <p>{Translator.translate("JOIN", this.props.lang)}</p>
+                <li className="directcall__row" onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.state.message)}>
+                    <p  className="directcall__text">{Translator.translate("JOIN", this.props.lang)}</p>
                 </li>
             );
         }

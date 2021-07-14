@@ -3,17 +3,20 @@ export const footerStyle = () => {
     return {
         width: "100%",
         zIndex: "1",
+        height: "64px"
     }
 }
 
 export const navbarStyle = () => {
 
     return {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-around",
-    }
+			display: "flex",
+			flexDirection: "row",
+			alignItems: "center",
+			justifyContent: "space-around",
+			width: "100%",
+			height: "100%",
+		};
 }
 
 export const itemStyle = props => {
@@ -55,6 +58,7 @@ export const itemLinkTextStyle = (isActive, context) => {
     };
 
     return {
-        ...colorProp
+        ...colorProp,
+        paddingTop: "2px"
     }
 };
