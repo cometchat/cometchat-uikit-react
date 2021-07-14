@@ -1,7 +1,7 @@
-export const chatsWrapperStyle = (props) => {
+export const chatsWrapperStyle = (props, theme) => {
 
     const borderStyle = (props._parent === "") ? {
-        border: `1px solid ${props.theme.borderColor.primary}`
+        border: `1px solid ${theme.borderColor.primary}`
     } : {};
 
     return {
@@ -29,33 +29,33 @@ export const chatsWrapperStyle = (props) => {
     }
 }
 
-export const chatsHeaderStyle = (props) => {
+export const chatsHeaderStyle = theme => {
 
-    return {
-        padding: "16px",
-        display: "flex",
-        alignItems: "center",
-        borderBottom: `1px solid ${props.theme.borderColor.primary}`,
-        height: "69px",
-    }
-}
+	return {
+		padding: "16px",
+		display: "flex",
+		alignItems: "center",
+		borderBottom: `1px solid ${theme.borderColor.primary}`,
+		height: "69px",
+	};
+};
 
-export const chatsHeaderCloseStyle = (img, context) => {
+export const chatsHeaderCloseStyle = (img, theme) => {
 
-    const mq = [...context.theme.breakPoints];
+	const mq = [...theme.breakPoints];
 
-    return {
-        cursor: "pointer",
-        display: "none",
-        mask: `url(${img}) no-repeat left center`,
-        backgroundColor: `${context.theme.primaryColor}`,
-        height: "24px",
-        width: "33%",
-        [`@media ${mq[0]}`]: {
-            display: "block!important"
-        }
-    }
-}
+	return {
+		cursor: "pointer",
+		display: "none",
+		mask: `url(${img}) no-repeat left center`,
+		backgroundColor: `${theme.primaryColor}`,
+		height: "24px",
+		width: "33%",
+		[`@media ${mq[0]}`]: {
+			display: "block!important",
+		},
+	};
+};
 
 export const chatsHeaderTitleStyle = (props) => {
 
@@ -90,19 +90,19 @@ export const chatsMsgStyle = () =>{
     }
 }
 
-export const chatsMsgTxtStyle = (props) => {
-
-    return {
-        margin: "0",
-        minHeight: "36px",
-        color: `${props.theme.color.secondary}`,
-        fontSize: "20px!important",
-        fontWeight: "600",
-        lineHeight: "30px",
-        wordWrap: "break-word",
-        padding: "0 16px"
-    }
-}
+export const chatsMsgTxtStyle = theme => {
+    
+	return {
+		margin: "0",
+		minHeight: "36px",
+		color: `${theme.color.secondary}`,
+		fontSize: "20px!important",
+		fontWeight: "600",
+		lineHeight: "30px",
+		wordWrap: "break-word",
+		padding: "0 16px",
+	};
+};
 
 export const chatsListStyle = () => {
 

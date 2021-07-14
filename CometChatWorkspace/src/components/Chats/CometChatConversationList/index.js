@@ -707,6 +707,7 @@ class CometChatConversationList extends React.Component {
 	};
 
 	getContext = () => {
+		
 		if (this.props._parent.length) {
 			return this.context;
 		} else {
@@ -800,14 +801,14 @@ class CometChatConversationList extends React.Component {
 		if (this.state.decoratorMessage.length !== 0) {
 			messageContainer = (
 				<div css={chatsMsgStyle()} className="chats__decorator-message">
-					<p css={chatsMsgTxtStyle(this.props)} className="decorator-message">
+					<p css={chatsMsgTxtStyle(theme)} className="decorator-message">
 						{this.state.decoratorMessage}
 					</p>
 				</div>
 			);
 		}
 
-		let closeBtn = <div css={chatsHeaderCloseStyle(navigateIcon, this.getContext())} className="header__close" onClick={this.handleMenuClose}></div>;
+		let closeBtn = <div css={chatsHeaderCloseStyle(navigateIcon, theme)} className="header__close" onClick={this.handleMenuClose}></div>;
 		if (this.getContext() && Object.keys(this.getContext().item).length === 0) {
 			closeBtn = null;
 		}
@@ -822,8 +823,8 @@ class CometChatConversationList extends React.Component {
 		}
 
 		const chatList = (
-			<div css={chatsWrapperStyle(this.props)} className="chats">
-				<div css={chatsHeaderStyle(this.props)} className="chats__header">
+			<div css={chatsWrapperStyle(this.props, theme)} className="chats">
+				<div css={chatsHeaderStyle(theme)} className="chats__header">
 					{closeBtn}
 					<h4 css={chatsHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>
 						{Translator.translate("CHATS", this.state.lang)}

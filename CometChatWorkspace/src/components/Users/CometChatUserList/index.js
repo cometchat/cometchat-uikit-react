@@ -218,7 +218,7 @@ class CometChatUserList extends React.PureComponent {
 		if (this.state.decoratorMessage.length !== 0) {
 			messageContainer = (
 				<div css={contactMsgStyle()} className="contacts__decorator-message">
-					<p css={contactMsgTxtStyle(this.getContext())} className="decorator-message">
+					<p css={contactMsgTxtStyle(theme)} className="decorator-message">
 						{this.state.decoratorMessage}
 					</p>
 				</div>
@@ -250,7 +250,7 @@ class CometChatUserList extends React.PureComponent {
 
 		});
 
-		let closeBtn = <div css={contactHeaderCloseStyle(navigateIcon, this.getContext())} className="header__close" onClick={this.handleMenuClose}></div>;
+		let closeBtn = <div css={contactHeaderCloseStyle(navigateIcon, theme)} className="header__close" onClick={this.handleMenuClose}></div>;
 		if (this.getContext() && Object.keys(this.getContext().item).length === 0) {
 			closeBtn = null;
 		}
@@ -259,15 +259,15 @@ class CometChatUserList extends React.PureComponent {
 		if (this.state.enableSearchUser) {
 			searchUser = (
 				<div css={contactSearchStyle()} className="contacts__search">
-					<button type="button" className="search__button" css={contactSearchButtonStyle(searchIcon, this.getContext())} />
+					<button type="button" className="search__button" css={contactSearchButtonStyle(searchIcon, theme)} />
 					<input type="text" autoComplete="off" css={contactSearchInputStyle()} className="search__input" placeholder={Translator.translate("SEARCH", this.state.lang)} onChange={this.searchUsers} />
 				</div>
 			);
 		}
 
 		const userListTemplate = (
-			<div css={contactWrapperStyle(this.props, this.getContext())} className="contacts">
-				<div css={contactHeaderStyle(this.getContext())} className="contacts__header">
+			<div css={contactWrapperStyle(this.props, theme)} className="contacts">
+				<div css={contactHeaderStyle(theme)} className="contacts__header">
 					{closeBtn}
 					<h4 css={contactHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>
 						{Translator.translate("USERS", this.state.lang)}
