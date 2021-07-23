@@ -3,6 +3,8 @@ import dateFormat from "dateformat";
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
+import PropTypes from "prop-types";
+
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatAvatar, CometChatToastNotification } from "../../Shared/";
@@ -14,6 +16,7 @@ import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
+import { theme } from "../../../resources/theme";
 
 import {
 	userDetailStyle,
@@ -169,12 +172,12 @@ class CometChatUserDetails extends React.Component {
 				/**
 				 * Don't update state if the response has the same value
 				 */
-				if (response !== this.state.enableBlockUser) {
+				if (response !== this.state.enableBlockUser && this._isMounted) {
 					this.setState({ enableBlockUser: response });
 				}
 			})
 			.catch(error => {
-				if (this.state.enableBlockUser !== false) {
+				if (this.state.enableBlockUser !== false && this._isMounted) {
 					this.setState({ enableBlockUser: false });
 				}
 			});
@@ -232,6 +235,10 @@ class CometChatUserDetails extends React.Component {
 		const profileLink = this.context.item.link;
 		window.open(profileLink, "", "fullscreen=yes, scrollbars=auto");
 	};
+
+	closeDetailView = () => {
+		this.props.actionGenerated(enums.ACTIONS["CLOSE_USER_DETAIL"]);
+	}
 
 	render() {
 
@@ -308,7 +315,7 @@ class CometChatUserDetails extends React.Component {
 		return (
 			<div css={userDetailStyle(this.context)} className="detailpane detailpane--user">
 				<div css={headerStyle(this.context)} className="detailpane__header">
-					<div css={headerCloseStyle(navigateIcon, this.context)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_USER_DETAIL"])}></div>
+					<div css={headerCloseStyle(navigateIcon, this.context)} className="header__close" onClick={this.closeDetailView}></div>
 					<h4 css={headerTitleStyle()} className="header__title">
 						{Translator.translate("DETAILS", this.context.language)}
 					</h4>
@@ -332,5 +339,16 @@ class CometChatUserDetails extends React.Component {
 		);
 	}
 }
+
+// Specifies the default values for props:
+CometChatUserDetails.defaultProps = {
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+};
+
+CometChatUserDetails.propTypes = {
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+};
 
 export { CometChatUserDetails };

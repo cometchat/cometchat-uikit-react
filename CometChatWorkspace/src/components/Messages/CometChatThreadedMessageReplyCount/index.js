@@ -33,11 +33,15 @@ const CometChatThreadedMessageReplyCount = props => {
 
 	React.useEffect(toggleReply);
 
+	const viewThread = () => {
+		props.actionGenerated(enums.ACTIONS["VIEW_THREADED_MESSAGE"], props.message);
+	}
+
 	const replyCount = props.message.replyCount;
 	const replyText = replyCount === 1 ? `${replyCount} ${Translator.translate("REPLY", props.lang)}` : `${replyCount} ${Translator.translate("REPLIES", props.lang)}`;
 
 	let replies = (
-		<span css={replyCountStyle(context)} className="replycount" onClick={() => props.actionGenerated(enums.ACTIONS["VIEW_THREADED_MESSAGE"], props.message)}>
+		<span css={replyCountStyle(context)} className="replycount" onClick={viewThread}>
 			{replyText}
 		</span>
 	);
@@ -58,13 +62,14 @@ const CometChatThreadedMessageReplyCount = props => {
 CometChatThreadedMessageReplyCount.defaultProps = {
 	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	message: {},
+	actionGenerated: {},
 };
 
 CometChatThreadedMessageReplyCount.propTypes = {
 	lang: PropTypes.string,
 	theme: PropTypes.object,
-	message: PropTypes.object,
+	actionGenerated: PropTypes.func.isRequired,
+	message: PropTypes.object.isRequired,
 };
 
 export {CometChatThreadedMessageReplyCount};

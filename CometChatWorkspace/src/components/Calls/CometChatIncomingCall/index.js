@@ -75,11 +75,9 @@ class CometChatIncomingCall extends React.PureComponent {
 	}
 
 	adjustFontSize = () => {
-
 		if (this.callButtonRef && this.callButtonRef.current) {
-
 			let reduceFontSize = false;
-            const buttonNodeList = this.callButtonRef.current.querySelectorAll("button");
+			const buttonNodeList = this.callButtonRef.current.querySelectorAll("button");
 
 			buttonNodeList.forEach(buttonNode => {
 				const parentContainerWidth = buttonNode.clientWidth;
@@ -106,6 +104,9 @@ class CometChatIncomingCall extends React.PureComponent {
 			case enums.INCOMING_CALL_CANCELLED: //occurs(call dismissed) at the callee end, caller cancels the call
 				this.incomingCallCancelled(call);
 				break;
+			case enums.OUTGOING_CALL_ACCEPTED: //occurs(call dismissed) at the callee end, caller cancels the call
+				this.outgoingCallAccepted(call);
+				break;
 			default:
 				break;
 		}
@@ -116,7 +117,7 @@ class CometChatIncomingCall extends React.PureComponent {
 			if (this.state.incomingCall === null) {
 				if (incomingCall?.callInitiator.uid !== this.loggedInUser?.uid) {
 					SoundManager.play(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
-					this.setState({incomingCall: incomingCall});
+					this.setState({ incomingCall: incomingCall });
 				}
 			}
 		}
@@ -126,7 +127,18 @@ class CometChatIncomingCall extends React.PureComponent {
 		if (this._isMounted) {
 			//we are not marking this as read as it will done in messagelist component
 			SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
-			this.setState({incomingCall: null});
+			this.setState({ incomingCall: null });
+		}
+	};
+
+	outgoingCallAccepted = call => {
+
+		if(call.sender?.uid === this.loggedInUser?.uid) {
+			if (this._isMounted) {
+				//we are not marking this as read as it will done in messagelist component
+				SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+				this.setState({ incomingCall: null });
+			}
 		}
 	};
 
@@ -142,13 +154,13 @@ class CometChatIncomingCall extends React.PureComponent {
 					}
 					Storage.setItem(enums.CONSTANTS["ACTIVECALL"], rejectedCall);
 					this.props.actionGenerated(enums.ACTIONS["INCOMING_CALL_REJECTED"], rejectedCall);
-					this.setState({callInProgress: null});
+					this.setState({ callInProgress: null });
 				}
 
-				this.setState({incomingCall: null});
+				this.setState({ incomingCall: null });
 			})
 			.catch(error => {
-				this.setState({incomingCall: null, callInProgress: null});
+				this.setState({ incomingCall: null, callInProgress: null });
 				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
 				this.context.setToastMessage("error", errorCode);
 			});
@@ -165,13 +177,13 @@ class CometChatIncomingCall extends React.PureComponent {
 						}
 						Storage.setItem(enums.CONSTANTS["ACTIVECALL"], call);
 						this.props.actionGenerated(enums.ACTIONS["INCOMING_CALL_ACCEPTED"], call);
-						this.setState({incomingCall: null, callInProgress: call});
+						this.setState({ incomingCall: null, callInProgress: call });
 					})
 					.catch(error => {
 						if (this.context) {
 							this.context.setCallInProgress(null, "");
 						}
-						this.setState({incomingCall: null, callInProgress: null});
+						this.setState({ incomingCall: null, callInProgress: null });
 
 						const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
 						this.context.setToastMessage("error", errorCode);
@@ -203,7 +215,7 @@ class CometChatIncomingCall extends React.PureComponent {
 	checkForActiveCallAndEndCall = () => {
 		const promise = new Promise((resolve, reject) => {
 			if (this.isCallActive() === false) {
-				return resolve({success: true});
+				return resolve({ success: true });
 			}
 
 			let sessionID = this.getActiveCallSessionID();
@@ -222,7 +234,7 @@ class CometChatIncomingCall extends React.PureComponent {
 	actionHandler = (action, call) => {
 		switch (action) {
 			case enums.ACTIONS["OUTGOING_CALL_ENDED"]:
-				this.setState({callInProgress: null});
+				this.setState({ callInProgress: null });
 				break;
 			case enums.ACTIONS["USER_JOINED_CALL"]:
 			case enums.ACTIONS["USER_LEFT_CALL"]:
@@ -248,7 +260,7 @@ class CometChatIncomingCall extends React.PureComponent {
 
 			if (this.state.incomingCall?.getSessionId() === call?.sessionId) {
 				SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
-				this.setState({incomingCall: null});
+				this.setState({ incomingCall: null });
 			}
 		}
 	};

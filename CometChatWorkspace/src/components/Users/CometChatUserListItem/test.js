@@ -19,34 +19,4 @@ describe("CometChatUserListItem", () => {
             container,
         );
     });
-
-    // it("renders user data", async () => {
-
-    //     const fakeUser = {
-    //         uid: "jonibaez",
-    //         name: "Joni Baez",
-    //         status: "online",
-    //         role: "default"
-    //     };
-
-    //     jest.spyOn(Storage.prototype, 'setItem');
-    //     global.fetch = jest.fn().mockImplementation(() => fakeUser);
-
-    //     // Use the asynchronous version of act to apply resolved promises
-    //     await act(async () => {
-    //         ReactDOM.render(
-    //             <CometChatContextProvider user="">
-    //                 <CometChatUserListItem user={fakeUser} />
-    //             </CometChatContextProvider>,
-    //             container,
-    //         );
-    //     });
-
-    //     expect(container.querySelector(".item__details__name").textContent).toBe(fakeUser.name);
-
-    //     // remove the mock to ensure tests are completely isolated
-    //     global.fetch.mockClear();
-    //     delete global.fetch;
-    // });
-
 });

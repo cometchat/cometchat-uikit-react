@@ -1,6 +1,6 @@
-export const messageReactionsStyle = (props, reactionData, context) => {
+export const messageReactionsStyle = (props, reactionData, context, loggedInUser) => {
 
-	const uid = props.loggedInUser.uid;
+	const uid = loggedInUser?.uid;
 	let borderStyle = {};
 	let hoveredBorderStyle = {};
 

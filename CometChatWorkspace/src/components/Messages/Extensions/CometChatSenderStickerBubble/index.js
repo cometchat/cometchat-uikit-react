@@ -22,28 +22,26 @@ import {
 } from "./style";
 
 class CometChatSenderStickerBubble extends React.Component {
-	
-    static contextType = CometChatContext;
-	messageFrom = "sender";
+	static contextType = CometChatContext;
 
 	constructor(props) {
 		super(props);
 
-		const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
 		this.state = {
-			message: message,
 			isHovering: false,
 		};
 	}
 
-	componentDidUpdate(prevProps) {
-		const previousMessageStr = JSON.stringify(prevProps.message);
-		const currentMessageStr = JSON.stringify(this.props.message);
+	shouldComponentUpdate(nextProps, nextState) {
 
-		if (previousMessageStr !== currentMessageStr) {
-			const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-			this.setState({ message: message });
+		const currentMessageStr = JSON.stringify(this.props.message);
+		const nextMessageStr = JSON.stringify(nextProps.message);
+
+		if (currentMessageStr !== nextMessageStr 
+		|| this.state.isHovering !== nextState.isHovering) {
+			return true;
 		}
+		return false;
 	}
 
 	handleMouseHover = () => {
@@ -59,8 +57,8 @@ class CometChatSenderStickerBubble extends React.Component {
 	render() {
 		let stickerData = null;
 		let stickerImg = null;
-		if (this.state.message.hasOwnProperty("data") && this.state.message.data.hasOwnProperty("customData")) {
-			stickerData = this.state.message.data.customData;
+		if (this.props.message.hasOwnProperty("data") && this.props.message.data.hasOwnProperty("customData")) {
+			stickerData = this.props.message.data.customData;
 
 			if (stickerData.hasOwnProperty("sticker_url")) {
 				const stickerName = stickerData.hasOwnProperty("sticker_name") ? stickerData.sticker_name : Translator.translate("STICKER", this.props.lang);
@@ -69,12 +67,12 @@ class CometChatSenderStickerBubble extends React.Component {
 		}
 
 		let messageReactions = null;
-		const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
+		const reactionsData = checkMessageForExtensionsData(this.props.message, "reactions");
 		if (reactionsData) {
 			if (Object.keys(reactionsData).length) {
 				messageReactions = (
 					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-						<CometChatMessageReactions {...this.props} message={this.state.message} reaction={reactionsData} />
+						<CometChatMessageReactions message={this.props.message} actionGenerated={this.props.actionGenerated} />
 					</div>
 				);
 			}
@@ -82,7 +80,7 @@ class CometChatSenderStickerBubble extends React.Component {
 
 		let toolTipView = null;
 		if (this.state.isHovering) {
-			toolTipView = <CometChatMessageActions {...this.props} message={this.state.message} />;
+			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
 		}
 
 		return (
@@ -98,8 +96,8 @@ class CometChatSenderStickerBubble extends React.Component {
 				{messageReactions}
 
 				<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-					<CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
-					<CometChatReadReceipt {...this.props} message={this.state.message} />
+					<CometChatThreadedMessageReplyCount message={this.props.message} actionGenerated={this.props.actionGenerated} />
+					<CometChatReadReceipt message={this.props.message} />
 				</div>
 			</div>
 		);
@@ -108,13 +106,16 @@ class CometChatSenderStickerBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatSenderStickerBubble.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
-    theme: theme
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+	actionGenerated: {},
 };
 
 CometChatSenderStickerBubble.propTypes = {
-    lang: PropTypes.string,
-    theme: PropTypes.object
-}
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	actionGenerated: PropTypes.func.isRequired,
+	message: PropTypes.object.isRequired,
+};
 
 export { CometChatSenderStickerBubble };

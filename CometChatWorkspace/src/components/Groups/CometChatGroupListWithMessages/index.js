@@ -79,9 +79,9 @@ class CometChatGroupListWithMessages extends React.Component {
 		this.setState({ sidebarview: !sidebarview });
 	}
 
-/**
- If the logged in user is banned, kicked or scope changed, update the chat window accordingly
- */
+	/**
+	 If the logged in user is banned, kicked or scope changed, update the chat window accordingly
+	*/
 	groupUpdated = (key, message, group, options) => {
 		
 		switch(key) {
