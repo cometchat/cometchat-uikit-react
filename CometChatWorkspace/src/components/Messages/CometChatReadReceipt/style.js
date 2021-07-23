@@ -1,6 +1,6 @@
-export const msgTimestampStyle = (context, state) => {
+export const msgTimestampStyle = (context, props, loggedInUser) => {
 
-    const colorValue = (state.message.messageFrom !== "sender") ? {
+    const colorValue = (props.message?.sender?.uid !== loggedInUser?.uid) ? {
         color: `${context.theme.color.helpText}`,
     } : {};
 

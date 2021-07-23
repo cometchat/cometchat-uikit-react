@@ -26,6 +26,7 @@ import {
 import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 import * as enums from "../../../util/enums.js";
+import { CometChatEvent } from "../../../util/CometChatEvent";
 
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
@@ -55,7 +56,7 @@ class CometChatMessageThread extends React.PureComponent {
 
 		this.state = {
 			messageList: [],
-			scrollToBottom: false,
+			scrollToBottom: true,
 			replyCount: 0,
 			replyPreview: null,
 			messageToBeEdited: null,
@@ -197,6 +198,9 @@ class CometChatMessageThread extends React.PureComponent {
 			case "messageFetched":
 				this.prependMessages(messages);
 				break;
+			case enums.ACTIONS["MESSAGES_INITIAL_FETCH"]:
+				this.prependMessagesAndScrollToBottom(messages);
+				break;
 			case enums.ACTIONS["ON_MESSAGE_DELETED"]:
 				this.removeMessages(messages);
 				break;
@@ -255,7 +259,8 @@ class CometChatMessageThread extends React.PureComponent {
 			this.updateMessages(messageList);
 
 			if (messageList.length - messageKey === 1) {
-				this.context.setLastMessage(newMessageObj);
+				//this.context.setLastMessage(newMessageObj);
+				CometChatEvent.triggerHandler("updateLastMessage", { ...newMessageObj });
 			}
 		}
 	};
@@ -265,7 +270,6 @@ class CometChatMessageThread extends React.PureComponent {
 	};
 
 	deleteMessage = message => {
-		
 		const messageId = message.id;
 		CometChat.deleteMessage(messageId)
 			.then(deletedMessage => {
@@ -275,7 +279,8 @@ class CometChatMessageThread extends React.PureComponent {
 				let messageKey = messageList.findIndex(m => m.id === message.id);
 
 				if (messageList.length - messageKey === 1 && !message.replyCount) {
-					this.context.setLastMessage(deletedMessage);
+					//this.context.setLastMessage(deletedMessage);
+					CometChatEvent.triggerHandler("updateLastMessage", { ...deletedMessage });
 				}
 			})
 			.catch(error => this.errorHandler("SOMETHING_WRONG"));
@@ -310,6 +315,12 @@ class CometChatMessageThread extends React.PureComponent {
 		this.setState({ messageList: messageList, scrollToBottom: false });
 	};
 
+	//messages are fetched, scroll to bottom
+	prependMessagesAndScrollToBottom = messages => {
+		const messageList = [...messages, ...this.state.messageList];
+		this.setState({ messageList: messageList, scrollToBottom: true });
+	};
+
 	//messages are deleted
 	removeMessages = messages => {
 		const deletedMessage = messages[0];
@@ -330,24 +341,24 @@ class CometChatMessageThread extends React.PureComponent {
 		}
 	};
 
-	getSenderMessageComponent = (message, key) => {
+	getSenderMessageComponent = message => {
 		let component;
 
 		switch (message.type) {
 			case CometChat.MESSAGE_TYPE.TEXT:
-				component = <CometChatSenderTextMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatSenderTextMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			case CometChat.MESSAGE_TYPE.IMAGE:
-				component = <CometChatSenderImageMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatSenderImageMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			case CometChat.MESSAGE_TYPE.FILE:
-				component = <CometChatSenderFileMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatSenderFileMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			case CometChat.MESSAGE_TYPE.VIDEO:
-				component = <CometChatSenderVideoMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatSenderVideoMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			case CometChat.MESSAGE_TYPE.AUDIO:
-				component = <CometChatSenderAudioMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatSenderAudioMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			default:
 				break;
@@ -356,25 +367,25 @@ class CometChatMessageThread extends React.PureComponent {
 		return component;
 	};
 
-	getReceiverMessageComponent = (message, key) => {
+	getReceiverMessageComponent = message => {
 		let component;
 
 		switch (message.type) {
 			case "message":
 			case CometChat.MESSAGE_TYPE.TEXT:
-				component = <CometChatReceiverTextMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatReceiverTextMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			case CometChat.MESSAGE_TYPE.IMAGE:
-				component = <CometChatReceiverImageMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatReceiverImageMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			case CometChat.MESSAGE_TYPE.FILE:
-				component = <CometChatReceiverFileMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatReceiverFileMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			case CometChat.MESSAGE_TYPE.AUDIO:
-				component = <CometChatReceiverAudioMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatReceiverAudioMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			case CometChat.MESSAGE_TYPE.VIDEO:
-				component = <CometChatReceiverVideoMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.actionHandler} {...this.props} />;
+				component = <CometChatReceiverVideoMessageBubble key={message.id} message={message} actionGenerated={this.actionHandler} />;
 				break;
 			default:
 				break;
@@ -383,24 +394,24 @@ class CometChatMessageThread extends React.PureComponent {
 		return component;
 	};
 
-	getSenderCustomMessageComponent = (message, key) => {
+	getSenderCustomMessageComponent = message => {
 		let component;
 
 		switch (message.type) {
 			case enums.CUSTOM_TYPE_POLL:
-				component = <CometChatSenderPollMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				component = <CometChatSenderPollMessageBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			case enums.CUSTOM_TYPE_STICKER:
-				component = <CometChatSenderStickerBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				component = <CometChatSenderStickerBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			case enums.CUSTOM_TYPE_DOCUMENT:
-				component = <CometChatSenderDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				component = <CometChatSenderDocumentBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			case enums.CUSTOM_TYPE_WHITEBOARD:
-				component = <CometChatSenderWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				component = <CometChatSenderWhiteboardBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			case enums.CUSTOM_TYPE_MEETING:
-				component = <CometChatSenderDirectCallBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				component = <CometChatSenderDirectCallBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			default:
 				break;
@@ -409,23 +420,23 @@ class CometChatMessageThread extends React.PureComponent {
 		return component;
 	};
 
-	getReceiverCustomMessageComponent = (message, key) => {
+	getReceiverCustomMessageComponent = message => {
 		let component;
 		switch (message.type) {
 			case enums.CUSTOM_TYPE_POLL:
-				component = <CometChatReceiverPollMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				component = <CometChatReceiverPollMessageBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			case enums.CUSTOM_TYPE_STICKER:
-				component = <CometChatReceiverStickerMessageBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				component = <CometChatReceiverStickerMessageBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			case enums.CUSTOM_TYPE_DOCUMENT:
-				component = <CometChatReceiverDocumentBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				component = <CometChatReceiverDocumentBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			case enums.CUSTOM_TYPE_WHITEBOARD:
-				component = <CometChatReceiverWhiteboardBubble loggedInUser={this.loggedInUser} key={key} message={message} actionGenerated={this.props.actionGenerated} {...this.props} />;
+				component = <CometChatReceiverWhiteboardBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			case enums.CUSTOM_TYPE_MEETING:
-				component = <CometChatReceiverDirectCallBubble loggedInUser={this.loggedInUser} key={key} message={message} {...this.props} enableMessageReaction={this.state.enableMessageReaction} />;
+				component = <CometChatReceiverDirectCallBubble key={message.id} message={message} actionGenerated={this.props.actionGenerated} />;
 				break;
 			default:
 				break;
@@ -436,21 +447,20 @@ class CometChatMessageThread extends React.PureComponent {
 
 	getParentMessageComponent = message => {
 		let component = null;
-		const key = 1;
 
 		switch (message.category) {
 			case CometChat.CATEGORY_MESSAGE:
 				if (this.loggedInUser.uid === message.sender.uid) {
-					component = this.getSenderMessageComponent(message, key);
+					component = this.getSenderMessageComponent(message);
 				} else {
-					component = this.getReceiverMessageComponent(message, key);
+					component = this.getReceiverMessageComponent(message);
 				}
 				break;
 			case CometChat.CATEGORY_CUSTOM:
 				if (this.loggedInUser.uid === message.sender.uid) {
-					component = this.getSenderCustomMessageComponent(message, key);
+					component = this.getSenderCustomMessageComponent(message);
 				} else {
-					component = this.getReceiverCustomMessageComponent(message, key);
+					component = this.getReceiverCustomMessageComponent(message);
 				}
 				break;
 			default:
@@ -500,14 +510,12 @@ class CometChatMessageThread extends React.PureComponent {
 				ref={el => {
 					this.composerRef = el;
 				}}
-				theme={this.props.theme}
-				lang={this.props.lang}
-				widgetsettings={this.props.widgetsettings}
 				parentMessageId={this.props.parentMessage.id}
 				messageToBeEdited={this.state.messageToBeEdited}
 				replyPreview={this.state.replyPreview}
 				messageToReact={this.state.messageToReact}
-				actionGenerated={this.actionHandler} />
+				actionGenerated={this.actionHandler}
+			/>
 		);
 
 		//if send messages feature is disabled
@@ -536,17 +544,7 @@ class CometChatMessageThread extends React.PureComponent {
 							{parentMessage}
 						</div>
 						{seperator}
-						<CometChatMessageList
-							theme={this.props.theme}
-							messages={this.state.messageList}
-							item={this.props.threadItem}
-							type={this.props.threadType}
-							scrollToBottom={this.state.scrollToBottom}
-							config={this.props.config}
-							widgetsettings={this.props.widgetsettings}
-							parentMessageId={this.props.parentMessage.id}
-							lang={this.props.lang}
-							actionGenerated={this.actionHandler} />
+						<CometChatMessageList messages={this.state.messageList} item={this.props.threadItem} type={this.props.threadType} scrollToBottom={this.state.scrollToBottom} parentMessageId={this.props.parentMessage.id} actionGenerated={this.actionHandler} />
 						{messageComposer}
 					</div>
 				</div>

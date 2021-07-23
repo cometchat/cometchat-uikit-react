@@ -97,9 +97,6 @@ class CometChatMessageHeader extends React.Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		this.MessageHeaderManager.removeListeners();
-		this.MessageHeaderManager = new MessageHeaderManager();
-		this.MessageHeaderManager.attachListeners(this.updateHeader);
 
 		if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && (this.item !== this.context.item || prevProps.lang !== this.props.lang)) {
 			this.setStatusForUser();
@@ -179,7 +176,7 @@ class CometChatMessageHeader extends React.Component {
 			case enums.GROUP_MEMBER_KICKED:
 			case enums.GROUP_MEMBER_BANNED:
 			case enums.GROUP_MEMBER_LEFT:
-				if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.item.guid === item.guid && this.loggedInUser.uid !== groupUser.uid) {
+				if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.item.guid === item.guid && this.loggedInUser?.uid !== groupUser?.uid) {
 					let membersCount = parseInt(item.membersCount);
 					const status = `${membersCount} ${Translator.translate("MEMBERS", this.props.lang)}`;
 					this.setState({status: status});
@@ -529,6 +526,18 @@ class CometChatMessageHeader extends React.Component {
 			});
 	};
 
+	initiateAudioCall = () => {
+		this.props.actionGenerated(enums.ACTIONS["INITIATE_AUDIO_CALL"]);
+	}
+
+	initiateVideoCall = () => {
+		this.props.actionGenerated(enums.ACTIONS["INITIATE_VIDEO_CALL"]);
+	}
+
+	viewDetail = () => {
+		this.props.actionGenerated(enums.ACTIONS["VIEW_DETAIL"]);
+	}
+
 	render() {
 
 		let avatar, presence;
@@ -569,7 +578,7 @@ class CometChatMessageHeader extends React.Component {
 
 		const audioCallText = Translator.translate("AUDIO_CALL", this.props.lang);
 		let audioCallBtn = (
-			<div className={audioCallClassName} css={chatOptionStyle(audioCallIcon, this.context, 0)} title={audioCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_AUDIO_CALL"])}>
+			<div className={audioCallClassName} css={chatOptionStyle(audioCallIcon, this.context, 0)} title={audioCallText} onClick={this.initiateAudioCall}>
 				<i></i>
 			</div>
 		);
@@ -585,7 +594,7 @@ class CometChatMessageHeader extends React.Component {
 
 		const videoCallText = Translator.translate("VIDEO_CALL", this.props.lang);
 		let videoCallBtn = (
-			<div className={videoCallClassName} css={chatOptionStyle(videoCallIcon, this.context, 0)} title={videoCallText} onClick={() => this.props.actionGenerated(enums.ACTIONS["INITIATE_VIDEO_CALL"])}>
+			<div className={videoCallClassName} css={chatOptionStyle(videoCallIcon, this.context, 0)} title={videoCallText} onClick={this.initiateVideoCall}>
 				<i></i>
 			</div>
 		);
@@ -601,7 +610,7 @@ class CometChatMessageHeader extends React.Component {
 
 		const viewDetailText = Translator.translate("VIEW_DETAIL", this.props.lang);
 		let viewDetailBtn = (
-			<div className={viewDetailClassName} css={chatOptionStyle(detailPaneIcon, this.context, 0)} title={viewDetailText} onClick={() => this.props.actionGenerated(enums.ACTIONS["VIEW_DETAIL"])}>
+			<div className={viewDetailClassName} css={chatOptionStyle(detailPaneIcon, this.context, 0)} title={viewDetailText} onClick={this.viewDetail}>
 				<i></i>
 			</div>
 		);

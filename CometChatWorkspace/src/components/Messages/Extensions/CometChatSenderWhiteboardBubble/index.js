@@ -27,125 +27,115 @@ import {
 
 import whiteboardIcon from "./resources/collaborative-whiteboard.svg";
 
-class CometChatSenderWhiteboardBubble extends React.PureComponent {
+class CometChatSenderWhiteboardBubble extends React.Component {
+	static contextType = CometChatContext;
+	loggedInUser;
 
-    static contextType = CometChatContext;
-    messageFrom = "sender";
+	constructor(props, context) {
+		super(props, context);
 
-    constructor(props) {
+		this.state = {
+			isHovering: false,
+		};
 
-        super(props);
-        const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
+		this.context.getLoggedinUser().then(user => {
+			this.loggedInUser = { ...user };
+		});
+	}
 
-        this.state = {
-            message: message,
-            isHovering: false
-        }
-    }
+	shouldComponentUpdate(nextProps, nextState) {
+		const currentMessageStr = JSON.stringify(this.props.message);
+		const nextMessageStr = JSON.stringify(nextProps.message);
 
-    componentDidUpdate(prevProps) {
+		if (currentMessageStr !== nextMessageStr || this.state.isHovering !== nextState.isHovering) {
+			return true;
+		}
+		return false;
+	}
 
-        const previousMessageStr = JSON.stringify(prevProps.message);
-        const currentMessageStr = JSON.stringify(this.props.message);
+	launchCollaborativeWhiteboard = () => {
+		let whiteboardUrl = null;
+		let whiteboardData = checkMessageForExtensionsData(this.props.message, "whiteboard");
+		if (whiteboardData && whiteboardData.hasOwnProperty("board_url") && whiteboardData.board_url.length) {
+			let username = this.loggedInUser?.name.split(" ").join("_");
+			// Appending the username to the board_url
+			whiteboardUrl = whiteboardData.board_url + "&username=" + username;
+			window.open(whiteboardUrl, "", "fullscreen=yes, scrollbars=auto");
+		}
+	};
 
-        if (previousMessageStr !== currentMessageStr) {
+	handleMouseHover = () => {
+		this.setState(this.toggleHoverState);
+	};
 
-            const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-            this.setState({ message: message })
-        }
-    }
+	toggleHoverState = state => {
+		return {
+			isHovering: !state.isHovering,
+		};
+	};
 
-    launchCollaborativeWhiteboard = () => {
+	render() {
+		let messageReactions = null;
+		const reactionsData = checkMessageForExtensionsData(this.props.message, "reactions");
+		if (reactionsData) {
+			if (Object.keys(reactionsData).length) {
+				messageReactions = (
+					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
+						<CometChatMessageReactions message={this.props.message} actionGenerated={this.props.actionGenerated} />
+					</div>
+				);
+			}
+		}
 
-        let whiteboardUrl = null;
-        let whiteboardData = checkMessageForExtensionsData(this.state.message, "whiteboard");
-        if (whiteboardData
-        && whiteboardData.hasOwnProperty("board_url")
-        && whiteboardData.board_url.length) {
+		let toolTipView = null;
+		if (this.state.isHovering) {
+			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
+		}
 
-            let username = this.props.loggedInUser.name.split(' ').join('_');
-            // Appending the username to the board_url
-            whiteboardUrl = whiteboardData.board_url + '&username=' + username;
-            window.open(whiteboardUrl, '', 'fullscreen=yes, scrollbars=auto');
-        }
-    }
+		const documentTitle = Translator.translate("CREATED_WHITEBOARD", this.props.lang);
+		return (
+			<div css={messageContainerStyle()} className="sender__message__container message__whiteboard" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
+				{toolTipView}
 
-    handleMouseHover = () => {
-        this.setState(this.toggleHoverState);
-    }
+				<div css={messageWrapperStyle()} className="message__wrapper">
+					<div css={messageTxtWrapperStyle(this.context)} className="message__whiteboard__wrapper">
+						<div css={messageTxtContainerStyle()} className="message__whiteboard__container">
+							<i css={messageTxtIconStyle(whiteboardIcon, this.context)}></i>
+							<p css={messageTxtStyle()} className="document__title">
+								{documentTitle}
+							</p>
+						</div>
+						<ul css={messageBtnStyle(this.context)} className="document__button">
+							<li onClick={this.launchCollaborativeWhiteboard}>
+								<p>{Translator.translate("LAUNCH", this.props.lang)}</p>
+							</li>
+						</ul>
+					</div>
+				</div>
 
-    toggleHoverState = (state) => {
+				{messageReactions}
 
-        return {
-            isHovering: !state.isHovering,
-        };
-    }
-
-    render() {
-
-        let messageReactions = null;
-        const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
-        if (reactionsData) {
-
-            if (Object.keys(reactionsData).length) {
-                messageReactions = (
-                    <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-                        <CometChatMessageReactions {...this.props} message={this.state.message} reaction={reactionsData} />
-                    </div>
-                );
-            }
-        }
-
-        let toolTipView = null;
-        if (this.state.isHovering) {
-            toolTipView = (<CometChatMessageActions {...this.props} message={this.state.message} />);
-        }
-
-        const documentTitle = Translator.translate("CREATED_WHITEBOARD", this.props.lang); 
-        return (
-            <div 
-            css={messageContainerStyle()} 
-            className="sender__message__container message__document"
-            onMouseEnter={this.handleMouseHover}
-            onMouseLeave={this.handleMouseHover}>
-
-                {toolTipView}
-                    
-                <div css={messageWrapperStyle()} className="message__wrapper">
-                    <div css={messageTxtWrapperStyle(this.context)} className="message__whiteboard__wrapper">
-                        <div css={messageTxtContainerStyle()} className="message__whiteboard__container">
-                            <i css={messageTxtIconStyle(whiteboardIcon, this.context)}></i>
-                            <p css={messageTxtStyle()} className="document__title">{documentTitle}</p>
-                        </div>
-                        <ul css={messageBtnStyle(this.context)} className="document__button">
-                            <li onClick={this.launchCollaborativeWhiteboard}>
-                                <p>{Translator.translate("LAUNCH", this.props.lang)}</p>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                {messageReactions}
-
-                <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                    <CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
-                    <CometChatReadReceipt {...this.props} message={this.state.message} />
-                </div>
-
-            </div>
-        )
-    }
+				<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+					<CometChatThreadedMessageReplyCount message={this.props.message} actionGenerated={this.props.actionGenerated} />
+					<CometChatReadReceipt message={this.props.message} />
+				</div>
+			</div>
+		);
+	}
 }
 
 // Specifies the default values for props:
 CometChatSenderWhiteboardBubble.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
-    theme: theme
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+	actionGenerated: {},
 };
 
 CometChatSenderWhiteboardBubble.propTypes = {
-    lang: PropTypes.string,
-    theme: PropTypes.object
-}
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	actionGenerated: PropTypes.func.isRequired,
+	message: PropTypes.object.isRequired,
+};
 
 export { CometChatSenderWhiteboardBubble };

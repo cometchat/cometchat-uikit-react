@@ -106,7 +106,7 @@ export class UIKitSettings {
 		this.polls = true;
 		this.messageTranslation = true;
 
-		this.allowModeratorToDeleteMemberMessages = false;
+		this.allowModeratorToDeleteMemberMessages = true;
 		this.setGroupInQnaModeByModerators = false;
 		this.highlightMessageFromModerators = false;
 		this.emailReplies = true;

@@ -144,13 +144,13 @@ export const pollPercentStyle = (context, width) => {
     }
 }
 
-export const answerWrapperStyle = (props, optionData, context) => {
+export const answerWrapperStyle = (state, optionData, context) => {
 
 	let countPadding = "0px 16px 0px 0px";
     let widthProp = "calc(100% - 40px)";
-	if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(props.loggedInUser.uid)) {
-		countPadding = "0px 8px";
-        widthProp = "calc(100% - 64px)";
+	if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(state?.loggedInUser?.uid)) {
+		//countPadding = "0px 8px";
+		widthProp = "calc(100% - 40px)";
 	}
 
 	return {
@@ -171,7 +171,7 @@ export const answerWrapperStyle = (props, optionData, context) => {
 		},
 		span: {
 			maxWidth: "40px",
-			margin: countPadding,
+			padding: countPadding,
 			fontWeight: "bold",
 			display: "inline-block",
 			fontSize: "13px",
@@ -193,7 +193,10 @@ export const messageInfoWrapperStyle = () => {
 
     return {
         alignSelf: "flex-start",
-        padding: "3px 5px",
+        padding: "4px 8px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-start"
     }
 }
 

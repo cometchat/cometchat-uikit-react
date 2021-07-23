@@ -35,143 +35,135 @@ import {
 
 import documentIcon from "./resources/collaborative-document.svg";
 
-class CometChatReceiverDocumentBubble extends React.PureComponent {
+class CometChatReceiverDocumentBubble extends React.Component {
+	static contextType = CometChatContext;
 
-    static contextType = CometChatContext;
-    messageFrom = "receiver";
+	constructor(props) {
+		super(props);
 
-    constructor(props) {
+		this.state = {
+			isHovering: false,
+		};
+	}
 
-        super(props);
-        
-        const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
-        this.state = {
-            message: message,
-            isHovering: false
-        }
-    }
+	shouldComponentUpdate(nextProps, nextState) {
 
-    componentDidUpdate(prevProps) {
+		const currentMessageStr = JSON.stringify(this.props.message);
+		const nextMessageStr = JSON.stringify(nextProps.message);
 
-        const previousMessageStr = JSON.stringify(prevProps.message);
-        const currentMessageStr = JSON.stringify(this.props.message);
+		if (currentMessageStr !== nextMessageStr 
+        || this.state.isHovering !== nextState.isHovering) {
+			return true;
+		}
+		return false;
+	}
 
-        if (previousMessageStr !== currentMessageStr) {
+	handleMouseHover = () => {
+		this.setState(this.toggleHoverState);
+	};
 
-            const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-            this.setState({ message: message })
-        }
-    }
+	toggleHoverState = state => {
+		return {
+			isHovering: !state.isHovering,
+		};
+	};
 
-    handleMouseHover = () => {
-        this.setState(this.toggleHoverState);
-    }
+	launchCollaborativeDocument = () => {
+		let documentUrl = null;
+		let documentData = checkMessageForExtensionsData(this.props.message, "document");
+		if (documentData && documentData.hasOwnProperty("document_url") && documentData.document_url.length) {
+			documentUrl = documentData.document_url;
+			window.open(documentUrl, "", "fullscreen=yes, scrollbars=auto");
+		}
+	};
 
-    toggleHoverState = (state) => {
+	render() {
+		let avatar = null,
+			name = null;
+		if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
+			avatar = (
+				<div css={messageThumbnailStyle} className="message__thumbnail">
+					<CometChatAvatar user={this.props.message.sender} />
+				</div>
+			);
 
-        return {
-            isHovering: !state.isHovering,
-        };
-    }
+			name = (
+				<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
+					<span css={nameStyle(this.context)} className="message__name">
+						{this.props.message.sender.name}
+					</span>
+				</div>
+			);
+		}
 
-    launchCollaborativeDocument = () => {
+		let messageReactions = null;
+		const reactionsData = checkMessageForExtensionsData(this.props.message, "reactions");
+		if (reactionsData) {
+			if (Object.keys(reactionsData).length) {
+				messageReactions = (
+					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
+						<CometChatMessageReactions message={this.props.message} actionGenerated={this.props.actionGenerated} />
+					</div>
+				);
+			}
+		}
 
-        let documentUrl = null;
-        let documentData = checkMessageForExtensionsData(this.state.message, "document");
-        if (documentData
-        && documentData.hasOwnProperty("document_url")
-        && documentData.document_url.length) {
+		let toolTipView = null;
+		if (this.state.isHovering) {
+			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
+		}
 
-            documentUrl = documentData.document_url;
-            window.open(documentUrl, '', 'fullscreen=yes, scrollbars=auto');
-        }
-    }
+		const documentTitle = `${this.props.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_DOCUMENT", this.props.lang)}`;
 
-    render() {
+		return (
+			<div css={messageContainerStyle()} className="receiver__message__container message__document" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
+				<div css={messageWrapperStyle()} className="message__wrapper">
+					{avatar}
+					<div css={messageDetailStyle()} className="message__details">
+						{name}
+						{toolTipView}
+						<div css={messageTxtContainerStyle()} className="message__document__container">
+							<div css={messageTxtWrapperStyle(this.context)} className="message__document__wrapper">
+								<div css={messageTxtTitleStyle(this.context)} className="message__document__title">
+									<i css={iconStyle(documentIcon, this.context)} title={Translator.translate("COLLABORATIVE_DOCUMENT", this.props.lang)}></i>
+									<p css={messageTxtStyle()} className="document__title">
+										{documentTitle}
+									</p>
+								</div>
 
-        let avatar = null, name = null;
-        if (this.state.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
+								<ul css={messageBtnStyle(this.context)} className="document__button">
+									<li onClick={this.launchCollaborativeDocument}>
+										<p>{Translator.translate("JOIN", this.props.lang)}</p>
+									</li>
+								</ul>
+							</div>
+						</div>
 
-            avatar = (
-                <div css={messageThumbnailStyle} className="message__thumbnail">
-                    <CometChatAvatar user={this.state.message.sender} />
-                </div>
-            );
+						{messageReactions}
 
-            name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-                <span css={nameStyle(this.context)} className="message__name">{this.props.message.sender.name}</span>
-                </div>);
-        }
-
-        let messageReactions = null;
-        const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
-        if (reactionsData) {
-
-            if (Object.keys(reactionsData).length) {
-                messageReactions = (
-                    <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-                        <CometChatMessageReactions {...this.props} message={this.state.message} reaction={reactionsData} />
-                    </div>
-                );
-            }
-        }
-
-        let toolTipView = null;
-        if (this.state.isHovering) {
-            toolTipView = (<CometChatMessageActions {...this.props} message={this.state.message} name={name} />);
-        }
-
-        const documentTitle = `${this.state.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_DOCUMENT", this.props.lang)}`;
-
-        return (
-            <div 
-            css={messageContainerStyle()} 
-            className="receiver__message__container message__document"
-            onMouseEnter={this.handleMouseHover}
-            onMouseLeave={this.handleMouseHover}>
-
-                <div css={messageWrapperStyle()} className="message__wrapper">
-                    {avatar}
-                    <div css={messageDetailStyle()} className="message__details">
-                        {name}
-                        {toolTipView}
-                        <div css={messageTxtContainerStyle()} className="message__document__container">
-                            <div css={messageTxtWrapperStyle(this.context)} className="message__document__wrapper">
-                                <div css={messageTxtTitleStyle(this.context)} className="message__document__title">
-                                    <i css={iconStyle(documentIcon, this.context)} title={Translator.translate("COLLABORATIVE_DOCUMENT", this.props.lang)}></i>
-                                    <p css={messageTxtStyle()} className="document__title">{documentTitle}</p>
-                                </div>
-                                
-                                <ul css={messageBtnStyle(this.context)} className="document__button">
-                                    <li onClick={this.launchCollaborativeDocument}>
-                                        <p>{Translator.translate("JOIN", this.props.lang)}</p>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        {messageReactions}
-
-                        <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                            <CometChatReadReceipt {...this.props} message={this.state.message} />
-                            <CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+						<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+							<CometChatReadReceipt message={this.props.message} />
+							<CometChatThreadedMessageReplyCount message={this.props.message} actionGenerated={this.props.actionGenerated} />
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
 }
 
 // Specifies the default values for props:
 CometChatReceiverDocumentBubble.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
-    theme: theme
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+	actionGenerated: {},
 };
 
 CometChatReceiverDocumentBubble.propTypes = {
-    lang: PropTypes.string,
-    theme: PropTypes.object
-}
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	actionGenerated: PropTypes.func.isRequired,
+	message: PropTypes.object.isRequired,
+};
 
 export { CometChatReceiverDocumentBubble };
