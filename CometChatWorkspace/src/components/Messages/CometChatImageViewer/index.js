@@ -7,6 +7,9 @@ import PropTypes from "prop-types";
 import { CometChatBackdrop } from "../../Shared";
 import { CometChatContext } from "../../../util/CometChatContext";
 
+import Translator from "../../../resources/localization/translator";
+
+
 import {
     imageWrapperStyle,
     imgStyle,
@@ -47,13 +50,16 @@ const CometChatImageViewer = (props) => {
 
 // Specifies the default values for props:
 CometChatImageViewer.defaultProps = {
-    count: 0,
-    close: () => { }
+	lang: Translator.getDefaultLanguage(),
+	count: 0,
+	close: () => {},
 };
 
 CometChatImageViewer.propTypes = {
-    show: PropTypes.bool,
-    close: PropTypes.func,
-}
+	lang: PropTypes.string,
+	show: PropTypes.bool,
+	close: PropTypes.func,
+	message: PropTypes.object.isRequired,
+};
 
 export { CometChatImageViewer };

@@ -34,7 +34,7 @@ export const CUSTOM_TYPE_MEETING = "meeting";
 export const CONSTANTS = {
     LOCALE: "cometchat:locale",
     ACTIVECALL: "cometchat:activecall",
-    MAX_MESSAGE_COUNT: 100,
+    MAX_MESSAGE_COUNT: 1000,
     METADATA_TYPE_LIVEREACTION: "live_reaction",
     LIVE_REACTIONS: { "heart": "./resources/heart.png", "thumbsup": "👍", "clap": "👏", "wink": "😉" },
     MESSAGES_COMPONENT: "messages",
@@ -113,6 +113,7 @@ export const ACTIONS = {
 	MESSAGE_RECEIVED: "messageReceived",
 	CUSTOM_MESSAGE_RECEIVED: "customMessageReceived",
 	MESSAGE_READ: "messageRead",
+	MESSAGES_INITIAL_FETCH: "messageInitialFetch",
 	MESSAGES_FETCHED: "messageFetched",
 	REFRESHING_MESSAGES: "refreshingMessages",
 	MESSAGES_REFRESHED: "messageRefreshed",
@@ -133,7 +134,13 @@ export const ACTIONS = {
 	SEND_STICKER: "sendSticker",
 	CLOSE_STICKER_KEYBOARD: "closeStickerKeyboard",
 	ERROR: "errorOccurred",
-	INFO: "infoMessage"
+	INFO: "infoMessage",
+	TRANSLATE_MESSAGE: "translateMessage"
+};
+
+export const EVENTS = {
+	NEW_MESSAGES: "newMessagesArrived",
+	CLEAR_UNREAD_MESSAGES: "clearUnreadMessages",
 };
 
 

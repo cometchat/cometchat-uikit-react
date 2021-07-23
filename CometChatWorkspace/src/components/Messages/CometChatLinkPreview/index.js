@@ -26,19 +26,9 @@ class CometChatLinkPreview extends React.PureComponent {
 
     static contextType = CometChatContext;
 
-    constructor(props) {
-
-        super(props);
-
-        this.state = {
-            message: props.message,
-            messageText: props.messageText
-        }
-    }
-
     render() {
 
-        const linkPreviewData = checkMessageForExtensionsData(this.state.message, "link-preview");
+        const linkPreviewData = checkMessageForExtensionsData(this.props.message, "link-preview");
         const linkObject = linkPreviewData["links"][0];
 
         const pattern = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)(\S+)?/;
@@ -51,7 +41,7 @@ class CometChatLinkPreview extends React.PureComponent {
                     <div css={previewDataStyle(this.context)} className="card__info">
                         <div css={previewTitleStyle(this.context)} className="card__title"><span>{linkObject["title"]}</span></div>
                         <div css={previewDescStyle(this.context)} className="card__desc"><span>{linkObject["description"]}</span></div>
-                        <div css={previewTextStyle(this.context)} className="card__text">{this.state.messageText}</div>
+                        <div css={previewTextStyle(this.context)} className="card__text">{this.props.messageText}</div>
                     </div>
                     <div css={previewLinkStyle(this.context)} className="card__link">
                         <a href={linkObject["url"]} target="_blank" rel="noopener noreferrer">{linkText}</a>
@@ -69,8 +59,9 @@ CometChatLinkPreview.defaultProps = {
 };
 
 CometChatLinkPreview.propTypes = {
-    lang: PropTypes.string,
-    theme: PropTypes.object
-}
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	message: PropTypes.object.isRequired,
+};
 
 export { CometChatLinkPreview };

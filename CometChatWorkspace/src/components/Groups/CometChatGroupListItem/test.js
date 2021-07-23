@@ -20,34 +20,4 @@ describe("CometChatGroupListItem", () => {
         );
     });
 
-    it("renders group data", async () => {
-
-        const fakeGroup = {
-            guid: "supergroup",
-            name: "Comic Heros' Hangout",
-            type: "public",
-            icon: "https://data-us.cometchat.io/assets/images/avatars/supergroup.png",
-            membersCount: 10
-        };
-
-        jest.spyOn(Storage.prototype, 'setItem');
-        global.fetch = jest.fn().mockImplementation(() => fakeGroup);
-
-        // Use the asynchronous version of act to apply resolved promises
-        await act(async () => {
-            ReactDOM.render(
-                <CometChatContextProvider group="">
-                    <CometChatGroupListItem group={fakeGroup} />
-                </CometChatContextProvider>,
-                container,
-            );
-        });
-
-        expect(container.querySelector(".item__details__name > p").textContent).toBe(fakeGroup.name);
-
-        // remove the mock to ensure tests are completely isolated
-        global.fetch.mockClear();
-        delete global.fetch;
-    });
-
 });

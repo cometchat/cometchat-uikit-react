@@ -31,39 +31,36 @@ import {
 
 import srcIcon from "./resources/1px.png";
 
-class CometChatReceiverImageMessageBubble extends React.PureComponent {
-
+class CometChatReceiverImageMessageBubble extends React.Component {
 	static contextType = CometChatContext;
-	messageFrom = "receiver";
 
 	constructor(props) {
 		super(props);
 		this._isMounted = false;
 		this.imgRef = React.createRef();
 
-		const message = Object.assign({}, props.message, {messageFrom: this.messageFrom});
-
 		this.state = {
-			message: message,
 			imageUrl: srcIcon,
 			isHovering: false,
 		};
 	}
 
+	shouldComponentUpdate(nextProps, nextState) {
+
+		const currentMessageStr = JSON.stringify(this.props.message);
+		const nextMessageStr = JSON.stringify(nextProps.message);
+
+		if (currentMessageStr !== nextMessageStr 
+		|| this.state.imageUrl !== nextState.imageUrl 
+		|| this.state.isHovering !== nextState.isHovering) {
+			return true;
+		}
+		return false;
+	}
+
 	componentDidMount() {
 		this._isMounted = true;
 		this.setImage();
-	}
-
-	componentDidUpdate(prevProps) {
-
-		const previousMessageStr = JSON.stringify(prevProps.message);
-		const currentMessageStr = JSON.stringify(this.props.message);
-
-		if (previousMessageStr !== currentMessageStr) {
-			const message = Object.assign({}, this.props.message, {messageFrom: this.messageFrom});
-			this.setState({message: message});
-		}
 	}
 
 	componentWillUnmount() {
@@ -85,7 +82,7 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 	};
 
 	setImage = () => {
-		const thumbnailGenerationData = checkMessageForExtensionsData(this.state.message, "thumbnail-generation");
+		const thumbnailGenerationData = checkMessageForExtensionsData(this.props.message, "thumbnail-generation");
 		if (thumbnailGenerationData) {
 			const mq = window.matchMedia(this.props.theme.breakPoints[0]);
 			mq.addListener(() => {
@@ -93,9 +90,8 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 				let img = new Image();
 				img.src = imageToDownload;
 				img.onload = () => {
-
 					if (this._isMounted) {
-						this.setState({imageUrl: img.src});
+						this.setState({ imageUrl: img.src });
 					}
 				};
 			});
@@ -106,9 +102,8 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 					let img = new Image();
 					img.src = imageToDownload;
 					img.onload = () => {
-
 						if (this._isMounted) {
-							this.setState({imageUrl: img.src});
+							this.setState({ imageUrl: img.src });
 						}
 					};
 				})
@@ -120,12 +115,11 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 
 	setMessageImageUrl = () => {
 		let img = new Image();
-		img.src = this.state.message.data.url;
+		img.src = this.props.message.data.url;
 		img.onload = () => {
-
 			if (this._isMounted) {
-				this.setState({imageUrl: img.src});
-			} 
+				this.setState({ imageUrl: img.src });
+			}
 		};
 	};
 
@@ -161,7 +155,7 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 	}
 
 	open = () => {
-		this.props.actionGenerated(enums.ACTIONS["VIEW_ORIGINAL_IMAGE"], this.state.message);
+		this.props.actionGenerated(enums.ACTIONS["VIEW_ORIGINAL_IMAGE"], this.props.message);
 	};
 
 	handleMouseHover = () => {
@@ -180,26 +174,26 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 		if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 			avatar = (
 				<div css={messageThumbnailStyle()} className="message__thumbnail">
-					<CometChatAvatar user={this.state.message.sender} />
+					<CometChatAvatar user={this.props.message.sender} />
 				</div>
 			);
 
 			name = (
 				<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
 					<span css={nameStyle(this.context)} className="message__name">
-						{this.state.message.sender.name}
+						{this.props.message.sender.name}
 					</span>
 				</div>
 			);
 		}
 
 		let messageReactions = null;
-		const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
+		const reactionsData = checkMessageForExtensionsData(this.props.message, "reactions");
 		if (reactionsData) {
 			if (Object.keys(reactionsData).length) {
 				messageReactions = (
 					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-						<CometChatMessageReactions {...this.props} message={this.state.message} reaction={reactionsData} />
+						<CometChatMessageReactions message={this.props.message} actionGenerated={this.props.actionGenerated} />
 					</div>
 				);
 			}
@@ -207,7 +201,7 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 
 		let toolTipView = null;
 		if (this.state.isHovering) {
-			toolTipView = <CometChatMessageActions {...this.props} message={this.state.message} name={name} />;
+			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
 		}
 
 		return (
@@ -219,15 +213,21 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 						{toolTipView}
 						<div css={messageImgContainerStyle()} className="message__image__container">
 							<div css={messageImgWrapperStyle(this.context)} onClick={this.open} className="message__image__wrapper">
-								<img src={this.state.imageUrl} alt={this.state.imageUrl} ref={el => { this.imgRef = el; }} />
+								<img
+									src={this.state.imageUrl}
+									alt={this.state.imageUrl}
+									ref={el => {
+										this.imgRef = el;
+									}}
+								/>
 							</div>
 						</div>
 
 						{messageReactions}
 
 						<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-							<CometChatReadReceipt {...this.props} message={this.state.message} />
-							<CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
+							<CometChatReadReceipt message={this.props.message} />
+							<CometChatThreadedMessageReplyCount message={this.props.message} actionGenerated={this.props.actionGenerated} />
 						</div>
 					</div>
 				</div>
@@ -239,12 +239,15 @@ class CometChatReceiverImageMessageBubble extends React.PureComponent {
 // Specifies the default values for props:
 CometChatReceiverImageMessageBubble.defaultProps = {
 	lang: Translator.getDefaultLanguage(),
-	theme: theme
+	theme: theme,
+	actionGenerated: {},
 };
 
 CometChatReceiverImageMessageBubble.propTypes = {
 	lang: PropTypes.string,
-	theme: PropTypes.object
-}
+	theme: PropTypes.object,
+	actionGenerated: PropTypes.func.isRequired,
+	message: PropTypes.object.isRequired,
+};
 
 export { CometChatReceiverImageMessageBubble };

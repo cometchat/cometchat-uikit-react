@@ -10,6 +10,8 @@ import { CometChatCreatePollOptions } from "../";
 
 import { CometChatContext } from "../../../../util/CometChatContext";
 import * as enums from "../../../../util/enums.js"; 
+
+import { theme } from "../../../../resources/theme";
 import Translator from "../../../../resources/localization/translator";
 
 import {
@@ -213,11 +215,13 @@ class CometChatCreatePoll extends React.Component {
 
 // Specifies the default values for props:
 CometChatCreatePoll.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
 };
 
 CometChatCreatePoll.propTypes = {
-    lang: PropTypes.string,
-}
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+};
 
 export { CometChatCreatePoll };

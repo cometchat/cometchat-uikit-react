@@ -13,6 +13,9 @@ import { theme } from "../resources/theme";
 export const CometChatContext = React.createContext({});
 
 export class CometChatContextProvider extends React.Component {
+	
+	loggedInUser;
+
 	constructor(props) {
 		super(props);
 
@@ -46,6 +49,7 @@ export class CometChatContextProvider extends React.Component {
 				[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]: Translator.translate("MODERATOR", props.language),
 				[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]: Translator.translate("PARTICIPANT", props.language),
 			},
+			getLoggedinUser: this.getLoggedinUser,
 			setGroupMembers: this.setGroupMembers,
 			updateGroupMembers: this.updateGroupMembers,
 			setAllGroupMembers: this.setAllGroupMembers,
@@ -62,8 +66,6 @@ export class CometChatContextProvider extends React.Component {
 			setDeletedGroupId: this.setDeletedGroupId,
 			setLeftGroupId: this.setLeftGroupId,
 			setLastMessage: this.setLastMessage,
-			setUnreadMessages: this.setUnreadMessages,
-			clearUnreadMessages: this.clearUnreadMessages,
 			setClearedUnreadMessages: this.setClearedUnreadMessages,
 			setDirectCallCustomMessage: this.setDirectCallCustomMessage,
 			checkIfDirectCallIsOngoing: this.checkIfDirectCallIsOngoing,
@@ -77,6 +79,9 @@ export class CometChatContextProvider extends React.Component {
 	}
 
 	componentDidMount() {
+
+		this.getLoggedinUser();
+		
 		if (this.props.user.trim().length) {
 			this.getUser(this.props.user.trim())
 				.then(user => {
@@ -104,13 +109,11 @@ export class CometChatContextProvider extends React.Component {
 	}
 
 	componentDidUpdate(prevProps) {
-		
 		if (this.props.user.trim().length && prevProps.user !== this.props.user) {
 			this.getUser(this.props.user)
 				.then(user => {
 					this.setType(CometChat.ACTION_TYPE.TYPE_USER);
 					this.setItem(user);
-					this.clearUnreadMessages();
 					this.setClearedUnreadMessages(false);
 				})
 				.catch(error => {
@@ -122,7 +125,6 @@ export class CometChatContextProvider extends React.Component {
 				.then(group => {
 					this.setType(CometChat.ACTION_TYPE.TYPE_GROUP);
 					this.setItem(group);
-					this.clearUnreadMessages();
 					this.setClearedUnreadMessages(false);
 				})
 				.catch(error => {
@@ -213,6 +215,45 @@ export class CometChatContextProvider extends React.Component {
 		return null;
 	};
 
+	getLoggedinUser = () => {
+		let timerCounter = 10000;
+		let timer = 0;
+
+		return new Promise((resolve, reject) => {
+
+			if (timerCounter === timer) {
+				return reject(`timer reached ${timerCounter}`);
+			};
+
+			if (this.loggedInUser) {
+				return resolve(this.loggedInUser);
+			};
+
+			if (!CometChat.isInitialized()) {
+				return reject("CometChat not initialized");
+			};
+
+			this.isUserLoggedIn = setInterval(() => {
+				CometChat.getLoggedinUser()
+					.then(user => {
+
+						this.loggedInUser = user;
+						clearInterval(this.isUserLoggedIn);
+						return resolve(user);
+					})
+					.catch(error => reject(error));
+
+				timer += 100;
+			}, 100);
+		});
+
+		// return new Promise((resolve, reject) => {
+		// 	CometChat.getLoggedinUser()
+		// 		.then(user => resolve(user))
+		// 		.catch(error => reject(error));
+		// });
+	};
+
 	clearGroupMembers = () => {
 		this.setState({
 			groupMembers: [],
@@ -267,51 +308,39 @@ export class CometChatContextProvider extends React.Component {
 	};
 
 	setCallInProgress = (call, callType) => {
-		this.setState({callInProgress: {...call}, callType});
+		this.setState({ callInProgress: { ...call }, callType });
 	};
 
 	setItem = item => {
-		this.setState({item: {...item}});
+		this.setState({ item: { ...item } });
 	};
 
 	setType = type => {
-		this.setState({type});
+		this.setState({ type });
 	};
 
 	setTypeAndItem = (type, item) => {
-		this.setState({item: {...item}, type});
+		this.setState({ item: { ...item }, type });
 	};
 
 	setDeletedGroupId = guid => {
-		this.setState({deletedGroupId: guid});
+		this.setState({ deletedGroupId: guid });
 	};
 
 	setLeftGroupId = guid => {
-		this.setState({leftGroupId: guid});
+		this.setState({ leftGroupId: guid });
 	};
 
 	setLastMessage = message => {
-		this.setState({lastMessage: message});
+		this.setState({ lastMessage: message });
 	};
-
-	setUnreadMessages = newMessage => {
-		let messageList = [...this.state.unreadMessages];
-		messageList = messageList.concat(newMessage);
-
-		this.setState({unreadMessages: messageList});
-		this.setClearedUnreadMessages(false);
-	};
-
-	clearUnreadMessages = () => {
-		this.setState({unreadMessages: []});
-	};
-
+	
 	setClearedUnreadMessages = flag => {
-		this.setState({clearedUnreadMessages: flag});
+		this.setState({ clearedUnreadMessages: flag });
 	};
 
 	setDirectCallCustomMessage = (message, event) => {
-		this.setState({directCallCustomMessage: message, directCallCustomMessageAction: event});
+		this.setState({ directCallCustomMessage: message, directCallCustomMessageAction: event });
 	};
 
 	checkIfDirectCallIsOngoing = () => {
@@ -352,13 +381,12 @@ export class CometChatContextProvider extends React.Component {
 	};
 
 	hasKeyValue = (data, key) => {
-
-		if(data.hasOwnProperty(key) === false || data[key] === null || data[key] === undefined) {
+		if (data.hasOwnProperty(key) === false || data[key] === null || data[key] === undefined) {
 			return false;
 		}
 
 		return true;
-	}
+	};
 
 	render() {
 		return (

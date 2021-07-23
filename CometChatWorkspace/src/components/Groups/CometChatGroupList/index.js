@@ -523,17 +523,17 @@ class CometChatGroupList extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatGroupList.defaultProps = {
-  lang: Translator.getDefaultLanguage(),
-  theme: theme,
-  onItemClick: () => {},
-  _parent: ""
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+	onItemClick: () => {},
+	_parent: ""
 };
 
 CometChatGroupList.propTypes = {
-  lang: PropTypes.string,
-  theme: PropTypes.object,
-  onItemClick: PropTypes.func,
-  _parent: PropTypes.string
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	onItemClick: PropTypes.func,
+	_parent: PropTypes.string
 }
 
 export { CometChatGroupList };
