@@ -1018,7 +1018,7 @@ class CometChatMessageComposer extends React.PureComponent {
 		}
 
 		//if live reactions is disabled for chat widget in dashboard
-		if (this.state.enableLiveReaction === false || this.state.messageInput.length) {
+		if (this.state.enableLiveReaction === false || this.state.messageInput.length || this.props.parentMessageId) {
 			liveReactionBtn = null;
 		}
 
@@ -1055,7 +1055,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		let createPoll = null;
 		if (this.state.createPoll) {
-			createPoll = <CometChatCreatePoll theme={this.props.theme} open={this.state.createPoll} close={this.closeCreatePoll} lang={this.props.lang} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+			createPoll = <CometChatCreatePoll close={this.closeCreatePoll} actionGenerated={this.actionHandler} />;
 		}
 
 		let editPreview = null;
@@ -1098,18 +1098,18 @@ class CometChatMessageComposer extends React.PureComponent {
 			const smartReplyData = checkMessageForExtensionsData(message, "smart-reply");
 			if (smartReplyData && smartReplyData.hasOwnProperty("error") === false) {
 				const options = [smartReplyData["reply_positive"], smartReplyData["reply_neutral"], smartReplyData["reply_negative"]];
-				smartReplyPreview = <CometChatSmartReplyPreview {...this.props} options={options} clicked={this.sendReplyMessage} close={this.clearReplyPreview} />;
+				smartReplyPreview = <CometChatSmartReplyPreview options={options} clicked={this.sendReplyMessage} close={this.clearReplyPreview} />;
 			}
 		}
 
 		let stickerViewer = null;
 		if (this.state.stickerViewer) {
-			stickerViewer = <CometChatStickerKeyboard theme={this.props.theme} lang={this.props.lang} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />;
+			stickerViewer = <CometChatStickerKeyboard actionGenerated={this.actionHandler} />;
 		}
 
 		let emojiViewer = null;
 		if (this.state.emojiViewer) {
-			emojiViewer = <CometChatEmojiKeyboard lang={this.props.lang} emojiClicked={this.emojiClicked} />;
+			emojiViewer = <CometChatEmojiKeyboard emojiClicked={this.emojiClicked} />;
 		}
 
 		return (

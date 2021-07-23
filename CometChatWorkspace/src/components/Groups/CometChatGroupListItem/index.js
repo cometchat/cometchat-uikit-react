@@ -47,6 +47,10 @@ class CometChatGroupListItem extends React.PureComponent {
 		}
 	}
 
+	clickHandler = () => {
+		this.props.clickHandler(this.props.group);
+	}
+
 	render() {
 
 		let groupTypeIcon = null;
@@ -60,14 +64,12 @@ class CometChatGroupListItem extends React.PureComponent {
 		}
 
 		return (
-			<div css={listItem(this.props, this.context)} className="list__item" onClick={() => this.props.clickHandler(this.props.group)}>
+			<div css={listItem(this.props, this.context)} className="list__item" onClick={this.clickHandler}>
 				<div css={itemThumbnailStyle()} className="list__item__thumbnail">
 					<CometChatAvatar group={this.props.group} />
 				</div>
 				<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(this.props.lang)}>
-					<div css={itemNameWrapperStyle()} className="item__details__name"
-						onMouseEnter={event => this.toggleTooltip(event, true)}
-						onMouseLeave={event => this.toggleTooltip(event, false)}>
+					<div css={itemNameWrapperStyle()} className="item__details__name" onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
 						<p css={listItemName()}>{this.props.group.name}</p>
 						<div css={listItemIcon()}>{groupTypeIcon}</div>
 					</div>
