@@ -1,17 +1,21 @@
-export const messageActionStyle = (props, context) => {
+import { CometChat } from "@cometchat-pro/chat";
 
-    const topPos = (props.name) ? { top: "-4px"} : { top: "-30px" };
-    const alignment = (props.message.messageFrom === "receiver") ? { alignSelf: "flex-start" } : { alignSelf: "flex-end" };
-    const direction = (props.message.messageFrom === "receiver") ? { 
+export const messageActionStyle = (props, context, loggedInUser) => {
+
+    const topPos = (props.message.sender?.uid !== loggedInUser?.uid && props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) ? { top: "-4px" } : { top: "-30px" };
+
+    const alignment = (props.message?.sender?.uid === loggedInUser?.uid) ? { alignSelf: "flex-end" } : { alignSelf: "flex-start" };
+    const direction = (props.message?.sender?.uid === loggedInUser?.uid) ? { 
+        "li:not(:last-of-type)": {
+            marginRight: "8px",
+        }
+
+    } : {
         flexDirection: "row-reverse",
         "li:not(:first-of-type)": {
             marginRight: "8px",
         }
 
-    } : {
-        "li:not(:last-of-type)": {
-            marginRight: "8px",
-        }
     };
 
     return {

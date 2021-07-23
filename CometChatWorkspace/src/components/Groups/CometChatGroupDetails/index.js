@@ -592,6 +592,10 @@ class CometChatGroupDetails extends React.Component {
 		this.context.setTypeAndItem(type, item);
 	};
 
+	closeGroupDetail = () => {
+		this.props.actionGenerated(enums.ACTIONS["CLOSE_GROUP_DETAIL"]);
+	}
+
 	render() {
 
 		if(this.state.loggedInUser === null) {
@@ -801,7 +805,7 @@ class CometChatGroupDetails extends React.Component {
 		return (
 			<div css={detailStyle(this.context)} className="detailpane">
 				<div css={headerStyle(this.context)} className="detailpane__header">
-					<div css={headerCloseStyle(navigateIcon, this.context)} className="header__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_GROUP_DETAIL"])}></div>
+					<div css={headerCloseStyle(navigateIcon, this.context)} className="header__close" onClick={this.closeGroupDetail}></div>
 					<h4 css={headerTitleStyle()} className="header__title">
 						{Translator.translate("DETAILS", this.context.language)}
 					</h4>

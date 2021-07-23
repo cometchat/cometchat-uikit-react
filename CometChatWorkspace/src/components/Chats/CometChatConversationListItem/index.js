@@ -25,7 +25,7 @@ import {
   itemLastMsgTimeStyle
 } from "./style";
 
-class CometChatConversationListItem extends React.Component {
+class CometChatConversationListItem extends React.PureComponent {
 	static contextType = CometChatContext;
 
 	constructor(props) {
@@ -416,7 +416,7 @@ class CometChatConversationListItem extends React.Component {
 
 		let unreadCount = null;
 		if (this.state.enableUnreadCount) {
-			unreadCount = <CometChatBadgeCount theme={this.props.theme} count={this.props.conversation.unreadMessageCount} />;
+			unreadCount = <CometChatBadgeCount count={this.props.conversation.unreadMessageCount} />;
 		}
 
 		let toolTipView = null;

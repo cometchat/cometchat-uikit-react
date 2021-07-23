@@ -17,10 +17,7 @@ const CometChatUserListItem = (props) => {
 
 	const context = useContext(CometChatContext);
 
-	let userPresence = (
-		<CometChatUserPresence
-		status={props.user.status} />
-	);
+	let userPresence = (<CometChatUserPresence status={props.user.status} />);
 
   	const toggleTooltip = (event, flag) => {
 
@@ -34,9 +31,9 @@ const CometChatUserListItem = (props) => {
 		}
 
 		if(flag) {
-		elem.setAttribute("title", elem.textContent);
+			elem.setAttribute("title", elem.textContent);
 		} else {
-		elem.removeAttribute("title");
+			elem.removeAttribute("title");
 		}
 	} 
   
@@ -58,13 +55,15 @@ const CometChatUserListItem = (props) => {
 
 // Specifies the default values for props:
 CometChatUserListItem.defaultProps = {
+	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	user: {}
+	user: {},
 };
 
 CometChatUserListItem.propTypes = {
+	lang: PropTypes.string.isRequired,
 	theme: PropTypes.object,
-	user: PropTypes.shape(CometChat.User)
-}
+	user: PropTypes.shape(CometChat.User),
+};
 
 export { CometChatUserListItem };

@@ -121,6 +121,10 @@ class CometChatStickerKeyboard extends React.PureComponent {
         });
     }
 
+    closeStickerKeyboard = () => {
+        this.props.actionGenerated(enums.ACTIONS["CLOSE_STICKER_KEYBOARD"]);
+    }
+
     render() {
 
         let messageContainer = null;
@@ -160,7 +164,7 @@ class CometChatStickerKeyboard extends React.PureComponent {
 
             stickers = (
                 <React.Fragment>
-                    <div css={stickerCloseStyle(closeIcon, this.context)} className="stickers__close" onClick={() => this.props.actionGenerated(enums.ACTIONS["CLOSE_STICKER_KEYBOARD"])}></div>
+                    <div css={stickerCloseStyle(closeIcon, this.context)} className="stickers__close" onClick={this.closeStickerKeyboard}></div>
                     <div css={stickerListStyle(this.props)} className="stickers__list">
                         {activeStickerList}
                     </div>

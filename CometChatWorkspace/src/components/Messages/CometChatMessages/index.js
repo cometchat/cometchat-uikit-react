@@ -29,6 +29,7 @@ import {CometChatContextProvider, CometChatContext} from "../../../util/CometCha
 import * as enums from "../../../util/enums.js";
 import {checkMessageForExtensionsData} from "../../../util/common";
 import {SoundManager} from "../../../util/SoundManager";
+import { CometChatEvent } from "../../../util/CometChatEvent";
 
 import {theme} from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
@@ -99,6 +100,7 @@ class CometChatMessages extends React.PureComponent {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
+		
 		if (Object.keys(this.item).length) {
 			const ifChatWindowChanged = () => {
 				let output = false;
@@ -115,7 +117,7 @@ class CometChatMessages extends React.PureComponent {
 			};
 
 			if (ifChatWindowChanged() === true) {
-				this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "", threadmessageview: false, viewdetailscreen: false });
+				this.setState({ messageList: [], scrollToBottom: true, messageToBeEdited: "", threadmessageview: false, viewdetailscreen: false, unreadMessages: [] });
 			}
 		}
 
@@ -151,7 +153,8 @@ class CometChatMessages extends React.PureComponent {
 					case enums.ACTIONS["MESSAGE_SENT"]:
 					case enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"]: {
 						this.messageSent(customMessage);
-						this.getContext().setLastMessage(customMessage[0]);
+						//this.getContext().setLastMessage(customMessage[0]);
+						CometChatEvent.triggerHandler("updateLastMessage", { ...customMessage[0] });
 						setTimeout(() => {
 							this.getContext().setDirectCallCustomMessage({}, "");
 						}, 1000);
@@ -286,7 +289,8 @@ class CometChatMessages extends React.PureComponent {
 			}
 			case enums.ACTIONS["MESSAGE_SENT"]:
 				this.messageSent(messages);
-				this.getContext().setLastMessage(messages[0]);
+				CometChatEvent.triggerHandler("updateLastMessage", { ...messages[0] });
+				//this.getContext().setLastMessage(messages[0]);
 				break;
 			case enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"]:
 				this.messageSent(messages);
@@ -308,6 +312,9 @@ class CometChatMessages extends React.PureComponent {
 			}
 			case enums.ACTIONS["MESSAGES_FETCHED"]:
 				this.prependMessages(messages);
+				break;
+			case enums.ACTIONS["MESSAGES_INITIAL_FETCH"]:
+				this.prependMessagesAndScrollToBottom(messages);
 				break;
 			case enums.ACTIONS["REFRESHING_MESSAGES"]:
 				this.refreshingMessages();
@@ -436,11 +443,11 @@ class CometChatMessages extends React.PureComponent {
 		}
 	};
 
-	infoMessageHandler = (infoCode) => {
+	infoMessageHandler = infoCode => {
 		if (typeof this.toastRef.setInfo === "function") {
 			this.toastRef?.setInfo(infoCode);
 		}
-	}
+	};
 
 	appendMemberAddedMessage = messages => {
 		//if group action messages are disabled
@@ -668,7 +675,8 @@ class CometChatMessages extends React.PureComponent {
 				let messageKey = messageList.findIndex(m => m.id === message.id);
 
 				if (messageList.length - messageKey === 1 && !message.replyCount) {
-					this.getContext().setLastMessage(deletedMessage);
+					CometChatEvent.triggerHandler("updateLastMessage", { ...deletedMessage });
+					//this.getContext().setLastMessage(deletedMessage);
 				}
 
 				this.removeMessages([deletedMessage]);
@@ -695,7 +703,8 @@ class CometChatMessages extends React.PureComponent {
 			this.updateParentThreadedMessage(newMessageObj, "edit");
 
 			if (messageList.length - messageKey === 1 && !message.replyCount) {
-				this.getContext().setLastMessage(newMessageObj);
+				CometChatEvent.triggerHandler("updateLastMessage", { ...newMessageObj });
+				//this.getContext().setLastMessage(newMessageObj);
 			}
 		}
 	};
@@ -716,7 +725,7 @@ class CometChatMessages extends React.PureComponent {
 
 	refreshingMessages = () => {
 		this.setState({ messageList: [], messageToBeEdited: "", replyPreview: null, liveReaction: false, messageToReact: null });
-		this.getContext().clearUnreadMessages();
+		CometChatEvent.triggerHandler(enums.EVENTS["CLEAR_UNREAD_MESSAGES"], {});
 	};
 
 	messageRefreshed = messages => {
@@ -725,24 +734,29 @@ class CometChatMessages extends React.PureComponent {
 	};
 
 	newMessagesArrived = newMessage => {
-		this.getContext().setUnreadMessages(newMessage);
+		let unreadMessages = [...this.state.unreadMessages];
+		unreadMessages.push(newMessage[0]);
+
+		this.setState({ unreadMessages: unreadMessages });
+
+		CometChatEvent.triggerHandler(enums.EVENTS["NEW_MESSAGES"], { unreadMessages: unreadMessages });
 	};
 
 	markMessagesAsRead = scrollToBottom => {
-		if (this.getContext().unreadMessages.length === 0) {
+		if (this.state.unreadMessages.length === 0) {
 			return false;
 		}
 
-		let unreadMessages = [...this.getContext().unreadMessages];
+		let unreadMessages = [...this.state.unreadMessages];
 		let messageList = [...this.state.messageList];
 
 		unreadMessages.forEach(unreadMessage => {
-			if (unreadMessage.getReceiverType() === CometChat.RECEIVER_TYPE.USER) {
+			if (unreadMessage.receiverType === CometChat.RECEIVER_TYPE.USER) {
 				if (this.messageListRef) {
 					messageList.push(unreadMessage);
 					this.messageListRef.markMessageAsRead(unreadMessage, CometChat.ACTION_TYPE.TYPE_USER);
 				}
-			} else if (unreadMessage.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP) {
+			} else if (unreadMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 				if (this.messageListRef) {
 					messageList.push(unreadMessage);
 					this.messageListRef.markMessageAsRead(unreadMessage, CometChat.ACTION_TYPE.TYPE_GROUP);
@@ -750,23 +764,19 @@ class CometChatMessages extends React.PureComponent {
 			}
 		});
 
-		this.getContext().clearUnreadMessages();
-		//this.props.actionGenerated("unreadMessages", []);
-
-		this.setState({ messageList: messageList, scrollToBottom: scrollToBottom });
+		this.setState({ messageList: messageList, scrollToBottom: scrollToBottom, unreadMessages: [] });
 	};
 
 	jumpToMessages = () => {
-		if (this.getContext().unreadMessages.length === 0) {
+		if (this.state.unreadMessages.length === 0) {
 			return false;
 		}
 
-		let unreadMessages = [...this.getContext().unreadMessages];
+		let unreadMessages = [...this.state.unreadMessages];
 		let messageList = [...this.state.messageList];
 		messageList = messageList.concat(unreadMessages);
 
-		this.getContext().clearUnreadMessages();
-		this.getContext().setClearedUnreadMessages(true);
+		CometChatEvent.triggerHandler(enums.EVENTS["CLEAR_UNREAD_MESSAGES"], {});
 
 		if (messageList.length > enums.CONSTANTS["MAX_MESSAGE_COUNT"]) {
 			if (this.messageListRef) {
@@ -795,6 +805,12 @@ class CometChatMessages extends React.PureComponent {
 
 			this.setState({ messageList: messagelist, scrollToBottom: false });
 		}
+	};
+
+	//messages are fetched, scroll to bottom
+	prependMessagesAndScrollToBottom = messages => {
+		const messageList = [...messages, ...this.state.messageList];
+		this.setState({ messageList: messageList, scrollToBottom: true });
 	};
 
 	//messages are fetched from backend
@@ -902,9 +918,6 @@ class CometChatMessages extends React.PureComponent {
 				ref={el => {
 					this.composerRef = el;
 				}}
-				theme={this.props.theme}
-				lang={this.state.lang}
-				widgetsettings={this.props.widgetsettings}
 				messageToBeEdited={this.state.messageToBeEdited}
 				replyPreview={this.state.replyPreview}
 				reaction={this.reactionName}
@@ -914,8 +927,8 @@ class CometChatMessages extends React.PureComponent {
 		);
 
 		let newMessageIndicator = null;
-		if (this.getContext()?.unreadMessages.length) {
-			const unreadMessageCount = this.getContext().unreadMessages.length;
+		if (this.state.unreadMessages.length) {
+			const unreadMessageCount = this.state.unreadMessages.length;
 			const messageText = unreadMessageCount > 1 ? `${unreadMessageCount} ${Translator.translate("NEW_MESSAGES", this.state.lang)}` : `${unreadMessageCount} ${Translator.translate("NEW_MESSAGE", this.state.lang)}`;
 			newMessageIndicator = (
 				<div css={messagePaneTopStyle()} className="message_pane__top">
@@ -934,8 +947,7 @@ class CometChatMessages extends React.PureComponent {
 		}
 
 		//if sending messages are disabled for chat wigdet in dashboard
-		if ((this.getContext()?.type === CometChat.ACTION_TYPE.TYPE_USER && this.state.enableSendingOneOnOneMessage === false) 
-		|| (this.getContext()?.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.state.enableSendingGroupMessage === false)) {
+		if ((this.getContext()?.type === CometChat.ACTION_TYPE.TYPE_USER && this.state.enableSendingOneOnOneMessage === false) || (this.getContext()?.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.state.enableSendingGroupMessage === false)) {
 			messageComposer = null;
 		}
 
@@ -954,17 +966,17 @@ class CometChatMessages extends React.PureComponent {
 		let incomingCallView = null;
 		let incomingDirectCallView = null;
 		if (this.props._parent.trim().length === 0) {
-			incomingCallView = <CometChatIncomingCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />;
+			incomingCallView = <CometChatIncomingCall actionGenerated={this.actionHandler} />;
 
-			incomingDirectCallView = <CometChatIncomingDirectCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />;
+			incomingDirectCallView = <CometChatIncomingDirectCall actionGenerated={this.actionHandler} />;
 		}
 
 		//don't include it when opened in chat widget
 		let outgoingDirectCallView = null;
 		let outgoingCallView = null;
 		if (Object.keys(this.props.widgetsettings).length === 0) {
-			outgoingCallView = <CometChatOutgoingCall ref={el => (this.outgoingCallRef = el)} theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />;
-			outgoingDirectCallView = <CometChatOutgoingDirectCall ref={el => (this.outgoingDirectCallRef = el)} theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />;
+			outgoingCallView = <CometChatOutgoingCall ref={el => (this.outgoingCallRef = el)} actionGenerated={this.actionHandler} />;
+			outgoingDirectCallView = <CometChatOutgoingDirectCall ref={el => (this.outgoingDirectCallRef = el)} actionGenerated={this.actionHandler} />;
 		}
 
 		let detailScreen = null;
@@ -972,13 +984,13 @@ class CometChatMessages extends React.PureComponent {
 			if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER) {
 				detailScreen = (
 					<div css={chatSecondaryStyle(this.props)} className="chat__secondary-view">
-						<CometChatUserDetails theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
+						<CometChatUserDetails actionGenerated={this.actionHandler} />
 					</div>
 				);
 			} else if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP) {
 				detailScreen = (
 					<div css={chatSecondaryStyle(this.props)} className="chat__secondary-view">
-						<CometChatGroupDetails theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
+						<CometChatGroupDetails actionGenerated={this.actionHandler} />
 					</div>
 				);
 			}
@@ -988,41 +1000,26 @@ class CometChatMessages extends React.PureComponent {
 		if (this.state.threadmessageview) {
 			threadMessageView = (
 				<div css={chatSecondaryStyle(this.props)} className="chat__secondary-view">
-					<CometChatMessageThread
-						theme={this.props.theme}
-						activeTab={this.state.activeTab}
-						threadItem={this.state.threadmessageitem}
-						threadType={this.state.threadmessagetype}
-						parentMessage={this.state.threadmessageparent}
-						loggedInUser={this.loggedInUser}
-						lang={this.state.lang}
-						widgetsettings={this.props.widgetsettings}
-						actionGenerated={this.actionHandler}
-					/>
+					<CometChatMessageThread activeTab={this.state.activeTab} threadItem={this.state.threadmessageitem} threadType={this.state.threadmessagetype} parentMessage={this.state.threadmessageparent} loggedInUser={this.loggedInUser} actionGenerated={this.actionHandler} />
 				</div>
 			);
 		}
 
 		let originalImageView = null;
 		if (this.state.viewOriginalImage) {
-			originalImageView = <CometChatImageViewer close={() => this.toggleOriginalImageView(false)} message={this.state.viewOriginalImage} lang={this.state.lang} />;
+			originalImageView = <CometChatImageViewer close={() => this.toggleOriginalImageView(false)} message={this.state.viewOriginalImage} />;
 		}
 
 		let messageComponent = (
 			<React.Fragment>
 				<div css={chatWrapperStyle(this.props, this.state)} className="main__chat" dir={Translator.getDirection(this.state.lang)}>
-					<CometChatMessageHeader sidebar={this.props.sidebar} theme={this.props.theme} lang={this.state.lang} viewdetail={this.props.viewdetail === false ? false : true} widgetsettings={this.props.widgetsettings} actionGenerated={this.actionHandler} />
+					<CometChatMessageHeader sidebar={this.props.sidebar} viewdetail={this.props.viewdetail === false ? false : true} actionGenerated={this.actionHandler} />
 					<CometChatMessageList
 						ref={el => {
 							this.messageListRef = el;
 						}}
-						theme={this.props.theme}
 						messages={this.state.messageList}
-						lang={this.state.lang}
 						scrollToBottom={this.state.scrollToBottom}
-						messageconfig={this.props.messageconfig}
-						widgetsettings={this.props.widgetsettings}
-						widgetconfig={this.props.widgetconfig}
 						actionGenerated={this.actionHandler}
 					/>
 					{liveReactionView}

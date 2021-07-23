@@ -1,7 +1,7 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core"
+import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -29,128 +29,123 @@ import {
 } from "./style";
 
 class CometChatReceiverStickerMessageBubble extends React.Component {
+	static contextType = CometChatContext;
 
-    static contextType = CometChatContext;
-    messageFrom = "receiver";
+	constructor(props) {
+		super(props);
 
-    constructor(props) {
+		this.state = {
+			isHovering: false,
+		};
+	}
 
-        super(props);
+	shouldComponentUpdate(nextProps, nextState) {
 
-        const message = Object.assign({}, props.message, { messageFrom: this.messageFrom });
-        this.state = {
-            message: message,
-            isHovering: false
-        }
-    }
+		const currentMessageStr = JSON.stringify(this.props.message);
+		const nextMessageStr = JSON.stringify(nextProps.message);
 
-    componentDidUpdate(prevProps) {
+		if (currentMessageStr !== nextMessageStr 
+        || this.state.isHovering !== nextState.isHovering) {
+			return true;
+		}
+		return false;
+	}
 
-        const previousMessageStr = JSON.stringify(prevProps.message);
-        const currentMessageStr = JSON.stringify(this.props.message);
+	handleMouseHover = () => {
+		this.setState(this.toggleHoverState);
+	};
 
-        if (previousMessageStr !== currentMessageStr) {
+	toggleHoverState = state => {
+		return {
+			isHovering: !state.isHovering,
+		};
+	};
 
-            const message = Object.assign({}, this.props.message, { messageFrom: this.messageFrom });
-            this.setState({ message: message })
-        }
-    }
+	render() {
+		let avatar = null,
+			name = null;
+		if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
+			avatar = (
+				<div css={messageThumbnailStyle()} className="message__thumbnail">
+					<CometChatAvatar user={this.props.message.sender} />
+				</div>
+			);
 
-    handleMouseHover = () => {
-        this.setState(this.toggleHoverState);
-    }
+			name = (
+				<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
+					<span css={nameStyle(this.context)} className="message__name">
+						{this.props.message.sender.name}
+					</span>
+				</div>
+			);
+		}
 
-    toggleHoverState = (state) => {
+		let stickerData = null;
+		let stickerImg = null;
+		if (this.props.message.hasOwnProperty("data") && this.props.message.data.hasOwnProperty("customData")) {
+			stickerData = this.props.message.data.customData;
 
-        return {
-            isHovering: !state.isHovering,
-        };
-    }
+			if (stickerData.hasOwnProperty("sticker_url")) {
+				const stickerName = stickerData.hasOwnProperty("sticker_name") ? stickerData.sticker_name : Translator.translate("STICKER", this.props.lang);
+				stickerImg = <img src={stickerData.sticker_url} alt={stickerName} />;
+			}
+		}
 
-    render() {
+		let messageReactions = null;
+		const reactionsData = checkMessageForExtensionsData(this.props.message, "reactions");
+		if (reactionsData) {
+			if (Object.keys(reactionsData).length) {
+				messageReactions = (
+					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
+						<CometChatMessageReactions message={this.props.message} actionGenerated={this.props.actionGenerated} />
+					</div>
+				);
+			}
+		}
 
-        let avatar = null, name = null;
-        if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
+		let toolTipView = null;
+		if (this.state.isHovering) {
+			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
+		}
 
-            avatar = (
-                <div css={messageThumbnailStyle()} className="message__thumbnail">
-                    <CometChatAvatar user={this.state.message.sender} />
-                </div>
-            );
+		return (
+			<div css={messageContainerStyle()} className="receiver__message__container message__sticker" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
+				<div css={messageWrapperStyle()} className="message__wrapper">
+					{avatar}
+					<div css={messageDetailStyle(name)} className="message__details">
+						{name}
+						{toolTipView}
+						<div css={messageImgContainerStyle()} className="message__image__container">
+							<div css={messageImgWrapperStyle(this.context)} className="message__image__wrapper">
+								{stickerImg}
+							</div>
+						</div>
 
-            name = (<div css={(nameWrapperStyle(avatar))} className="message__name__wrapper">
-                <span css={nameStyle(this.context)} className="message__name">{this.state.message.sender.name}</span>
-            </div>);
-        }
+						{messageReactions}
 
-        let stickerData = null;
-        let stickerImg = null;
-        if (this.state.message.hasOwnProperty("data") && this.state.message.data.hasOwnProperty("customData")) {
-
-            stickerData = this.state.message.data.customData;
-            
-            if (stickerData.hasOwnProperty("sticker_url")) {
-                const stickerName = (stickerData.hasOwnProperty("sticker_name")) ? stickerData.sticker_name : Translator.translate("STICKER", this.props.lang);
-                stickerImg = (<img src={stickerData.sticker_url} alt={stickerName} />);
-            }
-        }
-
-        let messageReactions = null;
-        const reactionsData = checkMessageForExtensionsData(this.state.message, "reactions");
-        if (reactionsData) {
-
-            if (Object.keys(reactionsData).length) {
-                messageReactions = (
-                    <div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-                        <CometChatMessageReactions  {...this.props} message={this.state.message} reaction={reactionsData} />
-                    </div>
-                );
-            }
-        }
-
-        let toolTipView = null;
-        if (this.state.isHovering) {
-            toolTipView = (<CometChatMessageActions {...this.props} message={this.state.message} name={name} />);
-        }
-
-        return (
-            <div 
-            css={messageContainerStyle()} 
-            className="receiver__message__container message__sticker"
-            onMouseEnter={this.handleMouseHover}
-            onMouseLeave={this.handleMouseHover}>
-                
-                <div css={messageWrapperStyle()} className="message__wrapper">
-                    {avatar}
-                    <div css={messageDetailStyle(name)} className="message__details">
-                        {name}
-                        {toolTipView}
-                        <div css={messageImgContainerStyle()} className="message__image__container">
-                            <div css={messageImgWrapperStyle(this.context)} className="message__image__wrapper">{stickerImg}</div>
-                        </div>
-
-                        {messageReactions}
-
-                        <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                            <CometChatReadReceipt {...this.props} message={this.state.message} />
-                            <CometChatThreadedMessageReplyCount {...this.props} message={this.state.message} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+						<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+							<CometChatReadReceipt message={this.props.message} />
+							<CometChatThreadedMessageReplyCount message={this.props.message} actionGenerated={this.props.actionGenerated} />
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
 }
 
 // Specifies the default values for props:
 CometChatReceiverStickerMessageBubble.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
-    theme: theme
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
+	actionGenerated: {},
 };
 
 CometChatReceiverStickerMessageBubble.propTypes = {
-    lang: PropTypes.string,
-    theme: PropTypes.object
-}
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+	actionGenerated: PropTypes.func.isRequired,
+	message: PropTypes.object.isRequired,
+};
 
 export { CometChatReceiverStickerMessageBubble };

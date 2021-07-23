@@ -122,7 +122,7 @@ export class CometChatNavBar extends React.Component {
 
 	tabChanged = tab => {
 
-		this.context.setLastMessage("");
+		//this.context.setLastMessage("");
 		this.setState({activeTab: tab});
 	};
 

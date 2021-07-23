@@ -244,7 +244,7 @@ class CometChatUserList extends React.PureComponent {
 			return (
 				<React.Fragment key={user.uid}>
 					{firstChar}
-					<CometChatUserListItem theme={this.props.theme} user={user} selectedUser={selectedUser} lang={this.state.lang} clickHandler={this.handleClick} />
+					<CometChatUserListItem user={user} selectedUser={selectedUser} clickHandler={this.handleClick} />
 				</React.Fragment>
 			);
 
