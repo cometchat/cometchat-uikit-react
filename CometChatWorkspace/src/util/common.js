@@ -125,7 +125,7 @@ export const getTimeStampForLastMessage = (timestamp, lang) => {
 
     } else {
 
-        timestamp = dateFormat(messageTimestamp, "dS mmm, yyyy");
+        timestamp = dateFormat(messageTimestamp, "dS mmm");
     }
 
     return timestamp;

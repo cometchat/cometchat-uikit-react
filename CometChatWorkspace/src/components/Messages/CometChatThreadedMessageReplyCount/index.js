@@ -62,7 +62,7 @@ const CometChatThreadedMessageReplyCount = props => {
 CometChatThreadedMessageReplyCount.defaultProps = {
 	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatThreadedMessageReplyCount.propTypes = {
