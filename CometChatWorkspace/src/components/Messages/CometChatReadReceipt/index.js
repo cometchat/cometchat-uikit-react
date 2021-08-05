@@ -126,12 +126,12 @@ class CometChatReadReceipt extends React.PureComponent {
 		const timestamp = getMessageSentTime(dateField, this.props.lang);
 
 		return (
-			<>
+			<React.Fragment>
 				<span css={msgTimestampStyle(this.context, this.props, this.loggedInUser)} className="message__timestamp">
 					{timestamp}
 				</span>
 				{receipt}
-			</>
+			</React.Fragment>
 		);
 	}
 }
