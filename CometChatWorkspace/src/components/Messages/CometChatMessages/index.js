@@ -50,7 +50,12 @@ class CometChatMessages extends React.PureComponent {
 	static contextType = CometChatContext;
 
 	constructor(props) {
+
 		super(props);
+
+		CometChat.getLoggedinUser()
+			.then(user => (this.loggedInUser = user))
+			.catch(error => this.errorHandler("SOMETHING_WRONG"));
 
 		this.state = {
 			messageList: [],
@@ -85,9 +90,7 @@ class CometChatMessages extends React.PureComponent {
 	}
 
 	componentDidMount() {
-		CometChat.getLoggedinUser()
-			.then(user => (this.loggedInUser = user))
-			.catch(error => this.errorHandler("SOMETHING_WRONG"));
+		
 
 		this.type = this.getContext().type;
 		this.item = this.getContext().item;
@@ -261,7 +264,9 @@ class CometChatMessages extends React.PureComponent {
 	};
 
 	actionHandler = (action, messages, key, group, options) => {
-		switch (action) {
+
+		switch (action) 
+		{
 			case enums.ACTIONS["CUSTOM_MESSAGE_RECEIVED"]:
 			case enums.ACTIONS["MESSAGE_RECEIVED"]:
 				{

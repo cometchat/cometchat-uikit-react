@@ -58,7 +58,7 @@ export const itemNameStyle = () => {
         fontSize: "15px",
         fontWeight: "600",
         display: "block",
-        width: "calc(100% - 75px)",
+        width: "calc(100% - 70px)",
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
@@ -83,7 +83,7 @@ export const itemLastMsgTimeStyle = (props) => {
 
     return {
         fontSize: "11px",
-        width: "75px",
+        width: "70px",
         textAlign: "right",
         color: `${props.theme.color.helpText}`,
     }

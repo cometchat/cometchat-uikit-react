@@ -49,10 +49,11 @@ class CometChatMessageList extends React.PureComponent {
 
 	static contextType = CometChatContext;
 
-	constructor(props) {
-		super(props);
+	constructor(props, context) {
+		super(props, context);
 		this.state = {
 			onItemClick: null,
+			loggedInUser: null,
 			decoratorMessage: Translator.translate("LOADING", this.props.lang),
 		};
 
@@ -61,11 +62,14 @@ class CometChatMessageList extends React.PureComponent {
 
 	componentDidMount() {
 
-		this.context
-			.getLoggedinUser()
-			.then(user => (this.loggedInUser = user))
+		CometChat.getLoggedinUser()
+			.then(user => {
+				this.setState({
+					loggedInUser: user,
+				});
+			})
 			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
-
+		
 		if (Object.keys(this.context.item).length === 0 && this.context.type.trim().length === 0) {
 			return false;
 		}
@@ -162,7 +166,7 @@ class CometChatMessageList extends React.PureComponent {
 
 				messageList.forEach(message => {
 					//if the sender of the message is not the loggedin user, mark the message as read.
-					if (message.getSender().getUid() !== this.loggedInUser.getUid() && message.hasOwnProperty("readAt") === false) {
+					if (message.getSender().getUid() !== this.state.loggedInUser?.uid && message.hasOwnProperty("readAt") === false) {
 						if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER) {
 							CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
 							this.props.actionGenerated(enums.ACTIONS["MESSAGE_READ"], message);
@@ -267,16 +271,16 @@ class CometChatMessageList extends React.PureComponent {
 
 		if (this.context.type === CometChat.RECEIVER_TYPE.GROUP && message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP && message.getReceiverId() === this.context.item.guid) {
 			updateEditedMessage(message);
-		} else if (this.context.type === CometChat.RECEIVER_TYPE.USER && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER && this.loggedInUser.uid === message.getReceiverId() && message.getSender().uid === this.context.item.uid) {
+		} else if (this.context.type === CometChat.RECEIVER_TYPE.USER && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER && this.state.loggedInUser?.uid === message.getReceiverId() && message.getSender().uid === this.context.item.uid) {
 			updateEditedMessage(message);
-		} else if (this.context.type === CometChat.RECEIVER_TYPE.USER && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER && this.loggedInUser.uid === message.getSender().uid && message.getReceiverId() === this.context.item.uid) {
+		} else if (this.context.type === CometChat.RECEIVER_TYPE.USER && message.getReceiverType() === CometChat.RECEIVER_TYPE.USER && this.state.loggedInUser?.uid === message.getSender().uid && message.getReceiverId() === this.context.item.uid) {
 			updateEditedMessage(message);
 		}
 	};
 
 	onMessageReadAndDelivered = message => {
 		//read receipts
-		if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER && message.getSender().getUid() === this.context.item.uid && message.getReceiver() === this.loggedInUser.uid) {
+		if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER && message.getSender().getUid() === this.context.item.uid && message.getReceiver() === this.state.loggedInUser?.uid) {
 			let messageList = [...this.props.messages];
 
 			if (message.getReceiptType() === "delivery") {
@@ -351,7 +355,7 @@ class CometChatMessageList extends React.PureComponent {
 			 * OR
 			 * If the message sender is logged-in user and message receiver is chat window user
 			 */
-			if ((message.getSender().uid === this.context.item.uid && message.getReceiverId() === this.loggedInUser?.uid) || (message.getSender().uid === this.loggedInUser?.uid && message.getReceiverId() === this.context.item.uid)) {
+			if ((message.getSender().uid === this.context.item.uid && message.getReceiverId() === this.state.loggedInUser?.uid) || (message.getSender().uid === this.state.loggedInUser?.uid && message.getReceiverId() === this.context.item.uid)) {
 				this.messageReceivedHandler(message, CometChat.RECEIVER_TYPE.USER);
 			}
 		}
@@ -391,7 +395,7 @@ class CometChatMessageList extends React.PureComponent {
 		if (
 			this.context.type === CometChat.RECEIVER_TYPE.GROUP &&
 			message.getReceiverType() === CometChat.RECEIVER_TYPE.GROUP &&
-			this.loggedInUser.uid === message.getSender().uid &&
+			this.state.loggedInUser?.uid === message.getSender().uid &&
 			message.getReceiverId() === this.context.item.guid &&
 			(message.type === enums.CUSTOM_TYPE_POLL || message.type === enums.CUSTOM_TYPE_DOCUMENT || message.type === enums.CUSTOM_TYPE_WHITEBOARD)
 		) {
@@ -404,7 +408,7 @@ class CometChatMessageList extends React.PureComponent {
 		} else if (
 			this.context.type === CometChat.RECEIVER_TYPE.USER &&
 			message.getReceiverType() === CometChat.RECEIVER_TYPE.USER &&
-			this.loggedInUser.uid === message.getSender().uid &&
+			this.state.loggedInUser?.uid === message.getSender().uid &&
 			message.getReceiverId() === this.context.item.uid &&
 			(message.type === enums.CUSTOM_TYPE_POLL || message.type === enums.CUSTOM_TYPE_DOCUMENT || message.type === enums.CUSTOM_TYPE_WHITEBOARD)
 		) {
@@ -603,14 +607,14 @@ class CometChatMessageList extends React.PureComponent {
 				component = this.getActionMessageComponent(message, key);
 				break;
 			case CometChat.CATEGORY_MESSAGE:
-				if (this.loggedInUser?.uid === message.sender?.uid) {
+				if (this.state.loggedInUser?.uid === message.sender?.uid) {
 					component = this.getSenderMessageComponent(message, key);
 				} else {
 					component = this.getReceiverMessageComponent(message, key);
 				}
 				break;
 			case CometChat.CATEGORY_CUSTOM:
-				if (this.loggedInUser?.uid === message.sender?.uid) {
+				if (this.state.loggedInUser?.uid === message.sender?.uid) {
 					component = this.getSenderCustomMessageComponent(message, key);
 				} else {
 					component = this.getReceiverCustomMessageComponent(message, key);

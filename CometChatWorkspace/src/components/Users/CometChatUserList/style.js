@@ -53,7 +53,7 @@ export const contactHeaderCloseStyle = (img, theme) => {
 		backgroundColor: `${theme.secondaryTextColor}`,
 		height: "24px",
 		width: "33%",
-		[`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
+		[`@media ${mq[1]}, ${mq[2]}`]: {
 			display: "block!important",
 		},
 	};

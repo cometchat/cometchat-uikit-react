@@ -97,7 +97,7 @@ class CometChatUserDetails extends React.Component {
 	enableUserPresence = () => {
 		this.context.FeatureRestriction.isUserPresenceEnabled()
 			.then(response => {
-				if (response !== this.state.enableUserPresence) {
+				if (response !== this.state.enableUserPresence && this._isMounted) {
 					this.setState({ enableUserPresence: response });
 				}
 			})
