@@ -98,9 +98,9 @@ class CometChatMessageHeader extends React.Component {
 
 	componentDidUpdate(prevProps, prevState) {
 
-		if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && (this.item !== this.context.item || prevProps.lang !== this.props.lang)) {
+		if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && (this.item !== this.context.item)) {
 			this.setStatusForUser();
-		} else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && (this.item !== this.context.item || prevProps.lang !== this.props.lang)) {
+		} else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && (this.item !== this.context.item)) {
 			this.setStatusForGroup();
 		}
 
@@ -131,18 +131,18 @@ class CometChatMessageHeader extends React.Component {
 			const lastActive = this.context.item.lastActiveAt * 1000;
 			const messageDate = dateFormat(lastActive, "dS mmm yyyy, h:MM TT");
 
-			status = `${Translator.translate("LAST_ACTIVE_AT", this.props.lang)}: ${messageDate}`;
+			status = `${Translator.translate("LAST_ACTIVE_AT", this.context.language)}: ${messageDate}`;
 		} else if (this.context.item.status === CometChat.USER_STATUS.OFFLINE) {
-			status = Translator.translate("OFFLINE", this.props.lang);
+			status = Translator.translate("OFFLINE", this.context.language);
 		} else if (this.context.item.status === CometChat.USER_STATUS.ONLINE) {
-			status = Translator.translate("ONLINE", this.props.lang);
+			status = Translator.translate("ONLINE", this.context.language);
 		}
 		
 		this.setState({status: status, presence: presence});
 	};
 
 	setStatusForGroup = () => {
-		let membersText = Translator.translate("MEMBERS", this.props.lang);
+		let membersText = Translator.translate("MEMBERS", this.context.language);
 		const status = `${this.context.item.membersCount} ${membersText}`;
 		this.setState({status: status});
 	};
@@ -165,9 +165,9 @@ class CometChatMessageHeader extends React.Component {
 
 					let status = "";
 					if (item.status === CometChat.USER_STATUS.OFFLINE) {
-						status = Translator.translate("OFFLINE", this.props.lang);
+						status = Translator.translate("OFFLINE", this.context.language);
 					} else if (item.status === CometChat.USER_STATUS.ONLINE) {
-						status = Translator.translate("ONLINE", this.props.lang);
+						status = Translator.translate("ONLINE", this.context.language);
 					}
 					this.setState({status: status, presence: item.status});
 				}
@@ -178,21 +178,21 @@ class CometChatMessageHeader extends React.Component {
 			case enums.GROUP_MEMBER_LEFT:
 				if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.item.guid === item.guid && this.loggedInUser?.uid !== groupUser?.uid) {
 					let membersCount = parseInt(item.membersCount);
-					const status = `${membersCount} ${Translator.translate("MEMBERS", this.props.lang)}`;
+					const status = `${membersCount} ${Translator.translate("MEMBERS", this.context.language)}`;
 					this.setState({status: status});
 				}
 				break;
 			case enums.GROUP_MEMBER_JOINED:
 				if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.item.guid === item.guid) {
 					let membersCount = parseInt(item.membersCount);
-					const status = `${membersCount} ${Translator.translate("MEMBERS", this.props.lang)}`;
+					const status = `${membersCount} ${Translator.translate("MEMBERS", this.context.language)}`;
 					this.setState({status: status});
 				}
 				break;
 			case enums.GROUP_MEMBER_ADDED:
 				if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.item.guid === item.guid) {
 					let membersCount = parseInt(item.membersCount);
-					const status = `${membersCount} ${Translator.translate("MEMBERS", this.props.lang)}`;
+					const status = `${membersCount} ${Translator.translate("MEMBERS", this.context.language)}`;
 					this.setState({status: status});
 				}
 				break;
@@ -225,10 +225,10 @@ class CometChatMessageHeader extends React.Component {
 		};
 
 		if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.type === item.receiverType && this.context.item.guid === item.receiverId) {
-			const typingText = `${item.sender.name} ${Translator.translate("IS_TYPING", this.props.lang)}`;
+			const typingText = `${item.sender.name} ${Translator.translate("IS_TYPING", this.context.language)}`;
 			showTyping(typingText);
 		} else if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.type === item.receiverType && this.context.item.uid === item.sender.uid) {
-			const typingText = `${Translator.translate("TYPING", this.props.lang)}`;
+			const typingText = `${Translator.translate("TYPING", this.context.language)}`;
 			showTyping(typingText);
 		}
 	};
@@ -257,7 +257,7 @@ class CometChatMessageHeader extends React.Component {
 		} else if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.type === item.receiverType && this.context.item.uid === item.sender.uid) {
 
 			if (this.state.presence === CometChat.USER_STATUS.ONLINE) {
-				this.setState({status: Translator.translate("ONLINE", this.props.lang), presence: CometChat.USER_STATUS.ONLINE});
+				this.setState({status: Translator.translate("ONLINE", this.context.language), presence: CometChat.USER_STATUS.ONLINE});
 			} else {
 				this.setStatusForUser();
 			}
@@ -576,7 +576,7 @@ class CometChatMessageHeader extends React.Component {
 			</span>
 		);
 
-		const audioCallText = Translator.translate("AUDIO_CALL", this.props.lang);
+		const audioCallText = Translator.translate("AUDIO_CALL", this.context.language);
 		let audioCallBtn = (
 			<div className={audioCallClassName} css={chatOptionStyle(audioCallIcon, this.context, 0)} title={audioCallText} onClick={this.initiateAudioCall}>
 				<i></i>
@@ -584,7 +584,7 @@ class CometChatMessageHeader extends React.Component {
 		);
 
 		if (this.context.checkIfCallIsOngoing()) {
-			const audioCallText = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.props.lang);
+			const audioCallText = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.context.language);
 			audioCallBtn = (
 				<div className={audioCallClassName} css={chatOptionStyle(audioCallIcon, this.context, 1)} title={audioCallText}>
 					<i></i>
@@ -592,7 +592,7 @@ class CometChatMessageHeader extends React.Component {
 			);
 		}
 
-		const videoCallText = Translator.translate("VIDEO_CALL", this.props.lang);
+		const videoCallText = Translator.translate("VIDEO_CALL", this.context.language);
 		let videoCallBtn = (
 			<div className={videoCallClassName} css={chatOptionStyle(videoCallIcon, this.context, 0)} title={videoCallText} onClick={this.initiateVideoCall}>
 				<i></i>
@@ -600,7 +600,7 @@ class CometChatMessageHeader extends React.Component {
 		);
 
 		if (this.context.checkIfCallIsOngoing()) {
-			const videoCallText = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.props.lang);
+			const videoCallText = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.context.language);
 			videoCallBtn = (
 				<div className={videoCallClassName} css={chatOptionStyle(videoCallIcon, this.context, 1)} title={videoCallText}>
 					<i></i>
@@ -608,7 +608,7 @@ class CometChatMessageHeader extends React.Component {
 			);
 		}
 
-		const viewDetailText = Translator.translate("VIEW_DETAIL", this.props.lang);
+		const viewDetailText = Translator.translate("VIEW_DETAIL", this.context.language);
 		let viewDetailBtn = (
 			<div className={viewDetailClassName} css={chatOptionStyle(detailPaneIcon, this.context, 0)} title={viewDetailText} onClick={this.viewDetail}>
 				<i></i>
@@ -701,14 +701,12 @@ class CometChatMessageHeader extends React.Component {
 
 // Specifies the default values for props:
 CometChatMessageHeader.defaultProps = {
-  lang: Translator.getDefaultLanguage(),
   theme: theme,
   item: {},
   type: ""
 };
 
 CometChatMessageHeader.propTypes = {
-  lang: PropTypes.string,
   theme: PropTypes.object,
   item: PropTypes.object,
   type: PropTypes.string

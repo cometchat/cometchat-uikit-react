@@ -43,7 +43,7 @@ const CometChatUserListItem = (props) => {
 				<CometChatAvatar user={props.user} />
 				{userPresence}
 			</div>
-			<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(props.lang)}>
+			<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(context.language)}>
 				<div css={itemNameStyle()} className="item__details__name"  
 				onMouseEnter={event => toggleTooltip(event, true)} 
 				onMouseLeave={event => toggleTooltip(event, false)}>{props.user.name}</div>
@@ -55,13 +55,11 @@ const CometChatUserListItem = (props) => {
 
 // Specifies the default values for props:
 CometChatUserListItem.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 	user: {},
 };
 
 CometChatUserListItem.propTypes = {
-	lang: PropTypes.string.isRequired,
 	theme: PropTypes.object,
 	user: PropTypes.shape(CometChat.User),
 };

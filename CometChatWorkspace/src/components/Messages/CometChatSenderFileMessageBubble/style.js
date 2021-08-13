@@ -66,7 +66,8 @@ export const messageInfoWrapperStyle = () => {
         alignSelf: "flex-end",
         display: "flex",
         justifyContent: "flex-end",
-        alignItems: "center"
+        alignItems: "center",
+	height: "25px",
     }
 }
 
@@ -88,5 +89,6 @@ export const iconStyle = (img, context) => {
 		display: "inline-block",
 		mask: `url(${img}) center center no-repeat`,
 		backgroundColor: `${context.theme.color.white}`,
+		flexShrink: "0"
 	};
 };

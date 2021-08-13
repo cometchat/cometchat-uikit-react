@@ -139,12 +139,12 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 
 		this.pollId = pollExtensionData.id;
 		const total = pollExtensionData.results.total;
-		let totalText = Translator.translate("NO_VOTE", this.props.lang);
+		let totalText = Translator.translate("NO_VOTE", this.context.language);
 
 		if (total === 1) {
-			totalText = `${total} ${Translator.translate("VOTE", this.props.lang)}`;
+			totalText = `${total} ${Translator.translate("VOTE", this.context.language)}`;
 		} else if (total > 1) {
-			totalText = `${total} ${Translator.translate("VOTES", this.props.lang)}`;
+			totalText = `${total} ${Translator.translate("VOTES", this.context.language)}`;
 		}
 
 		for (const option in pollExtensionData.options) {
@@ -228,13 +228,11 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatReceiverPollMessageBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverPollMessageBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

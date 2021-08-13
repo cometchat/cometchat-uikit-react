@@ -649,9 +649,7 @@ class CometChatGroupDetails extends React.Component {
 			</div>
 		);
 
-		let sharedmediaView = (
-			<CometChatSharedMediaView containerHeight="225px" />
-		);
+		let sharedmediaView = <CometChatSharedMediaView containerHeight="225px" lang={this.context.language} />;
 
 		if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
 			//if viewing group membersfeature is disabled
@@ -822,7 +820,7 @@ class CometChatGroupDetails extends React.Component {
 				{showDeleteConfirmDialog}
 				{showLeaveGroupConfirmDialog}
 				{showTransferOwnershipConfirmDialog}
-				<CometChatToastNotification ref={el => (this.toastRef = el)} />
+				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} />
 			</div>
 		);
 	}
@@ -830,12 +828,10 @@ class CometChatGroupDetails extends React.Component {
 
 // Specifies the default values for props:
 CometChatGroupDetails.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
     theme: theme
 };
 
 CometChatGroupDetails.propTypes = {
-    lang: PropTypes.string,
     theme: PropTypes.object
 }
 

@@ -30,25 +30,25 @@ class CometChatActionMessageBubble extends React.Component {
 
 		switch (call.status) {
 			case CometChat.CALL_STATUS.INITIATED: {
-				actionMessage = Translator.translate("CALL_INITIATED", this.props.lang);
+				actionMessage = Translator.translate("CALL_INITIATED", this.context.language);
 				if (call.type === CometChat.CALL_TYPE.AUDIO) {
 					if (call.receiverType === CometChat.RECEIVER_TYPE.USER) {
-						actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("OUTGOING_AUDIO_CALL", this.props.lang) : Translator.translate("INCOMING_AUDIO_CALL", this.props.lang);
+						actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("OUTGOING_AUDIO_CALL", this.context.language) : Translator.translate("INCOMING_AUDIO_CALL", this.context.language);
 					} else if (call.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 						if (call.action === CometChat.CALL_STATUS.INITIATED) {
-							actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("OUTGOING_AUDIO_CALL", this.props.lang) : Translator.translate("INCOMING_AUDIO_CALL", this.props.lang);
+							actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("OUTGOING_AUDIO_CALL", this.context.language) : Translator.translate("INCOMING_AUDIO_CALL", this.context.language);
 						} else if (call.action === CometChat.CALL_STATUS.REJECTED) {
-							actionMessage = call.sender.uid === this.loggedInUser?.uid ? Translator.translate("CALL_REJECTED", this.props.lang) : `${call.sender.name} ${Translator.translate("REJECTED_CALL", this.props.lang)}`;
+							actionMessage = call.sender.uid === this.loggedInUser?.uid ? Translator.translate("CALL_REJECTED", this.context.language) : `${call.sender.name} ${Translator.translate("REJECTED_CALL", this.context.language)}`;
 						}
 					}
 				} else if (call.type === CometChat.CALL_TYPE.VIDEO) {
 					if (call.receiverType === CometChat.RECEIVER_TYPE.USER) {
-						actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("OUTGOING_VIDEO_CALL", this.props.lang) : Translator.translate("INCOMING_VIDEO_CALL", this.props.lang);
+						actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("OUTGOING_VIDEO_CALL", this.context.language) : Translator.translate("INCOMING_VIDEO_CALL", this.context.language);
 					} else if (call.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 						if (call.action === CometChat.CALL_STATUS.INITIATED) {
-							actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("OUTGOING_VIDEO_CALL", this.props.lang) : Translator.translate("INCOMING_VIDEO_CALL", this.props.lang);
+							actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("OUTGOING_VIDEO_CALL", this.context.language) : Translator.translate("INCOMING_VIDEO_CALL", this.context.language);
 						} else if (call.action === CometChat.CALL_STATUS.REJECTED) {
-							actionMessage = call.sender.uid === this.loggedInUser?.uid ? Translator.translate("CALL_REJECTED", this.props.lang) : `${call.sender.name} ${Translator.translate("REJECTED_CALL", this.props.lang)}`;
+							actionMessage = call.sender.uid === this.loggedInUser?.uid ? Translator.translate("CALL_REJECTED", this.context.language) : `${call.sender.name} ${Translator.translate("REJECTED_CALL", this.context.language)}`;
 						}
 					}
 				}
@@ -56,43 +56,43 @@ class CometChatActionMessageBubble extends React.Component {
 			}
 			case CometChat.CALL_STATUS.ONGOING: {
 				if (call.receiverType === CometChat.RECEIVER_TYPE.USER) {
-					actionMessage = Translator.translate("CALL_ACCEPTED", this.props.lang);
+					actionMessage = Translator.translate("CALL_ACCEPTED", this.context.language);
 				} else if (call.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 					if (call.action === CometChat.CALL_STATUS.ONGOING) {
-						actionMessage = call.sender.uid === this.loggedInUser?.uid ? Translator.translate("CALL_ACCEPTED", this.props.lang) : `${call.sender.name} ${Translator.translate("JOINED", this.props.lang)}`;
+						actionMessage = call.sender.uid === this.loggedInUser?.uid ? Translator.translate("CALL_ACCEPTED", this.context.language) : `${call.sender.name} ${Translator.translate("JOINED", this.context.language)}`;
 					} else if (call.action === CometChat.CALL_STATUS.REJECTED) {
-						actionMessage = call.sender.uid === this.loggedInUser?.uid ? Translator.translate("CALL_REJECTED", this.props.lang) : `${call.sender.name} ${Translator.translate("REJECTED_CALL", this.props.lang)}`;
+						actionMessage = call.sender.uid === this.loggedInUser?.uid ? Translator.translate("CALL_REJECTED", this.context.language) : `${call.sender.name} ${Translator.translate("REJECTED_CALL", this.context.language)}`;
 					} else if (call.action === "left") {
 						if (call.sender.uid === this.loggedInUser?.uid) {
-							actionMessage = `${Translator.translate("YOU", this.props.lang)} ${Translator.translate("LEFT_THE_CALL", this.props.lang)}`;
+							actionMessage = `${Translator.translate("YOU", this.context.language)} ${Translator.translate("LEFT_THE_CALL", this.context.language)}`;
 						} else {
-							actionMessage = `${call.sender.name} ${Translator.translate("LEFT_THE_CALL", this.props.lang)}`;
+							actionMessage = `${call.sender.name} ${Translator.translate("LEFT_THE_CALL", this.context.language)}`;
 						}
 					}
 				}
 				break;
 			}
 			case CometChat.CALL_STATUS.UNANSWERED: {
-				actionMessage = Translator.translate("CALL_UNANSWERED", this.props.lang);
+				actionMessage = Translator.translate("CALL_UNANSWERED", this.context.language);
 
 				if (call.type === CometChat.CALL_TYPE.AUDIO && (call.receiverType === CometChat.RECEIVER_TYPE.USER || call.receiverType === CometChat.RECEIVER_TYPE.GROUP)) {
-					actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("UNANSWERED_AUDIO_CALL", this.props.lang) : Translator.translate("MISSED_AUDIO_CALL", this.props.lang);
+					actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("UNANSWERED_AUDIO_CALL", this.context.language) : Translator.translate("MISSED_AUDIO_CALL", this.context.language);
 				} else if (call.type === CometChat.CALL_TYPE.VIDEO && (call.receiverType === CometChat.RECEIVER_TYPE.USER || call.receiverType === CometChat.RECEIVER_TYPE.GROUP)) {
-					actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("UNANSWERED_VIDEO_CALL", this.props.lang) : Translator.translate("MISSED_VIDEO_CALL", this.props.lang);
+					actionMessage = call.callInitiator.uid === this.loggedInUser?.uid ? Translator.translate("UNANSWERED_VIDEO_CALL", this.context.language) : Translator.translate("MISSED_VIDEO_CALL", this.context.language);
 				}
 				break;
 			}
 			case CometChat.CALL_STATUS.REJECTED:
-				actionMessage = Translator.translate("CALL_REJECTED", this.props.lang);
+				actionMessage = Translator.translate("CALL_REJECTED", this.context.language);
 				break;
 			case CometChat.CALL_STATUS.ENDED:
-				actionMessage = Translator.translate("CALL_ENDED", this.props.lang);
+				actionMessage = Translator.translate("CALL_ENDED", this.context.language);
 				break;
 			case CometChat.CALL_STATUS.CANCELLED:
-				actionMessage = Translator.translate("CALL_CANCELLED", this.props.lang);
+				actionMessage = Translator.translate("CALL_CANCELLED", this.context.language);
 				break;
 			case CometChat.CALL_STATUS.BUSY:
-				actionMessage = Translator.translate("CALL_BUSY", this.props.lang);
+				actionMessage = Translator.translate("CALL_BUSY", this.context.language);
 				break;
 			default:
 				break;
@@ -109,26 +109,26 @@ class CometChatActionMessageBubble extends React.Component {
 
 		switch (message.action) {
 			case CometChat.ACTION_TYPE.MEMBER_JOINED:
-				actionMessage = `${byUser} ${Translator.translate("JOINED", this.props.lang)}`;
+				actionMessage = `${byUser} ${Translator.translate("JOINED", this.context.language)}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_LEFT:
-				actionMessage = `${byUser} ${Translator.translate("LEFT", this.props.lang)}`;
+				actionMessage = `${byUser} ${Translator.translate("LEFT", this.context.language)}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_ADDED:
-				actionMessage = `${byUser} ${Translator.translate("ADDED", this.props.lang)} ${onUser}`;
+				actionMessage = `${byUser} ${Translator.translate("ADDED", this.context.language)} ${onUser}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_KICKED:
-				actionMessage = `${byUser} ${Translator.translate("KICKED", this.props.lang)} ${onUser}`;
+				actionMessage = `${byUser} ${Translator.translate("KICKED", this.context.language)} ${onUser}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_BANNED:
-				actionMessage = `${byUser} ${Translator.translate("BANNED", this.props.lang)} ${onUser}`;
+				actionMessage = `${byUser} ${Translator.translate("BANNED", this.context.language)} ${onUser}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_UNBANNED:
-				actionMessage = `${byUser} ${Translator.translate("UNBANNED", this.props.lang)} ${onUser}`;
+				actionMessage = `${byUser} ${Translator.translate("UNBANNED", this.context.language)} ${onUser}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_SCOPE_CHANGED: {
 				const newScope = message?.newScope;
-				actionMessage = `${byUser} ${Translator.translate("MADE", this.props.lang)} ${onUser} ${Translator.translate(newScope, this.props.lang)}`;
+				actionMessage = `${byUser} ${Translator.translate("MADE", this.context.language)} ${onUser} ${Translator.translate(newScope, this.context.language)}`;
 				break;
 			}
 			default:
@@ -162,12 +162,10 @@ class CometChatActionMessageBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatActionMessageBubble.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
     theme: theme,
 };
 
 CometChatActionMessageBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	message: PropTypes.object.isRequired,
 };

@@ -30,7 +30,6 @@ class CometChatReadReceipt extends React.PureComponent {
 		};
 
 		this.context.getLoggedinUser().then(user => {
-			//console.log("constructor this.loggedInUser", this.loggedInUser);
 			this.loggedInUser = { ...user };
 		});
 	}
@@ -121,9 +120,9 @@ class CometChatReadReceipt extends React.PureComponent {
 			ticks = null;
 		}
 
-		const receipt = ticks ? <i css={iconStyle(ticks, color)} title={Translator.translate(receiptText, this.props.lang)}></i> : null;
+		const receipt = ticks ? <i css={iconStyle(ticks, color)} title={Translator.translate(receiptText, this.context.language)}></i> : null;
 
-		const timestamp = getMessageSentTime(dateField, this.props.lang);
+		const timestamp = getMessageSentTime(dateField, this.context.language);
 
 		return (
 			<React.Fragment>
@@ -138,12 +137,10 @@ class CometChatReadReceipt extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatReadReceipt.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 };
 
 CometChatReadReceipt.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	message: PropTypes.object.isRequired,
 };

@@ -88,7 +88,7 @@ class CometChatSenderDocumentBubble extends React.Component {
 			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
 		}
 
-		const documentTitle = Translator.translate("CREATED_DOCUMENT", this.props.lang);
+		const documentTitle = Translator.translate("CREATED_DOCUMENT", this.context.language);
 		return (
 			<div css={messageContainerStyle()} className="sender__message__container message__document" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
 				{toolTipView}
@@ -96,14 +96,14 @@ class CometChatSenderDocumentBubble extends React.Component {
 				<div css={messageWrapperStyle()} className="message__wrapper">
 					<div css={messageTxtWrapperStyle(this.context)} className="message__document__wrapper">
 						<div css={messageTxtContainerStyle()} className="message__document__container">
-							<i css={iconStyle(documentIcon, this.context)} title={Translator.translate("COLLABORATIVE_DOCUMENT", this.props.lang)}></i>
+							<i css={iconStyle(documentIcon, this.context)} title={Translator.translate("COLLABORATIVE_DOCUMENT", this.context.language)}></i>
 							<p css={messageTxtStyle()} className="document__title">
 								{documentTitle}
 							</p>
 						</div>
 						<ul css={messageBtnStyle(this.context)} className="document__button">
 							<li onClick={this.launchCollaborativeDocument}>
-								<p>{Translator.translate("LAUNCH", this.props.lang)}</p>
+								<p>{Translator.translate("LAUNCH", this.context.language)}</p>
 							</li>
 						</ul>
 					</div>
@@ -122,13 +122,11 @@ class CometChatSenderDocumentBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatSenderDocumentBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatSenderDocumentBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

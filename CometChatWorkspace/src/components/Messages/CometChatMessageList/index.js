@@ -54,7 +54,7 @@ class CometChatMessageList extends React.PureComponent {
 		this.state = {
 			onItemClick: null,
 			loggedInUser: null,
-			decoratorMessage: Translator.translate("LOADING", this.props.lang),
+			decoratorMessage: Translator.translate("LOADING", context.language),
 		};
 
 		this.messagesEnd = React.createRef();
@@ -106,7 +106,7 @@ class CometChatMessageList extends React.PureComponent {
 
 		if (ifChatWindowChanged() === true) {
 			this.messageCount = 0;
-			this.setState({ decoratorMessage: Translator.translate("LOADING", this.props.lang) });
+			this.setState({ decoratorMessage: Translator.translate("LOADING", this.context.language) });
 
 			this.MessageListManager?.removeListeners();
 
@@ -141,7 +141,7 @@ class CometChatMessageList extends React.PureComponent {
 	}
 
 	componentWillUnmount() {
-		this.MessageListManager.removeListeners();
+		this.MessageListManager?.removeListeners();
 		this.MessageListManager = null;
 	}
 
@@ -156,7 +156,7 @@ class CometChatMessageList extends React.PureComponent {
 		this.fetchMessages()
 			.then(messageList => {
 				if (messageList.length === 0) {
-					this.setState({ decoratorMessage: Translator.translate("NO_MESSAGES_FOUND", this.props.lang) });
+					this.setState({ decoratorMessage: Translator.translate("NO_MESSAGES_FOUND", this.context.language) });
 				} else {
 					this.setState({ decoratorMessage: "" });
 				}
@@ -186,7 +186,7 @@ class CometChatMessageList extends React.PureComponent {
 			})
 			.catch(error => {
 				if (this.props.messages.length === 0) {
-					this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
+					this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.context.language) });
 				}
 
 				if (error && error.hasOwnProperty("code") && error.code === "ERR_GUID_NOT_FOUND") {
@@ -318,7 +318,7 @@ class CometChatMessageList extends React.PureComponent {
 		}
 
 		this.props.actionGenerated(enums.ACTIONS["REFRESHING_MESSAGES"], []);
-		this.setState({ decoratorMessage: Translator.translate("LOADING", this.props.lang) });
+		this.setState({ decoratorMessage: Translator.translate("LOADING", this.context.language) });
 		this.MessageListManager.removeListeners();
 
 		if (this.props.parentMessageId) {
@@ -477,8 +477,8 @@ class CometChatMessageList extends React.PureComponent {
 	};
 
 	getSenderMessageComponent = message => {
-		let component;
 
+		let component;
 		if (message.hasOwnProperty("deletedAt")) {
 			component = <CometChatDeleteMessageBubble key={message.id} message={message} />;
 		} else {
@@ -507,6 +507,7 @@ class CometChatMessageList extends React.PureComponent {
 	};
 
 	getReceiverMessageComponent = message => {
+
 		let component;
 
 		if (message.hasOwnProperty("deletedAt")) {
@@ -604,20 +605,20 @@ class CometChatMessageList extends React.PureComponent {
 		switch (message.category) {
 			case CometChat.CATEGORY_ACTION:
 			case CometChat.CATEGORY_CALL:
-				component = this.getActionMessageComponent(message, key);
+				component = this.getActionMessageComponent(message);
 				break;
 			case CometChat.CATEGORY_MESSAGE:
 				if (this.state.loggedInUser?.uid === message.sender?.uid) {
-					component = this.getSenderMessageComponent(message, key);
+					component = this.getSenderMessageComponent(message);
 				} else {
-					component = this.getReceiverMessageComponent(message, key);
+					component = this.getReceiverMessageComponent(message);
 				}
 				break;
 			case CometChat.CATEGORY_CUSTOM:
 				if (this.state.loggedInUser?.uid === message.sender?.uid) {
-					component = this.getSenderCustomMessageComponent(message, key);
+					component = this.getSenderCustomMessageComponent(message);
 				} else {
-					component = this.getReceiverCustomMessageComponent(message, key);
+					component = this.getReceiverCustomMessageComponent(message);
 				}
 				break;
 			default:
@@ -651,7 +652,7 @@ class CometChatMessageList extends React.PureComponent {
 			if (cDate !== messageSentDate) {
 				dateSeparator = (
 					<div css={messageDateContainerStyle()} className="message__date">
-						<span css={messageDateStyle(this.context)}>{getMessageDate(dateField, this.props.lang)}</span>
+						<span css={messageDateStyle(this.context)}>{getMessageDate(dateField, this.context.language)}</span>
 					</div>
 				);
 			}
@@ -684,12 +685,10 @@ class CometChatMessageList extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatMessageList.defaultProps = {
-  lang: Translator.getDefaultLanguage(),
   theme: theme
 };
 
 CometChatMessageList.propTypes = {
-  lang: PropTypes.string,
   theme: PropTypes.object
 }
 

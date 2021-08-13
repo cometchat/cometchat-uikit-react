@@ -31,7 +31,6 @@ class CometChatGroupListWithMessages extends React.Component {
 
 		this.state = {
 			sidebarview: false,
-			lang: props.lang,
 		}
 
 		this.groupListRef = React.createRef();
@@ -41,13 +40,6 @@ class CometChatGroupListWithMessages extends React.Component {
 
 		if (this.props.chatWithGroup.length === 0) {
 			this.toggleSideBar();
-		}
-	}
-
-	componentDidUpdate(prevProps) {
-
-		if (prevProps.lang !== this.props.lang) {
-			this.setState({ lang: this.props.lang });
 		}
 	}
 
@@ -120,28 +112,21 @@ class CometChatGroupListWithMessages extends React.Component {
 		let messageScreen = (
 			<CometChatMessages
 			theme={this.props.theme}
-			lang={this.state.lang}
+			lang={this.props.lang}
 			_parent="groups"
 			actionGenerated={this.actionHandler} />
 		);
 
 		return (
-			<CometChatContextProvider ref={el => this.contextProviderRef = el} group={this.props.chatWithGroup}>
+			<CometChatContextProvider ref={el => (this.contextProviderRef = el)} group={this.props.chatWithGroup} language={this.props.lang}>
 				<div css={groupScreenStyle(this.props)} className="cometchat cometchat--groups">
 					<div css={groupScreenSidebarStyle(this.state, this.props)} className="groups__sidebar">
-						<CometChatGroupList 
-						ref={el => this.groupListRef = el}
-						_parent="glwm"
-						theme={this.props.theme}
-						lang={this.state.lang}
-						onItemClick={this.itemClicked}
-						actionGenerated={this.actionHandler} />
+						<CometChatGroupList ref={el => (this.groupListRef = el)} _parent="glwm" theme={this.props.theme} lang={this.props.lang} onItemClick={this.itemClicked} actionGenerated={this.actionHandler} />
 					</div>
-					<div css={groupScreenMainStyle(this.state, this.props)} className="groups__main">{messageScreen}</div>
-					<CometChatIncomingDirectCall 
-					theme={this.props.theme} 
-					lang={this.state.lang} 
-					actionGenerated={this.actionHandler} />
+					<div css={groupScreenMainStyle(this.state, this.props)} className="groups__main">
+						{messageScreen}
+					</div>
+					<CometChatIncomingDirectCall theme={this.props.theme} lang={this.props.lang} actionGenerated={this.actionHandler} />
 				</div>
 			</CometChatContextProvider>
 		);

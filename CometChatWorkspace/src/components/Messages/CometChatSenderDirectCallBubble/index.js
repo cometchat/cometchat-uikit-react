@@ -80,13 +80,13 @@ class CometChatSenderDirectCallBubble extends React.Component {
 		}
 
 		let callMessage = null;
-		const joinCallMessage = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.props.lang);
+		const joinCallMessage = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.context.language);
 
 		if (this.context.checkIfDirectCallIsOngoing() === enums.CONSTANTS.CALLS["ONGOING_CALL_SAME_GROUP"]) {
 			//ongoing call in same group
 			callMessage = (
 				<li className="directcall__row" title={joinCallMessage}>
-					<p className="directcall__text">{Translator.translate("JOIN", this.props.lang)}</p>
+					<p className="directcall__text">{Translator.translate("JOIN", this.context.language)}</p>
 				</li>
 			);
 		} else if (this.context.checkIfDirectCallIsOngoing() === enums.CONSTANTS.CALLS["ONGOING_CALL_DIFF_GROUP"]) {
@@ -94,7 +94,7 @@ class CometChatSenderDirectCallBubble extends React.Component {
 
 			callMessage = (
 				<li className="directcall__row" title={joinCallMessage}>
-					<p className="directcall__text">{Translator.translate("JOIN", this.props.lang)}</p>
+					<p className="directcall__text">{Translator.translate("JOIN", this.context.language)}</p>
 				</li>
 			);
 		} else if (this.context.checkIfCallIsOngoing()) {
@@ -102,18 +102,18 @@ class CometChatSenderDirectCallBubble extends React.Component {
 
 			callMessage = (
 				<li className="directcall__row" title={joinCallMessage}>
-					<p className="directcall__text">{Translator.translate("JOIN", this.props.lang)}</p>
+					<p className="directcall__text">{Translator.translate("JOIN", this.context.language)}</p>
 				</li>
 			);
 		} else {
 			callMessage = (
 				<li className="directcall__row" onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.props.message)}>
-					<p className="directcall__text">{Translator.translate("JOIN", this.props.lang)}</p>
+					<p className="directcall__text">{Translator.translate("JOIN", this.context.language)}</p>
 				</li>
 			);
 		}
 
-		const messageTitle = Translator.translate("YOU_INITIATED_GROUP_CALL", this.props.lang);
+		const messageTitle = Translator.translate("YOU_INITIATED_GROUP_CALL", this.context.language);
 		return (
 			<div css={messageContainerStyle()} className="sender__message__container message__directcall" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
 				{toolTipView}
@@ -121,7 +121,7 @@ class CometChatSenderDirectCallBubble extends React.Component {
 				<div css={messageWrapperStyle()} className="message__wrapper">
 					<div css={messageTxtWrapperStyle(this.context)} className="message__directcall__wrapper">
 						<div css={messageTxtContainerStyle()} className="message__directcall__container">
-							<i css={iconStyle(callIcon, this.context)} alt={Translator.translate("VIDEO_CALL", this.props.lang)}></i>
+							<i css={iconStyle(callIcon, this.context)} alt={Translator.translate("VIDEO_CALL", this.context.language)}></i>
 							<p css={messageTxtStyle()} className="directcall__title">
 								{messageTitle}
 							</p>
@@ -145,13 +145,11 @@ class CometChatSenderDirectCallBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatSenderDirectCallBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatSenderDirectCallBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

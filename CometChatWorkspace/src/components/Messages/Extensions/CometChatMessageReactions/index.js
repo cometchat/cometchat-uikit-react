@@ -100,7 +100,7 @@ class CometChatMessageReactions extends React.Component {
 
 			if (userList.length) {
 				reactionTitle = userList.join(", ");
-				const str = ` ${Translator.translate("REACTED", this.props.lang)}`;
+				const str = ` ${Translator.translate("REACTED", this.context.language)}`;
 				reactionTitle = reactionTitle.concat(str);
 			}
 
@@ -125,7 +125,7 @@ class CometChatMessageReactions extends React.Component {
 		}
 
 		const addReactionEmoji = (
-			<div key="-1" css={messageReactionsStyle(this.props, {}, this.context)} className="reaction reaction__add" title={Translator.translate("ADD_REACTION", this.props.lang)}>
+			<div key="-1" css={messageReactionsStyle(this.props, {}, this.context)} className="reaction reaction__add" title={Translator.translate("ADD_REACTION", this.context.language)}>
 				<button type="button" css={emojiButtonStyle(reactIcon, this.context)} className="button__reacttomessage" onClick={() => this.props.actionGenerated(enums.ACTIONS["REACT_TO_MESSAGE"], this.props.message)}>
 					<i></i>
 				</button>
@@ -155,13 +155,11 @@ class CometChatMessageReactions extends React.Component {
 
 // Specifies the default values for props:
 CometChatMessageReactions.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatMessageReactions.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

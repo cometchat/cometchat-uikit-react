@@ -97,8 +97,8 @@ class CometChatViewGroupMemberListItem extends React.Component {
         let name = this.props.member.name;
         let scope = (<span css={roleStyle()}>{this.roles[this.props.member.scope]}</span>);
         let changescope = null;
-        let ban = (<i css={banIconStyle(banIcon, this.context)} title={Translator.translate("BAN", this.props.lang)} onClick={() => { this.props.actionGenerated(enums.ACTIONS["BAN_GROUP_MEMBER"], this.props.member)}}></i>);
-        let kick = (<i css={kickIconStyle(kickIcon, this.context)} title={Translator.translate("KICK", this.props.lang)} onClick={() => { this.props.actionGenerated(enums.ACTIONS["KICK_GROUP_MEMBER"], this.props.member)}}></i>);
+        let ban = (<i css={banIconStyle(banIcon, this.context)} title={Translator.translate("BAN", this.context.language)} onClick={() => { this.props.actionGenerated(enums.ACTIONS["BAN_GROUP_MEMBER"], this.props.member)}}></i>);
+        let kick = (<i css={kickIconStyle(kickIcon, this.context)} title={Translator.translate("KICK", this.context.language)} onClick={() => { this.props.actionGenerated(enums.ACTIONS["KICK_GROUP_MEMBER"], this.props.member)}}></i>);
         
 
         if(this.state.showChangeScope) {
@@ -127,8 +127,8 @@ class CometChatViewGroupMemberListItem extends React.Component {
                     <select css={scopeSelectionStyle()} className="scope__select" onChange={this.scopeChangeHandler} defaultValue={this.props.member.scope}>
                         {options}
                     </select>
-                    <i css={scopeIconStyle(doneIcon, this.context)} title={Translator.translate("CHANGE_SCOPE", this.props.lang)} onClick={this.updateMemberScope}></i>
-                    <i css={scopeIconStyle(clearIcon, this.context)} title={Translator.translate("CHANGE_SCOPE", this.props.lang)} onClick={() => this.toggleChangeScope(false)}></i>
+                    <i css={scopeIconStyle(doneIcon, this.context)} title={Translator.translate("CHANGE_SCOPE", this.context.language)} onClick={this.updateMemberScope}></i>
+                    <i css={scopeIconStyle(clearIcon, this.context)} title={Translator.translate("CHANGE_SCOPE", this.context.language)} onClick={() => this.toggleChangeScope(false)}></i>
                 </div>
             );
 
@@ -140,7 +140,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
                 changescope = (
                     <React.Fragment>
                         {scope}
-                        <i css={scopeIconStyle(scopeIcon, this.context)} title={Translator.translate("CHANGE_SCOPE", this.props.lang)} onClick={() => this.toggleChangeScope(true)}></i>
+                        <i css={scopeIconStyle(scopeIcon, this.context)} title={Translator.translate("CHANGE_SCOPE", this.context.language)} onClick={() => this.toggleChangeScope(true)}></i>
                     </React.Fragment>
                 );
             }
@@ -148,7 +148,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
         //disable change scope, kick, ban of group owner
         if (this.context.item.owner === this.props.member.uid) {
-            scope = (<span css={roleStyle()}>{Translator.translate("OWNER", this.props.lang)}</span>);
+            scope = (<span css={roleStyle()}>{Translator.translate("OWNER", this.context.language)}</span>);
             changescope = scope;
             ban = null;
             kick = null;
@@ -156,7 +156,7 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
         //disable change scope, kick, ban of self
         if (this.props.loggedinuser.uid === this.props.member.uid) {
-            name = Translator.translate("YOU", this.props.lang);
+            name = Translator.translate("YOU", this.context.language);
             changescope = scope;
             ban = null;
             kick = null;
@@ -242,13 +242,11 @@ class CometChatViewGroupMemberListItem extends React.Component {
 
 // Specifies the default values for props:
 CometChatViewGroupMemberListItem.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	loggedinuser: {},
 	enableChangeScope: false,
 };
 
 CometChatViewGroupMemberListItem.propTypes = {
-	lang: PropTypes.string,
 	loggedinuser: PropTypes.shape(CometChat.User),
 	enableChangeScope: PropTypes.bool
 };
