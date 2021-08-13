@@ -44,7 +44,6 @@ class CometChatConversationList extends React.Component {
 		this.state = {
 			conversationlist: [],
 			onItemClick: null,
-			lang: props.lang,
 			hideGroupActionMessages: false,
 			showConfirmDialog: false,
 			decoratorMessage: Translator.translate("LOADING", props.lang),
@@ -57,7 +56,7 @@ class CometChatConversationList extends React.Component {
 
 		CometChat.getLoggedinUser()
 			.then(user => (this.loggedInUser = user))
-			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
 	}
 
 	componentDidMount() {
@@ -172,10 +171,6 @@ class CometChatConversationList extends React.Component {
 				conversationlist.splice(conversationKey, 1);
 				this.setState({ conversationlist: conversationlist });
 			}
-		}
-
-		if (prevProps.lang !== this.props.lang) {
-			this.setState({ lang: this.props.lang });
 		}
 
 		this.item = this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER || CometChat.ACTION_TYPE.TYPE_GROUP ? this.getContext().item : null;
@@ -686,7 +681,7 @@ class CometChatConversationList extends React.Component {
 			.then(conversationList => {
 				if (conversationList.length === 0) {
 					if (this.state.conversationlist.length === 0) {
-						this.setState({ decoratorMessage: Translator.translate("NO_CHATS_FOUND", this.state.lang) });
+						this.setState({ decoratorMessage: Translator.translate("NO_CHATS_FOUND", this.props.lang) });
 					}
 				} else {
 					this.setState({ decoratorMessage: "" });
@@ -710,7 +705,7 @@ class CometChatConversationList extends React.Component {
 
 				this.setState({ conversationlist: [...conversations, ...conversationList] });
 			})
-			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
 	};
 
 	getContext = () => {
@@ -735,6 +730,7 @@ class CometChatConversationList extends React.Component {
 	};
 
 	deleteConversation = conversation => {
+		
 		if (!this.state.showConfirmDialog) {
 			this.setState({ showConfirmDialog: true, conversationToBeDeleted: conversation });
 		}
@@ -822,8 +818,8 @@ class CometChatConversationList extends React.Component {
 			<div css={chatsWrapperStyle(this.props, theme)} className="chats">
 				<div css={chatsHeaderStyle(theme)} className="chats__header">
 					{closeBtn}
-					<h4 css={chatsHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>
-						{Translator.translate("CHATS", this.state.lang)}
+					<h4 css={chatsHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.props.lang)}>
+						{Translator.translate("CHATS", this.props.lang)}
 					</h4>
 				</div>
 				{messageContainer}
@@ -831,7 +827,7 @@ class CometChatConversationList extends React.Component {
 					{conversationList}
 				</div>
 				{showConfirmDialog}
-				<CometChatToastNotification ref={el => (this.toastRef = el)} />
+				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} />
 			</div>
 		);
 

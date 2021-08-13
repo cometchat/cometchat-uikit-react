@@ -209,6 +209,7 @@
 	"INVALID_POLL_OPTION": "Ange det svar som krävs innan du skapar en enkät",
 	"SAME_LANGUAGE_MESSAGE": "Valt språk för översättning liknar språket i det ursprungliga meddelandet",
     "LEAVE": "Lämna",
+	"SELECT_MODE":"Välj läge",
 	"CALLS": "Samtal",
 	"CUSTOM_MESSAGE_LOCATION": "📍Plats",
 	"OFFLINE": "Offline",

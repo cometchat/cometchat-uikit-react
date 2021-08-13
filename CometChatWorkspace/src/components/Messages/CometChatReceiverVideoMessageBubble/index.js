@@ -127,7 +127,7 @@ class CometChatReceiverVideoMessageBubble extends React.Component {
 // Specifies the default values for props:
 CometChatReceiverVideoMessageBubble.defaultProps = {
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverVideoMessageBubble.propTypes = {

@@ -124,7 +124,7 @@ export class CometChatToastNotification extends React.Component {
 
         return (
             <div css={notificationContainerStyle(this.props, keyframes)} className="toast__notification">
-                <div css={notificationStyle(this.props, this.state, keyframes, CometChatToastNotification)} className="toast__container">
+                <div css={notificationStyle(this.props, this.state)} className="toast__container">
                     {toastIcon}
                     <div css={notificationMessageContainerStyle()} className={messageClassName}>
                         <p css={notificationMessageStyle()}>{Translator.translate(this.state.message, this.props.lang)}</p>

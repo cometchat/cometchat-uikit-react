@@ -229,7 +229,7 @@ class CometChatSenderImageMessageBubble extends React.Component {
 // Specifies the default values for props:
 CometChatSenderImageMessageBubble.defaultProps = {
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatSenderImageMessageBubble.propTypes = {

@@ -209,6 +209,7 @@
 	"INVALID_POLL_OPTION": "Veuillez saisir la réponse requise avant de créer un sondage",
 	"SAME_LANGUAGE_MESSAGE": "La langue sélectionnée pour la traduction est similaire à la langue du message d'origine",
     "LEAVE": "Partez",
+	"SELECT_MODE":"Sélectionner le mode",
 	"CALLS": "Appels",
 	"CUSTOM_MESSAGE_LOCATION": "📍 Emplacement",
 	"OFFLINE": "Hors ligne",

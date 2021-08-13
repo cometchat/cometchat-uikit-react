@@ -204,6 +204,7 @@
 	"INVALID_POLL_OPTION": "Please enter the required answer before creating a poll",
 	"SAME_LANGUAGE_MESSAGE": "Selected language for translation is similar to the language of original message",
 	"LEAVE": "Leave",
+	"SELECT_MODE":"Select Mode",
 	"CALLS": "Calls",
 	"CUSTOM_MESSAGE_LOCATION": "📍Location",
 	"OFFLINE": "Offline",
