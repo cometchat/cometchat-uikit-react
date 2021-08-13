@@ -38,7 +38,7 @@ const CometChatThreadedMessageReplyCount = props => {
 	}
 
 	const replyCount = props.message.replyCount;
-	const replyText = replyCount === 1 ? `${replyCount} ${Translator.translate("REPLY", props.lang)}` : `${replyCount} ${Translator.translate("REPLIES", props.lang)}`;
+	const replyText = replyCount === 1 ? `${replyCount} ${Translator.translate("REPLY", context.language)}` : `${replyCount} ${Translator.translate("REPLIES", context.language)}`;
 
 	let replies = (
 		<span css={replyCountStyle(context)} className="replycount" onClick={viewThread}>
@@ -60,13 +60,11 @@ const CometChatThreadedMessageReplyCount = props => {
 
 // Specifies the default values for props:
 CometChatThreadedMessageReplyCount.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 	actionGenerated: () => {},
 };
 
 CometChatThreadedMessageReplyCount.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

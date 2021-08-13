@@ -1,4 +1,5 @@
 import {CometChat} from "@cometchat-pro/chat";
+import Translator from "../../../resources/localization/translator";
 
 export const userDetailStyle = context => {
 	return {
@@ -179,7 +180,8 @@ export const userStatusStyle = () => {
 export const userPresenceStyle = (context, state) => {
 	
 	let status = state.status ? state.status.toLowerCase() : "";
-	status = status === CometChat.USER_STATUS.ONLINE ? { color: `${context.theme.color.blue}` } : { color: `${context.theme.color.helpText}` };
+	let compareTo = Translator.translate((CometChat.USER_STATUS.ONLINE).toUpperCase(), context.language).toLowerCase();
+	status = status === compareTo ? { color: `${context.theme.color.blue}` } : { color: `${context.theme.color.helpText}` };
 
 	return {
 		width: "calc(100% - 50px)",

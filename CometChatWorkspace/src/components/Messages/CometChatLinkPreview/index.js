@@ -32,7 +32,7 @@ class CometChatLinkPreview extends React.PureComponent {
         const linkObject = linkPreviewData["links"][0];
 
         const pattern = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)(\S+)?/;
-        const linkText = (linkObject["url"].match(pattern)) ? Translator.translate("VIEW_ON_YOUTUBE", this.props.lang) : Translator.translate("VISIT", this.props.lang);
+        const linkText = (linkObject["url"].match(pattern)) ? Translator.translate("VIEW_ON_YOUTUBE", this.context.language) : Translator.translate("VISIT", this.context.language);
 
         return (
             <div css={messagePreviewContainerStyle(this.context)} className="message__preview">
@@ -54,12 +54,10 @@ class CometChatLinkPreview extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatLinkPreview.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
     theme: theme
 };
 
 CometChatLinkPreview.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	message: PropTypes.object.isRequired,
 };

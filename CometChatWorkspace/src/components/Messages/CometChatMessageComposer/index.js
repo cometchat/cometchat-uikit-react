@@ -871,7 +871,7 @@ class CometChatMessageComposer extends React.PureComponent {
 	render() {
 		
 		let liveReactionBtn = null;
-		const liveReactionText = Translator.translate("LIVE_REACTION", this.props.lang);
+		const liveReactionText = Translator.translate("LIVE_REACTION", this.context.language);
 		if (enums.CONSTANTS["LIVE_REACTIONS"].hasOwnProperty(this.props.reaction)) {
 			const reactionName = this.props.reaction;
 			liveReactionBtn = (
@@ -886,7 +886,7 @@ class CometChatMessageComposer extends React.PureComponent {
 			disabledState = true;
 		}
 
-		const docText = Translator.translate("ATTACH_FILE", this.props.lang);
+		const docText = Translator.translate("ATTACH_FILE", this.context.language);
 		let docs = (
 			<div
 				title={docText}
@@ -900,9 +900,9 @@ class CometChatMessageComposer extends React.PureComponent {
 			</div>
 		);
 
-		const videoText = Translator.translate("ATTACH_VIDEO", this.props.lang);
-		const audioText = Translator.translate("ATTACH_AUDIO", this.props.lang);
-		const imageText = Translator.translate("ATTACH_IMAGE", this.props.lang);
+		const videoText = Translator.translate("ATTACH_VIDEO", this.context.language);
+		const audioText = Translator.translate("ATTACH_AUDIO", this.context.language);
+		const imageText = Translator.translate("ATTACH_IMAGE", this.context.language);
 		let avp = (
 			<React.Fragment>
 				<div
@@ -938,28 +938,28 @@ class CometChatMessageComposer extends React.PureComponent {
 			</React.Fragment>
 		);
 
-		const pollText = Translator.translate("CREATE_POLL", this.props.lang);
+		const pollText = Translator.translate("CREATE_POLL", this.context.language);
 		let createPollBtn = (
 			<div title={pollText} css={fileItemStyle(pollIcon, this.context)} className="filelist__item item__poll" onClick={this.toggleCreatePoll}>
 				<i></i>
 			</div>
 		);
 
-		const collaborativeDocText = Translator.translate("COLLABORATE_USING_DOCUMENT", this.props.lang);
+		const collaborativeDocText = Translator.translate("COLLABORATE_USING_DOCUMENT", this.context.language);
 		let collaborativeDocBtn = (
 			<div title={collaborativeDocText} css={fileItemStyle(documentIcon, this.context)} className="filelist__item item__document" onClick={this.toggleCollaborativeDocument}>
 				<i></i>
 			</div>
 		);
 
-		const collaborativeBoardText = Translator.translate("COLLABORATE_USING_WHITEBOARD", this.props.lang);
+		const collaborativeBoardText = Translator.translate("COLLABORATE_USING_WHITEBOARD", this.context.language);
 		let collaborativeBoardBtn = (
 			<div title={collaborativeBoardText} css={fileItemStyle(whiteboardIcon, this.context)} className="filelist__item item__whiteboard" onClick={this.toggleCollaborativeBoard}>
 				<i></i>
 			</div>
 		);
 
-		const emojiText = Translator.translate("EMOJI", this.props.lang);
+		const emojiText = Translator.translate("EMOJI", this.context.language);
 		let emojiBtn = (
 			<div
 				title={emojiText}
@@ -973,14 +973,14 @@ class CometChatMessageComposer extends React.PureComponent {
 			</div>
 		);
 
-		const StickerText = Translator.translate("STICKER", this.props.lang);
+		const StickerText = Translator.translate("STICKER", this.context.language);
 		let stickerBtn = (
 			<div title={StickerText} css={stickerBtnStyle(stickerIcon, this.context)} className="button__sticker" onClick={this.toggleStickerPicker}>
 				<i></i>
 			</div>
 		);
 
-		const sendMessageText = Translator.translate("SEND_MESSAGE", this.props.lang);
+		const sendMessageText = Translator.translate("SEND_MESSAGE", this.context.language);
 		let sendBtn = (
 			<div title={sendMessageText} css={sendButtonStyle(sendBlue, this.context)} className="button__send" onClick={this.sendTextMessage}>
 				<i></i>
@@ -1031,13 +1031,13 @@ class CometChatMessageComposer extends React.PureComponent {
 			sendBtn = null;
 		}
 
-		const attachText = Translator.translate("ATTACH", this.props.lang);
+		const attachText = Translator.translate("ATTACH", this.context.language);
 		let attach = (
 			<div css={stickyAttachmentStyle()} className="input__sticky__attachment">
 				<div css={stickyAttachButtonStyle(roundedPlus, this.context)} className="attachment__icon" onClick={this.toggleFilePicker} title={attachText}>
 					<i></i>
 				</div>
-				<div css={filePickerStyle(this.state)} className="attachment__filepicker" dir={Translator.getDirection(this.props.lang)}>
+				<div css={filePickerStyle(this.state)} className="attachment__filepicker" dir={Translator.getDirection(this.context.language)}>
 					<div css={fileListStyle()} className="filepicker__filelist">
 						{avp}
 						{docs}
@@ -1083,7 +1083,7 @@ class CometChatMessageComposer extends React.PureComponent {
 			editPreview = (
 				<div css={editPreviewContainerStyle(this.context, keyframes)}>
 					<div css={previewHeadingStyle()}>
-						<div css={previewTextStyle()}>{Translator.translate("EDIT_MESSAGE", this.props.lang)}</div>
+						<div css={previewTextStyle()}>{Translator.translate("EDIT_MESSAGE", this.context.language)}</div>
 						<span css={previewCloseStyle(closeIcon, this.context)} onClick={this.closeEditPreview}></span>
 					</div>
 					<div>{messageText}</div>
@@ -1109,7 +1109,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		let emojiViewer = null;
 		if (this.state.emojiViewer) {
-			emojiViewer = <CometChatEmojiKeyboard emojiClicked={this.emojiClicked} />;
+			emojiViewer = <CometChatEmojiKeyboard emojiClicked={this.emojiClicked} lang={this.context.language} />;
 		}
 
 		return (
@@ -1123,8 +1123,8 @@ class CometChatMessageComposer extends React.PureComponent {
 						<div css={messageInputStyle(disabledState)}
 						className="input__message-input"
 						contentEditable="true"
-						placeholder={Translator.translate("ENTER_YOUR_MESSAGE_HERE", this.props.lang)}
-						dir={Translator.getDirection(this.props.lang)}
+						placeholder={Translator.translate("ENTER_YOUR_MESSAGE_HERE", this.context.language)}
+						dir={Translator.getDirection(this.context.language)}
 						onInput={this.changeHandler}
 						onBlur={event => this.endTyping(event)}
 						onKeyDown={this.sendMessageOnEnter}
@@ -1148,13 +1148,11 @@ class CometChatMessageComposer extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatMessageComposer.defaultProps = {
-  lang: Translator.getDefaultLanguage(),
   theme: theme,
   reaction: "heart"
 };
 
 CometChatMessageComposer.propTypes = {
-  lang: PropTypes.string,
   theme: PropTypes.object,
   reaction: PropTypes.string
 }

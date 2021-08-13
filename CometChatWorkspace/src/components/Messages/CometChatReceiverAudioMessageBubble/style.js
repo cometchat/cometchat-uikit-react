@@ -95,7 +95,8 @@ export const messageInfoWrapperStyle = () => {
         padding: "4px 8px",
         display: "flex",
         alignItems: "center",
-        justifyContent: "flex-start"
+        justifyContent: "flex-start",
+        height: "25px"
     }
 }
 

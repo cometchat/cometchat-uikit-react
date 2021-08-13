@@ -314,7 +314,7 @@ class CometChatIncomingCall extends React.PureComponent {
 		}
 
 		if (this.state.callInProgress) {
-			callScreen = <CometChatCallScreen loggedInUser={this.loggedInUser} call={this.state.callInProgress} actionGenerated={this.actionHandler} />;
+			callScreen = <CometChatCallScreen loggedInUser={this.loggedInUser} call={this.state.callInProgress} lang={this.props.lang} actionGenerated={this.actionHandler} />;
 		}
 
 		return (

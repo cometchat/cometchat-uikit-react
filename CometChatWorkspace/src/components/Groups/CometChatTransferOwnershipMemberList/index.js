@@ -92,7 +92,7 @@ class CometChatTransferOwnershipMemberList extends React.Component {
 			this.props.actionGenerated(enums.ACTIONS["OWNERSHIP_TRANSFERRED"], uid);
 
 		}).catch(error => {
-			this.setState({ transferringOwnership: false, errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
+			this.setState({ transferringOwnership: false, errorMessage: Translator.translate("SOMETHING_WRONG", this.context.language) });
 		});
 	};
 
@@ -120,7 +120,7 @@ class CometChatTransferOwnershipMemberList extends React.Component {
 		let transferBtn = null;
 		if(memberList.length) {
 
-			const transferText = this.state.transferringOwnership ? Translator.translate("TRANSFERRING", this.props.lang) : Translator.translate("TRANSFER", this.props.lang);
+			const transferText = this.state.transferringOwnership ? Translator.translate("TRANSFERRING", this.context.language) : Translator.translate("TRANSFER", this.context.language);
 			transferBtn = (
 				<div css={modalFootStyle(this.state, this.context, transferIcon)} className="modal__transferownership">
 					<button type="button" onClick={this.transferOwnership}>

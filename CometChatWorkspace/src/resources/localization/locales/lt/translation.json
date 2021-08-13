@@ -209,6 +209,7 @@
 	"INVALID_POLL_OPTION": "Prašome įvesti reikiamą atsakymą prieš kurdami apklausą",
 	"SAME_LANGUAGE_MESSAGE": "Pasirinkta vertimo kalba yra panaši į originalaus pranešimo kalbą",
     "LEAVE": "Palikti",
+	"SELECT_MODE":"Pasirinkti režimą",
 	"CALLS": "Skambučiai",
 	"CUSTOM_MESSAGE_LOCATION": "📍 Vieta",
 	"OFFLINE": "Atsijungęs",

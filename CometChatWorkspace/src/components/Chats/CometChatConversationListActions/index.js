@@ -44,9 +44,7 @@ class CometChatConversationListActions extends React.PureComponent {
 
 	deleteConversation = event => {
 
-		this.context.setConversationToBeDeleted(this.props.conversation);
 		this.props.actionGenerated(enums.ACTIONS["DELETE_CONVERSATION"], this.props.conversation);
-
 		event.stopPropagation();
 	};
 
@@ -57,7 +55,7 @@ class CometChatConversationListActions extends React.PureComponent {
 				type="button"
 				css={groupButtonStyle(this.state.deleteInProgress, loadingIcon, deleteIcon)}
 				className="group__button button__delete"
-				data-title={Translator.translate("DELETE", this.context.lang)}
+				data-title={Translator.translate("DELETE", this.context.language)}
 				onMouseEnter={event => this.toggleTooltip(event, true)}
 				onMouseLeave={event => this.toggleTooltip(event, false)}
 				onClick={this.deleteConversation} />
@@ -72,4 +70,4 @@ class CometChatConversationListActions extends React.PureComponent {
 	}
 }
 
-export {CometChatConversationListActions};
+export { CometChatConversationListActions };

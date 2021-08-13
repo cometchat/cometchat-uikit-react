@@ -47,7 +47,6 @@ class CometChatGroupList extends React.PureComponent {
 		this.state = {
 			grouplist: [],
 			createGroup: false,
-			lang: props.lang,
 			enableSearchGroup: false,
 			enableCreateGroup: false,
 			enableJoinGroup: false,
@@ -60,7 +59,7 @@ class CometChatGroupList extends React.PureComponent {
 
 		CometChat.getLoggedinUser()
 			.then(user => (this.loggedInUser = user))
-			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", props.lang) }));
 	}
 
 	componentDidMount() {
@@ -100,10 +99,6 @@ class CometChatGroupList extends React.PureComponent {
 				groups.splice(groupKey, 1);
 				this.setState({grouplist: groups});
 			}
-		}
-
-		if (prevProps.lang !== this.props.lang) {
-			this.setState({lang: this.props.lang});
 		}
 
 		this.item = this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP ? this.getContext().item : null;
@@ -328,7 +323,7 @@ class CometChatGroupList extends React.PureComponent {
 
 			let password = "";
 			if (group.type === CometChat.GROUP_TYPE.PASSWORD) {
-				password = prompt(Translator.translate("ENTER_YOUR_PASSWORD", this.state.lang));
+				password = prompt(Translator.translate("ENTER_YOUR_PASSWORD", this.props.lang));
 			}
 
 			const guid = group.guid;
@@ -384,7 +379,7 @@ class CometChatGroupList extends React.PureComponent {
 		let val = e.target.value;
 		this.timeout = setTimeout(() => {
 			
-			this.setState({ grouplist: [], decoratorMessage: Translator.translate("LOADING", this.state.lang) });
+			this.setState({ grouplist: [], decoratorMessage: Translator.translate("LOADING", this.props.lang) });
 
 			this.GroupListManager = new GroupListManager(val);
 			this.getGroups();
@@ -404,18 +399,15 @@ class CometChatGroupList extends React.PureComponent {
 	getGroups = () => {
 		this.GroupListManager.fetchNextGroups()
 			.then(groupList => {
-
 				if (groupList.length === 0) {
-
 					if (this.state.grouplist.length === 0) {
-						this.setState({ decoratorMessage: Translator.translate("NO_GROUPS_FOUND", this.state.lang) });
-					} 
+						this.setState({ decoratorMessage: Translator.translate("NO_GROUPS_FOUND", this.props.lang) });
+					}
 				} else {
 					this.setState({ grouplist: [...this.state.grouplist, ...groupList], decoratorMessage: "" });
 				}
-
 			})
-			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
 	};
 
 	createGroupHandler = flag => {
@@ -457,11 +449,11 @@ class CometChatGroupList extends React.PureComponent {
 		const groups = this.state.grouplist.map(group => {
 			let selectedGroup = this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP && this.getContext().item.guid === group.guid ? group : null;
 
-			return <CometChatGroupListItem key={group.guid} group={group} lang={this.state.lang} selectedGroup={selectedGroup} clickHandler={this.handleClick} />;
+			return <CometChatGroupListItem key={group.guid} group={group} selectedGroup={selectedGroup} clickHandler={this.handleClick} />;
 		});
 
 		let createGroupBtn = (
-			<div css={groupAddStyle(addIcon, theme)} title={Translator.translate("CREATE_GROUP", this.state.lang)} onClick={() => this.createGroupHandler(true)}>
+			<div css={groupAddStyle(addIcon, theme)} title={Translator.translate("CREATE_GROUP", this.props.lang)} onClick={() => this.createGroupHandler(true)}>
 				<i></i>
 			</div>
 		);
@@ -481,17 +473,14 @@ class CometChatGroupList extends React.PureComponent {
 			searchGroup = (
 				<div css={groupSearchStyle()} className="groups__search">
 					<button type="button" className="search__button" css={groupSearchButtonStyle(searchIcon, this.getContext())} />
-					<input type="text" autoComplete="off" css={groupSearchInputStyle()} className="search__input" placeholder={Translator.translate("SEARCH", this.state.lang)} onChange={this.searchGroup} />
+					<input type="text" autoComplete="off" css={groupSearchInputStyle()} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchGroup} />
 				</div>
 			);
 		}
 
 		let createGroup = null;
 		if(this.state.createGroup) {
-			createGroup = (<CometChatCreateGroup 
-				theme={this.props.theme} 
-				lang={this.state.lang} 
-				close={() => this.createGroupHandler(false)} actionGenerated={this.createGroupActionHandler} />);	
+			createGroup = <CometChatCreateGroup theme={this.props.theme} close={() => this.createGroupHandler(false)} actionGenerated={this.createGroupActionHandler} />;	
 		}
 
 		const groupListTemplate = (
@@ -499,8 +488,8 @@ class CometChatGroupList extends React.PureComponent {
 				<div css={groupWrapperStyle(this.props, theme)} className="groups">
 					<div css={groupHeaderStyle(theme)} className="groups__header">
 						{closeBtn}
-						<h4 css={groupHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>
-							{Translator.translate("GROUPS", this.state.lang)}
+						<h4 css={groupHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.props.lang)}>
+							{Translator.translate("GROUPS", this.props.lang)}
 						</h4>
 						{createGroupBtn}
 					</div>
@@ -511,7 +500,7 @@ class CometChatGroupList extends React.PureComponent {
 					</div>
 				</div>
 				{createGroup}
-				<CometChatToastNotification ref={el => (this.toastRef = el)} context={this.getContext()} />
+				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} />
 			</React.Fragment>
 		);
 

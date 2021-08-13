@@ -64,7 +64,6 @@ class CometChatMessages extends React.PureComponent {
 			replyPreview: null,
 			liveReaction: false,
 			messageToReact: null,
-			lang: props.lang,
 			unreadMessages: [],
 			viewdetailscreen: false,
 			threadmessageview: false,
@@ -132,10 +131,6 @@ class CometChatMessages extends React.PureComponent {
 		this.enableSendingOneOnOneMessage();
 		this.enableSendingGroupMessage();
 		this.enableHideDeletedMessages();
-
-		if (prevProps.lang !== this.props.lang) {
-			this.setState({ lang: this.props.lang });
-		}
 
 		/**
 		 * Custom message to be appended or updated for direct calling
@@ -520,7 +515,7 @@ class CometChatMessages extends React.PureComponent {
 		const messageList = [];
 
 		messages.forEach(eachMember => {
-			const newScope = Translator.translate(eachMember.scope, this.state.lang);
+			const newScope = Translator.translate(eachMember.scope, this.props.lang);
 
 			const sentAt = (new Date() / 1000) | 0;
 			const messageObj = {
@@ -934,11 +929,11 @@ class CometChatMessages extends React.PureComponent {
 		let newMessageIndicator = null;
 		if (this.state.unreadMessages.length) {
 			const unreadMessageCount = this.state.unreadMessages.length;
-			const messageText = unreadMessageCount > 1 ? `${unreadMessageCount} ${Translator.translate("NEW_MESSAGES", this.state.lang)}` : `${unreadMessageCount} ${Translator.translate("NEW_MESSAGE", this.state.lang)}`;
+			const messageText = unreadMessageCount > 1 ? `${unreadMessageCount} ${Translator.translate("NEW_MESSAGES", this.props.lang)}` : `${unreadMessageCount} ${Translator.translate("NEW_MESSAGE", this.props.lang)}`;
 			newMessageIndicator = (
 				<div css={messagePaneTopStyle()} className="message_pane__top">
 					<div css={messagePaneBannerStyle(this.props)} className="message_pane__banner">
-						<div css={messagePaneUnreadBannerStyle()} className="message_pane__unread_banner__banner" title={Translator.translate("JUMP", this.state.lang)}>
+						<div css={messagePaneUnreadBannerStyle()} className="message_pane__unread_banner__banner" title={Translator.translate("JUMP", this.props.lang)}>
 							<button type="button" css={messagePaneUnreadBannerMessageStyle(this.props)} className="message_pane__unread_banner__msg" onClick={this.jumpToMessages}>
 								<span css={iconArrowDownStyle()} className="icon--arrow-down">
 									&#x2193;{" "}
@@ -960,7 +955,7 @@ class CometChatMessages extends React.PureComponent {
 		if (this.state.liveReaction) {
 			liveReactionView = (
 				<div css={reactionsWrapperStyle()}>
-					<CometChatLiveReactions reaction={this.reactionName} theme={this.props.theme} lang={this.state.lang} />
+					<CometChatLiveReactions reaction={this.reactionName} theme={this.props.theme} lang={this.props.lang} />
 				</div>
 			);
 		}
@@ -980,8 +975,8 @@ class CometChatMessages extends React.PureComponent {
 		let outgoingDirectCallView = null;
 		let outgoingCallView = null;
 		if (Object.keys(this.props.widgetsettings).length === 0) {
-			outgoingCallView = <CometChatOutgoingCall ref={el => (this.outgoingCallRef = el)} actionGenerated={this.actionHandler} />;
-			outgoingDirectCallView = <CometChatOutgoingDirectCall ref={el => (this.outgoingDirectCallRef = el)} actionGenerated={this.actionHandler} />;
+			outgoingCallView = <CometChatOutgoingCall ref={el => (this.outgoingCallRef = el)} lang={this.props.lang} actionGenerated={this.actionHandler} />;
+			outgoingDirectCallView = <CometChatOutgoingDirectCall ref={el => (this.outgoingDirectCallRef = el)} lang={this.props.lang} actionGenerated={this.actionHandler} />;
 		}
 
 		let detailScreen = null;
@@ -1017,7 +1012,7 @@ class CometChatMessages extends React.PureComponent {
 
 		let messageComponent = (
 			<React.Fragment>
-				<div css={chatWrapperStyle(this.props, this.state)} className="main__chat" dir={Translator.getDirection(this.state.lang)}>
+				<div css={chatWrapperStyle(this.props, this.state)} className="main__chat" dir={Translator.getDirection(this.props.lang)}>
 					<CometChatMessageHeader sidebar={this.props.sidebar} viewdetail={this.props.viewdetail === false ? false : true} actionGenerated={this.actionHandler} />
 					<CometChatMessageList
 						ref={el => {
@@ -1031,7 +1026,7 @@ class CometChatMessages extends React.PureComponent {
 					{messageComposer}
 					{newMessageIndicator}
 				</div>
-				<CometChatToastNotification ref={el => (this.toastRef = el)} />
+				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} />
 				{originalImageView}
 				{detailScreen}
 				{threadMessageView}

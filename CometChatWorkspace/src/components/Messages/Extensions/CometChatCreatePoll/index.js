@@ -90,13 +90,13 @@ class CometChatCreatePoll extends React.Component {
 
         if (question.length === 0) {
 
-            this.setState({ errorMessage: Translator.translate("INVALID_POLL_QUESTION", this.props.lang) });
+            this.setState({ errorMessage: Translator.translate("INVALID_POLL_QUESTION", this.context.language) });
             return false;
         }
 
         if (firstOption.length === 0 || secondOption.length === 0) {
 
-            this.setState({ errorMessage: Translator.translate("INVALID_POLL_OPTION", this.props.lang) });
+            this.setState({ errorMessage: Translator.translate("INVALID_POLL_OPTION", this.context.language) });
             return false;
         }
 
@@ -127,13 +127,13 @@ class CometChatCreatePoll extends React.Component {
                 this.props.actionGenerated(enums.ACTIONS["POLL_CREATED"]);
 
             } else {
-                this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
+                this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.context.language) });
             }
 
         }).catch(error => {
 
             this.setState({ creatingPoll: false });
-            this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
+            this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.context.language) });
         });
     }
 
@@ -146,50 +146,50 @@ class CometChatCreatePoll extends React.Component {
                 key={index} 
                 option={option} 
                 tabIndex={index+4}
-                lang={this.props.lang}
+                lang={this.context.language}
                 optionChangeHandler={this.optionChangeHandler}
                 removePollOption={this.removePollOption} />
             );
         });
 
-        const createText = (this.state.creatingPoll) ? Translator.translate("CREATING", this.props.lang) : Translator.translate("CREATE", this.props.lang);
+        const createText = (this.state.creatingPoll) ? Translator.translate("CREATING", this.context.language) : Translator.translate("CREATE", this.context.language);
         return (
             <React.Fragment>
                 <CometChatBackdrop show={true} clicked={this.props.close} />
                 <div css={modalWrapperStyle(this.context)} className="modal__createpoll">
-                    <span css={modalCloseStyle(clearIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
+                    <span css={modalCloseStyle(clearIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.context.language)}></span>
                     <div css={modalBodyStyle()} className="modal__body">
                         <table css={modalTableStyle(this.context)}>
-                            <caption css={tableCaptionStyle()} className="modal__title">{Translator.translate("CREATE_POLL", this.props.lang)}</caption>
+                            <caption css={tableCaptionStyle()} className="modal__title">{Translator.translate("CREATE_POLL", this.context.language)}</caption>
                             <tbody css={tableBodyStyle()}>
                                 <tr className="error">
                                     <td colSpan="3"><div css={modalErrorStyle(this.context)}>{this.state.errorMessage}</div></td>
                                 </tr>
                                 <tr className="poll__question">
-                                    <td><label>{Translator.translate("QUESTION", this.props.lang)}</label></td>
+                                    <td><label>{Translator.translate("QUESTION", this.context.language)}</label></td>
                                     <td colSpan="2">
-                                        <input type="text" autoFocus tabIndex="1" placeholder={Translator.translate("ENTER_YOUR_QUESTION", this.props.lang)} ref={this.questionRef} />
+                                        <input type="text" autoFocus tabIndex="1" placeholder={Translator.translate("ENTER_YOUR_QUESTION", this.context.language)} ref={this.questionRef} />
                                     </td>
                                 </tr>
                                 <tr className="poll__options">
                                     <td>
-                                        <label>{Translator.translate("OPTIONS", this.props.lang)}</label>
+                                        <label>{Translator.translate("OPTIONS", this.context.language)}</label>
                                     </td>
                                     <td colSpan="2">
-                                        <input type="text" tabIndex="2" placeholder={Translator.translate("ENTER_YOUR_OPTION", this.props.lang)} ref={this.optionOneRef} />
+                                        <input type="text" tabIndex="2" placeholder={Translator.translate("ENTER_YOUR_OPTION", this.context.language)} ref={this.optionOneRef} />
                                     </td>
                                 </tr>
                                 <tr ref={this.optionRef} className="poll__options">
                                     <td>&nbsp;</td>
                                     <td colSpan="2">
-                                        <input type="text" tabIndex="3" placeholder={Translator.translate("ENTER_YOUR_OPTION", this.props.lang)} ref={this.optionTwoRef} />
+                                        <input type="text" tabIndex="3" placeholder={Translator.translate("ENTER_YOUR_OPTION", this.context.language)} ref={this.optionTwoRef} />
                                     </td>
                                 </tr>
                                 {pollOptionView}
                                 <tr>
                                     <td>&nbsp;</td>
                                     <td>
-                                        <label>{Translator.translate("ADD_NEW_OPTION", this.props.lang)}</label>
+                                        <label>{Translator.translate("ADD_NEW_OPTION", this.context.language)}</label>
                                     </td>
                                     <td css={iconWrapperStyle()}>
                                         <i tabIndex="100" css={addOptionIconStyle(addIcon, this.context)} className="option__add" onClick={this.addPollOption}></i>
@@ -215,12 +215,10 @@ class CometChatCreatePoll extends React.Component {
 
 // Specifies the default values for props:
 CometChatCreatePoll.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 };
 
 CometChatCreatePoll.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 };
 

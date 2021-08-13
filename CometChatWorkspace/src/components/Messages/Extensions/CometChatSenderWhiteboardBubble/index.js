@@ -92,7 +92,7 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
 		}
 
-		const documentTitle = Translator.translate("CREATED_WHITEBOARD", this.props.lang);
+		const documentTitle = Translator.translate("CREATED_WHITEBOARD", this.context.language);
 		return (
 			<div css={messageContainerStyle()} className="sender__message__container message__whiteboard" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
 				{toolTipView}
@@ -107,7 +107,7 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 						</div>
 						<ul css={messageBtnStyle(this.context)} className="document__button">
 							<li onClick={this.launchCollaborativeWhiteboard}>
-								<p>{Translator.translate("LAUNCH", this.props.lang)}</p>
+								<p>{Translator.translate("LAUNCH", this.context.language)}</p>
 							</li>
 						</ul>
 					</div>
@@ -126,13 +126,11 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatSenderWhiteboardBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatSenderWhiteboardBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,
