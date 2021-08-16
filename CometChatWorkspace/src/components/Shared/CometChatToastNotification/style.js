@@ -59,7 +59,7 @@ export const notificationContainerStyle = (props, keyframes) => {
     }
 }
 
-export const notificationStyle = (props, state, keyframes, CometChatToastNotification) => {
+export const notificationStyle = (props, state) => {
 
     let backgroundColorProp = {
         backgroundColor: "#000",

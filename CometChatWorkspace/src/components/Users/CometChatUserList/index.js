@@ -44,7 +44,6 @@ class CometChatUserList extends React.PureComponent {
 
 		this.state = {
 			userlist: [],
-			lang: props.lang,
 			enableSearchUser: false,
 			decoratorMessage: Translator.translate("LOADING", props.lang),
 		};
@@ -54,7 +53,7 @@ class CometChatUserList extends React.PureComponent {
 
 		CometChat.getLoggedinUser()
 			.then(user => (this.loggedInUser = user))
-			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
 	}
 
 	componentDidMount() {
@@ -68,7 +67,7 @@ class CometChatUserList extends React.PureComponent {
 				this.getUsers();
 				this.UserListManager.attachListeners(this.userUpdated);
 			})
-			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
 	}
 
 	componentDidUpdate(prevProps) {
@@ -91,10 +90,6 @@ class CometChatUserList extends React.PureComponent {
 				userlist.splice(userKey, 1, newUserObject);
 				this.setState({ userlist: userlist });
 			}
-		}
-
-		if (prevProps.lang !== this.props.lang) {
-			this.setState({ lang: this.props.lang })
 		}
 
 		this.item = (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER) ? this.getContext().item : null;
@@ -180,10 +175,10 @@ class CometChatUserList extends React.PureComponent {
 		this.UserListManager.initializeUsersRequest()
 			.then(response => {
 				this.timeout = setTimeout(() => {
-					this.setState({ userlist: [], decoratorMessage: Translator.translate("LOADING", this.state.lang) }, () => this.getUsers());
+					this.setState({ userlist: [], decoratorMessage: Translator.translate("LOADING", this.props.lang) }, () => this.getUsers());
 				}, 500);
 			})
-			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
   	}
 
 	getUsers = () => {
@@ -193,14 +188,14 @@ class CometChatUserList extends React.PureComponent {
 
 				if (userList.length === 0) {
 					if (this.state.userlist.length === 0) {
-						this.setState({ decoratorMessage: Translator.translate("NO_USERS_FOUND", this.state.lang) });
+						this.setState({ decoratorMessage: Translator.translate("NO_USERS_FOUND", this.props.lang) });
 					}
 				} else {
 					this.setState({ userlist: [...this.state.userlist, ...userList], decoratorMessage: "" });
 				}
 				
 			})
-			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.state.lang) }));
+			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
 	}
 
 	getContext = () => {
@@ -260,7 +255,7 @@ class CometChatUserList extends React.PureComponent {
 			searchUser = (
 				<div css={contactSearchStyle()} className="contacts__search">
 					<button type="button" className="search__button" css={contactSearchButtonStyle(searchIcon, theme)} />
-					<input type="text" autoComplete="off" css={contactSearchInputStyle()} className="search__input" placeholder={Translator.translate("SEARCH", this.state.lang)} onChange={this.searchUsers} />
+					<input type="text" autoComplete="off" css={contactSearchInputStyle()} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchUsers} />
 				</div>
 			);
 		}
@@ -269,8 +264,8 @@ class CometChatUserList extends React.PureComponent {
 			<div css={contactWrapperStyle(this.props, theme)} className="contacts">
 				<div css={contactHeaderStyle(theme)} className="contacts__header">
 					{closeBtn}
-					<h4 css={contactHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.state.lang)}>
-						{Translator.translate("USERS", this.state.lang)}
+					<h4 css={contactHeaderTitleStyle(this.props)} className="header__title" dir={Translator.getDirection(this.props.lang)}>
+						{Translator.translate("USERS", this.props.lang)}
 					</h4>
 					<div></div>
 				</div>

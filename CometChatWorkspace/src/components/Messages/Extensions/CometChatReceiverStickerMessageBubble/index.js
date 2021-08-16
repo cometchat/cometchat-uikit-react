@@ -86,7 +86,7 @@ class CometChatReceiverStickerMessageBubble extends React.Component {
 			stickerData = this.props.message.data.customData;
 
 			if (stickerData.hasOwnProperty("sticker_url")) {
-				const stickerName = stickerData.hasOwnProperty("sticker_name") ? stickerData.sticker_name : Translator.translate("STICKER", this.props.lang);
+				const stickerName = stickerData.hasOwnProperty("sticker_name") ? stickerData.sticker_name : Translator.translate("STICKER", this.context.language);
 				stickerImg = <img src={stickerData.sticker_url} alt={stickerName} />;
 			}
 		}
@@ -136,13 +136,11 @@ class CometChatReceiverStickerMessageBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatReceiverStickerMessageBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverStickerMessageBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

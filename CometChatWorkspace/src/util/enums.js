@@ -5,6 +5,7 @@ export const MESSAGE_DELIVERED = 'onMessagesDelivered';
 export const MESSAGE_READ = 'onMessagesRead';
 export const MESSAGE_DELETED = 'onMessageDeleted';
 export const MESSAGE_EDITED = 'onMessageEdited';
+export const TRANSIENT_MESSAGE_RECEIVED = "onTransientMessageReceived";
 
 export const INCOMING_CALL_RECEIVED = 'onIncomingCallReceived';
 export const OUTGOING_CALL_ACCEPTED = 'onOutgoingCallAccepted';
@@ -32,36 +33,38 @@ export const CUSTOM_TYPE_WHITEBOARD = "extension_whiteboard";
 export const CUSTOM_TYPE_MEETING = "meeting";
 
 export const CONSTANTS = {
-    LOCALE: "cometchat:locale",
-    ACTIVECALL: "cometchat:activecall",
-    MAX_MESSAGE_COUNT: 1000,
-    METADATA_TYPE_LIVEREACTION: "live_reaction",
-    LIVE_REACTIONS: { "heart": "./resources/heart.png", "thumbsup": "👍", "clap": "👏", "wink": "😉" },
-    MESSAGES_COMPONENT: "messages",
-    EMBEDDED_COMPONENT: "embedded",
-    OUTGOING_DEFAULT_CALLING: "outgoing_default",
-    INCOMING_DEFAULT_CALLING: "incoming_default",
-    INCOMING_DIRECT_CALLING: "incoming_direct",
-    OUTGOING_DIRECT_CALLING: "outgoing_direct",
-    AUDIO: {
-        "INCOMING_MESSAGE": "incomingMessage",
-        "INCOMING_OTHER_MESSAGE": "incomingOtherMessage",
-        "OUTGOING_MESSAGE": "outgoingMessage",
-        "INCOMING_CALL": "incomingCall",
-        "OUTGOING_CALL": "outgoingCall"
-    },
-    ERROR_CODES: {
-        "ERR_CHAT_API_FAILURE": "ERR_CHAT_API_FAILURE"
-    },
-    CALLS: {
-        "ONGOING_CALL": "noOngoingCall",
-        "ONGOING_CALL_SAME_GROUP": "ongoingDirectCallInSameGroup",
-        "ONGOING_CALL_DIFF_GROUP": "ongoingDirectCallInDifferentGroup",
-    },
+	LOCALE: "cometchat:locale",
+	ACTIVECALL: "cometchat:activecall",
+	MAX_MESSAGE_COUNT: 1000,
+	METADATA_TYPE_LIVEREACTION: "live_reaction",
+	LIVE_REACTIONS: { heart: "./resources/heart.png", thumbsup: "👍", clap: "👏", wink: "😉" },
+	MESSAGES_COMPONENT: "messages",
+	EMBEDDED_COMPONENT: "embedded",
+	OUTGOING_DEFAULT_CALLING: "outgoing_default",
+	INCOMING_DEFAULT_CALLING: "incoming_default",
+	INCOMING_DIRECT_CALLING: "incoming_direct",
+	OUTGOING_DIRECT_CALLING: "outgoing_direct",
+	AUDIO: {
+		INCOMING_MESSAGE: "incomingMessage",
+		INCOMING_OTHER_MESSAGE: "incomingOtherMessage",
+		OUTGOING_MESSAGE: "outgoingMessage",
+		INCOMING_CALL: "incomingCall",
+		OUTGOING_CALL: "outgoingCall",
+	},
+	ERROR_CODES: {
+		ERR_CHAT_API_FAILURE: "ERR_CHAT_API_FAILURE",
+	},
+	CALLS: {
+		ONGOING_CALL: "noOngoingCall",
+		ONGOING_CALL_SAME_GROUP: "ongoingDirectCallInSameGroup",
+		ONGOING_CALL_DIFF_GROUP: "ongoingDirectCallInDifferentGroup",
+	},
 	GROUPS: {
-		"OWNER": "owner"
-	}
-}
+		OWNER: "owner",
+	},
+	LIVE_REACTION_INTERVAL: 1500,
+	FILE_METADATA: "file",
+};
 
 export const ACTIONS = {
 	MESSAGE_SENT: "messageSent",
@@ -93,8 +96,8 @@ export const ACTIONS = {
 	SCOPECHANGE_GROUPMEMBER_SUCCESS: "updateGroupMember",
 	BAN_GROUP_MEMBER: "ban",
 	KICK_GROUP_MEMBER: "kick",
-	BAN_GROUPMEMBER_SUCCESS: "removeGroupMember",
-	KICK_GROUPMEMBER_SUCCESS: "removeGroupMember",
+	BAN_GROUPMEMBER_SUCCESS: "banGroupMember",
+	KICK_GROUPMEMBER_SUCCESS: "kickGroupMember",
 	CHANGE_SCOPE_GROUP_MEMBER: "changescope",
 	UNBAN_GROUP_MEMBER: "unban",
 	ADD_GROUP_MEMBER_SUCCESS: "addGroupMembers",

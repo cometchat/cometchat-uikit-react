@@ -243,7 +243,7 @@ class CometChatMessageActions extends React.PureComponent {
 						onMouseLeave={event => this.toggleTooltip(event, false)}
 						css={groupButtonStyle(reactIcon, this.context)}
 						className="group__button button__reacttomessage"
-						data-title={Translator.translate("ADD_REACTION", this.props.lang)}
+						data-title={Translator.translate("ADD_REACTION", this.context.language)}
 						onClick={this.reactToMessage}></button>
 				</li>
 			);
@@ -259,7 +259,7 @@ class CometChatMessageActions extends React.PureComponent {
 						onMouseLeave={event => this.toggleTooltip(event, false)}
 						css={groupButtonStyle(startThreadIcon, this.context)}
 						className="group__button button__threadedchats"
-						data-title={this.props.message.replyCount ? Translator.translate("REPLY_TO_THREAD", this.props.lang) : Translator.translate("REPLY_IN_THREAD", this.props.lang)}
+						data-title={this.props.message.replyCount ? Translator.translate("REPLY_TO_THREAD", this.context.language) : Translator.translate("REPLY_IN_THREAD", this.context.language)}
 						onClick={this.viewThread}></button>
 				</li>
 			);
@@ -287,7 +287,7 @@ class CometChatMessageActions extends React.PureComponent {
 						onMouseLeave={event => this.toggleTooltip(event, false)}
 						css={groupButtonStyle(deleteIcon, this.context, 1)}
 						className="group__button button__delete"
-						data-title={Translator.translate("DELETE_MESSAGE", this.props.lang)}
+						data-title={Translator.translate("DELETE_MESSAGE", this.context.language)}
 						onClick={this.deleteMessage}></button>
 				</li>
 			);
@@ -303,7 +303,7 @@ class CometChatMessageActions extends React.PureComponent {
 						onMouseLeave={event => this.toggleTooltip(event, false)}
 						css={groupButtonStyle(editIcon, this.context)}
 						className="group__button button__edit"
-						data-title={Translator.translate("EDIT_MESSAGE", this.props.lang)}
+						data-title={Translator.translate("EDIT_MESSAGE", this.context.language)}
 						onClick={this.editMessage}></button>
 				</li>
 			);
@@ -319,7 +319,7 @@ class CometChatMessageActions extends React.PureComponent {
 					onMouseLeave={event => this.toggleTooltip(event, false)}
 					css={groupButtonStyle(translateIcon, this.context)}
 					className="group__button button__translate"
-					data-title={Translator.translate("TRANSLATE_MESSAGE", this.props.lang)}
+					data-title={Translator.translate("TRANSLATE_MESSAGE", this.context.language)}
 					onClick={this.translateMessage}></button>
 				</li>
 			);
@@ -338,7 +338,7 @@ class CometChatMessageActions extends React.PureComponent {
 						onMouseLeave={event => this.toggleTooltip(event, false)}
 						css={groupButtonStyle(sendMessageInPrivateIcon, this.context)}
 						className="group__button button__translate"
-						data-title={Translator.translate("SEND_MESSAGE_IN_PRIVATE", this.props.lang)}
+						data-title={Translator.translate("SEND_MESSAGE_IN_PRIVATE", this.context.language)}
 						onClick={this.sendMessageInPrivate}></button>
 				</li>
 			);
@@ -365,13 +365,11 @@ class CometChatMessageActions extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatMessageActions.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 	actionGenerated: {},
 };
 
 CometChatMessageActions.propTypes = {
-	lang: PropTypes.string.isRequired,
 	theme: PropTypes.object.isRequired,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

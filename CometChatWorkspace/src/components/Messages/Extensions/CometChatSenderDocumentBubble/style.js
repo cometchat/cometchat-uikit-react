@@ -107,7 +107,9 @@ export const messageInfoWrapperStyle = () => {
         alignSelf: "flex-end",
         display: "flex",
         justifyContent: "flex-end",
-        alignItems: "center"
+        alignItems: "center",
+        padding: "4px 8px",
+        height: "25px",
     }
 }
 

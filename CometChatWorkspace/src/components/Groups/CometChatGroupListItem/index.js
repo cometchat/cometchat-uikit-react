@@ -56,11 +56,11 @@ class CometChatGroupListItem extends React.PureComponent {
 		let groupTypeIcon = null;
 		if (this.props.group.type === CometChat.GROUP_TYPE.PRIVATE) {
 
-			groupTypeIcon = (<i css={itemIconStyle(shieldIcon, this.context)} title={Translator.translate("PRIVATE_GROUP", this.props.lang)}></i>);
+			groupTypeIcon = (<i css={itemIconStyle(shieldIcon, this.context)} title={Translator.translate("PRIVATE_GROUP", this.context.language)}></i>);
 
 		} else if (this.props.group.type === CometChat.GROUP_TYPE.PASSWORD) {
 
-			groupTypeIcon = (<i css={itemIconStyle(lockIcon, this.context)} title={Translator.translate("PROTECTED_GROUP", this.props.lang)}></i>);
+			groupTypeIcon = (<i css={itemIconStyle(lockIcon, this.context)} title={Translator.translate("PROTECTED_GROUP", this.context.language)}></i>);
 		}
 
 		return (
@@ -68,12 +68,12 @@ class CometChatGroupListItem extends React.PureComponent {
 				<div css={itemThumbnailStyle()} className="list__item__thumbnail">
 					<CometChatAvatar group={this.props.group} />
 				</div>
-				<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(this.props.lang)}>
+				<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(this.context.language)}>
 					<div css={itemNameWrapperStyle()} className="item__details__name" onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
 						<p css={listItemName()}>{this.props.group.name}</p>
 						<div css={listItemIcon()}>{groupTypeIcon}</div>
 					</div>
-					<div css={itemDescStyle(this.context)} className="item__details__desc">{`${this.props.group.membersCount} ${Translator.translate("MEMBERS", this.props.lang)}`}</div>
+					<div css={itemDescStyle(this.context)} className="item__details__desc">{`${this.props.group.membersCount} ${Translator.translate("MEMBERS", this.context.language)}`}</div>
 				</div>
 			</div>
 		);
@@ -82,7 +82,6 @@ class CometChatGroupListItem extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatGroupListItem.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 	group: {},
 	selectedGroup: {},
@@ -90,7 +89,6 @@ CometChatGroupListItem.defaultProps = {
 };
 
 CometChatGroupListItem.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	selectedGroup: PropTypes.oneOfType([PropTypes.object, PropTypes.shape(CometChat.Group)]),
 	group: PropTypes.oneOfType([PropTypes.object, PropTypes.shape(CometChat.Group)]),

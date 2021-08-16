@@ -30,7 +30,6 @@ class CometChatReadReceipt extends React.PureComponent {
 		};
 
 		this.context.getLoggedinUser().then(user => {
-			//console.log("constructor this.loggedInUser", this.loggedInUser);
 			this.loggedInUser = { ...user };
 		});
 	}
@@ -68,6 +67,7 @@ class CometChatReadReceipt extends React.PureComponent {
 			color = null;
 		
 		if (this.props.message?.sender?.uid === this.loggedInUser?.uid) {
+
 			if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 				if (this.props.message.hasOwnProperty("error")) {
 					ticks = errorTick;
@@ -96,19 +96,25 @@ class CometChatReadReceipt extends React.PureComponent {
 					receiptText = "SENDING";
 					dateField = this.props.message._composedAt;
 					color = this.context.theme.secondaryTextColor;
-					if (this.props.message.hasOwnProperty("sentAt")) {
+
+					if (this.props.message.hasOwnProperty("readAt")) {
+
+						ticks = blueDoubleTick;
+						receiptText = "SEEN";
+						color = this.context.theme.primaryColor;
+						dateField = this.props.message.readAt;
+
+					} else if (this.props.message.hasOwnProperty("deliveredAt")) {
+
+						ticks = greyDoubleTick;
+						receiptText = "DELIVERED";
+						dateField = this.props.message.deliveredAt;
+
+					} else if (this.props.message.hasOwnProperty("sentAt")) {
+
 						ticks = greyTick;
 						receiptText = "SENT";
 						dateField = this.props.message.sentAt;
-						if (this.props.message.hasOwnProperty("deliveredAt")) {
-							ticks = greyDoubleTick;
-							receiptText = "DELIVERED";
-							if (this.props.message.hasOwnProperty("readAt")) {
-								ticks = blueDoubleTick;
-								receiptText = "SEEN";
-								color = this.context.theme.primaryColor;
-							}
-						}
 					}
 				}
 			}
@@ -121,29 +127,27 @@ class CometChatReadReceipt extends React.PureComponent {
 			ticks = null;
 		}
 
-		const receipt = ticks ? <i css={iconStyle(ticks, color)} title={Translator.translate(receiptText, this.props.lang)}></i> : null;
+		const receipt = ticks ? <i css={iconStyle(ticks, color)} title={Translator.translate(receiptText, this.context.language)}></i> : null;
 
-		const timestamp = getMessageSentTime(dateField, this.props.lang);
+		const timestamp = getMessageSentTime(dateField, this.context.language);
 
 		return (
-			<>
+			<React.Fragment>
 				<span css={msgTimestampStyle(this.context, this.props, this.loggedInUser)} className="message__timestamp">
 					{timestamp}
 				</span>
 				{receipt}
-			</>
+			</React.Fragment>
 		);
 	}
 }
 
 // Specifies the default values for props:
 CometChatReadReceipt.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 };
 
 CometChatReadReceipt.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	message: PropTypes.object.isRequired,
 };

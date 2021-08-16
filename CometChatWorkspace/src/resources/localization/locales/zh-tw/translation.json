@@ -209,6 +209,7 @@
     "INVALID_POLL_OPTION": "請在建立投票前輸入必要的答案",
 	"SAME_LANGUAGE_MESSAGE": "選擇的翻譯語言與原始訊息的語言相似",
     "LEAVE": "離開",
+	"SELECT_MODE":"選取模式",
 	"CALLS": "來電",
 	"CUSTOM_MESSAGE_LOCATION": "📍 位置",
 	"OFFLINE": "離線",

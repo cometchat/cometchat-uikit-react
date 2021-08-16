@@ -209,6 +209,7 @@
 	"INVALID_POLL_OPTION": "Sila masukkan jawapan yang diperlukan sebelum mencipta pengundian",
 	"SAME_LANGUAGE_MESSAGE": "Bahasa yang dipilih untuk terjemahan adalah sama dengan bahasa mesej asal",
     "LEAVE": "Tinggalkan",
+	"SELECT_MODE":"Pilih Mod",
 	"CALLS": "Panggilan",
 	"CUSTOM_MESSAGE_LOCATION": "📍 Lokasi",
 	"OFFLINE": "Luar Talian",

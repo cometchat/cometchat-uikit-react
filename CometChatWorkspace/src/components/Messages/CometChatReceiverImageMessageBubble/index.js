@@ -34,13 +34,15 @@ import srcIcon from "./resources/1px.png";
 class CometChatReceiverImageMessageBubble extends React.Component {
 	static contextType = CometChatContext;
 
-	constructor(props) {
-		super(props);
+	constructor(props, context) {
+
+		super(props, context);
 		this._isMounted = false;
 		this.imgRef = React.createRef();
 
 		this.state = {
 			imageUrl: srcIcon,
+			imageName: Translator.translate("LOADING", this.context.language),
 			isHovering: false,
 		};
 	}
@@ -55,12 +57,23 @@ class CometChatReceiverImageMessageBubble extends React.Component {
 		|| this.state.isHovering !== nextState.isHovering) {
 			return true;
 		}
+
 		return false;
 	}
 
 	componentDidMount() {
 		this._isMounted = true;
 		this.setImage();
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+
+		const previousMessageStr = JSON.stringify(prevProps.message);
+		const currentMessageStr = JSON.stringify(this.props.message);
+
+		if (previousMessageStr !== currentMessageStr) {
+			this.setImage();
+		}
 	}
 
 	componentWillUnmount() {
@@ -82,16 +95,27 @@ class CometChatReceiverImageMessageBubble extends React.Component {
 	};
 
 	setImage = () => {
+
 		const thumbnailGenerationData = checkMessageForExtensionsData(this.props.message, "thumbnail-generation");
+		
 		if (thumbnailGenerationData) {
+
+			let imageName = "";
+			if (this.props.message.data.attachments 
+			&& typeof this.props.message.data.attachments === "object" 
+			&& this.props.message.data.attachments.length) {
+
+				imageName = this.props.message.data.attachments[0]?.name;
+			}
+
 			const mq = window.matchMedia(this.props.theme.breakPoints[0]);
 			mq.addListener(() => {
 				const imageToDownload = this.chooseImage(thumbnailGenerationData);
 				let img = new Image();
 				img.src = imageToDownload;
 				img.onload = () => {
-					if (this._isMounted) {
-						this.setState({ imageUrl: img.src });
+					if (this._isMounted && this.state.imageUrl !== img.src) {
+						this.setState({ imageUrl: img.src, imageName: imageName });
 					}
 				};
 			});
@@ -102,8 +126,8 @@ class CometChatReceiverImageMessageBubble extends React.Component {
 					let img = new Image();
 					img.src = imageToDownload;
 					img.onload = () => {
-						if (this._isMounted) {
-							this.setState({ imageUrl: img.src });
+						if (this._isMounted && this.state.imageUrl !== img.src) {
+							this.setState({ imageUrl: img.src, imageName: imageName });
 						}
 					};
 				})
@@ -114,13 +138,21 @@ class CometChatReceiverImageMessageBubble extends React.Component {
 	};
 
 	setMessageImageUrl = () => {
-		let img = new Image();
-		img.src = this.props.message.data.url;
-		img.onload = () => {
-			if (this._isMounted) {
-				this.setState({ imageUrl: img.src });
-			}
-		};
+
+		if (this.props.message.data.attachments 
+		&& typeof this.props.message.data.attachments === "object" 
+		&& this.props.message.data.attachments.length) {
+
+			let img = new Image();
+			img.src = this.props.message.data.attachments[0].url;
+			const imageName = this.props.message.data.attachments[0]?.name;
+			img.onload = () => {
+				if (this._isMounted && this.state.imageUrl !== img.src) {
+					this.setState({ imageUrl: img.src, imageName: imageName });
+				}
+			};
+		}
+		
 	};
 
 	downloadImage(imgUrl) {
@@ -215,7 +247,7 @@ class CometChatReceiverImageMessageBubble extends React.Component {
 							<div css={messageImgWrapperStyle(this.context)} onClick={this.open} className="message__image__wrapper">
 								<img
 									src={this.state.imageUrl}
-									alt={this.state.imageUrl}
+									alt={this.state.imageName}
 									ref={el => {
 										this.imgRef = el;
 									}}
@@ -238,13 +270,11 @@ class CometChatReceiverImageMessageBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatReceiverImageMessageBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverImageMessageBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

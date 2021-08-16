@@ -13,7 +13,6 @@ import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
 import { theme } from "../../../resources/theme";
-import Translator from "../../../resources/localization/translator";
 
 import { 
 	messageContainerStyle,
@@ -132,13 +131,11 @@ class CometChatReceiverFileMessageBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatReceiverFileMessageBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 	actionGenerated: {},
 };
 
 CometChatReceiverFileMessageBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

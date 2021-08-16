@@ -30,7 +30,7 @@ const CometChatBanGroupMemberListItem = (props) => {
 
     let name = props.member.name;
     let scope = context.roles[props.member.scope];
-    let unBan = (<i title={Translator.translate("UNBAN", props.lang)} onClick={() => { props.actionGenerated(enums.ACTIONS["UNBAN_GROUP_MEMBER"], props.member)}} />);
+    let unBan = (<i title={Translator.translate("UNBAN", context.language)} onClick={() => { props.actionGenerated(enums.ACTIONS["UNBAN_GROUP_MEMBER"], props.member)}} />);
 
     //if the loggedin user is moderator, don't allow unban of banned moderators or administrators
     if (context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
@@ -85,12 +85,10 @@ const CometChatBanGroupMemberListItem = (props) => {
 
 // Specifies the default values for props:
 CometChatBanGroupMemberListItem.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
     theme: theme
 };
 
 CometChatBanGroupMemberListItem.propTypes = {
-    lang: PropTypes.string,
     theme: PropTypes.object
 }
 

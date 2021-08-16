@@ -28,11 +28,11 @@ class CometChatStickerKeyboard extends React.PureComponent {
 
     static contextType = CometChatContext;
 
-    constructor(props) {
+    constructor(props, context) {
 
-        super(props);
+        super(props, context);
 
-        this.decoratorMessage = Translator.translate("LOADING", props.lang);
+        this.decoratorMessage = Translator.translate("LOADING", context.language);
 
         this.state = {
             stickerlist: [],
@@ -66,7 +66,7 @@ class CometChatStickerKeyboard extends React.PureComponent {
             const stickerList = [...defaultStickers, ...customStickers];
             
             if (stickerList.length === 0) {
-                this.decoratorMessage = Translator.translate("NO_STICKERS_FOUND", this.props.lang);
+                this.decoratorMessage = Translator.translate("NO_STICKERS_FOUND", this.context.language);
             }
 
             const stickerSet = stickerList.reduce((r, sticker, index) => {
@@ -102,7 +102,7 @@ class CometChatStickerKeyboard extends React.PureComponent {
 
         }).catch(error => {
             
-            this.decoratorMessage = Translator.translate("SOMETHING_WRONG", this.props.lang);
+            this.decoratorMessage = Translator.translate("SOMETHING_WRONG", this.context.language);
             this.setState({ "activestickerlist": [], "stickerset": {} });
         });
     }
@@ -186,12 +186,10 @@ class CometChatStickerKeyboard extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatStickerKeyboard.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
     theme: theme
 };
 
 CometChatStickerKeyboard.propTypes = {
-    lang: PropTypes.string,
     theme: PropTypes.object
 }
 

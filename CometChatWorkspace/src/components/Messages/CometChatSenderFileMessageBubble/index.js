@@ -8,9 +8,9 @@ import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatR
 import { CometChatMessageReactions } from "../Extensions";
 
 import { CometChatContext } from "../../../util/CometChatContext";
-import { checkMessageForExtensionsData } from "../../../util/common";
+import { checkMessageForExtensionsData, getMessageFileMetadata } from "../../../util/common";
+import * as enums from "../../../util/enums.js";
 
-import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
 
 import {
@@ -33,7 +33,14 @@ class CometChatSenderFileMessageBubble extends React.Component {
 
 		this.state = {
 			isHovering: false,
+			fileData: {},
 		};
+	}
+
+	componentDidMount() {
+
+		const fileData = this.getFileData();
+		this.setState({ fileData: fileData });
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
@@ -42,10 +49,29 @@ class CometChatSenderFileMessageBubble extends React.Component {
 		const nextMessageStr = JSON.stringify(nextProps.message);
 
 		if (currentMessageStr !== nextMessageStr 
-		|| this.state.isHovering !== nextState.isHovering) {
+		|| this.state.isHovering !== nextState.isHovering 
+		|| this.state.fileData !== nextState.fileData) {
 			return true;
 		}
 		return false;
+	}
+
+	componentDidUpdate(prevProps) {
+
+		const previousMessageStr = JSON.stringify(prevProps.message);
+		const currentMessageStr = JSON.stringify(this.props.message);
+
+		if (previousMessageStr !== currentMessageStr) {
+
+			const fileData = this.getFileData();
+			
+			const previousfileData = JSON.stringify(this.state.fileData);
+			const currentfileData = JSON.stringify(fileData);
+			
+			if (previousfileData !== currentfileData) {
+				this.setState({ fileData: fileData });
+			}
+		}
 	}
 
 	handleMouseHover = () => {
@@ -58,7 +84,31 @@ class CometChatSenderFileMessageBubble extends React.Component {
 		};
 	};
 
+	getFileData = () => {
+		
+		const metadataKey = enums.CONSTANTS["FILE_METADATA"];
+		const fileMetadata = getMessageFileMetadata(this.props.message, metadataKey);
+
+		if (fileMetadata instanceof Blob) {
+			
+			return { fileName: fileMetadata["name"] };
+
+		} else if (this.props.message.data.attachments 
+		&& typeof this.props.message.data.attachments === "object" 
+		&& this.props.message.data.attachments.length) {
+
+			const fileName = this.props.message.data.attachments[0]?.name;
+			const fileUrl = this.props.message.data.attachments[0]?.url;
+
+			return { fileName, fileUrl: fileUrl };
+		}
+	};
+
 	render() {
+		if (!Object.keys(this.state.fileData).length) {
+			return null;
+		}
+
 		let messageReactions = null;
 		const reactionsData = checkMessageForExtensionsData(this.props.message, "reactions");
 		if (reactionsData) {
@@ -77,24 +127,19 @@ class CometChatSenderFileMessageBubble extends React.Component {
 		}
 
 		let fileMessage = null;
-		if (this.props.message.data.hasOwnProperty("attachments") && this.props.message.data.attachments.length) {
-			const fileName = this.props.message.data.attachments[0].name;
-			const fileUrl = this.props.message.data.attachments[0].url;
-
+		if (this.state.fileData.hasOwnProperty("fileUrl")) {
 			fileMessage = (
-				<a href={fileUrl} target="_blank" rel="noopener noreferrer" className="message__file">
+				<a href={this.state.fileData?.fileUrl} target="_blank" rel="noopener noreferrer" className="message__file">
 					<i css={iconStyle(fileIcon, this.context)}></i>
-					<p>{fileName}</p>
+					<p>{this.state.fileData?.fileName}</p>
 				</a>
 			);
 		} else {
-			const fileName = this.props.message.data.name || "";
-
 			fileMessage = (
-				<div className="message__file">
+				<React.Fragment>
 					<i css={iconStyle(fileIcon, this.context)}></i>
-					<p>{fileName}</p>
-				</div>
+					<p>{this.state.fileData?.fileName}</p>
+				</React.Fragment>
 			);
 		}
 
@@ -104,7 +149,7 @@ class CometChatSenderFileMessageBubble extends React.Component {
 
 				<div css={messageWrapperStyle()} className="message__wrapper">
 					<div css={messageFileWrapper(this.context)} className="message__file__wrapper">
-						{fileMessage}
+						<div className="message__file">{fileMessage}</div>
 					</div>
 				</div>
 
@@ -121,13 +166,11 @@ class CometChatSenderFileMessageBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatSenderFileMessageBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatSenderFileMessageBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

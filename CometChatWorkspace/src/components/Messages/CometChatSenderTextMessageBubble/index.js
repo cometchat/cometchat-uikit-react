@@ -42,6 +42,7 @@ class CometChatSenderTextMessageBubble extends React.Component {
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
+		
 		const currentMessageStr = JSON.stringify(this.props.message);
 		const nextMessageStr = JSON.stringify(nextProps.message);
 		
@@ -55,12 +56,14 @@ class CometChatSenderTextMessageBubble extends React.Component {
 	}
 
 	componentDidMount() {
+
 		this.enableLargerSizeEmojis();
 	}
 
 	componentDidUpdate(prevProps, prevState) {
 		
 		if (prevProps.message !== this.props.message) {
+
 			this.setState({ translatedMessage: "" });
 		}
 
@@ -243,7 +246,7 @@ class CometChatSenderTextMessageBubble extends React.Component {
 // Specifies the default values for props:
 CometChatSenderTextMessageBubble.defaultProps = {
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatSenderTextMessageBubble.propTypes = {
