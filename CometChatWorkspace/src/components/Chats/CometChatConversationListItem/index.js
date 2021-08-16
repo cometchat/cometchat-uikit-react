@@ -53,7 +53,7 @@ class CometChatConversationListItem extends React.PureComponent {
 		const previousItem = JSON.stringify(prevProps.conversation);
 		const currentItem = JSON.stringify(this.props.conversation);
 
-		if (previousItem !== currentItem || prevProps.lang !== this.props.lang) {
+		if (previousItem !== currentItem) {
 			const message = this.getLastMessage();
 			const timestamp = this.getLastMessageTimestamp();
 
@@ -80,7 +80,7 @@ class CometChatConversationListItem extends React.PureComponent {
 			if (this.state.enableHideDeletedMessages) {
 				message = "";
 			} else {
-				message = this.props.loggedInUser.uid === lastMessage.sender.uid ? `${Translator.translate("YOU_DELETED_THIS_MESSAGE", this.props.lang)}` : `${Translator.translate("THIS_MESSAGE_DELETED", this.props.lang)}`;
+				message = this.props.loggedInUser.uid === lastMessage.sender.uid ? `${Translator.translate("YOU_DELETED_THIS_MESSAGE", this.context.language)}` : `${Translator.translate("THIS_MESSAGE_DELETED", this.context.language)}`;
 			}
 		} else {
 			switch (lastMessage.category) {
@@ -117,7 +117,7 @@ class CometChatConversationListItem extends React.PureComponent {
 		}
 
 		let timestamp = this.props.conversation.lastMessage._composedAt || this.props.conversation.lastMessage.sentAt;
-		timestamp = getTimeStampForLastMessage(timestamp, this.props.lang);
+		timestamp = getTimeStampForLastMessage(timestamp, this.context.language);
 
 		return timestamp;
 	};
@@ -129,31 +129,31 @@ class CometChatConversationListItem extends React.PureComponent {
 		switch (lastMessage.type) {
 			case enums.CUSTOM_TYPE_POLL:
 				{
-					const pollMessage = Translator.translate("CUSTOM_MESSAGE_POLL", this.props.lang);
+					const pollMessage = Translator.translate("CUSTOM_MESSAGE_POLL", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${pollMessage}` : `${pollMessage}`;
 				}
 				break;
 			case enums.CUSTOM_TYPE_STICKER:
 				{
-					const stickerMessage = Translator.translate("CUSTOM_MESSAGE_STICKER", this.props.lang);
+					const stickerMessage = Translator.translate("CUSTOM_MESSAGE_STICKER", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${stickerMessage}` : `${stickerMessage}`;
 				}
 				break;
 			case enums.CUSTOM_TYPE_DOCUMENT:
 				{
-					const docMessage = Translator.translate("CUSTOM_MESSAGE_DOCUMENT", this.props.lang);
+					const docMessage = Translator.translate("CUSTOM_MESSAGE_DOCUMENT", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${docMessage}` : `${docMessage}`;
 				}
 				break;
 			case enums.CUSTOM_TYPE_WHITEBOARD:
 				{
-					const whiteboardMessage = Translator.translate("CUSTOM_MESSAGE_WHITEBOARD", this.props.lang);
+					const whiteboardMessage = Translator.translate("CUSTOM_MESSAGE_WHITEBOARD", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${whiteboardMessage}` : `${whiteboardMessage}`;
 				}
 				break;
 			case enums.CUSTOM_TYPE_MEETING:
 				{
-					const meetingMessage = Translator.translate("VIDEO_CALL", this.props.lang);
+					const meetingMessage = Translator.translate("VIDEO_CALL", this.context.language);
 					message = `${sender} ${meetingMessage}`;
 				}
 				break;
@@ -200,37 +200,37 @@ class CometChatConversationListItem extends React.PureComponent {
 				break;
 			case CometChat.MESSAGE_TYPE.MEDIA:
 				{
-					const mediaMessage = Translator.translate("MEDIA_MESSAGE", this.props.lang);
+					const mediaMessage = Translator.translate("MEDIA_MESSAGE", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${mediaMessage}` : `${mediaMessage}`;
 				}
 				break;
 			case CometChat.MESSAGE_TYPE.IMAGE:
 				{
-					const imageMessage = Translator.translate("MESSAGE_IMAGE", this.props.lang);
+					const imageMessage = Translator.translate("MESSAGE_IMAGE", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${imageMessage}` : `${imageMessage}`;
 				}
 				break;
 			case CometChat.MESSAGE_TYPE.FILE:
 				{
-					const fileMessage = Translator.translate("MESSAGE_FILE", this.props.lang);
+					const fileMessage = Translator.translate("MESSAGE_FILE", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${fileMessage}` : `${fileMessage}`;
 				}
 				break;
 			case CometChat.MESSAGE_TYPE.VIDEO:
 				{
-					const videoMessage = Translator.translate("MESSAGE_VIDEO", this.props.lang);
+					const videoMessage = Translator.translate("MESSAGE_VIDEO", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${videoMessage}` : `${videoMessage}`;
 				}
 				break;
 			case CometChat.MESSAGE_TYPE.AUDIO:
 				{
-					const audioMessage = Translator.translate("MESSAGE_AUDIO", this.props.lang);
+					const audioMessage = Translator.translate("MESSAGE_AUDIO", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${audioMessage}` : `${audioMessage}`;
 				}
 				break;
 			case CometChat.MESSAGE_TYPE.CUSTOM:
 				{
-					const customMessage = Translator.translate("CUSTOM_MESSAGE", this.props.lang);
+					const customMessage = Translator.translate("CUSTOM_MESSAGE", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${customMessage}` : `${customMessage}`;
 				}
 				break;
@@ -248,13 +248,13 @@ class CometChatConversationListItem extends React.PureComponent {
 		switch (lastMessage.type) {
 			case CometChat.MESSAGE_TYPE.VIDEO:
 				{
-					const videoMessage = Translator.translate("VIDEO_CALL", this.props.lang);
+					const videoMessage = Translator.translate("VIDEO_CALL", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${videoMessage}` : `${videoMessage}`;
 				}
 				break;
 			case CometChat.MESSAGE_TYPE.AUDIO:
 				{
-					const audioMessage = Translator.translate("AUDIO_CALL", this.props.lang);
+					const audioMessage = Translator.translate("AUDIO_CALL", this.context.language);
 					message = lastMessage.receiverType === CometChat.RECEIVER_TYPE.GROUP ? `${sender} ${audioMessage}` : `${audioMessage}`;
 				}
 				break;
@@ -306,26 +306,26 @@ class CometChatConversationListItem extends React.PureComponent {
 
 		switch (message.action) {
 			case CometChat.ACTION_TYPE.MEMBER_ADDED:
-				actionMessage = `${byString} ${Translator.translate("ADDED", this.props.lang)} ${forString}`;
+				actionMessage = `${byString} ${Translator.translate("ADDED", this.context.language)} ${forString}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_JOINED:
-				actionMessage = `${byString} ${Translator.translate("JOINED", this.props.lang)}`;
+				actionMessage = `${byString} ${Translator.translate("JOINED", this.context.language)}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_LEFT:
-				actionMessage = `${byString} ${Translator.translate("LEFT", this.props.lang)}`;
+				actionMessage = `${byString} ${Translator.translate("LEFT", this.context.language)}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_KICKED:
-				actionMessage = `${byString} ${Translator.translate("KICKED", this.props.lang)} ${forString}`;
+				actionMessage = `${byString} ${Translator.translate("KICKED", this.context.language)} ${forString}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_BANNED:
-				actionMessage = `${byString} ${Translator.translate("BANNED", this.props.lang)} ${forString}`;
+				actionMessage = `${byString} ${Translator.translate("BANNED", this.context.language)} ${forString}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_UNBANNED:
-				actionMessage = `${byString} ${Translator.translate("UNBANNED", this.props.lang)} ${forString}`;
+				actionMessage = `${byString} ${Translator.translate("UNBANNED", this.context.language)} ${forString}`;
 				break;
 			case CometChat.ACTION_TYPE.MEMBER_SCOPE_CHANGED: {
 				const newScope = message["data"]["extras"]["scope"]["new"];
-				actionMessage = `${byString} ${Translator.translate("MADE", this.props.lang)} ${forString} ${Translator.translate(newScope, this.props.lang)}`;
+				actionMessage = `${byString} ${Translator.translate("MADE", this.context.language)} ${forString} ${Translator.translate(newScope, this.context.language)}`;
 				break;
 			}
 			default:
@@ -430,7 +430,7 @@ class CometChatConversationListItem extends React.PureComponent {
 					{avatar}
 					{presence}
 				</div>
-				<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(this.props.lang)}>
+				<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(this.context.language)}>
 					<div css={itemRowStyle()} className="item__details_block_one">
 						<div css={itemNameStyle()} className="item__details__name" onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
 							{this.props.conversation.conversationWith.name}
@@ -452,7 +452,6 @@ class CometChatConversationListItem extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatConversationListItem.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 	loggedInUser: null,
 	conversation: {
@@ -461,7 +460,6 @@ CometChatConversationListItem.defaultProps = {
 };
 
 CometChatConversationListItem.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	loggedInUser: PropTypes.shape(CometChat.User),
 	conversation: PropTypes.shape(CometChat.Conversation)

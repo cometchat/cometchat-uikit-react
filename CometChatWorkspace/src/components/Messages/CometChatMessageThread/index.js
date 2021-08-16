@@ -328,7 +328,7 @@ class CometChatMessageThread extends React.PureComponent {
 
 		let messageKey = messagelist.findIndex(message => message.id === deletedMessage.id);
 		if (messageKey > -1) {
-			console.log("this.state.enableHideDeletedMessages", this.state.enableHideDeletedMessages);
+			
 			if (this.state.enableHideDeletedMessages) {
 				messagelist.splice(messageKey, 1);
 			} else {
@@ -488,7 +488,7 @@ class CometChatMessageThread extends React.PureComponent {
 		);
 		if (this.state.parentMessage.hasOwnProperty("replyCount")) {
 			const replyCount = this.state.parentMessage.replyCount;
-			const replyText = replyCount === 1 ? `${replyCount} ${Translator.translate("REPLY", this.props.lang)}` : `${replyCount} ${Translator.translate("REPLIES", this.props.lang)}`;
+			const replyText = replyCount === 1 ? `${replyCount} ${Translator.translate("REPLY", this.context.language)}` : `${replyCount} ${Translator.translate("REPLIES", this.context.language)}`;
 
 			seperator = (
 				<div css={messageSeparatorStyle(this.context)} className="message__separator">
@@ -502,7 +502,7 @@ class CometChatMessageThread extends React.PureComponent {
 
 		let originalImageView = null;
 		if (this.state.viewOriginalImage) {
-			originalImageView = <CometChatImageViewer open={true} close={() => this.toggleOriginalImageView(false)} message={this.state.viewOriginalImage} lang={this.props.lang} />;
+			originalImageView = <CometChatImageViewer open={true} close={() => this.toggleOriginalImageView(false)} message={this.state.viewOriginalImage} lang={this.context.language} />;
 		}
 
 		let messageComposer = (
@@ -530,7 +530,7 @@ class CometChatMessageThread extends React.PureComponent {
 						<div css={headerWrapperStyle()} className="header__wrapper">
 							<div css={headerDetailStyle()} className="header__details">
 								<h6 css={headerTitleStyle()} className="header__title">
-									{Translator.translate("THREAD", this.props.lang)}
+									{Translator.translate("THREAD", this.context.language)}
 								</h6>
 								<span css={headerNameStyle()} className="header__username">
 									{this.props.threadItem.name}
@@ -556,12 +556,10 @@ class CometChatMessageThread extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatMessageThread.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme
 };
 
 CometChatMessageThread.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object
 }
 

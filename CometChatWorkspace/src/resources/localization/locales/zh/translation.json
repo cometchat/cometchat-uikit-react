@@ -209,6 +209,7 @@
     "INVALID_POLL_OPTION": "请在创建民意调查之前输入必填的答案",
 	"SAME_LANGUAGE_MESSAGE": "选定的翻译语言类似于原始消息的语言",
     "LEAVE": "离开",
+	"SELECT_MODE":"选择模式",
 	"CALLS": "来电",
 	"CUSTOM_MESSAGE_LOCATION": "📍 位置",
 	"OFFLINE": "离线",

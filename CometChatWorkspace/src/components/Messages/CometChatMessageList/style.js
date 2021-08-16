@@ -35,6 +35,7 @@ export const messageDateContainerStyle = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        height: "35px",
     }
 }
 

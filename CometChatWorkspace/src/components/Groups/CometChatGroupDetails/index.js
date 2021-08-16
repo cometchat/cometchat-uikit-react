@@ -76,10 +76,8 @@ class CometChatGroupDetails extends React.Component {
 	}
 
 	componentDidMount() {
-
 		CometChat.getLoggedinUser()
 			.then(user => {
-
 				if (this._isMounted) {
 					this.setState({ loggedInUser: user });
 				}
@@ -313,7 +311,7 @@ class CometChatGroupDetails extends React.Component {
 			case enums.GROUP_MEMBER_KICKED:
 				{
 					const member = options.user;
-					this.removeParticipants(member, false);
+					this.removeParticipants(key, member, false);
 				}
 				break;
 			case enums.GROUP_MEMBER_BANNED:
@@ -321,7 +319,7 @@ class CometChatGroupDetails extends React.Component {
 					const member = options.user;
 					//this.setAvatar(member);
 					this.banMembers([member]);
-					this.removeParticipants(member, false);
+					this.removeParticipants(key, member, false);
 				}
 				break;
 			case enums.GROUP_MEMBER_UNBANNED:
@@ -408,7 +406,6 @@ class CometChatGroupDetails extends React.Component {
 	};
 
 	onDeleteConfirm = e => {
-
 		const optionSelected = e.target.value;
 		this.setState({ showDeleteConfirmDialog: false });
 
@@ -430,7 +427,6 @@ class CometChatGroupDetails extends React.Component {
 	};
 
 	onLeaveConfirm = e => {
-
 		const optionSelected = e.target.value;
 		this.setState({ showLeaveGroupConfirmDialog: false });
 
@@ -451,7 +447,6 @@ class CometChatGroupDetails extends React.Component {
 	};
 
 	onTransferConfirm = e => {
-
 		const optionSelected = e.target.value;
 		this.setState({ showTransferOwnershipConfirmDialog: false });
 		if (optionSelected === "no") {
@@ -462,7 +457,6 @@ class CometChatGroupDetails extends React.Component {
 	};
 
 	leaveGroup = () => {
-
 		/**
 		 * If loggeduser is the owner of the group; ask him to transfer ownership before leaving the group else show leave group confirmtion dialog
 		 */
@@ -508,7 +502,7 @@ class CometChatGroupDetails extends React.Component {
 				break;
 			case enums.ACTIONS["BAN_GROUPMEMBER_SUCCESS"]:
 			case enums.ACTIONS["KICK_GROUPMEMBER_SUCCESS"]:
-				this.removeParticipants(members);
+				this.removeParticipants(action, members);
 				break;
 			case enums.ACTIONS["SCOPECHANGE_GROUPMEMBER_SUCCESS"]:
 				this.updateParticipants(members);
@@ -544,15 +538,17 @@ class CometChatGroupDetails extends React.Component {
 
 	addParticipants = (members, triggerUpdate = true) => {
 		this.context.setGroupMembers(members);
-
-		this.props.actionGenerated(enums.ACTIONS["ADD_GROUP_MEMBER_SUCCESS"], members);
+		
 		if (triggerUpdate) {
 			const newItem = { ...this.context.item, membersCount: this.context.groupMembers.length };
 			this.context.setItem(newItem);
+
+			this.props.actionGenerated(enums.ACTIONS["ADD_GROUP_MEMBER_SUCCESS"], members);
 		}
 	};
 
-	removeParticipants = (member, triggerUpdate = true) => {
+	removeParticipants = (action, member, triggerUpdate = true) => {
+
 		const groupmembers = [...this.context.groupMembers];
 		const filteredMembers = groupmembers.filter(groupmember => {
 			if (groupmember.uid === member.uid) {
@@ -564,8 +560,16 @@ class CometChatGroupDetails extends React.Component {
 		this.context.updateGroupMembers(filteredMembers);
 
 		if (triggerUpdate) {
+			
 			const newItem = { ...this.context.item, membersCount: filteredMembers.length };
 			this.context.setItem(newItem);
+
+			//if group member is banned, update banned member list in context api
+			if(action === enums.ACTIONS["BAN_GROUPMEMBER_SUCCESS"]) {
+				this.context.setBannedGroupMembers([member]);
+			}
+
+			this.props.actionGenerated(action, [member]);
 		}
 	};
 
@@ -584,21 +588,19 @@ class CometChatGroupDetails extends React.Component {
 	};
 
 	updateOwnership = uid => {
-
 		const item = { ...this.context.item, owner: uid };
 		const type = CometChat.RECEIVER_TYPE.GROUP;
-		
+
 		this.setState({ transferOwnership: false });
 		this.context.setTypeAndItem(type, item);
 	};
 
 	closeGroupDetail = () => {
 		this.props.actionGenerated(enums.ACTIONS["CLOSE_GROUP_DETAIL"]);
-	}
+	};
 
 	render() {
-
-		if(this.state.loggedInUser === null) {
+		if (this.state.loggedInUser === null) {
 			return null;
 		}
 
@@ -649,9 +651,7 @@ class CometChatGroupDetails extends React.Component {
 			</div>
 		);
 
-		let sharedmediaView = (
-			<CometChatSharedMediaView containerHeight="225px" />
-		);
+		let sharedmediaView = <CometChatSharedMediaView containerHeight="225px" lang={this.context.language} />;
 
 		if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
 			//if viewing group membersfeature is disabled
@@ -727,55 +727,37 @@ class CometChatGroupDetails extends React.Component {
 		if (this.state.viewMember) {
 			viewMembers = (
 				<CometChatViewGroupMemberList
-				loggedinuser={this.state.loggedInUser}
-				enableChangeScope={this.state.enableChangeScope}
-				enableKickGroupMembers={this.state.enableKickGroupMembers}
-				enableBanGroupMembers={this.state.enableBanGroupMembers}
-				close={() => this.clickHandler("viewmember", false)}
-				actionGenerated={this.membersActionHandler} />
+					loggedinuser={this.state.loggedInUser}
+					enableChangeScope={this.state.enableChangeScope}
+					enableKickGroupMembers={this.state.enableKickGroupMembers}
+					enableBanGroupMembers={this.state.enableBanGroupMembers}
+					close={() => this.clickHandler("viewmember", false)}
+					actionGenerated={this.membersActionHandler}
+				/>
 			);
 		}
 
 		let addMembers = null;
 		if (this.state.addMember) {
-			addMembers = (
-				<CometChatAddGroupMemberList 
-				close={() => this.clickHandler("addmember", false)} 
-				actionGenerated={this.membersActionHandler} />
-			);
+			addMembers = <CometChatAddGroupMemberList close={() => this.clickHandler("addmember", false)} actionGenerated={this.membersActionHandler} />;
 		}
 
 		let bannedMembers = null;
 		if (this.state.banMember) {
-			bannedMembers = (
-				<CometChatBanGroupMemberList 
-				loggedinuser={this.state.loggedInUser}
-				close={() => this.clickHandler("banmember", false)} 
-				actionGenerated={this.membersActionHandler} />
-			);
+			bannedMembers = <CometChatBanGroupMemberList loggedinuser={this.state.loggedInUser} close={() => this.clickHandler("banmember", false)} actionGenerated={this.membersActionHandler} />;
 		}
 
 		let showDeleteConfirmDialog = null;
 		if (this.state.showDeleteConfirmDialog) {
 			showDeleteConfirmDialog = (
-				<CometChatConfirmDialog 
-				{...this.props} 
-				onClick={this.onDeleteConfirm} 
-				message={Translator.translate("DELETE_CONFIRM", this.context.language)} 
-				confirmButtonText={Translator.translate("DELETE", this.context.language)} 
-				cancelButtonText={Translator.translate("CANCEL", this.context.language)} />
+				<CometChatConfirmDialog {...this.props} onClick={this.onDeleteConfirm} message={Translator.translate("DELETE_CONFIRM", this.context.language)} confirmButtonText={Translator.translate("DELETE", this.context.language)} cancelButtonText={Translator.translate("CANCEL", this.context.language)} />
 			);
 		}
 
 		let showLeaveGroupConfirmDialog = null;
 		if (this.state.showLeaveGroupConfirmDialog) {
 			showLeaveGroupConfirmDialog = (
-				<CometChatConfirmDialog 
-				{...this.props} 
-				onClick={this.onLeaveConfirm} 
-				message={Translator.translate("LEAVE_CONFIRM", this.context.language)} 
-				confirmButtonText={Translator.translate("LEAVE", this.context.language)} 
-				cancelButtonText={Translator.translate("CANCEL", this.context.language)} />
+				<CometChatConfirmDialog {...this.props} onClick={this.onLeaveConfirm} message={Translator.translate("LEAVE_CONFIRM", this.context.language)} confirmButtonText={Translator.translate("LEAVE", this.context.language)} cancelButtonText={Translator.translate("CANCEL", this.context.language)} />
 			);
 		}
 
@@ -783,23 +765,18 @@ class CometChatGroupDetails extends React.Component {
 		if (this.state.showTransferOwnershipConfirmDialog) {
 			showTransferOwnershipConfirmDialog = (
 				<CometChatConfirmDialog
-				{...this.props}
-				onClick={this.onTransferConfirm}
-				message={Translator.translate("TRANSFER_CONFIRM", this.context.language)}
-				confirmButtonText={Translator.translate("TRANSFER", this.context.language)}
-				cancelButtonText={Translator.translate("CANCEL", this.context.language)} />
+					{...this.props}
+					onClick={this.onTransferConfirm}
+					message={Translator.translate("TRANSFER_CONFIRM", this.context.language)}
+					confirmButtonText={Translator.translate("TRANSFER", this.context.language)}
+					cancelButtonText={Translator.translate("CANCEL", this.context.language)}
+				/>
 			);
 		}
 
 		let transferOwnership = null;
 		if (this.state.transferOwnership) {
-			transferOwnership = (
-				<CometChatTransferOwnershipMemberList 
-				roles={this.roles} 
-				loggedinuser={this.state.loggedInUser} 
-				actionGenerated={this.membersActionHandler} 
-				close={() => this.clickHandler("transferownership", false)} />
-			);
+			transferOwnership = <CometChatTransferOwnershipMemberList roles={this.roles} loggedinuser={this.state.loggedInUser} actionGenerated={this.membersActionHandler} close={() => this.clickHandler("transferownership", false)} />;
 		}
 
 		return (
@@ -822,7 +799,7 @@ class CometChatGroupDetails extends React.Component {
 				{showDeleteConfirmDialog}
 				{showLeaveGroupConfirmDialog}
 				{showTransferOwnershipConfirmDialog}
-				<CometChatToastNotification ref={el => (this.toastRef = el)} />
+				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} />
 			</div>
 		);
 	}

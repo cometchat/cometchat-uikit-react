@@ -97,7 +97,7 @@ class CometChatUserDetails extends React.Component {
 	enableUserPresence = () => {
 		this.context.FeatureRestriction.isUserPresenceEnabled()
 			.then(response => {
-				if (response !== this.state.enableUserPresence) {
+				if (response !== this.state.enableUserPresence && this._isMounted) {
 					this.setState({ enableUserPresence: response });
 				}
 			})
@@ -303,7 +303,7 @@ class CometChatUserDetails extends React.Component {
 
 		let sharedmediaView = (
 			<div css={mediaSectionStyle()} className="detailpane__section">
-				<CometChatSharedMediaView theme={this.props.theme} />
+				<CometChatSharedMediaView theme={this.props.theme} lang={this.context.language} />
 			</div>
 		);
 
@@ -331,7 +331,7 @@ class CometChatUserDetails extends React.Component {
 						</div>
 					</div>
 				</div>
-				<CometChatToastNotification ref={el => (this.toastRef = el)} />
+				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} />
 				{viewProfile}
 				{blockUserView}
 				{sharedmediaView}
@@ -342,12 +342,10 @@ class CometChatUserDetails extends React.Component {
 
 // Specifies the default values for props:
 CometChatUserDetails.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
 };
 
 CometChatUserDetails.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 };
 

@@ -117,7 +117,7 @@ class CometChatReceiverWhiteboardBubble extends React.Component {
 			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
 		}
 
-		const documentTitle = `${this.props.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_WHITEBOARD", this.props.lang)}`;
+		const documentTitle = `${this.props.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_WHITEBOARD", this.context.language)}`;
 
 		return (
 			<div css={messageContainerStyle()} className="receiver__message__container message__whiteboard" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
@@ -129,7 +129,7 @@ class CometChatReceiverWhiteboardBubble extends React.Component {
 						<div css={messageTxtContainerStyle()} className="message__whiteboard__container">
 							<div css={messageTxtWrapperStyle(this.context)} className="message__whiteboard__wrapper">
 								<div css={messageTxtTitleStyle(this.context)} className="message__whiteboard__title">
-									<i css={iconStyle(whiteboardIcon, this.context)} title={Translator.translate("COLLABORATIVE_WHITEBOARD", this.props.lang)}></i>
+									<i css={iconStyle(whiteboardIcon, this.context)} title={Translator.translate("COLLABORATIVE_WHITEBOARD", this.context.language)}></i>
 									<p css={messageTxtStyle()} className="whiteboard__title">
 										{documentTitle}
 									</p>
@@ -137,7 +137,7 @@ class CometChatReceiverWhiteboardBubble extends React.Component {
 
 								<ul css={messageBtnStyle(this.context)} className="whiteboard__button">
 									<li onClick={this.launchCollaborativeWhiteboard}>
-										<p>{Translator.translate("JOIN", this.props.lang)}</p>
+										<p>{Translator.translate("JOIN", this.context.language)}</p>
 									</li>
 								</ul>
 							</div>
@@ -158,13 +158,11 @@ class CometChatReceiverWhiteboardBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatReceiverWhiteboardBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverWhiteboardBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

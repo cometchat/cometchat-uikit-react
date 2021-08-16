@@ -2,7 +2,6 @@ import { useContext } from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
-import PropTypes from "prop-types";
 
 import { CometChatContext } from "../../../../util/CometChatContext";
 
@@ -26,7 +25,7 @@ const CometChatCreatePollOptions = (props) => {
                 tabIndex={props.tabIndex}
                 type="text" 
                 autoComplete="off" 
-                placeholder={Translator.translate("ENTER_YOUR_OPTION", props.lang)}
+                placeholder={Translator.translate("ENTER_YOUR_OPTION", context.language)}
                 value={props.value}
                 onChange={(event) => props.optionChangeHandler(event, props.option)} />
             </td>
@@ -35,15 +34,6 @@ const CometChatCreatePollOptions = (props) => {
             </td>
         </tr>
     );
-}
-
-// Specifies the default values for props:
-CometChatCreatePollOptions.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
-};
-
-CometChatCreatePollOptions.propTypes = {
-    lang: PropTypes.string,
 }
 
 export { CometChatCreatePollOptions };

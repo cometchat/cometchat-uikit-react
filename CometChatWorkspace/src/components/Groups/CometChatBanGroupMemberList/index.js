@@ -51,7 +51,7 @@ class CometChatBanGroupMemberList extends React.Component {
     componentDidMount() {
 
         if (this.context.bannedGroupMembers.length === 0) {
-            this.setState({ decoratorMessage: Translator.translate("NO_BANNED_MEMBERS_FOUND", this.props.lang) });
+            this.setState({ decoratorMessage: Translator.translate("NO_BANNED_MEMBERS_FOUND", this.context.language) });
         } else {
             this.setState({ decoratorMessage: "" });
         }
@@ -60,7 +60,7 @@ class CometChatBanGroupMemberList extends React.Component {
     componentDidUpdate() {
         
         if (this.context.bannedGroupMembers.length === 0 && this.state.decoratorMessage === "") {
-            this.setState({ decoratorMessage: Translator.translate("NO_BANNED_MEMBERS_FOUND", this.props.lang) });
+            this.setState({ decoratorMessage: Translator.translate("NO_BANNED_MEMBERS_FOUND", this.context.language) });
         } else if (this.context.bannedGroupMembers.length && this.state.decoratorMessage.length) {
             this.setState({ decoratorMessage: "" });
         }
@@ -74,10 +74,10 @@ class CometChatBanGroupMemberList extends React.Component {
             if(response) {
                 this.props.actionGenerated(enums.ACTIONS["UNBAN_GROUP_MEMBER_SUCCESS"], [memberToUnBan]);
             } else {
-                this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) });
+                this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.context.language) });
             }
 
-        }).catch(error => this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
+        }).catch(error => this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.context.language) }));
     }
 
     updateMembers = (action, member) => {
@@ -127,11 +127,11 @@ class CometChatBanGroupMemberList extends React.Component {
             <React.Fragment>
                 <CometChatBackdrop show={true} clicked={this.props.close} />
                 <div css={modalWrapperStyle(this.context)} className="modal__bannedmembers">
-                    <span css={modalCloseStyle(clearIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.props.lang)}></span>
+                    <span css={modalCloseStyle(clearIcon, this.context)} className="modal__close" onClick={this.props.close} title={Translator.translate("CLOSE", this.context.language)}></span>
 
                     <div css={modalBodyStyle()} className="modal__body">
-                        <div css={modalCaptionStyle(Translator.getDirection(this.props.lang))} className="modal__title">
-                            {Translator.translate("BANNED_MEMBERS", this.props.lang)}
+                        <div css={modalCaptionStyle(Translator.getDirection(this.context.language))} className="modal__title">
+                            {Translator.translate("BANNED_MEMBERS", this.context.language)}
                         </div>
                         <div css={modalErrorStyle(this.context)} className="modal__error">
                             {this.state.errorMessage}
@@ -140,13 +140,13 @@ class CometChatBanGroupMemberList extends React.Component {
                         <div css={modalListStyle()} className="modal__content">
                             <div css={listHeaderStyle(this.context)} className="content__header">
                                 <div css={nameColumnStyle(this.props)} className="name">
-                                    {Translator.translate("NAME", this.props.lang)}
+                                    {Translator.translate("NAME", this.context.language)}
                                 </div>
                                 <div css={roleColumnStyle(this.context)} className="role">
-                                    {Translator.translate("SCOPE", this.props.lang)}
+                                    {Translator.translate("SCOPE", this.context.language)}
                                 </div>
                                 <div css={actionColumnStyle(this.context)} className="unban">
-                                    {Translator.translate("UNBAN", this.props.lang)}
+                                    {Translator.translate("UNBAN", this.context.language)}
                                 </div>
                             </div>
                             {messageContainer}
@@ -164,12 +164,10 @@ class CometChatBanGroupMemberList extends React.Component {
 
 // Specifies the default values for props:
 CometChatBanGroupMemberList.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
     theme: theme
 };
 
 CometChatBanGroupMemberList.propTypes = {
-    lang: PropTypes.string,
     theme: PropTypes.object
 }
 

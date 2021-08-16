@@ -106,7 +106,7 @@ class CometChatReceiverAudioMessageBubble extends React.Component {
 						<div css={messageAudioContainerStyle()} className="message__audio__container">
 							<div css={messageAudioWrapperStyle()} className="message__audio__wrapper">
 								<audio controls>
-									<source src={this.props.message.data.url} />
+									<source src={this.props.message.data.attachments[0].url} />
 								</audio>
 							</div>
 						</div>

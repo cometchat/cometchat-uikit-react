@@ -106,7 +106,7 @@ class CometChatReceiverVideoMessageBubble extends React.Component {
 						<div css={messageVideoContainerStyle()} className="message__video__container">
 							<div css={messageVideoWrapperStyle()} className="message__video__wrapper">
 								<video controls>
-									<source src={this.props.message.data.url} />
+									<source src={this.props.message.data.attachments[0].url} />
 								</video>
 							</div>
 						</div>

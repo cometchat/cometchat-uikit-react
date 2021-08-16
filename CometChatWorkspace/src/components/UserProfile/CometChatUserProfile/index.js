@@ -122,7 +122,7 @@ class CometChatUserProfile extends React.Component {
 		return (
 			<div css={userInfoScreenStyle(this.props)} className="userinfo">
 				{userProfile}
-				<CometChatToastNotification ref={el => (this.toastRef = el)} />
+				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} />
 			</div>
 		);
 	}

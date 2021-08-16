@@ -113,7 +113,7 @@ class CometChatReceiverDocumentBubble extends React.Component {
 			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
 		}
 
-		const documentTitle = `${this.props.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_DOCUMENT", this.props.lang)}`;
+		const documentTitle = `${this.props.message.sender.name} ${Translator.translate("SHARED_COLLABORATIVE_DOCUMENT", this.context.language)}`;
 
 		return (
 			<div css={messageContainerStyle()} className="receiver__message__container message__document" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
@@ -125,7 +125,7 @@ class CometChatReceiverDocumentBubble extends React.Component {
 						<div css={messageTxtContainerStyle()} className="message__document__container">
 							<div css={messageTxtWrapperStyle(this.context)} className="message__document__wrapper">
 								<div css={messageTxtTitleStyle(this.context)} className="message__document__title">
-									<i css={iconStyle(documentIcon, this.context)} title={Translator.translate("COLLABORATIVE_DOCUMENT", this.props.lang)}></i>
+									<i css={iconStyle(documentIcon, this.context)} title={Translator.translate("COLLABORATIVE_DOCUMENT", this.context.language)}></i>
 									<p css={messageTxtStyle()} className="document__title">
 										{documentTitle}
 									</p>
@@ -133,7 +133,7 @@ class CometChatReceiverDocumentBubble extends React.Component {
 
 								<ul css={messageBtnStyle(this.context)} className="document__button">
 									<li onClick={this.launchCollaborativeDocument}>
-										<p>{Translator.translate("JOIN", this.props.lang)}</p>
+										<p>{Translator.translate("JOIN", this.context.language)}</p>
 									</li>
 								</ul>
 							</div>
@@ -154,13 +154,11 @@ class CometChatReceiverDocumentBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatReceiverDocumentBubble.defaultProps = {
-	lang: Translator.getDefaultLanguage(),
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverDocumentBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,

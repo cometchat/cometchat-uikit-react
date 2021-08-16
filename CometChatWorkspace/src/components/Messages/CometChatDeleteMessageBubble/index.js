@@ -46,7 +46,7 @@ const CometChatDeleteMessageBubble = (props) => {
 				<React.Fragment>
 					<div css={messageTxtWrapperStyle(props, context, loggedInUser)} className="message__txt__wrapper">
 						<p css={messageTxtStyle(context)} className="message__txt">
-							{Translator.translate("YOU_DELETED_THIS_MESSAGE", props.lang)}
+							{Translator.translate("YOU_DELETED_THIS_MESSAGE", context.language)}
 						</p>
 					</div>
 					<div css={messageInfoWrapperStyle(props, loggedInUser)} className="message__info__wrapper">
@@ -83,7 +83,7 @@ const CometChatDeleteMessageBubble = (props) => {
 						{name}
 						<div css={messageTxtWrapperStyle(props, context, loggedInUser)} className="message__txt__wrapper">
 							<p css={messageTxtStyle(context)} className="message__txt">
-								{Translator.translate("THIS_MESSAGE_DELETED", props.lang)}
+								{Translator.translate("THIS_MESSAGE_DELETED", context.language)}
 							</p>
 						</div>
 						<div css={messageInfoWrapperStyle(props, loggedInUser)} className="message__info__wrapper">
@@ -105,12 +105,10 @@ const CometChatDeleteMessageBubble = (props) => {
 
 // Specifies the default values for props:
 CometChatDeleteMessageBubble.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
     theme: theme
 };
 
 CometChatDeleteMessageBubble.propTypes = {
-	lang: PropTypes.string,
 	theme: PropTypes.object,
 	message: PropTypes.object.isRequired,
 };

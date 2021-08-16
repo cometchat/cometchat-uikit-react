@@ -39,7 +39,6 @@ export class CometChatContextProvider extends React.Component {
 			clearedUnreadMessages: false,
 			directCallCustomMessage: {},
 			directCallCustomMessageAction: "",
-			conversationToBeDeleted: null,
 			UIKitSettings: settings,
 			FeatureRestriction: featureRestriction,
 			theme: theme,
@@ -71,7 +70,6 @@ export class CometChatContextProvider extends React.Component {
 			checkIfDirectCallIsOngoing: this.checkIfDirectCallIsOngoing,
 			checkIfCallIsOngoing: this.checkIfCallIsOngoing,
 			getActiveCallSessionID: this.getActiveCallSessionID,
-			setConversationToBeDeleted: this.setConversationToBeDeleted,
 			hasKeyValue: this.hasKeyValue,
 		};
 
@@ -144,6 +142,10 @@ export class CometChatContextProvider extends React.Component {
 		if (this.state.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.state.item.guid === this.state.leftGroupId) {
 			this.setTypeAndItem({}, "");
 			this.setLeftGroupId("");
+		}
+		
+		if (prevProps.language !== this.props.language) {
+			this.setState({ language: this.props.language });
 		}
 	}
 
@@ -376,10 +378,6 @@ export class CometChatContextProvider extends React.Component {
 		return sessionID;
 	};
 
-	setConversationToBeDeleted = conversation => {
-		this.setState({ conversationToBeDeleted: conversation });
-	};
-
 	hasKeyValue = (data, key) => {
 		if (data.hasOwnProperty(key) === false || data[key] === null || data[key] === undefined) {
 			return false;
@@ -391,7 +389,7 @@ export class CometChatContextProvider extends React.Component {
 	render() {
 		return (
 			<CometChatContext.Provider value={this.state}>
-				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} position={this.props.toastNotificationPos} />
+				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.language} position={this.props.toastNotificationPos} />
 				{this.props.children}
 			</CometChatContext.Provider>
 		);

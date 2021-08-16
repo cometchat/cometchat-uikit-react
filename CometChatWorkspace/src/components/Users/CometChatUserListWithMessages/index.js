@@ -30,7 +30,6 @@ class CometChatUserListWithMessages extends React.Component {
 
 		this.state = {
 			sidebarview: false,
-			lang: props.lang,
 		}
 
 		this.contextProviderRef = React.createRef();
@@ -40,13 +39,6 @@ class CometChatUserListWithMessages extends React.Component {
 
 		if (this.props.chatWithUser.length === 0) {
 			this.toggleSideBar();
-		}
-	}
-
-	componentDidUpdate(prevProps) {
-
-		if (prevProps.lang !== this.props.lang) {
-			this.setState({ lang: this.props.lang });
 		}
 	}
 
@@ -81,15 +73,15 @@ class CometChatUserListWithMessages extends React.Component {
 		actionGenerated={this.actionHandler} />);
 
 		return (
-			<CometChatContextProvider ref={el => (this.contextProviderRef = el)} user={this.props.chatWithUser}>
-				<div css={userScreenStyle(this.props)} className="cometchat cometchat--contacts" dir={Translator.getDirection(this.state.lang)}>
+			<CometChatContextProvider ref={el => (this.contextProviderRef = el)} user={this.props.chatWithUser} language={this.props.lang}>
+				<div css={userScreenStyle(this.props)} className="cometchat cometchat--contacts" dir={Translator.getDirection(this.props.lang)}>
 					<div css={userScreenSidebarStyle(this.state, this.props)} className="contacts__sidebar">
-						<CometChatUserList _parent="ulwm" theme={this.props.theme} lang={this.state.lang} onItemClick={this.itemClicked} actionGenerated={this.actionHandler} />
+						<CometChatUserList _parent="ulwm" theme={this.props.theme} lang={this.props.lang} onItemClick={this.itemClicked} actionGenerated={this.actionHandler} />
 					</div>
 					<div css={userScreenMainStyle(this.state, this.props)} className="contacts__main">
 						{messageScreen}
 					</div>
-					<CometChatIncomingCall theme={this.props.theme} lang={this.state.lang} actionGenerated={this.actionHandler} />
+					<CometChatIncomingCall theme={this.props.theme} lang={this.props.lang} actionGenerated={this.actionHandler} />
 				</div>
 			</CometChatContextProvider>
 		);

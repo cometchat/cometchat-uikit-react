@@ -315,7 +315,8 @@ class CometChatCallScreen extends React.PureComponent {
             .setLocalizedStringObject({
                 "SELECT_VIDEO_SOURCE": Translator.translate("SELECT_VIDEO_SOURCE", this.props.lang),
                 "SELECT_INPUT_AUDIO_SOURCE": Translator.translate("SELECT_INPUT_AUDIO_SOURCE", this.props.lang),
-                "SELECT_OUTPUT_AUDIO_SOURCE": Translator.translate("SELECT_OUTPUT_AUDIO_SOURCE", this.props.lang)
+                "SELECT_OUTPUT_AUDIO_SOURCE": Translator.translate("SELECT_OUTPUT_AUDIO_SOURCE", this.props.lang),
+                "SELECT_MODE": Translator.translate("SELECT_MODE", this.props.lang)
             }).build();
 
         const el = this.callScreenFrame;
