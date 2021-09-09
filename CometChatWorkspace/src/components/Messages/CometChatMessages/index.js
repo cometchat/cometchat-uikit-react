@@ -1053,13 +1053,13 @@ class CometChatMessages extends React.PureComponent {
 			if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER) {
 				detailScreen = (
 					<div css={chatSecondaryStyle(this.props)} className="chat__secondary-view">
-						<CometChatUserDetails actionGenerated={this.actionHandler} />
+						<CometChatUserDetails lang={this.props.lang} actionGenerated={this.actionHandler} />
 					</div>
 				);
 			} else if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP) {
 				detailScreen = (
 					<div css={chatSecondaryStyle(this.props)} className="chat__secondary-view">
-						<CometChatGroupDetails actionGenerated={this.actionHandler} />
+						<CometChatGroupDetails lang={this.props.lang} actionGenerated={this.actionHandler} />
 					</div>
 				);
 			}
@@ -1082,11 +1082,12 @@ class CometChatMessages extends React.PureComponent {
 		let messageComponent = (
 			<React.Fragment>
 				<div css={chatWrapperStyle(this.props, this.state)} className="main__chat" dir={Translator.getDirection(this.props.lang)}>
-					<CometChatMessageHeader sidebar={this.props.sidebar} viewdetail={this.props.viewdetail === false ? false : true} actionGenerated={this.actionHandler} />
+					<CometChatMessageHeader lang={this.props.lang} sidebar={this.props.sidebar} viewdetail={this.props.viewdetail === false ? false : true} actionGenerated={this.actionHandler} />
 					<CometChatMessageList
 						ref={el => {
 							this.messageListRef = el;
 						}}
+						lang={this.props.lang}
 						messages={this.state.messageList}
 						scrollToBottom={this.state.scrollToBottom}
 						actionGenerated={this.actionHandler}

@@ -59,7 +59,6 @@ class CometChatUserDetails extends React.Component {
 	}
 
 	componentDidMount() {
-
 		CometChat.getLoggedinUser()
 			.then(user => {
 				if (this._isMounted) {
@@ -81,11 +80,15 @@ class CometChatUserDetails extends React.Component {
 		this.enableUserPresence();
 	}
 
-	componentDidUpdate() {
+	componentDidUpdate(prevProps) {
 		this.enableSharedMedia();
 		this.enableBlockUser();
 		this.enableViewProfile();
 		this.enableUserPresence();
+
+		if (prevProps.lang !== this.props.lang) {
+			this.setStatusForUser();
+		}
 	}
 
 	componentWillUnmount() {
@@ -120,9 +123,9 @@ class CometChatUserDetails extends React.Component {
 
 					let status = "";
 					if (user.status === CometChat.USER_STATUS.OFFLINE) {
-						status = Translator.translate("OFFLINE", this.context.language);
+						status = Translator.translate("OFFLINE", this.props.lang);
 					} else if (user.status === CometChat.USER_STATUS.ONLINE) {
-						status = Translator.translate("ONLINE", this.context.language);
+						status = Translator.translate("ONLINE", this.props.lang);
 					}
 					this.setState({ status: status });
 				}
@@ -139,11 +142,11 @@ class CometChatUserDetails extends React.Component {
 			const lastActive = this.context.item.lastActiveAt * 1000;
 			const messageDate = dateFormat(lastActive, "dS mmm yyyy, h:MM TT");
 
-			status = `${Translator.translate("LAST_ACTIVE_AT", this.context.language)}: ${messageDate}`;
+			status = `${Translator.translate("LAST_ACTIVE_AT", this.props.lang)}: ${messageDate}`;
 		} else if (this.context.item.status === CometChat.USER_STATUS.OFFLINE) {
-			status = Translator.translate("OFFLINE", this.context.language);
+			status = Translator.translate("OFFLINE", this.props.lang);
 		} else if (this.context.item.status === CometChat.USER_STATUS.ONLINE) {
-			status = Translator.translate("ONLINE", this.context.language);
+			status = Translator.translate("ONLINE", this.props.lang);
 		}
 
 		this.setState({ status: status });
@@ -198,7 +201,6 @@ class CometChatUserDetails extends React.Component {
 	};
 
 	blockUser = () => {
-
 		let uid = this.context.item.uid;
 		let usersList = [uid];
 		CometChat.blockUsers(usersList)
@@ -215,7 +217,6 @@ class CometChatUserDetails extends React.Component {
 	};
 
 	unblockUser = () => {
-
 		let uid = this.context.item.uid;
 		let usersList = [uid];
 		CometChat.unblockUsers(usersList)
@@ -238,10 +239,9 @@ class CometChatUserDetails extends React.Component {
 
 	closeDetailView = () => {
 		this.props.actionGenerated(enums.ACTIONS["CLOSE_USER_DETAIL"]);
-	}
+	};
 
 	render() {
-
 		if (this.state.loggedInUser === null) {
 			return null;
 		}

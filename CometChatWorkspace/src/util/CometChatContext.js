@@ -13,7 +13,6 @@ import { theme } from "../resources/theme";
 export const CometChatContext = React.createContext({});
 
 export class CometChatContextProvider extends React.Component {
-	
 	loggedInUser;
 
 	constructor(props) {
@@ -71,15 +70,15 @@ export class CometChatContextProvider extends React.Component {
 			checkIfCallIsOngoing: this.checkIfCallIsOngoing,
 			getActiveCallSessionID: this.getActiveCallSessionID,
 			hasKeyValue: this.hasKeyValue,
+			setRoles: this.setRoles,
 		};
 
 		this.toastRef = React.createRef();
 	}
 
 	componentDidMount() {
-
 		this.getLoggedinUser();
-		
+
 		if (this.props.user.trim().length) {
 			this.getUser(this.props.user.trim())
 				.then(user => {
@@ -143,11 +142,21 @@ export class CometChatContextProvider extends React.Component {
 			this.setTypeAndItem({}, "");
 			this.setLeftGroupId("");
 		}
-		
+
 		if (prevProps.language !== this.props.language) {
 			this.setState({ language: this.props.language });
+			this.setRoles();
 		}
 	}
+
+	setRoles = () => {
+		const roles = {
+			[CometChat.GROUP_MEMBER_SCOPE.ADMIN]: Translator.translate("ADMINISTRATOR", this.props.language),
+			[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]: Translator.translate("MODERATOR", this.props.language),
+			[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]: Translator.translate("PARTICIPANT", this.props.language),
+		};
+		this.setState({ roles: roles });
+	};
 
 	getUser = uid => {
 		const promise = new Promise((resolve, reject) => {
@@ -222,23 +231,21 @@ export class CometChatContextProvider extends React.Component {
 		let timer = 0;
 
 		return new Promise((resolve, reject) => {
-
 			if (timerCounter === timer) {
 				return reject(`timer reached ${timerCounter}`);
-			};
+			}
 
 			if (this.loggedInUser) {
 				return resolve(this.loggedInUser);
-			};
+			}
 
 			if (!CometChat.isInitialized()) {
 				return reject("CometChat not initialized");
-			};
+			}
 
 			this.isUserLoggedIn = setInterval(() => {
 				CometChat.getLoggedinUser()
 					.then(user => {
-
 						this.loggedInUser = user;
 						clearInterval(this.isUserLoggedIn);
 						return resolve(user);
@@ -336,7 +343,7 @@ export class CometChatContextProvider extends React.Component {
 	setLastMessage = message => {
 		this.setState({ lastMessage: message });
 	};
-	
+
 	setClearedUnreadMessages = flag => {
 		this.setState({ clearedUnreadMessages: flag });
 	};

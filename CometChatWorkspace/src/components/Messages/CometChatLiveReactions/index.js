@@ -37,7 +37,7 @@ class CometChatLiveReactions extends React.PureComponent {
 
 	componentDidMount() {
 
-		this.sendMessage();
+		//this.sendMessage();
 		this.setItems();
 		this.requestAnimation();
 	}

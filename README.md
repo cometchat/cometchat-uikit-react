@@ -91,13 +91,13 @@ To install React UI Kit, you need to first register on CometChat Dashboard. <a h
 
 ### ii. Get your Application Keys :key:
 
-* Create a new app. Please follow the steps provided in the <a href="https://prodocs.cometchat.com/v3.0-beta/docs/concepts" target="_blank">Key concepts guide</a> to create V3 apps before you proceed.
+* Create a new app. Please follow the steps provided in the <a href="https://prodocs.cometchat.com/docs/concepts" target="_blank">Key concepts guide</a> to create V3 apps before you proceed.
 * Head over to the Quick Start or API & Auth Keys section and note the `App ID`, `Auth Key`, and `Region`.
 
 ### iii. Add the CometChat Dependency
 
 ```javascript
-  npm install @cometchat-pro/chat@3.0.0 --save
+  npm install @cometchat-pro/chat@3.0.1 --save
 ```
 
 <br/>
@@ -205,7 +205,7 @@ Visit our [React sample app](https://github.com/cometchat-pro/javascript-react-c
 
 # Troubleshooting
 
-- To read the full documentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/v3.0-beta/docs/react-ui-kit).
+- To read the full documentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/docs/react-ui-kit).
 
 - Facing any issues while integrating or installing the UI Kit please connect with us via real time support present in <a href="https://app.cometchat.com/" target="_blank">CometChat Dashboard.</a>
 

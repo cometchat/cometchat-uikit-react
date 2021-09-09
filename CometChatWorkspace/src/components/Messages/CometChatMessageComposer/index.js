@@ -844,6 +844,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		//mount the live reaction component
 		this.props.actionGenerated(enums.ACTIONS["SEND_LIVE_REACTION"]);
+		this.sendTransientMessage();
 
 		//set the timer to stop the live reaction
 		this.timeout = setTimeout(this.stopLiveReaction, liveReactionInterval);
@@ -856,6 +857,19 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		//set the animation flag to false
 		this.animationInProgress = false;
+	};
+	
+	
+
+	sendTransientMessage = () => {
+		//fetching the metadata type from constants
+		const metadata = { type: enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"], reaction: this.props.reaction };
+
+		const receiverType = this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER ? CometChat.ACTION_TYPE.TYPE_USER : CometChat.ACTION_TYPE.TYPE_GROUP;
+		const receiverId = this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER ? this?.context?.item?.uid : this?.context?.item?.guid;
+
+		let transientMessage = new CometChat.TransientMessage(receiverId, receiverType, metadata);
+		CometChat.sendTransientMessage(transientMessage);
 	};
 
 	reactToMessages = emoji => {
