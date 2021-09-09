@@ -205,7 +205,7 @@ Visit our [React sample app](https://github.com/cometchat-pro/cometchat-pro-reac
 
 # Troubleshooting
 
-- To read the full documentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/docs/react-ui-kit).
+- To read the full documentation on UI Kit integration visit our [Documentation](https://prodocs.cometchat.com/v2.1/docs/react-ui-kit).
 
 - Facing any issues while integrating or installing the UI Kit please connect with us via real time support present in <a href="https://app.cometchat.com/" target="_blank">CometChat Dashboard.</a>
 
