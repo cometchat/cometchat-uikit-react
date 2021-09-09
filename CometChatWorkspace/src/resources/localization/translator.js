@@ -13,28 +13,25 @@ import translationZH from "./locales/zh/translation.json";
 import translationZHTW from "./locales/zh-tw/translation.json";
 import translationSV from "./locales/sv/translation.json";
 import translationLT from "./locales/lt/translation.json";
+import translationHU from "./locales/hu/translation.json";
 
 // the translations
 const translations = {
-    "ar": translationAR,
-    "de": translationDE,
-    "en": translationEN,
-    "es": translationES,
-    "fr": translationFR,
-    "hi": translationHI,
-    "ms": translationMS,
-    "pt": translationPT,
-    "ru": translationRU,
-    "zh": translationZH,
-    "zh-tw": translationZHTW,
-    "sv": translationSV,
-    "lt": translationLT,
+	ar: translationAR,
+	de: translationDE,
+	en: translationEN,
+	es: translationES,
+	fr: translationFR,
+	hi: translationHI,
+	ms: translationMS,
+	pt: translationPT,
+	ru: translationRU,
+	zh: translationZH,
+	"zh-tw": translationZHTW,
+	sv: translationSV,
+	lt: translationLT,
+	hu: translationHU,
 };
-
-window.addEventListener('languagechange', () => {
-    let language = Translator.getBrowserLanguage().toLowerCase();
-    Translator.setLanguage(language);
-});
 
 class Translator {
 

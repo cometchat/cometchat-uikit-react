@@ -98,9 +98,9 @@ class CometChatMessageHeader extends React.Component {
 
 	componentDidUpdate(prevProps, prevState) {
 
-		if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && (this.item !== this.context.item)) {
+		if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && (this.item !== this.context.item || prevProps.lang !== this.props.lang)) {
 			this.setStatusForUser();
-		} else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && (this.item !== this.context.item)) {
+		} else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && (this.item !== this.context.item || prevProps.lang !== this.props.lang)) {
 			this.setStatusForGroup();
 		}
 
@@ -131,18 +131,18 @@ class CometChatMessageHeader extends React.Component {
 			const lastActive = this.context.item.lastActiveAt * 1000;
 			const messageDate = dateFormat(lastActive, "dS mmm yyyy, h:MM TT");
 
-			status = `${Translator.translate("LAST_ACTIVE_AT", this.context.language)}: ${messageDate}`;
+			status = `${Translator.translate("LAST_ACTIVE_AT", this.props.lang)}: ${messageDate}`;
 		} else if (this.context.item.status === CometChat.USER_STATUS.OFFLINE) {
-			status = Translator.translate("OFFLINE", this.context.language);
+			status = Translator.translate("OFFLINE", this.props.lang);
 		} else if (this.context.item.status === CometChat.USER_STATUS.ONLINE) {
-			status = Translator.translate("ONLINE", this.context.language);
+			status = Translator.translate("ONLINE", this.props.lang);
 		}
 		
 		this.setState({status: status, presence: presence});
 	};
 
 	setStatusForGroup = () => {
-		let membersText = Translator.translate("MEMBERS", this.context.language);
+		let membersText = Translator.translate("MEMBERS", this.props.lang);
 		const status = `${this.context.item.membersCount} ${membersText}`;
 		this.setState({status: status});
 	};
