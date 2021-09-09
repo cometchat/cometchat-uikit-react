@@ -728,6 +728,7 @@ class CometChatGroupDetails extends React.Component {
 			viewMembers = (
 				<CometChatViewGroupMemberList
 					loggedinuser={this.state.loggedInUser}
+					lang={this.props.lang}
 					enableChangeScope={this.state.enableChangeScope}
 					enableKickGroupMembers={this.state.enableKickGroupMembers}
 					enableBanGroupMembers={this.state.enableBanGroupMembers}
