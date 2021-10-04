@@ -25,6 +25,8 @@ class CometChatReadReceipt extends React.PureComponent {
 
 	constructor(props, context) {
 		super(props, context);
+
+		this._isMounted = false;
 		this.state = {
 			receipts: false,
 		};
@@ -35,11 +37,16 @@ class CometChatReadReceipt extends React.PureComponent {
 	}
 
 	componentDidMount() {
+		this._isMounted = true;
 		this.toggleReadReceipts();
 	}
 
 	componentDidUpdate() {
 		this.toggleReadReceipts();
+	}
+
+	componentWillUnmount() {
+		this._isMounted = false;
 	}
 
 	toggleReadReceipts = () => {
@@ -48,7 +55,7 @@ class CometChatReadReceipt extends React.PureComponent {
 		 */
 		this.context.FeatureRestriction.isDeliveryReceiptsEnabled()
 			.then(response => {
-				if (response !== this.state.receipts) {
+				if (response !== this.state.receipts && this._isMounted) {
 					this.setState({ receipts: response });
 				}
 			})
@@ -60,12 +67,11 @@ class CometChatReadReceipt extends React.PureComponent {
 	};
 
 	render() {
-		
 		let ticks,
 			receiptText = null,
 			dateField = null,
 			color = null;
-		
+
 		if (this.props.message?.sender?.uid === this.loggedInUser?.uid) {
 			if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 				if (this.props.message.hasOwnProperty("error")) {

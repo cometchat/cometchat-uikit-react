@@ -29,12 +29,12 @@ export const messageReactionsStyle = (props, reactionData, context, loggedInUser
 		backgroundColor: `${context.theme.backgroundColor.secondary}`,
 		borderRadius: "12px",
 		margin: "4px 4px 0 0",
-		cursor: "pointer",
 		...borderStyle,
 		".emoji-mart-emoji": {
 			display: "inline-flex",
 			alignItems: "center",
 			justifyContent: "center",
+			cursor: "pointer",
 		},
 		"&:hover": {
 			...hoveredBorderStyle,

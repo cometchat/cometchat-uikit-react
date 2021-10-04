@@ -683,7 +683,7 @@ class CometChatMessageHeader extends React.Component {
 						{presence}
 					</div>
 					<div css={chatUserStyle(this.context)} className={chatWithClassName}>
-						<h6 css={chatNameStyle()} className={chatNameClassName} onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
+						<h6 css={chatNameStyle(this.context)} className={chatNameClassName} onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
 							{this.context.item.name}
 						</h6>
 						{typing ? typing : status}

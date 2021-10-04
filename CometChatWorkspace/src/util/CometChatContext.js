@@ -77,9 +77,7 @@ export class CometChatContextProvider extends React.Component {
 	}
 
 	componentDidMount() {
-
 		this.getLoggedinUser();
-		//this.setRoles();
 
 		if (this.props.user.trim().length) {
 			this.getUser(this.props.user.trim())
@@ -112,9 +110,10 @@ export class CometChatContextProvider extends React.Component {
 		if (this.props.user.trim().length && prevProps.user !== this.props.user) {
 			this.getUser(this.props.user)
 				.then(user => {
-					this.setType(CometChat.ACTION_TYPE.TYPE_USER);
-					this.setItem(user);
-					this.setClearedUnreadMessages(false);
+					//this.setType(CometChat.ACTION_TYPE.TYPE_USER);
+					//this.setItem(user);
+					this.setTypeAndItem(CometChat.ACTION_TYPE.TYPE_USER, user);
+					//this.setClearedUnreadMessages(false);
 				})
 				.catch(error => {
 					const errorCode = error && error.hasOwnProperty("code") ? error.code : "uid not available";
@@ -123,9 +122,10 @@ export class CometChatContextProvider extends React.Component {
 		} else if (this.props.group.trim().length && prevProps.group !== this.props.group) {
 			this.getGroup(this.props.group)
 				.then(group => {
-					this.setType(CometChat.ACTION_TYPE.TYPE_GROUP);
-					this.setItem(group);
-					this.setClearedUnreadMessages(false);
+					//this.setType(CometChat.ACTION_TYPE.TYPE_GROUP);
+					//this.setItem(group);
+					this.setTypeAndItem(CometChat.ACTION_TYPE.TYPE_GROUP, group);
+					//this.setClearedUnreadMessages(false);
 				})
 				.catch(error => {
 					const errorCode = error && error.hasOwnProperty("code") ? error.code : "guid not available";
@@ -135,8 +135,9 @@ export class CometChatContextProvider extends React.Component {
 
 		//when the active group is deleted, close the chat window.
 		if (this.state.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.state.item.guid === this.state.deletedGroupId) {
-			this.setItem({});
-			this.setType("");
+			//this.setItem({});
+			//this.setType("");
+			this.setTypeAndItem({}, "");
 			this.setDeletedGroupId("");
 		}
 

@@ -210,9 +210,11 @@ class CometChatUserDetails extends React.Component {
 		CometChat.blockUsers(usersList)
 			.then(response => {
 				if (response && response.hasOwnProperty(uid) && response[uid].hasOwnProperty("success") && response[uid]["success"] === true) {
-					this.context.setToastMessage("success", "BLOCK_USER_SUCCESS");
-					this.context.setItem(Object.assign({}, this.context.item, { blockedByMe: true }));
-					this.context.setType(CometChat.ACTION_TYPE.TYPE_USER);
+
+					const newType = CometChat.ACTION_TYPE.TYPE_USER;
+					const newItem = Object.assign({}, this.context.item, { blockedByMe: true });
+					this.context.setTypeAndItem(newType, newItem);
+
 				} else {
 					this.toastRef.setError("SOMETHING_WRONG");
 				}
@@ -227,9 +229,11 @@ class CometChatUserDetails extends React.Component {
 		CometChat.unblockUsers(usersList)
 			.then(response => {
 				if (response && response.hasOwnProperty(uid) && response[uid].hasOwnProperty("success") && response[uid]["success"] === true) {
-					this.context.setToastMessage("success", "UNBLOCK_USER_SUCCESS");
-					this.context.setItem(Object.assign({}, this.context.item, { blockedByMe: false }));
-					this.context.setType(CometChat.ACTION_TYPE.TYPE_USER);
+					
+					const newType = CometChat.ACTION_TYPE.TYPE_USER;
+					const newItem = Object.assign({}, this.context.item, { blockedByMe: false });
+					this.context.setTypeAndItem(newType, newItem);
+					
 				} else {
 					this.toastRef.setError("SOMETHING_WRONG");
 				}

@@ -52,7 +52,7 @@ export const itemRowStyle = () => {
     }
 }
 
-export const itemNameStyle = () => {
+export const itemNameStyle = (props) => {
 
     return {
         fontSize: "15px",
@@ -62,6 +62,8 @@ export const itemNameStyle = () => {
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
+        lineHeight: "22px",
+        color: `${props.theme.color.primary}`
     }
 }
 
@@ -70,6 +72,7 @@ export const itemLastMsgStyle = (props) => {
     return {
         margin: "0",
         fontSize: "13px",
+        fontWeight: "400",
         width: "calc(100% - 50px)",
         overflow: "hidden",
         textOverflow: "ellipsis",
