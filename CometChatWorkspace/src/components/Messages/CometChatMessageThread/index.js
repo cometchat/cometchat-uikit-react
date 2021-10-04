@@ -328,6 +328,7 @@ class CometChatMessageThread extends React.PureComponent {
 
 		let messageKey = messagelist.findIndex(message => message.id === deletedMessage.id);
 		if (messageKey > -1) {
+			
 			if (this.state.enableHideDeletedMessages) {
 				messagelist.splice(messageKey, 1);
 			} else {

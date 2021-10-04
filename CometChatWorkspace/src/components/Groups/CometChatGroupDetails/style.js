@@ -47,7 +47,8 @@ export const headerTitleStyle = () => {
     return {
         margin: "0",
         fontWeight: "700",
-        fontSize: "20px"
+        fontSize: "22px",
+        lineHeight: "26px"
     }
 }
 
@@ -77,6 +78,7 @@ export const sectionHeaderStyle = (context) => {
         margin: "0",
         width: "100%",
         fontSize: "12px",
+        fontWeight: "500",
         lineHeight: "20px",
         color: `${context.theme.color.secondary}`,
         textTransform: "uppercase",
@@ -115,7 +117,9 @@ export const itemLinkStyle = (context, deleteLink) => {
 
     const deleteCss = (deleteLink) ? {
         color: `${context.theme.color.red}`,
-    } : {};
+    } : {
+        color: `${context.theme.color.primary}`,
+    };
 
     return {
         fontSize: "15px",

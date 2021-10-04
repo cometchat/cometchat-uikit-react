@@ -386,26 +386,19 @@ class CometChatGroupList extends React.PureComponent {
 		}, 500);
 	};
 
-	markMessagesRead = message => {
-		if (!(message.getReadAt() || message.getReadByMeAt())) {
-			if (message.getReceiverType() === CometChat.RECEIVER_TYPE.USER) {
-				CometChat.markAsRead(message.getId().toString(), message.getSender().getUid(), message.getReceiverType());
-			} else {
-				CometChat.markAsRead(message.getId().toString(), message.getReceiverId(), message.getReceiverType());
-			}
-		}
-	};
-
 	getGroups = () => {
 		this.GroupListManager.fetchNextGroups()
 			.then(groupList => {
+
 				if (groupList.length === 0) {
+
 					if (this.state.grouplist.length === 0) {
 						this.setState({ decoratorMessage: Translator.translate("NO_GROUPS_FOUND", this.props.lang) });
 					}
 				} else {
 					this.setState({ grouplist: [...this.state.grouplist, ...groupList], decoratorMessage: "" });
 				}
+
 			})
 			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
 	};
@@ -473,7 +466,7 @@ class CometChatGroupList extends React.PureComponent {
 			searchGroup = (
 				<div css={groupSearchStyle()} className="groups__search">
 					<button type="button" className="search__button" css={groupSearchButtonStyle(searchIcon, this.getContext())} />
-					<input type="text" autoComplete="off" css={groupSearchInputStyle()} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchGroup} />
+					<input type="text" autoComplete="off" css={groupSearchInputStyle(this.props)} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchGroup} />
 				</div>
 			);
 		}

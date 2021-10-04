@@ -185,6 +185,7 @@ class CometChatUserList extends React.PureComponent {
 
 		this.UserListManager.fetchNextUsers()
 			.then(userList => {
+
 				if (userList.length === 0) {
 					if (this.state.userlist.length === 0) {
 						this.setState({ decoratorMessage: Translator.translate("NO_USERS_FOUND", this.props.lang) });
@@ -192,6 +193,7 @@ class CometChatUserList extends React.PureComponent {
 				} else {
 					this.setState({ userlist: [...this.state.userlist, ...userList], decoratorMessage: "" });
 				}
+				
 			})
 			.catch(error => this.setState({ decoratorMessage: Translator.translate("SOMETHING_WRONG", this.props.lang) }));
 	}
@@ -227,7 +229,7 @@ class CometChatUserList extends React.PureComponent {
 			let firstChar = null;
 			if (chr !== currentLetter) {
 				currentLetter = chr;
-				firstChar = (<div css={contactAlphabetStyle()} className="contacts__list__alphabet-filter">{currentLetter}</div>);
+				firstChar = (<div css={contactAlphabetStyle(this.props)} className="contacts__list__alphabet-filter">{currentLetter}</div>);
 			} else {
 				firstChar = null;
 			}
@@ -253,7 +255,7 @@ class CometChatUserList extends React.PureComponent {
 			searchUser = (
 				<div css={contactSearchStyle()} className="contacts__search">
 					<button type="button" className="search__button" css={contactSearchButtonStyle(searchIcon, theme)} />
-					<input type="text" autoComplete="off" css={contactSearchInputStyle()} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchUsers} />
+					<input type="text" autoComplete="off" css={contactSearchInputStyle(this.props)} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchUsers} />
 				</div>
 			);
 		}

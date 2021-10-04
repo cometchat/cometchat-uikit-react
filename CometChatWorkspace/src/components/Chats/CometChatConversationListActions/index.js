@@ -70,4 +70,4 @@ class CometChatConversationListActions extends React.PureComponent {
 	}
 }
 
-export { CometChatConversationListActions };
+export {CometChatConversationListActions};

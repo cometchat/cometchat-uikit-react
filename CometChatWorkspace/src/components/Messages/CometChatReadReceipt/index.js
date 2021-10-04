@@ -25,6 +25,7 @@ class CometChatReadReceipt extends React.PureComponent {
 
 	constructor(props, context) {
 		super(props, context);
+		this._isMounted = false;
 		this.state = {
 			receipts: false,
 		};
@@ -35,11 +36,16 @@ class CometChatReadReceipt extends React.PureComponent {
 	}
 
 	componentDidMount() {
+		this._isMounted = true;
 		this.toggleReadReceipts();
 	}
 
 	componentDidUpdate() {
 		this.toggleReadReceipts();
+	}
+
+	componentWillUnmount() {
+		this._isMounted = false;
 	}
 
 	toggleReadReceipts = () => {
@@ -48,7 +54,7 @@ class CometChatReadReceipt extends React.PureComponent {
 		 */
 		this.context.FeatureRestriction.isDeliveryReceiptsEnabled()
 			.then(response => {
-				if (response !== this.state.receipts) {
+				if (response !== this.state.receipts && this._isMounted) {
 					this.setState({ receipts: response });
 				}
 			})
@@ -67,6 +73,7 @@ class CometChatReadReceipt extends React.PureComponent {
 			color = null;
 		
 		if (this.props.message?.sender?.uid === this.loggedInUser?.uid) {
+
 			if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 				if (this.props.message.hasOwnProperty("error")) {
 					ticks = errorTick;
@@ -95,19 +102,25 @@ class CometChatReadReceipt extends React.PureComponent {
 					receiptText = "SENDING";
 					dateField = this.props.message._composedAt;
 					color = this.context.theme.secondaryTextColor;
-					if (this.props.message.hasOwnProperty("sentAt")) {
+
+					if (this.props.message.hasOwnProperty("readAt")) {
+
+						ticks = blueDoubleTick;
+						receiptText = "SEEN";
+						color = this.context.theme.primaryColor;
+						dateField = this.props.message.readAt;
+
+					} else if (this.props.message.hasOwnProperty("deliveredAt")) {
+
+						ticks = greyDoubleTick;
+						receiptText = "DELIVERED";
+						dateField = this.props.message.deliveredAt;
+
+					} else if (this.props.message.hasOwnProperty("sentAt")) {
+
 						ticks = greyTick;
 						receiptText = "SENT";
 						dateField = this.props.message.sentAt;
-						if (this.props.message.hasOwnProperty("deliveredAt")) {
-							ticks = greyDoubleTick;
-							receiptText = "DELIVERED";
-							if (this.props.message.hasOwnProperty("readAt")) {
-								ticks = blueDoubleTick;
-								receiptText = "SEEN";
-								color = this.context.theme.primaryColor;
-							}
-						}
 					}
 				}
 			}

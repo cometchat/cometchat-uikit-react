@@ -77,6 +77,20 @@ export const checkMessageForExtensionsData = (message, extensionKey) => {
     return output;
 }
 
+export const getMessageFileMetadata = (message, metadataKey) => {
+
+    let fileMetadata = null;
+    if(message.hasOwnProperty("metadata")) {
+
+        const metadata = message["metadata"];
+        if (metadata.hasOwnProperty(metadataKey)) {
+            fileMetadata = metadata[metadataKey];
+        }
+    }
+
+    return fileMetadata;
+}
+
 export const ID = () => {
     // Math.random should be unique because of its seeding algorithm.
     // Convert it to base 36 (numbers + letters), and grab the first 9 characters

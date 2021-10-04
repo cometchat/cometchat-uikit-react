@@ -25,153 +25,163 @@ import {
 import closeIcon from "./resources/close.svg";
 
 class CometChatStickerKeyboard extends React.PureComponent {
-	static contextType = CometChatContext;
 
-	constructor(props, context) {
-		super(props, context);
+    static contextType = CometChatContext;
 
-		this.decoratorMessage = Translator.translate("LOADING", context.language);
+    constructor(props, context) {
 
-		this.state = {
-			stickerlist: [],
-			stickerset: {},
-			activestickerlist: [],
-			activestickerset: null,
-		};
-	}
+        super(props, context);
 
-	componentDidMount() {
-		this.getStickers();
-	}
+        this.decoratorMessage = Translator.translate("LOADING", context.language);
 
-	getStickers = () => {
-		CometChat.callExtension("stickers", "GET", "v1/fetch", null)
-			.then(stickers => {
-				// Stickers received
-				let activeStickerSet = null;
-				const customStickers = stickers.hasOwnProperty("customStickers") ? stickers["customStickers"] : [];
-				const defaultStickers = stickers.hasOwnProperty("defaultStickers") ? stickers["defaultStickers"] : [];
+        this.state = {
+            stickerlist: [],
+            stickerset: {},
+            activestickerlist: [],
+            activestickerset: null
+        }
+    }
 
-				defaultStickers.sort(function (a, b) {
-					return a.stickerSetOrder - b.stickerSetOrder;
-				});
+    componentDidMount() {
+        this.getStickers();
+    }
 
-				customStickers.sort(function (a, b) {
-					return a.stickerSetOrder - b.stickerSetOrder;
-				});
+    getStickers = () => {
 
-				const stickerList = [...defaultStickers, ...customStickers];
+        CometChat.callExtension('stickers', 'GET', 'v1/fetch', null).then(stickers => {
 
-				if (stickerList.length === 0) {
-					this.decoratorMessage = Translator.translate("NO_STICKERS_FOUND", this.context.language);
-				}
+            // Stickers received
+            let activeStickerSet = null; 
+            const customStickers = (stickers.hasOwnProperty("customStickers")) ? stickers["customStickers"] : [];
+            const defaultStickers = (stickers.hasOwnProperty("defaultStickers")) ? stickers["defaultStickers"] : [];
 
-				const stickerSet = stickerList.reduce((r, sticker, index) => {
-					const { stickerSetName } = sticker;
-					if (index === 0) {
-						activeStickerSet = stickerSetName;
-					}
+            defaultStickers.sort(function (a, b) {
+                return a.stickerSetOrder - b.stickerSetOrder;
+            });
 
-					r[stickerSetName] = [...(r[stickerSetName] || []), { ...sticker }];
+            customStickers.sort(function (a, b) {
+                return a.stickerSetOrder - b.stickerSetOrder;
+            });
 
-					return r;
-				}, {});
+            const stickerList = [...defaultStickers, ...customStickers];
+            
+            if (stickerList.length === 0) {
+                this.decoratorMessage = Translator.translate("NO_STICKERS_FOUND", this.context.language);
+            }
 
-				let activeStickerList = [];
-				if (Object.keys(stickerSet).length) {
-					Object.keys(stickerSet).forEach(key => {
-						stickerSet[key].sort(function (a, b) {
-							return a.stickerOrder - b.stickerOrder;
-						});
-					});
+            const stickerSet = stickerList.reduce((r, sticker, index) => {
 
-					activeStickerList = stickerSet[activeStickerSet];
-				}
+                const { stickerSetName } = sticker;
+                if (index === 0) {
+                    activeStickerSet = stickerSetName;
+                }
 
-				this.setState({
-					stickerlist: stickerList,
-					stickerset: stickerSet,
-					activestickerlist: activeStickerList,
-					activestickerset: activeStickerSet,
-				});
-			})
-			.catch(error => {
-				this.decoratorMessage = Translator.translate("SOMETHING_WRONG", this.context.language);
-				this.setState({ activestickerlist: [], stickerset: {} });
-			});
-	};
+                r[stickerSetName] = [...r[stickerSetName] || [], { ...sticker}];
 
-	sendStickerMessage = stickerItem => {
-		this.props.actionGenerated(enums.ACTIONS["SEND_STICKER"], stickerItem);
-	};
+                return r;
+            }, {});
 
-	onStickerSetClicked = sectionItem => {
-		this.setState({ activestickerlist: [] }, () => {
-			const stickerSet = { ...this.state.stickerset };
-			const activeStickerList = stickerSet[sectionItem];
-			this.setState({ activestickerset: sectionItem, activestickerlist: activeStickerList });
-		});
-	};
+            let activeStickerList = [];
+            if (Object.keys(stickerSet).length) {
 
-	closeStickerKeyboard = () => {
-		this.props.actionGenerated(enums.ACTIONS["CLOSE_STICKER_KEYBOARD"]);
-	};
+                Object.keys(stickerSet).forEach(key => {
+                    stickerSet[key].sort(function (a, b) {
+                        return a.stickerOrder - b.stickerOrder;
+                    });
+                });
 
-	render() {
-		let messageContainer = null;
-		if (this.state.activestickerlist.length === 0) {
-			messageContainer = (
-				<div css={stickerMsgStyle()} className="stickers__decorator-message">
-					<p css={stickerMsgTxtStyle(this.context)} className="decorator-message">
-						{this.decoratorMessage}
-					</p>
-				</div>
-			);
-		}
+                activeStickerList = stickerSet[activeStickerSet];
+            }
+            
+            this.setState({ 
+                "stickerlist": stickerList, 
+                "stickerset": stickerSet, 
+                "activestickerlist": activeStickerList, 
+                "activestickerset": activeStickerSet 
+            });
 
-		let stickers = null;
-		if (Object.keys(this.state.stickerset).length) {
-			const sectionItems = Object.keys(this.state.stickerset).map((sectionItem, key) => {
-				const stickerSetThumbnail = this.state.stickerset[sectionItem][0]["stickerUrl"];
-				return (
-					<div key={key} className="stickers__sectionitem" css={sectionListItemStyle()} onClick={() => this.onStickerSetClicked(sectionItem)}>
-						<img src={stickerSetThumbnail} alt={sectionItem} />
-					</div>
-				);
-			});
+        }).catch(error => {
+            
+            this.decoratorMessage = Translator.translate("SOMETHING_WRONG", this.context.language);
+            this.setState({ "activestickerlist": [], "stickerset": {} });
+        });
+    }
 
-			let activeStickerList = [];
-			if (this.state.activestickerlist.length) {
-				const stickerList = [...this.state.activestickerlist];
-				activeStickerList = stickerList.map((stickerItem, key) => {
-					return (
-						<div key={key} css={stickerItemStyle(this.context)} onClick={() => this.sendStickerMessage(stickerItem)} className="stickers__listitem">
-							<img src={stickerItem.stickerUrl} alt={stickerItem.stickerName} />
-						</div>
-					);
-				});
-			}
+    sendStickerMessage = (stickerItem) => {
+        this.props.actionGenerated(enums.ACTIONS["SEND_STICKER"], stickerItem);
+    }
 
-			stickers = (
-				<React.Fragment>
-					<div css={stickerCloseStyle(closeIcon, this.context)} className="stickers__close" onClick={this.closeStickerKeyboard}></div>
-					<div css={stickerListStyle(this.props)} className="stickers__list">
-						{activeStickerList}
-					</div>
-					<div css={stickerSectionListStyle(this.context)} className="stickers__sections">
-						{sectionItems}
-					</div>
-				</React.Fragment>
-			);
-		}
+    onStickerSetClicked = (sectionItem) => {
 
-		return (
-			<div css={stickerWrapperStyle(this.context, keyframes)} className="stickers">
-				{messageContainer}
-				{stickers}
-			</div>
-		);
-	}
+        this.setState({ activestickerlist: [] }, () => {
+
+            const stickerSet = { ...this.state.stickerset };
+            const activeStickerList = stickerSet[sectionItem];
+            this.setState({ "activestickerset": sectionItem, "activestickerlist": activeStickerList });
+        });
+    }
+
+    closeStickerKeyboard = () => {
+        this.props.actionGenerated(enums.ACTIONS["CLOSE_STICKER_KEYBOARD"]);
+    }
+
+    render() {
+
+        let messageContainer = null;
+        if (this.state.activestickerlist.length === 0) {
+            messageContainer = (
+                <div css={stickerMsgStyle()} className="stickers__decorator-message">
+                    <p css={stickerMsgTxtStyle(this.context)} className="decorator-message">{this.decoratorMessage}</p>
+                </div>
+            );
+        }
+
+        let stickers = null;
+        if (Object.keys(this.state.stickerset).length) {
+
+            const sectionItems = Object.keys(this.state.stickerset).map((sectionItem, key) => {
+
+                const stickerSetThumbnail = this.state.stickerset[sectionItem][0]["stickerUrl"];
+                return( <div  key={key}  className="stickers__sectionitem" css={sectionListItemStyle()}  onClick={() => this.onStickerSetClicked(sectionItem)}>
+                    <img src={stickerSetThumbnail} alt={sectionItem} />
+                </div>
+                );
+            });
+
+            let activeStickerList = [];
+            if (this.state.activestickerlist.length) {
+
+                const stickerList = [...this.state.activestickerlist];
+                activeStickerList = stickerList.map((stickerItem, key) => {
+
+                    return (
+                        <div key={key} css={stickerItemStyle(this.context)} onClick={() => this.sendStickerMessage(stickerItem)} className="stickers__listitem">
+                            <img src={stickerItem.stickerUrl} alt={stickerItem.stickerName} />
+                        </div>
+                    );
+                });
+            }
+
+            stickers = (
+                <React.Fragment>
+                    <div css={stickerCloseStyle(closeIcon, this.context)} className="stickers__close" onClick={this.closeStickerKeyboard}></div>
+                    <div css={stickerListStyle(this.props)} className="stickers__list">
+                        {activeStickerList}
+                    </div>
+                    <div css={stickerSectionListStyle(this.context)} className="stickers__sections">
+                        {sectionItems}
+                    </div>
+                </React.Fragment>
+            );
+        }
+
+        return (
+            <div css={stickerWrapperStyle(this.context, keyframes)} className="stickers">
+                {messageContainer}
+                {stickers}
+            </div>
+        );
+    }
 }
 
 // Specifies the default values for props:

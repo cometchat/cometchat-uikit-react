@@ -72,7 +72,8 @@ export const contactHeaderTitleStyle = (props) => {
         display: "inline-block",
         width: "100%",
         textAlign: "left",
-        fontSize: "20px",
+        fontSize: "22px",
+        lineHeight: "26px",
         ...alignment,
         "&[dir=rtl]": {
             textAlign: "right",
@@ -107,15 +108,18 @@ export const contactSearchButtonStyle = (img, theme) => {
 	};
 };
 
-export const contactSearchInputStyle = () => {
+export const contactSearchInputStyle = (props) => {
 
     return {
         width: "calc(100% - 30px)",
         padding: "8px",
         fontSize: "15px",
+        fontWeight: "400",
+        lineHeight: "20px",
         outline: "none",
         border: "none",
         height: "100%",
+        color: props.theme.color.search,
         backgroundColor: "transparent",
     }
 }
@@ -157,12 +161,15 @@ export const contactListStyle = () => {
     }
 }
 
-export const contactAlphabetStyle = () => {
+export const contactAlphabetStyle = (props) => {
     
     return {
         padding: "0 16px",
         margin: "5px 0",
         width: "100%",
-        fontSize: "14px"
+        fontSize: "12px",
+        fontWeight: "500",
+        lineHeight: "20px",
+        color: `${props.theme.color.tertiary}`
     }
 }

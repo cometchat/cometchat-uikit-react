@@ -11,7 +11,8 @@ import {
 	CometChatMessageComposer, 
 	CometChatLiveReactions, 
 	CometChatMessageThread, 
-	CometChatImageViewer
+	CometChatImageViewer,
+	CometChatBlockedUser
 } from "../";
 
 import {
@@ -107,7 +108,7 @@ class CometChatMessages extends React.PureComponent {
 			const ifChatWindowChanged = () => {
 				let output = false;
 
-				if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER && this.getContext().item.uid !== this.item.uid) {
+				if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_USER && (this.getContext().item.uid !== this.item.uid || this.getContext().item.blockedByMe !== this.item.blockedByMe)) {
 					output = true;
 				} else if (this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP && this.getContext().item.guid !== this.item.guid) {
 					output = true;
@@ -376,11 +377,11 @@ class CometChatMessages extends React.PureComponent {
 			case enums.ACTIONS["SEND_LIVE_REACTION"]:
 				this.toggleReaction(true);
 				break;
-			case enums.ACTIONS["SHOW_LIVE_REACTION"]:
-				this.showReaction(messages);
-				break;
 			case enums.ACTIONS["STOP_LIVE_REACTION"]:
 				this.toggleReaction(false);
+				break;
+			case enums.TRANSIENT_MESSAGE_RECEIVED:
+				this.liveReactionReceived(messages);
 				break;
 			case enums.ACTIONS["REACT_TO_MESSAGE"]:
 				this.reactToMessage(messages);
@@ -425,6 +426,12 @@ class CometChatMessages extends React.PureComponent {
 				break;
 			case enums.ACTIONS["SCOPECHANGE_GROUPMEMBER_SUCCESS"]:
 				this.appendMemberScopeChangedMessage(messages);
+				break;
+			case enums.ACTIONS["KICK_GROUPMEMBER_SUCCESS"]:
+				this.appendMemberKickedMessage(messages);
+				break;
+			case enums.ACTIONS["BAN_GROUPMEMBER_SUCCESS"]:
+				this.appendMemberBannedMessage(messages);
 				break;
 			case enums.ACTIONS["ERROR"]:
 				this.errorHandler(key);
@@ -513,7 +520,6 @@ class CometChatMessages extends React.PureComponent {
 		}
 
 		const messageList = [];
-
 		messages.forEach(eachMember => {
 			const newScope = Translator.translate(eachMember.scope, this.props.lang);
 
@@ -530,6 +536,62 @@ class CometChatMessages extends React.PureComponent {
 				actionBy: { ...this.loggedInUser },
 				actionOn: { ...eachMember },
 				newScope: newScope,
+			};
+			messageList.push(messageObj);
+		});
+
+		this.appendMessage(messageList);
+	};
+
+	appendMemberKickedMessage = messages => {
+		//if group action messages are disabled
+		if (this.state.enableGroupActionMessages === false) {
+			return false;
+		}
+
+		const messageList = [];
+		messages.forEach(eachMember => {
+			const sentAt = (new Date() / 1000) | 0;
+			const messageObj = {
+				receiver: { ...this.context.item },
+				receiverId: this.context.item.guid,
+				receiverType: CometChat.RECEIVER_TYPE.GROUP,
+				sender: { ...this.loggedInUser },
+				category: CometChat.CATEGORY_ACTION,
+				type: CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER,
+				sentAt: sentAt,
+				action: CometChat.ACTION_TYPE.MEMBER_KICKED,
+				actionBy: { ...this.loggedInUser },
+				actionOn: { ...eachMember },
+				actionFor: { ...this.context.item },
+			};
+			messageList.push(messageObj);
+		});
+
+		this.appendMessage(messageList);
+	};
+
+	appendMemberBannedMessage = messages => {
+		//if group action messages are disabled
+		if (this.state.enableGroupActionMessages === false) {
+			return false;
+		}
+
+		const messageList = [];
+		messages.forEach(eachMember => {
+			const sentAt = (new Date() / 1000) | 0;
+			const messageObj = {
+				receiver: { ...this.context.item },
+				receiverId: this.context.item.guid,
+				receiverType: CometChat.RECEIVER_TYPE.GROUP,
+				sender: { ...this.loggedInUser },
+				category: CometChat.CATEGORY_ACTION,
+				type: CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER,
+				sentAt: sentAt,
+				action: CometChat.ACTION_TYPE.MEMBER_BANNED,
+				actionBy: { ...this.loggedInUser },
+				actionOn: { ...eachMember },
+				actionFor: { ...this.context.item },
 			};
 			messageList.push(messageObj);
 		});
@@ -625,10 +687,11 @@ class CometChatMessages extends React.PureComponent {
 		Direct calling for groups
 		*/
 		if (this.getContext().type === CometChat.RECEIVER_TYPE.GROUP) {
+
+			const sessionID = this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP ? this.getContext().item.guid : null;
 			if (Object.keys(this.props.widgetsettings).length) {
-				this.props.actionGenerated(enums.ACTIONS["START_DIRECT_CALL"]);
+				this.props.actionGenerated(enums.ACTIONS["START_DIRECT_CALL"], sessionID);
 			} else {
-				const sessionID = this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP ? this.getContext().item.guid : null;
 				this.outgoingDirectCallRef.startCall(sessionID);
 			}
 			return;
@@ -655,10 +718,19 @@ class CometChatMessages extends React.PureComponent {
 		this.setState({ liveReaction: flag });
 	};
 
-	showReaction = reaction => {
-		if (reaction.metadata.type === enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"]) {
-			this.reactionName = reaction.metadata.reaction;
-			this.setState({ liveReaction: true });
+	liveReactionReceived = reaction => {
+
+		const stopReaction = () => {
+			this.toggleReaction(false);
+		}
+
+		if (reaction.data.type === enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"]) {
+
+			this.reactionName = reaction.data.reaction;
+			this.toggleReaction(true);
+
+			const liveReactionInterval = enums.CONSTANTS["LIVE_REACTION_INTERVAL"];
+			setTimeout(stopReaction, liveReactionInterval);
 		}
 	};
 
@@ -913,6 +985,18 @@ class CometChatMessages extends React.PureComponent {
 			return null;
 		}
 
+		let blockedUser = null;
+		let messageList = (
+			<CometChatMessageList
+				ref={el => {
+					this.messageListRef = el;
+				}}
+				lang={this.props.lang}
+				messages={this.state.messageList}
+				scrollToBottom={this.state.scrollToBottom}
+				actionGenerated={this.actionHandler}
+			/>
+		);
 		let messageComposer = (
 			<CometChatMessageComposer
 				ref={el => {
@@ -922,8 +1006,7 @@ class CometChatMessages extends React.PureComponent {
 				replyPreview={this.state.replyPreview}
 				reaction={this.reactionName}
 				messageToReact={this.state.messageToReact}
-				actionGenerated={this.actionHandler}
-			/>
+				actionGenerated={this.actionHandler} />
 		);
 
 		let newMessageIndicator = null;
@@ -951,6 +1034,12 @@ class CometChatMessages extends React.PureComponent {
 			messageComposer = null;
 		}
 
+		if (this.getContext().type === CometChat.RECEIVER_TYPE.USER && Object.keys(this.getContext().item).length && this.getContext().item.blockedByMe) {
+			messageComposer = null;
+			messageList = null;
+			blockedUser = <CometChatBlockedUser user={this.item} />;
+		}
+
 		let liveReactionView = null;
 		if (this.state.liveReaction) {
 			liveReactionView = (
@@ -967,6 +1056,7 @@ class CometChatMessages extends React.PureComponent {
 		let incomingDirectCallView = null;
 		if (this.props._parent.trim().length === 0) {
 			incomingCallView = <CometChatIncomingCall actionGenerated={this.actionHandler} />;
+
 			incomingDirectCallView = <CometChatIncomingDirectCall actionGenerated={this.actionHandler} />;
 		}
 
@@ -1013,17 +1103,10 @@ class CometChatMessages extends React.PureComponent {
 			<React.Fragment>
 				<div css={chatWrapperStyle(this.props, this.state)} className="main__chat" dir={Translator.getDirection(this.props.lang)}>
 					<CometChatMessageHeader lang={this.props.lang} sidebar={this.props.sidebar} viewdetail={this.props.viewdetail === false ? false : true} actionGenerated={this.actionHandler} />
-					<CometChatMessageList
-						ref={el => {
-							this.messageListRef = el;
-						}}
-						lang={this.props.lang}
-						messages={this.state.messageList}
-						scrollToBottom={this.state.scrollToBottom}
-						actionGenerated={this.actionHandler}
-					/>
+					{messageList}
 					{liveReactionView}
 					{messageComposer}
+					{blockedUser}
 					{newMessageIndicator}
 				</div>
 				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} />
@@ -1043,7 +1126,7 @@ class CometChatMessages extends React.PureComponent {
 		**/
 		if (this.props._parent.trim().length === 0) {
 			messageWrapper = (
-				<CometChatContextProvider ref={el => (this.contextProviderRef = el)} user={this.props.chatWithUser} group={this.props.chatWithGroup}>
+				<CometChatContextProvider ref={el => (this.contextProviderRef = el)} user={this.props.chatWithUser} group={this.props.chatWithGroup} language={this.props.lang}>
 					<div css={chatContainerStyle()}>{messageComponent}</div>
 				</CometChatContextProvider>
 			);

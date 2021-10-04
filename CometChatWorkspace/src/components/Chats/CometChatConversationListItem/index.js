@@ -432,7 +432,7 @@ class CometChatConversationListItem extends React.PureComponent {
 				</div>
 				<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(this.context.language)}>
 					<div css={itemRowStyle()} className="item__details_block_one">
-						<div css={itemNameStyle()} className="item__details__name" onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
+						<div css={itemNameStyle(this.props)} className="item__details__name" onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
 							{this.props.conversation.conversationWith.name}
 						</div>
 						{lastMessageTimeStamp}

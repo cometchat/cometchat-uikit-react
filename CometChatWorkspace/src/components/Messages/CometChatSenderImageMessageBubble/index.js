@@ -9,9 +9,10 @@ import { CometChatMessageReactions } from "../Extensions";
 
 import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
-import { checkMessageForExtensionsData } from "../../../util/common";
+import { checkMessageForExtensionsData, getMessageFileMetadata } from "../../../util/common";
 
 import { theme } from "../../../resources/theme";
+import Translator from "../../../resources/localization/translator";
 
 import {
 	messageContainerStyle,
@@ -27,24 +28,28 @@ class CometChatSenderImageMessageBubble extends React.Component {
 	static contextType = CometChatContext;
 	timer = null;
 
-	constructor(props) {
-		super(props);
+	constructor(props, context) {
+
+		super(props, context);
 		this._isMounted = false;
 		this.imgRef = React.createRef();
 
 		this.state = {
 			imageUrl: srcIcon,
+			imageName: Translator.translate("LOADING", context.language),
 			isHovering: false,
 		};
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
+
 		const currentMessageStr = JSON.stringify(this.props.message);
 		const nextMessageStr = JSON.stringify(nextProps.message);
 
 		if (currentMessageStr !== nextMessageStr 
 		|| this.state.imageUrl !== nextState.imageUrl 
 		|| this.state.isHovering !== nextState.isHovering) {
+
 			return true;
 		}
 
@@ -52,11 +57,13 @@ class CometChatSenderImageMessageBubble extends React.Component {
 	}
 
 	componentDidMount() {
+
 		this._isMounted = true;
 		this.setImage();
 	}
 
 	componentDidUpdate(prevProps) {
+
 		const previousMessageStr = JSON.stringify(prevProps.message);
 		const currentMessageStr = JSON.stringify(this.props.message);
 
@@ -84,17 +91,26 @@ class CometChatSenderImageMessageBubble extends React.Component {
 	};
 
 	setImage = () => {
-		const thumbnailGenerationData = checkMessageForExtensionsData(this.props.message, "thumbnail-generation");
 
+		const thumbnailGenerationData = checkMessageForExtensionsData(this.props.message, "thumbnail-generation");
 		if (thumbnailGenerationData) {
+
+			let imageName = "";
+			if (this.props.message.data.attachments 
+			&& typeof this.props.message.data.attachments === "object" 
+			&& this.props.message.data.attachments.length) {
+				imageName = this.props.message.data.attachments[0]?.name;
+			}
+
 			const mq = window.matchMedia(this.props.theme.breakPoints[0]);
 			mq.addListener(() => {
+
 				const imageToDownload = this.chooseImage(thumbnailGenerationData);
 				let img = new Image();
 				img.src = imageToDownload;
 				img.onload = () => {
-					if (this._isMounted) {
-						this.setState({ imageUrl: img.src });
+					if (this._isMounted && this.state.imageUrl !== img.src) {
+						this.setState({ imageUrl: img.src, imageName: imageName });
 					}
 				};
 			});
@@ -105,8 +121,8 @@ class CometChatSenderImageMessageBubble extends React.Component {
 					let img = new Image();
 					img.src = imageToDownload;
 					img.onload = () => {
-						if (this._isMounted) {
-							this.setState({ imageUrl: img.src });
+						if (this._isMounted && this.state.imageUrl !== img.src) {
+							this.setState({ imageUrl: img.src, imageName: imageName });
 						}
 					};
 				})
@@ -117,21 +133,34 @@ class CometChatSenderImageMessageBubble extends React.Component {
 	};
 
 	setMessageImageUrl = () => {
+
+		const metadataKey = enums.CONSTANTS["FILE_METADATA"];
+		const fileMetadata = getMessageFileMetadata(this.props.message, metadataKey);
+		
 		let img = new Image();
-		if (this.props.message.data.hasOwnProperty("url")) {
-			img.src = this.props.message.data.url;
-		} else if (this.props.message.data.hasOwnProperty("file")) {
+		let imageName;
+		if (fileMetadata instanceof Blob) {
+
 			const reader = new FileReader();
-			reader.onload = function () {
+			reader.onload = function() {
 				img.src = reader.result;
 			};
+			imageName = fileMetadata["name"];
+			reader.readAsDataURL(fileMetadata);
 
-			reader.readAsDataURL(this.props.message.data.file);
+		} else if (this.props.message.data.attachments 
+			&& typeof this.props.message.data.attachments === "object" 
+			&& this.props.message.data.attachments.length) {
+
+			const fileUrl = this.props.message.data.attachments[0]?.url;
+			imageName = this.props.message.data.attachments[0]?.name;
+			img.src = fileUrl;
 		}
 
 		img.onload = () => {
-			if (this._isMounted) {
-				this.setState({ imageUrl: img.src });
+			//only if there is a change in the image path, update state
+			if (this._isMounted && this.state.imageUrl !== img.src) {
+				this.setState({ imageUrl: img.src, imageName: imageName });
 			}
 		};
 	};
@@ -207,7 +236,7 @@ class CometChatSenderImageMessageBubble extends React.Component {
 					<div css={messageImgWrapper(this.context)} onClick={this.open} className="message__img__wrapper">
 						<img
 							src={this.state.imageUrl}
-							alt={this.state.imageUrl}
+							alt={this.state.imageName}
 							ref={el => {
 								this.imgRef = el;
 							}}

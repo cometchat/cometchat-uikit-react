@@ -88,6 +88,9 @@ export class MessageListManager {
                 },
                 onMessageEdited: editedMessage => {
                     callback(enums.MESSAGE_EDITED, editedMessage);
+                },
+                onTransientMessageReceived: transientMessage => {
+                    callback(enums.TRANSIENT_MESSAGE_RECEIVED, transientMessage);
                 }
             })
         );

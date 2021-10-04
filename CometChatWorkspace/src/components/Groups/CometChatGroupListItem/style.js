@@ -19,16 +19,19 @@ export const listItem = (props, context) => {
     }
 }
 
-export const listItemName = () => {
-
-    return {
-        maxWidth: "calc(100% - 30px)",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        margin: "0"
-    }
-}
+export const listItemName = context => {
+	return {
+		fontSize: "15px",
+		fontWeight: "600",
+		maxWidth: "calc(100% - 30px)",
+		overflow: "hidden",
+		textOverflow: "ellipsis",
+		whiteSpace: "nowrap",
+		margin: "0",
+		lineHeight: "22px",
+		color: `${context.theme.color.primary}`,
+	};
+};
 
 export const listItemIcon = () => {
 
@@ -76,8 +79,6 @@ export const itemDetailStyle = () => {
 export const itemNameWrapperStyle = () => { 
 
     return {
-        fontSize: "15px",
-        fontWeight: "600",
         display: "flex",
         alignItems: "center",
         width: "100%",
@@ -90,7 +91,9 @@ export const itemDescStyle = (context) => {
     return {
         borderBottom: `1px solid ${context.theme.borderColor.primary}`,
         padding: "0 0 5px 0",
-        fontSize: "12px",
+        fontSize: "13px",
+        fontWeight: "400",
+        lineHeight: "20px",
         color: `${context.theme.color.helpText}`,
         "&:hover": {
             borderBottom: `1px solid ${context.theme.borderColor.primary}`,

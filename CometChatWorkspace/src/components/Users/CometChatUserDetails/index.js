@@ -59,7 +59,6 @@ class CometChatUserDetails extends React.Component {
 	}
 
 	componentDidMount() {
-
 		CometChat.getLoggedinUser()
 			.then(user => {
 				if (this._isMounted) {
@@ -82,13 +81,12 @@ class CometChatUserDetails extends React.Component {
 	}
 
 	componentDidUpdate(prevProps) {
-		
 		this.enableSharedMedia();
 		this.enableBlockUser();
 		this.enableViewProfile();
 		this.enableUserPresence();
 
-		if(prevProps.lang !== this.props.lang) {
+		if (prevProps.lang !== this.props.lang) {
 			this.setStatusForUser();
 		}
 	}
@@ -139,7 +137,6 @@ class CometChatUserDetails extends React.Component {
 	};
 
 	setStatusForUser = () => {
-
 		let status = null;
 		if (this.context.item.status === CometChat.USER_STATUS.OFFLINE && this.context.item.lastActiveAt) {
 			const lastActive = this.context.item.lastActiveAt * 1000;
@@ -204,15 +201,16 @@ class CometChatUserDetails extends React.Component {
 	};
 
 	blockUser = () => {
-
 		let uid = this.context.item.uid;
 		let usersList = [uid];
 		CometChat.blockUsers(usersList)
 			.then(response => {
 				if (response && response.hasOwnProperty(uid) && response[uid].hasOwnProperty("success") && response[uid]["success"] === true) {
-					this.context.setToastMessage("success", "BLOCK_USER_SUCCESS");
-					this.context.setItem(Object.assign({}, this.context.item, { blockedByMe: true }));
-					this.context.setType(CometChat.ACTION_TYPE.TYPE_USER);
+
+					const newType = CometChat.ACTION_TYPE.TYPE_USER;
+					const newItem = Object.assign({}, this.context.item, { blockedByMe: true });
+					this.context.setTypeAndItem(newType, newItem);
+
 				} else {
 					this.toastRef.setError("SOMETHING_WRONG");
 				}
@@ -221,15 +219,16 @@ class CometChatUserDetails extends React.Component {
 	};
 
 	unblockUser = () => {
-
 		let uid = this.context.item.uid;
 		let usersList = [uid];
 		CometChat.unblockUsers(usersList)
 			.then(response => {
 				if (response && response.hasOwnProperty(uid) && response[uid].hasOwnProperty("success") && response[uid]["success"] === true) {
-					this.context.setToastMessage("success", "UNBLOCK_USER_SUCCESS");
-					this.context.setItem(Object.assign({}, this.context.item, { blockedByMe: false }));
-					this.context.setType(CometChat.ACTION_TYPE.TYPE_USER);
+					
+					const newType = CometChat.ACTION_TYPE.TYPE_USER;
+					const newItem = Object.assign({}, this.context.item, { blockedByMe: false });
+					this.context.setTypeAndItem(newType, newItem);
+					
 				} else {
 					this.toastRef.setError("SOMETHING_WRONG");
 				}
@@ -244,10 +243,9 @@ class CometChatUserDetails extends React.Component {
 
 	closeDetailView = () => {
 		this.props.actionGenerated(enums.ACTIONS["CLOSE_USER_DETAIL"]);
-	}
+	};
 
 	render() {
-
 		if (this.state.loggedInUser === null) {
 			return null;
 		}

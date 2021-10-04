@@ -120,14 +120,18 @@ class CometChatConversationListWithMessages extends React.Component {
 		);
 
 		return (
-			<CometChatContextProvider ref={el => (this.contextProviderRef = el)} user={this.props.chatWithUser} group={this.props.chatWithGroup} language={this.props.lang}>
+			<CometChatContextProvider ref={el => this.contextProviderRef = el} user={this.props.chatWithUser} group={this.props.chatWithGroup} language={this.props.lang}>
 				<div css={chatScreenStyle(this.props)} className="cometchat cometchat--chats" dir={Translator.getDirection(this.props.lang)}>
 					<div css={chatScreenSidebarStyle(this.state, this.props)} className="chats__sidebar">
-						<CometChatConversationList ref={el => (this.chatListRef = el)} _parent="clwm" theme={this.props.theme} lang={this.props.lang} onItemClick={this.itemClicked} actionGenerated={this.actionHandler} />
+						<CometChatConversationList
+						ref={el => this.chatListRef = el}
+						_parent="clwm"
+						theme={this.props.theme}
+						lang={this.props.lang}
+						onItemClick={this.itemClicked}
+						actionGenerated={this.actionHandler} />
 					</div>
-					<div css={chatScreenMainStyle(this.state, this.props)} className="chats__main">
-						{messageScreen}
-					</div>
+					<div css={chatScreenMainStyle(this.state, this.props)} className="chats__main">{messageScreen}</div>
 					<CometChatIncomingCall theme={this.props.theme} lang={this.props.lang} actionGenerated={this.actionHandler} />
 					<CometChatIncomingDirectCall theme={this.props.theme} lang={this.props.lang} actionGenerated={this.actionHandler} />
 				</div>

@@ -42,3 +42,4 @@ export { CometChatSenderTextMessageBubble } from "./CometChatSenderTextMessageBu
 export { CometChatSenderVideoMessageBubble } from "./CometChatSenderVideoMessageBubble";
 
 export { CometChatThreadedMessageReplyCount } from "./CometChatThreadedMessageReplyCount";
+export { CometChatBlockedUser } from "./CometChatBlockedUser";

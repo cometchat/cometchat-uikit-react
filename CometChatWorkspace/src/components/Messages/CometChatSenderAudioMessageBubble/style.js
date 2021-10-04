@@ -45,17 +45,18 @@ export const messageInfoWrapperStyle = () => {
         display: "flex",
         justifyContent: "flex-end",
         alignItems: "center",
-        height: "25px",
+        height: "25px"
     }
 }
 
 export const messageReactionsWrapperStyle = () => {
 
     return {
-        display: "inline-flex",
+        display: "flex",
         alignSelf: "flex-end",
         width: "100%",
         flexWrap: "wrap",
         justifyContent: "flex-end",
+        minHeight: "36px",
     }
 }

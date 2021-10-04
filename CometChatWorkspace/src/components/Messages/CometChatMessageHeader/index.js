@@ -214,14 +214,14 @@ class CometChatMessageHeader extends React.Component {
 			/**
 			 * if metadata is available, show live reactions else show typing
 			 */
-			if (item.hasOwnProperty("metadata") && item.metadata && item.metadata.hasOwnProperty("type") && item.metadata.type === enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"]) {
-				this.props.actionGenerated(enums.ACTIONS["SHOW_LIVE_REACTION"], item);
-			} else {
+			// if (item.hasOwnProperty("metadata") && item.metadata && item.metadata.hasOwnProperty("type") && item.metadata.type === enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"]) {
+			// 	this.props.actionGenerated(enums.ACTIONS["SHOW_LIVE_REACTION"], item);
+			// } else {
 
 				if (this.state.enableTypingIndicator === true) {
 					this.setState({typing: typingText});
 				} 
-			}
+			//}
 		};
 
 		if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.type === item.receiverType && this.context.item.guid === item.receiverId) {
@@ -239,14 +239,14 @@ class CometChatMessageHeader extends React.Component {
 			/**
 			 * if metadata is available, end live reactions else end typing
 			 */
-			if (item.hasOwnProperty("metadata") && item.metadata && item.metadata.hasOwnProperty("type") && item.metadata.type === enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"]) {
-				this.props.actionGenerated(enums.ACTIONS["STOP_LIVE_REACTION"], item);
-			} else {
+			// if (item.hasOwnProperty("metadata") && item.metadata && item.metadata.hasOwnProperty("type") && item.metadata.type === enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"]) {
+			// 	this.props.actionGenerated(enums.ACTIONS["STOP_LIVE_REACTION"], item);
+			// } else {
 
 				if (this.state.enableTypingIndicator === true) {
 					this.setState({typing: null});
 				} 
-			}
+			//}
 		}
 
 		if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.type === item.receiverType && this.context.item.guid === item.receiverId) {
@@ -683,7 +683,7 @@ class CometChatMessageHeader extends React.Component {
 						{presence}
 					</div>
 					<div css={chatUserStyle(this.context)} className={chatWithClassName}>
-						<h6 css={chatNameStyle()} className={chatNameClassName} onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
+						<h6 css={chatNameStyle(this.context)} className={chatNameClassName} onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
 							{this.context.item.name}
 						</h6>
 						{typing ? typing : status}

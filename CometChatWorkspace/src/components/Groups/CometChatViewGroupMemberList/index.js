@@ -39,36 +39,30 @@ class CometChatViewGroupMemberList extends React.Component {
 		const chatWindow = context.UIKitSettings.chatWindow;
 		this.mq = chatWindow.matchMedia(this.context.theme.breakPoints[1]);
 
-		// let userColumnTitle = Translator.translate("NAME", props.lang);
-		// if (this.mq.matches) {
-		// 	userColumnTitle = Translator.translate("AVATAR", props.lang);
-		// }
-
 		this.state = {
 			userColumnTitle: "",
 			errorMessage: "",
 		};
 	}
 
-    componentDidMount() {
-        this.updateUserColumnTitle();
-    }
-
+	componentDidMount() {
+		this.updateUserColumnTitle();
+	}
+    
 	componentDidUpdate(prevProps) {
 		if (prevProps.lang !== this.props.lang) {
 			this.updateUserColumnTitle();
 		}
 	}
 
-    updateUserColumnTitle = () => {
+	updateUserColumnTitle = () => {
+		let userColumnTitle = Translator.translate("NAME", this.props.lang);
+		if (this.mq.matches) {
+			userColumnTitle = Translator.translate("AVATAR", this.props.lang);
+		}
 
-        let userColumnTitle = Translator.translate("NAME", this.props.lang);
-        if (this.mq.matches) {
-            userColumnTitle = Translator.translate("AVATAR", this.props.lang);
-        }
-
-        this.setState({ userColumnTitle });
-    }
+		this.setState({ userColumnTitle });
+	};
 
 	componentWillUnmount() {
 		this._isMounted = false;
@@ -116,7 +110,6 @@ class CometChatViewGroupMemberList extends React.Component {
 		CometChat.kickGroupMember(guid, memberToKick.uid)
 			.then(response => {
 				if (response) {
-					this.context.setToastMessage("success", "KICK_GROUPMEMBER_SUCCESS");
 					this.props.actionGenerated(enums.ACTIONS["KICK_GROUPMEMBER_SUCCESS"], memberToKick);
 				} else {
 					this.setState({ errorMessage: Translator.translate("SOMETHING_WRONG", this.context.language) });
