@@ -7,9 +7,6 @@ import PropTypes from "prop-types";
 import { CometChatBackdrop } from "../../Shared";
 import { CometChatContext } from "../../../util/CometChatContext";
 
-import Translator from "../../../resources/localization/translator";
-
-
 import {
     imageWrapperStyle,
     imgStyle,

@@ -829,10 +829,12 @@ class CometChatGroupDetails extends React.Component {
 
 // Specifies the default values for props:
 CometChatGroupDetails.defaultProps = {
+    lang: Translator.getDefaultLanguage(),
     theme: theme
 };
 
 CometChatGroupDetails.propTypes = {
+    lang: PropTypes.string,
     theme: PropTypes.object
 }
 

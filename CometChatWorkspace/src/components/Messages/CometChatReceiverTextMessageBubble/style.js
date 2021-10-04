@@ -59,8 +59,8 @@ export const nameWrapperStyle = (avatar) => {
 export const nameStyle = context => {
 
 	return {
-		fontSize: "10px",
-		color: `${context.theme.color.helpText}`,
+		fontSize: "11px",
+		color: `${context.theme.color.search}`,
 	};
 };
 
@@ -85,7 +85,7 @@ export const messageTxtWrapperStyle = context => {
 	};
 };
 
-export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation) => {
+export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation, context) => {
 
     let emojiAlignmentProp = {
         " > img": {
@@ -134,11 +134,14 @@ export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation) => {
 
     return {
         margin: "0",
-        fontSize: "14px",
+        fontSize: "15px",
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",
         textAlign: "left",
         width: "auto",
+        color: `${context.theme.color.primary}`,
+        lineHeight: "20px",
+        fontWeight: "400",
         " a": {
             color: "#0432FF",
             "&:hover": {
@@ -177,10 +180,11 @@ export const messageInfoWrapperStyle = () => {
 export const messageReactionsWrapperStyle = () => {
 
     return {
-        display: "inline-flex",
+        display: "flex",
         alignSelf: "flex-start",
         width: "100%",
         flexWrap: "wrap",
         justifyContent: "flex-start",
+        minHeight: "36px",
     }
 }

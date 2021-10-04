@@ -10,7 +10,6 @@ import { CometChatMessageReactions } from "../Extensions";
 import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
-import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
 
 import {

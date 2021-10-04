@@ -13,7 +13,6 @@ import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
 import { theme } from "../../../resources/theme";
-import Translator from "../../../resources/localization/translator";
 
 import { 
 	messageContainerStyle,

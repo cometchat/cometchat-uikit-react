@@ -27,6 +27,7 @@ class CometChatMessageReactions extends React.Component {
 
 	constructor(props, context) {
 		super(props, context);
+		this._isMounted = false;
 		this.state = {
 			enableMessageReaction: false,
 		};
@@ -37,7 +38,12 @@ class CometChatMessageReactions extends React.Component {
 	}
 
 	componentDidMount() {
+		this._isMounted = true;
 		this.enableMessageReaction();
+	}
+
+	componentWillUnmount() {
+		this._isMounted = false;
 	}
 
 	enableMessageReaction = () => {
@@ -46,7 +52,7 @@ class CometChatMessageReactions extends React.Component {
 		 */
 		this.context.FeatureRestriction.isReactionsEnabled()
 			.then(response => {
-				if (response !== this.state.enableMessageReaction) {
+				if (response !== this.state.enableMessageReaction && this._isMounted) {
 					this.setState({ enableMessageReaction: response });
 				}
 			})
@@ -59,21 +65,23 @@ class CometChatMessageReactions extends React.Component {
 
 	reactToMessages = emoji => {
 
+		let messageObject = { ...this.props.message };
+		delete messageObject["metadata"]["@injected"]["extensions"]["reactions"][emoji.colons][this.loggedInUser.uid];
+		this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], messageObject);
+
 		CometChat.callExtension("reactions", "POST", "v1/react", {
 			msgId: this.props.message.id,
 			emoji: emoji.colons,
 		}).then(response => {
+			
 			// Reaction failed
-			if (response.hasOwnProperty("success") === false || (response.hasOwnProperty("success") && response["success"] === false)) {
+			if (!response || !response.success || response.success !== true) {
 				this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
 			}
 		})
-		.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
-	};
-
-	triggerEmojiClick = event => {
-		event.stopPropagation();
-		event.currentTarget.querySelector(".emoji-mart-emoji").click();
+		.catch(error => {
+			this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
+		});
 	};
 
 	getMessageReactions = reaction => {
@@ -106,7 +114,7 @@ class CometChatMessageReactions extends React.Component {
 
 			const reactionClassName = `reaction reaction__${reactionName}`;
 			return (
-				<div key={key} css={messageReactionsStyle(this.props, reactionData, this.context, this.loggedInUser)} className={reactionClassName} title={reactionTitle} onClick={this.triggerEmojiClick}>
+				<div key={key} css={messageReactionsStyle(this.props, reactionData, this.context, this.loggedInUser)} className={reactionClassName} title={reactionTitle}>
 					<Emoji emoji={{ id: reactionName }} size={16} native onClick={this.reactToMessages} />
 					<span css={reactionCountStyle(this.context)} className="reaction__count">
 						{reactionCount}

@@ -473,7 +473,7 @@ class CometChatGroupList extends React.PureComponent {
 			searchGroup = (
 				<div css={groupSearchStyle()} className="groups__search">
 					<button type="button" className="search__button" css={groupSearchButtonStyle(searchIcon, this.getContext())} />
-					<input type="text" autoComplete="off" css={groupSearchInputStyle()} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchGroup} />
+					<input type="text" autoComplete="off" css={groupSearchInputStyle(this.props)} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchGroup} />
 				</div>
 			);
 		}

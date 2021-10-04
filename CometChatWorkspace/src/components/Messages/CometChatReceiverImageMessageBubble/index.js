@@ -14,7 +14,6 @@ import * as enums from "../../../util/enums.js";
 import { checkMessageForExtensionsData } from "../../../util/common";
 
 import { theme } from "../../../resources/theme";
-import Translator from "../../../resources/localization/translator";
 
 import {
 	messageContainerStyle,
