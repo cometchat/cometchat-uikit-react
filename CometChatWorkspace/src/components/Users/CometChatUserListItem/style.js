@@ -42,7 +42,7 @@ export const itemDetailStyle = () => {
     }
 }
 
-export const itemNameStyle = () => { 
+export const itemNameStyle = (context) => { 
     
     return {
         fontSize: "15px",
@@ -51,7 +51,9 @@ export const itemNameStyle = () => {
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
         width: "100%",
-        margin: "5px 0 0 0" 
+        margin: "5px 0 0 0",
+        lineHeight: "22px",
+        color: `${context.theme.color.primary}`
     }
 };
 

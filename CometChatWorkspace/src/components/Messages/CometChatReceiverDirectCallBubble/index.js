@@ -178,7 +178,7 @@ class CometChatReceiverDirectCallBubble extends React.Component {
 // Specifies the default values for props:
 CometChatReceiverDirectCallBubble.defaultProps = {
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverDirectCallBubble.propTypes = {

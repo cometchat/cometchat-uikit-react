@@ -72,16 +72,18 @@ export const chatUserStyle = context => {
 	};
 };
 
-export const chatNameStyle = () => {
+export const chatNameStyle = (context) => {
 
     return {
         margin: "0",
         fontSize: "15px",
         fontWeight: "600",
+        lineHeight: "22px",
         width: "100%",
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
+        color: `${context.theme.primary}`,
     }
 }
 

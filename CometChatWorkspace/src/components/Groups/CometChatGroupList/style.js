@@ -68,11 +68,12 @@ export const groupHeaderTitleStyle = (props) => {
 
     return {
         margin: "0",
-        fontWeight: "700",
         display: "inline-block",
         width: "100%",
         textAlign: "left",
-        fontSize: "20px",
+        fontSize: "22px",
+        fontWeight: "700",
+        lineHeight: "26px",
         ...alignment,
         "&[dir=rtl]": {
             textAlign: "right",
@@ -122,15 +123,18 @@ export const groupSearchButtonStyle = (img, context) => {
 	};
 };
 
-export const groupSearchInputStyle = () => {
+export const groupSearchInputStyle = (props) => {
 
     return {
         width: "calc(100% - 30px)",
         height: "100%",
         padding: "8px",
         fontSize: "15px",
+        fontWeight: "400",
+        lineHeight: "20px",
         outline: "none",
         border: "none",
+        color: props.theme.color.search,
         backgroundColor: "transparent",
     };
 }

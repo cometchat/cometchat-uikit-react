@@ -229,7 +229,7 @@ class CometChatUserList extends React.PureComponent {
 			let firstChar = null;
 			if (chr !== currentLetter) {
 				currentLetter = chr;
-				firstChar = (<div css={contactAlphabetStyle()} className="contacts__list__alphabet-filter">{currentLetter}</div>);
+				firstChar = (<div css={contactAlphabetStyle(this.props)} className="contacts__list__alphabet-filter">{currentLetter}</div>);
 			} else {
 				firstChar = null;
 			}
@@ -255,7 +255,7 @@ class CometChatUserList extends React.PureComponent {
 			searchUser = (
 				<div css={contactSearchStyle()} className="contacts__search">
 					<button type="button" className="search__button" css={contactSearchButtonStyle(searchIcon, theme)} />
-					<input type="text" autoComplete="off" css={contactSearchInputStyle()} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchUsers} />
+					<input type="text" autoComplete="off" css={contactSearchInputStyle(this.props)} className="search__input" placeholder={Translator.translate("SEARCH", this.props.lang)} onChange={this.searchUsers} />
 				</div>
 			);
 		}

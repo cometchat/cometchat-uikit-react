@@ -69,7 +69,9 @@ export const chatsHeaderTitleStyle = (props) => {
         display: "inline-block",
         width: "100%",
         textAlign: "left",
-        fontSize: "20px",
+        fontSize: "22px",
+        fontWeight: "700",
+        lineHeight: "26px",
         ...alignment,
         "&[dir=rtl]": {
             textAlign: "right",

@@ -70,7 +70,7 @@ class CometChatGroupListItem extends React.PureComponent {
 				</div>
 				<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(this.context.language)}>
 					<div css={itemNameWrapperStyle()} className="item__details__name" onMouseEnter={event => this.toggleTooltip(event, true)} onMouseLeave={event => this.toggleTooltip(event, false)}>
-						<p css={listItemName()}>{this.props.group.name}</p>
+						<p css={listItemName(this.context)}>{this.props.group.name}</p>
 						<div css={listItemIcon()}>{groupTypeIcon}</div>
 					</div>
 					<div css={itemDescStyle(this.context)} className="item__details__desc">{`${this.props.group.membersCount} ${Translator.translate("MEMBERS", this.context.language)}`}</div>

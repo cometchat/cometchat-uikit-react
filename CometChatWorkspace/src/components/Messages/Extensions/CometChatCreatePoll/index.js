@@ -146,6 +146,7 @@ class CometChatCreatePoll extends React.Component {
                 key={index} 
                 option={option} 
                 tabIndex={index+4}
+                lang={this.context.language}
                 optionChangeHandler={this.optionChangeHandler}
                 removePollOption={this.removePollOption} />
             );

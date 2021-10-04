@@ -127,7 +127,7 @@ class CometChatReceiverAudioMessageBubble extends React.Component {
 // Specifies the default values for props:
 CometChatReceiverAudioMessageBubble.defaultProps = {
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverAudioMessageBubble.propTypes = {

@@ -94,7 +94,7 @@ class CometChatMessageList extends React.PureComponent {
 		const ifChatWindowChanged = () => {
 			let output = false;
 
-			if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.item.uid !== this.item.uid) {
+			if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && (this.context.item.uid !== this.item.uid || this.context.item.blockedByMe !== this.item.blockedByMe)) {
 				output = true;
 			} else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.context.item.guid !== this.item.guid) {
 				output = true;
@@ -379,9 +379,8 @@ class CometChatMessageList extends React.PureComponent {
 		//handling dom lag - increment count only for main message list
 		if (message.hasOwnProperty("parentMessageId") === false && this.props.hasOwnProperty("parentMessageId") === false) {
 			++this.messageCount;
-
 			//if the user has not scrolled in chat window(scroll is at the bottom of the chat window)
-			if (this.messagesEnd.scrollHeight - this.messagesEnd.scrollTop - this.messagesEnd.clientHeight < 20) {
+			if (this.messagesEnd.scrollHeight - this.messagesEnd.scrollTop - this.messagesEnd.clientHeight <= 1) {
 				if (this.messageCount > enums.CONSTANTS["MAX_MESSAGE_COUNT"]) {
 					this.reInitializeMessageBuilder();
 				} else {
@@ -440,7 +439,7 @@ class CometChatMessageList extends React.PureComponent {
 			++this.messageCount;
 
 			//if the user has not scrolled in chat window(scroll is at the bottom of the chat window)
-			if (this.messagesEnd.scrollHeight - this.messagesEnd.scrollTop === this.messagesEnd.clientHeight) {
+			if (this.messagesEnd.scrollHeight - this.messagesEnd.scrollTop - this.messagesEnd.clientHeight <= 1) {
 				if (this.messageCount > enums.CONSTANTS["MAX_MESSAGE_COUNT"]) {
 					this.reInitializeMessageBuilder();
 				} else {

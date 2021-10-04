@@ -1,16 +1,12 @@
 export const msgTimestampStyle = (context, props, loggedInUser) => {
 
-    const colorValue = (props.message?.sender?.uid !== loggedInUser?.uid) ? {
-        color: `${context.theme.color.helpText}`,
-    } : {};
-
     return {
         display: "flex",
         fontSize: "11px",
         fontWeight: "500",
         lineHeight: "12px",
         textTransform: "uppercase",
-        ...colorValue,
+        color: `${context.theme.color.search}`,
     }
 }
 

@@ -860,7 +860,6 @@ class CometChatMessageComposer extends React.PureComponent {
 	};
 	
 	
-
 	sendTransientMessage = () => {
 		//fetching the metadata type from constants
 		const metadata = { type: enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"], reaction: this.props.reaction };
@@ -873,18 +872,112 @@ class CometChatMessageComposer extends React.PureComponent {
 	};
 
 	reactToMessages = emoji => {
+
+		//close the emoji keyboard
+		this.toggleEmojiPicker();
+
+		//message object data structure
+		let messageObject = { ...this.state.messageToReact };
+		let newMessageObject = {};
+		let reactionObject = {};
+
+		const userObject = {};
+		if (this.loggedInUser.avatar && this.loggedInUser.avatar.length) {
+			userObject["name"] = this.loggedInUser.name;
+			userObject["avatar"] = this.loggedInUser.avatar;
+		} else {
+			userObject["name"] = this.loggedInUser.name;
+		}
+
+		const emojiObject = {
+			[emoji.colons]: { [this.loggedInUser.uid]: userObject },
+		};
+
+		const reactionExtensionsData = checkMessageForExtensionsData(messageObject, "reactions");
+		//if the message object has reactions extension data in metadata
+		if (reactionExtensionsData) {
+			//if the reactions metadata has the selected emoji/reaction
+			if (reactionExtensionsData[emoji.colons]) {
+				//if the reactions metadata has the selected emoji/reaction for the loggedin user
+				if (reactionExtensionsData[emoji.colons][this.loggedInUser.uid]) {
+					reactionObject = {
+						...messageObject["metadata"]["@injected"]["extensions"]["reactions"],
+					};
+					delete reactionObject[emoji.colons][this.loggedInUser.uid];
+				} else {
+					reactionObject = {
+						...messageObject["metadata"]["@injected"]["extensions"]["reactions"],
+						[emoji.colons]: {
+							...messageObject["metadata"]["@injected"]["extensions"]["reactions"][emoji.colons],
+							[this.loggedInUser.uid]: userObject,
+						},
+					};
+				}
+			} else {
+				reactionObject = {
+					...messageObject["metadata"]["@injected"]["extensions"]["reactions"],
+					...emojiObject,
+				};
+			}
+		} else {
+			if (messageObject.hasOwnProperty("metadata") === false) {
+				messageObject["metadata"] = {};
+			}
+
+			if (messageObject["metadata"].hasOwnProperty("@injected") === false) {
+				messageObject["metadata"]["@injected"] = {};
+			}
+
+			if (messageObject["metadata"]["@injected"].hasOwnProperty("extensions") === false) {
+				messageObject["metadata"]["@injected"]["extensions"] = {};
+			}
+
+			if (messageObject["metadata"]["@injected"]["extensions"].hasOwnProperty("reactions") === false) {
+				messageObject["metadata"]["@injected"]["extensions"]["reactions"] = {};
+			}
+
+			reactionObject = {
+				...emojiObject,
+			};
+		}
+
+		const metadatObject = {
+			metadata: {
+				...messageObject["metadata"],
+				"@injected": {
+					...messageObject["metadata"]["@injected"],
+					extensions: {
+						...messageObject["metadata"]["@injected"]["extensions"],
+						reactions: {
+							...reactionObject,
+						},
+					},
+				},
+			},
+		};
+
+		newMessageObject = {
+			...messageObject,
+			data: {
+				...messageObject,
+				...metadatObject,
+			},
+			...metadatObject,
+		};
+
+		this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], newMessageObject);
+
 		CometChat.callExtension("reactions", "POST", "v1/react", {
 			msgId: this.state.messageToReact.id,
 			emoji: emoji.colons,
 		})
-			.then(response => {
-				if (response.hasOwnProperty("success") && response["success"] === true) {
-					this.toggleEmojiPicker();
-				} else {
-					this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
-				}
-			})
-			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
+		.then(response => {
+			// Reaction failed
+			if (!response || !response.success || response.success !== true) {
+				this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
+			}
+		})
+		.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
 	};
 
 	render() {
