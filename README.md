@@ -87,7 +87,7 @@ ___
 
 ### i. Register on CometChat 🔧
 
-To install React UI Kit, you need to first register on CometChat Dashboard. <a href="https://app.cometchat.com/" target="_blank">Click here to sign up</a>
+To install React UI Kit, you need to first register on CometChat Dashboard. <a href="https://app.cometchat.com/signup" target="_blank">Click here to sign up</a>
 
 ### ii. Get your Application Keys :key:
 
@@ -160,7 +160,7 @@ CometChat.login(uid, authKey).then(
 
 ## 3. Add UI Kit to your project
 
-* Clone this repository `git clone https://github.com/cometchat-pro/cometchat-pro-react-ui-kit.git`
+* Clone this repository `git clone https://github.com/cometchat-pro/cometchat-pro-react-ui-kit.git -b v2`
 * Copy the cloned repository to your source folder
 
 <img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
@@ -199,7 +199,7 @@ Using the **CometChatUI** component, you can launch a fully functional chat appl
 
 # Checkout our sample app
 
-Visit our [React sample app](https://github.com/cometchat-pro/cometchat-pro-react-sample-app) repo to run the React sample app.
+Visit our [React sample app](https://github.com/cometchat-pro/javascript-react-chat-app/tree/v2) repo to run the React sample app.
 
 ---
 
