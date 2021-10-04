@@ -108,7 +108,7 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 
 		messageText = (
 			<div css={messageTxtWrapperStyle(this.context)} className="message__txt__wrapper">
-				<p css={messageTxtStyle(parsedMessage, emojiMessage, showVariation)} className="message__txt">
+				<p css={messageTxtStyle(parsedMessage, emojiMessage, showVariation, this.context)} className="message__txt">
 					{parsedMessage}
 					{this.state.translatedMessage}
 				</p>
@@ -272,7 +272,7 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 // Specifies the default values for props:
 CometChatReceiverTextMessageBubble.defaultProps = {
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverTextMessageBubble.propTypes = {

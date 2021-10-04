@@ -132,7 +132,7 @@ class CometChatReceiverFileMessageBubble extends React.Component {
 // Specifies the default values for props:
 CometChatReceiverFileMessageBubble.defaultProps = {
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatReceiverFileMessageBubble.propTypes = {

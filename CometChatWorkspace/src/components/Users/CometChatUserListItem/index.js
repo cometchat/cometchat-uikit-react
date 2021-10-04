@@ -44,7 +44,7 @@ const CometChatUserListItem = (props) => {
 				{userPresence}
 			</div>
 			<div css={itemDetailStyle()} className="list__item__details" dir={Translator.getDirection(context.language)}>
-				<div css={itemNameStyle()} className="item__details__name"  
+				<div css={itemNameStyle(context)} className="item__details__name"  
 				onMouseEnter={event => toggleTooltip(event, true)} 
 				onMouseLeave={event => toggleTooltip(event, false)}>{props.user.name}</div>
 				<div css={itemDescStyle(context)} className="item__details__desc"></div>

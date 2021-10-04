@@ -30,4 +30,4 @@ class CometChatConfirmDialog extends React.Component {
     }
 }
 
-export {CometChatConfirmDialog};
+export { CometChatConfirmDialog };

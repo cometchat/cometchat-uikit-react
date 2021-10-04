@@ -8,15 +8,15 @@ import { badgeStyle } from "./style";
 
 const CometChatBadgeCount = (props) => {
 
-	let count = "";
-
+	let badgeCount = null;
+	
 	if(props.count) {
-		count = (
+		badgeCount = (
 			<span css={badgeStyle(props)} className="unread-count">{props.count}</span>
 		);
 	}
 	
-	return count;
+	return badgeCount;
 }
 
 // Specifies the default values for props:

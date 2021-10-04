@@ -59,8 +59,8 @@ export const nameWrapperStyle = (avatar) => {
 export const nameStyle = context => {
 
 	return {
-		fontSize: "10px",
-		color: `${context.theme.color.helpText}`,
+		fontSize: "11px",
+		color: `${context.theme.color.search}`,
 	};
 };
 
@@ -120,11 +120,12 @@ export const messageInfoWrapperStyle = () => {
 export const messageReactionsWrapperStyle = () => {
 
     return {
-        display: "inline-flex",
+        display: "flex",
         alignSelf: "flex-start",
         width: "100%",
         flexWrap: "wrap",
         justifyContent: "flex-start",
+        minHeight: "36px",
     }
 }
 

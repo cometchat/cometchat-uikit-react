@@ -366,7 +366,7 @@ class CometChatMessageActions extends React.PureComponent {
 // Specifies the default values for props:
 CometChatMessageActions.defaultProps = {
 	theme: theme,
-	actionGenerated: {},
+	actionGenerated: () => {},
 };
 
 CometChatMessageActions.propTypes = {

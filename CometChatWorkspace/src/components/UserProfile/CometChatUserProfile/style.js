@@ -28,8 +28,9 @@ export const headerTitleStyle = () => {
 
     return {
         margin: "0",
+        fontSize: "22px",
         fontWeight: "700",
-        fontSize: "22px"
+        lineHeight: "26px",
     }
 }
 

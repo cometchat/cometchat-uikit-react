@@ -12,6 +12,7 @@ import * as enums from "../../../util/enums.js";
 
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
+import { LocalizedString } from "./strings";
 
 import {
     callScreenBackgroundStyle,
@@ -312,12 +313,7 @@ class CometChatCallScreen extends React.PureComponent {
             .setSessionID(sessionId)
             .setIsAudioOnlyCall(false)
             .setCustomCSS(customCSS)
-            .setLocalizedStringObject({
-                "SELECT_VIDEO_SOURCE": Translator.translate("SELECT_VIDEO_SOURCE", this.props.lang),
-                "SELECT_INPUT_AUDIO_SOURCE": Translator.translate("SELECT_INPUT_AUDIO_SOURCE", this.props.lang),
-                "SELECT_OUTPUT_AUDIO_SOURCE": Translator.translate("SELECT_OUTPUT_AUDIO_SOURCE", this.props.lang),
-                "SELECT_MODE": Translator.translate("SELECT_MODE", this.props.lang)
-            }).build();
+            .setLocalizedStringObject(LocalizedString(this.props.lang)).build();
 
         const el = this.callScreenFrame;
         CometChat.startCall(
@@ -353,16 +349,13 @@ class CometChatCallScreen extends React.PureComponent {
         const customCSS = this.context.UIKitSettings.customCSS;
 
         const callSettings = new CometChat.CallSettingsBuilder()
-            .setSessionID(sessionId)
-            .enableDefaultLayout(true)
-            .setMode(CometChat.CALL_MODE.DEFAULT)
-            .setIsAudioOnlyCall(callType)
-            .setCustomCSS(customCSS)
-            .setLocalizedStringObject({
-                "SELECT_VIDEO_SOURCE": Translator.translate("SELECT_VIDEO_SOURCE", this.props.lang),
-                "SELECT_INPUT_AUDIO_SOURCE": Translator.translate("SELECT_INPUT_AUDIO_SOURCE", this.props.lang),
-                "SELECT_OUTPUT_AUDIO_SOURCE": Translator.translate("SELECT_OUTPUT_AUDIO_SOURCE", this.props.lang)
-            }).build();
+					.setSessionID(sessionId)
+					.enableDefaultLayout(true)
+					.setMode(CometChat.CALL_MODE.DEFAULT)
+					.setIsAudioOnlyCall(callType)
+					.setCustomCSS(customCSS)
+					.setLocalizedStringObject(LocalizedString(this.props.lang))
+					.build();
 
 
         const el = this.callScreenFrame;

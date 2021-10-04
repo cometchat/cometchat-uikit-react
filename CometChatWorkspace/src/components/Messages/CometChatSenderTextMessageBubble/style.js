@@ -50,6 +50,7 @@ export const messageTxtStyle = (props, parsedMessage, emojiMessage, showVariatio
     };
 
     let emojiProp = {};
+    let heightProp = {};
 
     if (parsedMessage.length === emojiMessage.length && emojiMessage.length === 1) {
         emojiProp = {
@@ -58,12 +59,18 @@ export const messageTxtStyle = (props, parsedMessage, emojiMessage, showVariatio
                 height: "48px",
            }
         };
+        heightProp = {
+            height: "48px",
+        };
     } else if (parsedMessage.length === emojiMessage.length && emojiMessage.length === 2) {
         emojiProp = {
             "> img": {
                 width: "36px",
                 height: "36px",
             }
+        };
+        heightProp = {
+            height: "36px",
         };
     } else if (parsedMessage.length === emojiMessage.length && emojiMessage.length > 2) {
         emojiProp = {
@@ -90,6 +97,7 @@ export const messageTxtStyle = (props, parsedMessage, emojiMessage, showVariatio
         wordBreak: "break-word",
         textAlign: "left",
         width: "auto",
+        ...heightProp,
         " a": {
             color: "#0432FF",
             "&:hover": {
@@ -121,16 +129,18 @@ export const messageInfoWrapperStyle = () => {
         justifyContent: "flex-end",
         alignItems: "center",
         height: "25px",
+        padding: "4px 8px",
     }
 }
 
 export const messageReactionsWrapperStyle = () => {
 
     return {
-        display: "inline-flex",
+        display: "flex",
         alignSelf: "flex-end",
         width: "100%",
         flexWrap: "wrap",
         justifyContent: "flex-end",
+        minHeight: "36px"
     }
 }

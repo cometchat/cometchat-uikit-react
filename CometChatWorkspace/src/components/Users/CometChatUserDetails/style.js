@@ -164,6 +164,7 @@ export const userNameStyle = () => {
 		margin: "0",
 		fontSize: "15px",
 		fontWeight: "600",
+		lineHeight: "22px",
 		width: "100%",
 		overflow: "hidden",
 		textOverflow: "ellipsis",
@@ -187,6 +188,8 @@ export const userPresenceStyle = (context, state) => {
 		width: "calc(100% - 50px)",
 		textTransform: "capitalize",
 		fontSize: "13px",
+		fontWeight: "400",
+		lineHeight: "20px",
 		...status,
 	};
 };

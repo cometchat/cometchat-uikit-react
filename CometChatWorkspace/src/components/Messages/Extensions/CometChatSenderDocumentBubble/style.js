@@ -116,10 +116,11 @@ export const messageInfoWrapperStyle = () => {
 export const messageReactionsWrapperStyle = () => {
 
     return {
-        display: "inline-flex",
+        display: "flex",
         alignSelf: "flex-end",
         width: "100%",
         flexWrap: "wrap",
         justifyContent: "flex-end",
+        minHeight: "36px",
     }
 }
