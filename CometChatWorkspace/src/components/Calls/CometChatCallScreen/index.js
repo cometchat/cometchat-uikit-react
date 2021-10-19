@@ -307,11 +307,13 @@ class CometChatCallScreen extends React.PureComponent {
 
         const sessionId = call.data.customData.sessionID;
         const customCSS = this.context.UIKitSettings.customCSS;
+        const showRecordingButton = this.context.UIKitSettings.showCallRecordingOption;
 
         const callSettings = new CometChat.CallSettingsBuilder()
             .enableDefaultLayout(true)
             .setSessionID(sessionId)
             .setIsAudioOnlyCall(false)
+            .showRecordingButton(showRecordingButton)
             .setCustomCSS(customCSS)
             .setLocalizedStringObject(LocalizedString(this.props.lang)).build();
 
@@ -347,12 +349,14 @@ class CometChatCallScreen extends React.PureComponent {
         const sessionId = call.getSessionId();
         const callType = (call.type === CometChat.CALL_TYPE.AUDIO ? true : false);
         const customCSS = this.context.UIKitSettings.customCSS;
+        const showRecordingButton = this.context.UIKitSettings.showCallRecordingOption;
 
         const callSettings = new CometChat.CallSettingsBuilder()
 					.setSessionID(sessionId)
 					.enableDefaultLayout(true)
 					.setMode(CometChat.CALL_MODE.DEFAULT)
 					.setIsAudioOnlyCall(callType)
+					.showRecordingButton(showRecordingButton)
 					.setCustomCSS(customCSS)
 					.setLocalizedStringObject(LocalizedString(this.props.lang))
 					.build();
