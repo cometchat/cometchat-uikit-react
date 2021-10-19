@@ -1,23 +1,23 @@
 {
 	"name": "cometchat-pro-react-ui-kit",
-	"version": "2.4.0-5",
+	"version": "2.4.1-beta1-1",
 	"description": "CometChat UI Kit for React App",
 	"author": "CometChat",
 	"dependencies": {
-		"react": "^17.0.2",
-		"react-dom": "^17.0.2",
-		"react-scripts": "^4.0.3",
-		"@cometchat-pro/chat": "2.4.0",
+		"@cometchat-pro/chat": "2.4.1-beta1",
 		"@emotion/core": "^10.0.35",
 		"dateformat": "^4.0.0",
 		"emoji-mart": "^3.0.0",
+		"react": "^17.0.2",
+		"react-dom": "^17.0.2",
 		"react-html-parser": "^2.0.2",
+		"react-scripts": "^4.0.3",
 		"twemoji": "^13.0.1"
 	},
 	"devDependencies": {
+		"babel-jest": "26.6.0",
 		"jest": "26.6.0",
-		"jest-canvas-mock": "^2.3.1",
-		"babel-jest": "26.6.0"
+		"jest-canvas-mock": "^2.3.1"
 	},
 	"scripts": {
 		"test": "jest"
@@ -26,5 +26,8 @@
 		"moduleNameMapper": {
 			"\\.(css|scss|png|svg|pdf|jpg|jpeg|wav)$": "<rootDir>/src/resources/__mocks__/fileMock.js"
 		}
+	},
+	"optionalDependencies": {
+		"fsevents": "^2.3.2"
 	}
 }

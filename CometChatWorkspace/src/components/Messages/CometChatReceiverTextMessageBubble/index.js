@@ -52,6 +52,7 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 
 		if (currentMessageStr !== nextMessageStr 
 		|| this.state.isHovering !== nextState.isHovering
+		|| this.state.translatedMessage !== nextState.translatedMessage
 		|| this.state.enableLargerSizeEmojis !== nextState.enableLargerSizeEmojis) {
 			return true;
 		}

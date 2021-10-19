@@ -132,6 +132,8 @@ export class UIKitSettings {
 
 		this.viewProfile = true;
 		this.messageInPrivate = true;
+
+		this.showCallRecordingOption = true;
 	}
 
 	setCustomJS = customJS => {
@@ -380,7 +382,7 @@ export class UIKitSettings {
 
 	setAllowModeratorToDeleteMemberMessages = allowModeratorToDeleteMemberMessages => {
 		this.allowModeratorToDeleteMemberMessages = allowModeratorToDeleteMemberMessages;
-	}
+	};
 
 	setUnreadCount = unreadCount => {
 		this.unreadCount = unreadCount;
@@ -484,6 +486,10 @@ export class UIKitSettings {
 
 	setChatWindow = chatWindow => {
 		this.chatWindow = chatWindow;
+	};
+
+	setShowCallRecordingOption = showCallRecordingOption => {
+		this.showCallRecordingOption = showCallRecordingOption;
 	};
 
 	returnMatchedKey = (matchWith, optionToMatch) => {
