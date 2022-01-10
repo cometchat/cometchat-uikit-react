@@ -291,7 +291,7 @@ class CometChatConversationList extends React.Component {
 		//if chat window is not open, mark message as delivered
 		if ((this.getContext().type === "" || Object.keys(this.getContext().item).length === 0) 
 		&& message.hasOwnProperty("deliveredAt") === false) {
-			CometChat.markAsDelivered(message);
+			CometChat.markAsDelivered(message).catch(error => {});
 		}
 	};
 
