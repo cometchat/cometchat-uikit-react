@@ -1,3 +1,4 @@
+
 export const messageContainerStyle = () => {
 
     return {
@@ -17,7 +18,7 @@ export const messageContainerStyle = () => {
 export const messageWrapperStyle = () => {
 
     return {
-        width: "auto",
+        width: "100%",
         flex: "1 1",
         alignSelf: "flex-start",
         display: "flex",
@@ -41,6 +42,7 @@ export const messageDetailStyle = () => {
         flex: "1 1",
         display: "flex",
         flexDirection: "column",
+	width: "calc(100% - 36px)",
     }
 }
 
@@ -150,7 +152,7 @@ export const answerWrapperStyle = (state, optionData, context) => {
     let widthProp = "calc(100% - 40px)";
 	if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(state?.loggedInUser?.uid)) {
 		//countPadding = "0px 8px";
-		widthProp = "calc(100% - 40px)";
+		widthProp = "calc(100% - 80px)";
 	}
 
 	return {
@@ -159,7 +161,7 @@ export const answerWrapperStyle = (state, optionData, context) => {
 		display: "flex",
 		alignItems: "center",
 		minHeight: "35px",
-        padding: "0 16px",
+        	padding: "0 16px",
 		height: "100%",
 		zIndex: "2",
 		p: {
@@ -170,7 +172,7 @@ export const answerWrapperStyle = (state, optionData, context) => {
 			fontSize: "14px",
 		},
 		span: {
-			maxWidth: "40px",
+			width: "40px",
 			padding: countPadding,
 			fontWeight: "bold",
 			display: "inline-block",
@@ -182,7 +184,7 @@ export const answerWrapperStyle = (state, optionData, context) => {
 export const checkIconStyle = (img, context) => {
 
 	return {
-		width: "24px",
+		width: "40px",
 		height: "24px",
 		mask: `url(${img}) center center no-repeat`,
 		backgroundColor: `${context.theme.secondaryTextColor}`,
