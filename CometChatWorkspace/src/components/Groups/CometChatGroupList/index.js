@@ -185,10 +185,8 @@ class CometChatGroupList extends React.PureComponent {
 				this.updateMemberRemoved(group, options);
 				break;
 			case enums.GROUP_MEMBER_ADDED:
-				this.updateMemberAdded(group, options);
-				break;
 			case enums.GROUP_MEMBER_JOINED:
-				this.updateMemberJoined(group, options);
+				this.updateMemberAddition(group, options);
 				break;
 			default:
 				break;
@@ -223,70 +221,32 @@ class CometChatGroupList extends React.PureComponent {
 		}
 	};
 
-	updateMemberAdded = (group, options) => {
+	// Callback for when group member is added or joined
+	updateMemberAddition = (group, options) => {
 		let grouplist = [...this.state.grouplist];
 
 		//search for group
 		let groupKey = grouplist.findIndex(g => g.guid === group.guid);
 
 		if (groupKey > -1) {
+			if (options && this.loggedInUser.uid === options.user.uid){
 			let groupObj = {...grouplist[groupKey]};
-
-			let membersCount = parseInt(group.membersCount);
-
-			let scope = group.hasOwnProperty("scope") ? group.scope : "";
-			let hasJoined = group.hasOwnProperty("hasJoined") ? group.hasJoined : false;
-
-			if (options && this.loggedInUser.uid === options.user.uid) {
-				scope = CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT;
-				hasJoined = true;
-			}
-
-			let newgroupObj = Object.assign({}, groupObj, {membersCount: membersCount, scope: scope, hasJoined: hasJoined});
+			let hasJoined = true;
+			let newgroupObj = Object.assign({}, groupObj, { hasJoined: hasJoined});
 
 			grouplist.splice(groupKey, 1, newgroupObj);
 			this.setState({grouplist: grouplist});
 		} else {
-			let groupObj = {...group};
-
-			let scope = groupObj.hasOwnProperty("scope") ? groupObj.scope : "";
-			let hasJoined = groupObj.hasOwnProperty("hasJoined") ? groupObj.hasJoined : false;
+			let groupObj = {...grouplist[groupKey]};
 			let membersCount = parseInt(groupObj.membersCount);
 
-			if (options && this.loggedInUser.uid === options.user.uid) {
-				scope = CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT;
-				hasJoined = true;
-			}
-
-			let newgroupObj = Object.assign({}, groupObj, {membersCount: membersCount, scope: scope, hasJoined: hasJoined});
-
-			grouplist.unshift(newgroupObj);
-			this.setState({grouplist: grouplist});
-		}
-	};
-
-	updateMemberJoined = (group, options) => {
-		let grouplist = [...this.state.grouplist];
-
-		//search for group
-		let groupKey = grouplist.findIndex(g => g.guid === group.guid);
-
-		if (groupKey > -1) {
-			let groupObj = {...grouplist[groupKey]};
-
-			let scope = groupObj.scope;
-			let membersCount = parseInt(group.membersCount);
-
-			if (options && this.loggedInUser.uid === options.user.uid) {
-				scope = CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT;
-			}
-
-			let newgroupObj = Object.assign({}, groupObj, {membersCount: membersCount, scope: scope});
-
+			let newgroupObj = Object.assign({},groupObj, {membersCount: membersCount});
 			grouplist.splice(groupKey, 1, newgroupObj);
-			this.setState({grouplist: grouplist});
+			this.setState({grouplist:grouplist});
 		}
-	};
+
+		}
+		};
 
 	updateMemberChanged = (group, options) => {
 		let grouplist = [...this.state.grouplist];

@@ -158,7 +158,7 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 			}
 
 			let checkIcon = null;
-			if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(this.loggedInUser?.uid)) {
+			if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(this.state.loggedInUser?.uid)) {
 				checkIcon = <i css={checkIconStyle(checkImg, this.context)}></i>;
 			}
 
