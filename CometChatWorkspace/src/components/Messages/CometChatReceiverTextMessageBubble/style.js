@@ -85,7 +85,7 @@ export const messageTxtWrapperStyle = context => {
 	};
 };
 
-export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation, context) => {
+export const messageTxtStyle = (showVariation, count, context) => {
 
     let emojiAlignmentProp = {
         " > img": {
@@ -100,21 +100,21 @@ export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation, cont
 
     let emojiProp = {};
 
-    if (parsedMessage.length === emojiMessage.length && emojiMessage.length === 1) {
+    if (count === 1) {
         emojiProp = {
             "> img": {
                 width: "48px",
                 height: "48px",
             }
         };
-    } else if (parsedMessage.length === emojiMessage.length && emojiMessage.length === 2) {
+    } else if (count === 2) {
         emojiProp = {
             "> img": {
                 width: "36px",
                 height: "36px",
             }
         };
-    } else if (parsedMessage.length === emojiMessage.length && emojiMessage.length > 2) {
+    } else if (count > 2) {
         emojiProp = {
             "> img": {
                 width: "24px",
@@ -122,6 +122,7 @@ export const messageTxtStyle = (parsedMessage, emojiMessage, showVariation, cont
             }
         };
     }
+
 
     if (showVariation === false) {
         emojiProp = {

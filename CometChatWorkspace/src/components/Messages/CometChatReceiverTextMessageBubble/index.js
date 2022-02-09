@@ -3,7 +3,7 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from "@emotion/core";
 import twemoji from "twemoji";
-import ReactHtmlParser from "react-html-parser";
+import parse from "html-react-parser";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -12,7 +12,7 @@ import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
 import { CometChatContext } from "../../../util/CometChatContext";
-import { linkify, checkMessageForExtensionsData } from "../../../util/common";
+import { linkify, checkMessageForExtensionsData, countEmojiOccurences } from "../../../util/common";
 import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
@@ -98,9 +98,11 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 		const formattedText = linkify(messageText);
 
 		const emojiParsedMessage = twemoji.parse(formattedText, { folder: "svg", ext: ".svg" });
-		const parsedMessage = ReactHtmlParser(emojiParsedMessage, { decodeEntities: false });
-		const emojiMessage = parsedMessage.filter(message => message instanceof Object && message.type === "img");
+		// Checks Emoji Count
+	
+		let count = countEmojiOccurences(emojiParsedMessage,"class=\"emoji\"");
 
+		const parsedMessage = parse(emojiParsedMessage);
 		let showVariation = true;
 		//if larger size emojis feature is disabled
 		if (this.state.enableLargerSizeEmojis === false) {
@@ -109,7 +111,7 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 
 		messageText = (
 			<div css={messageTxtWrapperStyle(this.context)} className="message__txt__wrapper">
-				<p css={messageTxtStyle(parsedMessage, emojiMessage, showVariation, this.context)} className="message__txt">
+				<p css={messageTxtStyle(showVariation, count, this.context)} className="message__txt">
 					{parsedMessage}
 					{this.state.translatedMessage}
 				</p>
