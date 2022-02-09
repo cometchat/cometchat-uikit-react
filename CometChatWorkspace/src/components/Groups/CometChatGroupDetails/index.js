@@ -439,6 +439,8 @@ class CometChatGroupDetails extends React.Component {
 			.then(response => {
 				if (response) {
 					this.context.setLeftGroupId(guid);
+					this.props.actionGenerated(enums.ACTIONS["TOGGLE_SIDEBAR"]);
+					
 				} else {
 					this.toastRef.setError("SOMETHING_WRONG");
 				}
