@@ -101,6 +101,16 @@ class CometChatGroupList extends React.PureComponent {
 			}
 		}
 
+		if (this.getContext().leftGroupId.trim().length) {
+
+			const guid = this.getContext().leftGroupId.trim();
+			const groups = [...this.state.grouplist]; const groupKey = groups.findIndex(group => group.guid === guid);
+			if (groupKey > -1) {
+			const groupObj = groups[groupKey]; 
+			const membersCount = Number(groupObj.membersCount) ? Number(groupObj.membersCount) - 1 : 0 ; 
+			let newGroupObj = Object.assign({}, groupObj, { membersCount, hasJoined: false });
+			groups.splice(groupKey, 1, newGroupObj); this.setState({ grouplist: groups }); } }
+
 		this.item = this.getContext().type === CometChat.ACTION_TYPE.TYPE_GROUP ? this.getContext().item : null;
 		this.enableSearchGroup();
 		this.enableCreateGroup();
