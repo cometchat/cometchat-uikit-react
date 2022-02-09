@@ -184,3 +184,20 @@ export const getMessageDate = (timestamp, lang) => {
 
     return timestamp;
 }
+
+export const countEmojiOccurences = (string, word) =>  {
+    if(string.split(word).length - 1 >= 3){
+        return 3
+    }else{
+        let content = string;
+        content = string.replace(/<img[^>"']*((("[^"]*")|('[^']*'))[^"'>]*)*>/g,"");
+
+        if(content.length>0){
+            return 3;
+            
+        }else{
+            return string.split(word).length - 1;
+        }
+        
+        }
+ }
