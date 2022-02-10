@@ -96,7 +96,7 @@ export const messageFileStyle = props => {
 
 export const messageFileIconStyle = (props) => {
 	return {
-		mask: `url(${props.iconURL}) center center no-repeat`,
+		WebkitMask: `url(${props.iconURL}) center center no-repeat`,
 		backgroundColor: `${props.iconTint}`,
 		display: "inline-block",
 		width: "24px",

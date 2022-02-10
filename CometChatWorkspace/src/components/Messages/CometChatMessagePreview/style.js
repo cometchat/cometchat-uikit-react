@@ -38,7 +38,7 @@ export const previewCloseStyle = (props) => {
 		height: "24px",
 		borderRadius: "50%",
 		cursor: "pointer",
-		mask: `url(${props.closeIconURL}) center center no-repeat`,
+		WebkitMask: `url(${props.closeIconURL}) center center no-repeat`,
 		backgroundColor: props.closeIconTint,
 	};
 };

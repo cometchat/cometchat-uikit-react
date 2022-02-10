@@ -18,12 +18,11 @@ const CometChatMessageHoverItem = props => {
     return (
         <li style={hoverItemStyle(props)} className="action__group">
             <button
-                type="button"
-                onMouseEnter={showToolTip}
-                onMouseLeave={hideToolTip}
-                style={hoverItemButtonStyle(props)}
-                className={`group__button button__${props.id}`}
-                onClick={handleClick}></button>
+            onMouseEnter={showToolTip}
+            onMouseLeave={hideToolTip}
+            style={hoverItemButtonStyle(props)}
+            className={`group__button button__${props.id}`}
+            onClick={handleClick}></button>
         </li>
     );
 }

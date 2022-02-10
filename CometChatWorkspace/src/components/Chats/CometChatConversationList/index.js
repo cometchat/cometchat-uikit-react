@@ -562,20 +562,20 @@ const CometChatConversationList = React.forwardRef((props, ref) => {
 	const renderItems = conversationList.map(conversation => {
 		const typingIndicatorText = conversation.typingIndicatorText ? conversation.typingIndicatorText : "";
 
-		const background = props.configurations?.ConversationListItemConfiguration?.background || "transparent";
-		const hideStatusIndicator = props.configurations?.ConversationListItemConfiguration?.hideStatusIndicator || false;
-		const hideAvatar = props.configurations?.ConversationListItemConfiguration?.hideAvatar || false;
-		const hideUnreadCount = props.configurations?.ConversationListItemConfiguration?.hideUnreadCount || false;
+		const background = props.configurations?.conversationListItemConfiguration?.background || "transparent";
+		const hideStatusIndicator = props.configurations?.conversationListItemConfiguration?.hideStatusIndicator || false;
+		const hideAvatar = props.configurations?.conversationListItemConfiguration?.hideAvatar || false;
+		const hideUnreadCount = props.configurations?.conversationListItemConfiguration?.hideUnreadCount || false;
 
 		let hideReceipt = false;
-		if (props.configurations?.ConversationListItemConfiguration?.hideReceipt !== undefined) {
+		if (props.configurations?.conversationListItemConfiguration?.hideReceipt !== undefined) {
 			hideReceipt = props.configurations?.ConversationListItemConfiguration?.hideReceipt;
 		} else if (conversation.showTypingIndicator) {
 			hideReceipt = true;
 		}
 
 		let showTypingIndicator;
-		if (props.configurations?.ConversationListItemConfiguration?.showTypingIndicator !== true) {
+		if (props.configurations?.conversationListItemConfiguration?.showTypingIndicator !== true) {
 			showTypingIndicator = false;
 		} else {
 			if (conversation.showTypingIndicator === undefined) {
@@ -585,15 +585,16 @@ const CometChatConversationList = React.forwardRef((props, ref) => {
 			}
 		}
 
-		const hideThreadIndicator = props.configurations?.ConversationListItemConfiguration?.hideThreadIndicator || false;
-		const hideGroupActionMessages = props.configurations?.ConversationListItemConfiguration?.hideGroupActionMessages || false;
-		const hideDeletedMessages = props.configurations?.ConversationListItemConfiguration?.hideDeletedMessages || false;
-		const showDeleteConversation = props.configurations?.ConversationListItemConfiguration?.showDeleteConversation || true;
+		const hideThreadIndicator = props.configurations?.conversationListItemConfiguration?.hideThreadIndicator || false;
+		const hideGroupActionMessages = props.configurations?.conversationListItemConfiguration?.hideGroupActionMessages || false;
+		const hideDeletedMessages = props.configurations?.conversationListItemConfiguration?.hideDeletedMessages || false;
+		const showDeleteConversation = props.configurations?.conversationListItemConfiguration?.showDeleteConversation || true;
 
 		let border = "1px solid rgba(20, 20, 20, 10%)";
-		if (props.configurations?.ConversationListItemConfiguration?.borderWidth !== undefined && props.configurations?.ConversationListItemConfiguration?.borderStyle !== undefined) {
-			const borderWidth = props.configurations?.ConversationListItemConfiguration?.borderWidth;
-			const borderStyle = props.configurations?.ConversationListItemConfiguration?.borderStyle;
+		if (props.configurations?.conversationListItemConfiguration?.borderWidth !== undefined && props.configurations?.conversationListItemConfiguration?.borderStyle !== undefined) {
+
+			const borderWidth = props.configurations?.conversationListItemConfiguration?.borderWidth;
+			const borderStyle = props.configurations?.conversationListItemConfiguration?.borderStyle;
 
 			border = `${borderWidth} ${borderStyle} rgba(20, 20, 20, 10%)`;
 		}
@@ -618,7 +619,7 @@ const CometChatConversationList = React.forwardRef((props, ref) => {
 				hideDeletedMessages={hideDeletedMessages}
 				showDeleteConversation={showDeleteConversation}
 				key={conversation.conversationId}
-				configurations={props.configurations?.ConversationListItemConfiguration}
+				configurations={props.configurations}
 			/>
 		);
 	});
@@ -656,7 +657,7 @@ CometChatConversationList.defaultProps = {
 	loggedInUser: null,
 	conversationType: "both",
 	activeConversation: null,
-	configurations: null,
+	configurations: {},
 };
 
 export { CometChatConversationList };

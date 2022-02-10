@@ -68,7 +68,7 @@ const CometChatAvatar = props => {
 CometChatAvatar.defaultProps = {
 	cornerRadius: "50%",
 	border: "1px solid rgba(20, 20, 20, 8%)",
-	background: "#3399FF",
+	background: "#fff",
 	backgroundSize: "cover",
 	textColor: "#ffffff",
 	textFont: "bold 80px Inter",

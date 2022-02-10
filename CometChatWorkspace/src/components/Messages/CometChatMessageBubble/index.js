@@ -80,6 +80,11 @@ const CometChatMessageBubble = props => {
 
                 case CometChatMessageOptions.edit: {
 
+                    //if the sender of the message is not the logged in user, disable option to edit.
+                    if(props.loggedInUser?.uid !== props.messageObject?.sender?.uid) {
+                        return;
+                    }
+
                     messageOptions.push({
                         id: option,
                         iconURL: editIcon,

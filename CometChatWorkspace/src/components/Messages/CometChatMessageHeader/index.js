@@ -151,7 +151,7 @@ const CometChatMessageHeader = props => {
 	let chatNameClassName = chatWithType === CometChatMessageReceiverType.user ? "user__name" : "group__name";
         
     const avatar = chatWithType === CometChatMessageReceiverType.user ? <CometChatAvatar user={chatWith} /> : <CometChatAvatar group={chatWith} />;
-    const presence = chatWithType === CometChatMessageReceiverType.user ? <CometChatStatusIndicator status={userPresence} /> : null;
+    const presence = chatWithType === CometChatMessageReceiverType.user ? <CometChatStatusIndicator status={userPresence} style={{ position: "absolute", bottom: "1px", right: "0px" }} /> : null;
     const status = (
         <span style={chatStatusStyle(userPresence, chatWithType, typingText)} className={chatStatusClassName}>
             {messageHeaderStatus}

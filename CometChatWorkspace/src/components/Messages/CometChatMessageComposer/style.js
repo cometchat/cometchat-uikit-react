@@ -6,8 +6,8 @@ export const chatComposerStyle = props => {
 		order: "3",
 		position: "relative",
 		flex: "none",
-		minHeight: props.height,
-		borderRadius: props.cornerRadius
+		minHeight: "85px",
+		borderRadius: props.cornerRadius,
 	};
 };
 
@@ -16,14 +16,14 @@ export const chatComposerStyle = props => {
 export const composerInputStyle = props => {
 	return {
 		display: "flex",
-		width: "100%",
+		width: props.width,
 		flexDirection: "row",
 		alignItems: "flex-end",
 		position: "relative",
 		zIndex: "2",
 		padding: "0",
 		borderRadius: props.inputCornerRadius,
-		minHeight: props.height,
+		minHeight: "85px",
 	};
 };
 
@@ -58,7 +58,7 @@ export const messageInputStyle = (props, disabled) => {
 	return {
 		width: "100%",
 		minHeight: "50px",
-		maxHeight: props.height,
+		height: props.height,
 		font: props.placeholderFont,
 		color: props.placeholderColor,
 		lineHeight: "20px",
@@ -157,13 +157,6 @@ export const fileItemStyle = (img, context) => {
 		justifyContent: "center",
 		alignItems: "center",
 		margin: "0 16px 0 0",
-		" > i": {
-			width: "24px",
-			height: "24px",
-			display: "inline-block",
-			WebkitMask: `url(${img}) center center no-repeat`,
-			backgroundColor: `${context.theme.secondaryIconColor}`,
-		},
 		" > input": {
 			display: "none",
 		},

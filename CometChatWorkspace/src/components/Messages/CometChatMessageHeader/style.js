@@ -29,7 +29,8 @@ export const chatThumbnailStyle = () => {
     return {
         display: "inline-block",
         flexShrink: "0",
-        margin: "0 16px",
+        marginRight: "16px",
+        position: "relative"
     }
 }
 

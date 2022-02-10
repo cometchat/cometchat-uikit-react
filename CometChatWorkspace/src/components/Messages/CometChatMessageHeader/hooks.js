@@ -54,10 +54,11 @@ export const Hooks = (
         if (user.status === CometChat.USER_STATUS.OFFLINE && user.lastActiveAt) {
 
             //const lastActive = user.lastActiveAt * 1000;
-            const messageDate = <CometChatDate timeStamp={user.lastActiveAt} timeFormat="dd:mm:yyyy,hh:mm am/pm" />; //dateFormat(lastActive, "dS mmm yyyy, h:MM TT");
+            //const messageDate = <CometChatDate timeStamp={user.lastActiveAt} timeFormat="dd:mm:yyyy,hh:mm am/pm" />;
+            //const status = `${localize("LAST_ACTIVE_AT")}: ${messageDate}`;
+            //setMessageHeaderStatus(status);
 
-            const status = `${localize("LAST_ACTIVE_AT")}: ${messageDate}`;
-            setMessageHeaderStatus(status);
+            setMessageHeaderStatus(localize("OFFLINE"));
             setUserPresence(CometChat.USER_STATUS.OFFLINE);
 
         } else if (user.status === CometChat.USER_STATUS.OFFLINE) {

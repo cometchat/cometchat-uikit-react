@@ -26,7 +26,7 @@ export const Hooks = (
 		headerConfig.current.background = props.configurations?.messageHeaderConfiguration?.background || messageHeaderConfig.background;
 
 		const messageListConfig = new MessageListConfiguration();
-		listConfig.current.background = props.configurations?.messageListConfiguration?.background || new messageListConfig().background;
+		listConfig.current.background = props.configurations?.messageListConfiguration?.background || messageListConfig.background;
 
 		const messageComposerConfig = new MessageComposerConfiguration();
 		composerConfig.current.background = props.configurations?.messageComposerConfiguration?.background || messageComposerConfig.background;

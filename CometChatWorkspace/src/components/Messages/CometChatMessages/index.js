@@ -69,8 +69,6 @@ const CometChatMessages = props => {
 
     const addNewMessage = payload => {
 
-        console.log("payload", payload);
-
         if(messageListRef && messageListRef.current) {
 
             if (payload.status === messageStatus.inprogress) {

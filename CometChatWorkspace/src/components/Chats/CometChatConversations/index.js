@@ -24,7 +24,8 @@ import startConversationIcon from "./resources/create.svg";
 
 const CometChatConversations = props => {
 	
-	const [user, setUser] = React.useState(null);
+	const [loggedInUser, setLoggedInUser] = React.useState(null);
+	const listConfig = React.useRef({});
 
 	const getStartConversationButtonElem = () => {
 		
@@ -48,10 +49,8 @@ const CometChatConversations = props => {
 	// 	console.log("onItemClick called");
 	// }});
 
-	Hooks(setUser);
-
-	const listBackground = (props.configurations?.background) || "transparent";
-
+	Hooks(props, setLoggedInUser, listConfig);
+	
 	return (
 		<div style={containerStyle(props)} className="cometchat__conversations">
 			{getStartConversationButtonElem()}
@@ -78,11 +77,11 @@ const CometChatConversations = props => {
 				<CometChatConversationList
 					width="100%"
 					height="100%"
-					loggedInUser={user}
+					loggedInUser={loggedInUser}
 					conversationType={props.conversationType}
 					activeConversation={props.activeConversation}
-					background={listBackground}
-					configurations={props.configurations?.ConversationListConfiguration}
+					background={listConfig.current?.background}
+					configurations={props.configurations}
 				/>
 			</CometChatListBase>
 		</div>
@@ -164,7 +163,7 @@ CometChatConversations.defaultProps = {
 	startConversationIconTint: "#3399ff",
 	conversationType: "both",
 	activeConversation: null,
-	configurations: null,
+	configurations: {},
 };
 
 export { CometChatConversations };

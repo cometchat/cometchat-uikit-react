@@ -1,12 +1,17 @@
 import React from "react";
 import { CometChat } from "@cometchat-pro/chat";
 
-export const Hooks = (setUser) => {
+import { ConversationListConfiguration } from "../../";
 
-    React.useEffect(() => {
+export const Hooks = (props, setLoggedInUser, listConfig) => {
 
-		CometChat.getLoggedinUser()
-			.then(user => setUser(user))
+	React.useEffect(() => {
 
-	}, [])
+		//fetch loggedin user
+		CometChat.getLoggedinUser().then(user => setLoggedInUser(user));
+
+		const conversationListConfig = new ConversationListConfiguration();
+		listConfig.current.background = props.configurations?.conversationListConfiguration?.background || conversationListConfig.background;
+
+	}, []);
 };

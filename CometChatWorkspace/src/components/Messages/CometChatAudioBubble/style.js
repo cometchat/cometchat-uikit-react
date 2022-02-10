@@ -97,7 +97,7 @@ export const messageAudioStyle = props => {
 
 export const messageAudioIconStyle = (props) => {
 	return {
-		mask: `url(${props.iconURL}) center center no-repeat`,
+		WebkitMask: `url(${props.iconURL}) center center no-repeat`,
 		backgroundColor: `${props.iconTint}`,
 		display: "inline-block",
 		width: "24px",

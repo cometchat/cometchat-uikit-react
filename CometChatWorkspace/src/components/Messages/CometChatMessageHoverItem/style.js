@@ -18,7 +18,7 @@ export const hoverItemButtonStyle = props => {
         display: "inline-flex",
         justifyContent: "center",
         position: "relative",
-        WebkitMask: `url(${props.iconURL}) center center no-repeat`,
-        backgroundColor: `${props.iconTint}!important`
+        //WebkitMask: `url(${props.iconURL}) center center no-repeat`,
+        background: `url(${props.iconURL})`
     };
 }
