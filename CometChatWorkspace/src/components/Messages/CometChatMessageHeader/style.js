@@ -1,16 +1,16 @@
 import { CometChat } from "@cometchat-pro/chat";
 
-export const chatHeaderStyle = context => {
+export const chatHeaderStyle = props => {
 
 	return {
 		padding: "16px",
 		width: "100%",
-		backgroundColor: `${context.theme.backgroundColor.white}`,
+		background: props.background,
 		zIndex: "1",
-		borderBottom: `1px solid ${context.theme.borderColor.primary}`,
 		display: "flex",
 		flexDirection: "row",
 		justifyContent: "space-between",
+		border: props.border,
 	};
 };
 
@@ -24,41 +24,16 @@ export const chatDetailStyle = () => {
     }
 }
 
-export const chatSideBarBtnStyle = (img, props, context) => {
-
-    const displayValue = (props.hasOwnProperty("sidebar") && props.sidebar === 0) ? { display: "none!important"} : {};
-
-    const mq = [...context.theme.breakPoints];
-
-    return {
-        cursor: "pointer",
-        display: "none",
-        mask: `url(${img}) center center no-repeat`,
-        backgroundColor: `${context.theme.primaryColor}`,
-        width: "24px",
-        height: "24px",
-        float: "left",
-        [`@media ${mq[1]}, ${mq[2]}`]: {
-			display: "block"
-		},
-        ...displayValue
-    }
-}
-
 export const chatThumbnailStyle = () => {
 
     return {
         display: "inline-block",
-        width: "36px",
-        height: "36px",
         flexShrink: "0",
         margin: "0 16px",
     }
 }
 
-export const chatUserStyle = context => {
-
-    const mq = [...context.theme.breakPoints];
+export const chatUserStyle = () => {
 
 	return {
 		width: "calc(100% - 50px)",
@@ -66,61 +41,59 @@ export const chatUserStyle = context => {
 		flexGrow: "1",
 		display: "flex",
 		flexDirection: "column",
-		[`@media ${mq[1]}, ${mq[2]}`]: {
+		[`@media (minWidth: 320px) and (maxWidth: 768px)`]: {
 			width: "calc(100% - 80px)!important",
 		},
 	};
 };
 
-export const chatNameStyle = (context) => {
+export const chatNameStyle = () => {
 
     return {
         margin: "0",
         fontSize: "15px",
         fontWeight: "600",
-        lineHeight: "22px",
         width: "100%",
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
-        color: `${context.theme.primary}`,
     }
 }
 
-export const chatStatusStyle = (state, context) => {
+export const chatStatusStyle = (userPresence, type, typingText) => {
 
     let status = {};
-    if (context.type === CometChat.ACTION_TYPE.TYPE_USER) {
+    if (type === CometChat.ACTION_TYPE.TYPE_USER) {
 
         status = {
-            color: `${context.theme.color.blue}`,
+            color: `#39f`,
             textTransform: "capitalize",
         };
 
-        if (state.presence === "offline") {
+        if (userPresence === "offline") {
             status = {
-                color: `${context.theme.color.helpText}`,
+                color: `rgba(20, 20, 20, 0.6)`,
                 textTransform: "capitalize",
             }
         } 
 
-        if (state.typing) {
+        if (typingText && typingText.length) {
             status = {
-                color: `${context.theme.color.helpText}`,
+                color: `rgba(20, 20, 20, 0.6)`,
                 textTransform: "none",
                 fontStyle: "italic",
             };
         }
         
-    } else if (context.type === CometChat.ACTION_TYPE.TYPE_GROUP) {
+    } else if (type === CometChat.ACTION_TYPE.TYPE_GROUP) {
 
         status = {
-            color: `${context.theme.color.helpText}`,
+            color: `rgba(20, 20, 20, 0.6)`,
         }
 
-        if (state.typing) {
+        if (typingText && typingText.length) {
             status = {
-                color: `${context.theme.color.helpText}`,
+                color: `rgba(20, 20, 20, 0.6)`,
                 fontStyle: "italic",
             };
         }
@@ -141,30 +114,5 @@ export const chatOptionWrapStyle = () => {
         justifyContent: "space-between",
         alignItems: "center",
         width: "auto",
-    }
-}
-
-export const chatOptionStyle = (img, context, ongoingCall) => {
-
-    const bgColor = (ongoingCall) ? {
-        backgroundColor: `${context.theme.secondaryTextColor}`
-    } : {
-        backgroundColor: `${context.theme.primaryColor}`
-    };
-    
-    return {
-        width: "24px",
-        height: "24px",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        margin: "0 0 0 16px",
-        "i": {
-            width: "24px",
-            height: "24px",
-            display: "inline-block",
-            mask: `url(${img}) center center no-repeat`,
-            ...bgColor
-        }
     }
 }

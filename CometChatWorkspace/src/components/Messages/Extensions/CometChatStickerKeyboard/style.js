@@ -1,18 +1,18 @@
-export const stickerWrapperStyle = (context, keyframes) => {
+export const stickerWrapperStyle = (context) => {
 
-	const slideAnimation = keyframes`
-    from {
-        bottom: -55px
-    }
-    to {
-        bottom: 0px
-    }`;
+	// const slideAnimation = keyframes`
+    // from {
+    //     bottom: -55px
+    // }
+    // to {
+    //     bottom: 0px
+    // }`;
 
 	return {
-		backgroundColor: `${context.theme.backgroundColor.grey}`,
-		border: `1px solid ${context.theme.borderColor.primary}`,
+		backgroundColor: `rgba(20, 20, 20, 0.04)`,
+		border: `1px solid rgb(234, 234, 234)`,
 		borderBottom: "none",
-		animation: `${slideAnimation} 0.5s ease-out`,
+		//animation: `${slideAnimation} 0.5s ease-out`,
 		borderRadius: "10px 10px 0 0",
 		height: "215px",
 		display: "flex",
@@ -24,8 +24,8 @@ export const stickerWrapperStyle = (context, keyframes) => {
 export const stickerSectionListStyle = context => {
 
 	return {
-		borderTop: `1px solid ${context.theme.borderColor.primary}`,
-		backgroundColor: `${context.theme.backgroundColor.silver}`,
+		borderTop: `1px solid rgb(234, 234, 234)`,
+		backgroundColor: `rgba(20, 20, 20, 0.04)`,
 		display: "flex",
 		justifyContent: "space-between",
 		alignItems: "center",
@@ -33,11 +33,11 @@ export const stickerSectionListStyle = context => {
 		overflowX: "auto",
 		overflowY: "hidden",
 		padding: "10px",
-		"::-webkit-scrollbar": {
-			background: `${context.theme.backgroundColor.primary}`,
+		"::WebkitScrollbar": {
+			background: `#141414`,
 		},
-		"::-webkit-scrollbar-thumb": {
-			background: `${context.theme.backgroundColor.silver}`,
+		"::WebkitScrollbarThumb": {
+			background: `rgba(20, 20, 20, 0.04)`,
 		},
 	};
 };
@@ -71,7 +71,7 @@ export const stickerListStyle = () => {
 
 export const stickerItemStyle = context => {
 
-	const mq = [...context.theme.breakPoints];
+	//const mq = [...context.theme.breakPoints];
 
 	return {
 		minWidth: "50px",
@@ -81,10 +81,10 @@ export const stickerItemStyle = context => {
 		cursor: "pointer",
 		flexShrink: "0",
 		marginRight: "20px",
-		[`@media ${mq[1]}, ${mq[2]}, ${mq[3]}`]: {
-			maxWidth: "70px",
-			maxHeight: "70px",
-		},
+		//[`@media ${mq[1]}, ${mq[2]}, ${mq[3]}`]: {
+		//	maxWidth: "70px",
+		//	maxHeight: "70px",
+		//},
 	};
 };
 
@@ -101,18 +101,17 @@ export const stickerMsgStyle = () => {
     }
 }
 
-export const stickerMsgTxtStyle = context => {
+export const stickerMsgTxtStyle = () => {
 
 	return {
 		margin: "0",
 		height: "30px",
-		color: `${context.theme.color.secondary}`,
-		fontSize: "24px!important",
-		fontWeight: "600",
+		color: `rgba(20,20,20, 60%)`,
+		font: "400 20px Inter, sans-serif",
 	};
 };
 
-export const stickerCloseStyle = (img, context) => {
+export const stickerCloseStyle = (img) => {
 	
 	return {
 		width: "20px",
@@ -120,7 +119,7 @@ export const stickerCloseStyle = (img, context) => {
 		borderRadius: "50%",
 		alignSelf: "flex-end",
 		mask: `url(${img}) center center no-repeat`,
-		backgroundColor: `${context.theme.primaryColor}`,
+		backgroundColor: `#39f`,
 		cursor: "pointer",
 		margin: "8px 8px 0 0",
 	};

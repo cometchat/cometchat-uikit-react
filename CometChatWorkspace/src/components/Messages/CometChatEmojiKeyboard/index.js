@@ -1,11 +1,7 @@
 import React from "react";
-/** @jsxRuntime classic */
-/** @jsx jsx */
-import { jsx } from "@emotion/core";
-import PropTypes from "prop-types";
 import { Picker } from "emoji-mart";
 
-import Translator from "../../../resources/localization/translator";
+import { localize } from "../../";
 
 import {
     pickerStyle
@@ -21,17 +17,17 @@ class CometChatEmojiKeyboard extends React.Component {
         super(props);
 
         const categories = {
-            people: Translator.translate("SMILEY_PEOPLE", props.lang),
-            nature: Translator.translate("ANIMALES_NATURE", props.lang),
-            foods: Translator.translate("FOOD_DRINK", props.lang),
-            activity: Translator.translate("ACTIVITY", props.lang),
-            places: Translator.translate("TRAVEL_PLACES", props.lang),
-            objects: Translator.translate("OBJECTS", props.lang),
-            symbols: Translator.translate("SYMBOLS", props.lang),
-            flags: Translator.translate("FLAGS", props.lang)
+            people: localize("SMILEY_PEOPLE"),
+            nature: localize("ANIMALES_NATURE"),
+            foods: localize("FOOD_DRINK"),
+            activity: localize("ACTIVITY"),
+            places: localize("TRAVEL_PLACES"),
+            objects: localize("OBJECTS"),
+            symbols: localize("SYMBOLS"),
+            flags: localize("FLAGS")
         }
 
-        const title = Translator.translate("PICK_YOUR_EMOJI", props.lang);
+        const title = localize("PICK_YOUR_EMOJI");
 
         this.state = {
             categories: categories, 
@@ -44,18 +40,18 @@ class CometChatEmojiKeyboard extends React.Component {
         if(prevProps.lang !== this.props.lang) {
 
             const categories = {
-                search: Translator.translate("SEARCH", this.props.lang),
-                people: Translator.translate("SMILEY_PEOPLE", this.props.lang),
-                nature: Translator.translate("ANIMALES_NATURE", this.props.lang),
-                foods: Translator.translate("FOOD_DRINK", this.props.lang),
-                activity: Translator.translate("ACTIVITY", this.props.lang),
-                places: Translator.translate("TRAVEL_PLACES", this.props.lang),
-                objects: Translator.translate("OBJECTS", this.props.lang),
-                symbols: Translator.translate("SYMBOLS", this.props.lang),
-                flags: Translator.translate("FLAGS", this.props.lang)
+                search: localize("SEARCH"),
+                people: localize("SMILEY_PEOPLE"),
+                nature: localize("ANIMALES_NATURE"),
+                foods: localize("FOOD_DRINK"),
+                activity: localize("ACTIVITY"),
+                places: localize("TRAVEL_PLACES"),
+                objects: localize("OBJECTS"),
+                symbols: localize("SYMBOLS"),
+                flags: localize("FLAGS")
             }
 
-            const title = Translator.translate("PICK_YOUR_EMOJI", this.props.lang);
+            const title = localize("PICK_YOUR_EMOJI");
 
             this.setState({ categories: { ...categories}, title: title });
         }
@@ -65,7 +61,7 @@ class CometChatEmojiKeyboard extends React.Component {
 
         const exclude = ["search", "recent"];
         return(
-            <div css={pickerStyle()}>
+            <div style={pickerStyle()}>
             <Picker
             title={this.state.title}
             emoji="point_up"
@@ -82,11 +78,9 @@ class CometChatEmojiKeyboard extends React.Component {
 
 // Specifies the default values for props:
 CometChatEmojiKeyboard.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
 };
 
 CometChatEmojiKeyboard.propTypes = {
-    lang: PropTypes.string,
 }
 
 export { CometChatEmojiKeyboard };

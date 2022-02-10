@@ -1,7 +1,5 @@
 import { CometChat } from "@cometchat-pro/chat";
 
-import * as enums from "../../../util/enums.js";
-
 export class MessageHeaderManager {
 
     userListenerId = "head_user_" + new Date().getTime();
@@ -15,11 +13,11 @@ export class MessageHeaderManager {
             new CometChat.UserListener({
                 onUserOnline: onlineUser => {
                     /* when someuser/friend comes online, user will be received here */
-                    callback(enums.USER_ONLINE, onlineUser);
+                    callback("onUserOnline", onlineUser);
                 },
                 onUserOffline: offlineUser => {
                     /* when someuser/friend went offline, user will be received here */
-                    callback(enums.USER_OFFLINE, offlineUser);
+                    callback("onUserOffline", offlineUser);
                 }
             })
         );
@@ -28,10 +26,10 @@ export class MessageHeaderManager {
             this.msgListenerId,
             new CometChat.MessageListener({
                 onTypingStarted: typingIndicator => {
-                    callback(enums.TYPING_STARTED, typingIndicator);
+                    callback("onTypingStarted", typingIndicator);
                 },
                 onTypingEnded: typingIndicator => {
-                    callback(enums.TYPING_ENDED, typingIndicator);
+                    callback("onTypingEnded", typingIndicator);
                 }
             })
         );
@@ -40,19 +38,19 @@ export class MessageHeaderManager {
             this.groupListenerId,
             new CometChat.GroupListener({
                 onGroupMemberKicked: (message, kickedUser, kickedBy, kickedFrom) => {
-                    callback(enums.GROUP_MEMBER_KICKED, kickedFrom, kickedUser);
+                    callback("onGroupMemberKicked", kickedFrom, kickedUser);
                 }, 
                 onGroupMemberBanned: (message, bannedUser, bannedBy, bannedFrom) => {
-                    callback(enums.GROUP_MEMBER_BANNED, bannedFrom, bannedUser);
+                    callback("onGroupMemberBanned", bannedFrom, bannedUser);
                 }, 
                 onMemberAddedToGroup: (message, userAdded, userAddedBy, userAddedIn) => {
-                    callback(enums.GROUP_MEMBER_ADDED, userAddedIn);
+                    callback("onMemberAddedToGroup", userAddedIn);
                 }, 
                 onGroupMemberLeft: (message, leavingUser, group) => {
-                    callback(enums.GROUP_MEMBER_LEFT, group, leavingUser);
+                    callback("onGroupMemberLeft", group, leavingUser);
                 }, 
                 onGroupMemberJoined: (message, joinedUser, joinedGroup) => {
-                    callback(enums.GROUP_MEMBER_JOINED, joinedGroup);
+                    callback("onGroupMemberJoined", joinedGroup);
                 }
             })
         );

@@ -1,9 +1,9 @@
-export const messagePreviewContainerStyle = context => {
+export const messagePreviewContainerStyle = () => {
 
 	return {
 		display: "inline-block",
 		borderRadius: "12px",
-		backgroundColor: `${context.theme.backgroundColor.white}`,
+		backgroundColor: `#fff`,
 		boxShadow: "0px 1px 2px 1px rgba(0,0,0,0.18)",
 		alignSelf: "flex-start",
 		width: "auto",
@@ -28,42 +28,42 @@ export const previewImageStyle = (img) => {
     }
 }
 
-export const previewDataStyle = context => {
+export const previewDataStyle = () => {
 
 	return {
-		borderTop: `1px solid  ${context.theme.borderColor.primary}`,
-		borderBottom: `1px solid  ${context.theme.borderColor.primary}`,
+		borderTop: `1px solid #eaeaea`,
+		borderBottom: `1px solid #eaeaea`,
 		padding: "16px",
 	};
 };
 
-export const previewTitleStyle = context => {
+export const previewTitleStyle = () => {
 
 	return {
 		whiteSpace: "pre-wrap",
 		wordBreak: "break-word",
 		textAlign: "left",
 		width: "auto",
-		color: `${context.theme.color.helpText}`,
+		color: `rgba(20, 20, 20, 0.6)`,
 		fontWeight: "700",
 		marginBottom: "8px",
 	};
 };
 
-export const previewDescStyle = context => {
+export const previewDescStyle = () => {
 
 	return {
 		whiteSpace: "pre-wrap",
 		wordBreak: "break-word",
 		textAlign: "left",
 		width: "auto",
-		color: `${context.theme.color.helpText}`,
+		color: `rgba(20, 20, 20, 0.6)`,
 		fontStyle: "italic",
 		fontSize: "13px",
 	};
 };
 
-export const previewTextStyle = context => {
+export const previewTextStyle = () => {
 
 	return {
 		whiteSpace: "pre-wrap",
@@ -72,14 +72,14 @@ export const previewTextStyle = context => {
 		width: "auto",
 		".message__txt__wrapper": {
 			backgroundColor: "transparent",
-			color: `${context.theme.color.helpText}`,
+			color: `rgba(20, 20, 20, 0.6)`,
 			fontStyle: "normal",
 			padding: "8px 0",
 		},
 	};
 };
 
-export const previewLinkStyle = context => {
+export const previewLinkStyle = () => {
 
 	return {
 		display: "flex",
@@ -88,7 +88,7 @@ export const previewLinkStyle = context => {
 		padding: "12px",
 		"> a": {
 			display: "inline-block",
-			color: `${context.theme.color.blue}`,
+			color: `#39f`,
 			fontWeight: "700",
 		},
 	};

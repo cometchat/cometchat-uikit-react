@@ -1,15 +1,8 @@
 import React from "react";
-/** @jsxRuntime classic */
-/** @jsx jsx */
-import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
 
-import { checkMessageForExtensionsData } from "../../../util/common";
-
-import { CometChatContext } from "../../../util/CometChatContext";
-
-import { theme } from "../../../resources/theme";
-import Translator from "../../../resources/localization/translator";
+import { localize } from "../../";
+import { getExtensionsData, metadataKey } from "../"
 
 import {
     messagePreviewContainerStyle,
@@ -24,26 +17,24 @@ import {
 
 class CometChatLinkPreview extends React.PureComponent {
 
-    static contextType = CometChatContext;
-
     render() {
 
-        const linkPreviewData = checkMessageForExtensionsData(this.props.message, "link-preview");
+        const linkPreviewData = getExtensionsData(this.props.message, metadataKey.extensions.linkpreview);
         const linkObject = linkPreviewData["links"][0];
 
         const pattern = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)(\S+)?/;
-        const linkText = (linkObject["url"].match(pattern)) ? Translator.translate("VIEW_ON_YOUTUBE", this.context.language) : Translator.translate("VISIT", this.context.language);
+        const linkText = linkObject["url"].match(pattern) ? localize("VIEW_ON_YOUTUBE", this.props.lang) : localize("VISIT", this.props.lang);
 
         return (
-            <div css={messagePreviewContainerStyle(this.context)} className="message__preview">
-                <div css={messagePreviewWrapperStyle()} className="preview__card">
-                    <div css={previewImageStyle(linkObject["image"])} className="card__image"></div>
-                    <div css={previewDataStyle(this.context)} className="card__info">
-                        <div css={previewTitleStyle(this.context)} className="card__title"><span>{linkObject["title"]}</span></div>
-                        <div css={previewDescStyle(this.context)} className="card__desc"><span>{linkObject["description"]}</span></div>
-                        <div css={previewTextStyle(this.context)} className="card__text">{this.props.messageText}</div>
+            <div style={messagePreviewContainerStyle()} className="message__preview">
+                <div style={messagePreviewWrapperStyle()} className="preview__card">
+                    <div style={previewImageStyle(linkObject["image"])} className="card__image"></div>
+                    <div style={previewDataStyle()} className="card__info">
+                        <div style={previewTitleStyle()} className="card__title"><span>{linkObject["title"]}</span></div>
+                        <div style={previewDescStyle()} className="card__desc"><span>{linkObject["description"]}</span></div>
+                        <div style={previewTextStyle()} className="card__text">{this.props.messageText}</div>
                     </div>
-                    <div css={previewLinkStyle(this.context)} className="card__link">
+                    <div style={previewLinkStyle()} className="card__link">
                         <a href={linkObject["url"]} target="_blank" rel="noopener noreferrer">{linkText}</a>
                     </div>
                 </div>
@@ -54,11 +45,11 @@ class CometChatLinkPreview extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatLinkPreview.defaultProps = {
-    theme: theme
+    language: "en",
 };
 
 CometChatLinkPreview.propTypes = {
-	theme: PropTypes.object,
+	language: PropTypes.string,
 	message: PropTypes.object.isRequired,
 };
 
