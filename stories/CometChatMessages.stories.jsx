@@ -1,12 +1,11 @@
 import React from 'react';
 
 import {CometChatMessages} from "../CometChatWorkspace/src/components/Messages";
-
 const user = {
   "uid": "superhero2",
   "name": "Captain America",
   "avatar": "https://data-us.cometchat.io/assets/images/avatars/captainamerica.png",
-  "status": "online",
+  "status": "offline",
   "role": "default",
   "lastActiveAt": 1637693355,
   "conversationId": "superhero1_user_superhero2"

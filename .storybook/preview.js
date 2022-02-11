@@ -7,9 +7,9 @@ import { CometChatLocalize } from "../CometChatWorkspace/src/components/Shared";
 //   AUTH_KEY: '9dee5986129c7b1d60dbab4b8463e7a73d3a002f'
 // }
 const COMETCHAT_CONSTANTS = {
-  APP_ID: "20329915e6ba4fea",
-  REGION: "us",
-  AUTH_KEY: "1159ba9e866b7ba010f1542ea4440deae4447af3",
+  APP_ID: "2026561c13035efd",
+  REGION: "eu",
+  AUTH_KEY: "f121f4e440d75c60d58c97e1ee1572a33ddea1cf",
 };
 const withThemeProvider = (Story,context) => {
   useEffect(() => {
