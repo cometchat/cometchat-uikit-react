@@ -1,4 +1,6 @@
-export const imageWrapperStyle = (context, closeIcon, img) => {
+import { BREAKPOINTS } from "../";
+
+export const imageWrapperStyle = (closeIcon, img) => {
 
     const heightProps = (img) ? {
         height: "auto",
@@ -6,7 +8,7 @@ export const imageWrapperStyle = (context, closeIcon, img) => {
         height: "100%",
     };
 
-	const mq = [...context.theme.breakPoints];
+	const mq = [...BREAKPOINTS];
 
     return {
 		position: "absolute",

@@ -1,11 +1,5 @@
 import React from "react";
-/** @jsxRuntime classic */
-/** @jsx jsx */
-import { jsx } from "@emotion/core";
-import { CometChat } from "@cometchat-pro/chat";
-
-import { CometChatContext } from "../../../util/CometChatContext";
-import * as enums from "../../../util/enums.js";
+import PropTypes from "prop-types";
 
 import {
     reactionContainerStyle,
@@ -16,118 +10,112 @@ import heartIcon from "./resources/heart.png";
 
 class CometChatLiveReactions extends React.PureComponent {
 
-    static contextType = CometChatContext;
-    
-	constructor(props) {
-		super(props);
+    constructor(props) {
+        super(props);
 
-		this.parentElement = React.createRef();
+        this.parentElement = React.createRef();
 
-		this.counter = 0;
-		this.verticalSpeed = 5;
-		this.horizontalSpeed = 2;
-		this.items = [];
+        this.counter = 0;
+        this.verticalSpeed = 5;
+        this.horizontalSpeed = 2;
+        this.items = [];
 
-		this.before = Date.now();
+        this.before = Date.now();
 
-		const reaction = props.reaction ? enums.CONSTANTS["LIVE_REACTIONS"][props.reaction] : enums.CONSTANTS["LIVE_REACTIONS"]["heart"];
-		const reactionImg = <img src={heartIcon} alt={reaction} />;
-		this.emojis = Array(6).fill(reactionImg);
-	}
+        const reactionImg = <i style={props.style}>{props.reaction}</i>;//<img src={heartIcon} alt={props.reaction} />;
+        this.emojis = Array(6).fill(reactionImg);
+    }
 
-	componentDidMount() {
+    componentDidMount() {
 
-		//this.sendMessage();
-		this.setItems();
-		this.requestAnimation();
-	}
+        this.setItems();
+        this.requestAnimation();
+    }
 
-	componentWillUnmount() {
-		this.timer = null;
-	}
+    componentWillUnmount() {
 
-	sendMessage = () => {
+        this.timer = null;
+    }
 
-        //fetching the metadata type from constants
-		const metadata = { type: enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"], reaction: this.props.reaction };
+    setItems = () => {
 
-        const receiverType = this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER ? CometChat.ACTION_TYPE.TYPE_USER : CometChat.ACTION_TYPE.TYPE_GROUP;
-        const receiverId = (this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER) ? this?.context?.item?.uid : this?.context?.item?.guid;
+        const width = this.parentElement.offsetWidth;
+        const height = this.parentElement.offsetHeight;
 
-		let transientMessage = new CometChat.TransientMessage(receiverId, receiverType, metadata);
-		CometChat.sendTransientMessage(transientMessage);
-	};
+        const elements = this.parentElement.querySelectorAll(".emoji");
 
-	setItems = () => {
-		const width = this.parentElement.offsetWidth;
-		const height = this.parentElement.offsetHeight;
+        for (let i = 0; i < elements.length; i++) {
 
-		const elements = this.parentElement.querySelectorAll(".emoji");
+            const element = elements[i],
+                elementWidth = element.offsetWidth,
+                elementHeight = element.offsetHeight;
 
-		for (let i = 0; i < elements.length; i++) {
-			const element = elements[i],
-				elementWidth = element.offsetWidth,
-				elementHeight = element.offsetHeight;
+            const item = {
+                element: element,
+                elementHeight: elementHeight,
+                elementWidth: elementWidth,
+                ySpeed: -this.verticalSpeed,
+                omega: 2 * Math.PI * this.horizontalSpeed / (width * 60), //omega= 2Pi*frequency
+                random: (Math.random() / 2 + 0.5) * i * 10000, //random time offset
+                x: function (time) {
+                    return (Math.sin(this.omega * (time + this.random)) + 1) / 2 * (width - elementWidth);
+                },
+                y: height + (Math.random() + 1) * i * elementHeight,
+            }
+            
+            this.items.push(item);
+        }
+    }
 
-			const item = {
-				element: element,
-				elementHeight: elementHeight,
-				elementWidth: elementWidth,
-				ySpeed: -this.verticalSpeed,
-				omega: (2 * Math.PI * this.horizontalSpeed) / (width * 60), //omega= 2Pi*frequency
-				random: (Math.random() / 2 + 0.5) * i * 10000, //random time offset
-				x: function (time) {
-					return ((Math.sin(this.omega * (time + this.random)) + 1) / 2) * (width - elementWidth);
-				},
-				y: height + (Math.random() + 1) * i * elementHeight,
-			};
+    requestAnimation = () => {
+        this.timer = setTimeout(this.animate, 1000/60);
+    }
 
-			this.items.push(item);
-		}
-	};
+    animate = () => {
 
-	requestAnimation = () => {
-		this.timer = setTimeout(this.animate, 1000 / 60);
-	};
+        if (!this.parentElement) {
+            return false;
+        }
 
-	animate = () => {
-		if (!this.parentElement) {
-			return false;
-		}
+        const height = this.parentElement.offsetHeight;
+        const time = +new Date(); //little trick, gives unix time in ms
 
-		const height = this.parentElement.offsetHeight;
-		const time = +new Date(); //little trick, gives unix time in ms
+        for (let i = 0; i < this.items.length; i++) {
 
-		for (let i = 0; i < this.items.length; i++) {
-			const item = this.items[i];
+            const item = this.items[i];
+            
+            const transformString = "translate3d(" + item.x(time) + "px, " + item.y + "px, 0px)";
+            item.element.style.transform = transformString;
 
-			const transformString = "translate3d(" + item.x(time) + "px, " + item.y + "px, 0px)";
-			item.element.style.transform = transformString;
+            item.element.style.visibility = "visible";
 
-			item.element.style.visibility = "visible";
+            if (item.y <= height) {
+                item.element.classList.add("fade");
+            }
 
-			if (item.y <= height) {
-				item.element.classList.add("fade");
-			}
+            item.y += item.ySpeed;
+        }
 
-			item.y += item.ySpeed;
-		}
+        this.requestAnimation();
+    }
 
-		this.requestAnimation();
-	};
-
-	render() {
-		const emojis = this.emojis.map((emoji, index) => (
-			<span className="emoji" css={reactionEmojiStyle()} key={index}>
-				{emoji}
-			</span>
-		));
-		return (
-			<div ref={el => (this.parentElement = el)} css={reactionContainerStyle()}>
-				{emojis}
-			</div>
-		);
-	}
+    render () {
+        
+        const emojis = this.emojis.map((emoji, index) => (<span className="emoji" style={reactionEmojiStyle()} key={index}>{emoji}</span>))
+        return (
+            <div ref={el => this.parentElement = el} style={reactionContainerStyle()}>{emojis}</div>
+        )
+    }
 }
+
+CometChatLiveReactions.defaultProps = {
+	reaction: "❤️",
+    style: {}
+};
+
+CometChatLiveReactions.propTypes = {
+	reaction: PropTypes.string,
+    style: PropTypes.object
+};
 
 export { CometChatLiveReactions };

@@ -1,6 +1,8 @@
-export const modalWrapperStyle = context => {
+import { BREAKPOINTS } from "../../CometChatMessageConstants";
 
-	const mq = [...context.theme.breakPoints];
+export const modalWrapperStyle = () => {
+
+	const mq = [...BREAKPOINTS];
 
 	return {
 		minWidth: "350px",
@@ -8,7 +10,7 @@ export const modalWrapperStyle = context => {
 		width: "50%",
 		height: "40%",
 		overflow: "hidden",
-		backgroundColor: `${context.theme.backgroundColor.white}`,
+		backgroundColor: `#fff`,
 		position: "fixed",
 		left: "50%",
 		top: "50%",
@@ -25,7 +27,7 @@ export const modalWrapperStyle = context => {
 	};
 };
 
-export const modalCloseStyle = (img, context) => {
+export const modalCloseStyle = (img) => {
 
     return {
         position: "absolute",
@@ -35,7 +37,7 @@ export const modalCloseStyle = (img, context) => {
         top: "16px",
         right: "16px",
         mask: `url(${img}) center center no-repeat`,
-		backgroundColor: `${context.theme.primaryColor}`,
+		backgroundColor: "#39f",
         cursor: "pointer",
     }
 }
@@ -49,18 +51,18 @@ export const modalBodyStyle = () => {
     }
 }
 
-export const modalErrorStyle = (context) => {
+export const modalErrorStyle = () => {
 
     return {
         fontSize: "12px",
-		color: `${context.theme.color.red}`,
+		color: `red`,
 		textAlign: "center",
 		margin: "8px 0",
 		width: "100%",
     }
 }
 
-export const modalTableStyle = context => {
+export const modalTableStyle = () => {
 
 	return {
 		borderCollapse: "collapse",
@@ -69,7 +71,7 @@ export const modalTableStyle = context => {
 		width: "100%",
 		height: "90%",
 		tr: {
-			borderBottom: `1px solid ${context.theme.borderColor.primary}`,
+			borderBottom: `1px solid #39f`,
 			display: "table",
 			width: "100%",
 			tableLayout: "fixed",
@@ -118,16 +120,15 @@ export const tableBodyStyle = () => {
 }
 
 
-export const tableFootStyle = (context, state, img) => {
-
+export const tableFootStyle = (isCreating, img) => {
 	let loadingState = {};
 	let textMargin = {};
 
-	if (state.creatingPoll) {
+	if (isCreating) {
 		loadingState = {
 			disabled: "true",
 			pointerEvents: "none",
-			background: `url(${img}) no-repeat right 10px center ${context.theme.primaryColor}`,
+			background: `url(${img}) no-repeat right 10px center #39f`,
 		};
 
 		textMargin = {
@@ -144,9 +145,9 @@ export const tableFootStyle = (context, state, img) => {
 				button: {
 					cursor: "pointer",
 					padding: "8px 16px",
-					backgroundColor: `${context.theme.primaryColor}`,
+					backgroundColor: `#39f`,
 					borderRadius: "5px",
-					color: `${context.theme.color.white}`,
+					color: `#fff`,
 					fontSize: "14px",
 					outline: "0",
 					border: "0",
@@ -167,7 +168,7 @@ export const iconWrapperStyle = () => {
     }
 }
 
-export const addOptionIconStyle = (img, context) => {
+export const addOptionIconStyle = (img) => {
 
     return {
         backgroundSize: "28px 28px",
@@ -176,6 +177,6 @@ export const addOptionIconStyle = (img, context) => {
         height: "24px",
         width: "24px",
 		mask: `url(${img}) center center no-repeat`,
-		backgroundColor: `${context.theme.secondaryTextColor}`,
+		backgroundColor: `rgb(128, 128, 128)`,
     }
 }

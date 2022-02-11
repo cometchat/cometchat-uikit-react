@@ -1,176 +1,107 @@
 import React from "react";
-/** @jsxRuntime classic */
-/** @jsx jsx */
-import { jsx } from "@emotion/core";
 import PropTypes from "prop-types";
-import { Emoji } from "emoji-mart";
-import { CometChat } from "@cometchat-pro/chat";
 
-import { CometChatContext } from "../../../../util/CometChatContext";
-import * as enums from "../../../../util/enums.js";
-import { checkMessageForExtensionsData } from "../../../../util/common";
-
-import { theme } from "../../../../resources/theme";
-import Translator from "../../../../resources/localization/translator";
+import { localize } from "../../../";
+import { getExtensionsData, metadataKey, CometChatMessageEvents } from "../../";
+import { CometChatMessageReactionListItem } from "../";
 
 import {
-    messageReactionsStyle,
-    reactionCountStyle,
+	messageReactionListStyle,
+    messageAddReactionStyle,
     emojiButtonStyle,
 } from "./style";
 
 import reactIcon from "./resources/reactions.svg";
 
-class CometChatMessageReactions extends React.Component {
-	static contextType = CometChatContext;
-	loggedInUser;
+const CometChatMessageReactions = (props) => {
 
-	constructor(props, context) {
-		super(props, context);
-		this._isMounted = false;
-		this.state = {
-			enableMessageReaction: false,
-		};
+	const [reactionList, setReactionList] = React.useState([]);
 
-		this.context.getLoggedinUser().then(user => {
-			this.loggedInUser = { ...user };
-		});
-	}
+	const reactToMessage = React.useCallback(() => {
+		//CometChatEvent.triggerHandler(enums.EVENTS["REACT_TO_MESSAGE"], props.messageObject);
+		CometChatMessageEvents.emit(CometChatMessageEvents.onMessageReaction, props.messageObject);
+	}, [props.messageObject]);
 
-	componentDidMount() {
-		this._isMounted = true;
-		this.enableMessageReaction();
-	}
-
-	componentWillUnmount() {
-		this._isMounted = false;
-	}
-
-	enableMessageReaction = () => {
-		/**
-		 * If reacting to messages feature is disabled
-		 */
-		this.context.FeatureRestriction.isReactionsEnabled()
-			.then(response => {
-				if (response !== this.state.enableMessageReaction && this._isMounted) {
-					this.setState({ enableMessageReaction: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enableMessageReaction !== false) {
-					this.setState({ enableMessageReaction: false });
-				}
-			});
-	};
-
-	reactToMessages = emoji => {
-
-		let messageObject = { ...this.props.message };
-		delete messageObject["metadata"]["@injected"]["extensions"]["reactions"][emoji.colons][this.loggedInUser.uid];
-		this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], messageObject);
-
-		CometChat.callExtension("reactions", "POST", "v1/react", {
-			msgId: this.props.message.id,
-			emoji: emoji.colons,
-		}).then(response => {
-			
-			// Reaction failed
-			if (!response || !response.success || response.success !== true) {
-				this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
-			}
-		})
-		.catch(error => {
-			this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
-		});
-	};
-
-	getMessageReactions = reaction => {
-		
-		if (reaction === null) {
-			return null;
-		}
-
-		const messageReactions = Object.keys(reaction).map((data, key) => {
-			const reactionData = reaction[data];
-			const reactionName = data.replaceAll(":", "");
-			const reactionCount = Object.keys(reactionData).length;
-
-			if (!reactionCount) {
-				return null;
-			}
-
-			const userList = [];
-			let reactionTitle = "";
-
-			for (const user in reactionData) {
-				userList.push(reactionData[user]["name"]);
-			}
-
-			if (userList.length) {
-				reactionTitle = userList.join(", ");
-				const str = ` ${Translator.translate("REACTED", this.context.language)}`;
-				reactionTitle = reactionTitle.concat(str);
-			}
-
-			const reactionClassName = `reaction reaction__${reactionName}`;
-			return (
-				<div key={key} css={messageReactionsStyle(this.props, reactionData, this.context, this.loggedInUser)} className={reactionClassName} title={reactionTitle}>
-					<Emoji emoji={{ id: reactionName }} size={16} native onClick={this.reactToMessages} />
-					<span css={reactionCountStyle(this.context)} className="reaction__count">
-						{reactionCount}
-					</span>
-				</div>
-			);
-		});
-
-		return messageReactions;
-	};
-
-	addMessageReaction = () => {
-		//If reacting to messages feature is disabled
-		if (this.state.enableMessageReaction === false) {
-			return null;
-		}
-
-		const addReactionEmoji = (
-			<div key="-1" css={messageReactionsStyle(this.props, {}, this.context)} className="reaction reaction__add" title={Translator.translate("ADD_REACTION", this.context.language)}>
-				<button type="button" css={emojiButtonStyle(reactIcon, this.context)} className="button__reacttomessage" onClick={() => this.props.actionGenerated(enums.ACTIONS["REACT_TO_MESSAGE"], this.props.message)}>
+	const getAddReactionButton = React.useCallback(() => {
+		return (
+			<div key="-1" style={messageAddReactionStyle(props)} className="reaction reaction__add" title={localize("ADD_REACTION")}>
+				<button type="button" style={emojiButtonStyle(reactIcon, props)} className="button__reacttomessage" onClick={reactToMessage}>
 					<i></i>
 				</button>
 			</div>
 		);
+	}, [props, reactToMessage]);
 
-		return addReactionEmoji;
-	};
+	React.useEffect(() => {
+		const reaction = getExtensionsData(props.messageObject, metadataKey.extensions.reactions);
+		/**
+		 * If message reaction extension is enabled
+		 */
+		if (reaction) {
+			const messageReactions = Object.keys(reaction).map(data => {
+				const reactionData = reaction[data];
+				const reactionObject = { [data]: reactionData };
+				let textColor = "#141414";
+				let borderColor = "transparent";
+				let backgroundColor = "#F0F0F0";
+				if (reactionData.hasOwnProperty(props.loggedInUser?.uid)) {
+					textColor = "#3399ff";
+					borderColor = "#3399ff";
+					backgroundColor = "#F0F0F0";
+				}
 
-	render() {
-		const reaction = checkMessageForExtensionsData(this.props.message, "reactions");
-		const messageReactions = this.getMessageReactions(reaction);
+				return (
+					<CometChatMessageReactionListItem
+						key={data}
+						borderWidth="1px"
+						borderStyle="solid"
+						borderColor={borderColor}
+						textColor={textColor}
+						backgroundColor={backgroundColor}
+						textFont={props.textFont}
+						loggedInUser={props.loggedInUser}
+						messageId={props.messageObject.id}
+						reactionObject={reactionObject}
+					/>
+				);
+			});
 
-		const addReactionEmoji = this.addMessageReaction();
-
-		if (messageReactions !== null && messageReactions.length && addReactionEmoji !== null) {
-			if (this.props.message?.sender?.uid !== this.loggedInUser?.uid) {
-				messageReactions.push(addReactionEmoji);
-			} else {
-				messageReactions.unshift(addReactionEmoji);
-			}
+			/**
+			 * Add reaction button
+			 */
+			messageReactions.push(getAddReactionButton());
+			setReactionList(messageReactions);
 		}
+	}, [props.messageObject, props.loggedInUser, getAddReactionButton, props.textFont]);
 
-		return messageReactions;
+	if(!reactionList.length) {
+		return null;
 	}
+
+	return <div className="message_kit__reaction_bar" style={messageReactionListStyle()}>{reactionList}</div>;
 }
 
 // Specifies the default values for props:
 CometChatMessageReactions.defaultProps = {
-	theme: theme,
+	language: "en",
 	actionGenerated: () => {},
+	border: "1px solid rgba(20, 20, 20, 8%)",
+	background: "#F0F0F0",
+	text: "",
+	textColor: "#fff",
+	textFont: "700 11px Inter",
+	messageObject: null,
 };
 
 CometChatMessageReactions.propTypes = {
-	theme: PropTypes.object,
+	language: PropTypes.string,
 	actionGenerated: PropTypes.func.isRequired,
-	message: PropTypes.object.isRequired,
+	border: PropTypes.string,
+	background: PropTypes.string,
+	text: PropTypes.string,
+	textColor: PropTypes.string,
+	textFont: PropTypes.string,
+	messageObject: PropTypes.object.isRequired,
 };
 
 export { CometChatMessageReactions };

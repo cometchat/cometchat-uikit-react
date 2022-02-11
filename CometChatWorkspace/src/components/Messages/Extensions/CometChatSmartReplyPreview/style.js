@@ -1,23 +1,23 @@
-export const previewWrapperStyle = (context, keyframes) => {
+export const previewWrapperStyle = () => {
 
-	const slideAnimation = keyframes`
-    from {
-        bottom: -55px
-    }
-    to {
-        bottom: 0px
-    }`;
+	// const slideAnimation = keyframes`
+    // from {
+    //     bottom: -55px
+    // }
+    // to {
+    //     bottom: 0px
+    // }`;
 
 	return {
 		padding: "8px 8px 16px 8px",
-        marginBottom: "-8px",
-		backgroundColor: `${context.theme.backgroundColor.white}`,
-		border: `1px solid ${context.theme.borderColor.primary}`,
+		marginBottom: "-8px",
+		backgroundColor: `#fff`,
+		border: `1px solid #eaeaea`,
 		fontSize: "13px",
 		display: "flex",
 		flexDirection: "row-reverse",
 		justifyContent: "space-between",
-		animation: `${slideAnimation} 0.5s ease-out`,
+		//animation: `${slideAnimation} 0.5s ease-out`,
 		position: "relative",
 	};
 };
@@ -32,14 +32,14 @@ export const previewHeadingStyle = () => {
     }
 }
 
-export const previewCloseStyle = (img, context) => {
+export const previewCloseStyle = (img) => {
 
     return {
         width: "24px",
         height: "24px",
         borderRadius: "50%",
         mask: `url(${img}) center center no-repeat`,
-		backgroundColor: `${context.theme.primaryColor}`,
+		backgroundColor: `#39f`,
         cursor: "pointer",
     }
 }
@@ -54,13 +54,13 @@ export const previewOptionsWrapperStyle = () => {
     }
 }
 
-export const previewOptionStyle = context => {
+export const previewOptionStyle = () => {
 
 	return {
 		padding: "8px",
 		margin: "0 8px",
-		backgroundColor: `${context.theme.backgroundColor.grey}`,
-		border: `1px solid ${context.theme.borderColor.primary}`,
+		backgroundColor: `rgba(20,20,20,0.04)`,
+		border: `1px solid #eaeaea`,
 		borderRadius: "10px",
 		cursor: "pointer",
 		height: "100%",

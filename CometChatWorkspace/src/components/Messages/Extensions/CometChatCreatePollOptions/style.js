@@ -1,8 +1,8 @@
-export const removeOptionIconStyle = (img, context) => {
+export const removeOptionIconStyle = (img) => {
 
 	return {
 		mask: `url(${img}) center center no-repeat`,
-		backgroundColor: `${context.theme.color.red}`,
+		backgroundColor: `red`,
 		cursor: "pointer",
 		display: "block",
 		height: "24px",

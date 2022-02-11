@@ -1,331 +1,286 @@
-export const chatComposerStyle = context => {
-
+export const chatComposerStyle = props => {
 	return {
 		padding: "16px",
-		backgroundColor: `${context.theme.backgroundColor.white}`,
+		background: props.background,
 		zIndex: "1",
 		order: "3",
 		position: "relative",
 		flex: "none",
-		minHeight: "105px",
+		minHeight: "85px",
+		borderRadius: props.cornerRadius,
 	};
 };
 
-export const editPreviewContainerStyle = (context, keyframes) => {
 
-	const slideAnimation = keyframes`
-    from {
-        bottom: -60px
-    }
-    to {
-        bottom: 0px
-    }`;
+
+export const composerInputStyle = props => {
+	return {
+		display: "flex",
+		width: props.width,
+		flexDirection: "row",
+		alignItems: "flex-end",
+		position: "relative",
+		zIndex: "2",
+		padding: "0",
+		borderRadius: props.inputCornerRadius,
+		minHeight: "85px",
+	};
+};
+
+export const inputInnerStyle = (props) => {
+    
+	//const borderRadiusVal = state.emojiViewer || state.stickerViewer ? { borderRadius: "0 0 8px 8px", } : { borderRadius: "8px", };
 
 	return {
-		padding: "7px",
-		backgroundColor: `${context.theme.backgroundColor.white}`,
-		borderColor: `${context.theme.borderColor.primary}`,
-		borderWidth: "1px 1px 1px 5px",
-		borderStyle: "solid",
-		color: `${context.theme.color.helpText}`,
-		fontSize: "13px",
-		animation: `${slideAnimation} 0.5s ease-out`,
+		flex: "1 1 auto",
 		position: "relative",
+		outline: "none",
+		border: props.border,
+		background: "#fff",
+		display: "flex",
+		flexDirection: "column",
+		width: "100%",
+		minHeight: "85px",
+		//...borderRadiusVal,
+		borderRadius: "inherit",
+		
 	};
 };
 
-export const previewHeadingStyle = () => {
+export const messageInputStyle = (props, disabled) => {
+	const disabledState = disabled
+		? {
+				pointerEvents: "none",
+				opacity: "0.4",
+		  }
+		: {};
 
-    return {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between"
-    }
-}
+	return {
+		width: "100%",
+		minHeight: "50px",
+		height: props.height,
+		font: props.placeholderFont,
+		color: props.placeholderColor,
+		lineHeight: "20px",
+		padding: "16px",
+		outline: "none",
+		overflowX: "hidden",
+		overflowY: "auto",
+		position: "relative",
+		whiteSpace: "pre-wrap",
+		wordWrap: "break-word",
+		zIndex: "1",
+		userSelect: "text",
+		background: "#fff",
+		...disabledState,
+		"::before": {
+			content: "attr(placeholder)",
+			color: props.placeholderColor,
+			pointerEvents: "none",
+			display: "block" /* For Firefox */,
+		},
+	};
+};
 
-export const previewTextStyle = () => {
+export const inputStickyStyle = (disabled, attachments, props) => {
+	const disabledState = disabled
+		? { pointerEvents: "none", }
+		: {};
 
-    return {
-        padding: "5px 0",
-    }
-}
+	const flexDirectionProp =
+		attachments === null
+			? { flexDirection: "row-reverse",  }
+			: {};
 
-export const previewCloseStyle = (img, context) => {
-
-    return {
-        width: "24px",
-        height: "24px",
-        borderRadius: "50%",
-        cursor: "pointer",
-        mask: `url(${img}) center center no-repeat`,
-        backgroundColor: `${context.theme.primaryColor}`
-    }
-}
-
-export const composerInputStyle = () => {
-
-    return {
-        display: "flex",
-        width: "100%",
-        flexDirection: "row",
-        alignItems: "flex-end",
-        position: "relative",
-        zIndex: "2",
-        padding: "0",
-        minHeight: "85px",
-    }
-}
-
-export const inputInnerStyle = (props, state, context) => {
-
-    const borderRadiusVal = (state.emojiViewer || state.stickerViewer) ? {
-        borderRadius: "0 0 8px 8px",
-    } : {
-        borderRadius: "8px",
-    };
-
-    return {
-        flex: "1 1 auto",
-        position: "relative",
-        outline: "none",
-        border: `1px solid ${context.theme.borderColor.primary}`,
-        backgroundColor: `${context.theme.backgroundColor.white}`,
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        minHeight: "85px",
-        ...borderRadiusVal
-    }
-}
-
-export const messageInputStyle = (disabled) => {
-
-    const disabledState = (disabled) ? {
-        pointerEvents : "none",
-        opacity: "0.4"
-    } : {};
-
-    return {
-        width: "100%",
-        fontSize: "15px",
-        lineHeight: "20px",
-        fontWeight: "400",
-        padding: "16px",
-        outline: "none",
-        overflowX: "hidden",
-        overflowY: "auto",
-        position: "relative",
-        whiteSpace: "pre-wrap",
-        wordWrap: "break-word",
-        zIndex: "1",
-        minHeight: "50px",
-        maxHeight: "100px",
-        userSelect: "text",
-        ...disabledState,
-        '&:empty:before': {
-            content: "attr(placeholder)",
-            color: "rgb(153, 153, 153)",
-            pointerEvents: "none",
-            display: "block", /* For Firefox */
-        }
-    }
-}
-
-export const inputStickyStyle = (disabled, attachments, context) => {
-
-    const disabledState = (disabled) ? {
-        pointerEvents: "none",
-    } : {};
-
-    const flexDirectionProp = (attachments === null) ? {
-        flexDirection: "row-reverse",
-    } : {};
-
-    return {
-        padding: "8px 16px",
-        // height: "40px",
-        borderTop: `1px solid ${context.theme.borderColor.primary}`,
-        backgroundColor: `${context.theme.backgroundColor.grey}`,
-        display: "flex",
-        justifyContent: "space-between",
-        ...flexDirectionProp,
-        ...disabledState,
-        '&:empty:before': {
-            pointerEvents: "none",
-        }
-    }
-}
+	return {
+		padding: "8px 16px",
+		// height: "40px",
+		//borderTop: `1px solid ${context.theme.borderColor.primary}`,
+		backgroundColor: "rgba(20, 20, 20, 0.04)",
+		display: "flex",
+		justifyContent: "space-between",
+		...flexDirectionProp,
+		...disabledState,
+		"&:empty:before": {
+			pointerEvents: "none",
+		},
+	};
+};
 
 export const stickyAttachmentStyle = () => {
-
-    return {
-        display: "flex",
-        width: "auto"
-    }
-}
+	return {
+		display: "flex",
+		width: "auto",
+	};
+};
 
 export const attachmentIconStyle = () => {
+	return {
+		margin: "auto 0",
+		width: "24px",
+		height: "20px",
+		cursor: "pointer",
+	};
+};
 
-    return {
-        margin: "auto 0",
-        width: "24px",
-        height: "20px",
-        cursor: "pointer",
-    }
-}
+export const filePickerStyle = state => {
+	const active = state.showFilePicker
+		? { width: "calc(100% - 20px)", opacity: "1", }
+		: {};
 
-export const filePickerStyle = (state) => {
-
-    const active = (state.showFilePicker) ? {
-        width: "calc(100% - 20px)",
-        opacity: "1",
-    } : {};
-
-    return {
-        width: "0",
-        borderRadius: "8px",
-        overflow: "hidden",
-        zIndex: "1",
-        opacity: "0",
-        transition: "width 0.5s linear",
-        ...active,
-    }
-}
+	return {
+		width: "0",
+		borderRadius: "8px",
+		overflow: "hidden",
+		zIndex: "1",
+		opacity: "0",
+		transition: "width 0.5s linear",
+		...active,
+	};
+};
 
 export const fileListStyle = () => {
-
-    return {
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 0 0 16px",
-    }
-}
+	return {
+		width: "100%",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		padding: "0 0 0 16px",
+	};
+};
 
 export const fileItemStyle = (img, context) => {
+	return {
+		height: "24px",
+		cursor: "pointer",
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "center",
+		margin: "0 16px 0 0",
+		" > input": {
+			display: "none",
+		},
+	};
+};
 
-    return {
-        height: "24px",
-        cursor: "pointer",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        margin: "0 16px 0 0",
-        " > i": {
-            width: "24px",
-            height: "24px",
-            display: "inline-block",
-            mask: `url(${img}) center center no-repeat`,
-            backgroundColor: `${context.theme.secondaryTextColor}`
-        },
-        ' > input': {
-            display: "none",
-        },
-    }
+export const stickyAttachButtonStyle = props => {
+	return {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		cursor: "pointer",
+		width: "24px",
+	};
+};
+
+export const attchButtonIconStyle = props => {
+	return {
+		width: "24px",
+		height: "24px",
+		display: "inline-block",
+		WebkitMask: `url(${props.attachmentIconURL}) center center no-repeat`,
+		backgroundColor: props.attachmentIconTint,
+	};
 }
 
-export const stickyAttachButtonStyle = (img, context) => {
+export const stickyButtonStyle = props => {
 
-    return {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer",
-        width: "24px",
-        "i": {
-            width: "24px",
-            height: "24px",
-            display: "inline-block",
-            mask: `url(${img}) center center no-repeat`,
-            backgroundColor: `${context.theme.secondaryTextColor}`
-        }
-    }
+	return {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		cursor: "pointer",
+		width: "auto",
+	};
+};
+
+export const emojiButtonStyle = props => {
+	return {
+		height: "24px",
+		cursor: "pointer",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		margin: "0 0 0 16px",
+	};
+};
+
+export const emojiBtnIconStyle = props => {
+
+	return {
+		width: "24px",
+		height: "24px",
+		display: "inline-block",
+		WebkitMask: `url(${props.emojiIconURL}) center center no-repeat`,
+		backgroundColor: props.emojiIconTint,
+	};
 }
 
-export const stickyButtonStyle = (state) => {
+export const sendButtonStyle = props => {
+	return {
+		height: "24px",
+		cursor: "pointer",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		margin: "0 0 0 16px",
+	};
+};
 
-    const active = (state.showFilePicker) ? {
-        display: "none",
-    } : {
-        display: "flex",
-    };
-
-    return {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer",
-        width: "auto",
-        ...active
-    }
+export const sendBtnIconStyle = props => {
+	return {
+		width: "24px",
+		height: "24px",
+		display: "inline-block",
+		WebkitMask: `url(${props.sendButtonIconURL}) center center no-repeat`,
+		backgroundColor: props.sendButtonIconTint,
+	};
 }
 
-export const emojiButtonStyle = (img, context) => {
+export const reactionBtnStyle = props => {
+	return {
+		cursor: "pointer",
+		height: "24px",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		margin: "0 0 0 16px",
+	};
+};
 
-    return {
-        height: "24px",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        margin: "0 0 0 16px",
-        "i": {
-            width: "24px",
-            height: "24px",
-            display: "inline-block",
-            mask: `url(${img}) center center no-repeat`,
-            backgroundColor: `${context.theme.secondaryTextColor}`
-        }
-    }
+export const reactionBtnIconStyle = props => {
+	return {
+		font: props.liveReactionFont,
+		color: props.liveReactionColor,
+	};
 }
 
-export const sendButtonStyle = (img, context) => {
+export const stickerBtnStyle = props => {
+	return {
+		cursor: "pointer",
+		height: "24px",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		margin: "0 0 0 16px",
+	};
+};
 
-    return {
-        height: "24px",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        margin: "0 0 0 16px",
-        "i": {
-            width: "24px",
-            height: "24px",
-            display: "inline-block",
-            mask: `url(${img}) center center no-repeat`,
-            backgroundColor: `${context.theme.primaryColor}`
-        }
-    }
-}
+export const stickerBtnIconStyle = (props, stickerTemplate) => {
+	return {
+		width: "24px",
+		height: "24px",
+		display: "inline-block",
+		WebkitMask: `url(${stickerTemplate.icon}) center center no-repeat`,
+		backgroundColor: props.emojiIconTint,
+	};
+};
 
-export const reactionBtnStyle = () => {
+export const fileInputStyle = props => {
 
-    return {
-        cursor: "pointer",
-        height: "24px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        margin: "0 0 0 16px",
-    }
-}
-
-export const stickerBtnStyle = (img, context) => {
-
-    return {
-        cursor: "pointer",
-        height: "24px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        margin: "0 0 0 16px",
-        "i": {
-            width: "24px",
-            height: "24px",
-            display: "inline-block",
-            mask: `url(${img}) center center no-repeat`,
-            backgroundColor: `${context.theme.secondaryTextColor}`
-        }
-    }
+	return {
+		visibility: "hidden",
+		position: "absolute",
+		width: "0"
+	}
 }

@@ -1,334 +1,376 @@
 import React from "react";
-/** @jsxRuntime classic */
-/** @jsx jsx */
-import { jsx, keyframes } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
-
 import "emoji-mart/css/emoji-mart.css";
 
-import { CometChatSmartReplyPreview, CometChatCreatePoll, CometChatStickerKeyboard } from "../Extensions";
-import { CometChatEmojiKeyboard } from "../";
-
-import { CometChatContext } from "../../../util/CometChatContext";
-import { checkMessageForExtensionsData, ID, getUnixTimestamp } from "../../../util/common";
-import * as enums from "../../../util/enums.js";
-import { SoundManager } from "../../../util/SoundManager";
-
-import { theme } from "../../../resources/theme";
-import Translator from "../../../resources/localization/translator";
+import { 
+	CometChatBackdrop,
+	CometChatActionSheet, 
+	CometChatSoundManager, 
+	CometChatLocalize, 
+	localize 
+} from "../../";
 
 import {
-	chatComposerStyle,
-	editPreviewContainerStyle,
-	previewHeadingStyle,
-	previewCloseStyle,
-	previewTextStyle,
-	composerInputStyle,
-	inputInnerStyle,
-	messageInputStyle,
-	inputStickyStyle,
-	stickyAttachmentStyle,
-	filePickerStyle,
-	fileListStyle,
-	fileItemStyle,
+	CometChatMessageEvents,
+	metadataKey,
+	CometChatMessageTypes,
+	CometChatCustomMessageTypes,
+	getExtensionsData,
+	CometChatEmojiKeyboard,
+	CometChatStickerKeyboard,
+	CometChatMessagePreview,
+	messageConstants,
+	CometChatCreatePoll
+} from "../";
+
+import { ID, getUnixTimestamp } from "../CometChatMessageHelper";
+import { messageStatus } from "../CometChatMessageConstants";
+
+import { Hooks } from "./hooks";
+
+import { 
+	chatComposerStyle, 
+	composerInputStyle, 
+	inputInnerStyle, 
+	messageInputStyle, 
 	stickyAttachButtonStyle,
-	stickyButtonStyle,
+	attchButtonIconStyle,
+	inputStickyStyle,
+	stickerBtnStyle,
+	stickerBtnIconStyle,
 	emojiButtonStyle,
-	sendButtonStyle,
+	emojiBtnIconStyle,
 	reactionBtnStyle,
-	stickerBtnStyle
+	reactionBtnIconStyle,
+	sendButtonStyle,
+	sendBtnIconStyle,
+	fileInputStyle,
+	stickyButtonStyle
 } from "./style";
 
 import roundedPlus from "./resources/add-circle-filled.svg";
-import videoIcon from "./resources/video.svg";
-import audioIcon from "./resources/audio-file.svg";
-import docIcon from "./resources/file-upload.svg";
-import imageIcon from "./resources/image.svg";
 import insertEmoticon from "./resources/emoji.svg";
-import sendBlue from "./resources/send-message.svg";
-import pollIcon from "./resources/polls.svg";
-import stickerIcon from "./resources/stickers.svg";
-import closeIcon from "./resources/close.svg";
-import documentIcon from "./resources/collaborative-document.svg";
-import whiteboardIcon from "./resources/collaborative-whiteboard.svg";
-import heartIcon from "./resources/heart.png";
+import sendBtn from "./resources/send-message.svg";
 
-class CometChatMessageComposer extends React.PureComponent {
-	static contextType = CometChatContext;
+/**
+ * 
+ * CometChatMessageComposer is comprised of title, subtitle, avatar, badgecount and more.
+ * with additonal CometChat SDK conversation object
+ * 
+ * @version 1.0.0
+ * @author CometChatTeam
+ * @copyright © 2022 CometChat Inc.
+ * 
+ */
+const CometChatMessageComposer = React.forwardRef((props, ref) => {
+	const [loggedInUser, setLoggedInUser] = React.useState(null);
+	const [chatWith, setChatWith] = React.useState(null);
+	const [chatWithId, setChatWithId] = React.useState(null);
 
-	constructor(props) {
-		super(props);
+	const [messageInput, setMessageInput] = React.useState("");
 
-		this.imageUploaderRef = React.createRef();
-		this.fileUploaderRef = React.createRef();
-		this.audioUploaderRef = React.createRef();
-		this.videoUploaderRef = React.createRef();
-		this.messageInputRef = React.createRef();
-		this.liveReactionInProgress = false;
-		this.isTyping = false;
+	const [viewComposer, setViewComposer] = React.useState(false);
+	const [viewAttachButton, setViewAttachButton] = React.useState(false);
 
-		this.state = {
-			showFilePicker: false,
-			messageInput: "",
-			messageType: "",
-			emojiViewer: false,
-			createPoll: false,
-			messageToBeEdited: "",
-			replyPreview: null,
-			stickerViewer: false,
-			messageToReact: "",
-			shareDocument: false,
-			shareWhiteboard: false,
-			enableLiveReaction: false,
-			enablePolls: false,
-			enableTypingIndicator: false,
-			enableStickers: false,
-			enablePhotosVideos: false,
-			enableFiles: false,
-			enableEmojis: false,
-			enableCollaborativeDocument: false,
-			enableCollaborativeWhiteboard: false,
-		};
-	}
+	const [viewSticker, setViewSticker] = React.useState(false);
+	const [stickerTemplate, setStickerTemplate] = React.useState(null);
+	const [viewStickerTray, setViewStickerTray] = React.useState(null);
 
-	componentDidMount() {
-		CometChat.getLoggedinUser()
-			.then(user => (this.loggedInUser = user))
-			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
+	const [viewActionSheet, setViewActionSheet] = React.useState(false);
+	const [actionSheetItems, setActionSheetItems] = React.useState([]);
 
-		this.item = this.context.type === CometChat.ACTION_TYPE.TYPE_USER || this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP ? this.context.item : null;
-		this.enableLiveReaction();
-		this.enablePolls();
-		this.enableTypingIndicator();
-		this.enableStickers();
-		this.enablePhotosVideos();
-		this.enableFiles();
-		this.enableEmojis();
-		this.enableCollaborativeDocument();
-		this.enableCollaborativeWhiteboard();
-	}
+	const [viewCreatePoll, setViewCreatePoll] = React.useState(false);
+	const [viewEmojiTray, setViewEmojiTray] = React.useState(false);
 
-	componentDidUpdate(prevProps, prevState) {
-		if (prevProps.messageToBeEdited !== this.props.messageToBeEdited) {
-			const messageToBeEdited = this.props.messageToBeEdited;
+	const [messagePreview, setMessagePreview] = React.useState(null);
 
-			this.setState({ messageInput: messageToBeEdited, messageToBeEdited: messageToBeEdited });
+	let isTyping = null;
+	let liveReactionTimeout = 0;
+	const disabledState = false;
 
-			const element = this.messageInputRef.current;
-			if (messageToBeEdited) {
-				let messageText = messageToBeEdited.text;
+	const messageInputRef = React.useRef(null);
+	const fileInputRef = React.useRef(null);
+	const chatRef = React.useRef(chatWith);
 
-				//xss extensions data
-				const xssData = checkMessageForExtensionsData(messageToBeEdited, "xss-filter");
-				if (xssData && xssData.hasOwnProperty("sanitized_text") && xssData.hasOwnProperty("hasXSS") && xssData.hasXSS === "yes") {
-					messageText = xssData.sanitized_text;
-				}
+	/**
+	 * Event callbacks
+	 */
+	React.useImperativeHandle(ref, () => ({
+		previewMessageForEdit: previewMessageForEdit,
+	}));
 
-				element.focus();
-				element.textContent = "";
-				this.pasteHtmlAtCaret(messageText, false);
-			} else {
-				element.textContent = "";
-			}
+	const previewMessageForEdit = message => {
+		setMessagePreview({
+			message: message,
+			mode: "edit",
+		});
+
+		setMessageInput(message);
+
+		const element = messageInputRef.current;
+		let messageText = message.text;
+
+		//xss extensions data
+		const xssData = getExtensionsData(message, metadataKey.extensions.xssfilter);
+		if (xssData && xssData.hasOwnProperty("sanitized_text") && xssData.hasOwnProperty("hasXSS") && xssData.hasXSS === "yes") {
+			messageText = xssData.sanitized_text;
 		}
 
-		if (prevProps.replyPreview !== this.props.replyPreview) {
-			this.setState({ replyPreview: this.props.replyPreview });
-		}
-
-		const previousMessageStr = JSON.stringify(prevProps.messageToReact);
-		const currentMessageStr = JSON.stringify(this.props.messageToReact);
-
-		if (previousMessageStr !== currentMessageStr) {
-			this.setState({ messageToReact: this.props.messageToReact });
-		}
-
-		if (this.context.item !== this.item) {
-			this.messageInputRef.current.textContent = "";
-			this.setState({ stickerViewer: false, emojiViewer: false, replyPreview: null, messageToBeEdited: "", messageInput: "" });
-
-			this.focusOnMessageComposer();
-		}
-
-		if (prevState.messageInput !== this.state.messageInput) {
-			this.focusOnMessageComposer();
-		}
-
-		this.item = this.context.type === CometChat.ACTION_TYPE.TYPE_USER || this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP ? this.context.item : null;
-		this.enableLiveReaction();
-		this.enablePolls();
-		this.enableTypingIndicator();
-		this.enableStickers();
-		this.enablePhotosVideos();
-		this.enableFiles();
-		this.enableEmojis();
-		this.enableCollaborativeDocument();
-		this.enableCollaborativeWhiteboard();
-	}
-
-	/**
-	 * if live reactions feature is disabled
-	 */
-	enableLiveReaction = () => {
-		this.context.FeatureRestriction.isLiveReactionsEnabled()
-			.then(response => {
-				if (response !== this.state.enableLiveReaction) {
-					this.setState({ enableLiveReaction: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enableLiveReaction !== false) {
-					this.setState({ enableLiveReaction: false });
-				}
-			});
+		element.focus();
+		element.textContent = "";
+		pasteHtmlAtCaret(messageText, false);
 	};
 
-	/**
-	 * if polls feature is disabled
-	 */
-	enablePolls = () => {
-		this.context.FeatureRestriction.isPollsEnabled()
-			.then(response => {
-				if (response !== this.state.enablePolls) {
-					this.setState({ enablePolls: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enablePolls !== false) {
-					this.setState({ enablePolls: false });
-				}
-			});
+	const closeMessagePreview = () => setMessagePreview(null);
+
+	const draftMessage = message => {
+		setMessageInput(message);
 	};
 
-	/**
-	 * if typing indicator feature is disabled
-	 */
-	enableTypingIndicator = () => {
-		this.context.FeatureRestriction.isTypingIndicatorsEnabled()
-			.then(response => {
-				if (response !== this.state.enableTypingIndicator) {
-					this.setState({ enableTypingIndicator: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enableTypingIndicator !== false) {
-					this.setState({ enableTypingIndicator: false });
-				}
-			});
-	};
-
-	/**
-	 * if stickers feature is disabled
-	 */
-	enableStickers = () => {
-		this.context.FeatureRestriction.isStickersEnabled()
-			.then(response => {
-				if (response !== this.state.enableStickers) {
-					this.setState({ enableStickers: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enableStickers !== false) {
-					this.setState({ enableStickers: false });
-				}
-			});
-	};
-
-	/**
-	 * if uploding photos, videos feature is disabled
-	 */
-	enablePhotosVideos = () => {
-		this.context.FeatureRestriction.isPhotosVideosEnabled()
-			.then(response => {
-				if (response !== this.state.enablePhotosVideos) {
-					this.setState({ enablePhotosVideos: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enablePhotosVideos !== false) {
-					this.setState({ enablePhotosVideos: false });
-				}
-			});
-	};
-
-	/**
-	 * if uploding files feature is disabled
-	 */
-	enableFiles = () => {
-		this.context.FeatureRestriction.isFilesEnabled()
-			.then(response => {
-				if (response !== this.state.enableFiles) {
-					this.setState({ enableFiles: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enableFiles !== false) {
-					this.setState({ enableFiles: false });
-				}
-			});
-	};
-
-	/**
-	 * if sending emojis feature is disabled
-	 */
-	enableEmojis = () => {
-		this.context.FeatureRestriction.isEmojisEnabled()
-			.then(response => {
-				if (response !== this.state.enableEmojis) {
-					this.setState({ enableEmojis: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enableEmojis !== false) {
-					this.setState({ enableEmojis: false });
-				}
-			});
-	};
-
-	/**
-	 * if sharing collborative document feature is disabled
-	 */
-	enableCollaborativeDocument = () => {
-		this.context.FeatureRestriction.isCollaborativeDocumentEnabled()
-			.then(response => {
-				if (response !== this.state.enableCollaborativeDocument) {
-					this.setState({ enableCollaborativeDocument: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enableCollaborativeDocument !== false) {
-					this.setState({ enableCollaborativeDocument: false });
-				}
-			});
-	};
-
-	/**
-	 * if sharing collborative whiteboard feature is disabled
-	 */
-	enableCollaborativeWhiteboard = () => {
-		this.context.FeatureRestriction.isCollaborativeWhiteBoardEnabled()
-			.then(response => {
-				if (response !== this.state.enableCollaborativeWhiteboard) {
-					this.setState({ enableCollaborativeWhiteboard: response });
-				}
-			})
-			.catch(error => {
-				if (this.state.enableCollaborativeWhiteboard !== false) {
-					this.setState({ enableCollaborativeWhiteboard: false });
-				}
-			});
-	};
-
-	focusOnMessageComposer = () => {
-		if (this.messageInputRef && this.messageInputRef.current) {
-			this.messageInputRef.current.focus();
+	const sendMessageOnEnter = event => {
+		if (event.keyCode === 13 && !event.shiftKey) {
+			event.preventDefault();
+			sendTextMessage();
 		}
 	};
 
-	pasteHtmlAtCaret(html, selectPastedContent) {
+	const sendTextMessage = message => {
+		setViewEmojiTray(false);
+
+		if (!messageInput.trim().length) {
+			return false;
+		}
+
+		if (messagePreview && messagePreview.mode === "edit") {
+			editMessage(messagePreview.message);
+			return false;
+		}
+
+		let textMessage = new CometChat.TextMessage(chatWithId, messageInput, chatWith);
+		// if (this.props.parentMessageId) {
+		// 	textMessage.setParentMessageId(this.props.parentMessageId);
+		// }
+		textMessage.setSender(loggedInUser);
+		textMessage.setReceiver(chatWith);
+		textMessage.setText(messageInput);
+		textMessage._composedAt = getUnixTimestamp();
+		textMessage._id = ID();
+
+		CometChatMessageEvents.emit(CometChatMessageEvents.onMessageSent, { message: textMessage, status: messageStatus.inprogress });
+		CometChatSoundManager.play(CometChatSoundManager.Sound.outgoingMessage);
+
+		setMessageInput("");
+		messageInputRef.current.textContent = "";
+
+		CometChat.sendMessage(textMessage)
+			.then(message => {
+				const messageObject = { ...message, _id: textMessage._id };
+				CometChatMessageEvents.emit(CometChatMessageEvents.onMessageSent, { message: messageObject, status: messageStatus.success });
+			})
+			.catch(error => {
+				CometChatMessageEvents.emit(CometChatMessageEvents.onMessageError, { message: textMessage, error: error });
+			});
+	};
+
+	const sendMediaMessage = (messageInput, messageType) => {
+		setViewActionSheet(false);
+
+		let mediaMessage = new CometChat.MediaMessage(chatWithId, messageInput, messageType, chatWith);
+		// if (this.props.parentMessageId) {
+		// 	mediaMessage.setParentMessageId(this.props.parentMessageId);
+		// }
+		mediaMessage.setSender(loggedInUser);
+		mediaMessage.setReceiver(chatWith);
+		mediaMessage.setType(messageType);
+		mediaMessage.setMetadata({
+			[metadataKey.file]: messageInput,
+		});
+		mediaMessage._composedAt = getUnixTimestamp();
+		mediaMessage._id = ID();
+
+		CometChatMessageEvents.emit(CometChatMessageEvents.onMessageSent, { message: mediaMessage, status: messageStatus.inprogress });
+		CometChatSoundManager.play(CometChatSoundManager.Sound.outgoingMessage);
+
+		CometChat.sendMessage(mediaMessage)
+			.then(message => {
+				const messageObject = { ...message, _id: mediaMessage._id };
+				CometChatMessageEvents.emit(CometChatMessageEvents.onMessageSent, { message: messageObject, status: messageStatus.success });
+			})
+			.catch(error => {
+				CometChatMessageEvents.emit(CometChatMessageEvents.onMessageError, { message: mediaMessage, error: error });
+			});
+	};
+
+	const sendSticker = stickerMessage => {
+		const customData = { sticker_url: stickerMessage.stickerUrl, sticker_name: stickerMessage.stickerName };
+		const customMessage = new CometChat.CustomMessage(chatWithId, chatWith, CometChatCustomMessageTypes.sticker, customData);
+		// if (props.parentMessage && props.parentMessage.id) {
+		// 	customMessage.setParentMessageId(this.props.parentMessageId);
+		// }
+		customMessage.setSender(loggedInUser);
+		customMessage.setReceiver(chatWith);
+		customMessage.setMetadata({ incrementUnreadCount: true });
+		customMessage._composedAt = getUnixTimestamp();
+		customMessage._id = ID();
+
+		CometChatMessageEvents.emit(CometChatMessageEvents.onMessageSent, { message: customMessage, status: messageStatus.inprogress });
+		CometChatSoundManager.play(CometChatSoundManager.Sound.outgoingMessage);
+
+		CometChat.sendCustomMessage(customMessage)
+			.then(message => {
+				const messageObject = { ...message, _id: customMessage._id };
+				CometChatMessageEvents.emit(CometChatMessageEvents.onMessageSent, { message: messageObject, status: messageStatus.success });
+			})
+			.catch(error => {
+				CometChatMessageEvents.emit(CometChatMessageEvents.onMessageError, { message: customMessage, error: error });
+			});
+	};
+
+	const editMessage = message => {
+		endTyping(null, null);
+
+		let messageText = messageInput.trim();
+		let textMessage = new CometChat.TextMessage(chatWithId, messageText, chatWith);
+		textMessage.setId(messagePreview.message.id);
+
+		//const newMessage = { ...textMessage, messageFrom: messagePreview.message.messageFrom };
+		//CometChatMessageEvents.emit(CometChatMessageEvents.messageEdited, newMessage);
+
+		setMessageInput("");
+		messageInputRef.current.textContent = "";
+		CometChatSoundManager.play(CometChatSoundManager.Sound.outgoingMessage);
+
+		setMessagePreview(null);
+
+		CometChat.editMessage(textMessage)
+			.then(editedMessage => {
+				CometChatMessageEvents.emit(CometChatMessageEvents.messageEdited, { message: editedMessage, status: messageStatus.success });
+			})
+			.catch(error => {
+				CometChatMessageEvents.emit(CometChatMessageEvents.onMessageError, { error: error, message: message });
+			});
+	};
+
+	const replyToMessage = message => {};
+
+	const startTyping = (endTypingTimeout, typingMetadata) => {
+		//if typing is disabled
+		if (!props.enableTyping) {
+			return false;
+		}
+
+		//if typing is in progress
+		if (isTyping) {
+			return false;
+		}
+
+		let typingInterval = endTypingTimeout || 5000;
+		let metadata = typingMetadata || undefined;
+
+		let typingNotification = new CometChat.TypingIndicator(chatWithId, chatWith, metadata);
+		CometChat.startTyping(typingNotification);
+
+		isTyping = setTimeout(() => {
+			endTyping(null, typingMetadata);
+		}, typingInterval);
+	};
+
+	const endTyping = (event, typingMetadata) => {
+		//fixing synthetic issue
+		if (event) {
+			event.persist();
+		}
+
+		//if typing is disabled
+		if (!props.enableTyping) {
+			return false;
+		}
+
+		let metadata = typingMetadata || undefined;
+
+		let typingNotification = new CometChat.TypingIndicator(chatWithId, chatWith, metadata);
+		CometChat.endTyping(typingNotification);
+
+		clearTimeout(isTyping);
+		isTyping = null;
+	};
+
+	const fileInputHandler = id => {
+		if (!fileInputRef.current) {
+			return false;
+		}
+
+		fileInputRef.current.id = id;
+		fileInputRef.current.click();
+	};
+
+	const fileInputChangeHandler = event => {
+		const uploadedFile = event.target.files["0"];
+		var reader = new FileReader(); // Creating reader instance from FileReader() API
+		reader.addEventListener(
+			"load",
+			event => {
+				const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
+				sendMediaMessage(newFile, fileInputRef.current.id);
+				fileInputRef.current.value = "";
+			},
+			false,
+		);
+
+		reader.readAsArrayBuffer(uploadedFile);
+	};
+
+	const closeCreatePoll = () => {
+		setViewCreatePoll(false);
+	};
+
+	const onPollSubmit = () => {
+		setViewCreatePoll(false);
+	};
+
+	const shareCollaborativeDocument = () => {
+		CometChat.callExtension("document", "POST", "v1/create", {
+			receiver: chatRef.current.chatWithId,
+			receiverType: chatRef.current.chatWith,
+		}).catch(error => {});
+	};
+
+	const shareCollaborativeWhiteboard = () => {
+		CometChat.callExtension("whiteboard", "POST", "v1/create", {
+			receiver: chatRef.current.chatWithId,
+			receiverType: chatRef.current.chatWith,
+		}).catch(error => {});
+	};
+
+	const inputChangeHandler = event => {
+		startTyping();
+
+		const elem = event.currentTarget;
+		let messageInput = elem.textContent.trim();
+
+		if (!messageInput.length) {
+			event.currentTarget.textContent = messageInput;
+		}
+
+		setMessageInput(elem.innerText);
+	};
+
+	const toggleStickersTray = () => {
+		setViewStickerTray(prevViewStickerOption => !prevViewStickerOption);
+	};
+
+	const onEmojiSelect = emoji => {
+		const element = messageInputRef.current;
+		element.focus();
+		pasteHtmlAtCaret(emoji.native, false);
+
+		setMessageInput(element.innerText);
+	};
+
+	const pasteHtmlAtCaret = (html, selectPastedContent) => {
 		var sel, range;
-		const chatWindow = this.context.UIKitSettings.chatWindow;
+		const chatWindow = window;
 		if (chatWindow.getSelection) {
 			// IE9 and non-IE
 			sel = chatWindow.getSelection();
@@ -374,899 +416,237 @@ class CometChatMessageComposer extends React.PureComponent {
 				range.select();
 			}
 		}
-	}
-
-	emojiClicked = (emoji, event) => {
-		if (this.state.messageToReact) {
-			this.reactToMessages(emoji);
-			return;
-		}
-
-		const element = this.messageInputRef.current;
-		element.focus();
-		this.pasteHtmlAtCaret(emoji.native, false);
-		this.setState({ messageInput: element.innerText, messageType: "text" });
 	};
 
-	changeHandler = event => {
-		this.startTyping();
-
-		const elem = event.currentTarget;
-		let messageInput = elem.textContent.trim();
-
-		if (!messageInput.length) {
-			event.currentTarget.textContent = messageInput;
-			//return false;
-		}
-
-		this.setState({ messageInput: elem.innerText, messageType: "text" });
+	const attachmentClickHandler = () => {
+		setViewActionSheet(prevViewActionSheet => !prevViewActionSheet);
 	};
 
-	toggleFilePicker = () => {
-		const currentState = !this.state.showFilePicker;
-		this.setState({ showFilePicker: currentState });
-	};
+	const actionSheetClickHandler = actionSheetItemProps => {
 
-	openFileDialogue = fileType => {
-		switch (fileType) {
-			case "image":
-				this.imageUploaderRef.current.click();
+		switch (actionSheetItemProps.id) {
+			case CometChatMessageTypes.file:
+			case CometChatMessageTypes.image:
+			case CometChatMessageTypes.audio:
+			case CometChatMessageTypes.video:
+				fileInputHandler(actionSheetItemProps.id);
+				setViewActionSheet(false);
 				break;
-			case "file":
-				this.fileUploaderRef.current.click();
+			case CometChatCustomMessageTypes.poll: {
+				setViewActionSheet(false);
+				setViewCreatePoll(true);
 				break;
-			case "audio":
-				this.audioUploaderRef.current.click();
+			}
+			case CometChatCustomMessageTypes.document: {
+				shareCollaborativeDocument();
+				setViewActionSheet(false);
 				break;
-			case "video":
-				this.videoUploaderRef.current.click();
+			}
+			case CometChatCustomMessageTypes.whiteboard: {
+				shareCollaborativeWhiteboard();
+				setViewActionSheet(false);
+				break;
+			}
+			case CometChatCustomMessageTypes.location:
 				break;
 			default:
 				break;
 		}
 	};
 
-	onImageChange = e => {
-		if (!this.imageUploaderRef.current.files["0"]) {
+	const emojiClickHandler = () => {
+		setViewEmojiTray(prevViewEmojiOption => !prevViewEmojiOption);
+	};
+
+	const stickerClickHandler = () => {
+		if (stickerTemplate.actionCallback) {
+			stickerTemplate.actionCallback();
+		} else {
+			toggleStickersTray();
+		}
+	};
+
+	const shareLiveReaction = () => {
+		//if already live reaction in progress
+		if (liveReactionTimeout) {
 			return false;
 		}
 
-		const uploadedFile = this.imageUploaderRef.current.files["0"];
-
-		var reader = new FileReader(); // Creating reader instance from FileReader() API
-		reader.addEventListener(
-			"load",
-			event => {
-				// Setting up base64 URL on image
-
-				const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-				this.sendMediaMessage(newFile, CometChat.MESSAGE_TYPE.IMAGE);
-			},
-			false,
-		);
-
-		reader.readAsArrayBuffer(uploadedFile);
-	};
-
-	onFileChange = e => {
-		if (!this.fileUploaderRef.current.files["0"]) {
-			return false;
-		}
-
-		const uploadedFile = this.fileUploaderRef.current.files["0"];
-
-		var reader = new FileReader(); // Creating reader instance from FileReader() API
-		reader.addEventListener(
-			"load",
-			event => {
-				// Setting up base64 URL on image
-
-				const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-				this.sendMediaMessage(newFile, CometChat.MESSAGE_TYPE.FILE);
-			},
-			false,
-		);
-
-		reader.readAsArrayBuffer(uploadedFile);
-	};
-
-	onAudioChange = e => {
-		if (!this.audioUploaderRef.current.files["0"]) {
-			return false;
-		}
-
-		const uploadedFile = this.audioUploaderRef.current.files["0"];
-
-		var reader = new FileReader(); // Creating reader instance from FileReader() API
-		reader.addEventListener(
-			"load",
-			() => {
-				// Setting up base64 URL on image
-
-				const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-				this.sendMediaMessage(newFile, CometChat.MESSAGE_TYPE.AUDIO);
-			},
-			false,
-		);
-
-		reader.readAsArrayBuffer(uploadedFile);
-	};
-
-	onVideoChange = e => {
-		if (!this.videoUploaderRef.current.files["0"]) {
-			return false;
-		}
-
-		const uploadedFile = this.videoUploaderRef.current.files["0"];
-
-		var reader = new FileReader(); // Creating reader instance from FileReader() API
-		reader.addEventListener(
-			"load",
-			() => {
-				// Setting up base64 URL on image
-
-				const newFile = new File([reader.result], uploadedFile.name, uploadedFile);
-				this.sendMediaMessage(newFile, CometChat.MESSAGE_TYPE.VIDEO);
-			},
-			false,
-		);
-
-		reader.readAsArrayBuffer(uploadedFile);
-	};
-
-	getReceiverDetails = () => {
-		let receiverId;
-		let receiverType;
-
-		if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER) {
-			receiverId = this.context.item.uid;
-			receiverType = CometChat.RECEIVER_TYPE.USER;
-		} else if (this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP) {
-			receiverId = this.context.item.guid;
-			receiverType = CometChat.RECEIVER_TYPE.GROUP;
-		}
-
-		return { receiverId: receiverId, receiverType: receiverType };
-	};
-
-	sendMediaMessage = (messageInput, messageType) => {
-		this.toggleFilePicker();
-		this.endTyping(null, null);
-
-		const { receiverId, receiverType } = this.getReceiverDetails();
-
-		let mediaMessage = new CometChat.MediaMessage(receiverId, messageInput, messageType, receiverType);
-		if (this.props.parentMessageId) {
-			mediaMessage.setParentMessageId(this.props.parentMessageId);
-		}
-
-		mediaMessage.setSender(this.loggedInUser);
-		mediaMessage.setReceiver(this.context.type);
-		mediaMessage.setType(messageType);
-		mediaMessage.setMetadata({
-			[enums.CONSTANTS["FILE_METADATA"]]: messageInput,
-		});
-		mediaMessage._composedAt = getUnixTimestamp();
-		mediaMessage._id = ID();
-
-		SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
-		this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [mediaMessage]);
-
-		CometChat.sendMessage(mediaMessage)
-			.then(message => {
-				const newMessageObj = { ...message, _id: mediaMessage._id };
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], [newMessageObj]);
-			})
-			.catch(error => {
-				const newMessageObj = { ...mediaMessage, error: error };
-				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], [newMessageObj]);
-			});
-	};
-
-	sendMessageOnEnter = event => {
-		if (event.keyCode === 13 && !event.shiftKey) {
-			event.preventDefault();
-			this.sendTextMessage();
-			return true;
-		}
-	};
-
-	sendTextMessage = () => {
-		if (this.state.emojiViewer) {
-			this.setState({ emojiViewer: false });
-		}
-
-		if (!this.state.messageInput.trim().length) {
-			return false;
-		}
-
-		if (this.state.messageToBeEdited) {
-			this.editMessage();
-			return false;
-		}
-
-		this.endTyping(null, null);
-
-		let { receiverId, receiverType } = this.getReceiverDetails();
-		let messageInput = this.state.messageInput.trim();
-
-		let textMessage = new CometChat.TextMessage(receiverId, messageInput, receiverType);
-		if (this.props.parentMessageId) {
-			textMessage.setParentMessageId(this.props.parentMessageId);
-		}
-		textMessage.setSender(this.loggedInUser);
-		textMessage.setReceiver(this.context.type);
-		textMessage.setText(messageInput);
-		textMessage._composedAt = getUnixTimestamp();
-		textMessage._id = ID();
-
-		this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [textMessage]);
-		this.setState({ messageInput: "", replyPreview: false });
-
-		this.messageInputRef.current.textContent = "";
-		SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
-
-		CometChat.sendMessage(textMessage)
-			.then(message => {
-				const newMessageObj = { ...message, _id: textMessage._id };
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], [newMessageObj]);
-			})
-			.catch(error => {
-				const newMessageObj = { ...textMessage, error: error };
-				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], [newMessageObj]);
-
-				if (error && error.hasOwnProperty("code") && error.code === "ERR_GUID_NOT_FOUND") {
-					//this.context.setDeletedGroupId(this.context.item.guid);
-				}
-			});
-	};
-
-	editMessage = () => {
-		this.endTyping(null, null);
-
-		const messageToBeEdited = this.props.messageToBeEdited;
-
-		let { receiverId, receiverType } = this.getReceiverDetails();
-		let messageText = this.state.messageInput.trim();
-		let textMessage = new CometChat.TextMessage(receiverId, messageText, receiverType);
-		textMessage.setId(messageToBeEdited.id);
-
-		const newMessage = Object.assign({}, textMessage, { messageFrom: messageToBeEdited.messageFrom });
-		this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], newMessage);
-
-		this.setState({ messageInput: "" });
-		this.messageInputRef.current.textContent = "";
-		SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
-
-		this.closeEditPreview();
-
-		CometChat.editMessage(textMessage)
-			.then(message => {
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], { ...message });
-			})
-			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
-	};
-
-	closeEditPreview = () => {
-		this.props.actionGenerated(enums.ACTIONS["CLEAR_EDIT_PREVIEW"]);
-	};
-
-	startTyping = (timer, metadata) => {
-		let typingInterval = timer || 5000;
-
-		//if typing indicator feature is disabled
-		if (this.state.enableTypingIndicator === false) {
-			return false;
-		}
-
-		if (this.isTyping) {
-			return false;
-		}
-
-		let { receiverId, receiverType } = this.getReceiverDetails();
-		let typingMetadata = metadata || undefined;
-
-		let typingNotification = new CometChat.TypingIndicator(receiverId, receiverType, typingMetadata);
-		CometChat.startTyping(typingNotification);
-
-		this.isTyping = setTimeout(() => {
-			this.endTyping(null, typingMetadata);
-		}, typingInterval);
-	};
-
-	endTyping = (event, metadata) => {
-		//fixing synthetic issue
-		if (event) {
-			event.persist();
-		}
-
-		//if typing indicator is disabled for chat wigdet in dashboard
-		if (this.state.enableTypingIndicator === false) {
-			return false;
-		}
-
-		let { receiverId, receiverType } = this.getReceiverDetails();
-
-		let typingMetadata = metadata || undefined;
-
-		let typingNotification = new CometChat.TypingIndicator(receiverId, receiverType, typingMetadata);
-		CometChat.endTyping(typingNotification);
-
-		clearTimeout(this.isTyping);
-		this.isTyping = null;
-	};
-
-	toggleStickerPicker = () => {
-		const stickerViewer = this.state.stickerViewer;
-		this.setState({ stickerViewer: !stickerViewer, emojiViewer: false });
-	};
-
-	toggleEmojiPicker = () => {
-		const emojiViewer = this.state.emojiViewer;
-		this.setState({ emojiViewer: !emojiViewer, stickerViewer: false });
-	};
-
-	toggleCreatePoll = () => {
-		const createPoll = this.state.createPoll;
-		this.setState({ createPoll: !createPoll });
-	};
-
-	toggleCollaborativeDocument = () => {
-		const { receiverId, receiverType } = this.getReceiverDetails();
-		CometChat.callExtension("document", "POST", "v1/create", {
-			receiver: receiverId,
-			receiverType: receiverType,
-		})
-			.then(response => {
-				// Response with document url
-				if (response && response.hasOwnProperty("document_url")) {
-					this.context.setToastMessage("success", "DOCUMENT_SUCCESS");
-				} else {
-					this.context.setToastMessage("error", "DOCUMENT_FAIL");
-				}
-			})
-			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
-	};
-
-	toggleCollaborativeBoard = () => {
-		const { receiverId, receiverType } = this.getReceiverDetails();
-		CometChat.callExtension("whiteboard", "POST", "v1/create", {
-			receiver: receiverId,
-			receiverType: receiverType,
-		})
-			.then(response => {
-				// Response with board_url
-				if (response && response.hasOwnProperty("board_url")) {
-					this.context.setToastMessage("success", "WHITEBOARD_SUCCESS");
-				} else {
-					this.context.setToastMessage("error", "WHITEBOARD_FAIL");
-				}
-			})
-			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
-	};
-
-	closeCreatePoll = () => {
-		this.toggleCreatePoll();
-		this.toggleFilePicker();
-	};
-
-	actionHandler = (action, message) => {
-		switch (action) {
-			case enums.ACTIONS["POLL_CREATED"]:
-				this.toggleCreatePoll();
-				this.toggleFilePicker();
-				break;
-			case enums.ACTIONS["SEND_STICKER"]:
-				this.sendSticker(message);
-				break;
-			case enums.ACTIONS["CLOSE_STICKER_KEYBOARD"]:
-				this.toggleStickerPicker();
-				break;
-			default:
-				break;
-		}
-	};
-
-	sendSticker = stickerMessage => {
-		const { receiverId, receiverType } = this.getReceiverDetails();
-
-		const customData = { sticker_url: stickerMessage.stickerUrl, sticker_name: stickerMessage.stickerName };
-		const customType = enums.CUSTOM_TYPE_STICKER;
-
-		const customMessage = new CometChat.CustomMessage(receiverId, receiverType, customType, customData);
-		if (this.props.parentMessageId) {
-			customMessage.setParentMessageId(this.props.parentMessageId);
-		}
-		customMessage.setSender(this.loggedInUser);
-		customMessage.setReceiver(this.context.type);
-		customMessage.setMetadata({ incrementUnreadCount: true });
-		customMessage._composedAt = getUnixTimestamp();
-		customMessage._id = ID();
-
-		this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [customMessage]);
-		SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
-
-		CometChat.sendCustomMessage(customMessage)
-			.then(message => {
-				const newMessageObj = { ...message, _id: customMessage._id };
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], [newMessageObj]);
-			})
-			.catch(error => {
-				const newMessageObj = { ...customMessage, error: error };
-				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], [newMessageObj]);
-			});
-	};
-
-	sendReplyMessage = messageInput => {
-		let { receiverId, receiverType } = this.getReceiverDetails();
-
-		let textMessage = new CometChat.TextMessage(receiverId, messageInput, receiverType);
-		if (this.props.parentMessageId) {
-			textMessage.setParentMessageId(this.props.parentMessageId);
-		}
-		textMessage.setSender(this.loggedInUser);
-		textMessage.setReceiver(this.context.type);
-		textMessage._composedAt = getUnixTimestamp();
-		textMessage._id = ID();
-
-		this.props.actionGenerated(enums.ACTIONS["MESSAGE_COMPOSED"], [textMessage]);
-
-		SoundManager.play(enums.CONSTANTS.AUDIO["OUTGOING_MESSAGE"], this.context);
-		this.setState({ replyPreview: null });
-
-		CometChat.sendMessage(textMessage)
-			.then(message => {
-				const newMessageObj = { ...message, _id: textMessage._id };
-				this.props.actionGenerated(enums.ACTIONS["MESSAGE_SENT"], [newMessageObj]);
-			})
-			.catch(error => {
-				const newMessageObj = { ...textMessage, error: error };
-				this.props.actionGenerated(enums.ACTIONS["ERROR_IN_SENDING_MESSAGE"], [newMessageObj]);
-			});
-	};
-
-	clearReplyPreview = () => {
-		this.setState({ replyPreview: null });
-	};
-
-	startLiveReaction = event => {
-		//if a live reaction is already in progress, return
-		if (this.animationInProgress === true) {
-			return false;
-		}
-
-		if (this.timeout) {
-			clearTimeout(this.timeout);
-		}
-
-		//fetch the interval from the constants
-		const liveReactionInterval = enums.CONSTANTS["LIVE_REACTION_INTERVAL"];
-
-		//mount the live reaction component
-		this.props.actionGenerated(enums.ACTIONS["SEND_LIVE_REACTION"]);
-		this.sendTransientMessage();
-
-		//set the timer to stop the live reaction
-		this.timeout = setTimeout(this.stopLiveReaction, liveReactionInterval);
-	};
-
-	stopLiveReaction = () => {
-		
-		//unmount the live reaction component
-		this.props.actionGenerated(enums.ACTIONS["STOP_LIVE_REACTION"]);
-
-		//set the animation flag to false
-		this.animationInProgress = false;
-	};
-	
-	
-	sendTransientMessage = () => {
 		//fetching the metadata type from constants
-		const metadata = { type: enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"], reaction: this.props.reaction };
+		const data = { type: metadataKey.liveReaction, reaction: props.liveReaction };
 
-		const receiverType = this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER ? CometChat.ACTION_TYPE.TYPE_USER : CometChat.ACTION_TYPE.TYPE_GROUP;
-		const receiverId = this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER ? this?.context?.item?.uid : this?.context?.item?.guid;
-
-		let transientMessage = new CometChat.TransientMessage(receiverId, receiverType, metadata);
+		//send transient message
+		let transientMessage = new CometChat.TransientMessage(chatWithId, chatWith, data);
 		CometChat.sendTransientMessage(transientMessage);
+
+		//set timeout till the next share
+		liveReactionTimeout = setTimeout(clearTimeout(liveReactionTimeout), messageConstants.liveReactionTimeout);
+
+		//emit event to share live reaction
+		const payload = {
+			reaction: props.liveReaction,
+			style: { font: props.liveReactionFont, color: props.liveReactionColor },
+		};
+		CometChatMessageEvents.emit(CometChatMessageEvents.onLiveReaction, payload);
 	};
 
-	reactToMessages = emoji => {
+	const attachOption = viewAttachButton ? (
+		<div style={stickyAttachButtonStyle(props)} className="attachment__icon" onClick={attachmentClickHandler} title={localize("ATTACH")}>
+			<i style={attchButtonIconStyle(props)}></i>
+		</div>
+	) : null;
 
-		//close the emoji keyboard
-		this.toggleEmojiPicker();
+	const actionSheet = viewActionSheet ? (
+		<CometChatActionSheet
+			title="Add to Chat"
+			width="305px"
+			actions={actionSheetItems}
+			style={{
+				position: "absolute",
+				zIndex: "3",
+				left: "35px",
+				bottom: "55px",
+			}}
+		/>
+	) : null;
 
-		//message object data structure
-		let messageObject = { ...this.state.messageToReact };
-		let newMessageObject = {};
-		let reactionObject = {};
+	const createPoll = viewCreatePoll ? (
+		<CometChatBackdrop isOpen={viewCreatePoll}>
+			<CometChatCreatePoll user={props.user} group={props.group} onClose={closeCreatePoll} onSubmit={onPollSubmit} />
+		</CometChatBackdrop>
+	) : null;
 
-		const userObject = {};
-		if (this.loggedInUser.avatar && this.loggedInUser.avatar.length) {
-			userObject["name"] = this.loggedInUser.name;
-			userObject["avatar"] = this.loggedInUser.avatar;
-		} else {
-			userObject["name"] = this.loggedInUser.name;
-		}
+	const stickerButton = viewSticker ? (
+		<div title={localize("STICKER")} style={stickerBtnStyle(props)} className="button__sticker" onClick={stickerClickHandler}>
+			<i style={stickerBtnIconStyle(props, stickerTemplate)}></i>
+		</div>
+	) : null;
 
-		const emojiObject = {
-			[emoji.colons]: { [this.loggedInUser.uid]: userObject },
-		};
+	const previewTray = messagePreview ? <CometChatMessagePreview messageObject={messagePreview.message} onClose={closeMessagePreview} /> : null;
 
-		const reactionExtensionsData = checkMessageForExtensionsData(messageObject, "reactions");
-		//if the message object has reactions extension data in metadata
-		if (reactionExtensionsData) {
-			//if the reactions metadata has the selected emoji/reaction
-			if (reactionExtensionsData[emoji.colons]) {
-				//if the reactions metadata has the selected emoji/reaction for the loggedin user
-				if (reactionExtensionsData[emoji.colons][this.loggedInUser.uid]) {
-					reactionObject = {
-						...messageObject["metadata"]["@injected"]["extensions"]["reactions"],
-					};
-					delete reactionObject[emoji.colons][this.loggedInUser.uid];
-				} else {
-					reactionObject = {
-						...messageObject["metadata"]["@injected"]["extensions"]["reactions"],
-						[emoji.colons]: {
-							...messageObject["metadata"]["@injected"]["extensions"]["reactions"][emoji.colons],
-							[this.loggedInUser.uid]: userObject,
-						},
-					};
-				}
-			} else {
-				reactionObject = {
-					...messageObject["metadata"]["@injected"]["extensions"]["reactions"],
-					...emojiObject,
-				};
-			}
-		} else {
-			if (messageObject.hasOwnProperty("metadata") === false) {
-				messageObject["metadata"] = {};
-			}
+	const stickerTray = viewStickerTray ? <CometChatStickerKeyboard onClick={sendSticker} onClose={toggleStickersTray} /> : null;
 
-			if (messageObject["metadata"].hasOwnProperty("@injected") === false) {
-				messageObject["metadata"]["@injected"] = {};
-			}
+	const emojiButton = !props.hideEmoji ? (
+		<div title={localize("EMOJI")} style={emojiButtonStyle(props)} className="button__emoji" onClick={emojiClickHandler}>
+			<i style={emojiBtnIconStyle(props)}></i>
+		</div>
+	) : null;
 
-			if (messageObject["metadata"]["@injected"].hasOwnProperty("extensions") === false) {
-				messageObject["metadata"]["@injected"]["extensions"] = {};
-			}
+	const emojiTray = viewEmojiTray ? <CometChatEmojiKeyboard emojiClicked={onEmojiSelect} /> : null;
 
-			if (messageObject["metadata"]["@injected"]["extensions"].hasOwnProperty("reactions") === false) {
-				messageObject["metadata"]["@injected"]["extensions"]["reactions"] = {};
-			}
+	const liveReactionButton = !props.hideLiveReaction ? (
+		<div title={localize("LIVE_REACTION")} style={reactionBtnStyle(props)} className="button__reactions" onClick={shareLiveReaction}>
+			<i title={props.liveReaction} style={reactionBtnIconStyle(props)}>
+				{props.liveReaction}
+			</i>
+		</div>
+	) : null;
 
-			reactionObject = {
-				...emojiObject,
-			};
-		}
+	const sendButton = messageInput.length ? (
+		<div title={localize("SEND_MESSAGE")} style={sendButtonStyle(props)} className="button__send" onClick={sendTextMessage}>
+			<i style={sendBtnIconStyle(props)}></i>
+		</div>
+	) : null;
 
-		const metadatObject = {
-			metadata: {
-				...messageObject["metadata"],
-				"@injected": {
-					...messageObject["metadata"]["@injected"],
-					extensions: {
-						...messageObject["metadata"]["@injected"]["extensions"],
-						reactions: {
-							...reactionObject,
-						},
-					},
-				},
-			},
-		};
+	//CometChatMessageEvents.addListener(CometChatMessageEvents.previewMessageForEdit, previewMessageForEdit);
 
-		newMessageObject = {
-			...messageObject,
-			data: {
-				...messageObject,
-				...metadatObject,
-			},
-			...metadatObject,
-		};
+	Hooks(props, setLoggedInUser, setChatWith, setChatWithId, chatRef, setViewAttachButton, setViewComposer, setViewSticker, setStickerTemplate, setActionSheetItems, actionSheetClickHandler);
 
-		this.props.actionGenerated(enums.ACTIONS["MESSAGE_EDITED"], newMessageObject);
-
-		CometChat.callExtension("reactions", "POST", "v1/react", {
-			msgId: this.state.messageToReact.id,
-			emoji: emoji.colons,
-		})
-		.then(response => {
-			// Reaction failed
-			if (!response || !response.success || response.success !== true) {
-				this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
-			}
-		})
-		.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
-	};
-
-	render() {
-		let liveReactionBtn = null;
-		const liveReactionText = Translator.translate("LIVE_REACTION", this.context.language);
-		if (enums.CONSTANTS["LIVE_REACTIONS"].hasOwnProperty(this.props.reaction)) {
-			const reactionName = this.props.reaction;
-			liveReactionBtn = (
-				<div title={liveReactionText} css={reactionBtnStyle()} className="button__reactions" onClick={this.startLiveReaction}>
-					<img src={heartIcon} alt={reactionName} />
-				</div>
-			);
-		}
-
-		let disabledState = false;
-		if (this.context.item.blockedByMe) {
-			disabledState = true;
-		}
-
-		const docText = Translator.translate("ATTACH_FILE", this.context.language);
-		let docs = (
-			<div
-				title={docText}
-				css={fileItemStyle(docIcon, this.context)}
-				className="filelist__item item__file"
-				onClick={() => {
-					this.openFileDialogue("file");
-				}}>
-				<i></i>
-				<input onChange={this.onFileChange} type="file" id="file" ref={this.fileUploaderRef} />
-			</div>
-		);
-
-		const videoText = Translator.translate("ATTACH_VIDEO", this.context.language);
-		const audioText = Translator.translate("ATTACH_AUDIO", this.context.language);
-		const imageText = Translator.translate("ATTACH_IMAGE", this.context.language);
-		let avp = (
-			<React.Fragment>
-				<div
-					title={videoText}
-					css={fileItemStyle(videoIcon, this.context)}
-					className="filelist__item item__video"
-					onClick={() => {
-						this.openFileDialogue("video");
-					}}>
-					<i></i>
-					<input onChange={this.onVideoChange} accept="video/*" type="file" ref={this.videoUploaderRef} />
-				</div>
-				<div
-					title={audioText}
-					css={fileItemStyle(audioIcon, this.context)}
-					className="filelist__item item__audio"
-					onClick={() => {
-						this.openFileDialogue("audio");
-					}}>
-					<i></i>
-					<input onChange={this.onAudioChange} accept="audio/*" type="file" ref={this.audioUploaderRef} />
-				</div>
-				<div
-					title={imageText}
-					css={fileItemStyle(imageIcon, this.context)}
-					className="filelist__item item__image"
-					onClick={() => {
-						this.openFileDialogue("image");
-					}}>
-					<i></i>
-					<input onChange={this.onImageChange} accept="image/*" type="file" ref={this.imageUploaderRef} />
-				</div>
-			</React.Fragment>
-		);
-
-		const pollText = Translator.translate("CREATE_POLL", this.context.language);
-		let createPollBtn = (
-			<div title={pollText} css={fileItemStyle(pollIcon, this.context)} className="filelist__item item__poll" onClick={this.toggleCreatePoll}>
-				<i></i>
-			</div>
-		);
-
-		const collaborativeDocText = Translator.translate("COLLABORATE_USING_DOCUMENT", this.context.language);
-		let collaborativeDocBtn = (
-			<div title={collaborativeDocText} css={fileItemStyle(documentIcon, this.context)} className="filelist__item item__document" onClick={this.toggleCollaborativeDocument}>
-				<i></i>
-			</div>
-		);
-
-		const collaborativeBoardText = Translator.translate("COLLABORATE_USING_WHITEBOARD", this.context.language);
-		let collaborativeBoardBtn = (
-			<div title={collaborativeBoardText} css={fileItemStyle(whiteboardIcon, this.context)} className="filelist__item item__whiteboard" onClick={this.toggleCollaborativeBoard}>
-				<i></i>
-			</div>
-		);
-
-		const emojiText = Translator.translate("EMOJI", this.context.language);
-		let emojiBtn = (
-			<div
-				title={emojiText}
-				css={emojiButtonStyle(insertEmoticon, this.context)}
-				className="button__emoji"
-				onClick={() => {
-					this.toggleEmojiPicker();
-					this.setState({ messageToReact: "" });
-				}}>
-				<i></i>
-			</div>
-		);
-
-		const StickerText = Translator.translate("STICKER", this.context.language);
-		let stickerBtn = (
-			<div title={StickerText} css={stickerBtnStyle(stickerIcon, this.context)} className="button__sticker" onClick={this.toggleStickerPicker}>
-				<i></i>
-			</div>
-		);
-
-		const sendMessageText = Translator.translate("SEND_MESSAGE", this.context.language);
-		let sendBtn = (
-			<div title={sendMessageText} css={sendButtonStyle(sendBlue, this.context)} className="button__send" onClick={this.sendTextMessage}>
-				<i></i>
-			</div>
-		);
-
-		//if uploading photos, videos feature is disabled
-		if (this.state.enablePhotosVideos === false) {
-			avp = null;
-		}
-
-		//if files upload are disabled for chat widget in dashboard
-		if (this.state.enableFiles === false) {
-			docs = null;
-		}
-
-		//if polls feature is disabled
-		if (this.state.enablePolls === false || this.props.parentMessageId) {
-			createPollBtn = null;
-		}
-
-		//if collaborative_document are disabled for chat widget in dashboard
-		if (this.state.enableCollaborativeDocument === false || this.props.parentMessageId) {
-			collaborativeDocBtn = null;
-		}
-
-		//if collaborative_document are disabled for chat widget in dashboard
-		if (this.state.enableCollaborativeWhiteboard === false || this.props.parentMessageId) {
-			collaborativeBoardBtn = null;
-		}
-
-		//if emojis are disabled for chat widget in dashboard
-		if (this.state.enableEmojis === false) {
-			emojiBtn = null;
-		}
-
-		//if live reactions is disabled for chat widget in dashboard
-		if (this.state.enableLiveReaction === false || this.state.messageInput.length || this.props.parentMessageId) {
-			liveReactionBtn = null;
-		}
-
-		//if stickers is disabled for chat widget in dashboard
-		if (this.state.enableStickers === false) {
-			stickerBtn = null;
-		}
-
-		if (!this.state.messageInput.length) {
-			sendBtn = null;
-		}
-
-		const attachText = Translator.translate("ATTACH", this.context.language);
-		let attach = (
-			<div css={stickyAttachmentStyle()} className="input__sticky__attachment">
-				<div css={stickyAttachButtonStyle(roundedPlus, this.context)} className="attachment__icon" onClick={this.toggleFilePicker} title={attachText}>
-					<i></i>
-				</div>
-				<div css={filePickerStyle(this.state)} className="attachment__filepicker" dir={Translator.getDirection(this.context.language)}>
-					<div css={fileListStyle()} className="filepicker__filelist">
-						{avp}
-						{docs}
-						{createPollBtn}
-						{collaborativeDocBtn}
-						{collaborativeBoardBtn}
-					</div>
-				</div>
-			</div>
-		);
-
-		if (avp === null && docs === null && createPollBtn === null && collaborativeDocBtn === null && collaborativeBoardBtn === null) {
-			attach = null;
-		}
-
-		let createPoll = null;
-		if (this.state.createPoll) {
-			createPoll = <CometChatCreatePoll close={this.closeCreatePoll} actionGenerated={this.actionHandler} />;
-		}
-
-		let editPreview = null;
-		if (this.state.messageToBeEdited) {
-			let messageText = this.state.messageToBeEdited.text;
-
-			//xss extensions data
-			const xssData = checkMessageForExtensionsData(this.state.messageToBeEdited, "xss-filter");
-			if (xssData && xssData.hasOwnProperty("sanitized_text") && xssData.hasOwnProperty("hasXSS") && xssData.hasXSS === "yes") {
-				messageText = xssData.sanitized_text;
-			}
-
-			//datamasking extensions data
-			const maskedData = checkMessageForExtensionsData(this.state.messageToBeEdited, "data-masking");
-			if (maskedData && maskedData.hasOwnProperty("data") && maskedData.data.hasOwnProperty("sensitive_data") && maskedData.data.hasOwnProperty("message_masked") && maskedData.data.sensitive_data === "yes") {
-				messageText = maskedData.data.message_masked;
-			}
-
-			//profanity extensions data
-			const profaneData = checkMessageForExtensionsData(this.state.messageToBeEdited, "profanity-filter");
-			if (profaneData && profaneData.hasOwnProperty("profanity") && profaneData.hasOwnProperty("message_clean") && profaneData.profanity === "yes") {
-				messageText = profaneData.message_clean;
-			}
-
-			editPreview = (
-				<div css={editPreviewContainerStyle(this.context, keyframes)}>
-					<div css={previewHeadingStyle()}>
-						<div css={previewTextStyle()}>{Translator.translate("EDIT_MESSAGE", this.context.language)}</div>
-						<span css={previewCloseStyle(closeIcon, this.context)} onClick={this.closeEditPreview}></span>
-					</div>
-					<div>{messageText}</div>
-				</div>
-			);
-		}
-
-		let smartReplyPreview = null;
-		if (this.state.replyPreview) {
-			const message = this.state.replyPreview;
-
-			const smartReplyData = checkMessageForExtensionsData(message, "smart-reply");
-			if (smartReplyData && smartReplyData.hasOwnProperty("error") === false) {
-				const options = [smartReplyData["reply_positive"], smartReplyData["reply_neutral"], smartReplyData["reply_negative"]];
-				smartReplyPreview = <CometChatSmartReplyPreview options={options} clicked={this.sendReplyMessage} close={this.clearReplyPreview} />;
-			}
-		}
-
-		let stickerViewer = null;
-		if (this.state.stickerViewer) {
-			stickerViewer = <CometChatStickerKeyboard actionGenerated={this.actionHandler} />;
-		}
-
-		let emojiViewer = null;
-		if (this.state.emojiViewer) {
-			emojiViewer = <CometChatEmojiKeyboard emojiClicked={this.emojiClicked} lang={this.context.language} />;
-		}
-
-		return (
-			<div css={chatComposerStyle(this.context)} className="chat__composer">
-				{editPreview}
-				{smartReplyPreview}
-				{stickerViewer}
-				{emojiViewer}
-				<div css={composerInputStyle()} className="composer__input">
-					<div tabIndex="-1" css={inputInnerStyle(this.props, this.state, this.context)} className="input__inner">
-						<div
-							css={messageInputStyle(disabledState)}
-							className="input__message-input"
-							contentEditable="true"
-							placeholder={Translator.translate("ENTER_YOUR_MESSAGE_HERE", this.context.language)}
-							dir={Translator.getDirection(this.context.language)}
-							onInput={this.changeHandler}
-							onBlur={event => this.endTyping(event)}
-							onKeyDown={this.sendMessageOnEnter}
-							ref={this.messageInputRef}></div>
-						<div css={inputStickyStyle(disabledState, attach, this.context)} className="input__sticky">
-							{attach}
-							<div css={stickyButtonStyle(this.state)} className="input__sticky__buttons">
-								{stickerBtn}
-								{emojiBtn}
-								{sendBtn}
-								{liveReactionBtn}
-							</div>
+	return (
+		<div style={chatComposerStyle(props)} className="chat__composer">
+			{previewTray}
+			{stickerTray}
+			{emojiTray}
+			{actionSheet}
+			<input type="file" ref={fileInputRef} style={fileInputStyle()} onChange={fileInputChangeHandler} />
+			<div style={composerInputStyle(props)} className="composer__input">
+				<div tabIndex="-1" style={inputInnerStyle(props)} className="input__inner">
+					<div
+						style={messageInputStyle(props, disabledState)}
+						className="input__message-input"
+						contentEditable="true"
+						placeholder={props.placeholder}
+						dir={CometChatLocalize.getDir()}
+						onInput={inputChangeHandler}
+						onBlur={event => endTyping(event)}
+						onKeyDown={sendMessageOnEnter}
+						ref={messageInputRef}></div>
+					<div style={inputStickyStyle(disabledState, attachOption, props)} className="input__sticky">
+						{attachOption}
+						<div className="input__sticky__buttons" style={stickyButtonStyle(props)}>
+							{stickerButton}
+							{emojiButton}
+							{liveReactionButton}
+							{sendButton}
 						</div>
 					</div>
 				</div>
-				{createPoll}
 			</div>
-		);
-	}
-}
-
-// Specifies the default values for props:
-CometChatMessageComposer.defaultProps = {
-  theme: theme,
-  reaction: "heart"
-};
+			{createPoll}
+		</div>
+	);
+});
 
 CometChatMessageComposer.propTypes = {
-  theme: PropTypes.object,
-  reaction: PropTypes.string
-}
+	width: PropTypes.string,
+	height: PropTypes.string,
+	background: PropTypes.string,
+	border: PropTypes.string,
+	cornerRadius: PropTypes.string,
+	placeholder: PropTypes.string,
+	placeholderFont: PropTypes.string,
+	placeholderColor: PropTypes.string,
+	hideEmoji: PropTypes.bool,
+	emojiIconURL: PropTypes.string,
+	emojiIconTint: PropTypes.string,
+	hideLiveReaction: PropTypes.bool,
+	liveReaction: PropTypes.string,
+	liveReactionFont: PropTypes.string,
+	liveReactionColor: PropTypes.string,
+	hideAttachment: PropTypes.bool,
+	attachmentIconURL: PropTypes.string,
+	attachmentIconTint: PropTypes.string,
+	hideMicrophone: PropTypes.bool,
+	microphoneIconURL: PropTypes.string,
+	microphoneIconTint: PropTypes.string,
+	sendButtonIconURL: PropTypes.string,
+	sendButtonIconTint: PropTypes.string,
+	enableTyping: PropTypes.bool,
+	user: PropTypes.object,
+	group: PropTypes.object,
+	configurations: PropTypes.array,
+	messageFilterList: PropTypes.array,
+};
+
+CometChatMessageComposer.defaultProps = {
+	width: "100%",
+	height: "105px",
+	background: "rgb(255, 255, 255)",
+	border: "1px solid rgb(234, 234, 234)",
+	cornerRadius: "0 0 8px 8px",
+	inputCornerRadius: "8px",
+	placeholder: "Enter your message here",
+	placeholderFont: "400 15px Inter, sans-serif",
+	placeholderColor: "rgba(20, 20, 20, 0.6)",
+	hideEmoji: false,
+	emojiIconURL: insertEmoticon,
+	emojiIconTint: "rgba(20, 20, 20, 0.46)",
+	hideLiveReaction: false,
+	liveReaction: "❤️",
+	liveReactionFont: "400 18px Inter,sans-serif",
+	liveReactionColor: "#D7443E",
+	hideAttachment: false,
+	attachmentIconURL: roundedPlus,
+	attachmentIconTint: "rgba(20, 20, 20, 0.46)",
+	hideMicrophone: true,
+	microphoneIconURL: "",
+	microphoneIconTint: "rgba(20, 20, 20, 0.46)",
+	sendButtonIconURL: sendBtn,
+	sendButtonIconTint: "#39f",
+	typingIndicator: true,
+	user: null,
+	group: null,
+	messageFilterList: [],
+};
 
 export { CometChatMessageComposer };

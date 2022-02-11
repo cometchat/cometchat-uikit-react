@@ -1,6 +1,57 @@
-export { CometChatAvatar } from "./CometChatAvatar";
-export { CometChatBackdrop } from "./CometChatBackdrop";
-export { CometChatBadgeCount } from "./CometChatBadgeCount";
-export { CometChatUserPresence } from "./CometChatUserPresence";
-export { CometChatToastNotification } from "./CometChatToastNotification";
-export { CometChatConfirmDialog } from "./CometChatConfirmDialog";
+import {
+	AvatarConfiguration,
+	BadgeCountConfiguration,
+	StatusIndicatorConfiguration,
+	MessageReceiptConfiguration,
+	ConversationConfiguration,
+	ConversationListConfiguration,
+	ConversationListItemConfiguration,
+	MessageHeaderConfiguration,
+	MessageListConfiguration,
+	MessageComposerConfiguration,
+	CometChatActionSheet,
+	CometChatActionSheetItem,
+	CometChatListBase,
+	CometChatLocalize,
+	localize,
+	CometChatSoundManager,
+} from "./PrimaryComponents";
+
+import { CometChatConversationListItem } from "./SDKDerivedComponents";
+
+import {
+	CometChatAvatar,
+	CometChatBadgeCount,
+	CometChatStatusIndicator,
+	CometChatMessageReceipt,
+	CometChatConfirmDialog,
+	CometChatDate,
+	CometChatBackdrop,
+} from "./SecondaryComponents";
+
+export {
+	AvatarConfiguration,
+	BadgeCountConfiguration,
+	StatusIndicatorConfiguration,
+	MessageReceiptConfiguration,
+	ConversationConfiguration,
+	ConversationListConfiguration,
+	ConversationListItemConfiguration,
+	MessageHeaderConfiguration,
+	MessageListConfiguration,
+	MessageComposerConfiguration,
+	CometChatActionSheet,
+	CometChatActionSheetItem,
+	CometChatListBase,
+	CometChatLocalize,
+	localize,
+	CometChatSoundManager,
+	CometChatConversationListItem,
+	CometChatAvatar,
+	CometChatBadgeCount,
+	CometChatStatusIndicator,
+	CometChatMessageReceipt,
+	CometChatConfirmDialog,
+	CometChatDate,
+	CometChatBackdrop,
+};

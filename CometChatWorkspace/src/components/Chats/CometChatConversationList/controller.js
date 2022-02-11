@@ -1,7 +1,6 @@
 import { CometChat } from "@cometchat-pro/chat";
 
-import * as enums from "../../../util/enums.js";
-import { UIKitSettings } from "../../../util/UIKitSettings";
+import { conversationType } from "../";
 
 export class ConversationListManager {
 
@@ -12,16 +11,13 @@ export class ConversationListManager {
     groupListenerId = "chatlist_group_" + new Date().getTime();
     callListenerId = "chatlist_call_" + new Date().getTime();
 
-    constructor(context) {
+    constructor(props) {
 
-        const chatListMode = context.UIKitSettings.chatListMode;
-        const chatListFilterOptions = UIKitSettings.chatListFilterOptions;
-
-        switch (chatListMode) {
-            case chatListFilterOptions["USERS"]:
+        switch (props.conversationType) {
+            case conversationType["users"]:
                 this.conversationRequest = new CometChat.ConversationsRequestBuilder().setConversationType(CometChat.ACTION_TYPE.TYPE_USER).setLimit(30).build();
             break;
-            case chatListFilterOptions["GROUPS"]:
+            case conversationType["groups"]:
                 this.conversationRequest = new CometChat.ConversationsRequestBuilder().setConversationType(CometChat.ACTION_TYPE.TYPE_GROUP).setLimit(30).build();
                 break;
             default:
@@ -41,11 +37,11 @@ export class ConversationListManager {
             new CometChat.UserListener({
                 onUserOnline: onlineUser => {
                     /* when someuser/friend comes online, user will be received here */
-                    callback(enums.USER_ONLINE, onlineUser);
+                    callback("onUserOnline", onlineUser);
                 },
                 onUserOffline: offlineUser => {
                     /* when someuser/friend went offline, user will be received here */
-                    callback(enums.USER_OFFLINE, offlineUser);
+                    callback("onUserOffline", offlineUser);
                 }
             })
         );
@@ -54,25 +50,22 @@ export class ConversationListManager {
             this.groupListenerId,
             new CometChat.GroupListener({
                 onGroupMemberScopeChanged: (message, changedUser, newScope, oldScope, changedGroup) => {
-                    callback(enums.GROUP_MEMBER_SCOPE_CHANGED, changedGroup, message, {"user": changedUser, "scope": newScope});
+                    callback("onGroupMemberScopeChanged", message, changedUser, newScope, oldScope, changedGroup);
                 }, 
                 onGroupMemberKicked: (message, kickedUser, kickedBy, kickedFrom) => {
-                    callback(enums.GROUP_MEMBER_KICKED, kickedFrom, message, {"user": kickedUser, "hasJoined": false});
-                }, 
-                onGroupMemberBanned: (message, bannedUser, bannedBy, bannedFrom) => {
-                    callback(enums.GROUP_MEMBER_BANNED, bannedFrom, message, {"user": bannedUser});
-                }, 
-                onGroupMemberUnbanned: (message, unbannedUser, unbannedBy, unbannedFrom) => {
-                    callback(enums.GROUP_MEMBER_UNBANNED, unbannedFrom, message, {"user": unbannedUser});
-                }, 
-                onMemberAddedToGroup: (message, userAdded, userAddedBy, userAddedIn) => {
-                    callback(enums.GROUP_MEMBER_ADDED, userAddedIn, message, {"user": userAdded, "hasJoined": true});
+                    callback("onGroupMemberKicked", message, kickedUser, kickedBy, kickedFrom);
                 }, 
                 onGroupMemberLeft: (message, leavingUser, group) => {
-                    callback(enums.GROUP_MEMBER_LEFT, group, message, {"user": leavingUser});
+                    callback("onGroupMemberLeft", message, leavingUser, null, group);
+                }, 
+                onGroupMemberBanned: (message, bannedUser, bannedBy, bannedFrom) => {
+                    callback("onGroupMemberBanned", message, bannedUser, bannedBy, bannedFrom);
+                }, 
+                onMemberAddedToGroup: (message, userAdded, userAddedBy, userAddedIn) => {
+                    callback("onMemberAddedToGroup", message, userAdded, userAddedBy, userAddedIn);
                 }, 
                 onGroupMemberJoined: (message, joinedUser, joinedGroup) => {
-                    callback(enums.GROUP_MEMBER_JOINED, joinedGroup, message, {"user": joinedUser});
+                    callback("onGroupMemberJoined", message, joinedUser, null, joinedGroup);
                 }
             })
         );
@@ -81,44 +74,50 @@ export class ConversationListManager {
             this.conversationListenerId,
             new CometChat.MessageListener({
                 onTextMessageReceived: textMessage => {
-                    callback(enums.TEXT_MESSAGE_RECEIVED, null, textMessage);
+                    callback("onTextMessageReceived", textMessage);
                 },
                 onMediaMessageReceived: mediaMessage => {
-                    callback(enums.MEDIA_MESSAGE_RECEIVED, null, mediaMessage);
+                    callback("onMediaMessageReceived", mediaMessage);
                 },
                 onCustomMessageReceived: customMessage => {
-                    callback(enums.CUSTOM_MESSAGE_RECEIVED, null, customMessage);
+                    callback("onCustomMessageReceived", customMessage);
                 },
                 onMessageDeleted: deletedMessage => {
-                    callback(enums.MESSAGE_DELETED, null, deletedMessage);
+                    callback("onMessageDeleted", deletedMessage);
                 },
                 onMessageEdited: editedMessage => {
-                    callback(enums.MESSAGE_EDITED, null, editedMessage);
+                    callback("onMessageEdited", editedMessage);
                 },
                 onMessagesRead: messageReceipt => {
-                    callback(enums.MESSAGE_READ, null, messageReceipt);
+                    callback("onMessagesRead", messageReceipt);
+                },
+                onTypingStarted: typingIndicator => {
+                    callback("onTypingStarted", typingIndicator, true);
+                },
+                onTypingEnded: typingIndicator => {
+                    callback("onTypingEnded", typingIndicator, false);
                 }
             })
         );
 
-        CometChat.addCallListener(
-            this.callListenerId,
-            new CometChat.CallListener({
-                onIncomingCallReceived: call => {
-                  callback(enums.INCOMING_CALL_RECEIVED, null, call);
-                },
-                onIncomingCallCancelled: call => {
-                    callback(enums.INCOMING_CALL_CANCELLED, null, call);
-                }
-            })
-        );
+        // CometChat.addCallListener(
+        //     this.callListenerId,
+        //     new CometChat.CallListener({
+        //         onIncomingCallReceived: call => {
+        //           callback("onIncomingCallReceived", call);
+        //         },
+        //         onIncomingCallCancelled: call => {
+        //             callback("onIncomingCallCancelled", call);
+        //         }
+        //     })
+        // );
     }
 
     removeListeners() {
         CometChat.removeMessageListener(this.conversationListenerId);
         CometChat.removeUserListener(this.userListenerId);
         CometChat.removeGroupListener(this.groupListenerId);
-        CometChat.removeCallListener(this.callListenerId);
+        //CometChat.removeCallListener(this.callListenerId);
     }
 
 }
