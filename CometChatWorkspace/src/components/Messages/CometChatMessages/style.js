@@ -4,6 +4,7 @@ export const chatWrapperStyle = (props, state) => {
 		display: "flex",
 		flexDirection: "column",
 		height: "100%",
+		width: "100%",
 		boxSizing: "border-box",
 		position: "relative",
 		fontFamily: `Inter, sans-serif`,

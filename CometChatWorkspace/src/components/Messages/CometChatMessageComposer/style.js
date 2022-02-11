@@ -8,6 +8,7 @@ export const chatComposerStyle = props => {
 		flex: "none",
 		minHeight: "85px",
 		borderRadius: props.cornerRadius,
+		width: "100%",
 	};
 };
 
