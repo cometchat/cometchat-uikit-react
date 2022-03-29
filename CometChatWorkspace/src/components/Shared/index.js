@@ -1,33 +1,49 @@
 import {
-	AvatarConfiguration,
-	BadgeCountConfiguration,
-	StatusIndicatorConfiguration,
-	MessageReceiptConfiguration,
-	ConversationConfiguration,
-	ConversationListConfiguration,
-	ConversationListItemConfiguration,
-	MessageHeaderConfiguration,
-	MessageListConfiguration,
-	MessageComposerConfiguration,
-	CometChatActionSheet,
-	CometChatActionSheetItem,
-	CometChatListBase,
-	CometChatLocalize,
-	localize,
-	CometChatSoundManager,
+  AvatarConfiguration,
+  BadgeCountConfiguration,
+  StatusIndicatorConfiguration,
+  MessageReceiptConfiguration,
+  ConversationConfiguration,
+  ConversationListConfiguration,
+  ConversationListItemConfiguration,
+  MessageHeaderConfiguration,
+  MessageListConfiguration,
+  MessageComposerConfiguration,
+  CometChatListBase,
+  CometChatLocalize,
+  localize,
+  CometChatSoundManager,
+  CometChatTheme,
+  Palette,
+  Typography,
+  Breakpoints,
+  withCometChatTheme,
+  GroupListConfiguration,
+  GroupListItemConfiguration,
+  UserListConfiguration,
+  UserListItemConfiguration,
 } from "./PrimaryComponents";
 
-import { CometChatConversationListItem } from "./SDKDerivedComponents";
+import {
+  CometChatConversationListItem,
+  CometChatGroupListItem,
+  CometChatUserListItem,
+} from "./SDKDerivedComponents";
 
 import {
-	CometChatAvatar,
-	CometChatBadgeCount,
-	CometChatStatusIndicator,
-	CometChatMessageReceipt,
-	CometChatConfirmDialog,
-	CometChatDate,
-	CometChatBackdrop,
+  CometChatAvatar,
+  CometChatBadgeCount,
+  CometChatStatusIndicator,
+  CometChatMessageReceipt,
+  CometChatDate,
 } from "./SecondaryComponents";
+
+import { 
+	CometChatConfirmDialog,
+	CometChatBackdrop,
+	CometChatActionSheet, 
+	CometChatActionSheetItem 
+} from "./UtilityComponents";
 
 export {
 	AvatarConfiguration,
@@ -37,6 +53,10 @@ export {
 	ConversationConfiguration,
 	ConversationListConfiguration,
 	ConversationListItemConfiguration,
+	GroupListConfiguration,
+	GroupListItemConfiguration,
+	UserListConfiguration,
+	UserListItemConfiguration,
 	MessageHeaderConfiguration,
 	MessageListConfiguration,
 	MessageComposerConfiguration,
@@ -46,6 +66,11 @@ export {
 	CometChatLocalize,
 	localize,
 	CometChatSoundManager,
+	CometChatTheme,
+	Palette,
+	Typography,
+	Breakpoints,
+	withCometChatTheme,
 	CometChatConversationListItem,
 	CometChatAvatar,
 	CometChatBadgeCount,
@@ -54,4 +79,6 @@ export {
 	CometChatConfirmDialog,
 	CometChatDate,
 	CometChatBackdrop,
+	CometChatUserListItem,
+	CometChatGroupListItem,
 };

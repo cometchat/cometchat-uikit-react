@@ -7,10 +7,14 @@ import { ConversationConfiguration } from "./ConversationConfiguration";
 import { ConversationListConfiguration } from "./ConversationListConfiguration";
 import { ConversationListItemConfiguration } from "./ConversationListItemConfiguration";
 
+import { GroupListConfiguration } from './GroupListConfiguration';
+import { GroupListItemConfiguration } from "./GroupListItemConfiguration";
+
 import { MessageHeaderConfiguration } from "./MessageHeaderConfiguration";
 import { MessageListConfiguration } from "./MessageListConfiguration";
 import { MessageComposerConfiguration } from "./MessageComposerConfiguration";
-
+import { UserListConfiguration } from "./UserListConfiguration";
+import { UserListItemConfiguration } from "./UserListItemConfiguration";
 export {
 	AvatarConfiguration,
 	BadgeCountConfiguration,
@@ -19,7 +23,11 @@ export {
 	ConversationConfiguration,
 	ConversationListConfiguration,
 	ConversationListItemConfiguration,
+	GroupListConfiguration,
+	GroupListItemConfiguration,
 	MessageHeaderConfiguration,
 	MessageListConfiguration,
 	MessageComposerConfiguration,
+	UserListConfiguration,
+	UserListItemConfiguration,
 };

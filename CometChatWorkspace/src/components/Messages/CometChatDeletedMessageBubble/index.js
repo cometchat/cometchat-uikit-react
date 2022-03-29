@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import dateFormat from "dateformat";
+//import dateFormat from "dateformat";
 
 import { CometChatAvatar, localize } from "../../";
 import { CometChatMessageReceiverType } from "../";
@@ -33,7 +33,7 @@ const CometChatDeletedMessageBubble = (props) => {
 				</div>
 				<div style={messageInfoWrapperStyle(props)} className="message__info__wrapper">
 					<span style={messageTimeStampStyle()} className="message__timestamp">
-						{dateFormat(messageDate, "shortTime")}
+						{/* {dateFormat(messageDate, "shortTime")} */}
 					</span>
 				</div>
 			</React.Fragment>
@@ -70,7 +70,7 @@ const CometChatDeletedMessageBubble = (props) => {
 					</div>
 					<div style={messageInfoWrapperStyle(props)} className="message__info__wrapper">
 						<span style={messageTimeStampStyle()} className="message__timestamp">
-							{dateFormat(messageDate, "shortTime")}
+							{/* {dateFormat(messageDate, "shortTime")} */}
 						</span>
 					</div>
 				</div>
