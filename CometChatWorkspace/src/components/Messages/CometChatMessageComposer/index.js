@@ -5,8 +5,6 @@ import { jsx, keyframes } from "@emotion/core";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
-import "emoji-mart/css/emoji-mart.css";
-
 import { CometChatSmartReplyPreview, CometChatCreatePoll, CometChatStickerKeyboard } from "../Extensions";
 import { CometChatEmojiKeyboard } from "../";
 
@@ -376,7 +374,7 @@ class CometChatMessageComposer extends React.PureComponent {
 		}
 	}
 
-	emojiClicked = (emoji, event) => {
+	emojiClicked = (emoji) => {
 		if (this.state.messageToReact) {
 			this.reactToMessages(emoji);
 			return;
@@ -384,7 +382,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		const element = this.messageInputRef.current;
 		element.focus();
-		this.pasteHtmlAtCaret(emoji.native, false);
+		this.pasteHtmlAtCaret(emoji.char, false);
 		this.setState({ messageInput: element.innerText, messageType: "text" });
 	};
 
@@ -890,25 +888,25 @@ class CometChatMessageComposer extends React.PureComponent {
 		}
 
 		const emojiObject = {
-			[emoji.colons]: { [this.loggedInUser.uid]: userObject },
+			[emoji.char]: { [this.loggedInUser.uid]: userObject },
 		};
 
 		const reactionExtensionsData = checkMessageForExtensionsData(messageObject, "reactions");
 		//if the message object has reactions extension data in metadata
 		if (reactionExtensionsData) {
 			//if the reactions metadata has the selected emoji/reaction
-			if (reactionExtensionsData[emoji.colons]) {
+			if (reactionExtensionsData[emoji.char]) {
 				//if the reactions metadata has the selected emoji/reaction for the loggedin user
-				if (reactionExtensionsData[emoji.colons][this.loggedInUser.uid]) {
+				if (reactionExtensionsData[emoji.char][this.loggedInUser.uid]) {
 					reactionObject = {
 						...messageObject["metadata"]["@injected"]["extensions"]["reactions"],
 					};
-					delete reactionObject[emoji.colons][this.loggedInUser.uid];
+					delete reactionObject[emoji.char][this.loggedInUser.uid];
 				} else {
 					reactionObject = {
 						...messageObject["metadata"]["@injected"]["extensions"]["reactions"],
-						[emoji.colons]: {
-							...messageObject["metadata"]["@injected"]["extensions"]["reactions"][emoji.colons],
+						[emoji.char]: {
+							...messageObject["metadata"]["@injected"]["extensions"]["reactions"][emoji.char],
 							[this.loggedInUser.uid]: userObject,
 						},
 					};
@@ -969,7 +967,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		CometChat.callExtension("reactions", "POST", "v1/react", {
 			msgId: this.state.messageToReact.id,
-			emoji: emoji.colons,
+			emoji: emoji.char,
 		})
 		.then(response => {
 			// Reaction failed
@@ -1220,7 +1218,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		let emojiViewer = null;
 		if (this.state.emojiViewer) {
-			emojiViewer = <CometChatEmojiKeyboard emojiClicked={this.emojiClicked} lang={this.context.language} />;
+			emojiViewer = <CometChatEmojiKeyboard onClick={this.emojiClicked} />;
 		}
 
 		return (
