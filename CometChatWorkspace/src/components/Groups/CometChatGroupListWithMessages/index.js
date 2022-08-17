@@ -108,7 +108,7 @@ class CometChatGroupListWithMessages extends React.Component {
 	}
 
 	render() {
-
+		
 		let messageScreen = (
 			<CometChatMessages
 			theme={this.props.theme}
