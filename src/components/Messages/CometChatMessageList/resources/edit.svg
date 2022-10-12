@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Icons/24/Edit@2x</title>
+    <g id="Icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="Icons/24/Edit" stroke="#000000" stroke-width="1.5">
+            <g id="Group" transform="translate(2.000000, 2.000000)">
+                <path d="M19.0575522,0.942447817 C18.446118,0.333520669 17.6166676,-0.00576863311 16.7537598,0 C15.8908519,0.00591709876 15.0660722,0.356407418 14.4629399,0.973558559 L1.57420359,13.8622949 L0,20 L6.13770512,18.4257964 L19.0264414,5.53706009 C19.6435926,4.93392783 19.9940829,4.10914805 20,3.24624022 C20.0057686,2.38333239 19.6664793,1.55388202 19.0575522,0.942447817 Z" id="Path"></path>
+                <line x1="14.0940554" y1="1.34244308" x2="18.6575569" y2="5.90594462" id="Path"></line>
+                <line x1="12.2327441" y1="3.20375438" x2="16.7962456" y2="7.76725592" id="Path"></line>
+                <line x1="1.57420359" y1="13.8622949" x2="6.14214951" y2="18.421352" id="Path"></line>
+            </g>
+        </g>
+    </g>
+</svg>

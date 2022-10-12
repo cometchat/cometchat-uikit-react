@@ -1,6 +1,6 @@
 import {CometChat} from "@cometchat-pro/chat"
-import { useEffect } from "react";
-import { CometChatLocalize } from "../CometChatWorkspace/src/components/Shared";
+import React, { useEffect } from "react";
+import { CometChatLocalize } from "../src/components";
 // const COMETCHAT_CONSTANTS = {
 //   APP_ID: '2012109f0ca0568b',
 //   REGION: 'us',
