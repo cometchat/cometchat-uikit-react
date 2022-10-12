@@ -1,0 +1,12 @@
+src/*
+.babelrc
+babel.config.json
+webpack.config.js
+node_modules/*
+webpack.config.js
+.github
+.storybook
+examples
+Screenshots
+stories
+storybook-static

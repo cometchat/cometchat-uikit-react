@@ -1,0 +1,121 @@
+:root {
+	--primary: #ffff00;
+	--secondary: #fefefe;
+	--light: #e7e7e7;
+	--contrast: #aaaaaa;
+	--highlight: #dddddd;
+  --base_font_family: "Inter", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ddd;
+  width: 50px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+html {
+  text-size-adjust:100%;
+  font-size:10px;
+  height: 100%;
+  width: 100%;
+}
+
+body{
+  margin:0;
+  padding:0;
+  font-family: var(--base_font_family);
+  font-size: 1.4rem; 
+  overflow-x: hidden;
+  background-color: #fff;
+  color: #141414;
+  box-sizing:border-box;
+  height: 100%;
+  width: 100%;
+}
+
+a { 
+  background:0 0;
+  text-decoration:none;
+  background-color:transparent;
+  color:inherit;
+}
+
+a,
+a:visited,
+a:active,
+a:hover {
+  color: white;
+  text-decoration: none;
+}
+
+img {
+  border:0;
+  border-style:none;
+  max-width:100%;
+  display:inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family:inherit;
+  font-size:100%;
+  margin:0;
+  font:inherit;
+}
+
+button,input {
+  line-height:normal;
+  overflow:visible;
+}
+
+button,
+html input[type="button"],
+input[type="reset"],
+input[type="submit"],
+html [type="button"],
+[type="reset"],
+[type="submit"] {
+  -webkit-appearance:button;
+  cursor:pointer;
+  outline:0;
+  border:0;
+  background-color:transparent;
+}
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: var(--base_font_family);
+  font-stretch:normal;
+}
+
+h4 {
+  font-size: 2.2rem;
+  line-height:27px;
+}
+
+.clearfix::after,
+.clearfix::before {
+  content:" ";
+  display:table;
+}
+
+.clearfix,
+.clearfix::after {
+  clear:both;
+}
