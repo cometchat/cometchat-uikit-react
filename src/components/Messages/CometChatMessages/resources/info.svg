@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Icons/24/Info</title>
+    <g id="Icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="Icons/24/Info" stroke="#000000" stroke-width="1.5">
+            <g id="streamline-icon-information-circle@24x24" transform="translate(2.000000, 2.000000)">
+                <path d="M12,14 L11.3333333,14 C10.5969537,14 10,13.4030463 10,12.6666667 L10,9.33333333 C10,8.9651435 9.70152317,8.66666667 9.33333333,8.66666667 L8.66666667,8.66666667" id="Path"></path>
+                <path d="M9.66666667,5.33333333 C9.48257175,5.33333333 9.33333333,5.48257175 9.33333333,5.66666667 C9.33333333,5.85076158 9.48257175,6 9.66666667,6 C9.85076158,6 10,5.85076158 10,5.66666667 C10,5.48257175 9.85076158,5.33333333 9.66666667,5.33333333 L9.66666667,5.33333333" id="Path"></path>
+                <path d="M0,10 C0,15.5228475 4.4771525,20 10,20 C15.5228475,20 20,15.5228475 20,10 C20,4.4771525 15.5228475,0 10,0 C4.4771525,0 0,4.4771525 0,10 Z" id="Path"></path>
+            </g>
+        </g>
+    </g>
+</svg>

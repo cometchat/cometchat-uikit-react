@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Icons/24/deleteicon</title>
+    <g id="Icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="Icons/24/Delete" stroke="#000000" stroke-width="1.5">
+            <g id="Group" transform="translate(2.000000, 2.000000)">
+                <line x1="0" y1="3.6363627" x2="20" y2="3.6363627" id="Path"></line>
+                <path d="M12.0454545,0 L7.95454545,0 C7.20142989,0 6.59090909,0.610520639 6.59090909,1.36363601 L6.59090909,3.6363627 L13.4090909,3.6363627 L13.4090909,1.36363601 C13.4090909,0.610520639 12.7985701,0 12.0454545,0 Z" id="Path"></path>
+                <line x1="7.95454545" y1="15.2272688" x2="7.95454545" y2="8.40908875" id="Path"></line>
+                <line x1="12.0454545" y1="15.2272688" x2="12.0454545" y2="8.40908875" id="Path"></line>
+                <path d="M16.2363636,18.7454497 C16.1838968,19.4542339 15.5925391,20.0019341 14.8818182,20 L5.11818182,20 C4.40746088,20.0019341 3.81610324,19.4542339 3.76363636,18.7454497 L2.5,3.6363627 L17.5,3.6363627 L16.2363636,18.7454497 Z" id="Path"></path>
+            </g>
+        </g>
+    </g>
+</svg>

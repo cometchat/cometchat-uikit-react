@@ -73,9 +73,9 @@ Before you begin, ensure you have met the following requirements:
 
 - [npm](https://www.npmjs.com/get-npm)
 
-- React `npm install react@17.0.2`
+- React `npm install react@18.2.0`
 
-- React DOM `npm install react-dom@17.0.2`
+- React DOM `npm install react-dom@18.2.0`
 
 - React scripts `npm install react-scripts@4.0.3`
 
@@ -97,7 +97,7 @@ To install React UI Kit, you need to first register on CometChat Dashboard. <a h
 ### iii. Add the CometChat Dependency
 
 ```javascript
-  npm install @cometchat-pro/chat@3.0.6 --save
+  npm install @cometchat-pro/chat@3.0.10 --save
 ```
 
 <br/>
@@ -160,14 +160,7 @@ CometChat.login(uid, authKey).then(
 
 ## 3. Add UI Kit to your project
 
-* Clone this repository `git clone https://github.com/cometchat-pro/cometchat-pro-react-ui-kit.git`
-* Copy the cloned repository to your source folder
-
-<img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
-
-* Copy all the dependencies from package.json into your project's package.js and install them
-
-<img align="center" width="auto" height="auto"  src="./Screenshots/package-dependencies.png" />
+* Run `npm i @cometchat-pro/react-ui-kit --save` in your terminal and use the components in your React app.
 
 <br/>
 
@@ -181,7 +174,7 @@ Using the **CometChatUI** component, you can launch a fully functional chat appl
 * Embed CometChatUI component in container and provide an appropriate width and height to the container
 
 ```javascript
-  import { CometChatUI } from "./CometChatWorkspace/src";
+  import { CometChatConversationsWithMessages } from "@cometchat-pro/react-ui-kit";
 
   class App extends React.Component {
 
@@ -189,7 +182,7 @@ Using the **CometChatUI** component, you can launch a fully functional chat appl
 
       return (
         <div style={{width: '800px', height:'800px' }}>
-          <CometChatUI />
+          <CometChatConversationsWithMessages />
         </div>
       )
     }
@@ -199,7 +192,7 @@ Using the **CometChatUI** component, you can launch a fully functional chat appl
 
 # Checkout our sample app
 
-Visit our [React sample app](https://github.com/cometchat-pro/javascript-react-chat-app) repo to run the React sample app.
+Checkout our sample app provided in examples folder.
 
 ---
 
@@ -216,9 +209,9 @@ Visit our [React sample app](https://github.com/cometchat-pro/javascript-react-c
 Thanks to the following people who have contributed to this project:
 
 [👨‍💻 @priyadarshininadar](https://github.com/priyadarshininadar) <br>
-[👨‍💻 @ajaygajra](https://github.com/ajaygajra) <br>
-[👨‍💻 @prathamesh-majgaonkar](https://github.com/prathamesh-majgaonkar) <br>
-[👨‍💻 @mayur-bhandari](https://github.com/mayur-bhandari)
+[👨‍💻 @prakash-cometchat](https://github.com/prakash-cometchat) <br>
+[👨‍💻 @aaliya-shaikh](https://github.com/aaliya-shaikh) <br>
+[👨‍💻 @ramnayanyadav](https://github.com/ramnayanyadav)
 
 
 ---

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Icons/24/Plus</title>
+    <g id="Icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="Icons/24/Plus" stroke="#000000" stroke-width="1.5">
+            <g id="Group" transform="translate(2.000000, 2.000000)">
+                <line x1="10" y1="6" x2="10" y2="14" id="Path"></line>
+                <line x1="6" y1="10" x2="14" y2="10" id="Path"></line>
+                <path d="M0,10 C0,15.5228475 4.4771525,20 10,20 C15.5228475,20 20,15.5228475 20,10 C20,4.4771525 15.5228475,0 10,0 C4.4771525,0 0,4.4771525 0,10 Z" id="Path"></path>
+            </g>
+        </g>
+    </g>
+</svg>

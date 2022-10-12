@@ -1,0 +1,43 @@
+{
+	"name": "@cometchat-pro/react-ui-kit",
+	"version": "3.0.10-pluto.beta.1",
+	"description": "CometChat UI Kit for React App",
+	"author": "CometChatTeam",
+	"peerDependencies": {
+		"@babel/core": "^7.17.0",
+		"@babel/preset-env": "^7.16.11",
+		"@babel/preset-react": "^7.16.7",
+		"babel-loader": "^8.2.3",
+		"@cometchat-pro/chat": "^3.0.10"
+	},
+	"devDependencies": {
+		"@babel/cli": "^7.17.0",
+		"@babel/plugin-transform-runtime": "^7.17.0",
+		"webpack": "^5.68.0",
+		"webpack-cli": "^4.9.2",
+		"webpack-dev-server": "^4.7.4",
+		"@storybook/addon-actions": "^6.4.9",
+		"@storybook/addon-essentials": "^6.4.9",
+		"@storybook/addon-links": "^6.4.9",
+		"@storybook/node-logger": "^6.4.9",
+		"@storybook/preset-create-react-app": "^3.2.0",
+		"@storybook/react": "^6.4.9"
+	},
+	"main": "dist/index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "rm -rf dist && NODE_ENV=production babel src/components --out-dir dist --copy-files",
+		"prepublish": "npm run build",
+		"storybook": "start-storybook -p 6006",
+		"build-storybook": "build-storybook"
+	},
+	"keywords": [
+		"react",
+		"uikit",
+		"reactuikit",
+		"cometchat",
+		"cometchatuikit",
+		"cometchatavatar"
+	],
+	"license": "MIT"
+}
