@@ -17,8 +17,6 @@ import {
   MessageHeaderConfiguration,
   CometChatTheme,
   MetadataConstants,
-  GroupOptionConstants,
-  UserOptionConstants,
   localize,
 } from "../..";
 
@@ -27,8 +25,6 @@ import { MessageComposerConfiguration } from "../CometChatMessageComposer/Messag
 import { MessageListConfiguration } from "../CometChatMessageList/MessageListConfiguration";
 
 import { messageStatus } from "../CometChatMessageConstants";
-
-import { Hooks } from "./hooks";
 
 import { DetailsConfiguration } from "../../Shared";
 
@@ -43,17 +39,12 @@ import {
 
 import { MessageInputData } from "../..";
 
-import insertEmoticon from "./resources/emoji.svg";
-import infoIcon from "./resources/info.svg";
-import voicecallIcon from "./resources/voicecall.svg";
-import videocallIcon from "./resources/videocall.svg";
 import heart from "./resources/heart.png";
 
 const CometChatMessages = (props) => {
   let messageListRef = React.useRef(null);
   let messageComposerRef = React.useRef(null);
 
-  const [loggedInUser, setLoggedInUser] = React.useState(null);
   const [viewLiveReaction, setViewLiveReaction] = React.useState(false);
   const [liveReactionTemplate, setLiveReactionTemplate] = React.useState(null);
 
@@ -240,53 +231,6 @@ const CometChatMessages = (props) => {
     );
   };
 
-  const menuInputData = [];
-
-  if (user && user.uid) {
-    menuInputData.push(
-      {
-        id: UserOptionConstants.voiceCall,
-        iconURL: voicecallIcon,
-        title: "Voicecall",
-        onClick: voiceCallHandle,
-      },
-
-      {
-        id: UserOptionConstants.videoCall,
-        iconURL: videocallIcon,
-        title: "VideoCall",
-        onClick: videoCallHandle,
-      },
-      {
-        id: UserOptionConstants.viewInformation,
-        iconURL: infoIcon,
-        title: "Info",
-        onClick: infoHandle,
-      }
-    );
-  } else if (group && group.guid) {
-    menuInputData.push(
-      {
-        id: GroupOptionConstants.voiceCall,
-        iconURL: voicecallIcon,
-        title: "Voicecall",
-        onClick: voiceCallHandle,
-      },
-      {
-        id: GroupOptionConstants.videoCall,
-        iconURL: videocallIcon,
-        title: "VideoCall",
-        onClick: videoCallHandle,
-      },
-      {
-        id: GroupOptionConstants.viewInformation,
-        iconURL: infoIcon,
-        title: "Info",
-        onClick: infoHandle,
-      }
-    );
-  }
-
   CometChatMessageEvents.addListener(
     CometChatMessageEvents.onMessageEdit,
     "onMessageEdit",
@@ -322,7 +266,8 @@ const CometChatMessages = (props) => {
   const _messageTypes = messageComposerConfig.messageTypes;
   const _customOutgoingMessageSound =
     messageComposerConfig.customOutgoingMessageSound;
-  const _enableSoundForMessages = messageComposerConfig.enableSoundForMessages;
+  const _enableSoundForMessages =
+    enableSoundForMessages || messageComposerConfig.enableSoundForMessages;
   const _excludeMessageTypes = messageComposerConfig.excludeMessageTypes;
   const _enableTypingIndicator = messageComposerConfig.enableTypingIndicator;
   /**configurations of composer child components */
@@ -343,42 +288,10 @@ const CometChatMessages = (props) => {
 
   const _showBackButton = messageHeaderConfig.showBackButton;
   const _backButtonIconURL = messageHeaderConfig.backButtonIconURL;
-  const _options = messageHeaderConfig.options;
+
   const _enableIndicator = messageHeaderConfig.enableTypingIndicator;
   const _isMobileView = messageHeaderConfig.isMobile;
   const _dataItemConfiguration = messageHeaderConfig.dataItemConfiguration;
-
-  /**message list configuuration */
-  const messageListConfig =
-    messageListConfiguration || new MessageListConfiguration({});
-  const _alignment = messageListConfig.alignment;
-  const _limit = messageListConfig.limit;
-  const _messageTypesForList = messageListConfig.messageTypes;
-  const _customMessageTypes = messageListConfig.customMessageTypes;
-  const _excludeMessageTypesForList = messageListConfig.excludeMessageTypes;
-  const _excludeMessageListOptions = messageListConfig.excludeMessageOptions;
-  const _customOptions = messageListConfig.customOptions;
-  const _onlyUnread = messageListConfig.onlyUnread;
-  const _hideMessagesFromBlockedUsers =
-    messageListConfig.hideMessagesFromBlockedUsers;
-  const _hideDeletedMessages = messageListConfig.hideDeletedMessages;
-  const _tags = messageListConfig.tags;
-  const _sentMessageInputData = messageListConfig.sentMessageInputData;
-  const _receivedMessageInputData = messageListConfig.receivedMessageInputData;
-  const _loadingIconURL = messageListConfig.loadingIconURL;
-  const _customView = messageListConfig.customView;
-  const _emptyText = messageListConfig.emptyText;
-  const _errorText = messageListConfig.errorText;
-  const _hideError = messageListConfig.hideError;
-  const _onErrorCallback = messageListConfig.onErrorCallback;
-  const _enableSoundForMessagesList = messageListConfig.enableSoundForMessages;
-  const _customIncomingMessageListSound =
-    messageListConfig.customIncomingMessageSound;
-  const _customOutgoingMessageListSound =
-    messageListConfig.customOutgoingMessageSound;
-  const _enableGroupActionMessages =
-    messageListConfig.enableGroupActionMessages;
-  Hooks(props, setLoggedInUser);
 
   let liveReactionView = viewLiveReaction ? (
     <div style={liveReactionWrapperStyle()}>
@@ -398,42 +311,53 @@ const CometChatMessages = (props) => {
         style={messageHeaderStyle(_theme)}
         backButtonIconURL={_backButtonIconURL}
         showBackButton={_isMobileView && _showBackButton ? true : false}
-        options={_options || menuInputData}
         enableTypingIndicator={_enableIndicator}
         dataItemConfiguration={_dataItemConfiguration}
       />
       <CometChatMessageList
         ref={messageListRef}
+        limit={_messageListConfiguration.limit}
         user={user}
         group={group}
-        loggedInUser={loggedInUser}
-        limit={_messageListConfiguration.limit}
-        onlyUnread={_messageListConfiguration.onlyUnread}
-        emptyText={_messageListConfiguration.emptyText}
-        errorText={_messageListConfiguration.errorText}
-        customView={_messageListConfiguration.customView}
-        loadingIconURL={_messageListConfiguration.loadingIconURL}
         alignment={_messageListConfiguration.alignment}
-        timeAlignment={_messageListConfiguration.timeAlignment}
-        tags={_messageListConfiguration.tags}
         messageTypes={_messageListConfiguration.messageTypes}
-        receivedMessageInputData={getReceivedMessageInputData()}
+        excludeMessageTypes={_messageListConfiguration.excludeMessageTypes}
+        excludeMessageOptions={_messageListConfiguration.excludeMessageOptions}
+        customMessageOptions={_messageListConfiguration.customMessageOptions}
+        onlyUnread={_messageListConfiguration.onlyUnread}
+        hideMessagesFromBlockedUsers={
+          _messageListConfiguration.hideMessagesFromBlockedUsers
+        }
+        hideDeletedMessages={_messageListConfiguration.hideDeletedMessages}
+        tags={_messageListConfiguration.tags}
+        loadingIconURL={_messageListConfiguration.loadingIconURL}
+        customView={_messageListConfiguration.customView}
+        emptyText={localize("NO_MESSAGES_FOUND")}
+        errorText={localize("SOMETHING_WRONG")}
+        hideError={_messageListConfiguration.hideError}
+        customIncomingMessageSound={
+          _messageListConfiguration.customIncomingMessageSound
+        }
+        enableSoundForMessages={
+          _messageListConfiguration.enableSoundForMessages
+        }
         sentMessageInputData={getSentMessageInputData()}
-        // customOptions={[]}
-        // excludeMessageTypes={[]}
-        // excludeMessageOptions={[]}
-        // sentMessageInputData={null}
-        // receivedMessageInputData={null}
-        // onErrorCallback={() => {}}
-        // customIncomingMessageSound="" //url
-        // onlyUnread={false}
-        // hodeError={false}
-        // hideDeletedMessages={false}
-        // enableSoundForMessages={true}
-        // showEmojiInLargerSize={false}
-        // hideMessagesFromBlockedUsers={true}
-        theme={_theme}
+        receivedMessageInputData={getReceivedMessageInputData()}
         style={messageListStyle(props, _theme)}
+        messageBubbleConfiguration={
+          _messageListConfiguration.messageBubbleConfiguration
+        }
+        emojiKeyboardConfiguration={
+          _messageListConfiguration.emojiKeyboardConfiguration
+        }
+        smartRepliesConfiguration={
+          _messageListConfiguration.smartRepliesConfiguration
+        }
+        newMessageIndicatorConfiguration={
+          _messageListConfiguration.newMessageIndicatorConfiguration
+        }
+        dateConfiguration={_messageListConfiguration.dateConfiguration}
+        theme={_theme}
       />
       {liveReactionView}
       <CometChatMessageComposer
@@ -451,7 +375,7 @@ const CometChatMessages = (props) => {
         messageTypes={_messageTypes}
         excludeMessageTypes={_excludeMessageTypes}
         enableTypingIndicator={_enableTypingIndicator}
-        enableSoundForMessage={_enableSoundForMessages}
+        enableSoundForMessages={_enableSoundForMessages}
         customOutgoingMessageSound={_customOutgoingMessageSound}
         showSendButton={_showSendButton}
         placeholderText={_placeholderText}
@@ -469,11 +393,9 @@ const CometChatMessages = (props) => {
 };
 
 CometChatMessages.propTypes = {
-  user: PropTypes.object,
-  group: PropTypes.object,
-  hideLiveReaction: PropTypes.bool,
-  liveReactionIconURL: PropTypes.string,
-  messageTypes: PropTypes.array,
+  user: PropTypes.instanceOf(CometChat.User),
+  group: PropTypes.instanceOf(CometChat.Group),
+  messageTypes: PropTypes.arrayOf(CometChatMessageTemplate),
   hideMessageComposer: PropTypes.bool,
   liveReactionIconURL: PropTypes.string,
   enableSoundForMessages: PropTypes.bool,
@@ -481,11 +403,11 @@ CometChatMessages.propTypes = {
   customIncomingMessageSound: PropTypes.string,
   customOutgoingMessageSound: PropTypes.string,
   enableTypingIndicator: PropTypes.bool,
-  style: PropTypes.object,
-  messageHeaderConfiguration: PropTypes.object,
-  messageListConfiguration: PropTypes.object,
-  messageComposerConfiguration: PropTypes.object,
-  detailsConfiguration: PropTypes.object,
+  style: PropTypes.shape(MessagesStyles),
+  messageHeaderConfiguration: PropTypes.shape(MessageHeaderConfiguration),
+  messageListConfiguration: PropTypes.shape(MessageListConfiguration),
+  messageComposerConfiguration: PropTypes.shape(MessageComposerConfiguration),
+  detailsConfiguration: PropTypes.shape(DetailsConfiguration),
 };
 
 CometChatMessages.defaultProps = {
@@ -494,7 +416,7 @@ CometChatMessages.defaultProps = {
   liveReactionIconURL: heart,
   messageTypes: null,
   hideMessageComposer: null,
-  enableSoundForMessages: null,
+  enableSoundForMessages: true,
   enableSoundForCalls: null,
   customIncomingMessageSound: null,
   customOutgoingMessageSound: null,

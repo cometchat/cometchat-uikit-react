@@ -396,7 +396,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
         } else {
           playNotificationSound(message);
           addMessage(message);
-          // scrollToBottom();
+          scrollToBottom();
           markMessageAsRead(message);
           CometChatMessageEvents.emit(
             CometChatMessageEvents.onMessageRead,
@@ -422,7 +422,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
     ) {
       playNotificationSound();
       addMessage(message);
-      // scrollToBottom();
+      scrollToBottom();
     } else if (
       chatWithType === ReceiverTypeConstants.group &&
       message.getReceiverType() === ReceiverTypeConstants.group &&
@@ -446,7 +446,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
     ) {
       playNotificationSound(message);
       addMessage(message);
-      // scrollToBottom();
+      scrollToBottom();
     }
   };
 

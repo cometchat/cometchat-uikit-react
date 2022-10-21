@@ -138,7 +138,7 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
     messageTypes,
     excludeMessageTypes,
     enableTypingIndicator,
-    enableSoundForMessage,
+    enableSoundForMessages,
     customOutgoingMessageSound,
     style,
     messagePreviewConfiguration,
@@ -146,7 +146,7 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
     stickerKeyboardConfiguration,
     createPollConfiguration,
     actionSheetConfiguration,
-    theme
+    theme,
   } = props;
 
   const _theme = new CometChatTheme(theme ?? {});
@@ -158,7 +158,7 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
     previewMessageForEdit: previewMessage,
   }));
 
-  const draftMessage = () => { };
+  const draftMessage = () => {};
 
   const previewMessage = (message) => {
     setMessagePreview({
@@ -190,14 +190,16 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
     pasteHtmlAtCaret(messageText, false);
   };
 
-
   const playAudio = () => {
     if (customOutgoingMessageSound) {
-      CometChatSoundManager.play(CometChatSoundManager.Sound.outgoingMessage, customOutgoingMessageSound)
+      CometChatSoundManager.play(
+        CometChatSoundManager.Sound.outgoingMessage,
+        customOutgoingMessageSound
+      );
     } else {
-      CometChatSoundManager.play(CometChatSoundManager.Sound.outgoingMessage)
+      CometChatSoundManager.play(CometChatSoundManager.Sound.outgoingMessage);
     }
-  }
+  };
 
   const closeMessagePreview = () => {
     setMessagePreview(null);
@@ -245,7 +247,7 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
       status: messageStatus.inprogress,
     });
 
-    if (enableSoundForMessage) playAudio();
+    if (enableSoundForMessages) playAudio();
 
     setMessageInput("");
     messageInputRef.current.textContent = "";
@@ -266,7 +268,7 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
       });
 
     if (onSendButtonClick) {
-      onSendButtonClick()
+      onSendButtonClick();
     }
   };
 
@@ -294,7 +296,7 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
       status: messageStatus.inprogress,
     });
 
-    if (enableSoundForMessage) playAudio();
+    if (enableSoundForMessages) playAudio();
 
     CometChat.sendMessage(mediaMessage)
       .then((message) => {
@@ -336,7 +338,7 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
       status: messageStatus.inprogress,
     });
 
-    if (enableSoundForMessage) playAudio();
+    if (enableSoundForMessages) playAudio();
 
     CometChat.sendCustomMessage(customMessage)
       .then((message) => {
@@ -369,7 +371,7 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
     setMessageInput("");
     messageInputRef.current.textContent = "";
 
-    if (enableSoundForMessage) playAudio();
+    if (enableSoundForMessages) playAudio();
 
     setMessagePreview(null);
 
@@ -681,9 +683,9 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
     ) : null;
   };
 
-
   /**CreatePollConfiguration */
-  const _actionSheetConfiguration = actionSheetConfiguration ?? new ActionSheetConfiguration({});
+  const _actionSheetConfiguration =
+    actionSheetConfiguration ?? new ActionSheetConfiguration({});
 
   /**  action sheet render under tooltip */
   const actionSheetBoard = () => {
@@ -696,7 +698,9 @@ const CometChatMessageComposer = React.forwardRef((props, ref) => {
       >
         <CometChatActionSheet
           title={localize("ADD_TO_CHAT")}
-          layoutModeIconURL={_actionSheetConfiguration?.roundedPlus ?? roundedPlus}
+          layoutModeIconURL={
+            _actionSheetConfiguration?.roundedPlus ?? roundedPlus
+          }
           theme={_theme}
           style={actionSheetStyle(_theme)}
           actions={actionSheetItems}
@@ -1005,7 +1009,7 @@ CometChatMessageComposer.defaultProps = {
   excludeMessageTypes: null,
   onSendButtonClick: null,
   enableTypingIndicator: true,
-  enableSoundForMessage: true,
+  enableSoundForMessages: true,
   customOutgoingMessageSound: null,
   messagePreviewConfiguration: null,
   emojiKeyboardConfiguration: null,
@@ -1031,7 +1035,7 @@ CometChatMessageComposer.propTypes = {
   messageTypes: PropTypes.array,
   excludeMessageTypes: PropTypes.array,
   enableTypingIndicator: PropTypes.bool,
-  enableSoundForMessage: PropTypes.bool,
+  enableSoundForMessages: PropTypes.bool,
   customOutgoingMessageSound: PropTypes.string,
   style: PropTypes.object,
   messagePreviewConfiguration: PropTypes.object,
@@ -1039,7 +1043,7 @@ CometChatMessageComposer.propTypes = {
   stickerKeyboardConfiguration: PropTypes.object,
   createPollConfiguration: PropTypes.object,
   actionSheetConfiguration: PropTypes.object,
-  theme: PropTypes.object
+  theme: PropTypes.object,
 };
 
 export { CometChatMessageComposer };

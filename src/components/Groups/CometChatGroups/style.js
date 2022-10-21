@@ -27,7 +27,7 @@ export const createGroupBtnStyle = (style, createGroupIconURL, theme) => {
 		width: "24px",
 		cursor: "pointer",
 		position: "absolute",
-		top: "20px",
+		top: "7px",
 		...direction,
 	};
 };

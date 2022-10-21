@@ -1,7 +1,7 @@
 <div style="width:100%">
     <div style="width:50%;">
         <div align="center">
-       <a> <img align="center" width="180" height="180" alt="CometChat" src="../../Screenshots/logo.png"> </a>  
+       <a> <img align="center" width="180" height="180" alt="CometChat" src="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master/Screenshots/logo.png?raw=true"> </a>  
         </div>    
     </div>    
 </div>
@@ -17,7 +17,7 @@
 <div style="width:100%">
     <div style="width:50%; display:inline-block">
         <div align="center">
-          <img align="left" alt="Main" src="../../Screenshots/main.png">    
+          <img align="left" alt="Main" src="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master/Screenshots/main.png?raw=true">    
         </div>    
     </div>    
 </div>
@@ -64,13 +64,18 @@ Javascript React Chat App (built using **CometChat UI Kit**) is a fully function
     npm start
 ```
 
+or :
+
+
+[![Edit cometchat-react-sample-app](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/cometchat-react-sample-app-6bgbus?fontsize=14&hidenavigation=1&theme=dark)
+
 ---
 
 
 
 # Troubleshooting
 
-- To read the full documentation on UI Kit integration visit our [Documentation](https://www.cometchat.com/docs/React-uikit-beta/overview).
+- To read the full documentation on UI Kit integration visit our [Documentation](https://www.cometchat.com/docs/react-uikit-beta/overview).
 
 - Facing any issues while integrating or installing the UI Kit please connect with us via real time support present in <a href="https://app.cometchat.com/"> CometChat Dashboard.</a>
 

@@ -79,7 +79,7 @@ const CometChatJoinProtectedGroup = (props) => {
 	};
 
 	return (
-		<div className='joingroup__container' style={joinGroupContainerStyle()}>
+		<div className='joingroup__container' style={joinGroupContainerStyle(style, _theme)}>
 			<div
 				className='joingroup__title'
 				style={joinGroupTitleStyle(style, _theme)}

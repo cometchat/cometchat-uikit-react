@@ -344,7 +344,7 @@ const layout = {
 	},
 };
 
-export const UIComponents = (props) => {
+export const App = (props) => {
 	const [loggedInUser, setLoggedInUser] = useState(null);
 	const [width, setWidth] = useState(null);
 

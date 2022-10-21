@@ -1,16 +1,17 @@
 import { fontHelper } from "../..";
 
-export const joinGroupContainerStyle = () => {
+export const joinGroupContainerStyle = (style, theme) => {
 	return {
 		margin: "auto",
 		width: "100%",
 		height: "100%",
 		borderRadius: "8px",
-		zIndex: "4",
+		zIndex: "3",
 		display: "flex",
 		flexDirection: "column",
 		justifyContent: "center",
 		alignItems: "center",
+		background: style?.background || theme.pallete.background[theme.palette.mode]
 	};
 };
 

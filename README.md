@@ -1,7 +1,7 @@
 <div style="width:100%">
     <div style="width:50%;">
         <div align="center">
-        <img align="center" width="180" height="180" alt="CometChat" src="./Screenshots/logo.png">    
+        <img align="center" width="180" height="180" alt="CometChat" src="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master/Screenshots/logo.png?raw=true">    
         </div>    
     </div>    
 </div>
@@ -30,7 +30,7 @@
 <div style="width:100%">
     <div style="width:50%; display:inline-block">
         <div align="center">
-          <img align="left" alt="Main" src="./Screenshots/main.png">    
+          <img align="left" alt="Main" src="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master/Screenshots/main.png?raw=true">    
         </div>    
     </div>    
 </div>
@@ -166,12 +166,12 @@ CometChat.login(uid, authKey).then(
 
 ## 4. Launch CometChat
 
-Using the **CometChatUI** component, you can launch a fully functional chat application. In this component all the UI Screens and UI Components are interlinked and work together to launch a fully functional chat on your website/application.
+Using the **CometChatConversationsWithMessages** component, you can launch a fully functional chat module.
 
 ### Usage
 
-* Import CometChatUI component
-* Embed CometChatUI component in container and provide an appropriate width and height to the container
+* Import CometChatConversationsWithMessages component
+* Embed CometChatConversationsWithMessages component in container and provide an appropriate width and height to the container
 
 ```javascript
   import { CometChatConversationsWithMessages } from "@cometchat-pro/react-ui-kit";
@@ -192,13 +192,13 @@ Using the **CometChatUI** component, you can launch a fully functional chat appl
 
 # Checkout our sample app
 
-Checkout our sample app provided in examples folder.
+Checkout our sample app provided in <a href="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/tree/pluto/examples/cometchat-react-sample-app" target="_blank">examples</a> folder.
 
 ---
 
 # Troubleshooting
 
-- To read the full documentation on UI Kit integration visit our [Documentation](https://www.cometchat.com/docs/react-chat-ui-kit/overview).
+- To read the full documentation on UI Kit integration visit our [Documentation](https://www.cometchat.com/docs/react-uikit-beta/overview).
 
 - Facing any issues while integrating or installing the UI Kit please connect with us via real time support present in <a href="https://app.cometchat.com/" target="_blank">CometChat Dashboard.</a>
 

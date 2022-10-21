@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
-import { UIComponents } from "./UIComponents/UIComponents";
+import { App } from "./App/App";
 import reportWebVitals from './reportWebVitals';
 import { CometChat } from "@cometchat-pro/chat"
 import { COMETCHAT_CONSTANTS } from './consts';
@@ -23,7 +23,7 @@ CometChat.init(appID, appSetting).then(() => {
 
   root.render(
     <BrowserRouter>
-      <UIComponents />
+      <App />
     </BrowserRouter>
   );
 },

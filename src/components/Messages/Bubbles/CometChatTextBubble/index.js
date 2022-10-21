@@ -6,7 +6,6 @@ import {
   urlPattern,
   phoneNumPattern,
 } from "../../CometChatMessageConstants";
-
 import {
   getExtensionsData,
   ExtensionConstants,
@@ -32,6 +31,34 @@ const CometChatTextBubble = (props) => {
   const theme = props.theme
     ? new CometChatTheme(props?.theme)
     : new CometChatTheme({});
+
+  const linkify = (messageText) => {
+    let outputStr = messageText?.replace(
+      phoneNumPattern,
+      "<a target='blank' rel='noopener noreferrer' href='tel:$&'>$&</a>"
+    );
+    outputStr = outputStr?.replace(
+      emailPattern,
+      "<a target='blank' rel='noopener noreferrer' href='mailto:$&'>$&</a>"
+    );
+
+    const results = outputStr?.match(urlPattern);
+
+    results &&
+      results?.forEach((url) => {
+        url = url.trim();
+        let normalizedURL = url;
+        if (!url.startsWith("http")) {
+          normalizedURL = `//${url}`;
+        }
+        outputStr = outputStr.replace(
+          url,
+          `<a target='blank' rel='noopener noreferrer' href="${normalizedURL}">${url}</a>`
+        );
+      });
+
+    return outputStr;
+  };
 
   function linkPreviewHandler(preview) {
     const linkObject = preview["links"][0];
@@ -70,34 +97,6 @@ const CometChatTextBubble = (props) => {
       </div>
     );
   }
-
-  const linkify = (messageText) => {
-    let outputStr = messageText?.replace(
-      phoneNumPattern,
-      "<a target='blank' rel='noopener noreferrer' href='tel:$&'>$&</a>"
-    );
-    outputStr = outputStr?.replace(
-      emailPattern,
-      "<a target='blank' rel='noopener noreferrer' href='mailto:$&'>$&</a>"
-    );
-
-    const results = outputStr?.match(urlPattern);
-
-    results &&
-      results?.forEach((url) => {
-        url = url.trim();
-        let normalizedURL = url;
-        if (!url.startsWith("http")) {
-          normalizedURL = `//${url}`;
-        }
-        outputStr = outputStr.replace(
-          url,
-          `<a target='blank' rel='noopener noreferrer' href="${normalizedURL}">${url}</a>`
-        );
-      });
-
-    return outputStr;
-  };
 
   Hooks(props, setLinkPreview);
 
@@ -157,7 +156,10 @@ const CometChatTextBubble = (props) => {
       }
     }
 
-    const formattedText = linkify(messageText);
+    const formatedText = linkify(messageText);
+    const parseText = () => (
+      <div dangerouslySetInnerHTML={{ __html: formatedText }} />
+    );
 
     return (
       <div
@@ -166,9 +168,9 @@ const CometChatTextBubble = (props) => {
       >
         <p
           className="message__message-blocks"
-          style={messageTextBubbleStyle(props, theme, formattedText)}
+          style={messageTextBubbleStyle(props, theme, parseText())}
         >
-          {formattedText}
+          {parseText()}
         </p>
       </div>
     );
