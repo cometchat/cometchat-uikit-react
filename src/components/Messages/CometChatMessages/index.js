@@ -393,9 +393,9 @@ const CometChatMessages = (props) => {
 };
 
 CometChatMessages.propTypes = {
-  user: PropTypes.instanceOf(CometChat.User),
-  group: PropTypes.instanceOf(CometChat.Group),
-  messageTypes: PropTypes.arrayOf(CometChatMessageTemplate),
+  user: PropTypes.object,
+  group: PropTypes.object,
+  messageTypes: PropTypes.array,
   hideMessageComposer: PropTypes.bool,
   liveReactionIconURL: PropTypes.string,
   enableSoundForMessages: PropTypes.bool,
@@ -403,11 +403,11 @@ CometChatMessages.propTypes = {
   customIncomingMessageSound: PropTypes.string,
   customOutgoingMessageSound: PropTypes.string,
   enableTypingIndicator: PropTypes.bool,
-  style: PropTypes.shape(MessagesStyles),
-  messageHeaderConfiguration: PropTypes.shape(MessageHeaderConfiguration),
-  messageListConfiguration: PropTypes.shape(MessageListConfiguration),
-  messageComposerConfiguration: PropTypes.shape(MessageComposerConfiguration),
-  detailsConfiguration: PropTypes.shape(DetailsConfiguration),
+  style: PropTypes.object,
+  messageHeaderConfiguration: PropTypes.object,
+  messageListConfiguration: PropTypes.object,
+  messageComposerConfiguration: PropTypes.object,
+  detailsConfiguration: PropTypes.object,
 };
 
 CometChatMessages.defaultProps = {

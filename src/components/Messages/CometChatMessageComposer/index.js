@@ -1019,8 +1019,8 @@ CometChatMessageComposer.defaultProps = {
 };
 
 CometChatMessageComposer.propTypes = {
-  user: PropTypes.instanceOf(CometChat.User),
-  group: PropTypes.instanceOf(CometChat.Group),
+  user: PropTypes.object,
+  group: PropTypes.object,
   hideAttachment: PropTypes.bool,
   attachmentIconURL: PropTypes.string,
   stickerCloseIconURL: PropTypes.string,

@@ -213,8 +213,8 @@ CometChatMessageHeader.defaultProps = {
 };
 
 CometChatMessageHeader.propTypes = {
-  user: PropTypes.instanceOf(CometChat.User),
-  group: PropTypes.instanceOf(CometChat.Group),
+  user: PropTypes.object,
+  group: PropTypes.object,
   showBackButton: PropTypes.bool,
   style: PropTypes.object,
   //options: PropTypes.array,
