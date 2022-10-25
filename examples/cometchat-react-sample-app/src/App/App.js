@@ -442,7 +442,7 @@ export const App = (props) => {
 
 					<Route
 						exact
-						path='/shared'
+						path='/shared-module'
 						render={() => (
 							<Home isMobileView={_isMobileView}
 								menu={layout}
