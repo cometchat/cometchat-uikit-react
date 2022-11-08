@@ -63,12 +63,6 @@ Javascript React Chat App (built using **CometChat UI Kit**) is a fully function
     npm install
     npm start
 ```
-
-or :
-
-
-[![Edit cometchat-react-sample-app](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/cometchat-react-sample-app-6bgbus?fontsize=14&hidenavigation=1&theme=dark)
-
 ---
 
 
