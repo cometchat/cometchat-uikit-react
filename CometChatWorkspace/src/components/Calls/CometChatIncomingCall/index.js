@@ -1,7 +1,7 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx, keyframes } from "@emotion/core";
+import { jsx, keyframes } from "@emotion/react";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -19,16 +19,16 @@ import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
 
 import {
-    incomingCallWrapperStyle,
-    callContainerStyle,
-    headerWrapperStyle,
-    callDetailStyle,
-    nameStyle,
-    callTypeStyle,
-    thumbnailStyle,
-    headerButtonStyle,
-    ButtonStyle,
-	callIconStyle
+	incomingCallWrapperStyle,
+	callContainerStyle,
+	headerWrapperStyle,
+	callDetailStyle,
+	nameStyle,
+	callTypeStyle,
+	thumbnailStyle,
+	headerButtonStyle,
+	ButtonStyle,
+	callIconStyle,
 } from "./style";
 
 import audioCallIcon from "./resources/incoming-call.svg";
@@ -48,8 +48,8 @@ class CometChatIncomingCall extends React.PureComponent {
 		this.callButtonRef = React.createRef();
 
 		CometChat.getLoggedinUser()
-			.then(user => (this.loggedInUser = user))
-			.catch(error => {
+			.then((user) => (this.loggedInUser = user))
+			.catch((error) => {
 				console.error(error);
 			});
 	}
@@ -77,9 +77,10 @@ class CometChatIncomingCall extends React.PureComponent {
 	adjustFontSize = () => {
 		if (this.callButtonRef && this.callButtonRef.current) {
 			let reduceFontSize = false;
-			const buttonNodeList = this.callButtonRef.current.querySelectorAll("button");
+			const buttonNodeList =
+				this.callButtonRef.current.querySelectorAll("button");
 
-			buttonNodeList.forEach(buttonNode => {
+			buttonNodeList.forEach((buttonNode) => {
 				const parentContainerWidth = buttonNode.clientWidth;
 				const currentTextWidth = buttonNode.scrollWidth;
 
@@ -89,7 +90,7 @@ class CometChatIncomingCall extends React.PureComponent {
 			});
 
 			if (reduceFontSize) {
-				buttonNodeList.forEach(buttonNode => {
+				buttonNodeList.forEach((buttonNode) => {
 					buttonNode.style.fontSize = "85%";
 				});
 			}
@@ -112,18 +113,21 @@ class CometChatIncomingCall extends React.PureComponent {
 		}
 	};
 
-	incomingCallReceived = incomingCall => {
+	incomingCallReceived = (incomingCall) => {
 		if (this._isMounted) {
 			if (this.state.incomingCall === null) {
 				if (incomingCall?.callInitiator.uid !== this.loggedInUser?.uid) {
-					SoundManager.play(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+					SoundManager.play(
+						enums.CONSTANTS.AUDIO["INCOMING_CALL"],
+						this.context
+					);
 					this.setState({ incomingCall: incomingCall });
 				}
 			}
 		}
 	};
 
-	incomingCallCancelled = call => {
+	incomingCallCancelled = (call) => {
 		if (this._isMounted) {
 			//we are not marking this as read as it will done in messagelist component
 			SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
@@ -131,12 +135,14 @@ class CometChatIncomingCall extends React.PureComponent {
 		}
 	};
 
-	outgoingCallAccepted = call => {
-
-		if(call.sender?.uid === this.loggedInUser?.uid) {
+	outgoingCallAccepted = (call) => {
+		if (call.sender?.uid === this.loggedInUser?.uid) {
 			if (this._isMounted) {
 				//we are not marking this as read as it will done in messagelist component
-				SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+				SoundManager.pause(
+					enums.CONSTANTS.AUDIO["INCOMING_CALL"],
+					this.context
+				);
 				this.setState({ incomingCall: null });
 			}
 		}
@@ -144,53 +150,70 @@ class CometChatIncomingCall extends React.PureComponent {
 
 	rejectCall = () => {
 		SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
-		let callStatus = this.isCallActive() ? CometChat.CALL_STATUS.BUSY : CometChat.CALL_STATUS.REJECTED;
+		let callStatus = this.isCallActive()
+			? CometChat.CALL_STATUS.BUSY
+			: CometChat.CALL_STATUS.REJECTED;
 
 		CometChat.rejectCall(this.state.incomingCall.sessionId, callStatus)
-			.then(rejectedCall => {
+			.then((rejectedCall) => {
 				if (this.isCallActive() === false) {
 					if (this.context) {
 						this.context.setCallInProgress(null, "");
 					}
 					Storage.setItem(enums.CONSTANTS["ACTIVECALL"], rejectedCall);
-					this.props.actionGenerated(enums.ACTIONS["INCOMING_CALL_REJECTED"], rejectedCall);
+					this.props.actionGenerated(
+						enums.ACTIONS["INCOMING_CALL_REJECTED"],
+						rejectedCall
+					);
 					this.setState({ callInProgress: null });
 				}
 
 				this.setState({ incomingCall: null });
 			})
-			.catch(error => {
+			.catch((error) => {
 				this.setState({ incomingCall: null, callInProgress: null });
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
+				const errorCode =
+					error && error.hasOwnProperty("code") ? error.code : "ERROR";
 				this.context.setToastMessage("error", errorCode);
 			});
 	};
 
 	acceptCall = () => {
 		this.checkForActiveCallAndEndCall()
-			.then(response => {
-				SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+			.then((response) => {
+				SoundManager.pause(
+					enums.CONSTANTS.AUDIO["INCOMING_CALL"],
+					this.context
+				);
 				CometChat.acceptCall(this.state.incomingCall.sessionId)
-					.then(call => {
+					.then((call) => {
 						if (this.context) {
-							this.context.setCallInProgress(call, enums.CONSTANTS["INCOMING_DEFAULT_CALLING"]);
+							this.context.setCallInProgress(
+								call,
+								enums.CONSTANTS["INCOMING_DEFAULT_CALLING"]
+							);
 						}
 						Storage.setItem(enums.CONSTANTS["ACTIVECALL"], call);
-						this.props.actionGenerated(enums.ACTIONS["INCOMING_CALL_ACCEPTED"], call);
+						this.props.actionGenerated(
+							enums.ACTIONS["INCOMING_CALL_ACCEPTED"],
+							call
+						);
 						this.setState({ incomingCall: null, callInProgress: call });
 					})
-					.catch(error => {
+					.catch((error) => {
 						if (this.context) {
 							this.context.setCallInProgress(null, "");
 						}
 						this.setState({ incomingCall: null, callInProgress: null });
 
-						const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
+						const errorCode =
+							error && error.hasOwnProperty("code") ? error.code : "ERROR";
 						this.context.setToastMessage("error", errorCode);
 					});
 			})
-			.catch(error => {
-				const errorCode = error && error.hasOwnProperty("code") ? error.code : "ERROR";
+			.catch((error) => {
+				const errorCode =
+					error && error.hasOwnProperty("code") ? error.code : "ERROR";
 				this.context.setToastMessage("error", errorCode);
 			});
 	};
@@ -220,10 +243,10 @@ class CometChatIncomingCall extends React.PureComponent {
 
 			let sessionID = this.getActiveCallSessionID();
 			CometChat.endCall(sessionID)
-				.then(response => {
+				.then((response) => {
 					return resolve(response);
 				})
-				.catch(error => {
+				.catch((error) => {
 					return reject(error);
 				});
 		});
@@ -245,7 +268,7 @@ class CometChatIncomingCall extends React.PureComponent {
 		}
 	};
 
-	logStorageChange = event => {
+	logStorageChange = (event) => {
 		if (event?.key !== enums.CONSTANTS["ACTIVECALL"]) {
 			return false;
 		}
@@ -259,7 +282,10 @@ class CometChatIncomingCall extends React.PureComponent {
 			}
 
 			if (this.state.incomingCall?.getSessionId() === call?.sessionId) {
-				SoundManager.pause(enums.CONSTANTS.AUDIO["INCOMING_CALL"], this.context);
+				SoundManager.pause(
+					enums.CONSTANTS.AUDIO["INCOMING_CALL"],
+					this.context
+				);
 				this.setState({ incomingCall: null });
 			}
 		}
@@ -271,40 +297,75 @@ class CometChatIncomingCall extends React.PureComponent {
 		if (this.state.incomingCall) {
 			let callType = (
 				<React.Fragment>
-					<i css={callIconStyle(audioCallIcon, this.context)} title={Translator.translate("INCOMING_AUDIO_CALL", this.props.lang)}></i>
-					<span>{Translator.translate("INCOMING_AUDIO_CALL", this.props.lang)}</span>
+					<i
+						css={callIconStyle(audioCallIcon, this.context)}
+						title={Translator.translate("INCOMING_AUDIO_CALL", this.props.lang)}
+					></i>
+					<span>
+						{Translator.translate("INCOMING_AUDIO_CALL", this.props.lang)}
+					</span>
 				</React.Fragment>
 			);
 			if (this.state.incomingCall.type === CometChat.CALL_TYPE.VIDEO) {
 				callType = (
 					<React.Fragment>
-						<i css={callIconStyle(videoCallIcon, this.context)} title={Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}></i>
-						<span>{Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}</span>
+						<i
+							css={callIconStyle(videoCallIcon, this.context)}
+							title={Translator.translate(
+								"INCOMING_VIDEO_CALL",
+								this.props.lang
+							)}
+						></i>
+						<span>
+							{Translator.translate("INCOMING_VIDEO_CALL", this.props.lang)}
+						</span>
 					</React.Fragment>
 				);
 			}
 
 			incomingCallAlert = (
-				<div css={incomingCallWrapperStyle(this.props, keyframes)} className="callalert__wrapper">
-					<div css={callContainerStyle()} className="callalert__container">
-						<div css={headerWrapperStyle()} className="callalert__header">
-							<div css={callDetailStyle()} className="header__detail">
-								<div css={nameStyle()} className="name">
+				<div
+					css={incomingCallWrapperStyle(this.props, keyframes)}
+					className='callalert__wrapper'
+				>
+					<div css={callContainerStyle()} className='callalert__container'>
+						<div css={headerWrapperStyle()} className='callalert__header'>
+							<div css={callDetailStyle()} className='header__detail'>
+								<div css={nameStyle()} className='name'>
 									{this.state.incomingCall.sender.name}
 								</div>
-								<div css={callTypeStyle(this.props)} className="calltype">
+								<div css={callTypeStyle(this.props)} className='calltype'>
 									{callType}
 								</div>
 							</div>
-							<div css={thumbnailStyle()} className="header__thumbnail">
+							<div css={thumbnailStyle()} className='header__thumbnail'>
 								<CometChatAvatar user={this.state.incomingCall.sender} />
 							</div>
 						</div>
-						<div css={headerButtonStyle()} className="callalert__buttons" ref={this.callButtonRef}>
-							<button type="button" css={ButtonStyle(this.props, 0)} className="button button__decline" onClick={() => this.rejectCall(this.state.incomingCall, CometChat.CALL_STATUS.REJECTED)}>
+						<div
+							css={headerButtonStyle()}
+							className='callalert__buttons'
+							ref={this.callButtonRef}
+						>
+							<button
+								type='button'
+								css={ButtonStyle(this.props, 0)}
+								className='button button__decline'
+								onClick={() =>
+									this.rejectCall(
+										this.state.incomingCall,
+										CometChat.CALL_STATUS.REJECTED
+									)
+								}
+							>
 								{Translator.translate("DECLINE", this.props.lang)}
 							</button>
-							<button type="button" css={ButtonStyle(this.props, 1)} className="button button__accept" onClick={this.acceptCall}>
+							<button
+								type='button'
+								css={ButtonStyle(this.props, 1)}
+								className='button button__accept'
+								onClick={this.acceptCall}
+							>
 								{Translator.translate("ACCEPT", this.props.lang)}
 							</button>
 						</div>
@@ -314,7 +375,14 @@ class CometChatIncomingCall extends React.PureComponent {
 		}
 
 		if (this.state.callInProgress) {
-			callScreen = <CometChatCallScreen loggedInUser={this.loggedInUser} call={this.state.callInProgress} lang={this.props.lang} actionGenerated={this.actionHandler} />;
+			callScreen = (
+				<CometChatCallScreen
+					loggedInUser={this.loggedInUser}
+					call={this.state.callInProgress}
+					lang={this.props.lang}
+					actionGenerated={this.actionHandler}
+				/>
+			);
 		}
 
 		return (
@@ -328,13 +396,13 @@ class CometChatIncomingCall extends React.PureComponent {
 
 // Specifies the default values for props:
 CometChatIncomingCall.defaultProps = {
-    lang: Translator.getDefaultLanguage(),
-    theme: theme
+	lang: Translator.getDefaultLanguage(),
+	theme: theme,
 };
 
 CometChatIncomingCall.propTypes = {
-    lang: PropTypes.string,
-    theme: PropTypes.object
-}
+	lang: PropTypes.string,
+	theme: PropTypes.object,
+};
 
 export { CometChatIncomingCall };

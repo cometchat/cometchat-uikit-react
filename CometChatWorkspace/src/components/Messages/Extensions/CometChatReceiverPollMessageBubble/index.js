@@ -1,11 +1,15 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core";
+import { jsx } from "@emotion/react";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
-import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt } from "../../";
+import {
+	CometChatMessageActions,
+	CometChatThreadedMessageReplyCount,
+	CometChatReadReceipt,
+} from "../../";
 import { CometChatMessageReactions } from "../";
 import { CometChatAvatar } from "../../../Shared";
 
@@ -17,24 +21,23 @@ import { theme } from "../../../../resources/theme";
 import Translator from "../../../../resources/localization/translator";
 
 import {
-    messageContainerStyle,
-    messageWrapperStyle,
-    messageThumbnailStyle,
-    messageDetailStyle,
-    nameWrapperStyle,
-    nameStyle,
-    messageTxtContainerStyle,
-    messageTxtWrapperStyle,
-    pollQuestionStyle,
-    pollAnswerStyle,
-    pollPercentStyle,
-    answerWrapperStyle,
-    checkIconStyle,
-    pollTotalStyle,
-    messageInfoWrapperStyle,
-    messageReactionsWrapperStyle
+	messageContainerStyle,
+	messageWrapperStyle,
+	messageThumbnailStyle,
+	messageDetailStyle,
+	nameWrapperStyle,
+	nameStyle,
+	messageTxtContainerStyle,
+	messageTxtWrapperStyle,
+	pollQuestionStyle,
+	pollAnswerStyle,
+	pollPercentStyle,
+	answerWrapperStyle,
+	checkIconStyle,
+	pollTotalStyle,
+	messageInfoWrapperStyle,
+	messageReactionsWrapperStyle,
 } from "./style";
-
 
 import checkImg from "./resources/checkmark.svg";
 
@@ -48,24 +51,24 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 
 		this.state = {
 			isHovering: false,
-			loggedInUser: null
+			loggedInUser: null,
 		};
 	}
 
 	componentDidMount() {
-
-		this.context.getLoggedinUser().then(user => {
-			this.setState({ loggedInUser: {...user} });
+		this.context.getLoggedinUser().then((user) => {
+			this.setState({ loggedInUser: { ...user } });
 		});
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
-        
 		const currentMessageStr = JSON.stringify(this.props.message);
 		const nextMessageStr = JSON.stringify(nextProps.message);
 
-		if (currentMessageStr !== nextMessageStr 
-        || this.state.isHovering !== nextState.isHovering) {
+		if (
+			currentMessageStr !== nextMessageStr ||
+			this.state.isHovering !== nextState.isHovering
+		) {
 			return true;
 		}
 		return false;
@@ -76,26 +79,42 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 			vote: selectedOption,
 			id: this.pollId,
 		})
-			.then(response => {
-				if (response.hasOwnProperty("success") === false || (response.hasOwnProperty("success") && response["success"] === false)) {
-					this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG");
+			.then((response) => {
+				if (
+					response.hasOwnProperty("success") === false ||
+					(response.hasOwnProperty("success") && response["success"] === false)
+				) {
+					this.props.actionGenerated(
+						enums.ACTIONS["ERROR"],
+						[],
+						"SOMETHING_WRONG"
+					);
 				}
 			})
-			.catch(error => this.props.actionGenerated(enums.ACTIONS["ERROR"], [], "SOMETHING_WRONG"));
+			.catch((error) =>
+				this.props.actionGenerated(
+					enums.ACTIONS["ERROR"],
+					[],
+					"SOMETHING_WRONG"
+				)
+			);
 	};
 
 	handleMouseHover = () => {
 		this.setState(this.toggleHoverState);
 	};
 
-	toggleHoverState = state => {
+	toggleHoverState = (state) => {
 		return {
 			isHovering: !state.isHovering,
 		};
 	};
 
 	render() {
-		const pollExtensionData = checkMessageForExtensionsData(this.props.message, "polls");
+		const pollExtensionData = checkMessageForExtensionsData(
+			this.props.message,
+			"polls"
+		);
 		if (!pollExtensionData) {
 			return null;
 		}
@@ -120,14 +139,14 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 			name = null;
 		if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 			avatar = (
-				<div css={messageThumbnailStyle} className="message__thumbnail">
+				<div css={messageThumbnailStyle} className='message__thumbnail'>
 					<CometChatAvatar user={this.props.message.sender} />
 				</div>
 			);
 
 			name = (
-				<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-					<span css={nameStyle(this.context)} className="message__name">
+				<div css={nameWrapperStyle(avatar)} className='message__name__wrapper'>
+					<span css={nameStyle(this.context)} className='message__name'>
 						{this.props.message.sender.name}
 					</span>
 				</div>
@@ -142,9 +161,15 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 		let totalText = Translator.translate("NO_VOTE", this.context.language);
 
 		if (total === 1) {
-			totalText = `${total} ${Translator.translate("VOTE", this.context.language)}`;
+			totalText = `${total} ${Translator.translate(
+				"VOTE",
+				this.context.language
+			)}`;
 		} else if (total > 1) {
-			totalText = `${total} ${Translator.translate("VOTES", this.context.language)}`;
+			totalText = `${total} ${Translator.translate(
+				"VOTES",
+				this.context.language
+			)}`;
 		}
 
 		for (const option in pollExtensionData.options) {
@@ -158,12 +183,18 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 			}
 
 			let checkIcon = null;
-			if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(this.state.loggedInUser?.uid)) {
+			if (
+				optionData.hasOwnProperty("voters") &&
+				optionData.voters.hasOwnProperty(this.state.loggedInUser?.uid)
+			) {
 				checkIcon = <i css={checkIconStyle(checkImg, this.context)}></i>;
 			}
 
 			const template = (
-				<li key={option} onClick={event => this.answerPollQuestion(event, option)}>
+				<li
+					key={option}
+					onClick={(event) => this.answerPollQuestion(event, option)}
+				>
 					<div css={pollPercentStyle(this.context, width)}> </div>
 					<div css={answerWrapperStyle(this.state, optionData, this.context)}>
 						{checkIcon}
@@ -176,12 +207,21 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 		}
 
 		let messageReactions = null;
-		const reactionsData = checkMessageForExtensionsData(this.props.message, "reactions");
+		const reactionsData = checkMessageForExtensionsData(
+			this.props.message,
+			"reactions"
+		);
 		if (reactionsData) {
 			if (Object.keys(reactionsData).length) {
 				messageReactions = (
-					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-						<CometChatMessageReactions message={this.props.message} actionGenerated={this.props.actionGenerated} />
+					<div
+						css={messageReactionsWrapperStyle()}
+						className='message__reaction__wrapper'
+					>
+						<CometChatMessageReactions
+							message={this.props.message}
+							actionGenerated={this.props.actionGenerated}
+						/>
 					</div>
 				);
 			}
@@ -189,25 +229,44 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 
 		let toolTipView = null;
 		if (this.state.isHovering) {
-			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
+			toolTipView = (
+				<CometChatMessageActions
+					message={this.props.message}
+					actionGenerated={this.props.actionGenerated}
+				/>
+			);
 		}
 
 		return (
-			<div css={messageContainerStyle()} className="receiver__message__container message__poll" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
-				<div css={messageWrapperStyle()} className="message__wrapper">
+			<div
+				css={messageContainerStyle()}
+				className='receiver__message__container message__poll'
+				onMouseEnter={this.handleMouseHover}
+				onMouseLeave={this.handleMouseHover}
+			>
+				<div css={messageWrapperStyle()} className='message__wrapper'>
 					{avatar}
-					<div css={messageDetailStyle()} className="message__details">
+					<div css={messageDetailStyle()} className='message__details'>
 						{name}
 						{toolTipView}
-						<div css={messageTxtContainerStyle()} className="message__poll__container">
-							<div css={messageTxtWrapperStyle(this.context)} className="message__poll__wrapper">
-								<p css={pollQuestionStyle()} className="poll__question">
+						<div
+							css={messageTxtContainerStyle()}
+							className='message__poll__container'
+						>
+							<div
+								css={messageTxtWrapperStyle(this.context)}
+								className='message__poll__wrapper'
+							>
+								<p css={pollQuestionStyle()} className='poll__question'>
 									{pollExtensionData.question}
 								</p>
-								<ul css={pollAnswerStyle(this.context)} className="poll__options">
+								<ul
+									css={pollAnswerStyle(this.context)}
+									className='poll__options'
+								>
 									{pollOptions}
 								</ul>
-								<p css={pollTotalStyle()} className="poll__votes">
+								<p css={pollTotalStyle()} className='poll__votes'>
 									{totalText}
 								</p>
 							</div>
@@ -215,9 +274,15 @@ class CometChatReceiverPollMessageBubble extends React.Component {
 
 						{messageReactions}
 
-						<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+						<div
+							css={messageInfoWrapperStyle()}
+							className='message__info__wrapper'
+						>
 							<CometChatReadReceipt message={this.props.message} />
-							<CometChatThreadedMessageReplyCount message={this.props.message} actionGenerated={this.props.actionGenerated} />
+							<CometChatThreadedMessageReplyCount
+								message={this.props.message}
+								actionGenerated={this.props.actionGenerated}
+							/>
 						</div>
 					</div>
 				</div>

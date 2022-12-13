@@ -2,7 +2,7 @@ import React from "react";
 import dateFormat from "dateformat";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core";
+import { jsx } from "@emotion/react";
 import PropTypes from "prop-types";
 
 import { CometChat } from "@cometchat-pro/chat";
@@ -60,12 +60,12 @@ class CometChatUserDetails extends React.Component {
 
 	componentDidMount() {
 		CometChat.getLoggedinUser()
-			.then(user => {
+			.then((user) => {
 				if (this._isMounted) {
 					this.setState({ loggedInUser: user });
 				}
 			})
-			.catch(error => this.toastRef.setError("SOMETHING_WRONG"));
+			.catch((error) => this.toastRef.setError("SOMETHING_WRONG"));
 
 		this._isMounted = true;
 		this.toastRef = React.createRef();
@@ -99,12 +99,12 @@ class CometChatUserDetails extends React.Component {
 
 	enableUserPresence = () => {
 		this.context.FeatureRestriction.isUserPresenceEnabled()
-			.then(response => {
+			.then((response) => {
 				if (response !== this.state.enableUserPresence && this._isMounted) {
 					this.setState({ enableUserPresence: response });
 				}
 			})
-			.catch(error => {
+			.catch((error) => {
 				if (this.state.enableUserPresence !== false) {
 					this.setState({ enableUserPresence: false });
 				}
@@ -115,7 +115,10 @@ class CometChatUserDetails extends React.Component {
 		switch (key) {
 			case enums.USER_ONLINE:
 			case enums.USER_OFFLINE: {
-				if (this.context.type === CometChat.ACTION_TYPE.TYPE_USER && this.context.item.uid === user.uid) {
+				if (
+					this.context.type === CometChat.ACTION_TYPE.TYPE_USER &&
+					this.context.item.uid === user.uid
+				) {
 					//if user presence feature is disabled
 					if (this.state.enableUserPresence === false) {
 						return false;
@@ -138,11 +141,17 @@ class CometChatUserDetails extends React.Component {
 
 	setStatusForUser = () => {
 		let status = null;
-		if (this.context.item.status === CometChat.USER_STATUS.OFFLINE && this.context.item.lastActiveAt) {
+		if (
+			this.context.item.status === CometChat.USER_STATUS.OFFLINE &&
+			this.context.item.lastActiveAt
+		) {
 			const lastActive = this.context.item.lastActiveAt * 1000;
 			const messageDate = dateFormat(lastActive, "dS mmm yyyy, h:MM TT");
 
-			status = `${Translator.translate("LAST_ACTIVE_AT", this.props.lang)}: ${messageDate}`;
+			status = `${Translator.translate(
+				"LAST_ACTIVE_AT",
+				this.props.lang
+			)}: ${messageDate}`;
 		} else if (this.context.item.status === CometChat.USER_STATUS.OFFLINE) {
 			status = Translator.translate("OFFLINE", this.props.lang);
 		} else if (this.context.item.status === CometChat.USER_STATUS.ONLINE) {
@@ -154,7 +163,7 @@ class CometChatUserDetails extends React.Component {
 
 	enableSharedMedia = () => {
 		this.context.FeatureRestriction.isSharedMediaEnabled()
-			.then(response => {
+			.then((response) => {
 				/**
 				 * Don't update state if the response has the same value
 				 */
@@ -162,7 +171,7 @@ class CometChatUserDetails extends React.Component {
 					this.setState({ enableSharedMedia: response });
 				}
 			})
-			.catch(error => {
+			.catch((error) => {
 				if (this.state.enableSharedMedia !== false && this._isMounted) {
 					this.setState({ enableSharedMedia: false });
 				}
@@ -171,7 +180,7 @@ class CometChatUserDetails extends React.Component {
 
 	enableBlockUser = () => {
 		this.context.FeatureRestriction.isBlockUserEnabled()
-			.then(response => {
+			.then((response) => {
 				/**
 				 * Don't update state if the response has the same value
 				 */
@@ -179,7 +188,7 @@ class CometChatUserDetails extends React.Component {
 					this.setState({ enableBlockUser: response });
 				}
 			})
-			.catch(error => {
+			.catch((error) => {
 				if (this.state.enableBlockUser !== false && this._isMounted) {
 					this.setState({ enableBlockUser: false });
 				}
@@ -188,12 +197,12 @@ class CometChatUserDetails extends React.Component {
 
 	enableViewProfile = () => {
 		this.context.FeatureRestriction.isViewProfileEnabled()
-			.then(response => {
+			.then((response) => {
 				if (response !== this.state.enableViewProfile && this._isMounted) {
 					this.setState({ enableViewProfile: response });
 				}
 			})
-			.catch(error => {
+			.catch((error) => {
 				if (this.state.enableViewProfile !== false && this._isMounted) {
 					this.setState({ enableViewProfile: false });
 				}
@@ -204,36 +213,46 @@ class CometChatUserDetails extends React.Component {
 		let uid = this.context.item.uid;
 		let usersList = [uid];
 		CometChat.blockUsers(usersList)
-			.then(response => {
-				if (response && response.hasOwnProperty(uid) && response[uid].hasOwnProperty("success") && response[uid]["success"] === true) {
-
+			.then((response) => {
+				if (
+					response &&
+					response.hasOwnProperty(uid) &&
+					response[uid].hasOwnProperty("success") &&
+					response[uid]["success"] === true
+				) {
 					const newType = CometChat.ACTION_TYPE.TYPE_USER;
-					const newItem = Object.assign({}, this.context.item, { blockedByMe: true });
+					const newItem = Object.assign({}, this.context.item, {
+						blockedByMe: true,
+					});
 					this.context.setTypeAndItem(newType, newItem);
-
 				} else {
 					this.toastRef.setError("SOMETHING_WRONG");
 				}
 			})
-			.catch(error => this.toastRef.setError("SOMETHING_WRONG"));
+			.catch((error) => this.toastRef.setError("SOMETHING_WRONG"));
 	};
 
 	unblockUser = () => {
 		let uid = this.context.item.uid;
 		let usersList = [uid];
 		CometChat.unblockUsers(usersList)
-			.then(response => {
-				if (response && response.hasOwnProperty(uid) && response[uid].hasOwnProperty("success") && response[uid]["success"] === true) {
-					
+			.then((response) => {
+				if (
+					response &&
+					response.hasOwnProperty(uid) &&
+					response[uid].hasOwnProperty("success") &&
+					response[uid]["success"] === true
+				) {
 					const newType = CometChat.ACTION_TYPE.TYPE_USER;
-					const newItem = Object.assign({}, this.context.item, { blockedByMe: false });
+					const newItem = Object.assign({}, this.context.item, {
+						blockedByMe: false,
+					});
 					this.context.setTypeAndItem(newType, newItem);
-					
 				} else {
 					this.toastRef.setError("SOMETHING_WRONG");
 				}
 			})
-			.catch(error => this.toastRef.setError("SOMETHING_WRONG"));
+			.catch((error) => this.toastRef.setError("SOMETHING_WRONG"));
 	};
 
 	viewProfile = () => {
@@ -251,16 +270,31 @@ class CometChatUserDetails extends React.Component {
 		}
 
 		let viewProfile = null;
-		if (this.state.enableViewProfile === true && this.context.item.hasOwnProperty("link") && this.context.item.link && this.context.item.link.trim().length) {
+		if (
+			this.state.enableViewProfile === true &&
+			this.context.item.hasOwnProperty("link") &&
+			this.context.item.link &&
+			this.context.item.link.trim().length
+		) {
 			viewProfile = (
-				<div css={sectionStyle()} className="detailpane__section">
-					<div css={actionSectionStyle(this.context)} className="section section__viewprofile">
-						<h6 css={sectionHeaderStyle(this.props)} className="section__header">
+				<div css={sectionStyle()} className='detailpane__section'>
+					<div
+						css={actionSectionStyle(this.context)}
+						className='section section__viewprofile'
+					>
+						<h6
+							css={sectionHeaderStyle(this.props)}
+							className='section__header'
+						>
 							{Translator.translate("ACTIONS", this.context.language)}
 						</h6>
-						<div css={sectionContentStyle()} className="section__content">
-							<div css={contentItemStyle()} className="content__item">
-								<div css={itemLinkStyle(this.context)} className="item__link" onClick={this.viewProfile}>
+						<div css={sectionContentStyle()} className='section__content'>
+							<div css={contentItemStyle()} className='content__item'>
+								<div
+									css={itemLinkStyle(this.context)}
+									className='item__link'
+									onClick={this.viewProfile}
+								>
 									{Translator.translate("VIEW_PROFILE", this.context.language)}
 								</div>
 							</div>
@@ -273,26 +307,40 @@ class CometChatUserDetails extends React.Component {
 		let blockUserText;
 		if (this.context.item.blockedByMe) {
 			blockUserText = (
-				<div css={itemLinkStyle(this.context)} className="item__link" onClick={this.unblockUser}>
+				<div
+					css={itemLinkStyle(this.context)}
+					className='item__link'
+					onClick={this.unblockUser}
+				>
 					{Translator.translate("UNBLOCK_USER", this.context.language)}
 				</div>
 			);
 		} else {
 			blockUserText = (
-				<div css={itemLinkStyle(this.context)} className="item__link" onClick={this.blockUser}>
+				<div
+					css={itemLinkStyle(this.context)}
+					className='item__link'
+					onClick={this.blockUser}
+				>
 					{Translator.translate("BLOCK_USER", this.context.language)}
 				</div>
 			);
 		}
 
 		let blockUserView = (
-			<div css={sectionStyle()} className="detailpane__section">
-				<div css={privacySectionStyle(this.context)} className="section section__privacy">
-					<h6 css={sectionHeaderStyle(this.context)} className="section__header">
+			<div css={sectionStyle()} className='detailpane__section'>
+				<div
+					css={privacySectionStyle(this.context)}
+					className='section section__privacy'
+				>
+					<h6
+						css={sectionHeaderStyle(this.context)}
+						className='section__header'
+					>
 						{Translator.translate("OPTIONS", this.context.language)}
 					</h6>
-					<div css={sectionContentStyle()} className="section__content">
-						<div css={contentItemStyle()} className="content__item">
+					<div css={sectionContentStyle()} className='section__content'>
+						<div css={contentItemStyle()} className='content__item'>
 							{blockUserText}
 						</div>
 					</div>
@@ -306,8 +354,11 @@ class CometChatUserDetails extends React.Component {
 		}
 
 		let sharedmediaView = (
-			<div css={mediaSectionStyle()} className="detailpane__section">
-				<CometChatSharedMediaView theme={this.props.theme} lang={this.context.language} />
+			<div css={mediaSectionStyle()} className='detailpane__section'>
+				<CometChatSharedMediaView
+					theme={this.props.theme}
+					lang={this.context.language}
+				/>
 			</div>
 		);
 
@@ -317,25 +368,40 @@ class CometChatUserDetails extends React.Component {
 		}
 
 		return (
-			<div css={userDetailStyle(this.context)} className="detailpane detailpane--user">
-				<div css={headerStyle(this.context)} className="detailpane__header">
-					<div css={headerCloseStyle(navigateIcon, this.context)} className="header__close" onClick={this.closeDetailView}></div>
-					<h4 css={headerTitleStyle()} className="header__title">
+			<div
+				css={userDetailStyle(this.context)}
+				className='detailpane detailpane--user'
+			>
+				<div css={headerStyle(this.context)} className='detailpane__header'>
+					<div
+						css={headerCloseStyle(navigateIcon, this.context)}
+						className='header__close'
+						onClick={this.closeDetailView}
+					></div>
+					<h4 css={headerTitleStyle()} className='header__title'>
 						{Translator.translate("DETAILS", this.context.language)}
 					</h4>
 				</div>
-				<div css={sectionStyle()} className="detailpane__section">
-					<div css={userInfoSectionStyle()} className="section section__userinfo">
-						<div css={userThumbnailStyle()} className="user__thumbnail">
+				<div css={sectionStyle()} className='detailpane__section'>
+					<div
+						css={userInfoSectionStyle()}
+						className='section section__userinfo'
+					>
+						<div css={userThumbnailStyle()} className='user__thumbnail'>
 							<CometChatAvatar user={this.context.item} />
 						</div>
-						<div css={userStatusStyle()} className="user__status">
+						<div css={userStatusStyle()} className='user__status'>
 							<h6 css={userNameStyle()}>{this.context.item.name}</h6>
-							<span css={userPresenceStyle(this.context, this.state)}>{this.state.status}</span>
+							<span css={userPresenceStyle(this.context, this.state)}>
+								{this.state.status}
+							</span>
 						</div>
 					</div>
 				</div>
-				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.lang} />
+				<CometChatToastNotification
+					ref={(el) => (this.toastRef = el)}
+					lang={this.props.lang}
+				/>
 				{viewProfile}
 				{blockUserView}
 				{sharedmediaView}

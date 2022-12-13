@@ -1,10 +1,14 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core";
+import { jsx } from "@emotion/react";
 import PropTypes from "prop-types";
 
-import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt } from "../../";
+import {
+	CometChatMessageActions,
+	CometChatThreadedMessageReplyCount,
+	CometChatReadReceipt,
+} from "../../";
 import { CometChatMessageReactions } from "../";
 
 import { CometChatContext } from "../../../../util/CometChatContext";
@@ -14,15 +18,15 @@ import { theme } from "../../../../resources/theme";
 import Translator from "../../../../resources/localization/translator";
 
 import {
-    messageContainerStyle,
-    messageWrapperStyle,
-    messageTxtWrapperStyle,
-    messageTxtContainerStyle,
-    messageTxtStyle,
-    messageTxtIconStyle,
-    messageBtnStyle,
-    messageInfoWrapperStyle,
-    messageReactionsWrapperStyle,
+	messageContainerStyle,
+	messageWrapperStyle,
+	messageTxtWrapperStyle,
+	messageTxtContainerStyle,
+	messageTxtStyle,
+	messageTxtIconStyle,
+	messageBtnStyle,
+	messageInfoWrapperStyle,
+	messageReactionsWrapperStyle,
 } from "./style";
 
 import whiteboardIcon from "./resources/collaborative-whiteboard.svg";
@@ -38,7 +42,7 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 			isHovering: false,
 		};
 
-		this.context.getLoggedinUser().then(user => {
+		this.context.getLoggedinUser().then((user) => {
 			this.loggedInUser = { ...user };
 		});
 	}
@@ -47,7 +51,10 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 		const currentMessageStr = JSON.stringify(this.props.message);
 		const nextMessageStr = JSON.stringify(nextProps.message);
 
-		if (currentMessageStr !== nextMessageStr || this.state.isHovering !== nextState.isHovering) {
+		if (
+			currentMessageStr !== nextMessageStr ||
+			this.state.isHovering !== nextState.isHovering
+		) {
 			return true;
 		}
 		return false;
@@ -55,8 +62,15 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 
 	launchCollaborativeWhiteboard = () => {
 		let whiteboardUrl = null;
-		let whiteboardData = checkMessageForExtensionsData(this.props.message, "whiteboard");
-		if (whiteboardData && whiteboardData.hasOwnProperty("board_url") && whiteboardData.board_url.length) {
+		let whiteboardData = checkMessageForExtensionsData(
+			this.props.message,
+			"whiteboard"
+		);
+		if (
+			whiteboardData &&
+			whiteboardData.hasOwnProperty("board_url") &&
+			whiteboardData.board_url.length
+		) {
 			let username = this.loggedInUser?.name.split(" ").join("_");
 			// Appending the username to the board_url
 			whiteboardUrl = whiteboardData.board_url + "&username=" + username;
@@ -68,7 +82,7 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 		this.setState(this.toggleHoverState);
 	};
 
-	toggleHoverState = state => {
+	toggleHoverState = (state) => {
 		return {
 			isHovering: !state.isHovering,
 		};
@@ -76,12 +90,21 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 
 	render() {
 		let messageReactions = null;
-		const reactionsData = checkMessageForExtensionsData(this.props.message, "reactions");
+		const reactionsData = checkMessageForExtensionsData(
+			this.props.message,
+			"reactions"
+		);
 		if (reactionsData) {
 			if (Object.keys(reactionsData).length) {
 				messageReactions = (
-					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-						<CometChatMessageReactions message={this.props.message} actionGenerated={this.props.actionGenerated} />
+					<div
+						css={messageReactionsWrapperStyle()}
+						className='message__reaction__wrapper'
+					>
+						<CometChatMessageReactions
+							message={this.props.message}
+							actionGenerated={this.props.actionGenerated}
+						/>
 					</div>
 				);
 			}
@@ -89,23 +112,45 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 
 		let toolTipView = null;
 		if (this.state.isHovering) {
-			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
+			toolTipView = (
+				<CometChatMessageActions
+					message={this.props.message}
+					actionGenerated={this.props.actionGenerated}
+				/>
+			);
 		}
 
-		const documentTitle = Translator.translate("CREATED_WHITEBOARD", this.context.language);
+		const documentTitle = Translator.translate(
+			"CREATED_WHITEBOARD",
+			this.context.language
+		);
 		return (
-			<div css={messageContainerStyle()} className="sender__message__container message__whiteboard" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
+			<div
+				css={messageContainerStyle()}
+				className='sender__message__container message__whiteboard'
+				onMouseEnter={this.handleMouseHover}
+				onMouseLeave={this.handleMouseHover}
+			>
 				{toolTipView}
 
-				<div css={messageWrapperStyle()} className="message__wrapper">
-					<div css={messageTxtWrapperStyle(this.context)} className="message__whiteboard__wrapper">
-						<div css={messageTxtContainerStyle()} className="message__whiteboard__container">
+				<div css={messageWrapperStyle()} className='message__wrapper'>
+					<div
+						css={messageTxtWrapperStyle(this.context)}
+						className='message__whiteboard__wrapper'
+					>
+						<div
+							css={messageTxtContainerStyle()}
+							className='message__whiteboard__container'
+						>
 							<i css={messageTxtIconStyle(whiteboardIcon, this.context)}></i>
-							<p css={messageTxtStyle()} className="document__title">
+							<p css={messageTxtStyle()} className='document__title'>
 								{documentTitle}
 							</p>
 						</div>
-						<ul css={messageBtnStyle(this.context)} className="document__button">
+						<ul
+							css={messageBtnStyle(this.context)}
+							className='document__button'
+						>
 							<li onClick={this.launchCollaborativeWhiteboard}>
 								<p>{Translator.translate("LAUNCH", this.context.language)}</p>
 							</li>
@@ -115,8 +160,11 @@ class CometChatSenderWhiteboardBubble extends React.Component {
 
 				{messageReactions}
 
-				<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-					<CometChatThreadedMessageReplyCount message={this.props.message} actionGenerated={this.props.actionGenerated} />
+				<div css={messageInfoWrapperStyle()} className='message__info__wrapper'>
+					<CometChatThreadedMessageReplyCount
+						message={this.props.message}
+						actionGenerated={this.props.actionGenerated}
+					/>
 					<CometChatReadReceipt message={this.props.message} />
 				</div>
 			</div>

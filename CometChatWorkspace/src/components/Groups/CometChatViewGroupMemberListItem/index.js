@@ -1,7 +1,7 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core";
+import { jsx } from "@emotion/react";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
@@ -13,18 +13,18 @@ import * as enums from "../../../util/enums.js";
 import Translator from "../../../resources/localization/translator";
 
 import {
-    modalRowStyle,
-    nameColumnStyle,
-    avatarStyle,
-    nameStyle,
-    roleStyle,
-    scopeColumnStyle,
-    scopeIconStyle,
-    actionColumnStyle,
-    banIconStyle,
-    kickIconStyle,
-    scopeWrapperStyle,
-    scopeSelectionStyle
+	modalRowStyle,
+	nameColumnStyle,
+	avatarStyle,
+	nameStyle,
+	roleStyle,
+	scopeColumnStyle,
+	scopeIconStyle,
+	actionColumnStyle,
+	banIconStyle,
+	kickIconStyle,
+	scopeWrapperStyle,
+	scopeSelectionStyle,
 } from "./style";
 
 import scopeIcon from "./resources/edit.svg";
@@ -34,210 +34,299 @@ import banIcon from "./resources/ban-member.svg";
 import kickIcon from "./resources/delete.svg";
 
 class CometChatViewGroupMemberListItem extends React.Component {
+	static contextType = CometChatContext;
 
-    static contextType = CometChatContext;
+	constructor(props, context) {
+		super(props, context);
 
-    constructor(props, context) {
+		this.changeScopeDropDown = (
+			<select
+				className='members-scope-select'
+				onChange={this.scopeChangeHandler}
+				defaultValue={this.props.member.scope}
+			></select>
+		);
 
-        super(props, context);
+		this.state = {
+			showChangeScope: false,
+			scope: null,
+		};
 
-        this.changeScopeDropDown = (
-            <select 
-            className="members-scope-select"
-            onChange={this.scopeChangeHandler}
-            defaultValue={this.props.member.scope}></select>
-        )
+		this.roles = context.roles;
+	}
 
-        this.state = {
-            showChangeScope: false,
-            scope: null
-        }
+	toggleChangeScope = (flag) => {
+		this.setState({ showChangeScope: flag });
+	};
 
-        this.roles = context.roles;
-    }
+	scopeChangeHandler = (event) => {
+		this.setState({ scope: event.target.value });
+	};
 
-    toggleChangeScope = (flag) => {
-        this.setState({ showChangeScope: flag });
-    }
+	updateMemberScope = () => {
+		this.props.actionGenerated(
+			enums.ACTIONS["CHANGE_SCOPE_GROUP_MEMBER"],
+			this.props.member,
+			this.state.scope
+		);
+		this.toggleChangeScope();
+	};
 
-    scopeChangeHandler = (event) => {
-        this.setState({scope: event.target.value});
-    }
+	toggleTooltip = (event, flag) => {
+		const elem = event.currentTarget;
 
-    updateMemberScope = () => {
-        this.props.actionGenerated(enums.ACTIONS["CHANGE_SCOPE_GROUP_MEMBER"], this.props.member, this.state.scope);
-        this.toggleChangeScope();
-    }
+		if (elem.classList.contains("name")) {
+			const scrollWidth = elem.scrollWidth;
+			const clientWidth = elem.clientWidth;
 
-    toggleTooltip = (event, flag) => {
+			if (scrollWidth <= clientWidth) {
+				return false;
+			}
+		}
 
-        const elem = event.currentTarget;
-        
-        if (elem.classList.contains("name")) {
+		if (flag) {
+			elem.setAttribute("title", this.props.member.name);
+		} else {
+			elem.removeAttribute("title");
+		}
+	};
 
-            const scrollWidth = elem.scrollWidth;
-            const clientWidth = elem.clientWidth;
-            
-            if (scrollWidth <= clientWidth) {
-                return false;
-            }
-        }
+	render() {
+		let editClassName = "";
 
-        if(flag) {
-            elem.setAttribute("title", this.props.member.name);
-        } else {
-            elem.removeAttribute("title");
-        }
-    }
+		let name = this.props.member.name;
+		let scope = (
+			<span css={roleStyle()}>
+				{this.context.roles[this.props.member.scope]}
+			</span>
+		);
+		let changescope = null;
+		let ban = (
+			<i
+				css={banIconStyle(banIcon, this.context)}
+				title={Translator.translate("BAN", this.context.language)}
+				onClick={() => {
+					this.props.actionGenerated(
+						enums.ACTIONS["BAN_GROUP_MEMBER"],
+						this.props.member
+					);
+				}}
+			></i>
+		);
+		let kick = (
+			<i
+				css={kickIconStyle(kickIcon, this.context)}
+				title={Translator.translate("KICK", this.context.language)}
+				onClick={() => {
+					this.props.actionGenerated(
+						enums.ACTIONS["KICK_GROUP_MEMBER"],
+						this.props.member
+					);
+				}}
+			></i>
+		);
 
-    render() {
+		if (this.state.showChangeScope) {
+			let options = (
+				<React.Fragment>
+					<option value={CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT}>
+						{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]}
+					</option>
+					<option value={CometChat.GROUP_MEMBER_SCOPE.MODERATOR}>
+						{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]}
+					</option>
+					<option value={CometChat.GROUP_MEMBER_SCOPE.ADMIN}>
+						{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN]}
+					</option>
+				</React.Fragment>
+			);
 
-        let editClassName = "";
-    
-        let name = this.props.member.name;
-        let scope = <span css={roleStyle()}>{this.context.roles[this.props.member.scope]}</span>;
-        let changescope = null;
-        let ban = (<i css={banIconStyle(banIcon, this.context)} title={Translator.translate("BAN", this.context.language)} onClick={() => { this.props.actionGenerated(enums.ACTIONS["BAN_GROUP_MEMBER"], this.props.member)}}></i>);
-        let kick = (<i css={kickIconStyle(kickIcon, this.context)} title={Translator.translate("KICK", this.context.language)} onClick={() => { this.props.actionGenerated(enums.ACTIONS["KICK_GROUP_MEMBER"], this.props.member)}}></i>);
-        
+			if (
+				this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR &&
+				this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT
+			) {
+				options = (
+					<React.Fragment>
+						<option value={CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT}>
+							{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]}
+						</option>
+						<option value={CometChat.GROUP_MEMBER_SCOPE.MODERATOR}>
+							{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]}
+						</option>
+					</React.Fragment>
+				);
+			}
 
-        if(this.state.showChangeScope) {
+			changescope = (
+				<div css={scopeWrapperStyle()} className='scope__wrapper'>
+					<select
+						css={scopeSelectionStyle()}
+						className='scope__select'
+						onChange={this.scopeChangeHandler}
+						defaultValue={this.props.member.scope}
+					>
+						{options}
+					</select>
+					<i
+						css={scopeIconStyle(doneIcon, this.context)}
+						title={Translator.translate("CHANGE_SCOPE", this.context.language)}
+						onClick={this.updateMemberScope}
+					></i>
+					<i
+						css={scopeIconStyle(clearIcon, this.context)}
+						title={Translator.translate("CHANGE_SCOPE", this.context.language)}
+						onClick={() => this.toggleChangeScope(false)}
+					></i>
+				</div>
+			);
+		} else {
+			if (
+				this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT
+			) {
+				changescope = scope;
+			} else {
+				changescope = (
+					<React.Fragment>
+						{scope}
+						<i
+							css={scopeIconStyle(scopeIcon, this.context)}
+							title={Translator.translate(
+								"CHANGE_SCOPE",
+								this.context.language
+							)}
+							onClick={() => this.toggleChangeScope(true)}
+						></i>
+					</React.Fragment>
+				);
+			}
+		}
 
-            let options = (
-                <React.Fragment>
-                    <option value={CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT}>{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]}</option>
-                    <option value={CometChat.GROUP_MEMBER_SCOPE.MODERATOR}>{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]}</option>
-                    <option value={CometChat.GROUP_MEMBER_SCOPE.ADMIN}>{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.ADMIN]}</option>
-                </React.Fragment>
-            );
+		//disable change scope, kick, ban of group owner
+		if (this.context.item.owner === this.props.member.uid) {
+			scope = (
+				<span css={roleStyle()}>
+					{Translator.translate("OWNER", this.context.language)}
+				</span>
+			);
+			changescope = scope;
+			ban = null;
+			kick = null;
+		}
 
-            if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR
-                && this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
+		//disable change scope, kick, ban of self
+		if (this.props.loggedinuser.uid === this.props.member.uid) {
+			name = Translator.translate("YOU", this.context.language);
+			changescope = scope;
+			ban = null;
+			kick = null;
+		}
 
-                options = (
-                    <React.Fragment>
-                        <option value={CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT}>{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]}</option>
-                        <option value={CometChat.GROUP_MEMBER_SCOPE.MODERATOR}>{this.context.roles[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]}</option>
-                    </React.Fragment>
-                );
-            }
+		//if the loggedin user is moderator, don't allow to change scope, ban, kick group moderators or administrators
+		if (
+			this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR &&
+			(this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN ||
+				this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR)
+		) {
+			changescope = scope;
+			ban = null;
+			kick = null;
+		}
 
-            changescope = (
-                <div css={scopeWrapperStyle()} className="scope__wrapper">
-                    <select css={scopeSelectionStyle()} className="scope__select" onChange={this.scopeChangeHandler} defaultValue={this.props.member.scope}>
-                        {options}
-                    </select>
-                    <i css={scopeIconStyle(doneIcon, this.context)} title={Translator.translate("CHANGE_SCOPE", this.context.language)} onClick={this.updateMemberScope}></i>
-                    <i css={scopeIconStyle(clearIcon, this.context)} title={Translator.translate("CHANGE_SCOPE", this.context.language)} onClick={() => this.toggleChangeScope(false)}></i>
-                </div>
-            );
+		//if the loggedin user is administrator but not group owner, don't allow to change scope, ban, kick group administrators
+		if (
+			this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN &&
+			this.context.item.owner !== this.props.loggedinuser.uid &&
+			this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN
+		) {
+			changescope = scope;
+			ban = null;
+			kick = null;
+		}
 
-        } else {
+		let editAccess = null;
+		//if the loggedin user is participant, don't show the option to change scope, ban, or kick group members
+		if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
+			editAccess = null;
+			editClassName = "true";
+		} else {
+			editAccess = (
+				<React.Fragment>
+					<div css={actionColumnStyle(this.context)} className='ban'>
+						{ban}
+					</div>
+					<div css={actionColumnStyle(this.context)} className='kick'>
+						{kick}
+					</div>
+				</React.Fragment>
+			);
 
-            if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
-                changescope = scope;
-            } else {
-                changescope = (
-                    <React.Fragment>
-                        {scope}
-                        <i css={scopeIconStyle(scopeIcon, this.context)} title={Translator.translate("CHANGE_SCOPE", this.context.language)} onClick={() => this.toggleChangeScope(true)}></i>
-                    </React.Fragment>
-                );
-            }
-        }
+			/**
+			 * if kick and ban feature is disabled
+			 */
+			if (
+				this.props.enableBanGroupMembers === false &&
+				this.props.enableKickGroupMembers === false
+			) {
+				editAccess = null;
+			} else if (this.props.enableBanGroupMembers === false) {
+				//if ban feature is disabled
+				editAccess = (
+					<div css={actionColumnStyle(this.context)} className='kick'>
+						{kick}
+					</div>
+				);
+			} else if (this.props.enableKickGroupMembers === false) {
+				//if kick feature is disabled
+				editAccess = (
+					<div css={actionColumnStyle(this.context)} className='ban'>
+						{ban}
+					</div>
+				);
+			}
 
-        //disable change scope, kick, ban of group owner
-        if (this.context.item.owner === this.props.member.uid) {
-            scope = (<span css={roleStyle()}>{Translator.translate("OWNER", this.context.language)}</span>);
-            changescope = scope;
-            ban = null;
-            kick = null;
-        }
+			/**
+			 * if promote_demote_members feature is disabled
+			 */
+			if (this.props.enableChangeScope === false) {
+				changescope = scope;
+			}
+		}
 
-        //disable change scope, kick, ban of self
-        if (this.props.loggedinuser.uid === this.props.member.uid) {
-            name = Translator.translate("YOU", this.context.language);
-            changescope = scope;
-            ban = null;
-            kick = null;
-        }
+		let userPresence = (
+			<CometChatUserPresence status={this.props.member.status} />
+		);
 
-        //if the loggedin user is moderator, don't allow to change scope, ban, kick group moderators or administrators
-        if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR 
-        && (this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN || this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.MODERATOR)) {
-            changescope = scope;
-            ban = null;
-            kick = null;
-        }
-
-        //if the loggedin user is administrator but not group owner, don't allow to change scope, ban, kick group administrators
-        if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN
-        && this.context.item.owner !== this.props.loggedinuser.uid 
-        && this.props.member.scope === CometChat.GROUP_MEMBER_SCOPE.ADMIN) {
-            changescope = scope;
-            ban = null;
-            kick = null;
-        }
-        
-        let editAccess = null;
-        //if the loggedin user is participant, don't show the option to change scope, ban, or kick group members
-        if (this.context.item.scope === CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
-            editAccess = null;
-            editClassName = "true";
-        } else {
-
-            editAccess = (
-                <React.Fragment>
-                    <div css={actionColumnStyle(this.context)} className="ban">{ban}</div>
-                    <div css={actionColumnStyle(this.context)} className="kick">{kick}</div>
-                </React.Fragment>
-            );
-
-            /**
-             * if kick and ban feature is disabled
-             */
-            if (this.props.enableBanGroupMembers === false && this.props.enableKickGroupMembers === false) {
-                editAccess = null;
-            } else if (this.props.enableBanGroupMembers === false) { //if ban feature is disabled
-                editAccess = (
-                    <div css={actionColumnStyle(this.context)} className="kick">{kick}</div>
-                );
-            } else if (this.props.enableKickGroupMembers === false) { //if kick feature is disabled
-                editAccess = (
-                    <div css={actionColumnStyle(this.context)} className="ban">{ban}</div>
-                );
-            }
-
-            /**
-             * if promote_demote_members feature is disabled
-             */
-            if (this.props.enableChangeScope === false) {
-                changescope = scope;
-            }
-        }
-
-        let userPresence = (
-            <CometChatUserPresence status={this.props.member.status} />
-        );
-        
-        return (
-            <div css={modalRowStyle(this.context)} className="content__row">
-                <div css={nameColumnStyle(this.context, editClassName)} className="userinfo">
-                    <div css={avatarStyle(this.context, editClassName)} className="thumbnail"
-                    onMouseEnter={event => this.toggleTooltip(event, true)}
-                    onMouseLeave={event => this.toggleTooltip(event, false)}>
-                        <CometChatAvatar user={this.props.member} />
-                        {userPresence}
-                    </div>
-                    <div css={nameStyle(this.context, editClassName)} className="name"
-                    onMouseEnter={event => this.toggleTooltip(event, true)}
-                    onMouseLeave={event => this.toggleTooltip(event, false)}>{name}</div>
-                </div>
-                <div css={scopeColumnStyle(this.context)} className="scope">{changescope}</div>
-                {editAccess}
-            </div>
-        );
-    }
+		return (
+			<div css={modalRowStyle(this.context)} className='content__row'>
+				<div
+					css={nameColumnStyle(this.context, editClassName)}
+					className='userinfo'
+				>
+					<div
+						css={avatarStyle(this.context, editClassName)}
+						className='thumbnail'
+						onMouseEnter={(event) => this.toggleTooltip(event, true)}
+						onMouseLeave={(event) => this.toggleTooltip(event, false)}
+					>
+						<CometChatAvatar user={this.props.member} />
+						{userPresence}
+					</div>
+					<div
+						css={nameStyle(this.context, editClassName)}
+						className='name'
+						onMouseEnter={(event) => this.toggleTooltip(event, true)}
+						onMouseLeave={(event) => this.toggleTooltip(event, false)}
+					>
+						{name}
+					</div>
+				</div>
+				<div css={scopeColumnStyle(this.context)} className='scope'>
+					{changescope}
+				</div>
+				{editAccess}
+			</div>
+		);
+	}
 }
 
 // Specifies the default values for props:
@@ -248,7 +337,7 @@ CometChatViewGroupMemberListItem.defaultProps = {
 
 CometChatViewGroupMemberListItem.propTypes = {
 	loggedinuser: PropTypes.shape(CometChat.User),
-	enableChangeScope: PropTypes.bool
+	enableChangeScope: PropTypes.bool,
 };
 
 export { CometChatViewGroupMemberListItem };
