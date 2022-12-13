@@ -1,11 +1,15 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core";
+import { jsx } from "@emotion/react";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
-import { CometChatMessageActions, CometChatThreadedMessageReplyCount, CometChatReadReceipt } from "../";
+import {
+	CometChatMessageActions,
+	CometChatThreadedMessageReplyCount,
+	CometChatReadReceipt,
+} from "../";
 import { CometChatMessageReactions } from "../Extensions";
 import { CometChatAvatar } from "../../Shared";
 
@@ -47,12 +51,13 @@ class CometChatReceiverDirectCallBubble extends React.Component {
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
-
 		const currentMessageStr = JSON.stringify(this.props.message);
 		const nextMessageStr = JSON.stringify(nextProps.message);
 
-		if (currentMessageStr !== nextMessageStr 
-        || this.state.isHovering !== nextState.isHovering) {
+		if (
+			currentMessageStr !== nextMessageStr ||
+			this.state.isHovering !== nextState.isHovering
+		) {
 			return true;
 		}
 		return false;
@@ -62,7 +67,7 @@ class CometChatReceiverDirectCallBubble extends React.Component {
 		this.setState(this.toggleHoverState);
 	};
 
-	toggleHoverState = state => {
+	toggleHoverState = (state) => {
 		return {
 			isHovering: !state.isHovering,
 		};
@@ -73,14 +78,14 @@ class CometChatReceiverDirectCallBubble extends React.Component {
 			name = null;
 		if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 			avatar = (
-				<div css={messageThumbnailStyle} className="message__thumbnail">
+				<div css={messageThumbnailStyle} className='message__thumbnail'>
 					<CometChatAvatar user={this.props.message.sender} />
 				</div>
 			);
 
 			name = (
-				<div css={nameWrapperStyle(avatar)} className="message__name__wrapper">
-					<span css={nameStyle(this.context)} className="message__name">
+				<div css={nameWrapperStyle(avatar)} className='message__name__wrapper'>
+					<span css={nameStyle(this.context)} className='message__name'>
 						{this.props.message.sender.name}
 					</span>
 				</div>
@@ -88,12 +93,21 @@ class CometChatReceiverDirectCallBubble extends React.Component {
 		}
 
 		let messageReactions = null;
-		const reactionsData = checkMessageForExtensionsData(this.props.message, "reactions");
+		const reactionsData = checkMessageForExtensionsData(
+			this.props.message,
+			"reactions"
+		);
 		if (reactionsData) {
 			if (Object.keys(reactionsData).length) {
 				messageReactions = (
-					<div css={messageReactionsWrapperStyle()} className="message__reaction__wrapper">
-						<CometChatMessageReactions message={this.props.message} actionGenerated={this.props.actionGenerated} />
+					<div
+						css={messageReactionsWrapperStyle()}
+						className='message__reaction__wrapper'
+					>
+						<CometChatMessageReactions
+							message={this.props.message}
+							actionGenerated={this.props.actionGenerated}
+						/>
 					</div>
 				);
 			}
@@ -101,62 +115,117 @@ class CometChatReceiverDirectCallBubble extends React.Component {
 
 		let toolTipView = null;
 		if (this.state.isHovering) {
-			toolTipView = <CometChatMessageActions message={this.props.message} actionGenerated={this.props.actionGenerated} />;
+			toolTipView = (
+				<CometChatMessageActions
+					message={this.props.message}
+					actionGenerated={this.props.actionGenerated}
+				/>
+			);
 		}
 
-		const messageTitle = `${this.props.message.sender.name} ${Translator.translate("INITIATED_GROUP_CALL", this.context.language)}`;
+		const messageTitle = `${
+			this.props.message.sender.name
+		} ${Translator.translate("INITIATED_GROUP_CALL", this.context.language)}`;
 
 		let callMessage = null;
-		const joinCallMessage = Translator.translate("YOU_ALREADY_ONGOING_CALL", this.context.language);
+		const joinCallMessage = Translator.translate(
+			"YOU_ALREADY_ONGOING_CALL",
+			this.context.language
+		);
 
-		if (this.context.checkIfDirectCallIsOngoing() === enums.CONSTANTS.CALLS["ONGOING_CALL_SAME_GROUP"]) {
+		if (
+			this.context.checkIfDirectCallIsOngoing() ===
+			enums.CONSTANTS.CALLS["ONGOING_CALL_SAME_GROUP"]
+		) {
 			//ongoing call in same group
 			callMessage = (
-				<li className="directcall__row" title={joinCallMessage}>
-					<p className="directcall__text">{Translator.translate("JOIN", this.context.language)}</p>
+				<li className='directcall__row' title={joinCallMessage}>
+					<p className='directcall__text'>
+						{Translator.translate("JOIN", this.context.language)}
+					</p>
 				</li>
 			);
-		} else if (this.context.checkIfDirectCallIsOngoing() === enums.CONSTANTS.CALLS["ONGOING_CALL_DIFF_GROUP"]) {
+		} else if (
+			this.context.checkIfDirectCallIsOngoing() ===
+			enums.CONSTANTS.CALLS["ONGOING_CALL_DIFF_GROUP"]
+		) {
 			//ongoing call in different group
 
 			callMessage = (
-				<li className="directcall__row" title={joinCallMessage}>
-					<p className="directcall__text">{Translator.translate("JOIN", this.context.language)}</p>
+				<li className='directcall__row' title={joinCallMessage}>
+					<p className='directcall__text'>
+						{Translator.translate("JOIN", this.context.language)}
+					</p>
 				</li>
 			);
 		} else if (this.context.checkIfCallIsOngoing()) {
 			//ongoing call
 
 			callMessage = (
-				<li className="directcall__row" title={joinCallMessage}>
-					<p className="directcall__text">{Translator.translate("JOIN", this.context.language)}</p>
+				<li className='directcall__row' title={joinCallMessage}>
+					<p className='directcall__text'>
+						{Translator.translate("JOIN", this.context.language)}
+					</p>
 				</li>
 			);
 		} else {
 			callMessage = (
-				<li className="directcall__row" onClick={() => this.props.actionGenerated(enums.ACTIONS["JOIN_DIRECT_CALL"], this.props.message)}>
-					<p className="directcall__text">{Translator.translate("JOIN", this.context.language)}</p>
+				<li
+					className='directcall__row'
+					onClick={() =>
+						this.props.actionGenerated(
+							enums.ACTIONS["JOIN_DIRECT_CALL"],
+							this.props.message
+						)
+					}
+				>
+					<p className='directcall__text'>
+						{Translator.translate("JOIN", this.context.language)}
+					</p>
 				</li>
 			);
 		}
 
 		return (
-			<div css={messageContainerStyle()} className="receiver__message__container message__directcall" onMouseEnter={this.handleMouseHover} onMouseLeave={this.handleMouseHover}>
-				<div css={messageWrapperStyle()} className="message__wrapper">
+			<div
+				css={messageContainerStyle()}
+				className='receiver__message__container message__directcall'
+				onMouseEnter={this.handleMouseHover}
+				onMouseLeave={this.handleMouseHover}
+			>
+				<div css={messageWrapperStyle()} className='message__wrapper'>
 					{avatar}
-					<div css={messageDetailStyle()} className="message__details">
+					<div css={messageDetailStyle()} className='message__details'>
 						{name}
 						{toolTipView}
-						<div css={messageTxtContainerStyle()} className="message__directcall__container">
-							<div css={messageTxtWrapperStyle(this.context)} className="message__directcall__wrapper">
-								<div css={messageTxtTitleStyle(this.context)} className="message__directcall__title">
-									<i css={iconStyle(callIcon, this.context)} title={Translator.translate("VIDEO_CALL", this.context.language)}></i>
-									<p css={messageTxtStyle()} className="directcall__title">
+						<div
+							css={messageTxtContainerStyle()}
+							className='message__directcall__container'
+						>
+							<div
+								css={messageTxtWrapperStyle(this.context)}
+								className='message__directcall__wrapper'
+							>
+								<div
+									css={messageTxtTitleStyle(this.context)}
+									className='message__directcall__title'
+								>
+									<i
+										css={iconStyle(callIcon, this.context)}
+										title={Translator.translate(
+											"VIDEO_CALL",
+											this.context.language
+										)}
+									></i>
+									<p css={messageTxtStyle()} className='directcall__title'>
 										{messageTitle}
 									</p>
 								</div>
 
-								<ul css={messageBtnStyle(this.context)} className="directcall__button">
+								<ul
+									css={messageBtnStyle(this.context)}
+									className='directcall__button'
+								>
 									{callMessage}
 								</ul>
 							</div>
@@ -164,9 +233,14 @@ class CometChatReceiverDirectCallBubble extends React.Component {
 
 						{messageReactions}
 
-						<div css={messageInfoWrapperStyle()} className="message__info__wrapper">
+						<div
+							css={messageInfoWrapperStyle()}
+							className='message__info__wrapper'
+						>
 							<CometChatReadReceipt message={this.props.message} />
-							<CometChatThreadedMessageReplyCount message={this.props.message} />
+							<CometChatThreadedMessageReplyCount
+								message={this.props.message}
+							/>
 						</div>
 					</div>
 				</div>

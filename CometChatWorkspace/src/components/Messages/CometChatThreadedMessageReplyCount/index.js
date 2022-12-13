@@ -1,30 +1,29 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import {jsx} from "@emotion/core";
+import { jsx } from "@emotion/react";
 import PropTypes from "prop-types";
 
-import {CometChatContext} from "../../../util/CometChatContext";
+import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 
-import {theme} from "../../../resources/theme";
+import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
 
-import {replyCountStyle} from "./style";
+import { replyCountStyle } from "./style";
 
-const CometChatThreadedMessageReplyCount = props => {
-
+const CometChatThreadedMessageReplyCount = (props) => {
 	const context = React.useContext(CometChatContext);
 	const [reply, setReply] = React.useState(false);
 
 	const toggleReply = () => {
 		context.FeatureRestriction.isThreadedMessagesEnabled()
-			.then(response => {
+			.then((response) => {
 				if (response !== reply) {
 					setReply(response);
 				}
 			})
-			.catch(error => {
+			.catch((error) => {
 				if (reply !== false) {
 					setReply(false);
 				}
@@ -34,14 +33,24 @@ const CometChatThreadedMessageReplyCount = props => {
 	React.useEffect(toggleReply);
 
 	const viewThread = () => {
-		props.actionGenerated(enums.ACTIONS["VIEW_THREADED_MESSAGE"], props.message);
-	}
+		props.actionGenerated(
+			enums.ACTIONS["VIEW_THREADED_MESSAGE"],
+			props.message
+		);
+	};
 
 	const replyCount = props.message.replyCount;
-	const replyText = replyCount === 1 ? `${replyCount} ${Translator.translate("REPLY", context.language)}` : `${replyCount} ${Translator.translate("REPLIES", context.language)}`;
+	const replyText =
+		replyCount === 1
+			? `${replyCount} ${Translator.translate("REPLY", context.language)}`
+			: `${replyCount} ${Translator.translate("REPLIES", context.language)}`;
 
 	let replies = (
-		<span css={replyCountStyle(context)} className="replycount" onClick={viewThread}>
+		<span
+			css={replyCountStyle(context)}
+			className='replycount'
+			onClick={viewThread}
+		>
 			{replyText}
 		</span>
 	);
@@ -70,4 +79,4 @@ CometChatThreadedMessageReplyCount.propTypes = {
 	message: PropTypes.object.isRequired,
 };
 
-export {CometChatThreadedMessageReplyCount};
+export { CometChatThreadedMessageReplyCount };

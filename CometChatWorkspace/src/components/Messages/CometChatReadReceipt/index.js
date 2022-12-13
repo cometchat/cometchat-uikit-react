@@ -1,12 +1,12 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core";
+import { jsx } from "@emotion/react";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { getMessageSentTime } from "../../../util/common";
-import { CometChatContext } from "../../../util/CometChatContext"
+import { CometChatContext } from "../../../util/CometChatContext";
 
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
@@ -30,7 +30,7 @@ class CometChatReadReceipt extends React.PureComponent {
 			receipts: false,
 		};
 
-		this.context.getLoggedinUser().then(user => {
+		this.context.getLoggedinUser().then((user) => {
 			this.loggedInUser = { ...user };
 		});
 	}
@@ -53,12 +53,12 @@ class CometChatReadReceipt extends React.PureComponent {
 		 * if delivery receipts feature is disabled
 		 */
 		this.context.FeatureRestriction.isDeliveryReceiptsEnabled()
-			.then(response => {
+			.then((response) => {
 				if (response !== this.state.receipts && this._isMounted) {
 					this.setState({ receipts: response });
 				}
 			})
-			.catch(error => {
+			.catch((error) => {
 				if (this.state.receipts !== false) {
 					this.setState({ receipts: false });
 				}
@@ -66,14 +66,12 @@ class CometChatReadReceipt extends React.PureComponent {
 	};
 
 	render() {
-		
 		let ticks,
 			receiptText = null,
 			dateField = null,
 			color = null;
-		
-		if (this.props.message?.sender?.uid === this.loggedInUser?.uid) {
 
+		if (this.props.message?.sender?.uid === this.loggedInUser?.uid) {
 			if (this.props.message.receiverType === CometChat.RECEIVER_TYPE.GROUP) {
 				if (this.props.message.hasOwnProperty("error")) {
 					ticks = errorTick;
@@ -104,20 +102,15 @@ class CometChatReadReceipt extends React.PureComponent {
 					color = this.context.theme.secondaryTextColor;
 
 					if (this.props.message.hasOwnProperty("readAt")) {
-
 						ticks = blueDoubleTick;
 						receiptText = "SEEN";
 						color = this.context.theme.primaryColor;
 						dateField = this.props.message.readAt;
-
 					} else if (this.props.message.hasOwnProperty("deliveredAt")) {
-
 						ticks = greyDoubleTick;
 						receiptText = "DELIVERED";
 						dateField = this.props.message.deliveredAt;
-
 					} else if (this.props.message.hasOwnProperty("sentAt")) {
-
 						ticks = greyTick;
 						receiptText = "SENT";
 						dateField = this.props.message.sentAt;
@@ -133,13 +126,21 @@ class CometChatReadReceipt extends React.PureComponent {
 			ticks = null;
 		}
 
-		const receipt = ticks ? <i css={iconStyle(ticks, color)} title={Translator.translate(receiptText, this.context.language)}></i> : null;
+		const receipt = ticks ? (
+			<i
+				css={iconStyle(ticks, color)}
+				title={Translator.translate(receiptText, this.context.language)}
+			></i>
+		) : null;
 
 		const timestamp = getMessageSentTime(dateField, this.context.language);
 
 		return (
 			<React.Fragment>
-				<span css={msgTimestampStyle(this.context, this.props, this.loggedInUser)} className="message__timestamp">
+				<span
+					css={msgTimestampStyle(this.context, this.props, this.loggedInUser)}
+					className='message__timestamp'
+				>
 					{timestamp}
 				</span>
 				{receipt}
