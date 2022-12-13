@@ -1,14 +1,14 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import {jsx} from "@emotion/core";
+import { jsx } from "@emotion/react";
 
-import {CometChatContext} from "../../../util/CometChatContext";
+import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 
 import Translator from "../../../resources/localization/translator";
 
-import {conversationActionStyle, groupButtonStyle} from "./style.js";
+import { conversationActionStyle, groupButtonStyle } from "./style.js";
 
 import loadingIcon from "./resources/progress.svg";
 import deleteIcon from "./resources/delete.svg";
@@ -42,9 +42,11 @@ class CometChatConversationListActions extends React.PureComponent {
 		}
 	};
 
-	deleteConversation = event => {
-
-		this.props.actionGenerated(enums.ACTIONS["DELETE_CONVERSATION"], this.props.conversation);
+	deleteConversation = (event) => {
+		this.props.actionGenerated(
+			enums.ACTIONS["DELETE_CONVERSATION"],
+			this.props.conversation
+		);
 		event.stopPropagation();
 	};
 
@@ -52,22 +54,30 @@ class CometChatConversationListActions extends React.PureComponent {
 		const deleteConversation = (
 			<li>
 				<button
-				type="button"
-				css={groupButtonStyle(this.state.deleteInProgress, loadingIcon, deleteIcon)}
-				className="group__button button__delete"
-				data-title={Translator.translate("DELETE", this.context.language)}
-				onMouseEnter={event => this.toggleTooltip(event, true)}
-				onMouseLeave={event => this.toggleTooltip(event, false)}
-				onClick={this.deleteConversation} />
+					type='button'
+					css={groupButtonStyle(
+						this.state.deleteInProgress,
+						loadingIcon,
+						deleteIcon
+					)}
+					className='group__button button__delete'
+					data-title={Translator.translate("DELETE", this.context.language)}
+					onMouseEnter={(event) => this.toggleTooltip(event, true)}
+					onMouseLeave={(event) => this.toggleTooltip(event, false)}
+					onClick={this.deleteConversation}
+				/>
 			</li>
 		);
 
 		return (
-			<ul css={conversationActionStyle(this.context)} className="list__item__actions">
+			<ul
+				css={conversationActionStyle(this.context)}
+				className='list__item__actions'
+			>
 				{deleteConversation}
 			</ul>
 		);
 	}
 }
 
-export {CometChatConversationListActions};
+export { CometChatConversationListActions };

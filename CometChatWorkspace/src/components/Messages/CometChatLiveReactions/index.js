@@ -1,23 +1,19 @@
 import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
-import { jsx } from "@emotion/core";
+import { jsx } from "@emotion/react";
 import { CometChat } from "@cometchat-pro/chat";
 
 import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 
-import {
-    reactionContainerStyle,
-    reactionEmojiStyle
-} from "./style";
+import { reactionContainerStyle, reactionEmojiStyle } from "./style";
 
 import heartIcon from "./resources/heart.png";
 
 class CometChatLiveReactions extends React.PureComponent {
+	static contextType = CometChatContext;
 
-    static contextType = CometChatContext;
-    
 	constructor(props) {
 		super(props);
 
@@ -30,13 +26,14 @@ class CometChatLiveReactions extends React.PureComponent {
 
 		this.before = Date.now();
 
-		const reaction = props.reaction ? enums.CONSTANTS["LIVE_REACTIONS"][props.reaction] : enums.CONSTANTS["LIVE_REACTIONS"]["heart"];
+		const reaction = props.reaction
+			? enums.CONSTANTS["LIVE_REACTIONS"][props.reaction]
+			: enums.CONSTANTS["LIVE_REACTIONS"]["heart"];
 		const reactionImg = <img src={heartIcon} alt={reaction} />;
 		this.emojis = Array(6).fill(reactionImg);
 	}
 
 	componentDidMount() {
-
 		//this.sendMessage();
 		this.setItems();
 		this.requestAnimation();
@@ -47,14 +44,26 @@ class CometChatLiveReactions extends React.PureComponent {
 	}
 
 	sendMessage = () => {
+		//fetching the metadata type from constants
+		const metadata = {
+			type: enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"],
+			reaction: this.props.reaction,
+		};
 
-        //fetching the metadata type from constants
-		const metadata = { type: enums.CONSTANTS["METADATA_TYPE_LIVEREACTION"], reaction: this.props.reaction };
+		const receiverType =
+			this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER
+				? CometChat.ACTION_TYPE.TYPE_USER
+				: CometChat.ACTION_TYPE.TYPE_GROUP;
+		const receiverId =
+			this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER
+				? this?.context?.item?.uid
+				: this?.context?.item?.guid;
 
-        const receiverType = this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER ? CometChat.ACTION_TYPE.TYPE_USER : CometChat.ACTION_TYPE.TYPE_GROUP;
-        const receiverId = (this?.context?.type === CometChat.ACTION_TYPE.TYPE_USER) ? this?.context?.item?.uid : this?.context?.item?.guid;
-
-		let transientMessage = new CometChat.TransientMessage(receiverId, receiverType, metadata);
+		let transientMessage = new CometChat.TransientMessage(
+			receiverId,
+			receiverType,
+			metadata
+		);
 		CometChat.sendTransientMessage(transientMessage);
 	};
 
@@ -77,7 +86,10 @@ class CometChatLiveReactions extends React.PureComponent {
 				omega: (2 * Math.PI * this.horizontalSpeed) / (width * 60), //omega= 2Pi*frequency
 				random: (Math.random() / 2 + 0.5) * i * 10000, //random time offset
 				x: function (time) {
-					return ((Math.sin(this.omega * (time + this.random)) + 1) / 2) * (width - elementWidth);
+					return (
+						((Math.sin(this.omega * (time + this.random)) + 1) / 2) *
+						(width - elementWidth)
+					);
 				},
 				y: height + (Math.random() + 1) * i * elementHeight,
 			};
@@ -101,7 +113,8 @@ class CometChatLiveReactions extends React.PureComponent {
 		for (let i = 0; i < this.items.length; i++) {
 			const item = this.items[i];
 
-			const transformString = "translate3d(" + item.x(time) + "px, " + item.y + "px, 0px)";
+			const transformString =
+				"translate3d(" + item.x(time) + "px, " + item.y + "px, 0px)";
 			item.element.style.transform = transformString;
 
 			item.element.style.visibility = "visible";
@@ -118,12 +131,15 @@ class CometChatLiveReactions extends React.PureComponent {
 
 	render() {
 		const emojis = this.emojis.map((emoji, index) => (
-			<span className="emoji" css={reactionEmojiStyle()} key={index}>
+			<span className='emoji' css={reactionEmojiStyle()} key={index}>
 				{emoji}
 			</span>
 		));
 		return (
-			<div ref={el => (this.parentElement = el)} css={reactionContainerStyle()}>
+			<div
+				ref={(el) => (this.parentElement = el)}
+				css={reactionContainerStyle()}
+			>
 				{emojis}
 			</div>
 		);

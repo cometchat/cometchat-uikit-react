@@ -8,7 +8,7 @@
 		"react-dom": "^17.0.2",
 		"react-scripts": "^4.0.3",
 		"@cometchat-pro/chat": "3.0.10",
-		"@emotion/core": "^10.0.35",
+		"@emotion/react": "^11.0.0",
 		"dateformat": "^4.0.0",
 		"html-react-parser": "^1.4.5",
 		"twemoji": "^13.0.1"
@@ -27,5 +27,3 @@
 		}
 	}
 }
-
-
