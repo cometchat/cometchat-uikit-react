@@ -1,5 +1,5 @@
 import { fontHelper } from "../../Shared";
-import { JoinProtectedGroupStyles } from "../CometChatJoinProtectedGroup/JoinProtectedGroupsStyle";
+import { JoinProtectedGroupStyles } from "../CometChatJoinProtectedGroup/JoinProtectedGroupsStyles";
 export const chatScreenStyle = (style) => {
   return {
     display: "flex",
