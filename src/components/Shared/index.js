@@ -1,8 +1,4 @@
 import {
-  ConversationsWithMessagesConfiguration,
-  ConversationsConfiguration,
-  ConversationListConfiguration,
-  ConversationListItemConfiguration,
   ListBaseConfiguration,
   CometChatListBase,
   CometChatLocalize,
@@ -12,7 +8,6 @@ import {
   Palette,
   Typography,
   GroupListItemConfiguration,
-  UserListConfiguration,
   UserListItemConfiguration,
 } from "./PrimaryComponents";
 
@@ -21,7 +16,8 @@ import {
   CometChatGroupListItem,
   CometChatUserListItem,
   CometChatDataItem,
-  ConversationListItemStyles,
+  ConversationListItemStyle,
+  ConversationListItemConfiguration,
 } from "./SDKDerivedComponents";
 
 import {
@@ -90,33 +86,30 @@ import { BadgeCountConfiguration } from "./SecondaryComponents/CometChatBadgeCou
 import { StatusIndicatorConfiguration } from "./SecondaryComponents/CometChatStatusIndicator/StatusIndicatorConfiguration";
 import { MessageReceiptConfiguration } from "./SecondaryComponents/CometChatMessageReceipt/MessageReceiptConfiguration";
 import { DateConfiguration } from "./SecondaryComponents/CometChatDate/DateConfiguration";
-import { ActionSheetConfiguration } from "./UtilityComponents/CometChatActionSheet/ActionSheetConfiguration";
 import { DataItemConfiguration } from "./SDKDerivedComponents/CometChatDataItem/DataItemConfiguration";
 import { ListItemConfiguration } from "./UtilityComponents/CometChatListItem/ListItemConfiguration";
 import { DetailsConfiguration } from "./PrimaryComponents";
 
 /**Styles */
 import { BaseStyles } from "./Base/BaseStyles";
-import { AvatarStyles } from "./SecondaryComponents/CometChatAvatar/AvatarStyle";
-import { BadgeCountStyles } from "./SecondaryComponents/CometChatBadgeCount/BadgeCountStyle";
+import { AvatarStyle } from "./SecondaryComponents/CometChatAvatar/AvatarStyle";
+import { BadgeCountStyle } from "./SecondaryComponents/CometChatBadgeCount/BadgeCountStyle";
 import { StatusIndicatorStyles } from "./SecondaryComponents/CometChatStatusIndicator/StatusIndicatorStyles";
-import { MessageReceiptStyles } from "./SecondaryComponents/CometChatMessageReceipt/MessageReceiptStyle";
-import { DateStyles } from "./SecondaryComponents/CometChatDate/DateStyle";
-import { DecoratorMessageStyles } from "./UtilityComponents/CometChatDecoratorMessage/DecoratorMessageStyle";
-import { ListItemStyles } from "./UtilityComponents/CometChatListItem/ListItemStyle";
-import { DataItemStyles } from "./SDKDerivedComponents/CometChatDataItem/DataItemStyle";
-import { ActionSheetStyles } from "./UtilityComponents/CometChatActionSheet/ActionSheetStyle";
+import { MessageReceiptStyle } from "./SecondaryComponents/CometChatMessageReceipt/MessageReceiptStyle";
+import { DateStyle } from "./SecondaryComponents/CometChatDate/DateStyle";
+import { DecoratorMessageStyle } from "./UtilityComponents/CometChatDecoratorMessage/DecoratorMessageStyle";
+import { ListItemStyle } from "./UtilityComponents/CometChatListItem/ListItemStyle";
+import { DataItemStyle } from "./SDKDerivedComponents/CometChatDataItem/DataItemStyle";
+import { ActionSheetStyle } from "./UtilityComponents/CometChatActionSheet/ActionSheetStyle";
+import { ConfirmDialogStyle } from "./UtilityComponents/CometChatConfirmDialog/ConfirmDialogStyle";
+import { MenuListStyle } from "./UtilityComponents/CometChatMenuList/MenuListStyle";
+import { PopoverStyle } from "./UtilityComponents/CometChatPopover/PopoverStyle";
 
 export {
-  ConversationsWithMessagesConfiguration,
-  ConversationsConfiguration,
-  ConversationListConfiguration,
   ConversationListItemConfiguration,
   GroupListItemConfiguration,
-  UserListConfiguration,
   UserListItemConfiguration,
   ListBaseConfiguration,
-  ActionSheetConfiguration,
   ListItemConfiguration,
   DataItemConfiguration,
   CometChatActionSheet,
@@ -189,14 +182,17 @@ export {
    * Styles
    */
   BaseStyles,
-  AvatarStyles,
-  BadgeCountStyles,
+  AvatarStyle,
+  BadgeCountStyle,
   StatusIndicatorStyles,
-  MessageReceiptStyles,
-  ListItemStyles,
-  DataItemStyles,
-  DateStyles,
-  ActionSheetStyles,
-  DecoratorMessageStyles,
-  ConversationListItemStyles,
+  MessageReceiptStyle,
+  ListItemStyle,
+  DataItemStyle,
+  DateStyle,
+  ActionSheetStyle,
+  DecoratorMessageStyle,
+  ConversationListItemStyle,
+  ConfirmDialogStyle,
+  MenuListStyle,
+  PopoverStyle,
 };
