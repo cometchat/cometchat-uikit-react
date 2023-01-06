@@ -17,7 +17,7 @@ import { ConversationListStyle } from "./CometChatConversationList/ConversationL
  * Configurations
  */
 import { ConversationsConfiguration } from "./CometChatConversations/ConversationsConfiguration";
-import { ConversationsWithMessagesConfiguration } from "./CometChatConversationsWithMessages/ConversationsWithMessagesConfiguration";
+import { ConversationsWithMessagesConfiguration } from "./CometChatConversationsWithMessages/ConversationswithMessagesConfiguration";
 import { ConversationListConfiguration } from "./CometChatConversationList/ConversationListConfiguration";
 
 export {

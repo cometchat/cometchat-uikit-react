@@ -1,5 +1,5 @@
 import { fontHelper } from "../../Shared";
-import { JoinProtectedGroupStyles } from "../CometChatJoinProtectedGroup/JoinProtectedGroupsStyle";
+import { JoinProtectedGroupStyle } from "../CometChatJoinProtectedGroup/JoinProtectedGroupsStyle";
 export const chatScreenStyle = (style) => {
   return {
     display: "flex",
@@ -11,7 +11,7 @@ export const chatScreenStyle = (style) => {
 };
 
 export const joinProtectedGroupStyles = (theme, joinGroupConfiguration) => {
-  return new JoinProtectedGroupStyles({
+  return new JoinProtectedGroupStyle({
     width: joinGroupConfiguration?.style?.width || "100%",
     height: joinGroupConfiguration?.style?.height || "100%",
     boxShadow:
