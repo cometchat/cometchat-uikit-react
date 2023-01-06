@@ -7,18 +7,18 @@ export const actionSheetWrapperStyle = (props) => {
     borderRadius: props.style.borderRadius,
     border: props.style.border,
     width: props.style.width,
-    height: props.style.height,
+    height: "auto",
     transform: "scale(1)",
     transformOrigin: "left bottom",
     overflowY: "auto",
     overflowX: "hidden",
     display: "flex",
-    padding: "12px",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    flexWrap: "wrap",
+    padding: "8px",
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
     ...props.style,
+    boxSizing: "border-box",
   };
 };
 
@@ -50,15 +50,7 @@ export const actionSheetLayoutIconStyle = (props, mode) => {
   };
 };
 
-export const sheetItemListStyle = (mode) => {
-  let flexDirection = { flexDirection: "row" },
-    flexWrap = { flexWrap: "wrap" };
-
-  if (mode === layoutType.list) {
-    flexDirection = { flexDirection: "column" };
-    flexWrap = { flexWrap: "nowrap" };
-  }
-
+export const sheetItemListStyle = (props) => {
   return {
     width: "100%",
     display: "flex",
@@ -66,8 +58,9 @@ export const sheetItemListStyle = (mode) => {
     alignItems: "center",
     overflowY: "auto",
     overflowX: "hidden",
-    ...flexDirection,
-    ...flexWrap,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    boxSizing: "border-box",
   };
 };
 
@@ -85,6 +78,7 @@ export const listItemStyle = (props, mode, index, theme) => {
       cursor: "pointer",
       padding: "8px 16px",
       overflow: "hidden",
+      boxSizing: "border-box",
     };
 
   if (mode === layoutType.grid) {
@@ -119,6 +113,7 @@ export const listItemStyle = (props, mode, index, theme) => {
       ...sheetItemStyle,
       ...borderRadius,
       ...borderBottom,
+      margin: "0 5px",
     };
   }
 

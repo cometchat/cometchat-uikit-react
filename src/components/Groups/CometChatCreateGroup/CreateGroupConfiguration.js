@@ -1,4 +1,4 @@
-import { CreateGroupStyles } from "./CreateGroupStyles";
+import { CreateGroupStyle } from "./CreateGroupStyle";
 import closeIcon from "./resources/close.svg";
 
 /**
@@ -12,17 +12,17 @@ import closeIcon from "./resources/close.svg";
  * @param {object} style
  */
 export class CreateGroupConfiguration {
-	constructor({
-		hideCloseButton = false,
-		closeButtonIconURL = closeIcon,
-		onClose = null,
-		onCreateGroup = null,
-		style = new CreateGroupStyles({}),
-	}) {
-		this.hideCloseButton = hideCloseButton;
-		this.closeButtonIconURL = closeButtonIconURL;
-		this.onClose = onClose;
-		this.onCreateGroup = onCreateGroup;
-		this.style = new CreateGroupStyles(style || {});
-	}
+  constructor({
+    hideCloseButton = false,
+    closeButtonIconURL = closeIcon,
+    onClose = null,
+    onCreateGroup = null,
+    style = new CreateGroupStyle({}),
+  }) {
+    this.hideCloseButton = hideCloseButton;
+    this.closeButtonIconURL = closeButtonIconURL;
+    this.onClose = onClose;
+    this.onCreateGroup = onCreateGroup;
+    this.style = new CreateGroupStyle(style || {});
+  }
 }

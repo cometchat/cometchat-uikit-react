@@ -5,7 +5,7 @@
  * @param {String} char
  * @param {Array} keywords
  */
-class CometChatEmoji {
+ class CometChatEmoji {
   char = "";
   keywords = [];
   constructor({ char, keywords }) {

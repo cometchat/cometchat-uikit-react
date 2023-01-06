@@ -17,6 +17,7 @@ export const emojiListStyle = () => {
   return {
     display: "flex",
     flexWrap: "wrap",
+    justifyContent: "center",
   };
 };
 
@@ -44,13 +45,13 @@ export const emojiTabLsitStyle = (props, theme) => {
     width: props.style.width,
     zIndex: "3",
     display: "flex",
-    flexWrap: "wrap",
     padding: "5px 2px",
     position: "sticky",
     bottom: "0px",
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "space-between",
-
+    boxSizing: "border-box",
     background:
       props?.style?.categoryBackground || theme?.palette?.getBackground(),
   };

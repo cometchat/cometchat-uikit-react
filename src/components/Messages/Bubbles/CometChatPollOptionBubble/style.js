@@ -6,9 +6,10 @@ export const pollAnswerStyle = (props, theme) => {
       `${props.style.pollOptionBackground}` ||
       theme.palette.background[theme.palette.mode],
     margin: "5px 0",
-    borderRadius: "8px",
+    borderRadius: props.style.borderRadius || "8px",
+    border: props.style.border || "none",
     display: "flex",
-    width: "100%",
+    width: props.style.width,
     minWidth: "220px",
     cursor: "pointer",
     position: "relative",
@@ -52,9 +53,7 @@ export const answerWrapperStyle = (props, theme) => {
   return {
     width: "100%",
     height: "34px",
-    color:
-      props.style.pollOptionTextColor ||
-      theme?.palette?.getAccent(),
+    color: props.style.pollOptionTextColor || theme?.palette?.getAccent(),
     display: "flex",
     alignItems: "center",
     zIndex: "2",
@@ -85,9 +84,7 @@ export const pollOptionTitleStyle = (props, theme) => {
     marginLeft: "5%",
     font:
       props.style.pollOptionTextFont || fontHelper(theme.typography.subtitle1),
-    color:
-      props.style.pollOptionTextColor ||
-      theme?.palette?.getAccent(),
+    color: props.style.pollOptionTextColor || theme?.palette?.getAccent(),
     whiteSpace: "pre-wrap",
     wordWrap: "break-word",
   };
@@ -99,9 +96,7 @@ export const pollOptionPercentTextStyle = (props, theme) => {
     marginRight: "5%",
     font:
       props.style.votePercentTextFont || fontHelper(theme.typography.subtitle1),
-    color:
-      props.style.votePercentTextColor ||
-      theme?.palette?.getAccent(),
+    color: props.style.votePercentTextColor || theme?.palette?.getAccent(),
     textAlign: "center",
   };
 };

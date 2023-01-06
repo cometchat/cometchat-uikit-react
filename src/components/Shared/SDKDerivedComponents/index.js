@@ -6,13 +6,18 @@ import { CometChatDataItem } from "./CometChatDataItem";
 /**
  * Styles
  */
-import { ConversationListItemStyles } from "./CometChatConversationListItem/ConversationListItemStyles";
+import { ConversationListItemStyle } from "./CometChatConversationListItem/ConversationListItemStyle";
+
+/**
+ * configurations
+ */
+import { ConversationListItemConfiguration } from "./CometChatConversationListItem/ConversationListItemConfiguration";
 
 export {
-    CometChatConversationListItem,
-    CometChatGroupListItem,
-    CometChatUserListItem,
-    CometChatDataItem,
-    
-    ConversationListItemStyles
-}
+  CometChatConversationListItem,
+  CometChatGroupListItem,
+  CometChatUserListItem,
+  CometChatDataItem,
+  ConversationListItemStyle,
+  ConversationListItemConfiguration,
+};

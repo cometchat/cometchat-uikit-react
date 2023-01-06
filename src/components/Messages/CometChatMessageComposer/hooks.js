@@ -20,6 +20,9 @@ export const Hooks = (
   setViewAttachButton,
   openCreatePoll,
   fileInputHandler,
+  videoInputHandler,
+  imageInputHandler,
+  audioInputHandler,
   shareCollaborativeDocument,
   shareCollaborativeWhiteboard,
   sendSticker
@@ -27,10 +30,13 @@ export const Hooks = (
   const helper = (type, item) => {
     switch (type) {
       case CometChatMessageTypes.file:
-      case CometChatMessageTypes.image:
-      case CometChatMessageTypes.audio:
-      case CometChatMessageTypes.video:
         return { ...item, onActionClick: fileInputHandler };
+      case CometChatMessageTypes.image:
+        return { ...item, onActionClick: imageInputHandler };
+      case CometChatMessageTypes.audio:
+        return { ...item, onActionClick: audioInputHandler };
+      case CometChatMessageTypes.video:
+        return { ...item, onActionClick: videoInputHandler };
       case CometChatCustomMessageTypes.poll: {
         return { ...item, onActionClick: openCreatePoll };
       }
@@ -47,6 +53,7 @@ export const Hooks = (
         break;
     }
   };
+
   //fetch logged in user
   React.useEffect(() => {
     CometChat.getLoggedinUser().then((user) => (loggedInUser.current = user));
@@ -85,8 +92,12 @@ export const Hooks = (
         return item;
       });
 
-      Items = Items?.filter(val => !props?.excludeMessageTypes?.includes(val?.type));
-      
+      if (props?.excludeMessageTypes) {
+        Items = Items?.filter(
+          (val) => !props?.excludeMessageTypes?.includes(val?.type)
+        );
+      }
+
       actionItems = Items.filter((item, index) => {
         if (
           item?.type !== MessageTypeConstants.text &&
@@ -111,8 +122,10 @@ export const Hooks = (
         return item;
       });
 
-      Items = Items?.filter(val => !props?.excludeMessageTypes?.includes(val?.type));
-      
+      Items = Items?.filter(
+        (val) => !props?.excludeMessageTypes?.includes(val?.type)
+      );
+
       actionItems = Items?.filter((item, index) => {
         if (
           item?.type !== MessageTypeConstants.text &&
@@ -151,5 +164,5 @@ export const Hooks = (
       setViewAttachButton(true);
       setActionSheetItems(actionItems);
     }
-  }, [props.messageTypes]);
+  }, [props.messageTypes, props.excludeMessageTypes]);
 };

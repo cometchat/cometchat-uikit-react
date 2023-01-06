@@ -23,14 +23,12 @@ const getGroup = (guid) => {
 export const Hooks = (
   props,
   loggedInUser,
-  setChatWith,
-  setChatWithType,
+  chatWithRef,
+  chatWithTypeRef,
   setMessageHeaderStatus,
   setUserPresence,
   messageHeaderManager,
   messageHeaderCallback,
-  handlers,
-  callbackData,
   errorHandler
 ) => {
   //fetch logged in user
@@ -40,17 +38,17 @@ export const Hooks = (
         loggedInUser.current = user;
         messageHeaderManager.current?.attachListeners(messageHeaderCallback);
       })
-      .catch(error => errorHandler(error));
+      .catch((error) => errorHandler(error));
   }, []);
 
   const updateMessageHeaderStatusForUser = React.useCallback(
     (user) => {
       if (user.status === UserStatusConstants.offline) {
         setMessageHeaderStatus(localize("OFFLINE"));
-        setUserPresence(UserStatusConstants.offline);
+        setUserPresence(false);
       } else if (user.status === UserStatusConstants.online) {
         setMessageHeaderStatus(localize("ONLINE"));
-        setUserPresence(UserStatusConstants.online);
+        setUserPresence(true);
       }
     },
     [setMessageHeaderStatus, setUserPresence]
@@ -69,40 +67,41 @@ export const Hooks = (
   React.useEffect(() => {
     if (props.user && props.user.uid) {
       if (props.user.name) {
-        setChatWithType(CometChatMessageReceiverType.user);
-        setChatWith(props.user);
+        chatWithTypeRef.current = CometChatMessageReceiverType.group;
+        chatWithRef.current=props.group;
         updateMessageHeaderStatusForUser(props.user);
       } else {
-        getUser(props.user.uid).then((user) => {
-          setChatWithType(CometChatMessageReceiverType.user);
-          setChatWith(user);
-          updateMessageHeaderStatusForUser(user);
-        }).catch(error => errorHandler(error));
+        getUser(props.user.uid)
+          .then((user) => {
+            chatWithTypeRef.current = CometChatMessageReceiverType.group;
+            chatWithRef.current = user;
+            updateMessageHeaderStatusForUser(user);
+          })
+          .catch((error) => errorHandler(error));
       }
     } else if (props.group && props.group.guid) {
       if (props.group.name) {
-        setChatWithType(CometChatMessageReceiverType.group);
-        setChatWith(props.group);
+        chatWithTypeRef.current = CometChatMessageReceiverType.group;
+        chatWithRef.current=props.group;
         updateMessageHeaderStatusForGroup(props.group);
       } else {
-        getGroup(props.group.guid).then((group) => {
-          setChatWithType(CometChatMessageReceiverType.group);
-          setChatWith(group);
-          updateMessageHeaderStatusForGroup(group);
-        }).catch(error => errorHandler(error));
+        getGroup(props.group.guid)
+          .then((group) => {
+            chatWithTypeRef.current = CometChatMessageReceiverType.group;
+            chatWithRef.current=group;
+            updateMessageHeaderStatusForGroup(group);
+          })
+          .catch((error) => errorHandler(error));
       }
     }
   }, [
+    props,
     props.user,
     props.group,
-    setChatWith,
-    setChatWithType,
+    chatWithRef,
+    chatWithTypeRef,
     updateMessageHeaderStatusForUser,
     updateMessageHeaderStatusForGroup,
   ]);
 
-  React.useEffect(() => {
-    const handler = handlers[callbackData?.name];
-    if (handler) return handler(...callbackData?.args);
-  }, [callbackData, handlers]);
 };

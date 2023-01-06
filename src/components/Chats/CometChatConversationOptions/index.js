@@ -5,7 +5,7 @@
  * @param {String} iconURL
  * @param {Function} onClick
  */
-class CometChatConversationOptions {
+ class CometChatConversationOptions {
     constructor({
         id = "",
         title = "",

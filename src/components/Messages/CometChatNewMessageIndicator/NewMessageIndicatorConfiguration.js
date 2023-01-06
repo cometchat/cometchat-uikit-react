@@ -1,21 +1,22 @@
+import { NewMessageIndicatorStyle } from "../";
 /**
- * @class newMessageIndicatorConfiguration 
+ * @class newMessageIndicatorConfiguration
  * @description newMessageIndicator class is used for defining the newMessageIndicator templates.
- * @param {String} Icon
+ * @param {String} IconURL
  * @param {function} onClick
+ * @param {object} style
  */
 
 class NewMessageIndicatorConfiguration {
-    constructor({
-        Icon = "",
-        onClick = ()=>{},
-       
-     }) {
-
-        this.Icon = Icon;
-        this.onClick = onClick;
-       
-    }
+  constructor({
+    IconURL = "",
+    onClick = () => {},
+    style = new NewMessageIndicatorStyle({}),
+  }) {
+    this.IconURL = IconURL;
+    this.onClick = onClick;
+    this.style = new NewMessageIndicatorStyle(style || {});
+  }
 }
 
 export { NewMessageIndicatorConfiguration };

@@ -1,11 +1,12 @@
 import { MessageBubbleConfiguration } from "../Bubbles/CometChatMessageBubble/MessageBubbleConfiguration";
 import { DateConfiguration } from "../../Shared/PrimaryComponents/CometChatConfiguration/DateConfiguration";
-import { NewMessageIndicatorConfiguration } from "../CometChatNewMessageIndicator/NewMessageIndicatorConfiguration"
-import { SmartRepliesConfiguration } from "../CometChatSmartReplies/SmartRepliesConfiguration"
-import { EmojiKeyboardConfiguration } from "../CometChatEmojiKeyboard/EmojiKeyboardConfiguration"
-import { MessageInputData} from "../../Shared/InputData/MessageInputData"
-import loadingIcon from "./resources/spinner.svg"
+import { NewMessageIndicatorConfiguration } from "../CometChatNewMessageIndicator/NewMessageIndicatorConfiguration";
+import { SmartRepliesConfiguration } from "../CometChatSmartReplies/SmartRepliesConfiguration";
+import { EmojiKeyboardConfiguration } from "../CometChatEmojiKeyboard/EmojiKeyboardConfiguration";
+import { MessageInputData } from "../../Shared/InputData/MessageInputData";
+import loadingIcon from "./resources/spinner.svg";
 import { MessageListAlignmentConstants } from "../../Shared";
+import { MessageListStyle } from "../";
 
 /**
  * @class MessageListConfiguration
@@ -31,6 +32,7 @@ import { MessageListAlignmentConstants } from "../../Shared";
  * @param {Object} dateConfiguration
  * @param {Object} smartRepliesConfiguration
  * @param {Object} emojiKeyboardConfiguration
+ * @param {object} style
  */
 
 class MessageListConfiguration {
@@ -55,18 +57,21 @@ class MessageListConfiguration {
       title: null,
       thumbnail: null,
       readReceipt: null,
-      timestamp: null
+      timestamp: null,
     }),
-    receivedMessageInputData = new MessageInputData({id: true,
+    receivedMessageInputData = new MessageInputData({
+      id: true,
       title: null,
       thumbnail: null,
       readReceipt: null,
-      timestamp: null}),
+      timestamp: null,
+    }),
     messageBubbleConfiguration = new MessageBubbleConfiguration({}),
     newMessageIndicatorConfiguration = new NewMessageIndicatorConfiguration({}),
     dateConfiguration = new DateConfiguration({}),
     smartRepliesConfiguration = new SmartRepliesConfiguration({}),
-    emojiKeyboardConfiguration = new EmojiKeyboardConfiguration({})
+    emojiKeyboardConfiguration = new EmojiKeyboardConfiguration({}),
+    style = new MessageListStyle({}),
   }) {
     this.limit = limit;
     this.onlyUnread = onlyUnread;
@@ -77,19 +82,33 @@ class MessageListConfiguration {
     this.hideError = hideError;
     this.customView = customView;
     this.loadingIconURL = loadingIconURL;
-    this.receivedMessageInputData = new MessageInputData(receivedMessageInputData || {});
-    this.sentMessageInputData = new MessageInputData(sentMessageInputData || {});
+    this.receivedMessageInputData = new MessageInputData(
+      receivedMessageInputData || {}
+    );
+    this.sentMessageInputData = new MessageInputData(
+      sentMessageInputData || {}
+    );
     this.hideDeletedMessages = hideDeletedMessages;
     this.hideMessagesFromBlockedUsers = hideMessagesFromBlockedUsers;
     this.excludeMessageTypes = excludeMessageTypes;
     this.customIncomingMessageSound = customIncomingMessageSound;
     this.enableSoundForMessages = enableSoundForMessages;
     this.excludeMessageOptions = excludeMessageOptions;
-    this.messageBubbleConfiguration = new MessageBubbleConfiguration(messageBubbleConfiguration || {});
-    this.newMessageIndicatorConfiguration = new NewMessageIndicatorConfiguration(newMessageIndicatorConfiguration ||{});
+    this.messageBubbleConfiguration = new MessageBubbleConfiguration(
+      messageBubbleConfiguration || {}
+    );
+    this.newMessageIndicatorConfiguration =
+      new NewMessageIndicatorConfiguration(
+        newMessageIndicatorConfiguration || {}
+      );
     this.dateConfiguration = new DateConfiguration(dateConfiguration || {});
-    this.smartRepliesConfiguration = new SmartRepliesConfiguration(smartRepliesConfiguration || {});
-    this.emojiKeyboardConfiguration = new EmojiKeyboardConfiguration(emojiKeyboardConfiguration || {});
+    this.smartRepliesConfiguration = new SmartRepliesConfiguration(
+      smartRepliesConfiguration || {}
+    );
+    this.emojiKeyboardConfiguration = new EmojiKeyboardConfiguration(
+      emojiKeyboardConfiguration || {}
+    );
+    this.style = new MessageListStyle(style || {});
   }
 }
 

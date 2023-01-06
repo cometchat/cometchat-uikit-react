@@ -1,4 +1,4 @@
-import { BadgeCountStyles } from "../../../Shared";
+import { BadgeCountStyle } from "../../../Shared";
 
 /**
  * @class BadgeCountConfiguration
@@ -6,13 +6,10 @@ import { BadgeCountStyles } from "../../../Shared";
  * @param {Number} count
  */
 class BadgeCountConfiguration {
-	constructor({
-		style = new BadgeCountStyles({}),
-		count = 0,
-	}) {
-		this.style = new BadgeCountStyles(style ?? {});
-		this.count = count;
-	}
+  constructor({ style = new BadgeCountStyle({}), count = 0 }) {
+    this.style = new BadgeCountStyle(style ?? {});
+    this.count = count;
+  }
 }
 
 export { BadgeCountConfiguration };

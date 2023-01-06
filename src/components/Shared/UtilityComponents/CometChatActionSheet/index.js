@@ -62,7 +62,7 @@ const CometChatActionSheet = (props) => {
         </div>
         {toggleLayoutButton}
       </div>
-      <div className="sheet__items" style={sheetItemListStyle(mode)}>
+      <div className="sheet__items" style={sheetItemListStyle(props)}>
         {renderItems}
       </div>
     </div>

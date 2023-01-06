@@ -12,10 +12,8 @@ import {
 import { Hooks } from "./hooks";
 
 const CometChatNewMessageIndicator = (props) => {
-
-
   const { text, onClick, style, theme } = props;
-  const _theme = theme || new CometChatTheme({})
+  const _theme = theme || new CometChatTheme({});
   const [messageText, setMessageText] = React.useState();
   Hooks(text, setMessageText);
 
@@ -52,6 +50,7 @@ const CometChatNewMessageIndicator = (props) => {
 
 CometChatNewMessageIndicator.defaultProps = {
   text: "new messages",
+  iconURL: "",
   style: {
     textFont: "",
     textColor: "#ffffff",

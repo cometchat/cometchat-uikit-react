@@ -1,7 +1,7 @@
 import {
   AvatarConfiguration,
   StatusIndicatorConfiguration,
-  DataItemStyles,
+  DataItemStyle,
   InputData,
 } from "../../../Shared";
 
@@ -14,12 +14,12 @@ import {
 class DataItemConfiguration {
   constructor({
     inputData = new InputData({}),
-    style = new DataItemStyles({}),
+    style = new DataItemStyle({}),
     avatarConfiguration = new AvatarConfiguration({}),
     statusIndicatorConfiguration = new StatusIndicatorConfiguration({}),
   }) {
     this.inputData = new InputData(inputData ?? {});
-    this.style = new DataItemStyles(style ?? {});
+    this.style = new DataItemStyle(style ?? {});
     this.avatarConfiguration = new AvatarConfiguration(
       avatarConfiguration ?? {}
     );

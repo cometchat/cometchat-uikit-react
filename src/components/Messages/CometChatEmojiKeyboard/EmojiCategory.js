@@ -6,7 +6,7 @@
  * @param {String} symbol
  * @param {Object} emojis
  */
-class CometChatEmojiCategory {
+ class CometChatEmojiCategory {
   id = "";
   name = "";
   symbol = "";

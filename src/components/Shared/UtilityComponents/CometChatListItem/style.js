@@ -37,6 +37,7 @@ export const listItemIconStyle = (props) => {
     height: props.style.iconHeight,
     ...padding,
     cursor: "pointer",
+    boxSizing: "border-box",
   };
 };
 

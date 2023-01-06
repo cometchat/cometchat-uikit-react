@@ -1,10 +1,9 @@
 import heart from "./resources/heart.png";
 
 import { MessageComposerConfiguration } from "../CometChatMessageComposer/MessageComposerConfiguration";
-import { MessageHeaderConfiguration } from "../CometChatMessageHeader/MessageHeaderconfiguration";
-import { LiveReactionConfiguration } from "../CometChatLiveReactions/LiveReactionConfiguration";
+import { MessageHeaderConfiguration } from "../CometChatMessageHeader/MessageHeaderConfiguration";
 import { MessageListConfiguration } from "../CometChatMessageList/MessageListConfiguration";
-import { MessagesStyles } from "./MessagesStyles";
+import { MessagesStyle } from "./MessagesStyle";
 
 /**
  * @class MessagesConfiguration
@@ -33,7 +32,7 @@ class MessagesConfiguration {
     customOutgoingMessageSound = true,
     enableTypingIndicator = true,
     liveReactionIconURL = heart,
-    style = new MessagesStyles({}),
+    style = new MessagesStyle({}),
     messageHeaderConfiguration = new MessageHeaderConfiguration({}),
     messageListConfiguration = new MessageListConfiguration({}),
     messageComposerConfiguration = new MessageComposerConfiguration({}),
@@ -46,7 +45,7 @@ class MessagesConfiguration {
     this.customOutgoingMessageSound = customOutgoingMessageSound;
     this.enableSoundForMessages = enableSoundForMessages;
     this.enableSoundForCalls = enableSoundForCalls;
-    this.style = new MessagesStyles(style || {});
+    this.style = new MessagesStyle(style || {});
     this.messageHeaderConfiguration = messageHeaderConfiguration;
     this.messageListConfiguration = messageListConfiguration;
     this.messageComposerConfiguration = messageComposerConfiguration;

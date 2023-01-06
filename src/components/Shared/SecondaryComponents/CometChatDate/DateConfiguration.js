@@ -1,4 +1,4 @@
-import { DateStyles } from "../../../Shared";
+import { DateStyle } from "../../../Shared";
 
 /**
  * @class DateConfiguration
@@ -7,15 +7,15 @@ import { DateStyles } from "../../../Shared";
  * @param {String} customPattern
  */
 class DateConfiguration {
-	constructor({
-		style = new DateStyles({}),
-		pattern = "",
-		customPattern = null
-	}) {
-		this.style = new DateStyles(style ?? {});
-		this.pattern = pattern;
-		this.customPattern = customPattern;
-	}
+  constructor({
+    style = new DateStyle({}),
+    pattern = "",
+    customPattern = null,
+  }) {
+    this.style = new DateStyle(style ?? {});
+    this.pattern = pattern;
+    this.customPattern = customPattern;
+  }
 }
 
 export { DateConfiguration };

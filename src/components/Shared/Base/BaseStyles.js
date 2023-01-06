@@ -9,7 +9,7 @@
  * @param {String} activeBackground
  */
 
-class BaseStyles {
+ class BaseStyles {
     constructor({
         width = "100%",
         height = "100%",

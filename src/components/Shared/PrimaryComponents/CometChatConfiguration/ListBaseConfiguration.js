@@ -1,4 +1,4 @@
-import { ListBaseStyles } from "../CometChatListBase/ListBaseStyles";
+import { ListBaseStyles } from "../CometChatListBase/ListBaseStyle";
 
 /**
  * @class ListBaseConfiguration
@@ -14,29 +14,29 @@ import { ListBaseStyles } from "../CometChatListBase/ListBaseStyles";
  * @param {Object} style
  */
 class ListBaseConfiguration {
-	constructor({
-		title = "Title",
-		searchPlaceholder = "Search",
-		onSearch = () => { },
-		onBackButtonClick = () => { },
-		backButtonIconURL = "",
-		searchIconURL = "",
-		showBackButton = true,
-		hideSearch = true,
-		searchText = "",
-		style = new ListBaseStyles({})
-	}) {
-		this.title = title;
-		this.searchPlaceholder = searchPlaceholder;
-		this.onSearch = onSearch;
-		this.onBackButtonClick = onBackButtonClick;
-		this.backButtonIconURL = backButtonIconURL;
-		this.searchIconURL = searchIconURL;
-		this.showBackButton = showBackButton;
-		this.hideSearch = hideSearch;
-		this.searchText = searchText;
-		this.style = new ListBaseStyles(style ?? {});
-	}
+  constructor({
+    title = "Title",
+    searchPlaceholder = "Search",
+    onSearch = () => {},
+    onBackButtonClick = () => {},
+    backButtonIconURL = "",
+    searchIconURL = "",
+    showBackButton = true,
+    hideSearch = true,
+    searchText = "",
+    style = new ListBaseStyles({}),
+  }) {
+    this.title = title;
+    this.searchPlaceholder = searchPlaceholder;
+    this.onSearch = onSearch;
+    this.onBackButtonClick = onBackButtonClick;
+    this.backButtonIconURL = backButtonIconURL;
+    this.searchIconURL = searchIconURL;
+    this.showBackButton = showBackButton;
+    this.hideSearch = hideSearch;
+    this.searchText = searchText;
+    this.style = new ListBaseStyles(style ?? {});
+  }
 }
 
 export { ListBaseConfiguration };

@@ -52,9 +52,20 @@ import {
   translateLabelText,
 } from "./style";
 
-import { BaseStyles, AvatarStyles } from "../../../Shared";
+import { BaseStyles, AvatarStyle } from "../../../Shared";
 
-import { MessageBubbleStyles } from "..";
+import {
+  TextBubbleStyle,
+  ImageBubbleStyle,
+  AudioBubbleStyle,
+  VideoBubbleStyle,
+  DeleteBubbleStyle,
+  DocumentBubbleStyle,
+  WhiteboardBubbleStyle,
+  PollBubbleStyle,
+  FileBubbleStyle,
+  StickerBubbleStyle,
+} from "../../";
 
 import downloadIcon from "./resources/download-icon.svg";
 import whiteBoard from "./resources/whiteboard.svg";
@@ -74,6 +85,7 @@ import { PollBubbleConfiguration } from "../CometChatPollBubble/PollBubbleConfig
 import { StickerBubbleConfiguration } from "../CometChatStickerBubble/StickerBubbleConfiguration";
 import { DeletedBubbleConfiguration } from "../CometChatDeletedMessageBubble/DeletedBubbleConfiguration";
 import { CollaborativeDocumentConfiguration } from "../CometChatDocumentBubble/CollaborativeDocumentConfiguration";
+import { CollaborativeWhiteboardConfiguration } from "../CometChatWhiteboardBubble/CollaborativeWhiteboardConfiguration";
 
 /**
  *CometChatMessageBubble handles the display and functionality for all types of messages in a message list.
@@ -100,16 +112,51 @@ const CometChatMessageBubble = (props) => {
     avatarConfiguration,
     messageReceiptConfiguration,
     messageReactionsConfiguration,
+    messageBubbleConfiguration,
     dateConfiguration,
   } = props;
-
   const [isHovering, setIsHovering] = React.useState(null);
   const _theme = new CometChatTheme(theme || {});
-
   const _avatarConfiguration =
     avatarConfiguration || new AvatarConfiguration({});
   const _messageReactionsConfiguration =
     messageReactionsConfiguration || new MessageReactionsConfiguration({});
+
+  const _textBubbleConfiguration =
+    messageBubbleConfiguration.TextBubbleConfiguration ||
+    TextBubbleConfiguration({});
+  const _imageBubbleConfiguration =
+    messageBubbleConfiguration.ImageBubbleConfiguration ||
+    ImageBubbleConfiguration({});
+  const _fileBubbleConfiguration =
+    messageBubbleConfiguration.FileBubbleConfiguration ||
+    FileBubbleConfiguration({});
+  const _audioBubbleConfiguration =
+    messageBubbleConfiguration.AudioBubbleConfiguration ||
+    AudioBubbleConfiguration({});
+  const _videoBubbleConfiguration =
+    messageBubbleConfiguration.VideoBubbleConfiguration ||
+    VideoBubbleConfiguration({});
+
+  const _deleteBubbledConfiguration =
+    messageBubbleConfiguration.DeletedBubbleConfiguration ||
+    DeletedBubbleConfiguration({});
+
+  const _whiteboardBubbleConfiguration =
+    messageBubbleConfiguration.CollaborativeWhiteboardBubbleConfiguration ||
+    CollaborativeWhiteboardConfiguration({});
+
+  const _documentBubbleConfiguration =
+    messageBubbleConfiguration.CollaborativeDocumentBubbleConfiguration ||
+    CollaborativeDocumentConfiguration({});
+
+  const _pollBubbleConfiguration =
+    messageBubbleConfiguration.PollBubbleConfiguration ||
+    PollBubbleConfiguration({});
+
+  const _stickerBubbleConfiguration =
+    messageBubbleConfiguration.StickerBubbleConfiguration ||
+    StickerBubbleConfiguration({});
 
   /**
    *
@@ -128,7 +175,7 @@ const CometChatMessageBubble = (props) => {
     const outerView = `${outerViewWidth} solid ${
       _theme.palette.primary[_theme.palette.mode]
     }`;
-    let avatarStyle = new AvatarStyles({
+    let avatarStyle = new AvatarStyle({
       width: _avatarConfiguration?.style?.width,
       height: _avatarConfiguration?.style?.height,
       outerViewSpacing: _avatarConfiguration?.style?.outerViewSpacing,
@@ -181,6 +228,7 @@ const CometChatMessageBubble = (props) => {
    * @returns custom Bubble set by The user
    */
   const getCustomView = (customView) => {
+    //return customView;
     return React.createElement(customView, {
       key: messageObject.key,
       messageBubbleData: messageBubbleData,
@@ -255,75 +303,90 @@ const CometChatMessageBubble = (props) => {
           let textColor;
           if (alignment === MessageBubbleAlignmentConstants.right) {
             textColor = {
-              textColor: _theme.palette.accent900["light"],
+              textColor:
+                _textBubbleConfiguration.style.textFont ||
+                _theme.palette.accent900["light"],
             };
           } else {
             textColor = {
-              textColor: _theme.palette.accent900["dark"],
+              textColor:
+                _textBubbleConfiguration.style.textFont ||
+                _theme.palette.accent900["dark"],
             };
           }
+
           messageStyle = {
-            ...new BaseStyles({
-              width: "",
-              height: "",
+            ...new TextBubbleStyle({
+              width: _textBubbleConfiguration.style.width,
+              height: _textBubbleConfiguration.style.height,
               background: "transparent",
-              border: "none",
-              borderRadius: "12px",
-              activeBackground: "",
+              border: _textBubbleConfiguration.style.border,
+              borderRadius: _textBubbleConfiguration.style.borderRadius,
+              textFont: emojiFont(messageObject.text)
+                ? emojiFont(messageObject.text)
+                : _textBubbleConfiguration.style.textFont ||
+                  fontHelper(_theme.typography.subtitle1),
+              ...textColor,
+              linkPreviewTitleFont:
+                _textBubbleConfiguration.style.linkPreviewTitleFont ||
+                fontHelper(_theme.typography.title2),
+              linkPreviewTitleColor:
+                _textBubbleConfiguration.style.linkPreviewTitleColor ||
+                _theme.palette.accent[_theme.palette.mode],
+              linkPreviewSubtitleFont:
+                _textBubbleConfiguration.style.linkPreviewSubtitleFont ||
+                fontHelper(_theme.typography.subtitle2),
+              linkPreviewSubtitleColor:
+                _textBubbleConfiguration.style.linkPreviewSubtitleColor ||
+                _theme.palette.accent600[_theme.palette.mode],
+              linkPreviewBackgroundColor:
+                _textBubbleConfiguration.style.linkPreviewBackgroundColor ||
+                _theme.palette.background[_theme.palette.mode],
             }),
-            textFont:
-              emojiFont(messageObject.text) ||
-              fontHelper(_theme.typography.subtitle1),
-            ...textColor,
-            linkPreviewTitleFont: fontHelper(_theme.typography.title2),
-            linkPreviewTitleColor: _theme.palette.accent[_theme.palette.mode],
-            linkPreviewSubtitleFont: fontHelper(_theme.typography.subtitle2),
-            linkPreviewSubtitleColor:
-              _theme.palette.accent600[_theme.palette.mode],
-            linkPreviewBackgroundColor:
-              _theme.palette.background[_theme.palette.mode],
           };
           return (
             <CometChatTextBubble
               key={messageObject.id}
               messageObject={messageObject}
+              showEmojiInLargerSize={false}
               overlayImageURL={unsafeContent}
               text={""}
-              linkPreviewTitle={""}
-              linkPreviewSubtitle={""}
               theme={_theme}
               style={messageStyle}
             />
           );
         }
+
         case MessageTypeConstants.image: {
           messageStyle = {
-            ...new BaseStyles({
-              width: "100%",
-              height: "168px",
-              background: "none",
-              border: "none",
-              borderRadius: "12px",
-              activeBackground: "",
+            ...new ImageBubbleStyle({
+              width: _imageBubbleConfiguration.style.width,
+              height: _imageBubbleConfiguration.style.height,
+              background: _imageBubbleConfiguration.style.background,
+              border: _imageBubbleConfiguration.style.border,
+              borderRadius: _imageBubbleConfiguration.style.borderRadius,
+              activityBackground:
+                _imageBubbleConfiguration.style.activityBackground,
             }),
           };
           return (
             <CometChatImageBubble
               key={messageObject.id}
               messageObject={messageObject}
+              overlayImageURL={_imageBubbleConfiguration.overlayImageURL}
               style={messageStyle}
             />
           );
         }
         case MessageTypeConstants.video: {
           messageStyle = {
-            ...new BaseStyles({
-              width: "250px",
-              height: "200px",
-              background: "none",
-              border: "none",
-              borderRadius: "12px",
-              activeBackground: "",
+            ...new VideoBubbleStyle({
+              width: _videoBubbleConfiguration.style.width,
+              height: _videoBubbleConfiguration.style.height,
+              background:
+                _videoBubbleConfiguration.style.background || "transparent",
+              border: _videoBubbleConfiguration.style.border,
+              borderRadius: _videoBubbleConfiguration.style.borderRadius,
             }),
           };
           return (
@@ -336,13 +399,13 @@ const CometChatMessageBubble = (props) => {
         }
         case MessageTypeConstants.audio: {
           messageStyle = {
-            ...new BaseStyles({
-              width: "250px",
-              height: "auto",
-              background: "none",
-              border: "none",
-              borderRadius: "12px",
-              activeBackground: "",
+            ...new AudioBubbleStyle({
+              width: _audioBubbleConfiguration.style.width,
+              height: _audioBubbleConfiguration.style.height,
+              background:
+                _audioBubbleConfiguration.style.background || "transparent",
+              border: _audioBubbleConfiguration.style.border,
+              borderRadius: _audioBubbleConfiguration.style.borderRadius,
             }),
             iconTint: _theme.palette.primary[_theme.palette.mode],
           };
@@ -357,19 +420,29 @@ const CometChatMessageBubble = (props) => {
 
         case MessageTypeConstants.file: {
           messageStyle = {
-            ...new BaseStyles({
-              width: "190px",
-              height: "56px",
-              background: "transparent",
-              border: "none",
-              borderRadius: "12px",
-              activeBackground: "",
+            ...new FileBubbleStyle({
+              width: _fileBubbleConfiguration.style.width,
+              height: _fileBubbleConfiguration.style.height,
+              background:
+                _fileBubbleConfiguration.style.background || "transparent",
+              border: _fileBubbleConfiguration.style.border,
+              borderRadius: _fileBubbleConfiguration.style.borderRadius,
+              titleFont:
+                _fileBubbleConfiguration.style.titleFont ||
+                fontHelper(_theme.typography.title2),
+              subTitleFont:
+                _fileBubbleConfiguration.style.subTitleFont ||
+                fontHelper(_theme.typography.subtitle2),
+              iconTint:
+                _fileBubbleConfiguration.style.iconTint ||
+                _theme.palette.primary[_theme.palette.mode],
+              titleColor:
+                _fileBubbleConfiguration.style.titleColor ||
+                _theme.palette.accent[_theme.palette.mode],
+              subTitleColor:
+                _fileBubbleConfiguration.style.subTitleColor ||
+                _theme.palette.accent600[_theme.palette.mode],
             }),
-            titleFont: fontHelper(_theme.typography.title2),
-            subTitleFont: fontHelper(_theme.typography.subtitle2),
-            iconTint: _theme.palette.primary[_theme.palette.mode],
-            titleColor: _theme.palette.accent[_theme.palette.mode],
-            subTitleColor: _theme.palette.accent600[_theme.palette.mode],
           };
           return (
             <CometChatFileBubble
@@ -389,67 +462,57 @@ const CometChatMessageBubble = (props) => {
       let customMessageStyle = {};
       switch (messageObject.type) {
         case MessageTypeConstants.poll: {
-          if (alignment === MessageBubbleAlignmentConstants.right) {
+          if (
+            alignment === MessageBubbleAlignmentConstants.right ||
+            alignment === MessageBubbleAlignmentConstants.left
+          ) {
             customMessageStyle = {
-              ...new BaseStyles({
-                width: "100%",
-                height: "100%",
-                background: "transparent",
-                border: "none",
-                borderRadius: "12px",
-                activeBackground: "",
+              ...new PollBubbleStyle({
+                width: _pollBubbleConfiguration.style.width,
+                height: _pollBubbleConfiguration.style.height,
+                background:
+                  _pollBubbleConfiguration.style.height || "transparent",
+                border: _pollBubbleConfiguration.style.borde,
+                borderRadius: _pollBubbleConfiguration.style.borderRadius,
+                votePercentTextFont:
+                  _pollBubbleConfiguration.style.votePercentTextFont ||
+                  fontHelper(_theme.typography.subtitle1),
+                votePercentTextColor:
+                  _pollBubbleConfiguration.style.votePercentTextColor ||
+                  _theme.palette.background[_theme.palette.mode],
+                pollQuestionTextFont:
+                  _pollBubbleConfiguration.style.pollQuestionTextFont ||
+                  fontHelper(_theme.typography.subtitle1),
+                pollQuestionTextColor:
+                  _pollBubbleConfiguration.style.pollQuestionTextColor ||
+                  _theme.palette.accent[_theme.palette.mode],
+                pollOptionTextFont:
+                  _pollBubbleConfiguration.style.pollOptionTextFont ||
+                  fontHelper(_theme.typography.subtitle1),
+                pollOptionTextColor:
+                  _pollBubbleConfiguration.style.pollOptionTextColor ||
+                  _theme.palette.accent[_theme.palette.mode],
+                pollOptionsBackground:
+                  _pollBubbleConfiguration.style.pollOptionsBackground ||
+                  _theme.palette.background[_theme.palette.mode],
+                optionIconTint:
+                  _pollBubbleConfiguration.style.optionIconTint ||
+                  style.optionsIconTint ||
+                  _theme.palette.accent500[_theme.palette.mode],
+                totalVoteCountTextFont:
+                  _pollBubbleConfiguration.style.totalVoteCountTextFont ||
+                  fontHelper(_theme.typography.subtitle2),
+                totalVoteCountTextColor:
+                  _pollBubbleConfiguration.style.totalVoteCountTextColor ||
+                  _theme.palette.accent600[_theme.palette.mode],
+                selectedPollOptionBackground:
+                  _pollBubbleConfiguration.style.selectedPollOptionBackground ||
+                  style.selectedPollOptionBackground ||
+                  _theme.palette.primary[_theme.palette.mode],
               }),
-              votePercentTextFont: fontHelper(_theme.typography.subtitle1), //not in skecth
-              votePercentTextColor:
-                _theme.palette.background[_theme.palette.mode], //not in sketch
-              pollQuestionTextFont: fontHelper(_theme.typography.subtitle1),
-              pollQuestionTextColor: _theme.palette.accent[_theme.palette.mode],
-              pollOptionTextFont: fontHelper(_theme.typography.subtitle1),
-              pollOptionTextColor: _theme.palette.accent[_theme.palette.mode],
-              pollOptionsBackground:
-                _theme.palette.background[_theme.palette.mode],
-              optionIconTint:
-                style.optionsIconTint ||
-                _theme.palette.accent500[_theme.palette.mode],
-              totalVoteCountTextFont: fontHelper(_theme.typography.subtitle2),
-              totalVoteCountTextColor:
-                _theme.palette.accent600[_theme.palette.mode],
-              selectedPollOptionBackground:
-                style.selectedPollOptionBackground ||
-                _theme.palette.primary[_theme.palette.mode],
-            };
-          } else {
-            customMessageStyle = {
-              ...new BaseStyles({
-                width: "100%",
-                height: "100%",
-                background: "transparent",
-                border: "none",
-                borderRadius: "12px",
-                activeBackground: "",
-              }),
-              background: "transparent",
-              votePercentTextFont: fontHelper(_theme.typography.subtitle1),
-              votePercentTextColor:
-                _theme.palette.background[_theme.palette.mode],
-              pollQuestionTextColor: _theme.palette.accent[_theme.palette.mode],
-              pollQuestionTextFont: fontHelper(_theme.typography.subtitle1),
-              pollOptionTextFont: fontHelper(_theme.typography.subtitle1),
-              pollOptionTextColor: _theme.palette.accent[_theme.palette.mode],
-              pollOptionsBackground:
-                _theme.palette.background[_theme.palette.mode],
-              totalVoteCountTextFont: fontHelper(_theme.typography.subtitle2),
-              totalVoteCountTextColor:
-                _theme.palette.accent600[_theme.palette.mode],
-              optionIconTint:
-                style.optionsIconTint ||
-                _theme.palette.accent500[_theme.palette.mode],
-              pollOptionBorder: "none",
-              selectedPollOptionBackground:
-                style.selectedPollOptionBackground ||
-                _theme.palette.primary[_theme.palette.mode],
             };
           }
+
           return (
             <CometChatPollBubble
               key={messageObject.id}
@@ -461,6 +524,9 @@ const CometChatMessageBubble = (props) => {
               loggedInUser={loggedInUser || loggedInUser}
               theme={_theme}
               style={customMessageStyle}
+              pollOptionBubbleConfiguration={
+                _pollBubbleConfiguration.pollOptionBubbleConfiguration
+              }
             />
           );
         }
@@ -470,13 +536,13 @@ const CometChatMessageBubble = (props) => {
             alignment === MessageBubbleAlignmentConstants.left
           ) {
             customMessageStyle = {
-              ...new BaseStyles({
-                width: "150px",
-                height: "auto",
-                background: "transparent",
-                border: "none",
-                borderRadius: "12px",
-                activeBackground: "",
+              ...new StickerBubbleStyle({
+                width: _stickerBubbleConfiguration.style.width,
+                height: _stickerBubbleConfiguration.style.height,
+                background:
+                  _stickerBubbleConfiguration.style.background || "transparent",
+                border: _stickerBubbleConfiguration.style.border,
+                borderRadius: _stickerBubbleConfiguration.style.borderRadius,
               }),
             };
           }
@@ -489,52 +555,54 @@ const CometChatMessageBubble = (props) => {
           );
         }
         case MessageTypeConstants.whiteboard: {
-          if (alignment === MessageBubbleAlignmentConstants.right) {
+          if (
+            alignment === MessageBubbleAlignmentConstants.right ||
+            alignment === MessageBubbleAlignmentConstants.left
+          ) {
             customMessageStyle = {
-              ...new BaseStyles({
-                width: "228px",
-                height: "134px",
-                background: "transparent",
-                border: "none",
-                borderRadius: "12px",
-                activeBackground: "",
+              ...new WhiteboardBubbleStyle({
+                width: _whiteboardBubbleConfiguration.style.width,
+                height: _whiteboardBubbleConfiguration.style.height,
+                background:
+                  _whiteboardBubbleConfiguration.style.background ||
+                  "transparent",
+                border: _whiteboardBubbleConfiguration.style.border,
+                borderRadius: _whiteboardBubbleConfiguration.style.borderRadius,
+                titleFont:
+                  _whiteboardBubbleConfiguration.style.titleFont ||
+                  fontHelper(_theme.typography.title2),
+                iconTint:
+                  _whiteboardBubbleConfiguration.style.iconTint ||
+                  _theme.palette.accent700[_theme.palette.mode],
+                titleColor:
+                  _whiteboardBubbleConfiguration.style.titleColor ||
+                  _theme.palette.accent[_theme.palette.mode],
+                subTitleColor:
+                  _whiteboardBubbleConfiguration.style.subTitleColor ||
+                  _theme.palette.accent600[_theme.palette.mode],
+                subTitleFont:
+                  _whiteboardBubbleConfiguration.style.subTitleFont ||
+                  fontHelper(_theme.typography.subtitle2),
+                buttonTextColor:
+                  _whiteboardBubbleConfiguration.style.buttonTextColor ||
+                  _theme.palette.primary[_theme.palette.mode],
+                buttonTextFont:
+                  _whiteboardBubbleConfiguration.style.buttonTextFont ||
+                  fontHelper(_theme.typography.title2),
+                buttonBackground:
+                  _whiteboardBubbleConfiguration.style.buttonBackground ||
+                  "transparent",
               }),
-              titleFont: fontHelper(_theme.typography.title2),
-              iconTint: _theme.palette.accent700[_theme.palette.mode],
-              titleColor: _theme.palette.accent[_theme.palette.mode],
-              subTitleColor: _theme.palette.accent600[_theme.palette.mode],
-              subTitleFont: fontHelper(_theme.typography.subtitle2),
-              buttonTextColor: _theme.palette.primary[_theme.palette.mode],
-              buttonTextFont: fontHelper(_theme.typography.title2),
-              buttonBackground: "transparent",
-            };
-          } else {
-            customMessageStyle = {
-              ...new BaseStyles({
-                width: "228px",
-                height: "134px",
-                background: "transparent",
-                border: "none",
-                borderRadius: "12px",
-                activeBackground: "",
-              }),
-              titleFont: fontHelper(_theme.typography.title2),
-              iconTint: _theme.palette.accent700[_theme.palette.mode],
-              titleColor: _theme.palette.accent[_theme.palette.mode],
-              subTitleColor: _theme.palette.accent600[_theme.palette.mode],
-              subTitleFont: fontHelper(_theme.typography.subtitle2),
-              buttonTextColor: _theme.palette.primary[_theme.palette.mode],
-              buttonTextFont: fontHelper(_theme.typography.title2),
-              buttonBackground: "transparent",
             };
           }
+
           return (
             <CometChatWhiteboardBubble
               whiteboardURL={""}
               key={messageKey}
               messageObject={messageObject}
               subTitle={localize("WHITEBOARD_SUBTITLE_MESSAGE")}
-              iconURL={whiteBoard}
+              iconURL={_whiteboardBubbleConfiguration.iconURL}
               title={localize("SHARED_COLLABORATIVE_WHITEBOARD")}
               buttonText={localize("OPEN_WHITEBOARD")}
               theme={_theme}
@@ -543,43 +611,44 @@ const CometChatMessageBubble = (props) => {
           );
         }
         case MessageTypeConstants.document: {
-          if (alignment === MessageBubbleAlignmentConstants.right) {
+          if (
+            alignment === MessageBubbleAlignmentConstants.right ||
+            alignment === MessageBubbleAlignmentConstants.left
+          ) {
             customMessageStyle = {
-              ...new BaseStyles({
-                width: "228px",
-                height: "134px",
-                background: "transparent",
-                border: "none",
-                borderRadius: "12px",
-                activeBackground: "",
+              ...new DocumentBubbleStyle({
+                width: _documentBubbleConfiguration.style.width,
+                height: _documentBubbleConfiguration.style.height,
+                background:
+                  _documentBubbleConfiguration.style.background ||
+                  "transparent",
+                border: _documentBubbleConfiguration.style.border,
+                borderRadius: _documentBubbleConfiguration.style.borderRadius,
               }),
-              titleFont: fontHelper(_theme.typography.title2),
-              iconTint: _theme.palette.accent700[_theme.palette.mode],
-              titleColor: _theme.palette.accent[_theme.palette.mode],
-              subTitleColor: _theme.palette.accent600[_theme.palette.mode],
-              subTitleFont: fontHelper(_theme.typography.subtitle2),
-              buttonTextColor: _theme.palette.primary[_theme.palette.mode],
-              buttonTextFont: fontHelper(_theme.typography.title2),
-              buttonBackground: "transparent",
-            };
-          } else {
-            customMessageStyle = {
-              ...new BaseStyles({
-                width: "228px",
-                height: "134px",
-                background: "transparent",
-                border: "none",
-                borderRadius: "12px",
-                activeBackground: "",
-              }),
-              titleFont: fontHelper(_theme.typography.title2),
-              iconTint: _theme.palette.accent700[_theme.palette.mode],
-              titleColor: _theme.palette.accent[_theme.palette.mode],
-              subTitleColor: _theme.palette.accent600[_theme.palette.mode],
-              subTitleFont: fontHelper(_theme.typography.subtitle2),
-              buttonTextColor: _theme.palette.primary[_theme.palette.mode],
-              buttonTextFont: fontHelper(_theme.typography.title2),
-              buttonBackground: "transparent",
+              titleFont:
+                _documentBubbleConfiguration.style.titleFont ||
+                fontHelper(_theme.typography.title2),
+              iconTint:
+                _documentBubbleConfiguration.style.iconTint ||
+                _theme.palette.accent700[_theme.palette.mode],
+              titleColor:
+                _documentBubbleConfiguration.style.titleColor ||
+                _theme.palette.accent[_theme.palette.mode],
+              subTitleColor:
+                _documentBubbleConfiguration.style.subTitleColor ||
+                _theme.palette.accent600[_theme.palette.mode],
+              subTitleFont:
+                _documentBubbleConfiguration.style.subTitleFont ||
+                fontHelper(_theme.typography.subtitle2),
+              buttonTextColor:
+                _documentBubbleConfiguration.style.buttonTextColor ||
+                _theme.palette.primary[_theme.palette.mode],
+              buttonTextFont:
+                _documentBubbleConfiguration.style.buttonTextFont ||
+                fontHelper(_theme.typography.title2),
+              buttonBackground:
+                _documentBubbleConfiguration.style.buttonBackground ||
+                "transparent",
             };
           }
           return (
@@ -642,7 +711,7 @@ const CometChatMessageBubble = (props) => {
     return (
       <CometChatDeletedMessageBubble
         text={localize("MESSAGE_IS_DELETED")}
-        style={deleteBubbleStyle(_theme)}
+        style={deleteBubbleStyle(_theme, _deleteBubbledConfiguration)}
       />
     );
   };
@@ -662,7 +731,12 @@ const CometChatMessageBubble = (props) => {
           messageObject={messageObject}
           loggedInUser={loggedInUser}
           addReactionIconURL={_messageReactionsConfiguration.addReactionIconURL}
-          style={reactionsStyle(_theme, alignment, messageObject)}
+          style={reactionsStyle(
+            _theme,
+            alignment,
+            messageObject,
+            _messageReactionsConfiguration
+          )}
           updateReaction={updateReaction}
         />
       );

@@ -8,7 +8,7 @@ import {
   AvatarConfiguration,
   StatusIndicatorConfiguration,
   DataItemStyles,
-  AvatarStyles,
+  AvatarStyle,
   StatusIndicatorStyles,
   CometChatTheme,
   fontHelper,
@@ -75,7 +75,7 @@ const CometChatDataItem = (props) => {
     const outerViewWidth = _avatarConfiguration?.style?.outerViewWidth;
     const outerView = `${outerViewWidth} solid ${_theme?.palette?.getPrimary()}`;
     const borderWidth = _avatarConfiguration?.style?.borderWidth;
-    let avatarStyle = new AvatarStyles({
+    let avatarStyle = new AvatarStyle({
       width: _avatarConfiguration?.style?.width,
       height: _avatarConfiguration?.style?.height,
       outerViewSpacing: _avatarConfiguration?.style?.outerViewSpacing,

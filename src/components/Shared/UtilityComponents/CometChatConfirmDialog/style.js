@@ -20,8 +20,8 @@ export const dialogLoadingStyle = (loadingIcon) => {
 export const dialogTitleStyle = (props) => {
   return {
     width: props?.style?.width,
-    font: props?.style?.titleTextFont,
-    color: props?.style?.titleTextColor,
+    font: props?.style?.titleFont,
+    color: props?.style?.titleColor,
     textAlign: "center",
     padding: "10px",
     boxSizing: "border-box",
@@ -29,13 +29,13 @@ export const dialogTitleStyle = (props) => {
 };
 export const dialogWrapperStyle = (props) => {
   const display = props?.isOpen ? { display: "block" } : { display: "none" };
-
   return {
     background: props?.style?.background,
+    borderRadius: props.style.borderRadius,
     fontSize: "13px",
     zIndex: "4",
     ...display,
-    ...props?.styles,
+    ...props?.style,
   };
 };
 
@@ -51,6 +51,7 @@ export const dialogFormStyle = (props, state) => {
     justifyContent: "center",
     alignItems: "center",
     ...display,
+    margin: "10px",
   };
 };
 
@@ -68,9 +69,9 @@ export const dialogErrorStyle = (props, state) => {
 export const dialogMessageStyle = (props) => {
   return {
     textAlign: "center",
-    margin: "10px 35px",
-    font: "500 11px Inter,sans-serif",
-    color: "rgba(20,20,20, 0.6)",
+    margin: "10px 25px",
+    font: props.style.subTitleFont,
+    color: props.style.subTitleColor,
     boxSizing: "border-box",
     wordSpacing: "1px",
   };
@@ -81,7 +82,7 @@ export const dialogButtonStyle = (props) => {
     width: props?.style?.width,
     justifyContent: "center",
     alignItems: "center",
-    margin: "15px 0 0 0",
+    margin: "15px 0",
     textAlign: "center",
     display: "flex",
     flexDirection: "column",
@@ -97,7 +98,7 @@ export const buttonConfirmStyle = (props) => {
     borderRadius: props?.style?.borderRadius,
     font: props?.style?.confirmButtonTextFont,
     border: props?.style?.border,
-    background: props?.style?.confirmBackground,
+    background: props?.style?.confirmButtonBackground,
     color: props?.style?.confirmButtonTextColor,
   };
 };
@@ -111,7 +112,7 @@ export const buttonCancelStyle = (props) => {
     cursor: "pointer",
     borderRadius: props?.style?.borderRadius,
     font: props?.style?.cancelButtonTextFont,
-    background: props?.style?.cancelBackground,
+    background: props?.style?.cancelButtonBackground,
     color: props?.style?.cancelButtonTextColor,
   };
 };

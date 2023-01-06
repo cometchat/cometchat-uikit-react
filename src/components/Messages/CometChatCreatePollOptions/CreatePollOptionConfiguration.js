@@ -2,18 +2,18 @@ import deleteIcon from "./resources/delete.svg";
 
 import { localize } from "../../../";
 
-import { CreatePollOptionStyles } from "../";
+import { CreatePollOptionStyle } from "../";
 
 /**
  * @class CreatePollOptionConfiguration
  * @description CreatePollOptionConfiguration class is used for defining the MessageComposer templates.
- * @param {Function} onDeleteClick
- * @param {Function} onChangeHandler
- * @param {String} option
- * @param {Boolean} hasDelete
- * @param {String} placeholderText
- * @param {String} deleteIconUrl
- * @param {Object} style
+ * @param {function} onDeleteClick
+ * @param {function} onChangeHandler
+ * @param {string} option
+ * @param {boolean} hasDelete
+ * @param {string} placeholderText
+ * @param {string} deleteIconUrl
+ * @param {object} style
  */
 
 class CreatePollOptionConfiguration {
@@ -24,7 +24,7 @@ class CreatePollOptionConfiguration {
     onDeleteClick = null,
     onChangeHandler = null,
     option = null,
-    style = new CreatePollOptionStyles({}),
+    style = new CreatePollOptionStyle({}),
   }) {
     this.hasDelete = hasDelete;
     this.placeholderText = placeholderText;
@@ -32,7 +32,7 @@ class CreatePollOptionConfiguration {
     this.onDeleteClick = onDeleteClick;
     this.onChangeHandler = onChangeHandler;
     this.option = option;
-    this.style = new CreatePollOptionStyles(style ?? {});
+    this.style = new CreatePollOptionStyle(style ?? {});
   }
 }
 

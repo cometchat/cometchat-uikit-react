@@ -22,8 +22,10 @@ import {
   previewTitleStyle,
   previewLinkStyle,
   linkSubtitleStyle,
+  dangerStyle,
 } from "./style";
 import { Hooks } from "./hooks";
+import { dialogLoadingWrapperStyle } from "../../../Shared/UtilityComponents/CometChatConfirmDialog/style";
 
 const CometChatTextBubble = (props) => {
   const [linkPreviewData, setLinkPreview] = React.useState();
@@ -32,37 +34,8 @@ const CometChatTextBubble = (props) => {
     ? new CometChatTheme(props?.theme)
     : new CometChatTheme({});
 
-  const linkify = (messageText) => {
-    let outputStr = messageText?.replace(
-      phoneNumPattern,
-      "<a target='blank' rel='noopener noreferrer' href='tel:$&'>$&</a>"
-    );
-    outputStr = outputStr?.replace(
-      emailPattern,
-      "<a target='blank' rel='noopener noreferrer' href='mailto:$&'>$&</a>"
-    );
-
-    const results = outputStr?.match(urlPattern);
-
-    results &&
-      results?.forEach((url) => {
-        url = url.trim();
-        let normalizedURL = url;
-        if (!url.startsWith("http")) {
-          normalizedURL = `//${url}`;
-        }
-        outputStr = outputStr.replace(
-          url,
-          `<a target='blank' rel='noopener noreferrer' href="${normalizedURL}">${url}</a>`
-        );
-      });
-
-    return outputStr;
-  };
-
   function linkPreviewHandler(preview) {
     const linkObject = preview["links"][0];
-
     const linkText = linkObject["url"];
 
     return (
@@ -97,6 +70,35 @@ const CometChatTextBubble = (props) => {
       </div>
     );
   }
+
+  const linkify = (messageText) => {
+    let outputStr = messageText?.replace(
+      phoneNumPattern,
+      `<a target='blank' style="color:rgb(56, 2, 218)" rel='noopener noreferrer' href='tel:$&'>$&</a>`
+    );
+
+    outputStr = outputStr?.replace(
+      emailPattern,
+      `<a target='blank' style="color:rgb(56, 2, 218)" rel='noopener noreferrer' href='mailto:$&'>$&</a>`
+    );
+
+    const results = outputStr?.match(urlPattern);
+
+    results &&
+      results?.forEach((url) => {
+        url = url.trim();
+        let normalizedURL = url;
+        if (!url.startsWith("http")) {
+          normalizedURL = `//${url}`;
+        }
+        outputStr = outputStr.replace(
+          url,
+          `<a target='blank' style="color:rgb(56, 2, 218)" rel='noopener noreferrer' href="${normalizedURL}">${url}</a>`
+        );
+      });
+
+    return outputStr;
+  };
 
   Hooks(props, setLinkPreview);
 
@@ -157,9 +159,6 @@ const CometChatTextBubble = (props) => {
     }
 
     const formatedText = linkify(messageText);
-    const parseText = () => (
-      <div dangerouslySetInnerHTML={{ __html: formatedText }} />
-    );
 
     return (
       <div
@@ -168,9 +167,12 @@ const CometChatTextBubble = (props) => {
       >
         <p
           className="message__message-blocks"
-          style={messageTextBubbleStyle(props, theme, parseText())}
+          style={messageTextBubbleStyle(props, theme, formatedText)}
         >
-          {parseText()}
+          <div
+            style={dangerStyle()}
+            dangerouslySetInnerHTML={{ __html: formatedText }}
+          />
         </p>
       </div>
     );
@@ -182,8 +184,7 @@ const CometChatTextBubble = (props) => {
 CometChatTextBubble.defaultProps = {
   messageObject: null,
   text: "",
-  linkPreviewTitle: "",
-  linkPreviewSubtitle: "",
+  showEmojiInLargerSize: "",
   style: {
     width: "",
     height: "",
@@ -203,8 +204,7 @@ CometChatTextBubble.defaultProps = {
 CometChatTextBubble.propTypes = {
   messageObject: PropTypes.object,
   text: PropTypes.string,
-  linkPreviewTitle: PropTypes.string,
-  linkPreviewSubtitle: PropTypes.string,
+  showEmojiInLargerSize: PropTypes.string,
   style: PropTypes.object,
 };
 

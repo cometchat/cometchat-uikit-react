@@ -97,15 +97,15 @@ import { DetailsConfiguration } from "./PrimaryComponents";
 
 /**Styles */
 import { BaseStyles } from "./Base/BaseStyles";
-import { AvatarStyles } from "./SecondaryComponents/CometChatAvatar/AvatarStyles";
-import { BadgeCountStyles } from "./SecondaryComponents/CometChatBadgeCount/BadgeCountStyles";
+import { AvatarStyles } from "./SecondaryComponents/CometChatAvatar/AvatarStyle";
+import { BadgeCountStyles } from "./SecondaryComponents/CometChatBadgeCount/BadgeCountStyle";
 import { StatusIndicatorStyles } from "./SecondaryComponents/CometChatStatusIndicator/StatusIndicatorStyles";
-import { MessageReceiptStyles } from "./SecondaryComponents/CometChatMessageReceipt/MessageReceiptStyles";
-import { DateStyles } from "./SecondaryComponents/CometChatDate/DateStyles";
-import { DecoratorMessageStyles } from "./UtilityComponents/CometChatDecoratorMessage/DecoratorMessageStyles";
-import { ListItemStyles } from "./UtilityComponents/CometChatListItem/ListItemStyles";
-import { DataItemStyles } from "./SDKDerivedComponents/CometChatDataItem/DataItemStyles";
-import { ActionSheetStyles } from "./UtilityComponents/CometChatActionSheet/ActionSheetStyles";
+import { MessageReceiptStyles } from "./SecondaryComponents/CometChatMessageReceipt/MessageReceiptStyle";
+import { DateStyles } from "./SecondaryComponents/CometChatDate/DateStyle";
+import { DecoratorMessageStyles } from "./UtilityComponents/CometChatDecoratorMessage/DecoratorMessageStyle";
+import { ListItemStyles } from "./UtilityComponents/CometChatListItem/ListItemStyle";
+import { DataItemStyles } from "./SDKDerivedComponents/CometChatDataItem/DataItemStyle";
+import { ActionSheetStyles } from "./UtilityComponents/CometChatActionSheet/ActionSheetStyle";
 
 export {
   ConversationsWithMessagesConfiguration,

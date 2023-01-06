@@ -1,5 +1,5 @@
 import { localize } from "../../../";
-import { StickerKeyboardStyles } from "./StickerKeyboardStyles";
+import { StickerKeyboardStyle } from "./StickerKeyboardStyle";
 
 /**
  * @class StickerKeyboardConfiguration
@@ -9,9 +9,9 @@ import { StickerKeyboardStyles } from "./StickerKeyboardStyles";
  */
 
 class StickerKeyboardConfiguration {
-  constructor({ onClick = null, style = new StickerKeyboardStyles({}) }) {
+  constructor({ onClick = null, style = new StickerKeyboardStyle({}) }) {
     this.onClick = onClick;
-    this.style = new StickerKeyboardStyles(style ?? {});
+    this.style = new StickerKeyboardStyle(style ?? {});
   }
 }
 

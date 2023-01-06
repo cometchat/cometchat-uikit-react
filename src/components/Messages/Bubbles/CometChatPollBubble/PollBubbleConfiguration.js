@@ -1,10 +1,27 @@
-class PollBubbleConfiguration{
+import ImageURL from "./resources/checkmark.svg";
+
+import { PollBubbleStyle } from "../../";
+import { PollOptionBubbleConfiguration } from "../../";
+
+/**
+ * @class PollBubbleConfiguration
+ * @description PollBubbleConfiguration class is used for defining the PollBubbleConfiguration templates.
+ * @param {string} optionIconURL
+ * @param {object} style
+ */
+
+class PollBubbleConfiguration {
   constructor({
-    style = {},
-    iconURL = ""
+    optionIconURL = ImageURL,
+    style = new PollBubbleStyle({}),
+    pollOptionBubbleConfiguration = new PollOptionBubbleConfiguration({}),
   }) {
-    this.style = style;
-    this.iconURL = iconURL;
-  };
-} 
-  export { PollBubbleConfiguration };
+    this.style = new PollBubbleStyle(style ?? {});
+    this.optionIconURL = optionIconURL;
+    this.pollOptionBubbleConfiguration = new PollOptionBubbleConfiguration(
+      pollOptionBubbleConfiguration || {}
+    );
+  }
+}
+
+export { PollBubbleConfiguration };

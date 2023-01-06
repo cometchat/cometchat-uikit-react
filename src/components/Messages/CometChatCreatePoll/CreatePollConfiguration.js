@@ -2,7 +2,7 @@ import closeCreatePoll from "./resources/close.svg";
 import addIcon from "../CometChatMessageComposer/resources/add-circle-filled.svg";
 import deleteIcon from "../CometChatCreatePoll/resources/delete.svg";
 
-import { CreatePollStyles } from "../";
+import { CreatePollStyle } from "../";
 
 /**
  * @class CreatePollConfiguration
@@ -22,14 +22,14 @@ class CreatePollConfiguration {
     deleteIconURL = deleteIcon,
     onCreatePoll = null,
     onClose = null,
-    style = new CreatePollStyles({}),
+    style = new CreatePollStyle({}),
   }) {
     this.onClose = onClose;
     this.onCreatePoll = onCreatePoll;
     this.deleteIconURL = deleteIconURL;
     this.closeIconURL = closeIconURL;
     this.addAnswerIconURL = addAnswerIconURL;
-    this.style = new CreatePollStyles(style ?? {});
+    this.style = new CreatePollStyle(style ?? {});
   }
 }
 

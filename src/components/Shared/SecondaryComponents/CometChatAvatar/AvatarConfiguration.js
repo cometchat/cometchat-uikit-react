@@ -1,4 +1,4 @@
-import { AvatarStyles } from "../../../Shared";
+import { AvatarStyle } from "../../../Shared";
 
 /**
  * @class AvatarConfiguration
@@ -7,15 +7,11 @@ import { AvatarStyles } from "../../../Shared";
  * @param {String} name
  */
 class AvatarConfiguration {
-	constructor({
-		style = new AvatarStyles({}),
-		image = "",
-		name = "",
-	}) {
-		this.style = new AvatarStyles(style ?? {});
-		this.image = image;
-		this.name = name;
-	}
+  constructor({ style = new AvatarStyle({}), image = "", name = "" }) {
+    this.style = new AvatarStyle(style ?? {});
+    this.image = image;
+    this.name = name;
+  }
 }
 
 export { AvatarConfiguration };

@@ -1,18 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { AvatarStyles } from "../../../Shared/";
+import { AvatarStyle } from "../../../Shared/";
 import * as styles from "./style";
 import srcIcon from "./resources/default.jpg";
 
 const CometChatAvatar = (props) => {
+  const { name, image, style } = props;
 
-  const {
-    name,
-    image,
-    style
-  } = props;
-
-  const _style = new AvatarStyles(style);
+  const _style = new AvatarStyle(style);
 
   /**
    * Component template scoping
@@ -23,25 +18,23 @@ const CometChatAvatar = (props) => {
         <p style={styles.textStyle(_style)}>
           {name.length >= 2 ? name.substring(0, 2).toUpperCase() : name}
         </p>
-      )
+      );
     } else {
-      let imageSource
+      let imageSource;
       if (image) {
-        imageSource = image
-      } else imageSource = srcIcon
+        imageSource = image;
+      } else imageSource = srcIcon;
 
-      return <span style={styles.getImageStyle(_style, imageSource)}></span>
+      return <span style={styles.getImageStyle(_style, imageSource)}></span>;
     }
-  }
+  };
 
   /**
    * Component template
    */
   return (
     <div style={styles.getOuterViewStyle(_style)}>
-      <span style={styles.getContainerStyle(_style)}>
-        {getImageView()}
-      </span>
+      <span style={styles.getContainerStyle(_style)}>{getImageView()}</span>
     </div>
   );
 };
@@ -62,8 +55,8 @@ CometChatAvatar.defaultProps = {
     width: "36px",
     height: "36px",
     border: "none",
-    borderRadius: "50%"
-  }
+    borderRadius: "50%",
+  },
 };
 
 /**

@@ -4,7 +4,7 @@
  * @param {String} fontWeight
  * @param {String} fontSize
  */
-class FontDetails {
+ class FontDetails {
 	constructor({
 		fontFamily = "",
 		fontWeight = "",

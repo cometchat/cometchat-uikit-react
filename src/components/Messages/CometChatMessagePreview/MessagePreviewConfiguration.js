@@ -2,7 +2,7 @@ import closeButton from "../CometChatMessageComposer/resources/close.svg";
 
 import { localize } from "../../../";
 
-import { MessagePreviewStyles } from "../";
+import { MessagePreviewStyle } from "../";
 
 /**
  * @class MessagePreviewConfiguration
@@ -19,13 +19,13 @@ class MessagePreviewConfiguration {
     messagePreviewSubtitle = null,
     closeIconURL = closeButton,
     onCloseClick = null,
-    style = new MessagePreviewStyles({}),
+    style = new MessagePreviewStyle({}),
   }) {
     this.messagePreviewTitle = messagePreviewTitle;
     this.messagePreviewSubtitle = messagePreviewSubtitle;
     this.closeIconURL = closeIconURL;
     this.onCloseClick = onCloseClick;
-    this.style = new MessagePreviewStyles(style ?? {});
+    this.style = new MessagePreviewStyle(style ?? {});
   }
 }
 

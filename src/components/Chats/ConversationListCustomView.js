@@ -5,7 +5,7 @@
  * @param {any} empty
  * @param {any} error
  */
-class ConversationListCustomView {
+ class ConversationListCustomView {
     constructor({
         loading = "",
         empty = "",

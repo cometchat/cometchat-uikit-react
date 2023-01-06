@@ -8,7 +8,7 @@
  * @param {String} subtitle
  */
 
-class InputData {
+ class InputData {
 	constructor({
 		id = "",
 		thumbnail = true,
