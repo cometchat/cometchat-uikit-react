@@ -42,15 +42,14 @@ export const questionInputStyle = (props, theme) => {
     font:
       props?.style?.questionInputTextFont ||
       fontHelper(theme.typography.subtitle1),
-    color:
-      props?.style?.questionInputTextColor ||
-      theme?.palette?.getAccent(),
+    color: props?.style?.questionInputTextColor || theme?.palette?.getAccent(),
     boxShadow:
       props?.style?.questionInputBoxShadow ||
       `${theme.palette.accent50[theme.palette.mode]} 0 0 0 1px`,
     background:
       props?.style?.questionInputBackground ||
       theme.palette.accent50[theme.palette.mode],
+    boxSizing: "border-box",
   };
 };
 
@@ -66,15 +65,14 @@ export const answerInputStyle = (props, theme) => {
     borderRadius: props.style.answerInputBorderRadius || "8px",
     font:
       props.style.answerInputTextFont || fontHelper(theme.typography.subtitle1),
-    color:
-      props.style.answerInputTextColor ||
-      theme?.palette?.getAccent(),
+    color: props.style.answerInputTextColor || theme?.palette?.getAccent(),
     boxShadow:
       props.style.answerInputBoxShadow ||
       `${theme.palette.accent50[theme.palette.mode]} 0 0 0 1px`,
     background:
       props.style.answerInputBackground ||
       theme.palette.accent50[theme.palette.mode],
+    boxSizing: "border-box",
   };
 };
 
@@ -86,8 +84,7 @@ export const closeIconStyle = (props, img, theme) => {
     top: "3%",
     right: "3%",
     WebkitMask: `url(${img}) center center no-repeat`,
-    background:
-      props.style.closeIconTint || theme?.palette?.getPrimary(),
+    background: props.style.closeIconTint || theme?.palette?.getPrimary(),
     cursor: "pointer",
   };
 };
@@ -105,6 +102,7 @@ export const createPollQuestionAnsStyle = () => {
   return {
     width: "100%",
     marginBottom: "10px",
+    boxSizing: "border-box",
   };
 };
 
@@ -134,8 +132,7 @@ export const buttonStyle = (props, theme) => {
       props?.style?.createPollButtonTextColor ||
       theme.palette.background[theme.palette.mode],
     background:
-      props?.style?.createPollButtonBackground ||
-      theme?.palette?.getPrimary(),
+      props?.style?.createPollButtonBackground || theme?.palette?.getPrimary(),
   };
 };
 
@@ -162,9 +159,7 @@ export const addOptionIconStyle = (props, img, theme) => {
     height: "24px",
     width: "24px",
     WebkitMask: `url(${img}) center center no-repeat`,
-    background:
-      props.style.addAnswerIconTint ||
-      theme?.palette?.getPrimary(),
+    background: props.style.addAnswerIconTint || theme?.palette?.getPrimary(),
   };
 };
 export const helperTextStyle = (props, theme) => {
@@ -188,8 +183,7 @@ export const addItemStyle = (props, theme) => {
       props?.style?.addAnswerButtonTextFont ||
       fontHelper(theme.typography.text1),
     color:
-      props?.style?.addAnswerButtonTextColor ||
-      theme?.palette?.getPrimary(),
+      props?.style?.addAnswerButtonTextColor || theme?.palette?.getPrimary(),
   };
 };
 

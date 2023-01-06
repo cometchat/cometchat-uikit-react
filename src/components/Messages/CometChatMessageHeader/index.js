@@ -34,19 +34,24 @@ const CometChatMessageHeader = (props) => {
 
   const loggedInUser = React.useRef(null);
   const messageHeaderManager = React.useRef(new MessageHeaderManager());
-  const callbackData = React.useRef(null);
-
-  const [chatWith, setChatWith] = React.useState(null);
-  const [chatWithType, setChatWithType] = React.useState(null);
-
+  //const callbackData = React.useRef(null);
+  const callbackDataRef = React.useRef(null);
+  const chatWithRef = React.useRef(null);
+  const chatWithTypeRef = React.useRef(null);
   const [messageHeaderStatus, setMessageHeaderStatus] = React.useState("");
-  const [userPresence, setUserPresence] = React.useState("offline");
-  const [typingText, setTypingText] = React.useState(null);
-
+  const [userPresence, setUserPresence] = React.useState(false);
+ 
   const _theme = new CometChatTheme(theme ?? {});
 
   const messageHeaderCallback = (listenerName, ...args) => {
-    callbackData.current = { name: listenerName, args: [...args] };
+    callbackDataRef.current = { name: listenerName, args: [...args] };
+   try {
+    const handler = handlers[callbackDataRef.current?.name];
+
+    if (handler) return handler(...callbackDataRef.current?.args);
+  } catch (e) {
+    throw e;
+  }
   };
 
   /**
@@ -55,23 +60,23 @@ const CometChatMessageHeader = (props) => {
    */
   const handleUsers = (user) => {
     if (
-      chatWithType === CometChatMessageReceiverType.user &&
-      chatWith?.uid === user.uid
+      chatWithTypeRef?.current === CometChatMessageReceiverType.user &&
+      chatWithRef?.current?.uid === user.uid
     ) {
       if (user.status === UserStatusConstants.offline) {
         setMessageHeaderStatus(localize("OFFLINE"));
-        setUserPresence(user.status);
+        setUserPresence(false);
       } else if (user.status === UserStatusConstants.online) {
         setMessageHeaderStatus(localize("ONLINE"));
-        setUserPresence(user.status);
+        setUserPresence(true);
       }
     }
   };
 
   const handleGroups = (group) => {
     if (
-      chatWithType === CometChatMessageReceiverType.group &&
-      chatWith?.guid === group.guid
+      chatWithTypeRef?.current === CometChatMessageReceiverType.group &&
+      chatWithRef?.current?.guid === group.guid
     ) {
       const membersCount = parseInt(group.membersCount);
       const status = `${membersCount} ${localize("MEMBERS")}`;
@@ -90,46 +95,43 @@ const CometChatMessageHeader = (props) => {
 
   const handleStartTyping = (typingIndicator) => {
     if (
-      chatWithType === CometChatMessageReceiverType.group &&
-      chatWithType === typingIndicator.receiverType &&
-      chatWith?.guid === typingIndicator.receiverId
+      chatWithTypeRef?.current === CometChatMessageReceiverType.group &&
+      chatWithTypeRef?.current === typingIndicator.receiverType &&
+      chatWithRef?.current?.guid === typingIndicator.receiverId
     ) {
       const typingText = `${typingIndicator.sender.name} ${localize(
         "IS_TYPING"
       )}`;
-      setTypingText(typingText);
+      setMessageHeaderStatus(typingText);
     } else if (
-      chatWithType === CometChatMessageReceiverType.user &&
-      chatWithType === typingIndicator.receiverType &&
-      chatWith?.uid === typingIndicator.sender.uid
+      chatWithTypeRef?.current === CometChatMessageReceiverType.user &&
+      chatWithTypeRef?.current === typingIndicator.receiverType &&
+      chatWithRef?.current?.uid === typingIndicator.sender.uid
     ) {
       const typingText = localize("TYPING");
-      setTypingText(typingText);
+      setMessageHeaderStatus(typingText);
     }
   };
 
   const handleEndTyping = (typingIndicator) => {
     if (
-      chatWithType === CometChatMessageReceiverType.group &&
-      chatWithType === typingIndicator.receiverType &&
-      chatWith?.guid === typingIndicator.receiverId
+      chatWithTypeRef?.current === CometChatMessageReceiverType.group &&
+      chatWithTypeRef?.current === typingIndicator.receiverType &&
+      chatWithRef?.current?.guid === typingIndicator.receiverId
     ) {
-      const status = `${chatWith?.membersCount} ${localize("MEMBERS")}`;
+      const status = `${chatWithRef?.current?.membersCount} ${localize("MEMBERS")}`;
       setMessageHeaderStatus(status);
-      setTypingText(null);
     } else if (
-      chatWithType === CometChatMessageReceiverType.user &&
-      chatWithType === typingIndicator.receiverType &&
-      chatWith?.uid === typingIndicator.sender.uid
+      chatWithTypeRef?.current === CometChatMessageReceiverType.user &&
+      chatWithTypeRef?.current === typingIndicator.receiverType &&
+      chatWithRef?.current?.uid === typingIndicator.sender.uid
     ) {
-      if (userPresence === UserStatusConstants.online) {
+      if (userPresence) {
         setMessageHeaderStatus(localize("ONLINE"));
-        setUserPresence(UserStatusConstants.online);
-        setTypingText(null);
+        setUserPresence(true);
       } else {
         setMessageHeaderStatus(localize("OFFLINE"));
-        setUserPresence(UserStatusConstants.offline);
-        setTypingText(null);
+        setUserPresence(false);
       }
     }
   };
@@ -161,17 +163,15 @@ const CometChatMessageHeader = (props) => {
   //const _tail = dataItemConfig.tail;
 
   Hooks(
-    props,
-    loggedInUser,
-    setChatWith,
-    setChatWithType,
-    setMessageHeaderStatus,
-    setUserPresence,
-    messageHeaderManager,
-    messageHeaderCallback,
-    handlers,
-    callbackData,
-    errorHandler
+  props,
+  loggedInUser,
+  chatWithRef,
+  chatWithTypeRef,
+  setMessageHeaderStatus,
+  setUserPresence,
+  messageHeaderManager,
+  messageHeaderCallback,
+  errorHandler
   );
 
   return (
@@ -180,13 +180,21 @@ const CometChatMessageHeader = (props) => {
         {getBackButtonElem()}
         <div style={chatThumbnailStyle(props)}>
           <CometChatDataItem
-            inputData={_inputData}
+            inputData={
+              {
+                id: "",
+                thumbnail: true,
+                status: userPresence,
+                title: true,
+                subtitle: () => messageHeaderStatus,
+              } || _inputData
+            }
             style={dataItemStyle(props, _theme)}
             user={user}
             group={group}
             theme={_theme}
             // options={props.options || _options}
-            isActive={_isActive}
+            // isActive={_isActive}
           />
         </div>
       </div>

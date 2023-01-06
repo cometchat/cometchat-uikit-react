@@ -4,7 +4,7 @@ import sendBtn from "./resources/send-message.svg";
 
 import closeButton from "./resources/close-circle.svg";
 
-import { MessageComposerStyles } from "../";
+import { MessageComposerStyle } from "../";
 
 import { MessagePreviewConfiguration } from "../CometChatMessagePreview/MessagePreviewConfiguration";
 
@@ -13,8 +13,6 @@ import { EmojiKeyboardConfiguration } from "../CometChatEmojiKeyboard/EmojiKeybo
 import { CreatePollConfiguration } from "../CometChatCreatePoll/CreatePollConfiguration";
 
 import { StickerKeyboardConfiguration } from "../CometChatStickerKeyboard/StickerKeyboardConfiguration";
-
-import { ActionSheetConfiguration } from "../../Shared";
 
 /**
  * @class MessageComposerConfiguration
@@ -53,12 +51,11 @@ class MessageComposerConfiguration {
     enableTypingIndicator = true,
     enableSoundForMessages = true,
     customOutgoingMessageSound = null,
-    style = new MessageComposerStyles({}),
+    style = new MessageComposerStyle({}),
     messagePreviewConfiguration = new MessagePreviewConfiguration({}),
     emojiKeyboardConfiguration = new EmojiKeyboardConfiguration({}),
     stickerKeyboardConfiguration = new StickerKeyboardConfiguration({}),
     createPollConfiguration = new CreatePollConfiguration({}),
-    actionSheetConfiguration = new ActionSheetConfiguration({}),
   }) {
     this.sendButtonIconURL = sendButtonIconURL;
     this.attachmentIconURL = attachmentIconURL;
@@ -74,12 +71,11 @@ class MessageComposerConfiguration {
     this.enableSoundForMessages = enableSoundForMessages;
     this.enableTypingIndicator = enableTypingIndicator;
     this.excludeMessageTypes = excludeMessageTypes;
-    this.style = new MessageComposerStyles(style ?? {});
-    this.messagePreviewConfiguration = new MessagePreviewConfiguration(messagePreviewConfiguration ?? {});
-    this.emojiKeyboardConfiguration = new EmojiKeyboardConfiguration(emojiKeyboardConfiguration ?? {});
-    this.stickerKeyboardConfiguration = new StickerKeyboardConfiguration(stickerKeyboardConfiguration ?? {});
-    this.createPollConfiguration = new CreatePollConfiguration(createPollConfiguration ?? {});
-    this.actionSheetConfiguration = new ActionSheetConfiguration(actionSheetConfiguration ?? {});
+    this.style = new MessageComposerStyle(style ?? {});
+    this.messagePreviewConfiguration = messagePreviewConfiguration;
+    this.emojiKeyboardConfiguration = emojiKeyboardConfiguration;
+    this.stickerKeyboardConfiguration = stickerKeyboardConfiguration;
+    this.createPollConfiguration = createPollConfiguration;
   }
 }
 

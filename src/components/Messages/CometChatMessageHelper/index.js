@@ -36,6 +36,10 @@ export const getUnixTimestamp = () => {
   return Math.round(+new Date() / 1000);
 };
 
+export const getUniqueTimestamp = () => {
+  return new Date().getUTCMilliseconds();
+};
+
 export const getExtensionsData = (message, extensionKey) => {
   if (message?.hasOwnProperty("metadata")) {
     const metadata = message.metadata;

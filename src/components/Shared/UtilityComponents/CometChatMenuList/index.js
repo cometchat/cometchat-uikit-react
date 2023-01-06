@@ -8,18 +8,15 @@ import {
   listItemStyle,
 } from "./style";
 
-import { CometChatListItem } from "../../../Shared";
+import { CometChatListItem, localize } from "../../../Shared";
 
 const CometChatMenuList = (props) => {
   const [toggle, setToggle] = React.useState(false);
 
   const handleToggle = () => setToggle(!toggle);
   const callback = (onClickFunc, event) => {
-		onClickFunc(props.data, event);
-	};
-  const hideTooltip = (event) => event.target.removeAttribute("title");
-  const showTooltip = (event) =>
-    event.target.setAttribute("title", event.target.title);
+    onClickFunc(props.data, event);
+  };
 
   const getMenuPane = () => {
     return toggle ? (
@@ -32,10 +29,9 @@ const CometChatMenuList = (props) => {
             id={ele.id}
             style={listItemStyle(props)}
             text={ele.title}
+            hoverText={ele.title}
             onClick={callback.bind(this, ele.onClick)}
             onItemClick={callback.bind(this, ele.onClick)}
-            onMouseEnter={showTooltip}
-            onMouseLeave={hideTooltip}
           />
         ))}
       </div>
@@ -51,11 +47,10 @@ const CometChatMenuList = (props) => {
             className="list__item"
             id={ele.id}
             iconURL={ele.iconURL}
+            hoverText={ele.title}
             onClick={callback.bind(this, ele.onClick)}
             onItemClick={callback.bind(this, ele.onClick)}
             style={menuActionStyle(props)}
-            onMouseEnter={showTooltip}
-            onMouseLeave={hideTooltip}
           />
         ))}
         {props.list.length > props.mainMenuLimit && (
@@ -65,9 +60,8 @@ const CometChatMenuList = (props) => {
               style={menuActionStyle(props)}
               className="list__item"
               iconURL={moreIcon}
+              hoverText={localize("MORE")}
               onItemClick={handleToggle.bind(this)}
-              onMouseEnter={showTooltip}
-              onMouseLeave={hideTooltip}
             />
             {getMenuPane()}
           </React.Fragment>

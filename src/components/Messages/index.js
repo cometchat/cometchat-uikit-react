@@ -39,15 +39,20 @@ import { CometChatCreatePollOptions } from "./CometChatCreatePollOptions";
 import { MessageInputData } from "../Shared/InputData/MessageInputData";
 
 /**styles */
-import { MessageListStyles } from "./CometChatMessageList/MessageListStyles";
-import { EmojiKeyboardStyles } from "./CometChatEmojiKeyboard/EmojiKeyboardStyles";
-import { StickerKeyboardStyles } from "./CometChatStickerKeyboard/StickerKeyboardStyles";
-import { CreatePollStyles } from "./CometChatCreatePoll/CreatePollStyles";
-import { CreatePollOptionStyles } from "./CometChatCreatePollOptions/CreatePollOptionStyles";
-import { MessagePreviewStyles } from "./CometChatMessagePreview/MessagePreviewStyles";
-import { LiveReactionStyles } from "./CometChatLiveReactions/LiveReactionstyles";
-import { MessageComposerStyles } from "./CometChatMessageComposer/MessageComposerStyles";
-import { MessagesStyles } from "./CometChatMessages/MessagesStyles";
+import { MessageListStyle } from "./CometChatMessageList/MessageListStyle";
+import { EmojiKeyboardStyle } from "./CometChatEmojiKeyboard/EmojiKeyboardStyle";
+import { StickerKeyboardStyle } from "./CometChatStickerKeyboard/StickerKeyboardStyle";
+import { CreatePollStyle } from "./CometChatCreatePoll/CreatePollStyle";
+import { CreatePollOptionStyle } from "./CometChatCreatePollOptions/CreatePollOptionStyle";
+import { MessagePreviewStyle } from "./CometChatMessagePreview/MessagePreviewStyle";
+import { LiveReactionsStyle } from "./CometChatLiveReactions/LiveReactionsStyle";
+import { MessageComposerStyle } from "./CometChatMessageComposer/MessageComposerStyle";
+import { MessagesStyle } from "./CometChatMessages/MessagesStyle";
+import { MessageHeaderStyle } from "./CometChatMessageHeader/MessageHeaderStyle";
+import { SmartReplyStyle } from "./CometChatSmartReplies/SmartReplyStyle";
+import { NewMessageIndicatorStyle } from "./CometChatNewMessageIndicator/NewMessageIndicatorStyle";
+import { MessageReactionsStyle } from "./CometChatMessageReactions/MessageReactionsStyle";
+import { DeletedBubbleStyle } from "./Bubbles/CometChatDeletedMessageBubble/DeletedBubbleStyle";
 
 /**configurations */
 import { MessagesConfiguration } from "./CometChatMessages/MessagesConfiguration";
@@ -57,7 +62,21 @@ import { StickerKeyboardConfiguration } from "./CometChatStickerKeyboard/Sticker
 import { CreatePollConfiguration } from "./CometChatCreatePoll/CreatePollConfiguration";
 import { CreatePollOptionConfiguration } from "./CometChatCreatePollOptions/CreatePollOptionConfiguration";
 import { LiveReactionConfiguration } from "./CometChatLiveReactions/LiveReactionConfiguration";
-import { MessageHeaderConfiguration } from "./CometChatMessageHeader/MessageHeaderconfiguration";
+import { MessageHeaderConfiguration } from "./CometChatMessageHeader/MessageHeaderConfiguration";
+import { MessageReactionsConfiguration } from "./CometChatMessageReactions/MessageReactionsConfiguration";
+import { MessageListConfiguration } from "./CometChatMessageList/MessageListConfiguration";
+
+import { TextBubbleConfiguration } from "./Bubbles/CometChatTextBubble/TextBubbleConfiguration";
+import { AudioBubbleConfiguration } from "./Bubbles/CometChatAudioBubble/AudioBubbleConfiguration";
+import { ImageBubbleConfiguration } from "./Bubbles/CometChatImageBubble/ImageBubbleConfiguration";
+import { VideoBubbleConfiguration } from "./Bubbles/CometChatVideoBubble/VideoBubbleConfiguration";
+import { PollBubbleConfiguration } from "./Bubbles/CometChatPollBubble/PollBubbleConfiguration";
+import { PollOptionBubbleConfiguration } from "./Bubbles/CometChatPollOptionBubble/PollOptionBubbleConfiguration";
+import { FileBubbleConfiguration } from "./Bubbles/CometChatFileBubble/FileBubbleConfiguration";
+import { StickerBubbleConfiguration } from "./Bubbles/CometChatStickerBubble/StickerBubbleConfiguration";
+import { CollaborativeWhiteboardConfiguration } from "./Bubbles/CometChatWhiteboardBubble/CollaborativeWhiteboardConfiguration";
+import { CollaborativeDocumentConfiguration } from "./Bubbles/CometChatDocumentBubble/CollaborativeDocumentConfiguration";
+import { DeletedBubbleConfiguration } from "./Bubbles/CometChatDeletedMessageBubble/DeletedBubbleConfiguration";
 
 import {
   CometChatAudioBubble,
@@ -73,7 +92,17 @@ import {
   CometChatVideoBubble,
   CometChatTextBubble,
   CometChatWhiteboardBubble,
-  MessageBubbleStyles,
+  MessageBubbleStyle,
+  TextBubbleStyle,
+  FileBubbleStyle,
+  AudioBubbleStyle,
+  VideoBubbleStyle,
+  StickerBubbleStyle,
+  ImageBubbleStyle,
+  WhiteboardBubbleStyle,
+  DocumentBubbleStyle,
+  PollBubbleStyle,
+  PollOptionBubbleStyle,
 } from "./Bubbles";
 
 export {
@@ -119,16 +148,31 @@ export {
   CometChatCreatePoll,
   CometChatCreatePollOptions,
   MessageInputData,
-  MessageListStyles,
-  MessageBubbleStyles,
-  EmojiKeyboardStyles,
-  StickerKeyboardStyles,
-  CreatePollStyles,
-  CreatePollOptionStyles,
-  MessagePreviewStyles,
-  LiveReactionStyles,
-  MessageComposerStyles,
-  MessagesStyles,
+  MessageListStyle,
+  MessageBubbleStyle,
+  TextBubbleStyle,
+  FileBubbleStyle,
+  AudioBubbleStyle,
+  VideoBubbleStyle,
+  StickerBubbleStyle,
+  ImageBubbleStyle,
+  WhiteboardBubbleStyle,
+  DocumentBubbleStyle,
+  PollBubbleStyle,
+  PollOptionBubbleStyle,
+  EmojiKeyboardStyle,
+  StickerKeyboardStyle,
+  CreatePollStyle,
+  CreatePollOptionStyle,
+  MessagePreviewStyle,
+  LiveReactionsStyle,
+  MessageComposerStyle,
+  MessagesStyle,
+  MessageHeaderStyle,
+  SmartReplyStyle,
+  NewMessageIndicatorStyle,
+  MessageReactionsStyle,
+  DeletedBubbleStyle,
   CometChatThreadReplies,
   CometChatGroupActionBubble,
   CometChatSmartReplies,
@@ -140,4 +184,17 @@ export {
   CreatePollOptionConfiguration,
   LiveReactionConfiguration,
   MessageHeaderConfiguration,
+  MessageReactionsConfiguration,
+  MessageListConfiguration,
+  TextBubbleConfiguration,
+  AudioBubbleConfiguration,
+  ImageBubbleConfiguration,
+  VideoBubbleConfiguration,
+  PollBubbleConfiguration,
+  PollOptionBubbleConfiguration,
+  FileBubbleConfiguration,
+  StickerBubbleConfiguration,
+  CollaborativeWhiteboardConfiguration,
+  CollaborativeDocumentConfiguration,
+  DeletedBubbleConfiguration,
 };

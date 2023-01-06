@@ -5,6 +5,8 @@ import {
   messageBubbleAlignment,
 } from "../../..";
 import { fontHelper } from "../../..";
+import { MenuListStyle } from "../../../Shared";
+import { MessageReactionsStyle } from "../../";
 
 export const translatedTextBlockStyle = (alignment, theme) => {
   let color = theme.palette.accent900["light"];
@@ -49,30 +51,61 @@ export const translateLabelText = (alignment, theme) => {
     };
   }
 };
-export const deleteBubbleStyle = (theme) => {
+export const deleteBubbleStyle = (theme, deleteBubbledConfiguration) => {
   return {
-    width: "100%",
-    height: "auto",
-    border: `1px dashed ${theme.palette.accent400[theme.palette.mode]}`,
-    background: "transparent",
-    borderRadius: "12px",
-    textFont: fontHelper(theme.typography.subtitle1),
-    textColor: theme.palette.accent400[theme.palette.mode],
+    width: deleteBubbledConfiguration.style.width || "100%",
+    height: deleteBubbledConfiguration.style.height || "auto",
+    border:
+      deleteBubbledConfiguration.style.border ||
+      `1px dashed ${theme.palette.accent400[theme.palette.mode]}`,
+    background: deleteBubbledConfiguration.style.background || "transparent",
+    borderRadius: deleteBubbledConfiguration.style.borderRadius || "12px",
+    textFont:
+      deleteBubbledConfiguration.style.textFont ||
+      fontHelper(theme.typography.subtitle1),
+    textColor:
+      deleteBubbledConfiguration.style.textColor ||
+      theme.palette.accent400[theme.palette.mode],
   };
 };
 
-export const reactionsStyle = (theme, alignment, messageObject) => {
-  let iconTint = theme.palette.background[theme.palette.mode];
+export const reactionsStyle = (
+  theme,
+  alignment,
+  messageObject,
+  messageReactionsConfiguration
+) => {
+  let addReactionIconTint =
+    messageReactionsConfiguration.style.addReactionIconTint ||
+    theme.palette.accent300[theme.palette.mode];
   if (messageObject?.type !== "text") {
-    iconTint = theme.palette.accent500[theme.palette.mode];
+    addReactionIconTint =
+      messageReactionsConfiguration.style.addReactionIconTint ||
+      theme.palette.accent500[theme.palette.mode];
   } else if (alignment === messageBubbleAlignment.left) {
-    iconTint = theme.palette.accent500[theme.palette.mode];
+    addReactionIconTint =
+      messageReactionsConfiguration.style.addReactionIconTint ||
+      theme.palette.accent500[theme.palette.mode];
   }
   return {
-    width: "100%",
-    height: "auto",
-    borderRadius: "11px",
-    iconTint: iconTint,
+    ...new MessageReactionsStyle({
+      width: messageReactionsConfiguration.style.width,
+      height: messageReactionsConfiguration.style.height,
+      borderRadius: messageReactionsConfiguration.style.borderRadius,
+      addReactionIconTint: addReactionIconTint,
+      border: messageReactionsConfiguration.style.border,
+      background: messageReactionsConfiguration.style.background,
+      activeBackground: messageReactionsConfiguration.style.activeBackground,
+      textFont:
+        messageReactionsConfiguration.style.textFont ||
+        fontHelper(theme.typography.caption1),
+      textColor:
+        messageReactionsConfiguration.style.textColor ||
+        theme.palette.background[theme.palette.mode],
+      addReactionIconBackground:
+        messageReactionsConfiguration.style.addReactionIconBackground ||
+        theme.palette.primary[theme.palette.mode],
+    }),
   };
 };
 
@@ -100,6 +133,22 @@ export const messageOptionStyle = (
   }
 
   return {
+    ...new MenuListStyle({
+      width: "auto",
+      height: "36px",
+      background: theme.palette.background[theme.palette.mode],
+      border: `1px solid ${theme.palette.accent200[theme.palette.mode]}`,
+      borderRadius: "10px",
+      activeBackground: "none",
+
+      textFont: fontHelper(theme.typography.subtitle1),
+      textColor: theme.palette.accent600[theme.palette.mode],
+      iconTint: theme.palette.accent600[theme.palette.mode],
+      moreIconTint: theme.palette.accent600[theme.palette.mode],
+      iconBorder: "none",
+      iconBackground: "none",
+      iconBorderRadius: "none",
+    }),
     position: "absolute",
     zIndex: "1",
     display: "flex",
@@ -108,13 +157,6 @@ export const messageOptionStyle = (
     top: "-28px",
     ...position,
     ...direction,
-    height: "36px",
-    border: `1px solid ${theme.palette.accent200[theme.palette.mode]}`,
-    background: theme.palette.background[theme.palette.mode],
-    moreIconTint: theme.palette.accent600[theme.palette.mode],
-    textFont: fontHelper(theme.typography.subtitle1),
-    textColor: theme.palette.accent600[theme.palette.mode],
-    iconTint: theme.palette.accent600[theme.palette.mode],
   };
 };
 
@@ -155,7 +197,7 @@ export const messageRightGutterStyle = () => {
 
 export const messageBlockStyle = (alignment, style, messageObject, theme) => {
   let backgroundColor = "";
-  let alignItems = "center";
+  let alignItems = "flex-end";
 
   if (
     messageObject.type === MessageTypeConstants.image ||
@@ -227,7 +269,7 @@ export const messageKitReceiptStyle = () => {
 
 export const messageTimestampStyle = (style, theme) => {
   return {
-    color: style.timestampColor || theme.palette.accent[theme.palette.mode],
+    color: style.timetampColor || theme.palette.accent[theme.palette.mode],
     font: style.timestampFont || fontHelper(theme.typography.caption2),
     display: "flex",
     alignItems: "center",

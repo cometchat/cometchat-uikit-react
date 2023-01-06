@@ -1,4 +1,4 @@
-import { EmojiKeyboardStyles } from "../";
+import { EmojiKeyboardStyle } from "../";
 
 /**
  * @class EmojiKeyboardConfiguration
@@ -12,7 +12,7 @@ class EmojiKeyboardConfiguration {
   constructor({
     hideSearch = true,
     onClick = null,
-    style = new EmojiKeyboardStyles({}),
+    style = new EmojiKeyboardStyle({}),
   }) {
     this.hideSearch = hideSearch;
     this.onClick = onClick;

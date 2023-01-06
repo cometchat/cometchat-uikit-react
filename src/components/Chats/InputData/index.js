@@ -6,7 +6,7 @@
  * @param {boolean} title
  * @param {Function} subtitle
  */
-class InputData {
+ class InputData {
     constructor({
         id = "",
         thumbnail = true,

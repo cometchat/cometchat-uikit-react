@@ -5,7 +5,7 @@
  * @param {String} empty
  * @param {String} error
  */
-class CustomView {
+ class CustomView {
 	constructor({loading = null, empty = null, error = null}) {
 		this.loading = loading;
 		this.empty = empty;

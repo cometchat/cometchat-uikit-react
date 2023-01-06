@@ -6,7 +6,10 @@ import { CometChatTheme, fontHelper } from "../../..";
 
 import { CometChatPollOptionBubble } from "../";
 
-import { CometChatMessageEvents } from "../../../";
+import {
+  CometChatMessageEvents,
+  PollOptionBubbleConfiguration,
+} from "../../../";
 
 import { Hooks } from "./hooks";
 
@@ -38,6 +41,9 @@ const CometChatPollBubble = (props) => {
   const [pollId, setPollId] = React.useState();
 
   const theme = new CometChatTheme(props.theme) || new CometChatTheme({});
+  const _pollOptionBubbleConfiguration = new PollOptionBubbleConfiguration(
+    props.pollOptionBubbleConfiguration || {}
+  );
   const getPollOptions = () => {
     let votePercent = 0;
     const optionsTemplate = [];
@@ -45,17 +51,6 @@ const CometChatPollBubble = (props) => {
       const fraction = option.count / voteCount;
       votePercent = fraction.toLocaleString("en", { style: "percent" });
 
-      let backgroundColor =
-        props.style.background || theme.palette.background[theme.palette.mode];
-      if (
-        option.hasOwnProperty("voters") &&
-        option.voters.hasOwnProperty(props.loggedInUser?.uid) &&
-        voteCount
-      ) {
-        backgroundColor = theme?.palette?.getPrimary();
-      } else {
-        backgroundColor = theme.palette.accent100[theme.palette.mode];
-      }
       optionsTemplate.push(
         <CometChatPollOptionBubble
           optionText={option.text}
@@ -66,25 +61,40 @@ const CometChatPollBubble = (props) => {
           theme={theme}
           key={optionKey}
           style={{
+            width: props.style.width,
+            height: props.style.height,
+            background:
+              props.style.background ||
+              theme.palette.background[theme.palette.mode],
+            border: props.style.optionBorder || "none",
+            borderRadius: props.style.optionBorderRadius || "8px",
+
             pollOptionTextFont:
               props.style.pollOptionsFont ||
+              _pollOptionBubbleConfiguration.style.pollOptionTextFont ||
               fontHelper(theme.typography.subtitle1),
             pollOptionTextColor:
               props.style.pollOptionsColor ||
+              _pollOptionBubbleConfiguration.style.pollOptionTextColor ||
               theme?.palette?.getAccent(),
             pollOptionBackground: props.style.pollOptionsBackground,
             optionIconTint:
               props.style.iconTint ||
+              _pollOptionBubbleConfiguration.style.iconTint ||
               theme.palette.accent500[theme.palette.mode],
             selectedPollOptionBackground:
-              backgroundColor || theme?.palette?.getPrimary(),
-            pollOptionBorder: props.style.pollOptionBorder,
+              props.style.selectedPollOptionBackground ||
+              _pollOptionBubbleConfiguration.style
+                .selectedPollOptionBackground ||
+              theme.palette.primary[theme.palette.mode],
             votePercentTextFont:
               props.style.votePercentTextFont ||
+              _pollOptionBubbleConfiguration.style.votePercentTextFont ||
               fontHelper(theme.typography.subtitle1),
             votePercentTextColor:
-              props.style.pollOptionsColor ||
-              theme?.palette?.getAccent(),
+              props.style.votePercentTextColor ||
+              _pollOptionBubbleConfiguration.style.votePercentTextColor ||
+              theme.palette.background[theme.palette.mode],
           }}
           loggedInUser={props.loggedInUser}
           onClick={votingPoll}
@@ -114,12 +124,12 @@ const CometChatPollBubble = (props) => {
             {question}
           </p>
         </div>
-        <ul
+        <div
           style={pollAnswerStyle(props)}
           className="message__message-polloptions"
         >
           {getPollOptions()}
-        </ul>
+        </div>
         <div
           style={voteCountStyle(props, theme)}
           className="message__message-votecount"
@@ -180,7 +190,6 @@ CometChatPollBubble.defaultProps = {
     totalVoteCountTextFont: "400 13px Inter,sans-serif",
     totalVoteCountTextColor: "#fff",
     optionIconTint: "rgb(246,246,246)",
-    pollOptionBorder: "",
     selectedPollOptionBackground: "",
   },
 };
@@ -190,7 +199,6 @@ CometChatPollBubble.propTypes = {
   pollQuestion: PropTypes.string,
   options: PropTypes.array,
   optionIconURL: PropTypes.string,
-  pollQuestion: PropTypes.string,
   totalVoteCount: PropTypes.number,
   style: PropTypes.object,
 };

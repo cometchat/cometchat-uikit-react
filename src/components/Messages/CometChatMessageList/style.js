@@ -1,5 +1,6 @@
 import { messageAlignment } from "..";
 import { fontHelper } from "../../Shared";
+import { SmartReplyStyle, NewMessageIndicatorStyle } from "..";
 
 export const chatListStyle = (style, theme) => {
   return {
@@ -7,6 +8,7 @@ export const chatListStyle = (style, theme) => {
       style.background || theme?.palette?.background[theme?.palette?.mode],
     width: style?.width,
     height: style?.height,
+    minHeight: "200px",
     flex: "1 1 0",
     order: "2",
     position: "relative",
@@ -177,28 +179,55 @@ export const messageBubbleStyle = (alignment, loggedInUser, messageObject) => {
     },
   };
 };
-export const smartReplyStyle = (theme) => {
+
+export const smartReplyStyle = (theme, smartRepliesConfiguration) => {
   return {
-    padding: "8px 8px 16px 8px",
+    ...new SmartReplyStyle({
+      background:
+        smartRepliesConfiguration?.style?.background ||
+        theme?.palette?.background[theme?.palette?.mode],
+      textFont:
+        smartRepliesConfiguration?.style?.textFont ||
+        fontHelper(theme?.typography?.subtitle2),
+      textBackground:
+        smartRepliesConfiguration?.style?.textBackground ||
+        theme?.palette?.accent900[theme?.palette?.mode],
+      textColor:
+        smartRepliesConfiguration?.style?.textColor ||
+        theme?.palette?.accent[theme?.palette?.mode],
+      closeIconTint:
+        smartRepliesConfiguration?.style?.closeIconTint ||
+        theme?.palette?.accent600[theme?.palette?.mode],
+      border: smartRepliesConfiguration?.style?.border,
+    }),
     marginBottom: "-8px",
-    background: theme?.palette?.background[theme?.palette?.mode],
-    textFont: fontHelper(theme?.typography?.subtitle2),
-    textBackground: theme?.palette?.accent900[theme?.palette?.mode],
-    textColor: theme?.palette?.accent[theme?.palette?.mode],
-    iconTint: theme?.palette?.accent600[theme?.palette?.mode],
+    padding: "8px 8px 16px 8px",
     display: "flex",
     flexDirection: "row-reverse",
     justifyContent: "space-between",
-    border: `1px solid #eaeaea`,
   };
 };
 
-export const messageIndicatorStyle = (_theme) => {
+export const messageIndicatorStyle = (
+  _theme,
+  newMessageIndicatorConfiguration
+) => {
   return {
-    textFont: fontHelper(_theme.typography.subtitle2),
-    textColor: _theme.palette.background[_theme.palette.mode],
-    border: "0",
-    borderRadius: "8px",
-    background: _theme.palette.primary[_theme.palette.mode],
+    ...new NewMessageIndicatorStyle({
+      textFont:
+        newMessageIndicatorConfiguration?.style?.textFont ||
+        fontHelper(_theme.typography.subtitle2),
+      textColor:
+        newMessageIndicatorConfiguration?.style?.textColor ||
+        _theme.palette.background[_theme.palette.mode],
+      iconTint:
+        newMessageIndicatorConfiguration?.style?.iconTint ||
+        _theme.palette.background[_theme.palette.mode],
+      border: newMessageIndicatorConfiguration?.style?.border,
+      borderRadius: newMessageIndicatorConfiguration?.style?.borderRadius,
+      background:
+        newMessageIndicatorConfiguration?.style?.background ||
+        _theme.palette.primary[_theme.palette.mode],
+    }),
   };
 };

@@ -12,31 +12,39 @@ const CometChatListItem = (props) => {
   const getIcon = () => {
     return props.iconURL ? (
       <div className="item__background" style={iconBackgroundStyle(props)}>
-        <span className="item__icon" style={listItemIconStyle(props)}></span>
+        <span
+          title={props?.hoverText}
+          className="item__icon"
+          style={listItemIconStyle(props)}
+        ></span>
       </div>
     ) : null;
   };
 
   const getText = () => {
     return props.text ? (
-      <div style={listTitle(props)} className="item__text">
+      <div
+        style={listTitle(props)}
+        title={props?.hoverText}
+        className="item__text"
+      >
         {props.text}
       </div>
     ) : null;
   };
 
   return (
-		<div
-			id={props.id}
-			style={listItem(props)}
-			className='list__item'
-			onClick={props.onItemClick}
-		>
-			{getIcon()}
-			{getText()}
-			{props.tail}
-		</div>
-	);
+    <div
+      id={props.id}
+      style={listItem(props)}
+      className="list__item"
+      onClick={props.onItemClick}
+    >
+      {getIcon()}
+      {getText()}
+      {props.tail}
+    </div>
+  );
 };
 
 export { CometChatListItem };
@@ -46,6 +54,7 @@ CometChatListItem.defaultProps = {
   text: "",
   tail: null,
   iconURL: "",
+  hoverText: "",
   onItemClick: () => {},
   style: {
     width: "",
@@ -67,6 +76,7 @@ CometChatListItem.propTypes = {
   text: PropTypes.string,
   tail: PropTypes.object,
   iconURL: PropTypes.string,
+  hoverText: PropTypes.string,
   style: PropTypes.object,
   onItemClick: PropTypes.func,
 };

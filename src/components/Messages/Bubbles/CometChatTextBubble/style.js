@@ -131,3 +131,7 @@ export const linkSubtitleStyle = (props, theme) => {
     textDecoration: "none",
   };
 };
+
+export const dangerStyle = () => {
+  return {};
+};

@@ -6,9 +6,8 @@ import {
 	CometChatUserList,
 	CometChatTheme,
 	localize,
-	UserListConfiguration,
 } from "../..";
-
+import { UserListConfiguration } from "../CometChatUserList/UserListConfiguration";
 import { containerStyle, getListStyle, getListBaseStyle } from "./style";
 import backIcon from "./resources/back.svg";
 import searchIcon from "./resources/search.svg";
@@ -89,7 +88,7 @@ const Users = forwardRef((props, ref) => {
 					errorText={localize("SOMETHING_WRONG")}
 					activeUser={activeUser}
 					theme={_theme}
-					dataItemConfigurations={_userListConfiguration.dataItemConfigurations}
+					dataItemConfiguration={_userListConfiguration.dataItemConfiguration}
 				/>
 			</CometChatListBase>
 		</div>

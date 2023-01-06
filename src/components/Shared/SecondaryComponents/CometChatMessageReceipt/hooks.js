@@ -6,11 +6,13 @@ export const Hooks = (props, setIcon) => {
 		if (props.messageObject.error) {
 			setIcon(props.messageErrorIcon);
 		} else {
-			if (props.messageObject.readAt) {
+			
+			if (props.messageObject?.readAt) {
 				setIcon(props.messageReadIcon);
-			} else if (props.messageObject.deliveredAt) {
+			} else if (props.messageObject?.deliveredAt) {
+
 				setIcon(props.messageDeliveredIcon);
-			} else if (props.messageObject.sentAt) {
+			} else if (props.messageObject?.sentAt) {
 				setIcon(props.messageSentIcon);
 			} else {
 				setIcon(props.messageWaitIcon);

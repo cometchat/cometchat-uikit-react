@@ -1,7 +1,7 @@
 import { UserListConfiguration } from "../CometChatUserList/UserListConfiguration";
 import backIcon from "./resources/back.svg";
 import searchIcon from "./resources/search.svg";
-import { UsersStyles } from "./UsersStyles";
+import { UsersStyle } from "./UsersStyle";
 
 /**
  * @class UsersConfiguration
@@ -11,24 +11,31 @@ import { UsersStyles } from "./UsersStyles";
  * @param  {boolean} showBackButton
  * @param  {string} hideSearch
  * @param  {object} userListConfigurations
+ * @param  {string} selectionMode
+ * @param  {function} onSelection
+ * @param  {object} style
  *
  */
 export class UsersConfiguration {
-	constructor({
-		backButtonIconURL = backIcon,
-		searchIconURL = searchIcon,
-		showBackButton = false,
-		hideSearch = false,
-		style = new UsersStyles({}),
-		userListConfiguration = new UserListConfiguration({}),
-	}) {
-		this.backButtonIconURL = backButtonIconURL;
-		this.searchIconURL = searchIconURL;
-		this.showBackButton = showBackButton;
-		this.hideSearch = hideSearch;
-		this.style = new UsersStyles(style || {});
-		this.userListConfiguration = new UserListConfiguration(
-			userListConfiguration || {}
-		);
-	}
+  constructor({
+    backButtonIconURL = backIcon,
+    searchIconURL = searchIcon,
+    showBackButton = false,
+    hideSearch = false,
+    selectionMode = "none",
+    onSelection = () => {},
+    style = new UsersStyle({}),
+    userListConfiguration = new UserListConfiguration({}),
+  }) {
+    this.selectionMode = selectionMode;
+    this.onSelection = onSelection;
+    this.backButtonIconURL = backButtonIconURL;
+    this.searchIconURL = searchIconURL;
+    this.showBackButton = showBackButton;
+    this.hideSearch = hideSearch;
+    this.style = new UsersStyle(style || {});
+    this.userListConfiguration = new UserListConfiguration(
+      userListConfiguration || {}
+    );
+  }
 }

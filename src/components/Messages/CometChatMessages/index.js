@@ -9,9 +9,11 @@ import {
   CometChatMessageComposer,
   CometChatLiveReactions,
   messageConstants,
-  MessagesStyles,
   CometChatMessageTemplate,
+  LiveReactionsStyle,
 } from "..";
+
+import { MessagesManager } from "./controller";
 
 import {
   MessageHeaderConfiguration,
@@ -26,8 +28,6 @@ import { MessageListConfiguration } from "../CometChatMessageList/MessageListCon
 
 import { messageStatus } from "../CometChatMessageConstants";
 
-import { DetailsConfiguration } from "../../Shared";
-
 import {
   chatWrapperStyle,
   liveReactionWrapperStyle,
@@ -40,13 +40,15 @@ import {
 import { MessageInputData } from "../..";
 
 import heart from "./resources/heart.png";
+import { Hooks } from "./hooks";
 
 const CometChatMessages = (props) => {
   let messageListRef = React.useRef(null);
   let messageComposerRef = React.useRef(null);
-
+  const messagesManager = React.useRef(new MessagesManager());
   const [viewLiveReaction, setViewLiveReaction] = React.useState(false);
   const [liveReactionTemplate, setLiveReactionTemplate] = React.useState(null);
+  const loggedInUser = React.useRef(null);
 
   const {
     user,
@@ -69,6 +71,7 @@ const CometChatMessages = (props) => {
 
   const _messageListConfiguration =
     messageListConfiguration || new MessageListConfiguration({});
+
   const _theme = new CometChatTheme(theme ?? {});
 
   let liveReactionTimeout = 0;
@@ -110,14 +113,16 @@ const CometChatMessages = (props) => {
   const getReceivedMessageInputData = () => {
     if (user) {
       let timestamp =
-          _messageListConfiguration.receivedMessageInputData.timestamp || true,
+          _messageListConfiguration?.receivedMessageInputData?.timestamp ||
+          true,
         readReceipt =
-          _messageListConfiguration.receivedMessageInputData.readReceipt ||
+          _messageListConfiguration?.receivedMessageInputData?.readReceipt ||
           true,
         thumbnail =
-          _messageListConfiguration.receivedMessageInputData.thumbnail || false,
+          _messageListConfiguration?.receivedMessageInputData?.thumbnail ||
+          false,
         title =
-          _messageListConfiguration.receivedMessageInputData.title || false;
+          _messageListConfiguration?.receivedMessageInputData?.title || false;
 
       return new MessageInputData({
         timestamp: timestamp,
@@ -127,14 +132,16 @@ const CometChatMessages = (props) => {
       });
     } else if (group) {
       let timestamp =
-          _messageListConfiguration.receivedMessageInputData.timestamp || true,
+          _messageListConfiguration?.receivedMessageInputData?.timestamp ||
+          true,
         readReceipt =
-          _messageListConfiguration.receivedMessageInputData.readReceipt ||
+          _messageListConfiguration?.receivedMessageInputData?.readReceipt ||
           false,
         thumbnail =
-          _messageListConfiguration.receivedMessageInputData.thumbnail || true,
+          _messageListConfiguration?.receivedMessageInputData?.thumbnail ||
+          true,
         title =
-          _messageListConfiguration.receivedMessageInputData.title || true;
+          _messageListConfiguration?.receivedMessageInputData?.title || true;
 
       return new MessageInputData({
         timestamp: timestamp,
@@ -158,6 +165,16 @@ const CometChatMessages = (props) => {
         messageListRef.current.updateMessage(payload.message, true);
       }
     }
+  };
+
+  /***
+   * error handler
+   */
+  const errorHandler = (errorCode) => {
+    CometChatMessageEvents.emit(
+      CometChatMessageEvents.onMessageError,
+      errorCode
+    );
   };
 
   /**
@@ -193,14 +210,8 @@ const CometChatMessages = (props) => {
   const onTransientMessageReceived = (message) => {
     if (message.data.type === MetadataConstants.liveReaction) {
       const payload = {
-        reaction: heart,
-        style: {
-          width: "20px",
-          height: "20px",
-          border: "none",
-          borderRadius: "none",
-          background: "red",
-        },
+        reaction: message?.data?.reaction,
+        style: new LiveReactionsStyle(liveReactionStyle() || {}),
       };
       shareLiveReaction(payload);
     }
@@ -263,13 +274,15 @@ const CometChatMessages = (props) => {
   const _emojiIconURL = messageComposerConfig.emojiIconURL;
   const _showSendButton = messageComposerConfig.showSendButton;
   const _onSendButtonClick = messageComposerConfig.onSendButtonClick;
-  const _messageTypes = messageComposerConfig.messageTypes;
+  const _messageTypes = messageTypes || messageComposerConfig.messageTypes;
   const _customOutgoingMessageSound =
+    customOutgoingMessageSound ||
     messageComposerConfig.customOutgoingMessageSound;
   const _enableSoundForMessages =
     enableSoundForMessages || messageComposerConfig.enableSoundForMessages;
   const _excludeMessageTypes = messageComposerConfig.excludeMessageTypes;
-  const _enableTypingIndicator = messageComposerConfig.enableTypingIndicator;
+  const _enableTypingIndicator =
+    enableTypingIndicator || messageComposerConfig.enableTypingIndicator;
   /**configurations of composer child components */
   const _messagePreviewConfiguration =
     messageComposerConfig.messagePreviewConfiguration;
@@ -289,18 +302,21 @@ const CometChatMessages = (props) => {
   const _showBackButton = messageHeaderConfig.showBackButton;
   const _backButtonIconURL = messageHeaderConfig.backButtonIconURL;
 
-  const _enableIndicator = messageHeaderConfig.enableTypingIndicator;
+  const _enableIndicator =
+    enableTypingIndicator || messageHeaderConfig.enableTypingIndicator;
   const _isMobileView = messageHeaderConfig.isMobile;
   const _dataItemConfiguration = messageHeaderConfig.dataItemConfiguration;
 
   let liveReactionView = viewLiveReaction ? (
     <div style={liveReactionWrapperStyle()}>
       <CometChatLiveReactions
-        reaction={liveReactionTemplate.reaction}
+        reaction={liveReactionTemplate?.reaction}
         style={liveReactionStyle()}
       />
     </div>
   ) : null;
+
+  Hooks(props, loggedInUser, errorHandler, messagesCallback, messagesManager);
 
   return (
     <div className="main__chat" style={chatWrapperStyle(style)}>
@@ -308,7 +324,7 @@ const CometChatMessages = (props) => {
         user={user}
         group={group}
         theme={_theme}
-        style={messageHeaderStyle(_theme)}
+        style={messageHeaderStyle(_theme, messageHeaderConfig)}
         backButtonIconURL={_backButtonIconURL}
         showBackButton={_isMobileView && _showBackButton ? true : false}
         enableTypingIndicator={_enableIndicator}
@@ -320,7 +336,7 @@ const CometChatMessages = (props) => {
         user={user}
         group={group}
         alignment={_messageListConfiguration.alignment}
-        messageTypes={_messageListConfiguration.messageTypes}
+        messageTypes={messageTypes || _messageListConfiguration.messageTypes}
         excludeMessageTypes={_messageListConfiguration.excludeMessageTypes}
         excludeMessageOptions={_messageListConfiguration.excludeMessageOptions}
         customMessageOptions={_messageListConfiguration.customMessageOptions}
@@ -336,14 +352,16 @@ const CometChatMessages = (props) => {
         errorText={localize("SOMETHING_WRONG")}
         hideError={_messageListConfiguration.hideError}
         customIncomingMessageSound={
+          customIncomingMessageSound ||
           _messageListConfiguration.customIncomingMessageSound
         }
         enableSoundForMessages={
+          enableSoundForMessages ||
           _messageListConfiguration.enableSoundForMessages
         }
         sentMessageInputData={getSentMessageInputData()}
         receivedMessageInputData={getReceivedMessageInputData()}
-        style={messageListStyle(props, _theme)}
+        style={messageListStyle(_theme, _messageListConfiguration)}
         messageBubbleConfiguration={
           _messageListConfiguration.messageBubbleConfiguration
         }
@@ -360,34 +378,36 @@ const CometChatMessages = (props) => {
         theme={_theme}
       />
       {liveReactionView}
-      <CometChatMessageComposer
-        ref={messageComposerRef}
-        group={group}
-        user={user}
-        hideAttachment={_hideAttachment}
-        attachmentIconURL={_attachmentIconURL}
-        stickerCloseIconURL={_stickerCloseIconURL}
-        hideLiveReaction={_hideLiveReaction}
-        hideEmoji={_hideEmoji}
-        liveReactionIconURL={liveReactionIconURL}
-        sendButtonIconURL={_sendButtonIconURL}
-        onSendButtonClick={_onSendButtonClick}
-        messageTypes={_messageTypes}
-        excludeMessageTypes={_excludeMessageTypes}
-        enableTypingIndicator={_enableTypingIndicator}
-        enableSoundForMessages={_enableSoundForMessages}
-        customOutgoingMessageSound={_customOutgoingMessageSound}
-        showSendButton={_showSendButton}
-        placeholderText={_placeholderText}
-        emojiIconURL={_emojiIconURL}
-        messagePreviewConfiguration={_messagePreviewConfiguration}
-        emojiKeyboardConfiguration={_emojiKeyboardConfiguration}
-        stickerKeyboardConfiguration={_stickerKeyboardConfiguration}
-        createPollConfiguration={_createPollConfiguration}
-        actionSheetConfiguration={_actionSheetConfiguration}
-        theme={_theme}
-        style={messageComposerStyle(props, _theme)}
-      />
+      {!hideMessageComposer ? (
+        <CometChatMessageComposer
+          ref={messageComposerRef}
+          group={group}
+          user={user}
+          hideAttachment={_hideAttachment}
+          attachmentIconURL={_attachmentIconURL}
+          stickerCloseIconURL={_stickerCloseIconURL}
+          hideLiveReaction={_hideLiveReaction}
+          hideEmoji={_hideEmoji}
+          liveReactionIconURL={liveReactionIconURL}
+          sendButtonIconURL={_sendButtonIconURL}
+          onSendButtonClick={_onSendButtonClick}
+          messageTypes={_messageTypes}
+          excludeMessageTypes={_excludeMessageTypes}
+          enableTypingIndicator={_enableTypingIndicator}
+          enableSoundForMessages={_enableSoundForMessages}
+          customOutgoingMessageSound={_customOutgoingMessageSound}
+          showSendButton={_showSendButton}
+          placeholderText={_placeholderText}
+          emojiIconURL={_emojiIconURL}
+          messagePreviewConfiguration={_messagePreviewConfiguration}
+          emojiKeyboardConfiguration={_emojiKeyboardConfiguration}
+          stickerKeyboardConfiguration={_stickerKeyboardConfiguration}
+          createPollConfiguration={_createPollConfiguration}
+          actionSheetConfiguration={_actionSheetConfiguration}
+          theme={_theme}
+          style={messageComposerStyle(_theme, messageComposerConfig)}
+        />
+      ) : null}
     </div>
   );
 };
@@ -423,7 +443,7 @@ CometChatMessages.defaultProps = {
   enableTypingIndicator: null,
   style: {
     width: "100%",
-    height: "auto",
+    height: "100%",
     border: "none",
     borderRadius: "none",
     background: "rgb(255,255,255)",

@@ -1,8 +1,8 @@
 import { BaseStyles } from "../../Base/BaseStyles";
 
 /**
- * @class ConversationListItemStyles
- * @description ConversationListItemStyles class is used for defining the styles for conversation list item.
+ * @class ConversationListItemStyle
+ * @description ConversationListItemStyle class is used for defining the styles for conversation list item.
  * @param {String} width
  * @param {String} height
  * @param {String} background
@@ -19,7 +19,7 @@ import { BaseStyles } from "../../Base/BaseStyles";
  * @param {String} threadIndicatorTextFont
  */
 
-class ConversationListItemStyles extends BaseStyles {
+class ConversationListItemStyle extends BaseStyles {
   constructor({
     width = "280px",
     height = "100%",
@@ -56,4 +56,4 @@ class ConversationListItemStyles extends BaseStyles {
     this.threadIndicatorTextFont = threadIndicatorTextFont;
   }
 }
-export { ConversationListItemStyles };
+export { ConversationListItemStyle };

@@ -1,4 +1,4 @@
-import { CometChatLocalize } from "../..";
+import { CometChatLocalize, fontHelper, MenuListStyle } from "../..";
 
 export const listItemStyle = (style, theme, isActive) => {
   return {
@@ -111,12 +111,24 @@ export const subMenuStyles = (style, theme) => {
     : { right: "0" };
 
   return {
+    ...new MenuListStyle({
+      width: "auto",
+      height: style?.height,
+      background: "",
+      border: "",
+      borderRadius: "none",
+      activeBackground: "none",
+
+      textFont: fontHelper(theme.typography.subtitle1),
+      textColor: theme.palette.accent600[theme.palette.mode],
+      iconTint: theme?.palette?.getAccent(),
+      moreIconTint: theme?.palette?.getAccent50(),
+      iconBorder: "",
+      iconBackground: "",
+      iconBorderRadius: "",
+    }),
     position: "absolute",
-    width: "auto",
-    height: style?.height,
     padding: "0px 16px",
-    moreIconTint: theme?.palette?.getAccent50(),
-    iconTint: theme?.palette?.getAccent(),
     top: 0,
     ...leftRightPosition,
   };

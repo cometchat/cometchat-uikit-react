@@ -5,7 +5,7 @@
  * @param {String} customPattern
  */
 
-class DateConfiguration{
+ class DateConfiguration{
   constructor({
     pattern = "timeFormat",
     customPattern = null,

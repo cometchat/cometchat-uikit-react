@@ -1,5 +1,5 @@
 import uploadFile from "../../../Messages/CometChatMessageComposer/resources/file-upload.svg";
-import { ListItemStyles } from "../../../Shared";
+import { ListItemStyle } from "../../../Shared";
 
 /**
  * @class ListItemConfiguration
@@ -19,14 +19,14 @@ class ListItemConfiguration {
     tail = null,
     iconURL = null,
     onItemClick = null,
-    style = new ListItemStyles({})
+    style = new ListItemStyle({})
   ) {
     this.id = id;
     this.text = text;
     this.tail = tail;
     this.iconURL = iconURL || uploadFile;
     this.onItemClick = onItemClick;
-    this.style = new ListItemStyles(style ?? {});
+    this.style = new ListItemStyle(style ?? {});
   }
 }
 

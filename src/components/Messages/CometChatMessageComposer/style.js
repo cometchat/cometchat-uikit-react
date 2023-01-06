@@ -1,12 +1,13 @@
-import { ActionSheetStyles, BaseStyles, fontHelper } from "../../Shared";
-
 import {
-  StickerKeyboardStyles,
-  EmojiKeyboardStyles,
-  CreatePollStyles,
-} from "../";
+  ActionSheetStyle,
+  BaseStyles,
+  fontHelper,
+  PopoverStyle,
+} from "../../Shared";
 
-import { MessagePreviewStyles } from "../CometChatMessagePreview/MessagePreviewStyles";
+import { StickerKeyboardStyle, EmojiKeyboardStyle, CreatePollStyle } from "../";
+
+import { MessagePreviewStyle } from "../CometChatMessagePreview/MessagePreviewStyle";
 
 export const chatComposerStyle = (style, theme) => {
   return {
@@ -214,13 +215,25 @@ export const sendButtonStyle = () => {
   };
 };
 
-export const sendBtnIconStyle = (style, sendButtonIconURL, theme) => {
+export const sendBtnIconStyle = (
+  style,
+  sendButtonIconURL,
+  theme,
+  messageInput,
+  isTyping
+) => {
+  let sendButtonColor = "rgba(20,20,20,0.24)";
+  if (messageInput?.length && isTyping.current) {
+    sendButtonColor = theme.palette.getPrimary() || "#39f";
+  } else {
+    sendButtonColor = style.sendButtonIconTint || theme.palette.getAccent300();
+  }
   return {
     width: "24px",
     height: "24px",
     display: "inline-block",
     WebkitMask: `url(${sendButtonIconURL}) center center no-repeat`,
-    background: style.sendButtonIconTint || theme.palette.getAccent400(),
+    background: sendButtonColor,
   };
 };
 
@@ -274,7 +287,7 @@ export const fileInputStyle = () => {
 
 export const stickerKeyboardStyle = (theme, stickerConfig) => {
   return {
-    ...new StickerKeyboardStyles({
+    ...new StickerKeyboardStyle({
       width: stickerConfig.style.width,
       height: stickerConfig.style.height,
       background: stickerConfig.style.background,
@@ -304,21 +317,21 @@ export const stickerKeyboardStyle = (theme, stickerConfig) => {
 
 export const emojiBoardPopoverStyle = (theme, emojiConfig) => {
   return {
-    ...new BaseStyles({
+    ...new PopoverStyle({
       width: emojiConfig.style.width,
       height: emojiConfig.style.height,
       background: emojiConfig.style.background || theme.palette.getBackground(),
       border: emojiConfig.style.border,
       borderRadius: emojiConfig.style.borderRadius,
       activeBackground: emojiConfig.style.activeBackground,
+      boxShadow: `0 0 32px ${theme.palette.getAccent300()}`,
     }),
-    boxShadow: `0 0 32px ${theme.palette.getAccent300()}`,
   };
 };
 
 export const emojiKeyBoardStyle = (theme, emojiConfig) => {
   return {
-    ...new EmojiKeyboardStyles({
+    ...new EmojiKeyboardStyle({
       width: "100%",
       height: "100%",
       background: "transparent",
@@ -344,7 +357,7 @@ export const emojiKeyBoardStyle = (theme, emojiConfig) => {
 
 export const messagePreviewStyle = (theme, messagePreviewConfig) => {
   return {
-    ...new MessagePreviewStyles({
+    ...new MessagePreviewStyle({
       border:
         messagePreviewConfig.style.border ||
         `3px solid ${theme.palette.accent100[theme.palette.mode]}`,
@@ -373,23 +386,22 @@ export const messagePreviewStyle = (theme, messagePreviewConfig) => {
 
 export const actionSheetPopoverStyle = (theme) => {
   return {
-    ...new BaseStyles({
+    ...new PopoverStyle({
       width: "295px",
       height: "350px",
       background: theme.palette.getBackground(),
       border: `none`,
       borderRadius: "8px",
       activeBackground: theme.palette.getPrimary(),
+      boxShadow: `0 0 32px ${theme.palette.getAccent300()}`,
     }),
-    boxShadow: `0 0 32px ${theme.palette.getAccent300()}`,
-
     position: "relative",
   };
 };
 
 export const actionSheetStyle = (theme) => {
   return {
-    ...new ActionSheetStyles({
+    ...new ActionSheetStyle({
       width: "100%",
       height: "100%",
       background: "transparent",
@@ -406,7 +418,7 @@ export const actionSheetStyle = (theme) => {
 export const createPollStyle = (theme, createPollConfig) => {
   return {
     position: "fixed",
-    ...new CreatePollStyles({
+    ...new CreatePollStyle({
       width: "100%",
       height: "100%",
       background: "transparent",
@@ -509,7 +521,7 @@ export const createPollStyle = (theme, createPollConfig) => {
 
 export const popoverForCreatePollStyle = (theme, createPollConfig) => {
   return {
-    ...new BaseStyles({
+    ...new PopoverStyle({
       width: createPollConfig?.style?.width,
       height: createPollConfig?.style?.height,
       background:
@@ -519,11 +531,11 @@ export const popoverForCreatePollStyle = (theme, createPollConfig) => {
         `1px solid ${theme?.palette?.getAccent50()}`,
       borderRadius: createPollConfig?.style?.borderRadius,
       activeBackground: "",
+      boxShadow: `0 0 32px ${theme?.palette?.getAccent300()}`,
     }),
     position: "fixed",
     top: "50%",
     left: "50%",
     transform: "translate(-50%,-50%)",
-    boxShadow: `0 0 32px ${theme?.palette?.getAccent300()}`,
   };
 };

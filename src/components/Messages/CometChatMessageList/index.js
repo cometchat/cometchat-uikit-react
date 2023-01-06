@@ -37,6 +37,8 @@ import {
   CustomView,
 } from "../..";
 
+import { MessageBubbleStyle } from "..";
+
 import loadingIcon from "./resources/spinner.svg";
 
 import { fetchMessages, Hooks } from "./hooks";
@@ -59,7 +61,7 @@ import {
 } from "./style";
 import { messageStatus } from "../CometChatMessageConstants";
 
-import { CometChatDate, DateStyles } from "../../Shared";
+import { CometChatDate, DateStyle } from "../../Shared";
 
 import { EmojiKeyboardConfiguration } from "../";
 
@@ -67,6 +69,7 @@ import { SmartRepliesConfiguration } from "../CometChatSmartReplies/SmartReplies
 import { NewMessageIndicatorConfiguration } from "../CometChatNewMessageIndicator/NewMessageIndicatorConfiguration";
 import { MessageBubbleConfiguration } from "../Bubbles/CometChatMessageBubble/MessageBubbleConfiguration";
 import { DateConfiguration } from "../../Shared/PrimaryComponents/CometChatConfiguration/DateConfiguration";
+import { getUnixTimestamp } from "../CometChatMessageHelper";
 /**
  *
  * CometChatMessageList component retrieves the latest messages and presents them inside a message bubble, that a CometChat logged-in user has been a part of.
@@ -113,18 +116,16 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
     newMessageIndicatorConfiguration,
     dateConfiguration,
   } = props;
-
   let lastScrollTop = 0;
   const loggedInUserRef = React.useRef(null);
   const [messageCount, setMessageCount] = React.useState(0);
   const [messageList, setMessageList] = React.useState([]);
   const [unreadMessageCount, setUnreadMessageCount] = React.useState(0);
-  const [callbackData, setCallbackData] = React.useState(null);
+  const chatWithRef = React.useRef(null);
+  const chatWithTypeRef = React.useRef(null);
   const [decoratorMessage, setDecoratorMessage] = React.useState(
     localize("LOADING")
   );
-  const [chatWith, setChatWith] = React.useState(null);
-  const [chatWithType, setChatWithType] = React.useState(null);
   const messageTypesRef = React.useRef(null);
   const messageCategoryRef = React.useRef(null);
   let messageListManagerRef = React.useRef(null);
@@ -162,8 +163,13 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
     reactToMessages: reactToMessages,
   }));
 
-  const messageListCallback = (listenerName, ...args) => {
-    setCallbackData({ name: listenerName, args: [...args] });
+  const messageListCallback = (listenerName, args) => {
+    try {
+      const handler = handlers[listenerName];
+      if (handler) return handler(args);
+    } catch (e) {
+      throw e;
+    }
   };
 
   const errorHandler = (errorCode) => {
@@ -202,18 +208,18 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
    * add new message to the messageList
    */
   const addMessage = (message) => {
-    const messagelist = [...messageList];
-    messagelist.push(message);
-    setMessageList(messagelist);
-
-    // scrollToBottom()
+    setMessageList((prevMessageList) => {
+      const messagelist = [...prevMessageList];
+      messagelist.push(message);
+      return [...messagelist];
+    });
   };
 
   /**
    * Set unreadCount when new message is received
    */
   const updateUnreadMessageCount = () => {
-    setUnreadMessageCount(unreadMessageCount + 1);
+    setUnreadMessageCount(unreadMessageCount => unreadMessageCount + 1);
   };
 
   /**
@@ -257,52 +263,65 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
    */
   const updateMessage = (message, withMuid = false) => {
     let messageKey;
-    const messagelist = [...messageList];
-    if (withMuid) {
-      messageKey = messagelist.findIndex((m) => m.muid === message.muid);
-    } else {
-      messageKey = messagelist.findIndex((m) => m.id === message.id);
-    }
-    if (messageKey > -1) {
-      const messageObject = { ...messageList[messageKey], ...message };
+    setMessageList((prevMessageList) => {
+      const messagelist = [...prevMessageList];
+      if (withMuid) {
+        messageKey = messagelist.findIndex((m) => m.muid === message.muid);
+      } else {
+        messageKey = messagelist.findIndex((m) => m.id === message.id);
+      }
+      if (messageKey > -1) {
+        const messageObject = { ...messageList[messageKey], ...message };
 
-      messagelist.splice(messageKey, 1, messageObject);
+        messagelist.splice(messageKey, 1, messageObject);
 
-      setMessageCount(messagelist.length);
-      setMessageList(messagelist);
-    }
+        setMessageCount(messagelist.length);
+      }
+      return [...messagelist];
+    });
   };
 
   /**
    * Update message as read; show double blue tick
    */
   const updateMessageAsRead = (message) => {
-    const messagelist = [...messageList];
-    let messageKey = messagelist.findIndex((m) => m.id === message.messageId);
-
-    if (messageKey > -1) {
-      const messageObject = { ...messageList[messageKey] };
-      messageObject.readAt = message.getReadAt();
-      messagelist.splice(messageKey, 1, messageObject);
-      setMessageList(messagelist);
-    }
+    setMessageList((prevMessageList) => {
+      const messagelist = [...prevMessageList];
+      let messageKey = messagelist.findIndex(
+        (m) => m.id === message?.messageId
+      );
+      if (messageKey > -1) {
+        for (let i = messageKey; i >= 0; i--) {
+          let messageObj = { ...messagelist[i] };
+          if (!messageObj.readAt) {
+            messageObj.readAt = message?.getReadAt();
+            messagelist.splice(i, 1, { ...messageObj });
+          } else {
+            break; 
+          }
+        }
+      }
+      return [...messagelist];
+    });
   };
 
   /**
    * Update message as deleted; show deleted message bubble
    */
   const removeMessage = (message) => {
-    const messages = [...messageList];
-    let messageKey = messages.findIndex((m) => m.id === message.id);
-    if (messageKey > -1) {
-      if (hideDeletedMessages) {
-        messages.splice(messageKey, 1);
-      } else {
-        const messageObject = { ...messages[messageKey], ...message };
-        messages.splice(messageKey, 1, messageObject);
+    setMessageList((prevMessageList) => {
+      const messages = [...prevMessageList];
+      let messageKey = messages.findIndex((m) => m.id === message.id);
+      if (messageKey > -1) {
+        if (hideDeletedMessages) {
+          messages.splice(messageKey, 1);
+        } else {
+          const messageObject = { ...messages[messageKey], ...message };
+          messages.splice(messageKey, 1, messageObject);
+        }
+        return [...messages];
       }
-      setMessageList(() => messages);
-    }
+    });
   };
 
   /**
@@ -311,6 +330,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
    * emits markAsRead Event
    */
   const markMessageAsRead = (message) => {
+    console.log(message);
     if (!message?.readAt) {
       CometChat.markAsRead(message).catch((error) => {
         errorHandler(error);
@@ -320,12 +340,11 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
 
   const handleNewMessages = (message) => {
     //handling dom lag - increment count only for main message list
-
     setnewMessage(message);
 
     const messageReceivedHandler = (message) => {
       //if the user has not scrolled in chat window(scroll is at the bottom of the chat window)
-      setMessageCount(messageCount + 1);
+      setMessageCount((messageCount)=>messageCount + 1);
       if (
         messageListEndRef.current.scrollHeight -
           messageListEndRef.current.scrollTop -
@@ -356,13 +375,13 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
      * message receiver is chat window group
      */
     if (
-      chatWithType === ReceiverTypeConstants.group &&
+      chatWithTypeRef?.current === ReceiverTypeConstants.group &&
       message.getReceiverType() === ReceiverTypeConstants.group &&
-      message.getReceiverId() === chatWith?.guid
+      message.getReceiverId() === chatWithRef?.current?.guid
     ) {
       messageReceivedHandler(message);
     } else if (
-      chatWithType === ReceiverTypeConstants.user &&
+      chatWithTypeRef?.current === ReceiverTypeConstants.user &&
       message.getReceiverType() === ReceiverTypeConstants.user
     ) {
       /**
@@ -371,10 +390,10 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
        * If the message sender is logged-in user and message receiver is chat window user
        */
       if (
-        (message.getSender().uid === chatWith?.uid &&
+        (message.getSender().uid === chatWithRef?.current?.uid &&
           message.getReceiverId() === loggedInUserRef?.current?.uid) ||
         (message.getSender().uid === loggedInUserRef?.current?.uid &&
-          message.getReceiverId() === chatWith?.uid)
+          message.getReceiverId() === chatWithRef?.current?.uid)
       ) {
         messageReceivedHandler(message);
       }
@@ -383,7 +402,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
 
   const handleNewCustomMessages = (message) => {
     const customMessageReceivedHandler = (message) => {
-      setMessageCount(messageCount + 1);
+      setMessageCount((messageCount)=>messageCount + 1);
       //if the user has not scrolled in chat window(scroll is at the bottom of the chat window)
       if (
         messageListEndRef.current.scrollHeight -
@@ -412,10 +431,10 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
     };
 
     if (
-      chatWithType === ReceiverTypeConstants.group &&
+      chatWithTypeRef.current === ReceiverTypeConstants.group &&
       message.getReceiverType() === ReceiverTypeConstants.group &&
       loggedInUserRef.current?.uid === message.getSender().uid &&
-      message.getReceiverId() === chatWith?.guid &&
+      message.getReceiverId() === chatWithRef?.current?.guid &&
       (message.type === CometChatCustomMessageTypes.poll ||
         message.type === CometChatCustomMessageTypes.document ||
         message.type === CometChatCustomMessageTypes.whiteboard)
@@ -424,22 +443,22 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
       addMessage(message);
       scrollToBottom();
     } else if (
-      chatWithType === ReceiverTypeConstants.group &&
+      chatWithTypeRef.current === ReceiverTypeConstants.group &&
       message.getReceiverType() === ReceiverTypeConstants.group &&
-      message.getReceiverId() === chatWith?.guid
+      message.getReceiverId() === chatWithRef?.current?.guid
     ) {
       customMessageReceivedHandler(message, ReceiverTypeConstants.group);
     } else if (
-      chatWithType === ReceiverTypeConstants.user &&
+      chatWithTypeRef.current === ReceiverTypeConstants.user &&
       message.getReceiverType() === ReceiverTypeConstants.user &&
-      message.getSender().uid === chatWith?.uid
+      message.getSender().uid === chatWithRef?.current?.uid
     ) {
       customMessageReceivedHandler(message, ReceiverTypeConstants.user);
     } else if (
-      chatWithType === ReceiverTypeConstants.user &&
+      chatWithTypeRef.current === ReceiverTypeConstants.user &&
       message.getReceiverType() === ReceiverTypeConstants.user &&
       loggedInUserRef.current?.uid === message.getSender().uid &&
-      message.getReceiverId() === chatWith?.uid &&
+      message.getReceiverId() === chatWithRef?.current?.uid &&
       (message.type === CometChatCustomMessageTypes.poll ||
         message.type === CometChatCustomMessageTypes.document ||
         message.type === CometChatCustomMessageTypes.whiteboard)
@@ -453,8 +472,8 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
   const handleMessageDeliveryAndReadReceipt = (messageReceipt) => {
     //read receipts
     if (
-      messageReceipt?.getReceiverType() === ReceiverTypeConstants.user &&
-      messageReceipt?.getSender()?.getUid() === chatWith?.uid &&
+      messageReceipt?.receiverType === ReceiverTypeConstants.user &&
+      messageReceipt?.getSender()?.getUid() === chatWithRef?.current?.uid &&
       messageReceipt?.getReceiver() === loggedInUserRef.current.uid
     ) {
       if (messageReceipt?.getReceiptType() === "delivery") {
@@ -464,22 +483,22 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
       }
     } else if (
       messageReceipt?.getReceiverType() === ReceiverTypeConstants.group &&
-      messageReceipt?.getReceiver() === chatWith?.guid
+      messageReceipt?.getReceiver() === chatWithRef?.current?.guid
     ) {
     }
   };
 
   const handleMessageDelete = (message) => {
     if (
-      chatWithType === ReceiverTypeConstants.group &&
+      chatWithTypeRef?.current === ReceiverTypeConstants.group &&
       message.getReceiverType() === ReceiverTypeConstants.group &&
-      message.getReceiverId() === chatWith?.guid
+      message.getReceiverId() === chatWithRef?.current?.guid
     ) {
       removeMessage(message);
     } else if (
-      chatWith === ReceiverTypeConstants.user &&
+      chatWithTypeRef?.current === ReceiverTypeConstants.user &&
       message.getReceiverType() === ReceiverTypeConstants.user &&
-      message.getSender().uid === chatWith?.uid
+      message.getSender().uid === chatWithRef?.current?.uid
     ) {
       removeMessage(message);
     }
@@ -487,23 +506,23 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
 
   const handleMessageEdit = (message) => {
     if (
-      chatWithType === ReceiverTypeConstants.group &&
+      chatWithTypeRef?.current === ReceiverTypeConstants.group &&
       message.getReceiverType() === ReceiverTypeConstants.group &&
-      message.getReceiverId() === chatWith?.guid
+      message.getReceiverId() === chatWithRef?.current?.guid
     ) {
       updateMessage(message);
     } else if (
-      chatWithType === ReceiverTypeConstants.user &&
+      chatWithTypeRef?.current === ReceiverTypeConstants.user &&
       message.getReceiverType() === ReceiverTypeConstants.user &&
       loggedInUserRef.current.uid === message.getReceiverId() &&
-      message.getSender().uid === chatWith?.uid
+      message.getSender().uid === chatWithRef?.current?.uid
     ) {
       updateMessage(message);
     } else if (
-      chatWithType === ReceiverTypeConstants.user &&
+      chatWithTypeRef?.current === ReceiverTypeConstants.user &&
       message.getReceiverType() === ReceiverTypeConstants.user &&
       loggedInUserRef.current.uid === message.getSender().uid &&
-      message.getReceiverId() === chatWith?.uid
+      message.getReceiverId() === chatWithRef?.current?.uid
     ) {
       updateMessage(message);
     }
@@ -511,13 +530,13 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
 
   const handleNewGroupActionMessage = (message) => {
     if (
-      chatWithType === ReceiverTypeConstants.group &&
+      chatWithTypeRef?.current === ReceiverTypeConstants.group &&
       message.getReceiverType() === ReceiverTypeConstants.group &&
-      message.getReceiverId() === chatWith?.guid
+      message.getReceiverId() === chatWithRef?.current?.guid
     ) {
       playNotificationSound(message);
       addMessage(message);
-      // scrollToBottom();
+      scrollToBottom();
       markMessageAsRead(message);
       CometChatMessageEvents.emit(
         CometChatMessageEvents.onMessageRead,
@@ -566,25 +585,29 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
 
   const scrollToBottom = (scrollHeight = 0) => {
     setTimeout(() => {
-      if (messageListEndRef) {
+      if (messageListEndRef && messageListEndRef.current) {
         messageListEndRef.current.scrollTop =
           messageListEndRef.current.scrollHeight - scrollHeight;
       }
-    });
+    }, 10);
   };
 
   const handleScroll = (event) => {
     const scrollTop = event.currentTarget.scrollTop;
     const scrollHeight = event.currentTarget.scrollHeight;
+    const clientHeight = event.currentTarget.clientHeight;
 
     lastScrollTop = scrollHeight - scrollTop;
+
+    if (lastScrollTop - clientHeight <= 1) {
+      scrolledToBottom();
+    }
 
     const top = Math.round(scrollTop) === 0;
     if (top && messageList.length) {
       fetchMessages(messageListManagerRef?.current)
-        .then((messagelist) => {
-          prependMessages(messagelist);
-          messageHandler(messagelist, true, lastScrollTop);
+        .then((messageList) => {
+          messageHandler(messageList, false);
         })
         .catch((error) => {
           errorHandler(error);
@@ -597,15 +620,22 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
    * Update message as delivered; show double grey tick
    */
   const updateMessageAsDelivered = (message) => {
-    const messagelist = [...messageList];
-    let messageKey = messagelist.findIndex((m) => m.id === message.messageId);
-
-    if (messageKey > -1) {
-      const messageObject = { ...messageList[messageKey] };
-      messageObject.deliveredAt = message.getDeliveredAt();
-      messagelist?.splice(messageKey, 1, messageObject);
-      setMessageList(messagelist);
-    }
+    setMessageList((prevMessageList) => {
+      const messagelist = [...prevMessageList];
+      let messageKey = messagelist.findIndex((m) => m.id === message.messageId);
+      if (messageKey > -1) {
+        for (let i = messageKey; i >= 0; i--) {
+          let messageObj = messagelist[i];
+          if (!messageObj.deliveredAt) {
+            messageObj.deliveredAt = message?.getDeliveredAt();
+            messagelist.splice(i, 1, { ...messageObj });
+          } else {
+            break;
+          }
+        }
+      }
+      return [...messagelist];
+    });
   };
 
   /**
@@ -624,6 +654,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
       setUnreadMessageCount(0);
       scrollToBottom();
       markMessageAsRead(message);
+      updateMessageAsRead(message);
       CometChatMessageEvents.emit(
         CometChatMessageEvents.onMessageRead,
         message
@@ -676,19 +707,15 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
     messageList,
     setMessageList,
     setDecoratorMessage,
-    setChatWith,
-    setChatWithType,
     messageHandler,
     messageListCallback,
-    handlers,
-    callbackData,
     messageTypesRef,
     messageCategoryRef,
     messageListManagerRef,
     localize,
     errorHandler,
-    chatWith,
-    chatWithType,
+    chatWithRef,
+    chatWithTypeRef,
     setMessageCount,
     setnewMessage
   );
@@ -767,8 +794,16 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
    * Deletes the selected message
    */
   const deleteMessage = (message) => {
+    CometChatMessageEvents.emit(CometChatMessageEvents.onMessageDelete, {
+      message: message,
+      status: messageStatus.inprogress,
+    });
     CometChat.deleteMessage(message.id)
       .then((deletedMessage) => {
+        CometChatMessageEvents.emit(CometChatMessageEvents.onMessageDelete, {
+          message: deletedMessage,
+          status: messageStatus.success,
+        });
         removeMessage(deletedMessage);
       })
       .catch((error) => {
@@ -1075,9 +1110,11 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
           messageTemplateObject.type === message.type &&
           messageTemplateObject.customView
       );
-      if (templateObject?.customView) {
-        return templateObject.customView;
+
+      if (templateObject[0]?.customView) {
+        return templateObject[0].customView;
       }
+
       return null;
     }
   };
@@ -1094,7 +1131,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
   const getMessageContainer = () => {
     let messageContainer = null;
     if (
-      messageList.length === 0 &&
+      messageList?.length === 0 &&
       decoratorMessage?.toLowerCase() === localize("LOADING").toLowerCase()
     ) {
       messageContainer = (
@@ -1103,7 +1140,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
           className="messagelist__decorator-message"
         >
           {customView?.loading ? (
-            getCustomView(customView.loading, props)
+            getCustomView(customView?.loading, props)
           ) : (
             <div
               style={decoratorMsgImgStyle(style, loadingIconURL, _theme)}
@@ -1113,7 +1150,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
         </div>
       );
     } else if (
-      messageList.length === 0 &&
+      messageList?.length === 0 &&
       decoratorMessage?.toLowerCase() ===
         localize("NO_MESSAGES_FOUND").toLowerCase()
     ) {
@@ -1178,7 +1215,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
           className="messagelist__decorator-message"
         >
           {customView?.error ? (
-            getCustomView(customView.error, props)
+            getCustomView(customView?.error, props)
           ) : (
             <p
               style={decoratorMsgTxtStyle(
@@ -1226,7 +1263,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
           }
           loggedInUser={loggedInUserRef.current}
           onClick={_smartRepliesConfiguration.onClick}
-          style={smartReplyStyle(_theme)}
+          style={smartReplyStyle(_theme, _smartRepliesConfiguration)}
           onClose={onClose.bind(this)}
         />
       );
@@ -1251,8 +1288,11 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
             scrolledToBottom.bind(this) ||
             _newMessageIndicatorConfiguration.onClick
           }
-          Icon={_newMessageIndicatorConfiguration.Icon}
-          style={messageIndicatorStyle(_theme)}
+          IconURL={_newMessageIndicatorConfiguration.IconURL}
+          style={messageIndicatorStyle(
+            _theme,
+            _newMessageIndicatorConfiguration
+          )}
         />
       );
     }
@@ -1266,7 +1306,6 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
   const renderItems = () => {
     // to hold date value for first message
     let previousMessageDate = null;
-
     return messageList.map((eachMessage) => {
       // date label component
       let dateSeparator = null;
@@ -1289,7 +1328,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
 
       const pattern = _dateConfiguration?.pattern;
       const customPattern = _dateConfiguration?.customPattern;
-      const dateStyle = new DateStyles({
+      const dateStyle = new DateStyle({
         ..._dateConfiguration?.style,
         textColor:
           _dateConfiguration?.style?.textColor ||
@@ -1346,7 +1385,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
         };
         messageBubbleData = receivedMessageInputData;
       }
-      let style = {
+      let style = new MessageBubbleStyle({
         width: "100%",
         height: "100%",
         border: "0 none",
@@ -1356,7 +1395,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
         ...background,
         nameTextColor: _theme.palette.accent500[_theme.palette.mode],
         timestampColor: _theme.palette.accent[_theme.palette.mode],
-      };
+      });
 
       return !eachMessage.action ? (
         <React.Fragment key={messageKey}>
@@ -1386,6 +1425,7 @@ const CometChatMessageList = React.forwardRef((props, ref) => {
                 style={{ ...style }}
                 theme={_theme}
                 updateReaction={onReactToMessages.bind(this)}
+                messageBubbleConfiguration={_messageBubbleConfiguration}
               />
             }
           </div>

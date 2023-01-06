@@ -126,5 +126,6 @@ export const Hooks = (props, setImageURL, imageURL, setUnsafe) => {
     props.messageObject,
     setImageURL,
     setMessageImageUrl,
+    setUnsafe,
   ]);
 };

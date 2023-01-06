@@ -1,4 +1,4 @@
-import { JoinProtectedGroupStyles } from "./JoinProtectedGroupsStyles";
+import { JoinProtectedGroupStyle } from "./JoinProtectedGroupsStyle";
 
 /**
  * @class JoinProtectedGroupConfiguration
@@ -6,7 +6,7 @@ import { JoinProtectedGroupStyles } from "./JoinProtectedGroupsStyles";
  * @param {object} style
  */
 export class JoinProtectedGroupConfiguration {
-	constructor({ style = new JoinProtectedGroupStyles({}) }) {
-		this.style = new JoinProtectedGroupStyles(style || {});
-	}
+  constructor({ style = new JoinProtectedGroupStyle({}) }) {
+    this.style = new JoinProtectedGroupStyle(style || {});
+  }
 }

@@ -1,8 +1,7 @@
+import { DeletedBubbleStyle } from "../..";
 class DeletedBubbleConfiguration {
-  constructor({
-    style = {},
-  }) {
-    this.style = style;
-  };
-} 
-  export { DeletedBubbleConfiguration };
+  constructor({ style = new DeletedBubbleStyle({}) }) {
+    this.style = new DeletedBubbleStyle(style || {});
+  }
+}
+export { DeletedBubbleConfiguration };

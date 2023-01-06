@@ -6,22 +6,20 @@ import { CometChatUsersWithMessages } from "./CometChatUsersWithMessages";
 /**
  * Styles
  */
-import { UsersWithMessagesStyles } from "./CometChatUsersWithMessages/UsersWithMessagesStyles";
+import { UsersWithMessagesStyle } from "./CometChatUsersWithMessages/UsersWithMessagesStyle";
 
 /**
  * Configurations
  */
-import { UsersConfiguration } from "./CometChatUsers/UsersConfiguration"
-import { UsersWithMessagesConfiguration } from "./CometChatUsersWithMessages/UsersWithMessagesConfiguration"
+import { UsersConfiguration } from "./CometChatUsers/UsersConfiguration";
+import { UsersWithMessagesConfiguration } from "./CometChatUsersWithMessages/UsersWithMessagesConfiguration";
 
 export {
-    CometChatUserList,
-    CometChatUserEvents,
-    CometChatUsers,
-    CometChatUsersWithMessages,
-    
-    UsersWithMessagesStyles,
-
-    UsersConfiguration,
-    UsersWithMessagesConfiguration
-}
+  CometChatUserList,
+  CometChatUserEvents,
+  CometChatUsers,
+  CometChatUsersWithMessages,
+  UsersWithMessagesStyle,
+  UsersConfiguration,
+  UsersWithMessagesConfiguration,
+};
