@@ -1,6 +1,6 @@
 {
 	"name": "@cometchat-pro/react-ui-kit",
-	"version": "3.0.10-pluto.beta.1.2",
+	"version": "3.0.10-pluto.beta.1.3",
 	"description": "CometChat UI Kit for React App",
 	"author": "CometChatTeam",
 	"peerDependencies": {

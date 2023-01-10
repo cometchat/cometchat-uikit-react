@@ -44,7 +44,6 @@ The UI Kit is developed to keep developers in mind and aims to reduce developmen
 ---
 ## Features
 - Private(1-1) & Group Conversations
-- Voice & video calling & conferencing
 - Rich Media Attachments
 - Typing Indicators
 - Text, Media and Custom messages
@@ -55,7 +54,6 @@ The UI Kit is developed to keep developers in mind and aims to reduce developmen
 - Search by users and groups
 - Groups List
 - Conversations List
-- Threaded Conversations
 
 ## Extensions
 
