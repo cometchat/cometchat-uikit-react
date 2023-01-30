@@ -1,144 +1,117 @@
-import { CometChat } from "@cometchat-pro/chat"
+import { CometChat } from "@cometchat-pro/chat";
 
 export class CometChatManager {
+	loggedInUser;
+	isUserLoggedIn;
 
-    loggedInUser;
-    isUserLoggedIn;
+	getLoggedInUser() {
+		let timerCounter = 10000;
+		let timer = 0;
 
-    getLoggedInUser() {
+		return new Promise((resolve, reject) => {
+			if (timerCounter === timer) reject(`timer reached ${timerCounter}`);
 
-        let timerCounter = 10000;
-        let timer = 0;
-        
-        return new Promise((resolve, reject) => {
-            
-            if(timerCounter === timer) reject(`timer reached ${timerCounter}`);
+			if (this.loggedInUser) resolve(this.loggedInUser);
 
-            if(this.loggedInUser) resolve(this.loggedInUser);
+			if (!CometChat.isInitialized()) reject("CometChat not initialized");
 
-            if(!CometChat.isInitialized()) reject("CometChat not initialized");
+			this.isUserLoggedIn = setInterval(() => {
+				CometChat.getLoggedinUser().then(
+					(user) => {
+						this.loggedInUser = user;
+						clearInterval(this.isUserLoggedIn);
+						resolve(user);
+					},
+					(error) => {
+						console.log(error);
+						reject(error);
+					}
+				);
 
-            this.isUserLoggedIn = setInterval(() => {
+				timer += 100;
+			}, 100);
+		});
+	}
 
-                CometChat.getLoggedinUser().then(user => {
+	static blockUsers = (userList) => {
+		let promise = new Promise((resolve, reject) => {
+			CometChat.blockUsers(userList).then(
+				(list) => resolve(list),
+				(error) => reject(error)
+			);
+		});
 
-                    this.loggedInUser = user;
-                    clearInterval(this.isUserLoggedIn);
-                    resolve(user);
-                    
-                }, error => {
-                    console.log(error);
-                    reject(error);
-                });
+		return promise;
+	};
 
-                timer += 100;
-            }, 100);
+	static unblockUsers = (userList) => {
+		let promise = new Promise((resolve, reject) => {
+			CometChat.unblockUsers(userList).then(
+				(list) => resolve(list),
+				(error) => reject(error)
+			);
+		});
 
-        });
-    }
+		return promise;
+	};
 
-    static blockUsers = (userList) => {
+	static call = (receiverID, receiverType, callType) => {
+		let promise = new Promise((resolve, reject) => {
+			const call = new CometChat.Call(receiverID, callType, receiverType);
+			CometChat.initiateCall(call).then(
+				(call) => resolve(call),
+				(error) => reject(error)
+			);
+		});
 
-        let promise = new Promise((resolve, reject) => {
+		return promise;
+	};
 
-            CometChat.blockUsers(userList).then(
-                list => resolve(list),
-                error => reject(error)
-            );
+	static audioCall = (receiverID, receiverType, callType) => {
+		let promise = new Promise((resolve, reject) => {
+			const call = new CometChat.Call(receiverID, callType, receiverType);
+			CometChat.initiateCall(call).then(
+				(call) => resolve(call),
+				(error) => reject(error)
+			);
+		});
 
-        });
+		return promise;
+	};
 
-        return promise;
-    }
+	static videoCall = (receiverID, receiverType, callType) => {
+		let promise = new Promise((resolve, reject) => {
+			const call = new CometChat.Call(receiverID, callType, receiverType);
+			CometChat.initiateCall(call).then(
+				(call) => resolve(call),
+				(error) => reject(error)
+			);
+		});
 
-    static unblockUsers = (userList) => {
+		return promise;
+	};
 
-        let promise = new Promise((resolve, reject) => {
+	static acceptCall = (sessionId) => {
+		let promise = new Promise((resolve, reject) => {
+			CometChat.acceptCall(sessionId).then(
+				(call) => resolve(call),
+				(error) => reject(error)
+			);
+		});
 
-            CometChat.unblockUsers(userList).then(
-                list => resolve(list),
-                error => reject(error)
-            );
+		return promise;
+	};
 
-        });
+	static rejectCall = (sessionId, rejectStatus) => {
+		let promise = new Promise((resolve, reject) => {
+			CometChat.rejectCall(sessionId, rejectStatus).then(
+				(call) => resolve(call),
+				(error) => reject(error)
+			);
+		});
 
-        return promise;
-    }
-
-    static call = (receiverID, receiverType, callType) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            const call = new CometChat.Call(receiverID, callType, receiverType);
-            CometChat.initiateCall(call).then(
-                call => resolve(call),
-                error => reject(error)
-            );
-
-        });
-
-        return promise;
-
-    }
-
-    static audioCall = (receiverID, receiverType, callType) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            const call = new CometChat.Call(receiverID, callType, receiverType);
-            CometChat.initiateCall(call).then(
-                call => resolve(call),
-                error => reject(error)
-            );
-
-        });
-
-        return promise;
-    
-    }
-
-    static videoCall = (receiverID, receiverType, callType) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            const call = new CometChat.Call(receiverID, callType, receiverType);
-            CometChat.initiateCall(call).then(
-                call => resolve(call),
-                error => reject(error)
-            );
-
-        });
-
-        return promise;
-    }
-
-    static acceptCall = (sessionId) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            CometChat.acceptCall(sessionId).then(
-                call => resolve(call),
-                error => reject(error)
-            );
-
-        });
-
-        return promise;
-    }
-
-    static rejectCall = (sessionId, rejectStatus) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            CometChat.rejectCall(sessionId, rejectStatus).then(
-                call => resolve(call),
-                error => reject(error)
-            );
-
-        });
-
-        return promise;
-    }
+		return promise;
+	};
 }
 
 export default CometChatManager;

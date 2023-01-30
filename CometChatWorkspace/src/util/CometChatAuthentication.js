@@ -1,9 +1,7 @@
 import React from "react";
 import { CometChatContext } from "../../../util/CometChatContext";
 
-
 function CometChatAuthentication(WrappedComponent) {
-
 	return class AuthenticatedComponent extends React.Component {
 		static contextType = CometChatContext;
 
@@ -16,7 +14,7 @@ function CometChatAuthentication(WrappedComponent) {
 		}
 
 		componentDidMount() {
-			this.context.getLoggedinUser().then(user => {
+			this.context.getLoggedinUser().then((user) => {
 				this.setState({ loggedInUser: { ...user } });
 			});
 		}
@@ -32,7 +30,16 @@ function CometChatAuthentication(WrappedComponent) {
 		 * Render
 		 */
 		render() {
-			return <div>{this.state.loggedInUser === null ? null : <WrappedComponent {...this.props} loggedInUser={this.state.loggedInUser} />}</div>;
+			return (
+				<div>
+					{this.state.loggedInUser === null ? null : (
+						<WrappedComponent
+							{...this.props}
+							loggedInUser={this.state.loggedInUser}
+						/>
+					)}
+				</div>
+			);
 		}
 	};
 }

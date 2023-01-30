@@ -2,7 +2,7 @@ import React from "react";
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import { jsx } from "@emotion/react";
-import twemoji from "twemoji";
+import twemoji from "@twemoji/api";
 import parse from "html-react-parser";
 import PropTypes from "prop-types";
 import { CometChat } from "@cometchat-pro/chat";

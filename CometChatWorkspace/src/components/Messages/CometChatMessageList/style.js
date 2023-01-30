@@ -1,5 +1,4 @@
-export const chatListStyle = context => {
-
+export const chatListStyle = (context) => {
 	return {
 		backgroundColor: `${context.theme.backgroundColor.white}`,
 		zIndex: "1",
@@ -11,36 +10,33 @@ export const chatListStyle = context => {
 };
 
 export const listWrapperStyle = () => {
-
-    return {
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        overflowX: "hidden",
-        overflowY: "scroll",
-        position: "absolute",
-        top: "0",
-        transition: "background .3s ease-out .1s",
-        width: "100%",
-        zIndex: "100",
-        paddingTop: "16px"
-    }
-}
+	return {
+		boxSizing: "border-box",
+		display: "flex",
+		flexDirection: "column",
+		height: "100%",
+		overflowX: "hidden",
+		overflowY: "scroll",
+		position: "absolute",
+		top: "0",
+		transition: "background .3s ease-out .1s",
+		width: "100%",
+		zIndex: "100",
+		paddingTop: "16px",
+	};
+};
 
 export const messageDateContainerStyle = () => {
+	return {
+		marginBottom: "16px",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		height: "35px",
+	};
+};
 
-    return {
-        marginBottom: "16px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "35px",
-    }
-}
-
-export const messageDateStyle = context => {
-
+export const messageDateStyle = (context) => {
 	return {
 		padding: "8px 12px",
 		backgroundColor: `${context.theme.backgroundColor.secondary}`,
@@ -50,20 +46,18 @@ export const messageDateStyle = context => {
 };
 
 export const decoratorMessageStyle = () => {
+	return {
+		overflow: "hidden",
+		width: "100%",
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "center",
+		position: "absolute",
+		top: "50%",
+	};
+};
 
-    return {
-        overflow: "hidden",
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        position: "absolute",
-        top: "50%",
-    }
-}
-
-export const decoratorMessageTxtStyle = context => {
-
+export const decoratorMessageTxtStyle = (context) => {
 	return {
 		margin: "0",
 		height: "36px",

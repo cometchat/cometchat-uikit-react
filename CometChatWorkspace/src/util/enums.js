@@ -1,16 +1,16 @@
-export const TEXT_MESSAGE_RECEIVED = 'onTextMessageReceived';
-export const MEDIA_MESSAGE_RECEIVED = 'onMediaMessageReceived';
-export const CUSTOM_MESSAGE_RECEIVED = 'onCustomMessageReceived';
-export const MESSAGE_DELIVERED = 'onMessagesDelivered';
-export const MESSAGE_READ = 'onMessagesRead';
-export const MESSAGE_DELETED = 'onMessageDeleted';
-export const MESSAGE_EDITED = 'onMessageEdited';
+export const TEXT_MESSAGE_RECEIVED = "onTextMessageReceived";
+export const MEDIA_MESSAGE_RECEIVED = "onMediaMessageReceived";
+export const CUSTOM_MESSAGE_RECEIVED = "onCustomMessageReceived";
+export const MESSAGE_DELIVERED = "onMessagesDelivered";
+export const MESSAGE_READ = "onMessagesRead";
+export const MESSAGE_DELETED = "onMessageDeleted";
+export const MESSAGE_EDITED = "onMessageEdited";
 export const TRANSIENT_MESSAGE_RECEIVED = "onTransientMessageReceived";
 
-export const INCOMING_CALL_RECEIVED = 'onIncomingCallReceived';
-export const OUTGOING_CALL_ACCEPTED = 'onOutgoingCallAccepted';
-export const OUTGOING_CALL_REJECTED = 'onOutgoingCallRejected';
-export const INCOMING_CALL_CANCELLED = 'onIncomingCallCancelled';
+export const INCOMING_CALL_RECEIVED = "onIncomingCallReceived";
+export const OUTGOING_CALL_ACCEPTED = "onOutgoingCallAccepted";
+export const OUTGOING_CALL_REJECTED = "onOutgoingCallRejected";
+export const INCOMING_CALL_CANCELLED = "onIncomingCallCancelled";
 
 export const GROUP_MEMBER_SCOPE_CHANGED = "onGroupMemberScopeChanged";
 export const GROUP_MEMBER_KICKED = "onGroupMemberKicked";
@@ -37,7 +37,12 @@ export const CONSTANTS = {
 	ACTIVECALL: "cometchat:activecall",
 	MAX_MESSAGE_COUNT: 1000,
 	METADATA_TYPE_LIVEREACTION: "live_reaction",
-	LIVE_REACTIONS: { heart: "./resources/heart.png", thumbsup: "👍", clap: "👏", wink: "😉" },
+	LIVE_REACTIONS: {
+		heart: "./resources/heart.png",
+		thumbsup: "👍",
+		clap: "👏",
+		wink: "😉",
+	},
 	MESSAGES_COMPONENT: "messages",
 	EMBEDDED_COMPONENT: "embedded",
 	OUTGOING_DEFAULT_CALLING: "outgoing_default",
@@ -138,14 +143,13 @@ export const ACTIONS = {
 	CLOSE_STICKER_KEYBOARD: "closeStickerKeyboard",
 	ERROR: "errorOccurred",
 	INFO: "infoMessage",
-	TRANSLATE_MESSAGE: "translateMessage"
+	TRANSLATE_MESSAGE: "translateMessage",
 };
 
 export const EVENTS = {
 	NEW_MESSAGES: "newMessagesArrived",
 	CLEAR_UNREAD_MESSAGES: "clearUnreadMessages",
 };
-
 
 export const KEYS = {
 	METADATA: "metadata",

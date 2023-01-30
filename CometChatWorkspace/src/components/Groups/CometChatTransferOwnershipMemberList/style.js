@@ -1,5 +1,4 @@
 export const modalWrapperStyle = (props, context) => {
-
 	const mq = [`@media (min-width : 320px) and (max-width: 767px)`];
 	return {
 		minWidth: "350px",
@@ -14,7 +13,8 @@ export const modalWrapperStyle = (props, context) => {
 		transform: "translate(-50%, -50%)",
 		zIndex: "1002",
 		margin: "0 auto",
-		boxShadow: "rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
+		boxShadow:
+			"rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
 		borderRadius: "12px",
 		display: "block",
 		[mq[0]]: {
@@ -46,15 +46,16 @@ export const modalBodyStyle = () => {
 	};
 };
 
-export const modalCaptionStyle = dir => {
+export const modalCaptionStyle = (dir) => {
 	const textAlignStyle =
-		dir === "rtl" ? {
-			textAlign: "right",
-			paddingRight: "32px",
-		}
-		: {
-			textAlign: "left",
-		};
+		dir === "rtl"
+			? {
+					textAlign: "right",
+					paddingRight: "32px",
+			  }
+			: {
+					textAlign: "left",
+			  };
 
 	return {
 		fontSize: "20px",
@@ -65,7 +66,7 @@ export const modalCaptionStyle = dir => {
 	};
 };
 
-export const modalErrorStyle = context => {
+export const modalErrorStyle = (context) => {
 	return {
 		fontSize: "12px",
 		color: `${context.theme.color.red}`,
@@ -87,7 +88,7 @@ export const modalListStyle = (context) => {
 	};
 };
 
-export const listHeaderStyle = context => {
+export const listHeaderStyle = (context) => {
 	return {
 		display: "flex",
 		flexDirection: "row",
@@ -113,8 +114,7 @@ export const listStyle = () => {
 };
 
 export const nameColumnStyle = (props, context) => {
-
-	const mq = context.theme.breakPoints.map(x => `@media ${x}`);
+	const mq = context.theme.breakPoints.map((x) => `@media ${x}`);
 	return {
 		width: "calc(100% - 180px)",
 		[mq[1]]: {
@@ -130,8 +130,7 @@ export const nameColumnStyle = (props, context) => {
 };
 
 export const scopeColumnStyle = (context) => {
-
-	const mq = context.theme.breakPoints.map(x => `@media ${x}`);
+	const mq = context.theme.breakPoints.map((x) => `@media ${x}`);
 	return {
 		width: "180px",
 		[mq[1]]: {
@@ -146,18 +145,20 @@ export const scopeColumnStyle = (context) => {
 	};
 };
 
-
-
 export const modalFootStyle = (state, context, img) => {
+	const btnState =
+		!state.newGroupOwner || state.transferringOwnership
+			? {
+					disabled: "true",
+					pointerEvents: "none",
+			  }
+			: {};
 
-	const btnState = !state.newGroupOwner || state.transferringOwnership ? { 
-		disabled: "true",
-		pointerEvents: "none",
-	} : {};
-
-	const loadingState = state.transferringOwnership ? {
-		background: `url(${img}) no-repeat right 10px center ${context.theme.backgroundColor.blue}`,
-	} : {};
+	const loadingState = state.transferringOwnership
+		? {
+				background: `url(${img}) no-repeat right 10px center ${context.theme.backgroundColor.blue}`,
+		  }
+		: {};
 
 	const textMargin = state.transferringOwnership ? { marginRight: "24px" } : {};
 

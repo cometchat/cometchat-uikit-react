@@ -62,7 +62,9 @@ import heartIcon from "./resources/heart.png";
 
 class CometChatMessageComposer extends React.PureComponent {
 	static contextType = CometChatContext;
-
+	range;
+	sel;
+	chatWindow;
 	constructor(props) {
 		super(props);
 
@@ -108,7 +110,7 @@ class CometChatMessageComposer extends React.PureComponent {
 					"SOMETHING_WRONG"
 				)
 			);
-
+		this.chatWindow =  this.context.UIKitSettings.chatWindow;
 		this.item =
 			this.context.type === CometChat.ACTION_TYPE.TYPE_USER ||
 			this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP
@@ -154,7 +156,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
 				element.focus();
 				element.textContent = "";
-				this.pasteHtmlAtCaret(messageText, false);
+				this.pasteHtmlAtCaret(messageText);
 			} else {
 				element.textContent = "";
 			}
@@ -360,68 +362,75 @@ class CometChatMessageComposer extends React.PureComponent {
 	focusOnMessageComposer = () => {
 		if (this.messageInputRef && this.messageInputRef.current) {
 			this.messageInputRef.current.focus();
+			this.updateSelection()
 		}
 	};
 
-	pasteHtmlAtCaret(html, selectPastedContent) {
-		var sel, range;
-		const chatWindow = this.context.UIKitSettings.chatWindow;
-		if (chatWindow.getSelection) {
-			// IE9 and non-IE
-			sel = chatWindow.getSelection();
-			if (sel.getRangeAt && sel.rangeCount) {
-				range = sel.getRangeAt(0);
-				range.deleteContents();
-
-				// Range.createContextualFragment() would be useful here but is
-				// only relatively recently standardized and is not supported in
-				// some browsers (IE9, for one)
-				var el = document.createElement("div");
-				el.innerText = html;
-				var frag = document.createDocumentFragment(),
-					node,
-					lastNode;
-				while ((node = el.firstChild)) {
-					lastNode = frag.appendChild(node);
+	    /**
+     * Updates caret selection object
+     */
+		 updateSelection() {
+			try {
+				if (this.chatWindow.getSelection) {
+				  this.sel = this.chatWindow.getSelection();
+				  if (this.sel.getRangeAt && this.sel.rangeCount) {
+					this.range = this.sel.getRangeAt(0);
+				  }
 				}
-				var firstNode = frag.firstChild;
-				range.insertNode(frag);
+			  } catch (error) {
+				console.log("Error updating selection", error);
+			  }
+			
+		  }
 
-				// Preserve the selection
-				if (lastNode) {
-					range = range.cloneRange();
-					range.setStartAfter(lastNode);
-					if (selectPastedContent) {
-						range.setStartBefore(firstNode);
-					} else {
-						range.collapse(true);
-					}
-					sel.removeAllRanges();
-					sel.addRange(range);
-				}
+	 /**
+     * Pastes given html at caret position
+     */
+	  pasteHtmlAtCaret(html) {
+		  
+		try {
+		  if (this.sel && this.range) {
+			this.range.deleteContents();
+  
+			let el = document.createElement("div");
+			el.innerHTML = html;
+			let frag = document.createDocumentFragment(),
+			  node,
+			  lastNode;
+			while ((node = el.firstChild)) {
+			  lastNode = frag.appendChild(node);
 			}
-		} else if ((sel = document.selection) && sel.type !== "Control") {
-			// IE < 9
-			var originalRange = sel.createRange();
-			originalRange.collapse(true);
-			sel.createRange().pasteHTML(html);
-			if (selectPastedContent) {
-				range = sel.createRange();
-				range.setEndPoint("StartToStart", originalRange);
-				range.select();
+			this.range.insertNode(frag);
+  
+			if (lastNode) {
+				this.range = this.range.cloneRange();
+				this.range.setStartAfter(lastNode);
+				this.range.collapse(true);
+				this.sel.removeAllRanges();
+				this.sel.addRange(this.range);
 			}
+		  } else if (document.selection && document.selection.type != "Control") {
+			document.selection.createRange().pasteHTML(html);
+		  }
+		} catch (error) {
+		  console.log("Error pasting html to caret", error);
 		}
-	}
+	  }
 
 	emojiClicked = (emoji) => {
 		if (this.state.messageToReact) {
 			this.reactToMessages(emoji);
 			return;
 		}
-
 		const element = this.messageInputRef.current;
-		element.focus();
-		this.pasteHtmlAtCaret(emoji.char, false);
+		if(!this.sel && !this.range){
+			//  focus when we open emoji keyboard for the first time
+			this.focusOnMessageComposer();
+			}
+			else{
+				element.focus();
+			}
+		this.pasteHtmlAtCaret(emoji.char);
 		this.setState({ messageInput: element.innerText, messageType: "text" });
 	};
 
@@ -771,6 +780,7 @@ class CometChatMessageComposer extends React.PureComponent {
 	};
 
 	endTyping = (event, metadata) => {
+		this.updateSelection() //updating selection onblur
 		//fixing synthetic issue
 		if (event) {
 			event.persist();

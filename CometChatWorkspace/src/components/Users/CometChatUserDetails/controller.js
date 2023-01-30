@@ -1,4 +1,4 @@
-import {CometChat} from "@cometchat-pro/chat";
+import { CometChat } from "@cometchat-pro/chat";
 
 import * as enums from "../../../util/enums.js";
 
@@ -9,15 +9,15 @@ export class UserDetailManager {
 		CometChat.addUserListener(
 			this.userListenerId,
 			new CometChat.UserListener({
-				onUserOnline: onlineUser => {
+				onUserOnline: (onlineUser) => {
 					/* when someuser/friend comes online, user will be received here */
 					callback(enums.USER_ONLINE, onlineUser);
 				},
-				onUserOffline: offlineUser => {
+				onUserOffline: (offlineUser) => {
 					/* when someuser/friend went offline, user will be received here */
 					callback(enums.USER_OFFLINE, offlineUser);
 				},
-			}),
+			})
 		);
 	}
 

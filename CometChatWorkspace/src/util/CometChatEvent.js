@@ -8,7 +8,8 @@ class CometChatEvent {
 
 	static triggerHandler(event, params) {
 		if (CometChatEvent._triggers[event]) {
-			for (const i in CometChatEvent._triggers[event]) CometChatEvent._triggers[event][i](params);
+			for (const i in CometChatEvent._triggers[event])
+				CometChatEvent._triggers[event][i](params);
 		}
 	}
 }

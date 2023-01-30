@@ -1,63 +1,59 @@
 export const messageContainerStyle = () => {
-
-    return {
-        alignSelf: "flex-start",
-        marginBottom: "16px",
-        paddingLeft: "16px",
-        paddingRight: "16px",
-        maxWidth: "305px",
-        clear: "both",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: "0",
-    }
-}
+	return {
+		alignSelf: "flex-start",
+		marginBottom: "16px",
+		paddingLeft: "16px",
+		paddingRight: "16px",
+		maxWidth: "305px",
+		clear: "both",
+		position: "relative",
+		display: "flex",
+		flexDirection: "column",
+		flexShrink: "0",
+	};
+};
 
 export const messageWrapperStyle = () => {
-
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
-    }
-}
+	return {
+		width: "auto",
+		flex: "1 1",
+		alignSelf: "flex-start",
+		display: "flex",
+	};
+};
 
 export const messageThumbnailStyle = () => {
-
-    return {
-        width: "36px",
-        height: "36px",
-        margin: "10px 5px",
-        float: "left",
-        flexShrink: "0",
-    }
-}
+	return {
+		width: "36px",
+		height: "36px",
+		margin: "10px 5px",
+		float: "left",
+		flexShrink: "0",
+	};
+};
 
 export const messageDetailStyle = () => {
-
-    return {
-        flex: "1 1",
-        display: "flex",
-        flexDirection: "column",
-    }
-}
+	return {
+		flex: "1 1",
+		display: "flex",
+		flexDirection: "column",
+	};
+};
 
 export const nameWrapperStyle = (avatar) => {
+	const paddingValue = avatar
+		? {
+				padding: "3px 5px",
+		  }
+		: {};
 
-    const paddingValue = (avatar) ? {
-        padding: "3px 5px",
-    } : {};
+	return {
+		alignSelf: "flex-start",
+		...paddingValue,
+	};
+};
 
-    return {
-        alignSelf: "flex-start",
-        ...paddingValue
-    }
-}
-
-export const nameStyle = context => {
-
+export const nameStyle = (context) => {
 	return {
 		fontSize: "11px",
 		color: `${context.theme.color.search}`,
@@ -65,17 +61,15 @@ export const nameStyle = context => {
 };
 
 export const messageTxtContainerStyle = () => {
+	return {
+		width: "auto",
+		flex: "1 1",
+		alignSelf: "flex-start",
+		display: "flex",
+	};
+};
 
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
-    }
-}
-
-export const messageTxtWrapperStyle = context => {
-
+export const messageTxtWrapperStyle = (context) => {
 	return {
 		display: "flex",
 		flexDirection: "column",
@@ -87,8 +81,7 @@ export const messageTxtWrapperStyle = context => {
 	};
 };
 
-export const messageTxtTitleStyle = context => {
-
+export const messageTxtTitleStyle = (context) => {
 	return {
 		display: "flex",
 		justifyContent: "center",
@@ -98,20 +91,18 @@ export const messageTxtTitleStyle = context => {
 };
 
 export const messageTxtStyle = () => {
-
-    return {
-        margin: "0",
-        whiteSpace: "pre-wrap",
-        wordWrap: "break-word",
-        textAlign: "left",
-        width: "calc(100% - 24px)",
-        fontSize: "14px",
-        marginLeft: "8px"
-    }
-}
+	return {
+		margin: "0",
+		whiteSpace: "pre-wrap",
+		wordWrap: "break-word",
+		textAlign: "left",
+		width: "calc(100% - 24px)",
+		fontSize: "14px",
+		marginLeft: "8px",
+	};
+};
 
 export const iconStyle = (img, context) => {
-
 	return {
 		width: "24px",
 		height: "24px",
@@ -121,8 +112,7 @@ export const iconStyle = (img, context) => {
 	};
 };
 
-export const messageBtnStyle = context => {
-
+export const messageBtnStyle = (context) => {
 	return {
 		listStyleType: "none",
 		padding: "0",
@@ -153,25 +143,23 @@ export const messageBtnStyle = context => {
 };
 
 export const messageInfoWrapperStyle = () => {
-
-    return {
-        alignSelf: "flex-start",
-        padding: "4px 8px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        height: "25px"
-    }
-}
+	return {
+		alignSelf: "flex-start",
+		padding: "4px 8px",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "flex-start",
+		height: "25px",
+	};
+};
 
 export const messageReactionsWrapperStyle = () => {
-
-    return {
-        display: "flex",
-        alignSelf: "flex-start",
-        width: "100%",
-        flexWrap: "wrap",
-        justifyContent: "flex-start",
-        minHeight: "36px",
-    }
-}
+	return {
+		display: "flex",
+		alignSelf: "flex-start",
+		width: "100%",
+		flexWrap: "wrap",
+		justifyContent: "flex-start",
+		minHeight: "36px",
+	};
+};
