@@ -700,8 +700,8 @@ class CometChatMessageList extends React.PureComponent {
 		const clientHeight = e.currentTarget.clientHeight;
 
 		this.lastScrollTop = scrollHeight - scrollTop;
-
-		if (this.lastScrollTop === clientHeight) {
+		
+		if (this.lastScrollTop - clientHeight <= 1) {
 			this.props.actionGenerated(enums.ACTIONS["CLEAR_UNREAD_MESSAGES"]);
 		}
 

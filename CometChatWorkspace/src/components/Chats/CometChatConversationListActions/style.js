@@ -1,4 +1,4 @@
-export const conversationActionStyle = context => {
+export const conversationActionStyle = (context) => {
 	return {
 		display: "flex",
 		listStyleType: "none",
@@ -15,8 +15,11 @@ export const conversationActionStyle = context => {
 	};
 };
 
-export const groupButtonStyle = (actionInProgress, progressIcon, actionIcon) => {
-
+export const groupButtonStyle = (
+	actionInProgress,
+	progressIcon,
+	actionIcon
+) => {
 	const backgroundImage = actionInProgress ? progressIcon : actionIcon;
 
 	return {

@@ -6,12 +6,12 @@
  * @param {Array} keywords
  */
 class CometChatEmoji {
-  char = "";
-  keywords = [];
-  constructor({ char, keywords }) {
-    this.char = char;
-    this.keywords = keywords;
-  }
+	char = "";
+	keywords = [];
+	constructor({ char, keywords }) {
+		this.char = char;
+		this.keywords = keywords;
+	}
 }
 
 export { CometChatEmoji };

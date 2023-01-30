@@ -43,9 +43,18 @@ export class CometChatContextProvider extends React.Component {
 			theme: theme,
 			language: props.language,
 			roles: {
-				[CometChat.GROUP_MEMBER_SCOPE.ADMIN]: Translator.translate("ADMINISTRATOR", props.language),
-				[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]: Translator.translate("MODERATOR", props.language),
-				[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]: Translator.translate("PARTICIPANT", props.language),
+				[CometChat.GROUP_MEMBER_SCOPE.ADMIN]: Translator.translate(
+					"ADMINISTRATOR",
+					props.language
+				),
+				[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]: Translator.translate(
+					"MODERATOR",
+					props.language
+				),
+				[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]: Translator.translate(
+					"PARTICIPANT",
+					props.language
+				),
 			},
 			getLoggedinUser: this.getLoggedinUser,
 			setGroupMembers: this.setGroupMembers,
@@ -81,60 +90,81 @@ export class CometChatContextProvider extends React.Component {
 
 		if (this.props.user.trim().length) {
 			this.getUser(this.props.user.trim())
-				.then(user => {
+				.then((user) => {
 					this.setType(CometChat.ACTION_TYPE.TYPE_USER);
 					this.setItem(user);
 				})
-				.catch(error => {
-					const errorCode = error && error.hasOwnProperty("code") ? error.code : "uid not available";
+				.catch((error) => {
+					const errorCode =
+						error && error.hasOwnProperty("code")
+							? error.code
+							: "uid not available";
 					this.toastRef.setError(errorCode);
 				});
 		} else if (this.props.group.trim().length) {
 			this.getGroup(this.props.group.trim())
-				.then(group => {
+				.then((group) => {
 					this.setType(CometChat.ACTION_TYPE.TYPE_GROUP);
 					this.setItem(group);
 				})
-				.catch(error => {
-					const errorCode = error && error.hasOwnProperty("code") ? error.code : "guid not available";
+				.catch((error) => {
+					const errorCode =
+						error && error.hasOwnProperty("code")
+							? error.code
+							: "guid not available";
 					this.toastRef.setError(errorCode);
 				});
-		} else if (this.props.user.trim().length === 0 && this.props.group.trim().length === 0 && this.props._component === enums.CONSTANTS["MESSAGES_COMPONENT"]) {
+		} else if (
+			this.props.user.trim().length === 0 &&
+			this.props.group.trim().length === 0 &&
+			this.props._component === enums.CONSTANTS["MESSAGES_COMPONENT"]
+		) {
 			const errorCode = "UID_OR_GUID_NOT_AVAILABLE";
 			this.toastRef.setError(errorCode);
 		}
 	}
 
 	componentDidUpdate(prevProps) {
-
 		if (this.props.user.trim().length && prevProps.user !== this.props.user) {
 			this.getUser(this.props.user)
-				.then(user => {
+				.then((user) => {
 					//this.setType(CometChat.ACTION_TYPE.TYPE_USER);
 					//this.setItem(user);
 					this.setTypeAndItem(CometChat.ACTION_TYPE.TYPE_USER, user);
 					//this.setClearedUnreadMessages(false);
 				})
-				.catch(error => {
-					const errorCode = error && error.hasOwnProperty("code") ? error.code : "uid not available";
+				.catch((error) => {
+					const errorCode =
+						error && error.hasOwnProperty("code")
+							? error.code
+							: "uid not available";
 					this.toastRef.setError(errorCode);
 				});
-		} else if (this.props.group.trim().length && prevProps.group !== this.props.group) {
+		} else if (
+			this.props.group.trim().length &&
+			prevProps.group !== this.props.group
+		) {
 			this.getGroup(this.props.group)
-				.then(group => {
+				.then((group) => {
 					//this.setType(CometChat.ACTION_TYPE.TYPE_GROUP);
 					//this.setItem(group);
 					this.setTypeAndItem(CometChat.ACTION_TYPE.TYPE_GROUP, group);
 					//this.setClearedUnreadMessages(false);
 				})
-				.catch(error => {
-					const errorCode = error && error.hasOwnProperty("code") ? error.code : "guid not available";
+				.catch((error) => {
+					const errorCode =
+						error && error.hasOwnProperty("code")
+							? error.code
+							: "guid not available";
 					this.toastRef.setError(errorCode);
 				});
 		}
 
 		//when the active group is deleted, close the chat window.
-		if (this.state.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.state.item.guid === this.state.deletedGroupId) {
+		if (
+			this.state.type === CometChat.ACTION_TYPE.TYPE_GROUP &&
+			this.state.item.guid === this.state.deletedGroupId
+		) {
 			//this.setItem({});
 			//this.setType("");
 			this.setTypeAndItem({}, "");
@@ -142,7 +172,10 @@ export class CometChatContextProvider extends React.Component {
 		}
 
 		//when the active group is left, close the chat window.
-		if (this.state.type === CometChat.ACTION_TYPE.TYPE_GROUP && this.state.item.guid === this.state.leftGroupId) {
+		if (
+			this.state.type === CometChat.ACTION_TYPE.TYPE_GROUP &&
+			this.state.item.guid === this.state.leftGroupId
+		) {
 			this.setTypeAndItem({}, "");
 			this.setLeftGroupId("");
 		}
@@ -155,14 +188,23 @@ export class CometChatContextProvider extends React.Component {
 
 	setRoles = () => {
 		const roles = {
-			[CometChat.GROUP_MEMBER_SCOPE.ADMIN]: Translator.translate("ADMINISTRATOR", this.props.language),
-			[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]: Translator.translate("MODERATOR", this.props.language),
-			[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]: Translator.translate("PARTICIPANT", this.props.language),
+			[CometChat.GROUP_MEMBER_SCOPE.ADMIN]: Translator.translate(
+				"ADMINISTRATOR",
+				this.props.language
+			),
+			[CometChat.GROUP_MEMBER_SCOPE.MODERATOR]: Translator.translate(
+				"MODERATOR",
+				this.props.language
+			),
+			[CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT]: Translator.translate(
+				"PARTICIPANT",
+				this.props.language
+			),
 		};
 		this.setState({ roles: roles });
 	};
 
-	getUser = uid => {
+	getUser = (uid) => {
 		const promise = new Promise((resolve, reject) => {
 			if (!uid) {
 				const error = { code: "uid not available" };
@@ -170,14 +212,14 @@ export class CometChatContextProvider extends React.Component {
 			}
 
 			CometChat.getUser(uid)
-				.then(user => resolve(user))
-				.catch(error => reject(error));
+				.then((user) => resolve(user))
+				.catch((error) => reject(error));
 		});
 
 		return promise;
 	};
 
-	getGroup = guid => {
+	getGroup = (guid) => {
 		const promise = new Promise((resolve, reject) => {
 			if (!guid) {
 				const error = { code: "guid not available" };
@@ -185,24 +227,27 @@ export class CometChatContextProvider extends React.Component {
 			}
 
 			CometChat.getGroup(guid)
-				.then(group => {
+				.then((group) => {
 					if (group.hasJoined === false) {
 						const guid = group.guid;
 						const groupType = group.type;
 						let password = "";
 						if (groupType === CometChat.GROUP_TYPE.PASSWORD) {
-							const promptMessage = Translator.translate("Enter password", this.props.lang);
+							const promptMessage = Translator.translate(
+								"Enter password",
+								this.props.lang
+							);
 							password = prompt(promptMessage);
 						}
 
 						CometChat.joinGroup(guid, groupType, password)
-							.then(group => resolve(group))
-							.catch(error => reject(error));
+							.then((group) => resolve(group))
+							.catch((error) => reject(error));
 					} else {
 						resolve(group);
 					}
 				})
-				.catch(error => reject(error));
+				.catch((error) => reject(error));
 		});
 
 		return promise;
@@ -249,12 +294,12 @@ export class CometChatContextProvider extends React.Component {
 
 			this.isUserLoggedIn = setInterval(() => {
 				CometChat.getLoggedinUser()
-					.then(user => {
+					.then((user) => {
 						this.loggedInUser = user;
 						clearInterval(this.isUserLoggedIn);
 						return resolve(user);
 					})
-					.catch(error => reject(error));
+					.catch((error) => reject(error));
 
 				timer += 100;
 			}, 100);
@@ -284,37 +329,37 @@ export class CometChatContextProvider extends React.Component {
 		});
 	};
 
-	updateGroupMembers = groupMembers => {
+	updateGroupMembers = (groupMembers) => {
 		this.setState({
 			groupMembers: [...groupMembers],
 		});
 	};
 
-	setGroupMembers = groupMembers => {
+	setGroupMembers = (groupMembers) => {
 		this.setState({
 			groupMembers: [...this.state.groupMembers, ...groupMembers],
 		});
 	};
 
-	setGroupAdmins = groupAdmins => {
+	setGroupAdmins = (groupAdmins) => {
 		this.setState({
 			groupAdmins: [...this.state.groupAdmins, ...groupAdmins],
 		});
 	};
 
-	setGroupModerators = groupModerators => {
+	setGroupModerators = (groupModerators) => {
 		this.setState({
 			groupModerators: [...this.state.groupModerators, ...groupModerators],
 		});
 	};
 
-	setBannedGroupMembers = bannedMembers => {
+	setBannedGroupMembers = (bannedMembers) => {
 		this.setState({
 			bannedGroupMembers: [...this.state.bannedGroupMembers, ...bannedMembers],
 		});
 	};
 
-	updateBannedGroupMembers = bannedMembers => {
+	updateBannedGroupMembers = (bannedMembers) => {
 		this.setState({
 			bannedGroupMembers: [...bannedMembers],
 		});
@@ -324,11 +369,11 @@ export class CometChatContextProvider extends React.Component {
 		this.setState({ callInProgress: { ...call }, callType });
 	};
 
-	setItem = item => {
+	setItem = (item) => {
 		this.setState({ item: { ...item } });
 	};
 
-	setType = type => {
+	setType = (type) => {
 		this.setState({ type });
 	};
 
@@ -336,31 +381,40 @@ export class CometChatContextProvider extends React.Component {
 		this.setState({ item: { ...item }, type });
 	};
 
-	setDeletedGroupId = guid => {
+	setDeletedGroupId = (guid) => {
 		this.setState({ deletedGroupId: guid });
 	};
 
-	setLeftGroupId = guid => {
+	setLeftGroupId = (guid) => {
 		this.setState({ leftGroupId: guid });
 	};
 
-	setLastMessage = message => {
+	setLastMessage = (message) => {
 		this.setState({ lastMessage: message });
 	};
 
-	setClearedUnreadMessages = flag => {
+	setClearedUnreadMessages = (flag) => {
 		this.setState({ clearedUnreadMessages: flag });
 	};
 
 	setDirectCallCustomMessage = (message, event) => {
-		this.setState({ directCallCustomMessage: message, directCallCustomMessageAction: event });
+		this.setState({
+			directCallCustomMessage: message,
+			directCallCustomMessageAction: event,
+		});
 	};
 
 	checkIfDirectCallIsOngoing = () => {
 		let output = null;
 
-		if (Object.keys(this.state.callInProgress).length && (this.state.callType === enums.CONSTANTS["INCOMING_DIRECT_CALLING"] || this.state.callType === enums.CONSTANTS["OUTGOING_DIRECT_CALLING"])) {
-			if (this.state.callInProgress.customData.sessionID === this.state.item.guid) {
+		if (
+			Object.keys(this.state.callInProgress).length &&
+			(this.state.callType === enums.CONSTANTS["INCOMING_DIRECT_CALLING"] ||
+				this.state.callType === enums.CONSTANTS["OUTGOING_DIRECT_CALLING"])
+		) {
+			if (
+				this.state.callInProgress.customData.sessionID === this.state.item.guid
+			) {
 				output = enums.CONSTANTS.CALLS["ONGOING_CALL_SAME_GROUP"];
 			} else {
 				output = enums.CONSTANTS.CALLS["ONGOING_CALL_DIFF_GROUP"];
@@ -380,7 +434,10 @@ export class CometChatContextProvider extends React.Component {
 
 	getActiveCallSessionID = () => {
 		let sessionID;
-		if (this.state.callType === enums.CONSTANTS["INCOMING_DIRECT_CALLING"] || this.state.callType === enums.CONSTANTS["OUTGOING_DIRECT_CALLING"]) {
+		if (
+			this.state.callType === enums.CONSTANTS["INCOMING_DIRECT_CALLING"] ||
+			this.state.callType === enums.CONSTANTS["OUTGOING_DIRECT_CALLING"]
+		) {
 			sessionID = this.state.callInProgress?.data?.customData?.sessionID;
 		} else {
 			sessionID = this.state.callInProgress?.sessionId;
@@ -390,7 +447,11 @@ export class CometChatContextProvider extends React.Component {
 	};
 
 	hasKeyValue = (data, key) => {
-		if (data.hasOwnProperty(key) === false || data[key] === null || data[key] === undefined) {
+		if (
+			data.hasOwnProperty(key) === false ||
+			data[key] === null ||
+			data[key] === undefined
+		) {
 			return false;
 		}
 
@@ -398,10 +459,13 @@ export class CometChatContextProvider extends React.Component {
 	};
 
 	render() {
-		
 		return (
 			<CometChatContext.Provider value={this.state}>
-				<CometChatToastNotification ref={el => (this.toastRef = el)} lang={this.props.language} position={this.props.toastNotificationPos} />
+				<CometChatToastNotification
+					ref={(el) => (this.toastRef = el)}
+					lang={this.props.language}
+					position={this.props.toastNotificationPos}
+				/>
 				{this.props.children}
 			</CometChatContext.Provider>
 		);

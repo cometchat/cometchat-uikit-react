@@ -1,4 +1,4 @@
-export const alertWrapperStyle = props => {
+export const alertWrapperStyle = (props) => {
 	return {
 		width: "calc(100% - 32px)",
 		height: "auto",
@@ -19,9 +19,9 @@ export const alertWrapperStyle = props => {
 
 export const alertMessageStyle = () => {
 	return {
-		textAlign: "center"
-	}
-}
+		textAlign: "center",
+	};
+};
 
 export const alertButtonStyle = (props) => {
 	return {
@@ -46,4 +46,4 @@ export const alertButtonStyle = (props) => {
 			backgroundColor: `${props.theme.backgroundColor.secondary}`,
 		},
 	};
-}
+};

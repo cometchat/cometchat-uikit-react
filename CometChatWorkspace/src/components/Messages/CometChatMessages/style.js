@@ -1,5 +1,4 @@
 export const chatWrapperStyle = (props, state) => {
-
 	let borderStyle = {};
 	if (props._parent.trim().length === 0) {
 		if (state.viewdetailscreen || state.threadmessageview) {
@@ -18,18 +17,21 @@ export const chatWrapperStyle = (props, state) => {
 
 	const mq = [...props.theme.breakPoints];
 
-	const secondaryViewWidth = (state.threadmessageview || state.viewdetailscreen) ? {
-        width: "calc(100% - 400px)",
-        [`@media ${mq[1]}, ${mq[2]}`]: {
-            width: "100%",
-        },
-        [`@media ${mq[3]}, ${mq[4]}`]: {
-            width: "0",
-            display: "none",
-        },
-    } : {
-        width: "100%",
-    };
+	const secondaryViewWidth =
+		state.threadmessageview || state.viewdetailscreen
+			? {
+					width: "calc(100% - 400px)",
+					[`@media ${mq[1]}, ${mq[2]}`]: {
+						width: "100%",
+					},
+					[`@media ${mq[3]}, ${mq[4]}`]: {
+						width: "0",
+						display: "none",
+					},
+			  }
+			: {
+					width: "100%",
+			  };
 
 	return {
 		display: "flex",
@@ -61,67 +63,65 @@ export const chatWrapperStyle = (props, state) => {
 };
 
 export const chatSecondaryStyle = (props) => {
+	const borderStyle =
+		props._parent.trim().length === 0
+			? {
+					borderRight: `1px solid ${props.theme.borderColor.primary}`,
+					borderBottom: `1px solid ${props.theme.borderColor.primary}`,
+			  }
+			: {};
 
-    const borderStyle = (props._parent.trim().length === 0) ? {
-        borderRight: `1px solid ${props.theme.borderColor.primary}`,
-        borderBottom: `1px solid ${props.theme.borderColor.primary}`
-    } : {};
+	const mq = [...props.theme.breakPoints];
 
-    const mq = [...props.theme.breakPoints];
-
-    return {
-        float: "right",
-        borderLeft: `1px solid ${props.theme.borderColor.primary}`,
-        height: "100%",
-        width: "400px",
-        display: "flex",
-        flexDirection: "column",
-        order: "3",
-        ...borderStyle,
-        [`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
-            position: "absolute!important",
-            right: "0!important",
-            top: "0",
-            bottom: "0",
-            width: "100%!important",
-            zIndex: "2",
-            backgroundColor: `${props.theme.backgroundColor.white}`,
-        }
-    }
-}
+	return {
+		float: "right",
+		borderLeft: `1px solid ${props.theme.borderColor.primary}`,
+		height: "100%",
+		width: "400px",
+		display: "flex",
+		flexDirection: "column",
+		order: "3",
+		...borderStyle,
+		[`@media ${mq[1]}, ${mq[2]}, ${mq[3]}, ${mq[4]}`]: {
+			position: "absolute!important",
+			right: "0!important",
+			top: "0",
+			bottom: "0",
+			width: "100%!important",
+			zIndex: "2",
+			backgroundColor: `${props.theme.backgroundColor.white}`,
+		},
+	};
+};
 
 export const reactionsWrapperStyle = () => {
-
-    return {
-        position: "absolute", 
-        width: "100%", 
-        height: "100%", 
-        top: "0", 
-        right: "0",
-        zIndex: "2",
-        display: "flex",
-        justifyContent: "left",
-        alignItems: "center"
-    }
-}
-
+	return {
+		position: "absolute",
+		width: "100%",
+		height: "100%",
+		top: "0",
+		right: "0",
+		zIndex: "2",
+		display: "flex",
+		justifyContent: "left",
+		alignItems: "center",
+	};
+};
 
 export const messagePaneTopStyle = () => {
+	return {
+		top: "75px",
+		position: "absolute",
+		width: "auto",
+		right: "auto",
+		left: "50%",
+		fontWeight: "700",
+		zIndex: "200",
+		transform: "translateX(-50%)",
+	};
+};
 
-    return {
-        top: "75px",
-        position: "absolute",
-        width: "auto",
-        right: "auto",
-        left: "50%",
-        fontWeight: "700",
-        zIndex: "200",
-        transform: "translateX(-50%)",
-    }
-}
-
-export const messagePaneBannerStyle = props => {
-
+export const messagePaneBannerStyle = (props) => {
 	return {
 		marginBottom: "0",
 		display: "block",
@@ -134,18 +134,16 @@ export const messagePaneBannerStyle = props => {
 };
 
 export const messagePaneUnreadBannerStyle = () => {
+	return {
+		height: "28px",
+		borderRadius: "14px",
+		display: "flex",
+		flex: "1",
+		alignItems: "center",
+	};
+};
 
-    return {
-        height: "28px",
-        borderRadius: "14px",
-        display: "flex",
-        flex: "1",
-        alignItems: "center",
-    }
-}
-
-export const messagePaneUnreadBannerMessageStyle = props => {
-
+export const messagePaneUnreadBannerMessageStyle = (props) => {
 	return {
 		padding: "0 16px",
 		flex: "1",
@@ -159,22 +157,20 @@ export const messagePaneUnreadBannerMessageStyle = props => {
 };
 
 export const iconArrowDownStyle = () => {
-
-    return {
-        position: "relative",
-        display: "inline-flex",
-        height: "20px",
-        alignItems: "center",
-        justifyContent: "center",
-        paddingRight: "8px",
-    }
-}
+	return {
+		position: "relative",
+		display: "inline-flex",
+		height: "20px",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingRight: "8px",
+	};
+};
 
 export const chatContainerStyle = () => {
-
-    return {
-        display: "flex", 
-        width: "100%", 
-        height: "100%"
-    }
-}
+	return {
+		display: "flex",
+		width: "100%",
+		height: "100%",
+	};
+};

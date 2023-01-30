@@ -1,5 +1,5 @@
 import React from "react";
-import twemoji from "twemoji";
+import twemoji from "@twemoji/api";
 import parse from "html-react-parser";
 /** @jsxRuntime classic */
 /** @jsx jsx */

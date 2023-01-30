@@ -3,14 +3,12 @@ import { CometChat } from "@cometchat-pro/chat";
 import * as enums from "../../../util/enums";
 
 class MessageFilter {
-
 	categories = {};
 	types = null;
 	context;
 
 	constructor(context) {
-
-        this.context = context;
+		this.context = context;
 
 		this.categories = {
 			[CometChat.CATEGORY_MESSAGE]: CometChat.CATEGORY_MESSAGE,
@@ -30,37 +28,37 @@ class MessageFilter {
 			[enums.CUSTOM_TYPE_DOCUMENT]: enums.CUSTOM_TYPE_DOCUMENT,
 			[enums.CUSTOM_TYPE_WHITEBOARD]: enums.CUSTOM_TYPE_WHITEBOARD,
 			[enums.CUSTOM_TYPE_MEETING]: enums.CUSTOM_TYPE_MEETING,
-			[CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER]: CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER,
+			[CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER]:
+				CometChat.ACTION_TYPE.TYPE_GROUP_MEMBER,
 			[CometChat.CALL_TYPE.AUDIO]: CometChat.CALL_TYPE.AUDIO,
 			[CometChat.CALL_TYPE.VIDEO]: CometChat.CALL_TYPE.VIDEO,
 		};
 	}
 
 	getCategories = () => {
+		const categories = { ...this.categories };
 
-		const categories = {...this.categories};
-
-		return new Promise(resolve => {
+		return new Promise((resolve) => {
 			this.context.FeatureRestriction.isGroupActionMessagesEnabled()
-				.then(response => {
+				.then((response) => {
 					if (response === false) {
 						delete categories[CometChat.CATEGORY_ACTION];
 					}
 					return categories;
 				})
-				.catch(error => {
+				.catch((error) => {
 					delete categories[CometChat.CATEGORY_ACTION];
 					return categories;
 				})
-				.then(categories => {
+				.then((categories) => {
 					this.context.FeatureRestriction.isCallActionMessagesEnabled()
-						.then(response => {
+						.then((response) => {
 							if (response === false) {
 								delete categories[CometChat.CATEGORY_CALL];
 							}
 							resolve(categories);
 						})
-						.catch(error => {
+						.catch((error) => {
 							delete categories[CometChat.CATEGORY_CALL];
 							resolve(categories);
 						});
@@ -69,9 +67,8 @@ class MessageFilter {
 	};
 
 	getTypes = () => {
-
-        const types = {...this.types};
-        return new Promise(resolve => resolve(types));
+		const types = { ...this.types };
+		return new Promise((resolve) => resolve(types));
 	};
 }
 

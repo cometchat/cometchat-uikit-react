@@ -1,5 +1,4 @@
 export const removeOptionIconStyle = (img, context) => {
-
 	return {
 		mask: `url(${img}) center center no-repeat`,
 		backgroundColor: `${context.theme.color.red}`,
@@ -11,7 +10,7 @@ export const removeOptionIconStyle = (img, context) => {
 };
 
 export const iconWrapperStyle = () => {
-    return {
-        width: "50px"
-    }
-}
+	return {
+		width: "50px",
+	};
+};
