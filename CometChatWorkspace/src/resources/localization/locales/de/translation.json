@@ -203,7 +203,7 @@
 	"INVALID_POLL_QUESTION": "Bitte gebe die gewünschte Frage ein, bevor Du eine Umfrage erstellst",
 	"INVALID_POLL_OPTION": "Bitte gebe die erforderliche Antwort ein, bevor Du eine Umfrage erstellst",
 	"SAME_LANGUAGE_MESSAGE": "Die ausgewählte Sprache für die Übersetzung ist die Sprache der Originalnachricht",
-    	"LEAVE": "Verlassen",
+	"LEAVE": "Verlassen",
 	"SELECT_MODE": "Modus wählen",
 	"CALL_RECORDING_STARTED_MSG": "Dieser Anruf wird aufgezeichnet",
 	"USER_JOINED_CALL_MSG": "ist dem Aufruf beigetreten",

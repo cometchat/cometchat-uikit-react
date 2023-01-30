@@ -32,7 +32,8 @@ export class UIKitSettings {
 		this.chatWindow = window;
 
 		this.userListMode = UIKitSettings.userListFilterOptions["ALL"];
-		this.groupInMode = UIKitSettings.groupListFilterOptions["PUBLIC_AND_PASSWORD"];
+		this.groupInMode =
+			UIKitSettings.groupListFilterOptions["PUBLIC_AND_PASSWORD"];
 		this.chatListMode = UIKitSettings.chatListFilterOptions["USERS_AND_GROUPS"];
 
 		this.chats = true;
@@ -136,359 +137,370 @@ export class UIKitSettings {
 		this.showCallRecordingOption = true;
 	}
 
-	setCustomJS = customJS => {
+	setCustomJS = (customJS) => {
 		this.customJS = customJS;
 	};
 
-	setCustomCSS = customCSS => {
+	setCustomCSS = (customCSS) => {
 		this.customCSS = customCSS;
 	};
 
-	setTabs = tabList => {
+	setTabs = (tabList) => {
 		this.tabs = tabList;
 	};
 
-	setUserSettings = userSettings => {
+	setUserSettings = (userSettings) => {
 		this.userSettings = userSettings;
 	};
 
-	setCalls = calls => {
+	setCalls = (calls) => {
 		this.calls = calls;
 	};
 
-	setUsers = users => {
+	setUsers = (users) => {
 		this.users = users;
 	};
 
-	setChats = chats => {
+	setChats = (chats) => {
 		this.chats = chats;
 	};
 
-	setGroups = groups => {
+	setGroups = (groups) => {
 		this.groups = groups;
 	};
 
-	setChatListMode = option => {
+	setChatListMode = (option) => {
 		if (!option.trim().length) {
 			return false;
 		}
 
-		const chatListFilterKey = this.returnMatchedKey(UIKitSettings.chatListFilterOptions, option);
+		const chatListFilterKey = this.returnMatchedKey(
+			UIKitSettings.chatListFilterOptions,
+			option
+		);
 		if (chatListFilterKey) {
-			this.chatListMode = UIKitSettings.chatListFilterOptions[chatListFilterKey];
+			this.chatListMode =
+				UIKitSettings.chatListFilterOptions[chatListFilterKey];
 		}
 	};
 
-	setUserListMode = option => {
+	setUserListMode = (option) => {
 		if (!option.trim().length) {
 			return false;
 		}
 
-		const userListFilterKey = this.returnMatchedKey(UIKitSettings.userListFilterOptions, option);
+		const userListFilterKey = this.returnMatchedKey(
+			UIKitSettings.userListFilterOptions,
+			option
+		);
 		if (userListFilterKey) {
-			this.userListMode = UIKitSettings.userListFilterOptions[userListFilterKey];
+			this.userListMode =
+				UIKitSettings.userListFilterOptions[userListFilterKey];
 		}
 	};
 
 	setGroupListMode = () => {};
 
-	setUserVideoCall = userVideoCall => {
+	setUserVideoCall = (userVideoCall) => {
 		this.userVideoCall = userVideoCall;
 	};
 
-	setGroupVideoCall = groupVideoCall => {
+	setGroupVideoCall = (groupVideoCall) => {
 		this.groupVideoCall = groupVideoCall;
 	};
 
-	setUserAudioCall = userAudioCall => {
+	setUserAudioCall = (userAudioCall) => {
 		this.userAudioCall = userAudioCall;
 	};
 
-	setGroupAudioCall = groupAudioCall => {
+	setGroupAudioCall = (groupAudioCall) => {
 		this.groupAudioCall = groupAudioCall;
 	};
 
-	setEditMessage = editMessage => {
+	setEditMessage = (editMessage) => {
 		this.editMessage = editMessage;
 	};
 
-	setSendMessageInOneOnOne = sendMessageInOneOnOne => {
+	setSendMessageInOneOnOne = (sendMessageInOneOnOne) => {
 		this.sendMessageInOneOnOne = sendMessageInOneOnOne;
 	};
 
-	setSendMessageInGroup = sendMessageInGroup => {
+	setSendMessageInGroup = (sendMessageInGroup) => {
 		this.sendMessageInGroup = sendMessageInGroup;
 	};
 
-	setJoinOrLeaveGroup = joinOrLeaveGroup => {
+	setJoinOrLeaveGroup = (joinOrLeaveGroup) => {
 		this.joinOrLeaveGroup = joinOrLeaveGroup;
 	};
 
-	setBlockUser = blockUser => {
+	setBlockUser = (blockUser) => {
 		this.blockUser = blockUser;
 	};
 
-	setSendEmojis = sendEmojis => {
+	setSendEmojis = (sendEmojis) => {
 		this.sendEmojis = sendEmojis;
 	};
 
-	setSendEmojisInLargerSize = sendEmojisInLargerSize => {
+	setSendEmojisInLargerSize = (sendEmojisInLargerSize) => {
 		this.sendEmojisInLargerSize = sendEmojisInLargerSize;
 	};
 
-	setSendGifs = sendGifs => {
+	setSendGifs = (sendGifs) => {
 		this.sendGifs = sendGifs;
 	};
 
-	setShareCopyForwardMessage = shareCopyForwardMessage => {
+	setShareCopyForwardMessage = (shareCopyForwardMessage) => {
 		this.shareCopyForwardMessage = shareCopyForwardMessage;
 	};
 
-	setSendFiles = sendFiles => {
+	setSendFiles = (sendFiles) => {
 		this.sendFiles = sendFiles;
 	};
 
-	setSendPhotoVideos = sendPhotoVideos => {
+	setSendPhotoVideos = (sendPhotoVideos) => {
 		this.sendPhotoVideos = sendPhotoVideos;
 	};
 
-	setViewShareMedia = viewShareMedia => {
+	setViewShareMedia = (viewShareMedia) => {
 		this.viewShareMedia = viewShareMedia;
 	};
 
-	setEnableSoundForMessages = enableSoundForMessages => {
+	setEnableSoundForMessages = (enableSoundForMessages) => {
 		this.enableSoundForMessages = enableSoundForMessages;
 	};
 
-	setEnableSoundForCalls = enableSoundForCalls => {
+	setEnableSoundForCalls = (enableSoundForCalls) => {
 		this.enableSoundForCalls = enableSoundForCalls;
 	};
 
-	setSendStickers = sendStickers => {
+	setSendStickers = (sendStickers) => {
 		this.sendStickers = sendStickers;
 	};
 
-	setViewGroupMembers = viewGroupMembers => {
+	setViewGroupMembers = (viewGroupMembers) => {
 		this.viewGroupMembers = viewGroupMembers;
 	};
 
-	setCallNotifications = callNotifications => {
+	setCallNotifications = (callNotifications) => {
 		this.callNotifications = callNotifications;
 	};
 
-	setAllowDeleteGroup = allowDeleteGroup => {
+	setAllowDeleteGroup = (allowDeleteGroup) => {
 		this.allowDeleteGroup = allowDeleteGroup;
 	};
 
-	setKickMember = kickMember => {
+	setKickMember = (kickMember) => {
 		this.kickMember = kickMember;
 	};
 
-	setBanMember = banMember => {
+	setBanMember = (banMember) => {
 		this.banMember = banMember;
 	};
 
-	setAllowPromoteDemoteMembers = allowPromoteDemoteMembers => {
+	setAllowPromoteDemoteMembers = (allowPromoteDemoteMembers) => {
 		this.allowPromoteDemoteMembers = allowPromoteDemoteMembers;
 	};
 
-	setAllowAddMembers = allowAddMembers => {
+	setAllowAddMembers = (allowAddMembers) => {
 		this.allowAddMembers = allowAddMembers;
 	};
 
-	setShareLocation = shareLocation => {
+	setShareLocation = (shareLocation) => {
 		this.shareLocation = shareLocation;
 	};
 
-	setJoinLeaveNotifications = joinLeaveNotifications => {
+	setJoinLeaveNotifications = (joinLeaveNotifications) => {
 		this.joinLeaveNotifications = joinLeaveNotifications;
 	};
 
-	setSendVoiceNotes = sendVoiceNotes => {
+	setSendVoiceNotes = (sendVoiceNotes) => {
 		this.sendVoiceNotes = sendVoiceNotes;
 	};
 
-	setMessageTranslation = messageTranslation => {
+	setMessageTranslation = (messageTranslation) => {
 		this.messageTranslation = messageTranslation;
 	};
 
-	setGroupCreation = groupCreation => {
+	setGroupCreation = (groupCreation) => {
 		this.groupCreation = groupCreation;
 	};
 
-	setSendTypingIndicator = sendTypingIndicator => {
+	setSendTypingIndicator = (sendTypingIndicator) => {
 		this.sendTypingIndicator = sendTypingIndicator;
 	};
 
-	setShowUserPresence = showUserPresence => {
+	setShowUserPresence = (showUserPresence) => {
 		this.showUserPresence = showUserPresence;
 	};
 
-	setDeleteMessage = deleteMessage => {
+	setDeleteMessage = (deleteMessage) => {
 		this.deleteMessage = deleteMessage;
 	};
 
-	setThreadedChats = threadedChats => {
+	setThreadedChats = (threadedChats) => {
 		this.threadedChats = threadedChats;
 	};
 
-	setReplyingToMessage = replyingToMessage => {
+	setReplyingToMessage = (replyingToMessage) => {
 		this.replyingToMessage = replyingToMessage;
 	};
 
-	setShowReadDeliveryReceipts = showReadDeliveryReceipts => {
+	setShowReadDeliveryReceipts = (showReadDeliveryReceipts) => {
 		this.showReadDeliveryReceipts = showReadDeliveryReceipts;
 	};
 
-	setHideDeletedMessages = hideDeletedMessages => {
+	setHideDeletedMessages = (hideDeletedMessages) => {
 		this.hideDeletedMessages = hideDeletedMessages;
 	};
 
-	setEmailReplies = emailReplies => {
+	setEmailReplies = (emailReplies) => {
 		this.emailReplies = emailReplies;
 	};
 
-	setSendMessageReaction = sendMessageReaction => {
+	setSendMessageReaction = (sendMessageReaction) => {
 		this.sendMessageReaction = sendMessageReaction;
 	};
 
-	setCollaborativeWhiteboard = collaborativeWhiteboard => {
+	setCollaborativeWhiteboard = (collaborativeWhiteboard) => {
 		this.collaborativeWhiteboard = collaborativeWhiteboard;
 	};
 
-	setCollaborativeDocument = collaborativeDocument => {
+	setCollaborativeDocument = (collaborativeDocument) => {
 		this.collaborativeDocument = collaborativeDocument;
 	};
 
-	setPolls = polls => {
+	setPolls = (polls) => {
 		this.polls = polls;
 	};
 
-	setSendLiveReaction = sendLiveReaction => {
+	setSendLiveReaction = (sendLiveReaction) => {
 		this.sendLiveReaction = sendLiveReaction;
 	};
 
-	setPublicGroup = publicGroup => {
+	setPublicGroup = (publicGroup) => {
 		this.publicGroup = publicGroup;
 	};
 
-	setPrivateGroup = privateGroup => {
+	setPrivateGroup = (privateGroup) => {
 		this.privateGroup = privateGroup;
 	};
 
-	setPasswordGroup = passwordGroup => {
+	setPasswordGroup = (passwordGroup) => {
 		this.passwordGroup = passwordGroup;
 	};
 
-	setAllowModeratorToDeleteMemberMessages = allowModeratorToDeleteMemberMessages => {
-		this.allowModeratorToDeleteMemberMessages = allowModeratorToDeleteMemberMessages;
+	setAllowModeratorToDeleteMemberMessages = (
+		allowModeratorToDeleteMemberMessages
+	) => {
+		this.allowModeratorToDeleteMemberMessages =
+			allowModeratorToDeleteMemberMessages;
 	};
 
-	setUnreadCount = unreadCount => {
+	setUnreadCount = (unreadCount) => {
 		this.unreadCount = unreadCount;
 	};
 
-	setSmartReplies = smartReplies => {
+	setSmartReplies = (smartReplies) => {
 		this.smartReplies = smartReplies;
 	};
 
-	setSearchUsers = searchUsers => {
+	setSearchUsers = (searchUsers) => {
 		this.searchUsers = searchUsers;
 	};
 
-	setSearchGroups = searchGroups => {
+	setSearchGroups = (searchGroups) => {
 		this.searchGroups = searchGroups;
 	};
 
-	setSearchMessages = searchMessages => {
+	setSearchMessages = (searchMessages) => {
 		this.searchMessages = searchMessages;
 	};
 
-	setCallRecording = callRecording => {
+	setCallRecording = (callRecording) => {
 		this.callRecording = callRecording;
 	};
 
-	setCallLiveStreaming = callLiveStreaming => {
+	setCallLiveStreaming = (callLiveStreaming) => {
 		this.callLiveStreaming = callLiveStreaming;
 	};
 
-	setCallTranscription = callTranscription => {
+	setCallTranscription = (callTranscription) => {
 		this.callTranscription = callTranscription;
 	};
 
-	setThumbnailGeneration = thumbnailGeneration => {
+	setThumbnailGeneration = (thumbnailGeneration) => {
 		this.thumbnailGeneration = thumbnailGeneration;
 	};
 
-	setLinkPreview = linkPreview => {
+	setLinkPreview = (linkPreview) => {
 		this.linkPreview = linkPreview;
 	};
 
-	setSaveMessages = saveMessages => {
+	setSaveMessages = (saveMessages) => {
 		this.saveMessages = saveMessages;
 	};
 
-	setPinMessages = pinMessages => {
+	setPinMessages = (pinMessages) => {
 		this.pinMessages = pinMessages;
 	};
 
-	setRichMediaPreview = richMediaPreview => {
+	setRichMediaPreview = (richMediaPreview) => {
 		this.richMediaPreview = richMediaPreview;
 	};
 
-	setVoiceTranscription = voiceTranscription => {
+	setVoiceTranscription = (voiceTranscription) => {
 		this.voiceTranscription = voiceTranscription;
 	};
 
-	setMentions = mentions => {
+	setMentions = (mentions) => {
 		this.mentions = mentions;
 	};
 
-	setXssFilter = xssFilter => {
+	setXssFilter = (xssFilter) => {
 		this.xssFilter = xssFilter;
 	};
 
-	setProfanityFilter = profanityFilter => {
+	setProfanityFilter = (profanityFilter) => {
 		this.profanityFilter = profanityFilter;
 	};
 
-	setImageModeration = imageModeration => {
+	setImageModeration = (imageModeration) => {
 		this.imageModeration = imageModeration;
 	};
 
-	setDataMasking = dataMasking => {
+	setDataMasking = (dataMasking) => {
 		this.dataMasking = dataMasking;
 	};
 
-	setMalwareScanner = malwareScanner => {
+	setMalwareScanner = (malwareScanner) => {
 		this.malwareScanner = malwareScanner;
 	};
 
-	setSentimentAnalysis = sentimentAnalysis => {
+	setSentimentAnalysis = (sentimentAnalysis) => {
 		this.sentimentAnalysis = sentimentAnalysis;
 	};
 
-	setInflightMessageModeration = inflightMessageModeration => {
+	setInflightMessageModeration = (inflightMessageModeration) => {
 		this.inflightMessageModeration = inflightMessageModeration;
 	};
 
-	setMessageHistory = messageHistory => {
+	setMessageHistory = (messageHistory) => {
 		this.messageHistory = messageHistory;
 	};
 
-	setViewProfile = viewProfile => {
+	setViewProfile = (viewProfile) => {
 		this.viewProfile = viewProfile;
 	};
 
-	setMessageInPrivate = messageInPrivate => {
+	setMessageInPrivate = (messageInPrivate) => {
 		this.messageInPrivate = messageInPrivate;
 	};
 
-	setShowCallRecordingOption = showCallRecordingOption => {
+	setShowCallRecordingOption = (showCallRecordingOption) => {
 		this.showCallRecordingOption = showCallRecordingOption;
 	};
 
-	setChatWindow = chatWindow => {
+	setChatWindow = (chatWindow) => {
 		this.chatWindow = chatWindow;
 	};
 

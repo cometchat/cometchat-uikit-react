@@ -1,14 +1,15 @@
 export const imageWrapperStyle = (context, closeIcon, img) => {
-
-    const heightProps = (img) ? {
-        height: "auto",
-    } : {
-        height: "100%",
-    };
+	const heightProps = img
+		? {
+				height: "auto",
+		  }
+		: {
+				height: "100%",
+		  };
 
 	const mq = [...context.theme.breakPoints];
 
-    return {
+	return {
 		position: "absolute",
 		top: "0",
 		left: "0",
@@ -27,16 +28,17 @@ export const imageWrapperStyle = (context, closeIcon, img) => {
 			height: "100%",
 		},
 	};
-}
+};
 
-export const imgStyle = image => {
-
-    const sizeProps = (!image) ? {
-        width: "24px",
-        height: "24px",
-    } : {
-		maxHeight: "100%",
-	};
+export const imgStyle = (image) => {
+	const sizeProps = !image
+		? {
+				width: "24px",
+				height: "24px",
+		  }
+		: {
+				maxHeight: "100%",
+		  };
 
 	return {
 		objectFit: "contain",

@@ -284,7 +284,7 @@ class CometChatGroupList extends React.PureComponent {
 				this.setState({ grouplist: grouplist });
 			} else {
 				let groupObj = { ...grouplist[groupKey] };
-				let membersCount = parseInt(groupObj.membersCount);
+				let membersCount = parseInt(group.membersCount);
 
 				let newgroupObj = Object.assign({}, groupObj, {
 					membersCount: membersCount,

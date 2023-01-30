@@ -34,90 +34,87 @@ const translations = {
 };
 
 class Translator {
+	static key = enums.CONSTANTS["LOCALE"];
+	static rtlLanguages = ["ar"];
+	static defaultLanguage = "en";
 
-    static key = enums.CONSTANTS["LOCALE"];
-    static rtlLanguages = ["ar"];
-    static defaultLanguage = "en";
+	static getLanguage = () => {
+		return localStorage.getItem(this.key);
+	};
 
-    static getLanguage = () => {
+	static setLanguage = (language) => {
+		const item = this.key;
+		localStorage.setItem(item, language);
+	};
 
-        return localStorage.getItem(this.key);
-    }
+	static getBrowserLanguage = () =>
+		(navigator.languages && navigator.languages[0]) ||
+		navigator.language ||
+		navigator.userLanguage;
 
-    static setLanguage = (language) => {
+	static getDefaultLanguage = () => {
+		//get the language from localstorage
+		const savedLanguage = this.getLanguage();
 
-        const item = this.key;
-        localStorage.setItem(item, language);
-    }
+		//get the language set in the browser
+		const browserLanguageCode = Translator.getBrowserLanguage().toLowerCase();
+		let browserLanguage = browserLanguageCode;
 
-    static getBrowserLanguage = () => ((navigator.languages && navigator.languages[0]) || navigator.language || navigator.userLanguage);
+		//check if the language set in the browser has hyphen(-), if yes split and take the first element of the array
+		if (
+			browserLanguageCode !== "zh-tw" &&
+			browserLanguageCode.indexOf("-") !== -1
+		) {
+			const browserLanguageArray = browserLanguageCode.split("-");
+			browserLanguage = browserLanguageArray[0];
+		}
 
-    static getDefaultLanguage = () => {
+		//if there is language set in localstorage and it is different from browser language, update local storage and return the language code
+		if (savedLanguage) {
+			if (savedLanguage !== browserLanguage) {
+				this.setLanguage(browserLanguage);
 
-        //get the language from localstorage
-        const savedLanguage = this.getLanguage();
+				//if the translations are not available, default to en
+				return translations.hasOwnProperty(browserLanguage)
+					? browserLanguage
+					: this.defaultLanguage;
+			} else {
+				//if the translations are not available, default to en
+				return translations.hasOwnProperty(browserLanguage)
+					? browserLanguage
+					: this.defaultLanguage;
+			}
+		} else {
+			this.setLanguage(browserLanguage);
 
-        //get the language set in the browser
-        const browserLanguageCode = Translator.getBrowserLanguage().toLowerCase();
-        let browserLanguage = browserLanguageCode;
+			//if the translations are not available, default to en
+			return translations.hasOwnProperty(browserLanguage)
+				? browserLanguage
+				: this.defaultLanguage;
+		}
+	};
 
-        //check if the language set in the browser has hyphen(-), if yes split and take the first element of the array
-        if (browserLanguageCode !== "zh-tw" && browserLanguageCode.indexOf("-") !== -1) {
+	static getDirection(language) {
+		return this.rtlLanguages.includes(language) ? "rtl" : "ltr";
+	}
 
-            const browserLanguageArray = browserLanguageCode.split("-");
-            browserLanguage = browserLanguageArray[0];
-        }
+	static translate(str, language) {
+		if (translations.hasOwnProperty(language)) {
+			const languageDb = translations[language];
+			if (languageDb.hasOwnProperty(str)) {
+				return languageDb[str];
+			}
 
-        //if there is language set in localstorage and it is different from browser language, update local storage and return the language code
-        if (savedLanguage) {
+			return str;
+		} else {
+			const languageDb = translations[this.defaultLanguage];
+			if (languageDb.hasOwnProperty(str)) {
+				return languageDb[str];
+			}
 
-            if (savedLanguage !== browserLanguage) {
-
-                this.setLanguage(browserLanguage);
-                
-                //if the translations are not available, default to en
-                return (translations.hasOwnProperty(browserLanguage)) ? browserLanguage : this.defaultLanguage;
-                
-            } else {
-
-                //if the translations are not available, default to en
-                return (translations.hasOwnProperty(browserLanguage)) ? browserLanguage : this.defaultLanguage;
-            }
-
-        } else {
-
-            this.setLanguage(browserLanguage);
-
-            //if the translations are not available, default to en
-            return (translations.hasOwnProperty(browserLanguage)) ? browserLanguage : this.defaultLanguage;
-        }
-    }
-
-    static getDirection(language) {
-        return this.rtlLanguages.includes(language) ? "rtl" : "ltr";
-    }
-
-    static translate(str, language) {
-
-        if (translations.hasOwnProperty(language)) {
-
-            const languageDb = translations[language];
-            if (languageDb.hasOwnProperty(str)) {
-                return languageDb[str];
-            }
-
-            return str;
-
-        } else {
-
-            const languageDb = translations[this.defaultLanguage];
-            if (languageDb.hasOwnProperty(str)) {
-                return languageDb[str];
-            }
-
-            return str;
-        }
-    }
+			return str;
+		}
+	}
 }
 
 export default Translator;

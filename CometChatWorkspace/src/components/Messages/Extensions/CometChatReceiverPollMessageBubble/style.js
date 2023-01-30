@@ -1,65 +1,60 @@
-
 export const messageContainerStyle = () => {
-
-    return {
-        alignSelf: "flex-start",
-        marginBottom: "16px",
-        paddingLeft: "16px",
-        paddingRight: "16px",
-        maxWidth: "65%",
-        clear: "both",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: "0",
-    }
-}
+	return {
+		alignSelf: "flex-start",
+		marginBottom: "16px",
+		paddingLeft: "16px",
+		paddingRight: "16px",
+		maxWidth: "65%",
+		clear: "both",
+		position: "relative",
+		display: "flex",
+		flexDirection: "column",
+		flexShrink: "0",
+	};
+};
 
 export const messageWrapperStyle = () => {
-
-    return {
-        width: "100%",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
-    }
-}
+	return {
+		width: "100%",
+		flex: "1 1",
+		alignSelf: "flex-start",
+		display: "flex",
+	};
+};
 
 export const messageThumbnailStyle = () => {
-
-    return {
-        width: "36px",
-        height: "36px",
-        margin: "10px 5px",
-        float: "left",
-        flexShrink: "0",
-    }
-}
+	return {
+		width: "36px",
+		height: "36px",
+		margin: "10px 5px",
+		float: "left",
+		flexShrink: "0",
+	};
+};
 
 export const messageDetailStyle = () => {
-
-    return {
-        flex: "1 1",
-        display: "flex",
-        flexDirection: "column",
-	width: "calc(100% - 36px)",
-    }
-}
+	return {
+		flex: "1 1",
+		display: "flex",
+		flexDirection: "column",
+		width: "calc(100% - 36px)",
+	};
+};
 
 export const nameWrapperStyle = (avatar) => {
+	const paddingValue = avatar
+		? {
+				padding: "3px 5px",
+		  }
+		: {};
 
-    const paddingValue = (avatar) ? {
-        padding: "3px 5px",
-    } : {};
+	return {
+		alignSelf: "flex-start",
+		...paddingValue,
+	};
+};
 
-    return {
-        alignSelf: "flex-start",
-        ...paddingValue
-    }
-}
-
-export const nameStyle = context => {
-
+export const nameStyle = (context) => {
 	return {
 		fontSize: "11px",
 		color: `${context.theme.color.search}`,
@@ -67,17 +62,15 @@ export const nameStyle = context => {
 };
 
 export const messageTxtContainerStyle = () => {
+	return {
+		width: "auto",
+		flex: "1 1",
+		alignSelf: "flex-start",
+		display: "flex",
+	};
+};
 
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
-    }
-}
-
-export const messageTxtWrapperStyle = context => {
-
+export const messageTxtWrapperStyle = (context) => {
 	return {
 		display: "flex",
 		flexDirection: "column",
@@ -90,19 +83,17 @@ export const messageTxtWrapperStyle = context => {
 };
 
 export const pollQuestionStyle = () => {
+	return {
+		margin: "0",
+		whiteSpace: "pre-wrap",
+		wordWrap: "break-word",
+		textAlign: "left",
+		width: "100%",
+		fontSize: "14px",
+	};
+};
 
-    return {
-        margin: "0",
-        whiteSpace: "pre-wrap",
-        wordWrap: "break-word",
-        textAlign: "left",
-        width: "100%",
-        fontSize: "14px",
-    }
-}
-
-export const pollAnswerStyle = context => {
-
+export const pollAnswerStyle = (context) => {
 	return {
 		listStyleType: "none",
 		padding: "0",
@@ -120,37 +111,40 @@ export const pollAnswerStyle = context => {
 };
 
 export const pollTotalStyle = () => {
-
-    return {
-        fontSize: "13px",
-        margin: "0",
-        alignSelf: "flex-end"
-    }
-}
+	return {
+		fontSize: "13px",
+		margin: "0",
+		alignSelf: "flex-end",
+	};
+};
 
 export const pollPercentStyle = (context, width) => {
+	const curvedBorders =
+		width === "100%"
+			? { borderRadius: "8px" }
+			: {
+					borderRadius: "8px 0 0 8px",
+			  };
 
-    const curvedBorders = (width === "100%") ? { borderRadius: "8px" } : {
-        borderRadius: "8px 0 0 8px"
-    };
-
-    return {
-        maxWidth: "100%",
-        width: width,
-        ...curvedBorders,
-        backgroundColor: `${context.theme.backgroundColor.primary}`,
-        minHeight: "35px",
-        height: "100%",
-        position: "absolute",
-        zIndex: "1",
-    }
-}
+	return {
+		maxWidth: "100%",
+		width: width,
+		...curvedBorders,
+		backgroundColor: `${context.theme.backgroundColor.primary}`,
+		minHeight: "35px",
+		height: "100%",
+		position: "absolute",
+		zIndex: "1",
+	};
+};
 
 export const answerWrapperStyle = (state, optionData, context) => {
-
 	let countPadding = "0px 16px 0px 0px";
-    let widthProp = "calc(100% - 40px)";
-	if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(state?.loggedInUser?.uid)) {
+	let widthProp = "calc(100% - 40px)";
+	if (
+		optionData.hasOwnProperty("voters") &&
+		optionData.voters.hasOwnProperty(state?.loggedInUser?.uid)
+	) {
 		//countPadding = "0px 8px";
 		widthProp = "calc(100% - 80px)";
 	}
@@ -161,7 +155,7 @@ export const answerWrapperStyle = (state, optionData, context) => {
 		display: "flex",
 		alignItems: "center",
 		minHeight: "35px",
-        	padding: "0 16px",
+		padding: "0 16px",
 		height: "100%",
 		zIndex: "2",
 		p: {
@@ -182,7 +176,6 @@ export const answerWrapperStyle = (state, optionData, context) => {
 };
 
 export const checkIconStyle = (img, context) => {
-
 	return {
 		width: "40px",
 		height: "24px",
@@ -192,25 +185,23 @@ export const checkIconStyle = (img, context) => {
 };
 
 export const messageInfoWrapperStyle = () => {
-
-    return {
-        alignSelf: "flex-start",
-        padding: "4px 8px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        height: "25px"
-    }
-}
+	return {
+		alignSelf: "flex-start",
+		padding: "4px 8px",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "flex-start",
+		height: "25px",
+	};
+};
 
 export const messageReactionsWrapperStyle = () => {
-
-    return {
-        display: "flex",
-        alignSelf: "flex-start",
-        width: "100%",
-        flexWrap: "wrap",
-        justifyContent: "flex-start",
-        minHeight: "36px",
-    }
-}
+	return {
+		display: "flex",
+		alignSelf: "flex-start",
+		width: "100%",
+		flexWrap: "wrap",
+		justifyContent: "flex-start",
+		minHeight: "36px",
+	};
+};

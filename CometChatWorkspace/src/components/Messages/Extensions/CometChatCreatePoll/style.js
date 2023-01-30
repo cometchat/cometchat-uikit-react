@@ -1,5 +1,4 @@
-export const modalWrapperStyle = context => {
-
+export const modalWrapperStyle = (context) => {
 	const mq = [...context.theme.breakPoints];
 
 	return {
@@ -15,7 +14,8 @@ export const modalWrapperStyle = context => {
 		transform: "translate(-50%, -50%)",
 		zIndex: "1002",
 		margin: "0 auto",
-		boxShadow: "rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
+		boxShadow:
+			"rgba(20, 20, 20, 0.2) 0 16px 32px, rgba(20, 20, 20, 0.04) 0 0 0 1px",
 		borderRadius: "12px",
 		display: "block",
 		[`@media ${mq[1]}, ${mq[2]}`]: {
@@ -26,42 +26,38 @@ export const modalWrapperStyle = context => {
 };
 
 export const modalCloseStyle = (img, context) => {
-
-    return {
-        position: "absolute",
-        width: "32px",
-        height: "32px",
-        borderRadius: "50%",
-        top: "16px",
-        right: "16px",
-        mask: `url(${img}) center center no-repeat`,
+	return {
+		position: "absolute",
+		width: "32px",
+		height: "32px",
+		borderRadius: "50%",
+		top: "16px",
+		right: "16px",
+		mask: `url(${img}) center center no-repeat`,
 		backgroundColor: `${context.theme.primaryColor}`,
-        cursor: "pointer",
-    }
-}
+		cursor: "pointer",
+	};
+};
 
 export const modalBodyStyle = () => {
-
-    return {
-        padding: "24px",
-        height: "100%",
-        width: "100%"
-    }
-}
+	return {
+		padding: "24px",
+		height: "100%",
+		width: "100%",
+	};
+};
 
 export const modalErrorStyle = (context) => {
-
-    return {
-        fontSize: "12px",
+	return {
+		fontSize: "12px",
 		color: `${context.theme.color.red}`,
 		textAlign: "center",
 		margin: "8px 0",
 		width: "100%",
-    }
-}
+	};
+};
 
-export const modalTableStyle = context => {
-
+export const modalTableStyle = (context) => {
 	return {
 		borderCollapse: "collapse",
 		margin: "0",
@@ -78,48 +74,44 @@ export const modalTableStyle = context => {
 };
 
 export const tableCaptionStyle = () => {
-
-    return {
-        fontSize: "20px",
-        marginBottom: "15px",
-        fontWeight: "bold",
-        textAlign: "left",
-    }
-}
+	return {
+		fontSize: "20px",
+		marginBottom: "15px",
+		fontWeight: "bold",
+		textAlign: "left",
+	};
+};
 
 export const tableBodyStyle = () => {
-
-    return {
-        height: "calc(100% - 40px)",
-        overflowY: "auto",
-        display: "block",
-        "tr": {
-            "td": {
-                padding: "8px 16px",
-                fontSize: "14px",
-                "input": {
-                    width: "100%",
-                    border: "none",
-                    padding: "8px 16px",
-                    fontSize: "14px",
-                    "&:focus": {
-                        outline: "none"
-                    }
-                },
-                "label": {
-                    padding: "8px 16px", 
-                },
-                ":first-of-type": {
-                    width: "120px"
-                }
-            }
-        }
-    }
-}
-
+	return {
+		height: "calc(100% - 40px)",
+		overflowY: "auto",
+		display: "block",
+		tr: {
+			td: {
+				padding: "8px 16px",
+				fontSize: "14px",
+				input: {
+					width: "100%",
+					border: "none",
+					padding: "8px 16px",
+					fontSize: "14px",
+					"&:focus": {
+						outline: "none",
+					},
+				},
+				label: {
+					padding: "8px 16px",
+				},
+				":first-of-type": {
+					width: "120px",
+				},
+			},
+		},
+	};
+};
 
 export const tableFootStyle = (context, state, img) => {
-
 	let loadingState = {};
 	let textMargin = {};
 
@@ -161,21 +153,19 @@ export const tableFootStyle = (context, state, img) => {
 };
 
 export const iconWrapperStyle = () => {
-
-    return {
-        width: "50px"
-    }
-}
+	return {
+		width: "50px",
+	};
+};
 
 export const addOptionIconStyle = (img, context) => {
-
-    return {
-        backgroundSize: "28px 28px",
-        cursor: "pointer",
-        display: "block",
-        height: "24px",
-        width: "24px",
+	return {
+		backgroundSize: "28px 28px",
+		cursor: "pointer",
+		display: "block",
+		height: "24px",
+		width: "24px",
 		mask: `url(${img}) center center no-repeat`,
 		backgroundColor: `${context.theme.secondaryTextColor}`,
-    }
-}
+	};
+};

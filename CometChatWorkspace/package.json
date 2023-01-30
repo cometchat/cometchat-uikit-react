@@ -1,19 +1,20 @@
 {
 	"name": "cometchat-pro-react-ui-kit",
-	"version": "3.0.10-1",
+	"version": "3.0.11-1",
 	"description": "CometChat UI Kit for React App",
 	"author": "CometChat",
 	"dependencies": {
 		"react": "^17.0.2",
 		"react-dom": "^17.0.2",
 		"react-scripts": "^4.0.3",
-		"@cometchat-pro/chat": "3.0.10",
-		"@emotion/react": "^11.0.0",
+		"@cometchat-pro/chat": "3.0.11",
+		"@emotion/react": "^11",
 		"dateformat": "^4.0.0",
 		"html-react-parser": "^1.4.5",
-		"twemoji": "^13.0.1"
+		"@twemoji/api": "^14.1.0"
 	},
 	"devDependencies": {
+		"web-vitals": "^3.0.4",
 		"jest": "26.6.0",
 		"jest-canvas-mock": "^2.3.1",
 		"babel-jest": "26.6.0"

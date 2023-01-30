@@ -13,9 +13,8 @@ export const modalRowStyle = (props, context) => {
 	};
 };
 
-export const modalColumnStyle = context => {
-
-	const mq = context.theme.breakPoints.map(x => `@media ${x}`);
+export const modalColumnStyle = (context) => {
+	const mq = context.theme.breakPoints.map((x) => `@media ${x}`);
 	return {
 		width: "calc(100% - 180px)",
 		[mq[1]]: {
@@ -50,15 +49,14 @@ export const nameStyle = () => {
 	};
 };
 
-export const selectionColumnStyle = context => {
-
-	const mq = context.theme.breakPoints.map(x => `@media ${x}`);
+export const selectionColumnStyle = (context) => {
+	const mq = context.theme.breakPoints.map((x) => `@media ${x}`);
 	return {
 		width: "180px",
 		display: "flex",
 		justifyContent: "flex-start",
 		alignItems: "center",
-		"span": {
+		span: {
 			fontSize: "12px",
 			display: "block",
 			paddingRight: "8px",
@@ -73,10 +71,13 @@ export const selectionColumnStyle = context => {
 			width: "120px",
 		},
 	};
-
 };
 
-export const selectionBoxStyle = (inactiveStateImg, activeStateImg, context) => {
+export const selectionBoxStyle = (
+	inactiveStateImg,
+	activeStateImg,
+	context
+) => {
 	return {
 		display: "none",
 		" + label": {
