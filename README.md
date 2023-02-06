@@ -1,38 +1,49 @@
 <div style="width:100%">
     <div style="width:50%;">
         <div align="center">
-        <img align="center" width="180" height="180" alt="CometChat" src="./Screenshots/logo.png">    
+        <img align="center" width="180" height="180" alt="CometChat" src="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master/Screenshots/logo.png?raw=true">    
         </div>    
     </div>    
 </div>
 
 <br/><br/>
 
-# CometChat Kitchen Sink Sample App (React)
+# CometChat React UI Kit
 
 <p align="left">
-    <a href="https://github.com/cometchat-pro/cometchat-pro-react-sample-app/releases/" alt="Releases">
-        <img src="https://img.shields.io/github/v/release/cometchat-pro/cometchat-pro-react-sample-app" />
-    </a>
-    <a href="https://img.shields.io/github/languages/top/cometchat-pro/cometchat-pro-react-sample-app">
-        <img src="https://img.shields.io/github/languages/top/cometchat-pro/cometchat-pro-react-sample-app" />
-    </a>
-    <a href="https://github.com/cometchat-pro/cometchat-pro-react-sample-app/stargazers">
-        <img src="https://img.shields.io/github/stars/cometchat-pro/cometchat-pro-react-sample-app?style=social" />
-    </a>
-    <a href="https://twitter.com/CometChat">
-        <img src="https://img.shields.io/twitter/follow/CometChat?label=CometChat&style=social" />
-    </a>
+  <a href="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/releases/" alt="Releases">
+    <img src="https://img.shields.io/github/v/release/cometchat-pro/cometchat-pro-react-ui-kit" />
+  </a>
+  <a href="https://img.shields.io/github/languages/top/cometchat-pro/cometchat-pro-react-ui-kit">
+    <img src="https://img.shields.io/github/languages/top/cometchat-pro/cometchat-pro-react-ui-kit" />
+  </a>
+  <a href="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/stargazers">
+    <img src="https://img.shields.io/github/stars/cometchat-pro/cometchat-pro-react-ui-kit?style=social" />
+  </a>
+  <a href="https://twitter.com/CometChat">
+    <img src="https://img.shields.io/twitter/follow/CometChat?label=CometChat&style=social" />
+  </a>
 </p>
 
-![alt text](./Screenshots/main.png "Main")
+</br></br>
 
-CometChat Kitchen Sink Sample App (built using **CometChat UI Kit**) is a fully functional real-time messaging app capable of private (one-on-one), group messaging, voice & video calling.
+<div style="width:100%">
+    <div style="width:50%; display:inline-block">
+        <div align="center">
+          <img align="left" alt="Main" src="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master/Screenshots/main.png?raw=true">    
+        </div>    
+    </div>    
+</div>
 
+</br></br>
+
+CometChat React UI Kit is a collection of custom UI Components designed to build text chat and voice/video calling features in your application. 
+
+The UI Kit is developed to keep developers in mind and aims to reduce development efforts significantly.
+
+---
 ## Features
-- Login
 - Private(1-1) & Group Conversations
-- Voice & video calling & conferencing
 - Rich Media Attachments
 - Typing Indicators
 - Text, Media and Custom messages
@@ -40,87 +51,172 @@ CometChat Kitchen Sink Sample App (built using **CometChat UI Kit**) is a fully 
 - Online Presence Indicators
 - Message History
 - Users & Friends List
-- Groups List
 - Search by users and groups
+- Groups List
 - Conversations List
-- Threaded Conversations
-  
- ## Extensions
 
- [Thumbnail Generation](https://www.cometchat.com/docs/extensions/thumbnail-generation) | [Link Preview](https://www.cometchat.com/docs/extensions/link-preview) | [Rich Media Preview](https://www.cometchat.com/docs/extensions/rich-media-preview) | [Smart Replies](https://www.cometchat.com/docs/extensions/smart-replies)| [Emojis](https://www.cometchat.com/docs/extensions/emojis) | [Polls](https://www.cometchat.com/docs/extensions/polls) | [Reactions](https://www.cometchat.com/docs/extensions/reactions) | [Stickers](https://www.cometchat.com/docs/extensions/stickers)
+## Extensions
 
-<hr/> 
+ [Thumbnail Generation](https://prodocs.cometchat.com/docs/extensions-thumbnail-generation) | [Link Preview](https://prodocs.cometchat.com/docs/extensions-link-preview) | [Rich Media Preview](https://prodocs.cometchat.com/docs/extensions-rich-media-preview) | [Smart Reply](https://prodocs.cometchat.com/docs/extensions-smart-reply)| [Emojis](https://prodocs.cometchat.com/docs/extensions-emojis) | [Polls](https://prodocs.cometchat.com/docs/extensions-polls) | [Reactions](https://prodocs.cometchat.com/docs/extensions-reactions) | [Stickers](https://prodocs.cometchat.com/docs/extensions-stickers)
+
+  ---
 
 ## Prerequisites
 
 Before you begin, ensure you have met the following requirements:
 
-- React `npm install react@17.0.2` 
+- A text editor, to write code in. This could be a text editor (e.g. [Visual Studio Code](https://code.visualstudio.com/), [Notepad++](https://notepad-plus-plus.org/), [Sublime Text](https://www.sublimetext.com/), [Atom](https://atom.io/), or [VIM](https://www.vim.org/))
 
-- React DOM `npm install react-dom@17.0.2`
+- [Node](https://nodejs.org/)
+
+- [npm](https://www.npmjs.com/get-npm)
+
+- React `npm install react@18.2.0`
+
+- React DOM `npm install react-dom@18.2.0`
 
 - React scripts `npm install react-scripts@4.0.3`
 
 ___
 
-## Installing React Sample App
+## Installing React UI Kit 
 
-1. Clone this repository `git clone https://github.com/cometchat-pro/javascript-react-chat-app.git`
-2. Navigate to the root directory and replace `APP_ID`, `REGION` and `AUTH_KEY` with your CometChat `App ID`, `Region` and `Auth Key` in src/consts.js file.
+## 1. Setup :wrench:
 
-![alt text](./Screenshots/constants.png "Constants")
+### i. Register on CometChat 🔧
 
-3. Install dependencies
+To install React UI Kit, you need to first register on CometChat Dashboard. <a href="https://app.cometchat.com/signup" target="_blank">Click here to sign up</a>
 
-    a. Add node-sass dependency in your project.
-    ```javascript
-        npm install node-sass@version
-    ```
-    <b> Note</b>: Cross check for the compatible version of this dependency with your system's node version in the link given below <br />
-        <a href="https://www.npmjs.com/package/node-sass">https://www.npmjs.com/package/node-sass</a>
+### ii. Get your Application Keys :key:
 
-    b.
+* Create a new app. Please follow the steps provided in the <a href="https://www.cometchat.com/docs/react-chat-ui-kit/key-concepts" target="_blank">Key concepts guide</a> to create V3 apps before you proceed.
+* Head over to the Quick Start or API & Auth Keys section and note the `App ID`, `Auth Key`, and `Region`.
 
-    ```javascript
-    npm install
-    ```
-___
-
-## Running the sample app
+### iii. Add the CometChat Dependency
 
 ```javascript
-  npm start
+  npm install @cometchat-pro/chat@3.0.10 --save
 ```
-___
 
-## Add UI Kit to your project
+<br/>
 
-Learn more about how to integrate [UI Kit](https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/) inside your app. 
+## 2. Configure CometChat inside your app
+
+### i. Import CometChat SDK
+
+```javascript
+  import { CometChat } from "@cometchat-pro/chat";
+```
+
+### ii. Initialize CometChat 🌟
+
+The `init()` method initializes the settings required for CometChat.
+We suggest calling the `init()` method on app startup, preferably in the `index.js` file method of the Application class.
+
+```javascript
+const appID = "APP_ID";
+const region = "REGION";
+const appSetting = new CometChat.AppSettingsBuilder().subscribePresenceForAllUsers().setRegion(region).build();
+CometChat.init(appID, appSetting).then(
+  () => {
+    console.log("Initialization completed successfully");
+    // You can now call login function.
+  },
+  error => {
+    console.log("Initialization failed with error:", error);
+    // Check the reason for error and take appropriate action.
+  }
+);
+```
+**Note:**</br>
+* Replace APP_ID and REGION with your CometChat `App ID` and `Region` in the above code.
+
+
+### iii. Login your user 👤
+
+This method takes `UID` and `Auth Key` as input parameters and returns the User object containing all the information of the logged-in user..
+
+```javascript
+const authKey = "AUTH_KEY";
+const uid = "SUPERHERO1";
+
+CometChat.login(uid, authKey).then(
+  user => {
+    console.log("Login Successful:", { user });    
+  },
+  error => {
+    console.log("Login failed with exception:", { error });    
+  }
+);
+```
+**Note:** </br>
+* Replace `AUTH_KEY` with your CometChat `Auth Key` in the above code.
+
+* We have setup 5 users for testing having UIDs: `SUPERHERO1`, `SUPERHERO2`, `SUPERHERO3`,`SUPERHERO4` and `SUPERHERO5`.
+
+<br/>
+
+## 3. Add UI Kit to your project
+
+* Run `npm i @cometchat-pro/react-ui-kit --save` in your terminal and use the components in your React app.
+
+<br/>
+
+## 4. Launch CometChat
+
+Using the **CometChatConversationsWithMessages** component, you can launch a fully functional chat module.
+
+### Usage
+
+* Import CometChatConversationsWithMessages component
+* Embed CometChatConversationsWithMessages component in container and provide an appropriate width and height to the container
+
+```javascript
+  import { CometChatConversationsWithMessages } from "@cometchat-pro/react-ui-kit";
+
+  class App extends React.Component {
+
+    render() {
+
+      return (
+        <div style={{width: '800px', height:'800px' }}>
+          <CometChatConversationsWithMessages />
+        </div>
+      )
+    }
+  }
+```
+
+
+# Checkout our sample app
+
+Checkout our sample app provided in <a href="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/tree/pluto/examples/cometchat-react-sample-app" target="_blank">examples</a> folder.
 
 ---
 
 # Troubleshooting
 
-- To read the full dcoumentation on UI Kit integration visit our [Documentation](https://www.cometchat.com/docs/react-chat-ui-kit/overview).
+- To read the full documentation on UI Kit integration visit our [Documentation](https://www.cometchat.com/docs/react-uikit-beta/overview).
 
-- Facing any issues while integrating or installing the UI Kit please connect with us via real time support present in <a href="https://app.cometchat.com/">CometChat Dashboard.</a>
+- Facing any issues while integrating or installing the UI Kit please connect with us via real time support present in <a href="https://app.cometchat.com/" target="_blank">CometChat Dashboard.</a>
 
 ---
+
 # Contributors
 
 Thanks to the following people who have contributed to this project:
 
-[@priyadarshininadar](https://github.com/priyadarshininadar) <br>
-[@ajaygajra](https://github.com/ajaygajra) <br>
-[@prathamesh-majgaonkar](https://github.com/prathamesh-majgaonkar) <br>
-[@mayur-bhandari](https://github.com/mayur-bhandari)
+[👨‍💻 @priyadarshininadar](https://github.com/priyadarshininadar) <br>
+[👨‍💻 @prakash-cometchat](https://github.com/prakash-cometchat) <br>
+[👨‍💻 @aaliya-shaikh](https://github.com/aaliya-shaikh) <br>
+[👨‍💻 @ramnayanyadav](https://github.com/ramnayanyadav)
 
 
 ---
 
-# Contact
+# Contact :mailbox:
 
-Contact us via real time support present in [CometChat Dashboard.](https://app.cometchat.com/)
+Contact us via real time support present in [CometChat Dashboard](https://app.cometchat.com/).
 
 ---
 
@@ -128,4 +224,4 @@ Contact us via real time support present in [CometChat Dashboard.](https://app.c
 
 ---
 
-This project uses the following [license](https://github.com/cometchat-pro/javascript-react-chat-app/blob/master/LICENSE).
+This project uses the following [license](https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master/LICENSE).
