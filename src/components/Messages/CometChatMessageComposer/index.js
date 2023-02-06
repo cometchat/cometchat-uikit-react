@@ -25,8 +25,6 @@ import {
   CometChatMessagePreview,
   messageConstants,
   CometChatCreatePoll,
-  CometChatMessageTemplate,
-  MessageComposerStyle,
 } from "..";
 
 import { getUnixTimestamp, getUniqueTimestamp } from "../CometChatMessageHelper";
@@ -1035,9 +1033,9 @@ CometChatMessageComposer.defaultProps = {
 };
 
 CometChatMessageComposer.propTypes = {
-  user: PropTypes.instanceOf(CometChat.User),
-  group: PropTypes.instanceOf(CometChat.Group),
-  style: PropTypes.shape(MessageComposerStyle),
+  user: PropTypes.object,
+  group: PropTypes.object,
+  style: PropTypes.object,
   attachmentIconURL: PropTypes.string,
   stickerCloseIconURL: PropTypes.string,
   placeholderText: PropTypes.string,
@@ -1052,12 +1050,12 @@ CometChatMessageComposer.propTypes = {
   showSendButton: PropTypes.bool,
   sendButtonIconURL: PropTypes.string,
   onSendButtonClick: PropTypes.func,
-  messageTypes: PropTypes.arrayOf(CometChatMessageTemplate),
-  excludeMessageTypes: PropTypes.arrayOf(CometChatMessageTemplate),
-  messagePreviewConfiguration: PropTypes.shape(MessagePreviewConfiguration),
-  emojiKeyboardConfiguration: PropTypes.shape(EmojiKeyboardConfiguration),
-  stickerkeyboardConfiguration: PropTypes.shape(StickerKeyboardConfiguration),
-  createPollConfiguration: PropTypes.shape(CreatePollConfiguration),
+  messageTypes: PropTypes.array,
+  excludeMessageTypes: PropTypes.array,
+  messagePreviewConfiguration: PropTypes.object,
+  emojiKeyboardConfiguration: PropTypes.object,
+  stickerkeyboardConfiguration: PropTypes.object,
+  createPollConfiguration: PropTypes.object,
 };
 
 export { CometChatMessageComposer };

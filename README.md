@@ -111,7 +111,7 @@ To install React UI Kit, you need to first register on CometChat Dashboard. <a h
 ### ii. Initialize CometChat 🌟
 
 The `init()` method initializes the settings required for CometChat.
-We suggest calling the `init()` method on app startup, preferably in the `onCreate()` method of the Application class.
+We suggest calling the `init()` method on app startup, preferably in the `index.js` file method of the Application class.
 
 ```javascript
 const appID = "APP_ID";
