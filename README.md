@@ -173,7 +173,7 @@ CometChat.login(uid, authKey).then(
 
 <img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
 
-- Copy all the dependencies from package.json into your project's package.js and install them
+- Copy all the dependencies from package.json into your project's package.json and install them
 
 <img align="center" width="auto" height="auto"  src="./Screenshots/package-dependencies.png" />
 
