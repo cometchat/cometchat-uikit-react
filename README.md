@@ -121,18 +121,18 @@ We suggest calling the `init()` method on app startup, preferably in the `index.
 const appID = "APP_ID";
 const region = "REGION";
 const appSetting = new CometChat.AppSettingsBuilder()
-  .subscribePresenceForAllUsers()
-  .setRegion(region)
-  .build();
+	.subscribePresenceForAllUsers()
+	.setRegion(region)
+	.build();
 CometChat.init(appID, appSetting).then(
-  () => {
-    console.log("Initialization completed successfully");
-    // You can now call login function.
-  },
-  error => {
-    console.log("Initialization failed with error:", error);
-    // Check the reason for error and take appropriate action.
-  }
+	() => {
+		console.log("Initialization completed successfully");
+		// You can now call login function.
+	},
+	(error) => {
+		console.log("Initialization failed with error:", error);
+		// Check the reason for error and take appropriate action.
+	}
 );
 ```
 
@@ -149,12 +149,12 @@ const authKey = "AUTH_KEY";
 const uid = "SUPERHERO1";
 
 CometChat.login(uid, authKey).then(
-  user => {
-    console.log("Login Successful:", { user });
-  },
-  error => {
-    console.log("Login failed with exception:", { error });
-  }
+	(user) => {
+		console.log("Login Successful:", { user });
+	},
+	(error) => {
+		console.log("Login failed with exception:", { error });
+	}
 );
 ```
 
@@ -173,7 +173,7 @@ CometChat.login(uid, authKey).then(
 
 <img align="center" width="auto" height="auto" src="./Screenshots/add-ui-kit.png">
 
-- Copy all the dependencies from package.json into your project's package.json and install them
+- Copy all the dependencies from package.json into your project's package.js and install them
 
 <img align="center" width="auto" height="auto"  src="./Screenshots/package-dependencies.png" />
 
@@ -192,13 +192,13 @@ Using the **CometChatUI** component, you can launch a fully functional chat appl
 import { CometChatUI } from "./CometChatWorkspace/src";
 
 class App extends React.Component {
-  render() {
-    return (
-      <div style={{ width: "800px", height: "800px" }}>
-        <CometChatUI />
-      </div>
-    );
-  }
+	render() {
+		return (
+			<div style={{ width: "800px", height: "800px" }}>
+				<CometChatUI />
+			</div>
+		);
+	}
 }
 ```
 
