@@ -125,7 +125,7 @@ export const iconStyle = (img) => {
 		justifyContent: "center",
 		alignItems: "center",
 		i: {
-			mask: `url(${img}) center center no-repeat`,
+			WebkitMask: `url(${img}) center center no-repeat`,
 			backgroundColor: `white`,
 			display: "inline-block",
 			width: "24px",

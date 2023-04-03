@@ -700,7 +700,7 @@ class CometChatMessageList extends React.PureComponent {
 		const clientHeight = e.currentTarget.clientHeight;
 
 		this.lastScrollTop = scrollHeight - scrollTop;
-		
+
 		if (this.lastScrollTop - clientHeight <= 1) {
 			this.props.actionGenerated(enums.ACTIONS["CLEAR_UNREAD_MESSAGES"]);
 		}
@@ -794,7 +794,7 @@ class CometChatMessageList extends React.PureComponent {
 					) : null;
 					break;
 				case CometChat.MESSAGE_TYPE.IMAGE:
-					component = message.data.url ? (
+					component = message.data.attachments ? (
 						<CometChatReceiverImageMessageBubble
 							key={messageKey}
 							message={message}
@@ -812,7 +812,7 @@ class CometChatMessageList extends React.PureComponent {
 					) : null;
 					break;
 				case CometChat.MESSAGE_TYPE.AUDIO:
-					component = message.data.url ? (
+					component = message.data.attachments ? (
 						<CometChatReceiverAudioMessageBubble
 							key={messageKey}
 							message={message}
@@ -821,7 +821,7 @@ class CometChatMessageList extends React.PureComponent {
 					) : null;
 					break;
 				case CometChat.MESSAGE_TYPE.VIDEO:
-					component = message.data.url ? (
+					component = message.data.attachments ? (
 						<CometChatReceiverVideoMessageBubble
 							key={messageKey}
 							message={message}
