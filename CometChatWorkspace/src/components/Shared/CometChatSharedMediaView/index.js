@@ -157,7 +157,7 @@ class CometChatSharedMediaView extends React.Component {
 
 	render() {
 		const template = (message, key) => {
-			if (this.state.messagetype === "image" && message.data.url) {
+			if (this.state.messagetype === "image" && message?.data?.attachments) {
 				return (
 					<div
 						id={message.id}
@@ -166,12 +166,12 @@ class CometChatSharedMediaView extends React.Component {
 						className='item item__image'
 					>
 						<img
-							src={message.data.url}
+							src={message.data.attachments[0].url}
 							alt={Translator.translate("SHARED_MEDIA", this.props.lang)}
 						/>
 					</div>
 				);
-			} else if (this.state.messagetype === "video" && message.data.url) {
+			} else if (this.state.messagetype === "video" && message?.data?.attachments) {
 				return (
 					<div
 						id={message.id}
@@ -179,7 +179,7 @@ class CometChatSharedMediaView extends React.Component {
 						css={itemStyle(this.state, this.props, fileIcon, this.context)}
 						className='item item__video'
 					>
-						<video src={message.data.url} />
+						<video src={message.data.attachments[0].url} />
 					</div>
 				);
 			} else if (

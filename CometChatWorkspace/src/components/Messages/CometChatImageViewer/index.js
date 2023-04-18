@@ -17,7 +17,7 @@ const CometChatImageViewer = (props) => {
 	const [image, setImage] = React.useState(null);
 
 	let img = new Image();
-	img.src = props.message.data.url;
+	img.src = props.message?.data?.attachments[0].url;
 
 	img.onload = () => {
 		setImage(img.src);
