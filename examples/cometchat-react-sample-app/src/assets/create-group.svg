@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 24 13" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
+    <title>group_add</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Rounded" transform="translate(-576.000000, -4103.000000)">
+            <g id="Social" transform="translate(100.000000, 4044.000000)">
+                <g id="-Round-/-Social-/-group_add" transform="translate(476.000000, 54.000000)">
+                    <g>
+                        <polygon id="Path" points="0 0 24 0 24 24 0 24"></polygon>
+                        <path d="M7,10 L5,10 L5,8 C5,7.45 4.55,7 4,7 C3.45,7 3,7.45 3,8 L3,10 L1,10 C0.45,10 0,10.45 0,11 C0,11.55 0.45,12 1,12 L3,12 L3,14 C3,14.55 3.45,15 4,15 C4.55,15 5,14.55 5,14 L5,12 L7,12 C7.55,12 8,11.55 8,11 C8,10.45 7.55,10 7,10 Z M18,11 C19.66,11 20.99,9.66 20.99,8 C20.99,6.34 19.66,5 18,5 C17.68,5 17.37,5.05 17.09,5.14 C17.66,5.95 17.99,6.93 17.99,8 C17.99,9.07 17.65,10.04 17.09,10.86 C17.37,10.95 17.68,11 18,11 Z M13,11 C14.66,11 15.99,9.66 15.99,8 C15.99,6.34 14.66,5 13,5 C11.34,5 10,6.34 10,8 C10,9.66 11.34,11 13,11 Z M13,13 C11,13 7,14 7,16 L7,17 C7,17.55 7.45,18 8,18 L18,18 C18.55,18 19,17.55 19,17 L19,16 C19,14 15,13 13,13 Z M19.62,13.16 C20.45,13.89 21,14.82 21,16 L21,17.5 C21,17.67 20.98,17.84 20.95,18 L23.5,18 C23.78,18 24,17.78 24,17.5 L24,16 C24,14.46 21.63,13.51 19.62,13.16 Z" id="🔹-Icon-Color" fill="#1D1D1D"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

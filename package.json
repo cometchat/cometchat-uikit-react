@@ -1,43 +1,72 @@
 {
-	"name": "@cometchat-pro/react-ui-kit",
-	"version": "3.0.10-pluto.beta.1.4",
-	"description": "CometChat UI Kit for React App",
-	"author": "CometChatTeam",
-	"peerDependencies": {
-		"@babel/core": "^7.17.0",
-		"@babel/preset-env": "^7.16.11",
-		"@babel/preset-react": "^7.16.7",
-		"babel-loader": "^8.2.3",
-		"@cometchat-pro/chat": "^3.0.10"
-	},
-	"devDependencies": {
-		"@babel/cli": "^7.17.0",
-		"@babel/plugin-transform-runtime": "^7.17.0",
-		"webpack": "^5.68.0",
-		"webpack-cli": "^4.9.2",
-		"webpack-dev-server": "^4.7.4",
-		"@storybook/addon-actions": "^6.4.9",
-		"@storybook/addon-essentials": "^6.4.9",
-		"@storybook/addon-links": "^6.4.9",
-		"@storybook/node-logger": "^6.4.9",
-		"@storybook/preset-create-react-app": "^3.2.0",
-		"@storybook/react": "^6.4.9"
-	},
-	"main": "dist/index.js",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"build": "rm -rf dist && NODE_ENV=production babel src/components --out-dir dist --copy-files",
-		"prepublish": "npm run build",
-		"storybook": "start-storybook -p 6006",
-		"build-storybook": "build-storybook"
-	},
-	"keywords": [
-		"react",
-		"uikit",
-		"reactuikit",
-		"cometchat",
-		"cometchatuikit",
-		"cometchatavatar"
-	],
-	"license": "MIT"
+  "name": "@cometchat-pro/react-ui-kit",
+  "version": "3.0.12-pluto.beta.2",
+  "description": "CometChat UI Kit for React App",
+  "author": "CometChatTeam",
+  "peerDependencies": {
+    "@cometchat-pro/chat": "^3.0.12",
+    "my-cstom-package-lit": "^3.4.19",
+    "uikit-resources-lerna": "^3.4.35",
+    "uikit-utils-lerna": "^3.4.35",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.17.0",
+    "@babel/core": "^7.17.0",
+    "@babel/plugin-transform-runtime": "^7.17.0",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-react": "^7.16.7",
+    "@cometchat-pro/chat": "^3.0.12",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-image": "^3.0.2",
+    "@rollup/plugin-node-resolve": "^15.0.2",
+    "@rollup/plugin-typescript": "^11.1.1",
+    "@rollup/plugin-url": "^8.0.1",
+    "@types/react": "^18.2.7",
+    "@types/react-dom": "^18.2.4",
+    "babel-loader": "^8.2.3",
+    "my-cstom-package-lit": "^3.4.38",
+    "rollup": "^3.23.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-dts": "^5.3.0",
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "rollup-plugin-terser": "^7.0.2",
+    "tslib": "^2.5.2",
+    "typescript": "^5.0.4",
+    "uikit-resources-lerna": "^3.4.41",
+    "uikit-utils-lerna": "^3.4.40",
+    "webpack": "^5.68.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.7.4"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup -c --bundleConfigAsCjs"
+  },
+  "keywords": [
+    "react",
+    "uikit",
+    "reactuikit",
+    "cometchat",
+    "cometchatuikit",
+    "cometchatavatar"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@lit-labs/react": "^1.1.1"
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cometchat-pro/cometchat-pro-react-ui-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/issues"
+  },
+  "homepage": "https://github.com/cometchat-pro/cometchat-pro-react-ui-kit#readme"
 }

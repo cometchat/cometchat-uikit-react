@@ -1,78 +1,46 @@
-<div style="width:100%">
-    <div style="width:50%;">
-        <div align="center">
-       <a> <img align="center" width="180" height="180" alt="CometChat" src="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master/Screenshots/logo.png?raw=true"> </a>  
-        </div>    
-    </div>    
-</div>
+# Getting Started with Create React App
 
-</br></br>
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-# Javascript React Chat App
+## Available Scripts
 
-[![Platform](https://img.shields.io/badge/Platform-Javascript-brightgreen)](#)
-![Twitter Follow](https://img.shields.io/twitter/follow/cometchat?style=social)
-</br></br>
+In the project directory, you can run:
 
-<div style="width:100%">
-    <div style="width:50%; display:inline-block">
-        <div align="center">
-          <img align="left" alt="Main" src="https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/blob/master/Screenshots/main.png?raw=true">    
-        </div>    
-    </div>    
-</div>
+### `npm start`
 
-</br></br>
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-Javascript React Chat App (built using **CometChat UI Kit**) is a fully functional real-time messaging app capable of private (one-on-one), group messaging, voice & video calling.
+The page will reload if you make edits.\
+You will also see any lint errors in the console.
 
-## Features
+### `npm test`
 
-- Login
-- Private(1-1) & Group Conversations
-- Typing Indicators
-- Text, Media and Custom messages
-- Read receipts
-- Online Presence Indicators
-- Message History
-- Users & Friends List
-- Groups List
-- Search by users and groups
-- Conversations List
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-## Extensions
+### `npm run build`
 
-[Thumbnail Generation](https://prodocs.cometchat.com/docs/extensions-thumbnail-generation) | [Link Preview](https://prodocs.cometchat.com/docs/extensions-link-preview)  | [Smart Reply](https://prodocs.cometchat.com/docs/extensions-smart-reply) | [Polls](https://prodocs.cometchat.com/docs/extensions-polls) | [Reactions](https://prodocs.cometchat.com/docs/extensions-reactions) | [Stickers](https://prodocs.cometchat.com/docs/extensions-stickers)
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-<hr/>
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-## Prerequisite
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-1. To run this app, you must have the **Node Package Manager (NPM)** already installed and setup . 
+### `npm run eject`
 
-2. To run this app, you must create an account with CometChat . If you don't have an account, you can create one from <a href="https://app.cometchat.com/" target="_blank">CometChat Dashboard</a>.
+**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
-3. Create a new App in your cometchat account and obtain your `App ID`, `Auth Key` and `Region`.
+If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-## Usage
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
 
-1. [Clone this repo](https://github.com/cometchat-pro/cometchat-pro-react-ui-kit/tree/pluto) and navigate to **examples/cometchat-react-sample-app** folder.
-2. Navigate to the cometchat-react-chat-app/src directory and replace APP_ID, REGION and AUTH_KEY with your CometChat App ID, Region and Auth Key in consts.js file
+You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
 
-```javascript
-    npm install
-    npm start
-```
----
+## Learn More
 
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-
-# Troubleshooting
-
-- To read the full documentation on UI Kit integration visit our [Documentation](https://www.cometchat.com/docs/react-uikit-beta/overview).
-
-- Facing any issues while integrating or installing the UI Kit please connect with us via real time support present in <a href="https://app.cometchat.com/"> CometChat Dashboard.</a>
-
-# Contact 📪
-
-Contact us via real time support present in [CometChat Dashboard](https://app.cometchat.com/).
+To learn React, check out the [React documentation](https://reactjs.org/).
