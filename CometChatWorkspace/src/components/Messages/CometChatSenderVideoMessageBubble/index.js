@@ -3,7 +3,7 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from "@emotion/react";
 import PropTypes from "prop-types";
-
+import { theme } from "../../../resources/theme";
 import {
 	CometChatMessageActions,
 	CometChatThreadedMessageReplyCount,
@@ -16,7 +16,7 @@ import {
 	getMessageFileMetadata,
 } from "../../../util/common";
 import * as enums from "../../../util/enums.js";
-
+import placeholderImage from "./resources/image_placeholder.png";
 import {
 	messageContainerStyle,
 	messageWrapperStyle,
@@ -28,16 +28,22 @@ import {
 class CometChatSenderVideoMessageBubble extends React.Component {
 	constructor(props) {
 		super(props);
-
+		this._isMounted = false;
 		this.state = {
 			isHovering: false,
 			fileData: {},
+			thumbnailURL:placeholderImage
 		};
 	}
 
 	componentDidMount() {
+		this._isMounted = true;
 		const fileData = this.getFileData();
+		this.setImage();
 		this.setState({ fileData: fileData });
+	}
+	componentWillUnmount(){
+		this._isMounted = false;
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
@@ -47,7 +53,8 @@ class CometChatSenderVideoMessageBubble extends React.Component {
 		if (
 			currentMessageStr !== nextMessageStr ||
 			this.state.isHovering !== nextState.isHovering ||
-			this.state.fileData !== nextState.fileData
+			this.state.fileData !== nextState.fileData ||
+			this.state.thumbnailURL !== nextState.thumbnailURL
 		) {
 			return true;
 		}
@@ -59,6 +66,7 @@ class CometChatSenderVideoMessageBubble extends React.Component {
 		const currentMessageStr = JSON.stringify(this.props.message);
 
 		if (previousMessageStr !== currentMessageStr) {
+			this.setImage();
 			const fileData = this.getFileData();
 
 			const previousfileData = JSON.stringify(this.state.fileData);
@@ -69,7 +77,89 @@ class CometChatSenderVideoMessageBubble extends React.Component {
 			}
 		}
 	}
+	setImage = () => {
 
+		const thumbnailGenerationData = checkMessageForExtensionsData(
+			this.props.message,
+			"thumbnail-generation"
+		);
+		if (thumbnailGenerationData) {
+			const mq = window.matchMedia(this.props.theme.breakPoints[0]);
+
+			mq.addListener(() => {
+				const imageToDownload = this.chooseImage(thumbnailGenerationData);
+
+				let img = new Image();
+				img.src = imageToDownload;
+				img.onload = () => {
+					if (this._isMounted && this.state.thumbnailURL !== img.src) {
+						this.setState({ thumbnailURL: img.src });
+					}
+				};
+			});
+
+			const imageToDownload = this.chooseImage(thumbnailGenerationData);
+			this.downloadImage(imageToDownload)
+				.then((response) => {
+					let img = new Image();
+					img.src = imageToDownload;
+					img.onload = () => {
+						if (this._isMounted && this.state.thumbnailURL !== img.src) {
+							this.setState({ thumbnailURL: img.src });
+						}
+					};
+				})
+				.catch((error) => console.error(error));
+		}
+	};
+	chooseImage = (thumbnailGenerationObject) => {
+		const smallUrl = thumbnailGenerationObject["url_small"];
+		const mediumUrl = thumbnailGenerationObject["url_medium"];
+
+		const mq = window.matchMedia(this.props.theme.breakPoints[0]);
+
+		let imageToDownload = mediumUrl;
+		if (mq.matches) {
+			imageToDownload = smallUrl;
+		}
+
+		return imageToDownload;
+	};
+
+
+
+	downloadImage(imgUrl) {
+		const promise = new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open("GET", imgUrl, true);
+			xhr.responseType = "blob";
+
+			xhr.onload = () => {
+				if (xhr.readyState === 4) {
+					if (xhr.status === 200) {
+						this.timer = null;
+						resolve(imgUrl);
+					} else if (xhr.status === 403) {
+						this.timer = setTimeout(() => {
+							this.downloadImage(imgUrl)
+								.then((response) => resolve(imgUrl))
+								.catch((error) => reject(error));
+						}, 800);
+					}
+				} else {
+					reject(xhr.statusText);
+				}
+			};
+
+			xhr.onerror = (event) =>
+				reject(new Error("There was a network error.", event));
+			xhr.ontimeout = (event) =>
+				reject(new Error("There was a timeout error.", event));
+			xhr.send();
+		});
+
+		return promise;
+	}
 	getFileData = () => {
 		const metadataKey = enums.CONSTANTS["FILE_METADATA"];
 		const fileMetadata = getMessageFileMetadata(
@@ -136,7 +226,6 @@ class CometChatSenderVideoMessageBubble extends React.Component {
 				/>
 			);
 		}
-
 		return (
 			<div
 				css={messageContainerStyle()}
@@ -151,7 +240,9 @@ class CometChatSenderVideoMessageBubble extends React.Component {
 						css={messageVideoWrapperStyle()}
 						className='message__video__wrapper'
 					>
-						<video controls src={this.state.fileData?.fileUrl}></video>
+						<video controls src={this.state.fileData?.fileUrl} poster={this.state?.thumbnailURL}>
+								</video>
+
 					</div>
 				</div>
 
@@ -171,10 +262,12 @@ class CometChatSenderVideoMessageBubble extends React.Component {
 
 // Specifies the default values for props:
 CometChatSenderVideoMessageBubble.defaultProps = {
+	theme: theme,
 	actionGenerated: () => {},
 };
 
 CometChatSenderVideoMessageBubble.propTypes = {
+	theme: PropTypes.object,
 	actionGenerated: PropTypes.func.isRequired,
 	message: PropTypes.object.isRequired,
 };

@@ -381,6 +381,7 @@ class CometChatIncomingCall extends React.PureComponent {
 					call={this.state.callInProgress}
 					lang={this.props.lang}
 					actionGenerated={this.actionHandler}
+					widgetsettings={this.props.widgetsettings}
 				/>
 			);
 		}
@@ -398,11 +399,13 @@ class CometChatIncomingCall extends React.PureComponent {
 CometChatIncomingCall.defaultProps = {
 	lang: Translator.getDefaultLanguage(),
 	theme: theme,
+	widgetsettings: {}
 };
 
 CometChatIncomingCall.propTypes = {
 	lang: PropTypes.string,
 	theme: PropTypes.object,
+	widgetsettings: PropTypes.object,
 };
 
 export { CometChatIncomingCall };

@@ -9,7 +9,6 @@ import { CometChat } from "@cometchat-pro/chat";
 import { CometChatContext } from "../../../util/CometChatContext";
 import { Storage } from "../../../util/Storage";
 import * as enums from "../../../util/enums.js";
-
 import { theme } from "../../../resources/theme";
 import Translator from "../../../resources/localization/translator";
 import { LocalizedString } from "./strings";
@@ -356,7 +355,7 @@ class CometChatCallScreen extends React.PureComponent {
 		const customCSS = this.context.UIKitSettings.customCSS;
 		const showRecordingButton =
 			this.context.UIKitSettings.showCallRecordingOption;
-
+        const switchToVideoCall = this.props.widgetsettings && this.props.widgetsettings['main'] && this.props.widgetsettings['main']['enable_video_calling'] === true ? true : false
 		const callSettings = new CometChat.CallSettingsBuilder()
 			.setSessionID(sessionId)
 			.enableDefaultLayout(true)
@@ -364,6 +363,7 @@ class CometChatCallScreen extends React.PureComponent {
 			.setIsAudioOnlyCall(callType)
 			.showRecordingButton(showRecordingButton)
 			.setCustomCSS(customCSS)
+			.showSwitchToVideoCallButton(switchToVideoCall)
 			.setLocalizedStringObject(LocalizedString(this.props.lang))
 			.build();
 
@@ -508,6 +508,7 @@ CometChatCallScreen.defaultProps = {
 	maxWidth: "100%",
 	maxHeight: "100%",
 	style: {},
+	widgetsettings: {}
 };
 
 CometChatCallScreen.propTypes = {
@@ -518,6 +519,7 @@ CometChatCallScreen.propTypes = {
 	maxWidth: PropTypes.string,
 	maxHeight: PropTypes.string,
 	style: PropTypes.object,
+	widgetsettings: PropTypes.object,
 };
 
 export { CometChatCallScreen };
