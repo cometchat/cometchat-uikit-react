@@ -380,18 +380,18 @@ class CometChatMessageComposer extends React.PureComponent {
 			  } catch (error) {
 				console.log("Error updating selection", error);
 			  }
-			
+
 		  }
 
 	 /**
      * Pastes given html at caret position
      */
 	  pasteHtmlAtCaret(html) {
-		  
+
 		try {
 		  if (this.sel && this.range) {
 			this.range.deleteContents();
-  
+
 			let el = document.createElement("div");
 			el.innerHTML = html;
 			let frag = document.createDocumentFragment(),
@@ -401,7 +401,7 @@ class CometChatMessageComposer extends React.PureComponent {
 			  lastNode = frag.appendChild(node);
 			}
 			this.range.insertNode(frag);
-  
+
 			if (lastNode) {
 				this.range = this.range.cloneRange();
 				this.range.setStartAfter(lastNode);
@@ -471,14 +471,41 @@ class CometChatMessageComposer extends React.PureComponent {
 				break;
 		}
 	};
+// check file type when uploading an attachment
+checkFileType = (event) => {
+	const files = event.target.files;
+	if (files && files.length > 0) {
+	  const file = files[0];
+	  const fileType = file.type.split('/')[0];
 
-	onImageChange = (e) => {
-		if (!this.imageUploaderRef.current.files["0"]) {
-			return false;
-		}
-
-		const uploadedFile = this.imageUploaderRef.current.files["0"];
-
+	  switch (fileType) {
+		case 'image':
+		  this.onImageChange(file);
+		  break;
+		case 'audio':
+		  this.onAudioChange(file);
+		  break;
+		case 'video':
+		  this.onVideoChange(file);
+		  break;
+		default:
+		  this.onFileChange(file);
+		  break;
+	  }
+	} else {
+	  return;
+	}
+  }
+  uploadFile = (event) => {
+	const files = event.target.files;
+	if (files && files.length > 0) {
+	  const file = files[0];
+	  this.onFileChange(file);
+	} else {
+	  return;
+	}
+  }
+	onImageChange = (uploadedFile) => {
 		var reader = new FileReader(); // Creating reader instance from FileReader() API
 		reader.addEventListener(
 			"load",
@@ -498,13 +525,7 @@ class CometChatMessageComposer extends React.PureComponent {
 		reader.readAsArrayBuffer(uploadedFile);
 	};
 
-	onFileChange = (e) => {
-		if (!this.fileUploaderRef.current.files["0"]) {
-			return false;
-		}
-
-		const uploadedFile = this.fileUploaderRef.current.files["0"];
-
+	onFileChange = (uploadedFile) => {
 		var reader = new FileReader(); // Creating reader instance from FileReader() API
 		reader.addEventListener(
 			"load",
@@ -524,13 +545,7 @@ class CometChatMessageComposer extends React.PureComponent {
 		reader.readAsArrayBuffer(uploadedFile);
 	};
 
-	onAudioChange = (e) => {
-		if (!this.audioUploaderRef.current.files["0"]) {
-			return false;
-		}
-
-		const uploadedFile = this.audioUploaderRef.current.files["0"];
-
+	onAudioChange = (uploadedFile) => {
 		var reader = new FileReader(); // Creating reader instance from FileReader() API
 		reader.addEventListener(
 			"load",
@@ -550,13 +565,7 @@ class CometChatMessageComposer extends React.PureComponent {
 		reader.readAsArrayBuffer(uploadedFile);
 	};
 
-	onVideoChange = (e) => {
-		if (!this.videoUploaderRef.current.files["0"]) {
-			return false;
-		}
-
-		const uploadedFile = this.videoUploaderRef.current.files["0"];
-
+	onVideoChange = (uploadedFile) => {
 		var reader = new FileReader(); // Creating reader instance from FileReader() API
 		reader.addEventListener(
 			"load",
@@ -1202,7 +1211,7 @@ class CometChatMessageComposer extends React.PureComponent {
 			>
 				<i></i>
 				<input
-					onChange={this.onFileChange}
+					onChange={this.uploadFile}
 					type='file'
 					id='file'
 					ref={this.fileUploaderRef}
@@ -1234,7 +1243,7 @@ class CometChatMessageComposer extends React.PureComponent {
 				>
 					<i></i>
 					<input
-						onChange={this.onVideoChange}
+						onChange={this.checkFileType}
 						accept='video/*'
 						type='file'
 						ref={this.videoUploaderRef}
@@ -1250,7 +1259,7 @@ class CometChatMessageComposer extends React.PureComponent {
 				>
 					<i></i>
 					<input
-						onChange={this.onAudioChange}
+						onChange={this.checkFileType}
 						accept='audio/*'
 						type='file'
 						ref={this.audioUploaderRef}
@@ -1266,7 +1275,7 @@ class CometChatMessageComposer extends React.PureComponent {
 				>
 					<i></i>
 					<input
-						onChange={this.onImageChange}
+						onChange={this.checkFileType}
 						accept='image/*'
 						type='file'
 						ref={this.imageUploaderRef}
