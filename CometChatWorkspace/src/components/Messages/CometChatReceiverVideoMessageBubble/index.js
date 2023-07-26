@@ -15,7 +15,7 @@ import { CometChatAvatar } from "../../Shared";
 
 import { CometChatContext } from "../../../util/CometChatContext";
 import { checkMessageForExtensionsData } from "../../../util/common";
-
+import placeholderImage from "./resources/image_placeholder.png";
 import { theme } from "../../../resources/theme";
 
 import {
@@ -36,10 +36,19 @@ class CometChatReceiverVideoMessageBubble extends React.Component {
 
 	constructor(props) {
 		super(props);
+		this._isMounted = false;
 
 		this.state = {
 			isHovering: false,
+			thumbnailURL: placeholderImage
 		};
+	}
+	componentDidMount() {
+		this._isMounted = true;
+		this.setImage();
+	}
+	componentWillUnmount(){
+		this._isMounted = false;
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
@@ -48,11 +57,94 @@ class CometChatReceiverVideoMessageBubble extends React.Component {
 
 		if (
 			currentMessageStr !== nextMessageStr ||
-			this.state.isHovering !== nextState.isHovering
+			this.state.isHovering !== nextState.isHovering ||
+			this.state.thumbnailURL !== nextState.thumbnailURL
 		) {
 			return true;
 		}
 		return false;
+	}
+	setImage = () => {
+		const thumbnailGenerationData = checkMessageForExtensionsData(
+			this.props.message,
+			"thumbnail-generation"
+		);
+		if (thumbnailGenerationData) {
+			const mq = window.matchMedia(this.props.theme.breakPoints[0]);
+
+			mq.addListener(() => {
+				const imageToDownload = this.chooseImage(thumbnailGenerationData);
+
+				let img = new Image();
+				img.src = imageToDownload;
+				img.onload = () => {
+					if (this._isMounted && this.state.thumbnailURL !== img.src) {
+						this.setState({ thumbnailURL: img.src });
+					}
+				};
+			});
+
+			const imageToDownload = this.chooseImage(thumbnailGenerationData);
+			this.downloadImage(imageToDownload)
+				.then((response) => {
+					let img = new Image();
+					img.src = imageToDownload;
+					img.onload = () => {
+						if (this._isMounted && this.state.thumbnailURL !== img.src) {
+							this.setState({ thumbnailURL: img.src });
+						}
+					};
+				})
+				.catch((error) => console.error(error));
+		}
+	};
+	chooseImage = (thumbnailGenerationObject) => {
+		const smallUrl = thumbnailGenerationObject["url_small"];
+		const mediumUrl = thumbnailGenerationObject["url_medium"];
+
+		const mq = window.matchMedia(this.props.theme.breakPoints[0]);
+
+		let imageToDownload = mediumUrl;
+		if (mq.matches) {
+			imageToDownload = smallUrl;
+		}
+
+		return imageToDownload;
+	};
+
+
+
+	downloadImage(imgUrl) {
+		const promise = new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open("GET", imgUrl, true);
+			xhr.responseType = "blob";
+
+			xhr.onload = () => {
+				if (xhr.readyState === 4) {
+					if (xhr.status === 200) {
+						this.timer = null;
+						resolve(imgUrl);
+					} else if (xhr.status === 403) {
+						this.timer = setTimeout(() => {
+							this.downloadImage(imgUrl)
+								.then((response) => resolve(imgUrl))
+								.catch((error) => reject(error));
+						}, 800);
+					}
+				} else {
+					reject(xhr.statusText);
+				}
+			};
+
+			xhr.onerror = (event) =>
+				reject(new Error("There was a network error.", event));
+			xhr.ontimeout = (event) =>
+				reject(new Error("There was a timeout error.", event));
+			xhr.send();
+		});
+
+		return promise;
 	}
 
 	handleMouseHover = () => {
@@ -135,7 +227,7 @@ class CometChatReceiverVideoMessageBubble extends React.Component {
 								css={messageVideoWrapperStyle()}
 								className='message__video__wrapper'
 							>
-								<video controls>
+								<video controls poster={this.state?.thumbnailURL}>
 									<source src={this.props.message.data.attachments[0].url} />
 								</video>
 							</div>

@@ -13,7 +13,6 @@ import { CometChatAvatar } from "../../Shared";
 import { CometChatContext } from "../../../util/CometChatContext";
 import * as enums from "../../../util/enums.js";
 import { SoundManager } from "../../../util/SoundManager";
-
 import Translator from "../../../resources/localization/translator";
 import { theme } from "../../../resources/theme";
 
@@ -253,6 +252,7 @@ class CometChatOutgoingCall extends React.PureComponent {
 						call={this.state.callInProgress}
 						lang={this.props.lang}
 						actionGenerated={this.actionHandler}
+						widgetsettings={this.props.widgetsettings}
 					/>
 				);
 			}
@@ -265,11 +265,13 @@ class CometChatOutgoingCall extends React.PureComponent {
 CometChatOutgoingCall.defaultProps = {
 	lang: Translator.getDefaultLanguage(),
 	theme: theme,
+	widgetsettings: {}
 };
 
 CometChatOutgoingCall.propTypes = {
 	lang: PropTypes.string,
 	theme: PropTypes.object,
+	widgetsettings: PropTypes.object,
 };
 
 export { CometChatOutgoingCall };
