@@ -110,10 +110,10 @@ class CometChatMessageComposer extends React.PureComponent {
 					"SOMETHING_WRONG"
 				)
 			);
-		this.chatWindow =  this.context.UIKitSettings.chatWindow;
+		this.chatWindow = this.context.UIKitSettings.chatWindow;
 		this.item =
 			this.context.type === CometChat.ACTION_TYPE.TYPE_USER ||
-			this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP
+				this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP
 				? this.context.item
 				: null;
 		this.enableLiveReaction();
@@ -192,7 +192,7 @@ class CometChatMessageComposer extends React.PureComponent {
 
 		this.item =
 			this.context.type === CometChat.ACTION_TYPE.TYPE_USER ||
-			this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP
+				this.context.type === CometChat.ACTION_TYPE.TYPE_GROUP
 				? this.context.item
 				: null;
 		this.enableLiveReaction();
@@ -366,56 +366,56 @@ class CometChatMessageComposer extends React.PureComponent {
 		}
 	};
 
-	    /**
-     * Updates caret selection object
-     */
-		 updateSelection() {
-			try {
-				if (this.chatWindow.getSelection) {
-				  this.sel = this.chatWindow.getSelection();
-				  if (this.sel.getRangeAt && this.sel.rangeCount) {
+	/**
+ * Updates caret selection object
+ */
+	updateSelection() {
+		try {
+			if (this.chatWindow.getSelection) {
+				this.sel = this.chatWindow.getSelection();
+				if (this.sel.getRangeAt && this.sel.rangeCount) {
 					this.range = this.sel.getRangeAt(0);
-				  }
 				}
-			  } catch (error) {
-				console.log("Error updating selection", error);
-			  }
+			}
+		} catch (error) {
+			console.log("Error updating selection", error);
+		}
 
-		  }
+	}
 
-	 /**
-     * Pastes given html at caret position
-     */
-	  pasteHtmlAtCaret(html) {
+	/**
+	* Pastes given html at caret position
+	*/
+	pasteHtmlAtCaret(html) {
 
 		try {
-		  if (this.sel && this.range) {
-			this.range.deleteContents();
+			if (this.sel && this.range) {
+				this.range.deleteContents();
 
-			let el = document.createElement("div");
-			el.innerHTML = html;
-			let frag = document.createDocumentFragment(),
-			  node,
-			  lastNode;
-			while ((node = el.firstChild)) {
-			  lastNode = frag.appendChild(node);
-			}
-			this.range.insertNode(frag);
+				let el = document.createElement("div");
+				el.innerHTML = html;
+				let frag = document.createDocumentFragment(),
+					node,
+					lastNode;
+				while ((node = el.firstChild)) {
+					lastNode = frag.appendChild(node);
+				}
+				this.range.insertNode(frag);
 
-			if (lastNode) {
-				this.range = this.range.cloneRange();
-				this.range.setStartAfter(lastNode);
-				this.range.collapse(true);
-				this.sel.removeAllRanges();
-				this.sel.addRange(this.range);
+				if (lastNode) {
+					this.range = this.range.cloneRange();
+					this.range.setStartAfter(lastNode);
+					this.range.collapse(true);
+					this.sel.removeAllRanges();
+					this.sel.addRange(this.range);
+				}
+			} else if (document.selection && document.selection.type != "Control") {
+				document.selection.createRange().pasteHTML(html);
 			}
-		  } else if (document.selection && document.selection.type != "Control") {
-			document.selection.createRange().pasteHTML(html);
-		  }
 		} catch (error) {
-		  console.log("Error pasting html to caret", error);
+			console.log("Error pasting html to caret", error);
 		}
-	  }
+	}
 
 	emojiClicked = (emoji) => {
 		if (this.state.messageToReact) {
@@ -423,13 +423,13 @@ class CometChatMessageComposer extends React.PureComponent {
 			return;
 		}
 		const element = this.messageInputRef.current;
-		if(!this.sel && !this.range){
+		if (!this.sel && !this.range) {
 			//  focus when we open emoji keyboard for the first time
 			this.focusOnMessageComposer();
-			}
-			else{
-				element.focus();
-			}
+		}
+		else {
+			element.focus();
+		}
 		this.pasteHtmlAtCaret(emoji.char);
 		this.setState({ messageInput: element.innerText, messageType: "text" });
 	};
@@ -471,40 +471,40 @@ class CometChatMessageComposer extends React.PureComponent {
 				break;
 		}
 	};
-// check file type when uploading an attachment
-checkFileType = (event) => {
-	const files = event.target.files;
-	if (files && files.length > 0) {
-	  const file = files[0];
-	  const fileType = file.type.split('/')[0];
+	// check file type when uploading an attachment
+	checkFileType = (event) => {
+		const files = event.target.files;
+		if (files && files.length > 0) {
+			const file = files[0];
+			const fileType = file.type.split('/')[0];
 
-	  switch (fileType) {
-		case 'image':
-		  this.onImageChange(file);
-		  break;
-		case 'audio':
-		  this.onAudioChange(file);
-		  break;
-		case 'video':
-		  this.onVideoChange(file);
-		  break;
-		default:
-		  this.onFileChange(file);
-		  break;
-	  }
-	} else {
-	  return;
+			switch (fileType) {
+				case 'image':
+					this.onImageChange(file);
+					break;
+				case 'audio':
+					this.onAudioChange(file);
+					break;
+				case 'video':
+					this.onVideoChange(file);
+					break;
+				default:
+					this.onFileChange(file);
+					break;
+			}
+		} else {
+			return;
+		}
 	}
-  }
-  uploadFile = (event) => {
-	const files = event.target.files;
-	if (files && files.length > 0) {
-	  const file = files[0];
-	  this.onFileChange(file);
-	} else {
-	  return;
+	uploadFile = (event) => {
+		const files = event.target.files;
+		if (files && files.length > 0) {
+			const file = files[0];
+			this.onFileChange(file);
+		} else {
+			return;
+		}
 	}
-  }
 	onImageChange = (uploadedFile) => {
 		var reader = new FileReader(); // Creating reader instance from FileReader() API
 		reader.addEventListener(
@@ -599,8 +599,24 @@ checkFileType = (event) => {
 
 		return { receiverId: receiverId, receiverType: receiverType };
 	};
+	updateCursorOnMediaUpload() {
+		try {
+			let element = this.messageInputRef.current
+			element?.focus();
+			var range = document?.createRange();
+			range?.selectNodeContents(element);
+			range?.collapse(false); // collapse to the end
+			var selection = window.getSelection();
+			selection?.removeAllRanges();
+			selection?.addRange(range);
+		}
+		catch (err) {
+			console.log(err)
+		}
+	}
 
 	sendMediaMessage = (messageInput, messageType) => {
+		this.updateCursorOnMediaUpload();
 		this.toggleFilePicker();
 		this.endTyping(null, null);
 
@@ -1070,18 +1086,18 @@ checkFileType = (event) => {
 				if (reactionExtensionsData[emoji.char][this.loggedInUser.uid]) {
 					reactionObject = {
 						...messageObject["metadata"]["@injected"]["extensions"][
-							"reactions"
+						"reactions"
 						],
 					};
 					delete reactionObject[emoji.char][this.loggedInUser.uid];
 				} else {
 					reactionObject = {
 						...messageObject["metadata"]["@injected"]["extensions"][
-							"reactions"
+						"reactions"
 						],
 						[emoji.char]: {
 							...messageObject["metadata"]["@injected"]["extensions"][
-								"reactions"
+							"reactions"
 							][emoji.char],
 							[this.loggedInUser.uid]: userObject,
 						},
