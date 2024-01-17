@@ -19,6 +19,8 @@ import { CometChatAvatar } from "../../Shared";
 import { CometChatContext } from "../../../util/CometChatContext";
 import {
 	linkify,
+	isEmail,
+	isPhoneNumber,
 	checkMessageForExtensionsData,
 	countEmojiOccurences,
 } from "../../../util/common";
@@ -86,6 +88,13 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 
 	getMessageText = () => {
 		let messageText = this.props.message.text;
+		let hasDataMasking = false;
+
+		if (isEmail(messageText) || isPhoneNumber(messageText)) {
+			hasDataMasking = true;
+		} else {
+			hasDataMasking = false;
+		}
 
 		//xss extensions data
 		const xssData = checkMessageForExtensionsData(
@@ -98,9 +107,9 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 			xssData.hasOwnProperty("hasXSS") &&
 			xssData.hasXSS === "yes"
 		) {
+
 			messageText = xssData.sanitized_text;
 		}
-
 		//datamasking extensions data
 		const maskedData = checkMessageForExtensionsData(
 			this.props.message,
@@ -116,6 +125,7 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 			messageText = maskedData.data.message_masked;
 		}
 
+
 		//profanity extensions data
 		const profaneData = checkMessageForExtensionsData(
 			this.props.message,
@@ -129,23 +139,31 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 		) {
 			messageText = profaneData.message_clean;
 		}
+		// Check if link preview data exists
+		const linkPreviewData = checkMessageForExtensionsData(
+			this.props.message,
+			"link-preview"
+		);
+		const hasLinkPreview = linkPreviewData && linkPreviewData.hasOwnProperty("links") && linkPreviewData["links"].length;
 
-		const formattedText = linkify(messageText);
+		const formattedText = hasLinkPreview || hasDataMasking ? linkify(messageText) : messageText;
 
 		const emojiParsedMessage = twemoji.parse(formattedText, {
 			folder: "svg",
 			ext: ".svg",
 		});
-		// Checks Emoji Count
+		const hasTwemoji = emojiParsedMessage !== formattedText;
 
 		let count = countEmojiOccurences(emojiParsedMessage, 'class="emoji"');
-
-		const parsedMessage = parse(emojiParsedMessage);
 		let showVariation = true;
 		//if larger size emojis feature is disabled
 		if (this.state.enableLargerSizeEmojis === false) {
 			showVariation = false;
 		}
+
+		// If the message contains a twemoji or a link preview, parse the HTML,
+		// otherwise, use the original message text
+		const messageContent = (hasTwemoji || hasLinkPreview || hasDataMasking) ? parse(emojiParsedMessage) : emojiParsedMessage;
 
 		messageText = (
 			<div
@@ -156,7 +174,7 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 					css={messageTxtStyle(showVariation, count, this.context)}
 					className='message__txt'
 				>
-					{parsedMessage}
+					{messageContent}
 					{this.state.translatedMessage}
 				</p>
 			</div>
@@ -379,7 +397,7 @@ class CometChatReceiverTextMessageBubble extends React.Component {
 // Specifies the default values for props:
 CometChatReceiverTextMessageBubble.defaultProps = {
 	theme: theme,
-	actionGenerated: () => {},
+	actionGenerated: () => { },
 };
 
 CometChatReceiverTextMessageBubble.propTypes = {
