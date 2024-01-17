@@ -7,7 +7,15 @@ const seconds = 1 * milliseconds;
 const minute = 60 * seconds;
 const hour = 60 * minute;
 const day = 24 * hour;
+export const isEmail = (text) => {
+	const emailRegEx = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+	return emailRegEx.test(text);
+};
 
+export const isPhoneNumber = (text) => {
+	const phoneRegEx = /^(\+\d{1,3}[- ]?)?\d{10}$/;
+	return phoneRegEx.test(text);
+};
 const wordBoundary = {
 	start: `(?:^|:|;|'|"|,|{|}|\\.|\\s|\\!|\\?|\\(|\\)|\\[|\\]|\\*)`,
 	end: `(?=$|:|;|'|"|,|{|}|\\.|\\s|\\!|\\?|\\(|\\)|\\[|\\]|\\*)`,
@@ -15,20 +23,20 @@ const wordBoundary = {
 
 const emailPattern = new RegExp(
 	wordBoundary.start +
-		`[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}` +
-		wordBoundary.end,
+	`[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}` +
+	wordBoundary.end,
 	"gi"
 );
 const urlPattern = new RegExp(
 	wordBoundary.start +
-		`((https?://|www\\.|pic\\.)[-\\w;/?:@&=+$\\|\\_.!~*\\|'()\\[\\]%#,☺]+[\\w/#](\\(\\))?)` +
-		wordBoundary.end,
+	`((https?://|www\\.|pic\\.)[-\\w;/?:@&=+$\\|\\_.!~*\\|'()\\[\\]%#,☺]+[\\w/#](\\(\\))?)` +
+	wordBoundary.end,
 	"gi"
 );
 const phoneNumPattern = new RegExp(
 	wordBoundary.start +
-		`(?:\\+?(\\d{1,3}))?([-. (]*(\\d{3})[-. )]*)?((\\d{3})[-. ]*(\\d{2,4})(?:[-.x ]*(\\d+))?)` +
-		wordBoundary.end,
+	`(?:\\+?(\\d{1,3}))?([-. (]*(\\d{3})[-. )]*)?((\\d{3})[-. ]*(\\d{2,4})(?:[-.x ]*(\\d+))?)` +
+	wordBoundary.end,
 	"gi"
 );
 
