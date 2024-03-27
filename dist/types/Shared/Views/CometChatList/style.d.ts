@@ -1,0 +1,18 @@
+import { LabelStyle, LoaderStyle, SearchInputStyle } from "@cometchat/uikit-elements";
+import { CSSProperties } from "react";
+import { ListStyle } from "@cometchat/uikit-shared";
+import { TitleAlignment } from "@cometchat/uikit-resources";
+export declare function listWrapperStyle(listStyle: ListStyle | null): CSSProperties;
+export declare function headerStyle(emptyTitle: boolean): CSSProperties;
+export declare function titleStyle(listStyle: ListStyle | null, titleAlignment: TitleAlignment, emptyTitle?: Boolean): CSSProperties;
+export declare const searchStyle: CSSProperties;
+export declare function searchInputStyle(listStyle: ListStyle | null): SearchInputStyle;
+export declare function listItemContainerStyle(): CSSProperties;
+export declare function viewContainerStyle(): CSSProperties;
+export declare function defaultViewStyle(): CSSProperties;
+export declare function customViewStyle(): CSSProperties;
+export declare function loaderStyle(listStyle: ListStyle | null): LoaderStyle;
+export declare function sectionHeaderStyle(listStyle: ListStyle | null): CSSProperties;
+export declare function errorLabelStyle(listStyle: ListStyle | null): LabelStyle;
+export declare function emptyLabelStyle(listStyle: ListStyle | null): LabelStyle;
+export declare function intersectionObserverBottomTargetDivStyle(): CSSProperties;

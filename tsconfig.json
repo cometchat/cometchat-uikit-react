@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "jsx": "react-jsx",
+        "target": "es2020",
+        "module": "es2020",
+        "lib": ["es2022", "DOM", "DOM.Iterable"],
+        "declaration": true,
+        "declarationDir": "types",
+        "sourceMap": true,
+        "outDir": "dist",
+        "moduleResolution": "node",
+        "emitDeclarationOnly": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "useDefineForClassFields": false
+    },
+    "exclude": [
+        "dist",
+        "node_modules",
+        "src/**/*.test.tsx",
+        "src/**/*.stories.tsx",
+        "examples"
+    ]
+}

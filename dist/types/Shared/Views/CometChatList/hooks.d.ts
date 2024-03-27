@@ -1,0 +1,20 @@
+import React, { JSX } from "react";
+import { DivElementRef } from ".";
+type Args = {
+    onSearchRef: React.MutableRefObject<((searchStr: string) => void) | undefined>;
+    searchInputElement: JSX.IntrinsicElements["cometchat-search-input"] | null;
+    intersectionObserverRootRef: React.MutableRefObject<DivElementRef>;
+    intersectionObserverBottomTargetRef: React.MutableRefObject<DivElementRef>;
+    intersectionObserverTopTargetRef: React.MutableRefObject<DivElementRef>;
+    onScrolledToBottomRef: React.MutableRefObject<(() => void) | undefined>;
+    onScrolledToTopRef: React.MutableRefObject<(() => void) | undefined>;
+    timeoutIdRef: React.MutableRefObject<number | null>;
+    scrollToBottom: boolean;
+    didComponentScrollToBottomRef: React.MutableRefObject<boolean>;
+    scrollHeightTupleRef: React.MutableRefObject<[number, number]>;
+    didTopObserverCallbackRunRef: React.MutableRefObject<boolean>;
+    errorHandler: (error: unknown) => void;
+    scrolledUpCallback?: (boolean?: boolean) => void;
+};
+export declare function Hooks(args: Args): void;
+export {};

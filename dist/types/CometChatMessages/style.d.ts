@@ -1,0 +1,17 @@
+import { DetailsConfiguration, DetailsStyle, MessageComposerConfiguration, MessageComposerStyle, MessageHeaderConfiguration, MessageHeaderStyle, MessageListConfiguration, MessageListStyle, MessagesStyle } from "@cometchat/uikit-shared";
+import { CSSProperties } from "react";
+import { CometChatTheme } from "@cometchat/uikit-resources";
+export declare const MessagesWrapperStyle: (messagesStyle: MessagesStyle | undefined, theme: CometChatTheme) => CSSProperties;
+export declare const MessagesDivStyle: () => CSSProperties;
+export declare const ThreadedMessagesDivStyle: CSSProperties;
+export declare const MessagesDetailsDivStyle: CSSProperties;
+export declare const MessagesHeaderDivStyle: CSSProperties;
+export declare const MessagesListDivStyle: CSSProperties;
+export declare const CometChatThreadedMessagesDivStyle: CSSProperties;
+export declare const MessagesComposerDivStyle: (theme: CometChatTheme) => CSSProperties;
+export declare const liveReactionStyle: () => CSSProperties;
+export declare const getMessageHeaderStyle: (messageHeaderConfiguration: MessageHeaderConfiguration | undefined) => MessageHeaderStyle;
+export declare const getMessageListStyle: (messageListConfiguration: MessageListConfiguration | undefined) => MessageListStyle;
+export declare const getMessageComposerStyle: (messageComposerConfiguration: MessageComposerConfiguration | undefined) => MessageComposerStyle;
+export declare const getDetailsStyle: (detailsConfiguration: DetailsConfiguration | undefined, messagesStyle: MessagesStyle | undefined, theme: CometChatTheme) => DetailsStyle;
+export declare const panelDivStyle: CSSProperties;

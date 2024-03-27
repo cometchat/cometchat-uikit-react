@@ -1,0 +1,70 @@
+{
+  "name": "@cometchat/chat-uikit-react",
+  "version": "4.3.2",
+  "description": "CometChat UIKit for React App",
+  "author": "CometChatTeam",
+  "peerDependencies": {
+    "@cometchat/chat-sdk-javascript": "^4.0.4",
+    "@cometchat/uikit-elements": "~4.3.2",
+    "@cometchat/uikit-resources": "~4.3.1",
+    "@cometchat/uikit-shared": "~4.3.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.17.0",
+    "@babel/core": "^7.17.0",
+    "@babel/plugin-transform-runtime": "^7.17.0",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-react": "^7.16.7",
+    "@rollup/plugin-commonjs": "^25.0.5",
+    "@rollup/plugin-image": "^3.0.2",
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-typescript": "^11.1.1",
+    "@rollup/plugin-url": "^8.0.1",
+    "@types/react": "^18.2.7",
+    "@types/react-dom": "^18.2.4",
+    "babel-loader": "^8.2.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rollup": "^3.23.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-dts": "^5.3.0",
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "rollup-plugin-terser": "^7.0.2",
+    "tslib": "^2.5.2",
+    "typescript": "^5.0.4",
+    "webpack": "^5.68.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.7.4"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup -c --bundleConfigAsCjs"
+  },
+  "keywords": [
+    "CometChat",
+    "messaging",
+    "message",
+    "uikit",
+    "React",
+    "chat-uikit",
+    "uikit-react",
+    "react-uikit",
+    "chat-uikit-react",
+    "text",
+    "image",
+    "voice",
+    "audio",
+    "chat",
+    "video",
+    "ui components"
+  ],
+  "license": "SEE LICENSE IN LICENSE.md",
+  "dependencies": {
+    "@lit-labs/react": "^1.1.1"
+  },
+  "bugs": {
+    "url": "https://www.cometchat.com/contact-sales"
+  }
+}

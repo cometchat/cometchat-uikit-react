@@ -1,0 +1,24 @@
+import { AvatarStyle, BackdropStyle, ChangeScopeStyle, LabelStyle, ListItemStyle, MenuListStyle } from "@cometchat/uikit-elements";
+import { CSSProperties } from "react";
+import { CometChatTheme } from "@cometchat/uikit-resources";
+import { GroupMembersStyle, ListStyle } from "@cometchat/uikit-shared";
+type ButtonStyle = CSSProperties & {
+    buttonIconTint?: string;
+};
+export declare function groupMembersWrapperStyle(groupMemberSyleObject: GroupMembersStyle | null, theme: CometChatTheme): CSSProperties;
+export declare function listStyle(groupMemberStyleObject: GroupMembersStyle | null, theme: CometChatTheme): ListStyle;
+export declare function backBtnContainerStyle(): CSSProperties;
+export declare function defaultBackBtnStyle(groupMemberStyleObject: GroupMembersStyle | null, theme: CometChatTheme): ButtonStyle;
+export declare function closeBtnStyle(groupMemberStyleObject: GroupMembersStyle | null, theme: CometChatTheme): ButtonStyle;
+export declare function menusContainerStyle(): CSSProperties;
+export declare function avatarStyle(avatarStyleObject: AvatarStyle | null, theme: CometChatTheme): AvatarStyle;
+export declare function statusIndicatorStyle(statusIndicatorStyleObject: CSSProperties | null): CSSProperties;
+export declare function listItemStyle(listItemStyleObject: ListItemStyle | null, groupMemberStyleObject: GroupMembersStyle | null, theme: CometChatTheme): ListItemStyle;
+export declare function scopeLabelStyle(groupScopeStyleObject: ChangeScopeStyle | null, theme: CometChatTheme): LabelStyle;
+export declare function menuListStyle(groupMembersStyle: GroupMembersStyle | null, theme: CometChatTheme): MenuListStyle;
+export declare function groupScopeStyle(groupScopeStyleObject: ChangeScopeStyle | null, theme: CometChatTheme): ChangeScopeStyle;
+export declare function listWrapperStyle(): CSSProperties;
+export declare function tailViewStyle(): CSSProperties;
+export declare function closeBtnContainerStyle(): CSSProperties;
+export declare const getBackdropStyle: (groupsMembersStyle: GroupMembersStyle | null) => BackdropStyle;
+export {};

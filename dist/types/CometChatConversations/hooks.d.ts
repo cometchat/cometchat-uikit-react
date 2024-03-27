@@ -1,0 +1,22 @@
+import React, { JSX } from "react";
+import { Action } from ".";
+import { ConversationsManager } from "./controller";
+type Args = {
+    conversationsRequestBuilder: CometChat.ConversationsRequestBuilder | null;
+    conversationsManagerRef: React.MutableRefObject<ConversationsManager | null>;
+    fetchNextAndAppendConversations: (fetchId: string) => Promise<void>;
+    fetchNextIdRef: React.MutableRefObject<string>;
+    dispatch: React.Dispatch<Action>;
+    confirmDialogElement: JSX.IntrinsicElements["cometchat-confirm-dialog"] | null;
+    conversationToBeDeleted: CometChat.Conversation | null;
+    errorHandler: (error: unknown) => void;
+    refreshSingleConversation: (message: CometChat.BaseMessage, remove?: boolean) => Promise<void>;
+    onMessageReceived: (message: CometChat.BaseMessage) => Promise<void>;
+    setReceipts: (messageReceipt: CometChat.MessageReceipt, updateReadAt: boolean) => void;
+    setTypingIndicator: (typingIndicator: CometChat.TypingIndicator, typingStarted: boolean) => void;
+    disableTyping: boolean;
+    loggedInUser: CometChat.User | null;
+    isFirstReload: boolean;
+};
+export declare function Hooks(args: Args): void;
+export {};

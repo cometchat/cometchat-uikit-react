@@ -1,0 +1,3 @@
+import { MessagesConfiguration } from "@cometchat/uikit-shared";
+declare function Hooks(loggedInUser: any, setLoggedInUser: Function, subscribeToEvents: Function, onErrorCallback: Function, isMobileView: any, joinGroupConfiguration: any, group: any, setActiveGroup: any, messagesConfiguration: MessagesConfiguration | undefined, onBack: Function, createGroupElement: any, createGroupButtonRef: any, openCreateGroup: Function, closeCreateGroup: Function, joinGroupElement: any, onGroupJoined: Function, createGroupConfigCreateClick: ((group: CometChat.Group) => void) | null | undefined, joinGroupConfigOnError: ((error: any) => void) | null | undefined, joinGroupConfigJoinClick: ((group: CometChat.Group, password: string) => void) | null | undefined): void;
+export { Hooks };
