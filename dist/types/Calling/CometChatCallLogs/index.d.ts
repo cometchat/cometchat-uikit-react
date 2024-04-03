@@ -1,6 +1,6 @@
 import { AvatarStyle, ListItemStyle } from "@cometchat/uikit-elements";
-import { DatePatterns, TitleAlignment } from "@cometchat/uikit-resources";
 import { CallLogsStyle, OutgoingCallConfiguration } from "@cometchat/uikit-shared";
+import { DatePatterns, TitleAlignment } from "@cometchat/uikit-resources";
 interface ICallLogsProps {
     title?: string;
     titleAlignment?: TitleAlignment;

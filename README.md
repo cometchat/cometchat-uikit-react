@@ -1,62 +1,28 @@
-<div style="width:100%">
-    <div align="center">
-        <img alt="CometChat" src="https://avatars2.githubusercontent.com/u/45484907?s=200&v=4" width="180" height="180" alt="CometChat" />
-    </div>
-</div>
-<br>
-<div align="center">Full-fledged Chat UIKit built with <a href="https://react.dev/">React JS</a>. </div>
-<div align="center">
-  <a href="https://www.cometchat.com/docs/v4/react-uikit/overview"><strong>Explore CometChat docs »</strong></a>
-</div>
-<br />
-<br />
+# CometChat React UI Kit
 
-##
+CometChat's React UI Kit provides a prepared user interface that developers can use to quickly incorporate a reliable & fully-featured chat experience into their existing or new applications.
 
-[![Platform](https://img.shields.io/badge/Platform-React-blue?logo=react&color=%235fd3f3)](#) [![Language](https://img.shields.io/badge/Language-Typescript-blue?logo=typescript&color=%232f74c0)](#)
-[![Version](https://img.shields.io/badge/Version-4-blue?color=red)](#)
-<a href="https://github.com/cometchat-pro/javascript-react-chat-ui-kit/stargazers">
-<img src="https://img.shields.io/github/stars/cometchat-pro/javascript-react-chat-ui-kit?style=social" />
-</a>
-<a href="https://twitter.com/CometChat">
-<img src="https://img.shields.io/twitter/follow/CometChat?label=CometChat&style=social" />
-</a>
-
-<hr/>
-
-## Table of contents
-
-- [About the project](#about-the-project)
-  - [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-  - [Dependencies](#dependencies)
-
-## About the project
-
-CometChat React JS UIKit provides pre-built user interface kit that developers can use to quickly integrate a reliable & fully featured chat experience into an existing or a new web app.<br />
-
-### Prerequisites
-
-- npm >= 8
+## Prerequisites
+- Node.js >= 14.17.0
+- npm >= 7
 
 ## Getting Started
+To set up the CometChat React UI Kit and utilize CometChat for your chat functionality, you'll need to follow these steps:
 
-To set up React JS Chat UIKit and utilize CometChat for your chat functionality, you'll need to follow these steps:
+1. **Create an Account**: Register at the [CometChat Dashboard](https://app.cometchat.com/) to create an account.
 
-- Registration: Go to the [CometChat website](https://www.cometchat.com/) and sign up for an account.
+2. **Create an Application**: After registering, log in to your CometChat account and create a new application. Once created, CometChat will generate an Auth Key and App ID for you. Keep these credentials secure as you'll need them later.
 
-- Create an App: After registering, log in to your [CometChat account](https://app.cometchat.com/login) and create a new app. Provide the necessary details such as the app name, platform (React JS), and other relevant information. Once you've created the app, CometChat will generate an Auth Key and App ID for you. You can find them under the Credentials section of your app.
+3. **Check the [Key Concepts](https://www.cometchat.com/docs/react-uikit/key-concepts)** to understand the basic components of CometChat.
 
-- Make sure you've read the [key concepts](https://www.cometchat.com/docs/v4/react-uikit/key-concepts)
-
-- Follow the steps provided in the integration section [here](https://www.cometchat.com/docs/v4/react-uikit/integration)
+4. **Refer to the [Integration Steps](https://www.cometchat.com/docs/react-uikit/integration)** in our documentation to integrate the UI Kit into your React app.
 
 ### Dependencies
+Install the necessary peer dependencies by running the following command:
 
-To utilize the React JS Chat UIKit in your React project, you need to include the necessary dependencies in your package.json file.
-<br /><br />
-If your NPM version is between 3-6 please install the following dependencies via command line:
-
-```javascript
-npm i @cometchat/chat-sdk-javascript @cometchat/uikit-elements  @cometchat/uikit-resources  @cometchat/uikit-shared
+```bash
+npm install @cometchat/chat-sdk-javascript@latest @cometchat/uikit-elements@latest @cometchat/uikit-resources@latest @cometchat/uikit-shared@latest
 ```
+
+## Help and Support
+If you run into any issues while executing the project or integrating with our UI Kits, refer to our [documentation](https://www.cometchat.com/docs/react-uikit/integration), create a [support ticket](https://help.cometchat.com/hc/en-us), or receive real-time assistance through the [CometChat Dashboard](https://app.cometchat.com/).

@@ -1,13 +1,13 @@
 {
   "name": "@cometchat/chat-uikit-react",
-  "version": "4.3.2",
+  "version": "4.3.3",
   "description": "CometChat UIKit for React App",
   "author": "CometChatTeam",
   "peerDependencies": {
     "@cometchat/chat-sdk-javascript": "^4.0.4",
-    "@cometchat/uikit-elements": "~4.3.2",
-    "@cometchat/uikit-resources": "~4.3.1",
-    "@cometchat/uikit-shared": "~4.3.2"
+    "@cometchat/uikit-elements": "^4.3.3",
+    "@cometchat/uikit-resources": "^4.3.2",
+    "@cometchat/uikit-shared": "^4.3.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.0",
@@ -60,7 +60,7 @@
     "video",
     "ui components"
   ],
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "https://www.cometchat.com/legal-terms-of-service",
   "dependencies": {
     "@lit-labs/react": "^1.1.1"
   },
