@@ -1,3 +1,7 @@
+<p align="center">
+  <img alt="CometChat" src="https://assets.cometchat.io/website/images/logos/banner.png">
+</p>
+
 # CometChat React UI Kit
 
 CometChat's React UI Kit provides a prepared user interface that developers can use to quickly incorporate a reliable & fully-featured chat experience into their existing or new applications.
