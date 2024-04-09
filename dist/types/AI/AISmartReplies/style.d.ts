@@ -3,7 +3,6 @@ import { AISmartRepliesStyle } from "@cometchat/uikit-shared";
 import { CometChatTheme } from "@cometchat/uikit-resources";
 export declare const getContainerStyle: (style?: AISmartRepliesStyle, theme?: CometChatTheme) => {
     display: string;
-    overflow: string;
     width: string;
     height: string;
     justifyContent: string;

@@ -1,6 +1,6 @@
 import { Action, ActionOnClickType, ContentToDisplay } from ".";
 import { Group, GroupMembersRequestBuilder, User, UsersRequestBuilder } from "@cometchat/chat-sdk-javascript";
-import { CometChatMentionsTextFormatter, CometChatTextFormatter, UserMemberWrapperConfiguration } from "@cometchat/uikit-shared";
+import { CometChatMentionsFormatter, CometChatTextFormatter, UserMemberWrapperConfiguration } from "@cometchat/uikit-shared";
 import { UserMemberListType } from "@cometchat/uikit-resources";
 import React, { JSX } from "react";
 type Args = {
@@ -39,7 +39,7 @@ type Args = {
     textFormatters: Array<CometChatTextFormatter>;
     disableMentions: boolean;
     textFormatterArray: Array<CometChatTextFormatter>;
-    mentionsTextFormatterInstanceRef: React.MutableRefObject<CometChatMentionsTextFormatter>;
+    mentionsTextFormatterInstanceRef: React.MutableRefObject<CometChatMentionsFormatter>;
     userMemberWrapperConfiguration: UserMemberWrapperConfiguration | undefined;
     setTextFormatters: React.Dispatch<React.SetStateAction<CometChatTextFormatter[]>>;
     CometChatUIKitLoginListener: any;

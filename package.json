@@ -1,13 +1,13 @@
 {
   "name": "@cometchat/chat-uikit-react",
-  "version": "4.3.3",
+  "version": "4.3.4",
   "description": "CometChat UIKit for React App",
   "author": "CometChatTeam",
   "peerDependencies": {
     "@cometchat/chat-sdk-javascript": "^4.0.4",
-    "@cometchat/uikit-elements": "^4.3.3",
-    "@cometchat/uikit-resources": "^4.3.2",
-    "@cometchat/uikit-shared": "^4.3.3"
+    "@cometchat/uikit-elements": "^4.3.4",
+    "@cometchat/uikit-resources": "^4.3.3",
+    "@cometchat/uikit-shared": "^4.3.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.0",

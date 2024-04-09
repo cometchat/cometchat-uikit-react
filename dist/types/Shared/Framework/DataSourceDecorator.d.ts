@@ -1,5 +1,5 @@
 import { BaseStyle, FileBubbleStyle, ImageBubbleStyle, TextBubbleStyle } from "@cometchat/uikit-elements";
-import { CardBubbleStyle, FormBubbleStyle, SchedulerBubbleStyle, CometChatMentionsTextFormatter, CometChatTextFormatter, CometChatUrlTextFormatter } from "@cometchat/uikit-shared";
+import { CardBubbleStyle, FormBubbleStyle, SchedulerBubbleStyle, CometChatMentionsFormatter, CometChatTextFormatter, CometChatUrlsFormatter } from "@cometchat/uikit-shared";
 import { CardMessage, CometChatActionsIcon, CometChatActionsView, CometChatDetailsTemplate, CometChatMessageComposerAction, CometChatMessageTemplate, CometChatTheme, FormMessage, MessageBubbleAlignment, SchedulerMessage } from "@cometchat/uikit-resources";
 import { AIOptionsStyle } from "@cometchat/uikit-shared";
 import { DataSource } from "./DataSource";
@@ -53,7 +53,7 @@ export declare abstract class DataSourceDecorator implements DataSource {
     getAuxiliaryHeaderMenu(user?: CometChat.User, group?: CometChat.Group): any;
     getAIOptions(user: CometChat.User | null, group: CometChat.Group | null, theme: CometChatTheme, id?: Map<String, any>, AIOptionsStyle?: AIOptionsStyle): (CometChatMessageComposerAction | CometChatActionsView)[];
     getAllTextFormatters(formatterParams: any): CometChatTextFormatter[];
-    getMentionsTextFormatter(params?: any): CometChatMentionsTextFormatter;
-    getUrlTextFormatter(params?: any): CometChatUrlTextFormatter;
+    getMentionsTextFormatter(params?: any): CometChatMentionsFormatter;
+    getUrlTextFormatter(params?: any): CometChatUrlsFormatter;
     getMentionsFormattedText(message: CometChat.TextMessage, subtitle: string, additionalConfigurations: any): string;
 }

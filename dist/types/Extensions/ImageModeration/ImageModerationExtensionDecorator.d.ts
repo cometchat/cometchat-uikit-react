@@ -6,9 +6,10 @@ export declare class ImageModerationExtensionDecorator extends DataSourceDecorat
     configuration?: ImageModerationConfiguration;
     newDataSource: DataSource;
     private theme;
+    loggedInUser: CometChat.User;
     constructor(dataSource: DataSource, configuration?: ImageModerationConfiguration);
     getId(): string;
-    getImageMessageContentView(message: CometChat.MediaMessage, alignment: MessageBubbleAlignment, theme: CometChatTheme): import("react/jsx-runtime").JSX.Element;
+    getImageMessageContentView(message: CometChat.MediaMessage, alignment: MessageBubbleAlignment, theme: CometChatTheme): any;
     showDialog(_event: any): void;
     getConfirmationModal(_event: any): import("react/jsx-runtime").JSX.Element;
     onConfirmClicked(_event: any): void;
@@ -18,6 +19,7 @@ export declare class ImageModerationExtensionDecorator extends DataSourceDecorat
         height: string;
         width: string;
         border: string;
+        borderRadius: string;
         warningTextColor: string | undefined;
         warningTextFont: string;
     };
