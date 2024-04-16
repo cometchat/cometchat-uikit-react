@@ -18,7 +18,7 @@ export declare class PollsExtensionDecorator extends DataSourceDecorator {
     getPollsTemplate(_theme: CometChatTheme): CometChatMessageTemplate;
     getPollsContentView(message: CometChat.CustomMessage, _theme: CometChatTheme): import("react/jsx-runtime").JSX.Element;
     getPollBubbleData(message: CometChat.CustomMessage, key?: string): any;
-    getAttachmentOptions(theme: CometChatTheme, id?: any): CometChatMessageComposerAction[];
+    getAttachmentOptions(theme: CometChatTheme, id: any): CometChatMessageComposerAction[];
     onPollsButtonClicked(theme: CometChatTheme, ...args: any[]): void;
     getPollView(user: CometChat.User, group: CometChat.Group, createPollStyle: CreatePollStyle): import("react/jsx-runtime").JSX.Element;
     triggerCloseEvent(): void;

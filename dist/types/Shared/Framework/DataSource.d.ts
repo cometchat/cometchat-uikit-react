@@ -1,5 +1,5 @@
 import { BaseStyle, FileBubbleStyle, ImageBubbleStyle, TextBubbleStyle } from "@cometchat/uikit-elements";
-import { CardBubbleStyle, FormBubbleStyle, SchedulerBubbleStyle, CometChatMentionsFormatter, CometChatTextFormatter, CometChatUrlsFormatter } from "@cometchat/uikit-shared";
+import { CardBubbleStyle, CometChatMentionsFormatter, CometChatTextFormatter, CometChatUrlsFormatter, ComposerId, FormBubbleStyle, SchedulerBubbleStyle } from "@cometchat/uikit-shared";
 import { CardMessage, CometChatActionsIcon, CometChatActionsView, CometChatDetailsTemplate, CometChatMessageComposerAction, CometChatMessageTemplate, CometChatTheme, FormMessage, MessageBubbleAlignment, SchedulerMessage } from "@cometchat/uikit-resources";
 import { AIOptionsStyle } from "@cometchat/uikit-shared";
 export declare abstract class DataSource {
@@ -30,7 +30,7 @@ export declare abstract class DataSource {
     abstract getMessageTemplate(messageType: string, messageCategory: string, theme?: CometChatTheme): CometChatMessageTemplate | null;
     abstract getMessageOptions(loggedInUser: CometChat.User, messageObject: CometChat.BaseMessage, theme: CometChatTheme, group?: CometChat.Group): Array<CometChatActionsIcon | CometChatActionsView>;
     abstract getCommonOptions(loggedInUser: CometChat.User, messageObject: CometChat.BaseMessage, theme: CometChatTheme, group?: CometChat.Group): Array<CometChatActionsIcon | CometChatActionsView>;
-    abstract getAttachmentOptions(theme: CometChatTheme, id?: Map<String, any>): CometChatMessageComposerAction[];
+    abstract getAttachmentOptions(theme: CometChatTheme, id: ComposerId): CometChatMessageComposerAction[];
     abstract getAllMessageTypes(): Array<string>;
     abstract getAllMessageCategories(): Array<string>;
     abstract getAuxiliaryOptions(id: Map<String, any>, theme: CometChatTheme, user?: CometChat.User, group?: CometChat.Group): any;

@@ -16,6 +16,6 @@ export declare class CollaborativeDocumentExtensionDecorator extends DataSourceD
     getDocumentContentView(documentMessage: CometChat.CustomMessage, _theme: CometChatTheme): import("react/jsx-runtime").JSX.Element;
     launchCollaborativeDocument(documentURL: string): void;
     getDocumentURL(message: CometChat.CustomMessage): any;
-    getAttachmentOptions(theme: CometChatTheme, id?: any): CometChatMessageComposerAction[];
+    getAttachmentOptions(theme: CometChatTheme, id: any): CometChatMessageComposerAction[];
     getLastConversationMessage(conversation: CometChat.Conversation, loggedInUser: CometChat.User, additionalConfigurations?: any): string;
 }

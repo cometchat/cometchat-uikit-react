@@ -1,4 +1,4 @@
-import { UIKitSettings, CometChatSoundManager, FormBubbleStyle, SchedulerBubbleStyle, CardBubbleStyle, AIOptionsStyle, CometChatTextFormatter, CometChatMentionsFormatter, CometChatUrlsFormatter, BaseStyle as BaseStyle$1, ListStyle, OptionsStyle, ImageModerationStyle, LinkPreviewStyle, MessageTranslationStyle, PollsBubbleStyle, CreatePollStyle, SmartRepliesStyle, StickersStyle, CallButtonsStyle, IncomingCallStyle, CometChatUIKitCalls, OutgoingCallStyle, CallLogsStyle, OutgoingCallConfiguration, CallLogHistoryConfiguration, CallLogParticipantsConfiguration, CallLogRecordingsConfiguration, CallLogDetailsStyle, CallLogHistoryStyle, CallLogParticipantsStyle, CallLogRecordingsStyle, WithDetailsStyle, CallLogDetailsConfiguration, CallLogsConfiguration, AddMembersStyle, BannedMembersStyle, ConversationsStyle, WithMessagesStyle, MessagesConfiguration, ConversationsConfiguration, ContactsConfiguration, AddMembersConfiguration, BannedMembersConfiguration, GroupMembersConfiguration, TransferOwnershipConfiguration, DetailsStyle, GroupMembersStyle, GroupsStyle, GroupsConfiguration, CreateGroupConfiguration, JoinGroupConfiguration, MessageComposerStyle, UserMemberWrapperConfiguration, MessageHeaderStyle, MessageListStyle, MessageInformationConfiguration, ReactionsConfiguration, MessageHeaderConfiguration, MessageListConfiguration, MessageComposerConfiguration, ThreadedMessagesConfiguration, DetailsConfiguration, MessagesStyle, TransferOwnershipStyle, UsersStyle, UsersConfiguration, ContactsStyle, MessageInformationStyle, AIAssistBotConfiguration, AIConversationStarterConfiguration, AISmartRepliesConfiguration, AIConversationSummaryConfiguration } from '@cometchat/uikit-shared';
+import { UIKitSettings, CometChatSoundManager, ComposerId as ComposerId$1, FormBubbleStyle, SchedulerBubbleStyle, CardBubbleStyle, AIOptionsStyle, CometChatTextFormatter, CometChatMentionsFormatter, CometChatUrlsFormatter, BaseStyle as BaseStyle$1, ListStyle, OptionsStyle, ImageModerationStyle, LinkPreviewStyle, MessageTranslationStyle, PollsBubbleStyle, CreatePollStyle, SmartRepliesStyle, StickersStyle, CallButtonsStyle, IncomingCallStyle, CometChatUIKitCalls, OutgoingCallStyle, CallLogsStyle, OutgoingCallConfiguration, CallLogHistoryConfiguration, CallLogParticipantsConfiguration, CallLogRecordingsConfiguration, CallLogDetailsStyle, CallLogHistoryStyle, CallLogParticipantsStyle, CallLogRecordingsStyle, WithDetailsStyle, CallLogDetailsConfiguration, CallLogsConfiguration, AddMembersStyle, BannedMembersStyle, ConversationsStyle, WithMessagesStyle, MessagesConfiguration, ConversationsConfiguration, ContactsConfiguration, AddMembersConfiguration, BannedMembersConfiguration, GroupMembersConfiguration, TransferOwnershipConfiguration, DetailsStyle, GroupMembersStyle, GroupsStyle, GroupsConfiguration, CreateGroupConfiguration, JoinGroupConfiguration, MessageComposerStyle, UserMemberWrapperConfiguration, MessageHeaderStyle, MessageListStyle, MessageInformationConfiguration, ReactionsConfiguration, MessageHeaderConfiguration, MessageListConfiguration, MessageComposerConfiguration, ThreadedMessagesConfiguration, DetailsConfiguration, MessagesStyle, TransferOwnershipStyle, UsersStyle, UsersConfiguration, ContactsStyle, MessageInformationStyle, AIAssistBotConfiguration, AIConversationStarterConfiguration, AISmartRepliesConfiguration, AIConversationSummaryConfiguration } from '@cometchat/uikit-shared';
 export * from '@cometchat/uikit-shared';
 import { CometChatLocalize, FormMessage, CardMessage, CustomInteractiveMessage, SchedulerMessage, CometChatTheme, CometChatActionsIcon, CometChatActionsView, MessageBubbleAlignment, CometChatMessageTemplate, CometChatMessageComposerAction, CometChatDetailsTemplate, MentionsTargetElement, TabAlignment, CometChatTabItem, IconButtonAlignment, TitleAlignment, States, CallWorkflow, DatePatterns, CometChatOption, SelectionMode, UserPresencePlacement, AuxiliaryButtonAlignment, MessageListAlignment, TimestampAlignment, TabsVisibility } from '@cometchat/uikit-resources';
 export * from '@cometchat/uikit-resources';
@@ -80,7 +80,7 @@ declare abstract class DataSource {
     abstract getMessageTemplate(messageType: string, messageCategory: string, theme?: CometChatTheme): CometChatMessageTemplate | null;
     abstract getMessageOptions(loggedInUser: CometChat.User, messageObject: CometChat.BaseMessage, theme: CometChatTheme, group?: CometChat.Group): Array<CometChatActionsIcon | CometChatActionsView>;
     abstract getCommonOptions(loggedInUser: CometChat.User, messageObject: CometChat.BaseMessage, theme: CometChatTheme, group?: CometChat.Group): Array<CometChatActionsIcon | CometChatActionsView>;
-    abstract getAttachmentOptions(theme: CometChatTheme, id?: Map<String, any>): CometChatMessageComposerAction[];
+    abstract getAttachmentOptions(theme: CometChatTheme, id: ComposerId$1): CometChatMessageComposerAction[];
     abstract getAllMessageTypes(): Array<string>;
     abstract getAllMessageCategories(): Array<string>;
     abstract getAuxiliaryOptions(id: Map<String, any>, theme: CometChatTheme, user?: CometChat.User, group?: CometChat.Group): any;
@@ -143,7 +143,7 @@ declare abstract class DataSourceDecorator implements DataSource {
     getMessageTemplate(messageType: string, messageCategory: string, theme?: CometChatTheme | undefined): CometChatMessageTemplate | null;
     getMessageOptions(loggedInUser: CometChat.User, messageObject: CometChat.BaseMessage, theme: CometChatTheme, group?: CometChat.Group): Array<CometChatActionsIcon | CometChatActionsView>;
     getCommonOptions(loggedInUser: CometChat.User, messageObject: CometChat.BaseMessage, theme: CometChatTheme, group?: CometChat.Group): Array<CometChatActionsIcon | CometChatActionsView>;
-    getAttachmentOptions(theme: CometChatTheme, id?: Map<String, any> | undefined): CometChatMessageComposerAction[];
+    getAttachmentOptions(theme: CometChatTheme, id: ComposerId$1): CometChatMessageComposerAction[];
     getAllMessageTypes(): string[];
     getAllMessageCategories(): string[];
     getAuxiliaryOptions(id: Map<String, any>, theme: CometChatTheme, user?: CometChat.User, group?: CometChat.Group): any;
@@ -236,7 +236,7 @@ declare class MessagesDataSource implements DataSource {
     videoAttachmentOption(theme: CometChatTheme): CometChatMessageComposerAction;
     audioAttachmentOption(theme: CometChatTheme): CometChatMessageComposerAction;
     fileAttachmentOption(theme: CometChatTheme): CometChatMessageComposerAction;
-    getAttachmentOptions(theme: CometChatTheme, id?: Map<String, any>): Array<CometChatMessageComposerAction>;
+    getAttachmentOptions(theme: CometChatTheme, id: ComposerId$1): Array<CometChatMessageComposerAction>;
     getLastConversationMessage(conversation: CometChat.Conversation, loggedInUser: CometChat.User, additionalConfigurations: any): string;
     getDefaultDetailsTemplate(loggedInUser: CometChat.User, user: CometChat.User | null, group: CometChat.Group | null, theme: CometChatTheme): CometChatDetailsTemplate[];
     getAuxiliaryHeaderMenu(user?: CometChat.User, group?: CometChat.Group): any;
@@ -385,7 +385,7 @@ interface IListProps<T> {
      * @remarks
      * This property will be used to extract the key value from each object in the `list` prop. The extracted key value is set as a `key` of a React element
      */
-    listItemKey: keyof T;
+    listItemKey?: keyof T;
     /**
      * Fetch state of the component
      */
@@ -488,7 +488,7 @@ declare class CollaborativeDocumentExtensionDecorator extends DataSourceDecorato
     getDocumentContentView(documentMessage: CometChat.CustomMessage, _theme: CometChatTheme): react_jsx_runtime.JSX.Element;
     launchCollaborativeDocument(documentURL: string): void;
     getDocumentURL(message: CometChat.CustomMessage): any;
-    getAttachmentOptions(theme: CometChatTheme, id?: any): CometChatMessageComposerAction[];
+    getAttachmentOptions(theme: CometChatTheme, id: any): CometChatMessageComposerAction[];
     getLastConversationMessage(conversation: CometChat.Conversation, loggedInUser: CometChat.User, additionalConfigurations?: any): string;
 }
 
@@ -530,7 +530,7 @@ declare class CollaborativeWhiteBoardExtensionDecorator extends DataSourceDecora
     getWhiteboardContentView(whiteboardMessage: CometChat.CustomMessage, _theme: CometChatTheme): react_jsx_runtime.JSX.Element;
     launchCollaborativeWhiteboardDocument(whiteboardURL: string): void;
     getWhiteboardDocument(message: CometChat.CustomMessage): any;
-    getAttachmentOptions(theme: CometChatTheme, id?: any): CometChatMessageComposerAction[];
+    getAttachmentOptions(theme: CometChatTheme, id: any): CometChatMessageComposerAction[];
     getLastConversationMessage(conversation: CometChat.Conversation, loggedInUser: CometChat.User, additionalConfigurations: any): string;
 }
 
@@ -700,7 +700,7 @@ declare class PollsExtensionDecorator extends DataSourceDecorator {
     getPollsTemplate(_theme: CometChatTheme): CometChatMessageTemplate;
     getPollsContentView(message: CometChat.CustomMessage, _theme: CometChatTheme): react_jsx_runtime.JSX.Element;
     getPollBubbleData(message: CometChat.CustomMessage, key?: string): any;
-    getAttachmentOptions(theme: CometChatTheme, id?: any): CometChatMessageComposerAction[];
+    getAttachmentOptions(theme: CometChatTheme, id: any): CometChatMessageComposerAction[];
     onPollsButtonClicked(theme: CometChatTheme, ...args: any[]): void;
     getPollView(user: CometChat.User, group: CometChat.Group, createPollStyle: CreatePollStyle): react_jsx_runtime.JSX.Element;
     triggerCloseEvent(): void;

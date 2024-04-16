@@ -1,4 +1,4 @@
-import { AIOptionsStyle, CardBubbleStyle, CometChatMentionsFormatter, CometChatTextFormatter, CometChatUrlsFormatter, FormBubbleStyle, SchedulerBubbleStyle } from "@cometchat/uikit-shared";
+import { AIOptionsStyle, CardBubbleStyle, CometChatMentionsFormatter, CometChatTextFormatter, CometChatUrlsFormatter, ComposerId, FormBubbleStyle, SchedulerBubbleStyle } from "@cometchat/uikit-shared";
 import { BaseStyle, FileBubbleStyle, ImageBubbleStyle, TextBubbleStyle } from "@cometchat/uikit-elements";
 import { CardMessage, CometChatActionsIcon, CometChatActionsView, CometChatDetailsTemplate, CometChatMessageComposerAction, CometChatMessageTemplate, CometChatTheme, FormMessage, MentionsTargetElement, MessageBubbleAlignment, SchedulerMessage } from "@cometchat/uikit-resources";
 import { DataSource } from "../Framework/DataSource";
@@ -70,7 +70,7 @@ export declare class MessagesDataSource implements DataSource {
     videoAttachmentOption(theme: CometChatTheme): CometChatMessageComposerAction;
     audioAttachmentOption(theme: CometChatTheme): CometChatMessageComposerAction;
     fileAttachmentOption(theme: CometChatTheme): CometChatMessageComposerAction;
-    getAttachmentOptions(theme: CometChatTheme, id?: Map<String, any>): Array<CometChatMessageComposerAction>;
+    getAttachmentOptions(theme: CometChatTheme, id: ComposerId): Array<CometChatMessageComposerAction>;
     getLastConversationMessage(conversation: CometChat.Conversation, loggedInUser: CometChat.User, additionalConfigurations: any): string;
     getDefaultDetailsTemplate(loggedInUser: CometChat.User, user: CometChat.User | null, group: CometChat.Group | null, theme: CometChatTheme): CometChatDetailsTemplate[];
     getAuxiliaryHeaderMenu(user?: CometChat.User, group?: CometChat.Group): any;

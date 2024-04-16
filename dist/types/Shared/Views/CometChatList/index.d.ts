@@ -84,7 +84,7 @@ interface IListProps<T> {
      * @remarks
      * This property will be used to extract the key value from each object in the `list` prop. The extracted key value is set as a `key` of a React element
      */
-    listItemKey: keyof T;
+    listItemKey?: keyof T;
     /**
      * Fetch state of the component
      */
