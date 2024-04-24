@@ -1,3 +1,4 @@
+import CometChatUserMemberWrapper from "./CometChatUserMemberWrapper";
 export * from '@cometchat/uikit-shared';
 export * from '@cometchat/uikit-resources';
 export { CometChatAvatar, AvatarStyle, CometChatBadge, BadgeStyle, CometChatReceipt, ReceiptStyle, CometChatStatusIndicator, CometChatDate, DateStyle, CometChatIcon, IconStyle, CometChatBackdrop, CometChatButton, CometChatPopover, PopoverStyle, CometChatLabel, LabelStyle, CometChatInput, InputStyle, CometChatSearchInput, SearchInputStyle, CometChatModal, ModalStyle, CometChatMenuList, MenuListStyle, CometChatLoader, LoaderStyle, CometChatListItem, ListItemStyle, CometChatConfirmDialog, ConfirmDialogStyle, CometChatDivider, CometChatButtonGroup, ButtonGroupStyle, CometChatCheckbox, CheckboxStyle, TextBubbleStyle, ImageBubbleStyle, FileBubbleStyle, CometChatRadioButton, RadioButtonStyle, CometChatEmojiKeyboard, EmojiKeyboardStyle, Emojis, CometChatEmoji, CometChatMessageInput, CometChatTextInput, TextInputStyle, MessageInputStyle, CometChatDropdown, DropdownStyle, CometChatChangeScope, ChangeScopeStyle, CometChatPreview, PreviewStyle, auxiliaryButtonAlignmentEnum, CometChatActionSheet, CometChatActionItem, layoutType, ActionSheetStyle, CometChatLiveReaction, CometChatJoinGroup, JoinGroupStyle, CometChatCreateGroup, CreateGroupStyle, CometChatDocumentBubble, CometChatCard, CardStyle, DocumentBubbleStyle, CometChatFullScreenViewer, FullScreenViewerStyle, CometChatIconButton, CometChatDraggable, CometChatContextMenu, ContextMenuStyle, CometChatMediaRecorder, MediaRecorderStyle, CallscreenStyle, BackdropStyle, QuickViewStyle, CometChatQuickView, CometChatSingleSelect, CometChatCallscreenWrapper, SingleSelectStyle, } from '@cometchat/uikit-elements';
@@ -70,6 +71,7 @@ export { CometChatUsersWithMessages } from "./CometChatUsersWithMessages";
 export { CometChatContacts } from './CometChatContacts';
 export { CometChatMessageInformation } from './CometChatMessageInformation';
 export { TabsStyle } from "./Shared/Views/CometChatTabs/TabsStyle";
+export { CometChatUserMemberWrapper };
 export { AIAssistBotExtension } from './AI/AIAssistBot/AIAssistBotExtension';
 export { AIAssistBotDecorator } from './AI/AIAssistBot/AIAssistBotDecorator';
 export { AIConversationStarterExtension } from './AI/AIConversationStarter/AIConversationStarterExtension';

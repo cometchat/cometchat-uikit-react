@@ -7,7 +7,7 @@ interface MessageInformationProps {
     message: CometChat.BaseMessage;
     template?: CometChatMessageTemplate | any;
     closeIconURL?: string;
-    bubbleView: (messageObject: CometChat.BaseMessage) => void | JSX.Element;
+    bubbleView?: (messageObject: CometChat.BaseMessage) => void | JSX.Element;
     listItemView?: (messageObject: CometChat.BaseMessage, messageReceipt?: CometChat.MessageReceipt) => JSX.Element;
     subtitleView?: (messageObject: CometChat.BaseMessage, messageReceipt?: CometChat.MessageReceipt) => void | JSX.Element;
     receiptDatePattern?: (timestamp: number) => string;

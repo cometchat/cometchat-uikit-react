@@ -13,7 +13,7 @@ export declare class UsersManager {
     /**
      * Calls `fetchNext` method of the set `usersRequest`
      */
-    fetchNext(): Promise<import("@cometchat/chat-sdk-javascript").User[] | []>;
+    fetchNext(): Promise<[] | import("@cometchat/chat-sdk-javascript").User[]>;
     getCurrentPage(): number;
     /**
      * Attaches an SDK user listener

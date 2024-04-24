@@ -1,13 +1,13 @@
 {
   "name": "@cometchat/chat-uikit-react",
-  "version": "4.3.5",
-  "description": "CometChat UIKit for React App",
-  "author": "CometChatTeam",
+  "version": "4.3.6",
+  "description": "Ready-to-use Chat UI Components for React(Javascript/Web)",
+  "author": "CometChat",
   "peerDependencies": {
     "@cometchat/chat-sdk-javascript": "^4.0.5",
-    "@cometchat/uikit-elements": "^4.3.6",
-    "@cometchat/uikit-resources": "^4.3.6",
-    "@cometchat/uikit-shared": "^4.3.6"
+    "@cometchat/uikit-elements": "^4.3.7",
+    "@cometchat/uikit-resources": "^4.3.7",
+    "@cometchat/uikit-shared": "^4.3.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.0",
@@ -36,6 +36,8 @@
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.7.4"
   },
+  "homepage": "https://www.cometchat.com",
+  "repository": "https://github.com/cometchat/cometchat-uikit-react",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -58,7 +60,8 @@
     "audio",
     "chat",
     "video",
-    "ui components"
+    "ui components",
+    "webRTC"
   ],
   "license": "https://www.cometchat.com/legal-terms-of-service",
   "dependencies": {

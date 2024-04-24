@@ -43,5 +43,5 @@ export declare const messageInfoHeaderStyle: (theme: CometChatTheme) => WrapperS
 export declare const getMessageInfoStyle: (theme: CometChatTheme, messageInfo?: MessageInformationStyle) => CSSProperties;
 export declare const getReceiptTextStyle: (theme: CometChatTheme) => CSSProperties;
 export declare const getMessageTextStyle: (theme: CometChatTheme) => CSSProperties;
-export declare const getParentBubbleStyle: () => CSSProperties;
+export declare const getParentBubbleStyle: (alignBubble?: boolean) => CSSProperties;
 export {};
