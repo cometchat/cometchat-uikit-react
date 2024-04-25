@@ -6,6 +6,12 @@
 
 The CometChat React UI Kit provides a pre-built user interface kit that developers can use to quickly integrate a reliable & fully-featured chat experience into an existing or a new app.
 
+<div style="
+    display: flex;
+    align-items: center;
+    justify-content: center;">
+   <img src="./Screenshots/overview_cometchat_screens.png" />
+</div>
 
 ## Prerequisites
 
