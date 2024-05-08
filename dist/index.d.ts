@@ -14,20 +14,20 @@ interface IMentionsProps {
     onItemClick?: (user: CometChat.User | CometChat.GroupMember) => void;
     listItemView?: (item?: CometChat.User | CometChat.GroupMember) => JSX.Element;
     avatarStyle?: AvatarStyle;
-    statusIndicatorStyle: CSSProperties;
-    searchKeyword: string;
+    statusIndicatorStyle?: CSSProperties;
+    searchKeyword?: string;
     group?: CometChat.Group;
     subtitleView?: (item?: CometChat.User | CometChat.GroupMember) => JSX.Element;
     usersRequestBuilder?: CometChat.UsersRequestBuilder;
-    disableUsersPresence?: Boolean;
+    disableUsersPresence?: boolean;
     userPresencePlacement?: UserPresencePlacement;
     hideSeparator?: boolean;
-    loadingStateView: JSX.Element;
-    onEmpty: () => void;
+    loadingStateView?: JSX.Element;
+    onEmpty?: () => void;
     groupMemberRequestBuilder?: CometChat.GroupMembersRequestBuilder;
     loadingIconUrl?: string;
     disableLoadingState?: boolean;
-    onError: () => void;
+    onError?: () => void;
 }
 declare function CometChatUserMemberWrapper(props: IMentionsProps): react_jsx_runtime.JSX.Element;
 
@@ -918,7 +918,7 @@ declare class CallingExtensionDecorator extends DataSourceDecorator {
     getCallActionMessage(_message: CometChat.Call): string;
     getDefaultAudioCallMessageBubble(_message: CometChat.Call, _alignment: MessageBubbleAlignment, _theme: CometChatTheme): react_jsx_runtime.JSX.Element;
     getDefaultVideoCallMessageBubble(_message: CometChat.Call, _alignment: MessageBubbleAlignment, _theme: CometChatTheme): react_jsx_runtime.JSX.Element;
-    getLastConversationMessage(conversation: CometChat.Conversation, loggedInUser: CometChat.User, additionalConfigurations?: any): string;
+    getLastConversationMessage(conversation: CometChat.Conversation, loggedInUser: CometChat.User, additionalParams?: any): string;
     getAuxiliaryHeaderMenu(user?: CometChat.User, group?: CometChat.Group): any[];
 }
 
