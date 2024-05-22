@@ -1348,9 +1348,6 @@ interface IBannedMembersProps {
     /**
      * Image URL for the back button
      *
-     * @remarks
-     * This prop will also be used if `backButton` prop is not provided
-     *
      * @defaultValue `./assets/backbutton.svg`
      */
     backButtonIconURL?: string;
@@ -1638,11 +1635,22 @@ interface IConversationsProps {
      */
     datePattern?: DatePatterns;
     /**
+     * @deprecated
+     *
+     * This property is deprecated as of version 4.3.8 due to newer property 'passwordGroupIcon'. It will be removed in subsequent versions.
+     */
+    /**
      * Image URL for the status indicator icon in the default list item view of a conversation related to a password-protected group
      *
      * @defaultValue `./assets/locked.svg`
      */
     protectedGroupIcon?: string;
+    /**
+     * Image URL for the status indicator icon in the default list item view of a conversation related to a password-protected group
+     *
+     * @defaultValue {undefined}
+     */
+    passwordGroupIcon?: string;
     /**
      * Image URL for the status indicator icon in the default list item view of a conversation related to a private group
      *
@@ -1887,11 +1895,22 @@ interface IDetailsProps {
      */
     privateGroupIcon?: string;
     /**
+     * @deprecated
+     *
+     * This property is deprecated as of version 4.3.8 due to newer property 'passwordGroupIcon'. It will be removed in subsequent versions.
+     */
+    /**
      * Image URL for the status indicator icon of a password-protected group
      *
      * @defaultValue `./assets/locked.svg`
      */
     protectedGroupIcon?: string;
+    /**
+       * Image URL for the status indicator icon of a password-protected group
+       *
+       * @defaultValue {undefined}
+       */
+    passwordGroupIcon?: string;
     /**
      * Function to create a list of `CometChatTemplate` instances from the `user` or `group` prop
      */
@@ -1987,16 +2006,9 @@ interface IGroupMembersProps {
     /**
      * Image URL for the back button
      *
-     * @remarks
-     * This prop will also be used if `backButton` prop is not provided
-     *
      * @defaultValue `./assets/backbutton.svg`
      */
     backButtonIconURL?: string;
-    /**
-     * Custom back button
-     */
-    backButton?: JSX$1.Element;
     /**
      * Show back button
      *
@@ -2095,6 +2107,12 @@ interface IGroupMembersProps {
     emptyStateView?: JSX$1.Element;
     /**
      * Custom view for the error state of the component
+     */
+    errorStateView?: JSX$1.Element;
+    /**
+     * @deprecated
+     *
+     * This property is deprecated as of version 4.3.8 due to newer property 'errorStateView'. It will be removed in subsequent versions.
      */
     errorSateView?: JSX$1.Element;
     /**
@@ -2631,7 +2649,13 @@ interface IMessageHeaderProps {
     subtitleView?: any;
     disableUsersPresence?: boolean;
     disableTyping?: boolean;
+    /**
+  * @deprecated
+  *
+  * This property is deprecated as of version 4.3.8 due to newer property 'passwordGroupIcon'. It will be removed in subsequent versions.
+  */
     protectedGroupIcon?: string;
+    passwordGroupIcon?: string | undefined;
     privateGroupIcon?: string;
     menu?: any;
     user?: CometChat.User;

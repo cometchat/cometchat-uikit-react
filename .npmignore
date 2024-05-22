@@ -1,0 +1,11 @@
+src/*
+.babelrc
+webpack.config.js
+node_modules/*
+webpack.config.js
+.github
+examples
+/examples
+Screenshots
+package-lock.json
+.DS_Store

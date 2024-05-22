@@ -10,6 +10,7 @@ export declare class UsersManager {
      * Set `usersRequest` of the instance
      */
     constructor(args: Args);
+    private getDefaultRequestBuilder;
     /**
      * Calls `fetchNext` method of the set `usersRequest`
      */

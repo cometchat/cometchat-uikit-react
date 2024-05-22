@@ -7,16 +7,9 @@ interface IGroupMembersProps {
     /**
      * Image URL for the back button
      *
-     * @remarks
-     * This prop will also be used if `backButton` prop is not provided
-     *
      * @defaultValue `./assets/backbutton.svg`
      */
     backButtonIconURL?: string;
-    /**
-     * Custom back button
-     */
-    backButton?: JSX.Element;
     /**
      * Show back button
      *
@@ -115,6 +108,12 @@ interface IGroupMembersProps {
     emptyStateView?: JSX.Element;
     /**
      * Custom view for the error state of the component
+     */
+    errorStateView?: JSX.Element;
+    /**
+     * @deprecated
+     *
+     * This property is deprecated as of version 4.3.8 due to newer property 'errorStateView'. It will be removed in subsequent versions.
      */
     errorSateView?: JSX.Element;
     /**

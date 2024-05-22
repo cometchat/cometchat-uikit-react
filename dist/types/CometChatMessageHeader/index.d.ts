@@ -8,7 +8,13 @@ interface IMessageHeaderProps {
     subtitleView?: any;
     disableUsersPresence?: boolean;
     disableTyping?: boolean;
+    /**
+  * @deprecated
+  *
+  * This property is deprecated as of version 4.3.8 due to newer property 'passwordGroupIcon'. It will be removed in subsequent versions.
+  */
     protectedGroupIcon?: string;
+    passwordGroupIcon?: string | undefined;
     privateGroupIcon?: string;
     menu?: any;
     user?: CometChat.User;
