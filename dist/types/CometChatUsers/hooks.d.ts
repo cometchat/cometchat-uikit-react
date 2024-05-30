@@ -12,6 +12,7 @@ type Args = {
     fetchNextIdRef: React.MutableRefObject<string>;
     searchKeyword: string;
     disableLoadingState: boolean;
+    usersSearchText: React.MutableRefObject<string>;
 };
 export declare function Hooks(args: Args): void;
 export {};

@@ -11,6 +11,7 @@ type Args = {
     fetchNextAndAppendBannedMembers: (fetchId: string) => Promise<void>;
     fetchNextIdRef: React.MutableRefObject<string>;
     groupPropRef: React.MutableRefObject<CometChat.Group>;
+    bannedMembersSearchText: React.MutableRefObject<string>;
 };
 export declare function Hooks(args: Args): void;
 export {};

@@ -1,7 +1,9 @@
+/// <reference types="react" />
 type Args = {
     searchText: string;
     usersRequestBuilder: CometChat.UsersRequestBuilder | null;
     searchRequestBuilder: CometChat.UsersRequestBuilder | null;
+    usersSearchText: React.MutableRefObject<string>;
 };
 export declare class UsersManager {
     private usersRequest;

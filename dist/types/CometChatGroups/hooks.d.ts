@@ -9,6 +9,7 @@ type Args = {
     groupsManagerRef: React.MutableRefObject<GroupsManager | null>;
     dispatch: React.Dispatch<Action>;
     fetchNextAndAppendGroups: (fetchId: string) => Promise<void>;
+    groupsSearchText: React.MutableRefObject<string>;
 };
 export declare function Hooks(args: Args): void;
 export {};
