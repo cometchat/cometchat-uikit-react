@@ -1,3 +1,0 @@
-import { MutableRefObject } from "react";
-declare function Hooks(itemRefs: any, loggedInUser: any, setLoggedInUser: Function, messageListManager: any, fetchPreviousMessages: Function, updateMessage: Function, messagesRequestBuilder: CometChat.MessagesRequestBuilder | undefined, user: any, group: any, subscribeToEvents: Function, messageIdRef: any, messagesCountRef: any, messageList: any, onErrorCallback: any, setMessageList: any, setScrollListToBottom: any, smartReplyViewRef: any, setShowSmartReply: Function, isOnBottom: MutableRefObject<boolean>, isFirstReload: boolean, setIsFirstReload: Function): void;
-export { Hooks };

@@ -1,0 +1,6 @@
+import { MutableRefObject } from "react";
+/**
+ * This Hooks function is a custom React hook designed to manage  functionalities of CometChatMessageList component. It fetches the logged-in user, handles event subscriptions and tracks message IDs for new message retrieval. It plays a key role in maintaining real-time functionality and user interactions in the chat interface.
+ **/
+declare function Hooks(loggedInUserRef: MutableRefObject<CometChat.User | null>, messageListManagerRef: MutableRefObject<any>, fetchPreviousMessages: () => void, updateMessage: (key: string, mesage: CometChat.BaseMessage, group?: CometChat.Group) => void, messagesRequestBuilder: CometChat.MessagesRequestBuilder | undefined, user: CometChat.User | undefined, group: CometChat.Group | undefined, subscribeToEvents: () => (() => void) | undefined, messageIdRef: MutableRefObject<any>, totalMessagesCountRef: MutableRefObject<any>, messageList: CometChat.BaseMessage[], onErrorCallback: (error: CometChat.CometChatException) => void, setMessageList: (messages: CometChat.BaseMessage[]) => void, setScrollListToBottom: (scrollToBottom: boolean) => void, smartReplyViewRef: MutableRefObject<any>, isOnBottomRef: MutableRefObject<boolean>, isFirstReloadRef: MutableRefObject<boolean>): void;
+export { Hooks };

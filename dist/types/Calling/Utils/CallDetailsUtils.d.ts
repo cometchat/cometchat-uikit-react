@@ -1,4 +1,4 @@
-import { CometChatTheme, CometChatCallDetailsTemplate } from "@cometchat/uikit-resources";
+import { CometChatCallDetailsTemplate, CometChatTheme } from "@cometchat/uikit-resources";
 export declare class CallingDetailsUtils {
     static getDefaultCallTemplate(callLog: any, loggedInUser: CometChat.User, theme: CometChatTheme): Array<CometChatCallDetailsTemplate>;
     private static getCallButtons;

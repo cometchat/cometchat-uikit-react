@@ -62,7 +62,7 @@ export { CometChatGroupsWithMessages } from './CometChatGroupsWithMessages';
 export { CometChatMessageBubble } from './Shared/Views/CometChatMessageBubble';
 export { CometChatMessageComposer } from './CometChatMessageComposer';
 export { CometChatMessageHeader } from './CometChatMessageHeader';
-export { CometChatMessageList } from './CometChatMessageList';
+export { CometChatMessageList } from './CometChatMessageList/CometChatMessageList';
 export { CometChatMessages } from './CometChatMessages';
 export { CometChatThreadedMessages } from './CometChatThreadedMessages';
 export { CometChatTransferOwnership } from './CometChatTransferOwnership';
@@ -81,3 +81,4 @@ export { AISmartRepliesDecorator } from './AI/AISmartReplies/AISmartRepliesDecor
 export { AIConversationSummaryExtension } from './AI/AIConversationSummary/AIConversationSummaryExtension';
 export { AIConversationSummaryDecorator } from './AI/AIConversationSummary/AIConversationSummaryDecorator';
 export { AIExtensionDataSource } from './Shared/Framework/AIExtensionDataSource';
+export * from './Shared/Views/LitElementsWrapper/LitElementsWrapper';
