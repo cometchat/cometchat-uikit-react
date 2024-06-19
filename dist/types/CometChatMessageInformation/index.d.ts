@@ -1,5 +1,5 @@
 /// <reference types="react" />
-import { ListItemStyle } from "@cometchat/uikit-elements";
+import { BackdropStyle, ListItemStyle } from "@cometchat/uikit-elements";
 import { CometChatMessageTemplate } from "@cometchat/uikit-resources";
 import { MessageInformationStyle } from "@cometchat/uikit-shared";
 interface MessageInformationProps {
@@ -23,6 +23,7 @@ interface MessageInformationProps {
     loadingStateView?: any;
     errorStateText?: any;
     errorStateView?: any;
+    backdropStyle?: BackdropStyle;
 }
 declare const CometChatMessageInformation: (props: MessageInformationProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatMessageInformation };

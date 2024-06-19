@@ -62,8 +62,6 @@ export declare const getMessageComposerStyle: (conversationsWithMessagesStyle: W
     background?: string | undefined;
 };
 export declare const getMessagesStyle: (messagesStyle?: MessagesStyle, conversationsWithMessagesStyle?: WithMessagesStyle | undefined) => {
-    messageTextColor?: string | undefined;
-    messageTextFont?: string | undefined;
     height?: string | undefined;
     width?: string | undefined;
     border?: string | undefined;

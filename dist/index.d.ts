@@ -3,7 +3,7 @@ import * as React$1 from 'react';
 import React__default, { CSSProperties, JSX as JSX$1 } from 'react';
 import { UserMemberListType, UserPresencePlacement, CometChatLocalize, FormMessage, CardMessage, CustomInteractiveMessage, SchedulerMessage, CometChatTheme, CometChatActionsIcon, CometChatActionsView, MessageBubbleAlignment, CometChatMessageTemplate, CometChatMessageComposerAction, CometChatDetailsTemplate, MentionsTargetElement, TabAlignment, CometChatTabItem, IconButtonAlignment, TitleAlignment, States, CallWorkflow, DatePatterns, CometChatOption, SelectionMode, AuxiliaryButtonAlignment, MessageListAlignment, TimestampAlignment, TabsVisibility } from '@cometchat/uikit-resources';
 export * from '@cometchat/uikit-resources';
-import { AvatarStyle, TextBubbleStyle, BaseStyle, ImageBubbleStyle, FileBubbleStyle, DocumentBubbleStyle, ConfirmDialogStyle, ListItemStyle, CallscreenStyle, BadgeStyle, ReceiptStyle, DateStyle, ChangeScopeStyle, ActionSheetStyle, MediaRecorderStyle, EmojiKeyboardStyle, CometChatEmojiKeyboard, CometChatIconButton, CometChatButton as CometChatButton$1, CometChatDate, CometChatLabel, CometChatLoader, CometChatAvatar, CometChatReceipt } from '@cometchat/uikit-elements';
+import { AvatarStyle, TextBubbleStyle, BaseStyle, ImageBubbleStyle, FileBubbleStyle, DocumentBubbleStyle, ConfirmDialogStyle, ListItemStyle, CallscreenStyle, BadgeStyle, ReceiptStyle, DateStyle, ChangeScopeStyle, ActionSheetStyle, MediaRecorderStyle, EmojiKeyboardStyle, BackdropStyle, CometChatEmojiKeyboard, CometChatIconButton, CometChatButton as CometChatButton$1, CometChatDate, CometChatLabel, CometChatLoader, CometChatAvatar, CometChatReceipt } from '@cometchat/uikit-elements';
 export { ActionSheetStyle, AvatarStyle, BackdropStyle, BadgeStyle, ButtonGroupStyle, CallscreenStyle, CardStyle, ChangeScopeStyle, CheckboxStyle, CometChatActionItem, CometChatActionSheet, CometChatAvatar, CometChatBackdrop, CometChatBadge, CometChatButton, CometChatButtonGroup, CometChatCallscreenWrapper, CometChatCard, CometChatChangeScope, CometChatCheckbox, CometChatConfirmDialog, CometChatContextMenu, CometChatCreateGroup, CometChatDate, CometChatDivider, CometChatDocumentBubble, CometChatDraggable, CometChatDropdown, CometChatEmoji, CometChatEmojiKeyboard, CometChatFullScreenViewer, CometChatIcon, CometChatIconButton, CometChatInput, CometChatJoinGroup, CometChatLabel, CometChatListItem, CometChatLiveReaction, CometChatLoader, CometChatMediaRecorder, CometChatMenuList, CometChatMessageInput, CometChatModal, CometChatPopover, CometChatPreview, CometChatQuickView, CometChatRadioButton, CometChatReceipt, CometChatSearchInput, CometChatSingleSelect, CometChatStatusIndicator, CometChatTextInput, ConfirmDialogStyle, ContextMenuStyle, CreateGroupStyle, DateStyle, DocumentBubbleStyle, DropdownStyle, EmojiKeyboardStyle, Emojis, FileBubbleStyle, FullScreenViewerStyle, IconStyle, ImageBubbleStyle, InputStyle, JoinGroupStyle, LabelStyle, ListItemStyle, LoaderStyle, MediaRecorderStyle, MenuListStyle, MessageInputStyle, ModalStyle, PopoverStyle, PreviewStyle, QuickViewStyle, RadioButtonStyle, ReceiptStyle, SearchInputStyle, SingleSelectStyle, TextBubbleStyle, TextInputStyle, auxiliaryButtonAlignmentEnum, layoutType } from '@cometchat/uikit-elements';
 import { UIKitSettings, CometChatSoundManager, ComposerId as ComposerId$1, FormBubbleStyle, SchedulerBubbleStyle, CardBubbleStyle, AIOptionsStyle, CometChatTextFormatter, CometChatMentionsFormatter, CometChatUrlsFormatter, BaseStyle as BaseStyle$1, ListStyle, OptionsStyle, ImageModerationStyle, LinkPreviewStyle, MessageTranslationStyle, PollsBubbleStyle, CreatePollStyle, SmartRepliesStyle, StickersStyle, CallButtonsStyle, IncomingCallStyle, CometChatUIKitCalls, OutgoingCallStyle, CallLogsStyle, OutgoingCallConfiguration, CallLogHistoryConfiguration, CallLogParticipantsConfiguration, CallLogRecordingsConfiguration, CallLogDetailsStyle, CallLogHistoryStyle, CallLogParticipantsStyle, CallLogRecordingsStyle, WithDetailsStyle, CallLogDetailsConfiguration, CallLogsConfiguration, AddMembersStyle, BannedMembersStyle, ConversationsStyle, WithMessagesStyle, MessagesConfiguration, ConversationsConfiguration, ContactsConfiguration, AddMembersConfiguration, BannedMembersConfiguration, GroupMembersConfiguration, TransferOwnershipConfiguration, DetailsStyle, GroupMembersStyle, GroupsStyle, GroupsConfiguration, CreateGroupConfiguration, JoinGroupConfiguration, MessageComposerStyle, UserMemberWrapperConfiguration, MessageHeaderStyle, MessageListStyle, MessageInformationConfiguration, ReactionsConfiguration, MessageHeaderConfiguration, MessageListConfiguration, MessageComposerConfiguration, ThreadedMessagesConfiguration, DetailsConfiguration, MessagesStyle, TransferOwnershipStyle, UsersStyle, UsersConfiguration, ContactsStyle, MessageInformationStyle, AIAssistBotConfiguration, AIConversationStarterConfiguration, AISmartRepliesConfiguration, AIConversationSummaryConfiguration, CometChatReactions } from '@cometchat/uikit-shared';
 export * from '@cometchat/uikit-shared';
@@ -1052,10 +1052,10 @@ declare const CometChatCallLogs: {
 interface ICallLogDetailsProps {
     title?: string;
     backIconUrl?: string;
-    call: any;
+    call: CometChat$1.Call;
     onBackClick?: Function;
     avatarStyle?: AvatarStyle;
-    data?: (callLog: any, loggedInUser: CometChat.User, theme: CometChatTheme) => CometChatDetailsTemplate[];
+    data?: (callLog: any, loggedInUser: CometChat$1.User, theme: CometChatTheme) => CometChatDetailsTemplate[];
     callLogHistoryConfiguration?: CallLogHistoryConfiguration;
     callLogParticipantsConfiguration?: CallLogParticipantsConfiguration;
     callLogRecordingsConfiguration?: CallLogRecordingsConfiguration;
@@ -1063,7 +1063,17 @@ interface ICallLogDetailsProps {
 }
 declare const CometChatCallLogDetails: {
     (props: ICallLogDetailsProps): react_jsx_runtime.JSX.Element;
-    defaultProps: ICallLogDetailsProps;
+    defaultProps: {
+        title: any;
+        backIconUrl: string;
+        onBackClick: undefined;
+        avatarStyle: AvatarStyle;
+        data: (callLog: any, loggedInUser: CometChat$1.User, theme: CometChatTheme) => CometChatDetailsTemplate[];
+        callLogHistoryConfiguration: CallLogHistoryConfiguration;
+        callLogParticipantsConfiguration: CallLogParticipantsConfiguration;
+        callLogRecordingsConfiguration: CallLogRecordingsConfiguration;
+        callLogDetailsStyle: CallLogDetailsStyle;
+    };
 };
 
 interface ICallLogHistoryProps {
@@ -2738,6 +2748,7 @@ interface IMessageListProps {
     threadIndicatorIcon?: string;
     disableMentions?: boolean;
     textFormatters?: CometChatTextFormatter[];
+    backdropStyle?: BackdropStyle;
 }
 declare const CometChatMessageList: {
     (props: IMessageListProps): react_jsx_runtime.JSX.Element;
@@ -3228,6 +3239,7 @@ interface MessageInformationProps {
     loadingStateView?: any;
     errorStateText?: any;
     errorStateView?: any;
+    backdropStyle?: BackdropStyle;
 }
 declare const CometChatMessageInformation: (props: MessageInformationProps) => react_jsx_runtime.JSX.Element;
 

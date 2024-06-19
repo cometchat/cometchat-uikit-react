@@ -38,8 +38,6 @@ export declare const getMessageComposerStyle: (groupsWithMessagesStyle: WithMess
     background?: string | undefined;
 };
 export declare const getMessagesStyle: (messagesStyle?: MessagesStyle, withMessagesStyle?: WithMessagesStyle | undefined) => {
-    messageTextColor?: string | undefined;
-    messageTextFont?: string | undefined;
     height?: string | undefined;
     width?: string | undefined;
     border?: string | undefined;
