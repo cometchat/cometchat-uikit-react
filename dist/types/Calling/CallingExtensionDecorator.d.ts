@@ -68,6 +68,6 @@ export declare class CallingExtensionDecorator extends DataSourceDecorator {
     getCallActionMessage(_message: CometChat.Call): string;
     getDefaultAudioCallMessageBubble(_message: CometChat.Call, _alignment: MessageBubbleAlignment, _theme: CometChatTheme): import("react/jsx-runtime").JSX.Element;
     getDefaultVideoCallMessageBubble(_message: CometChat.Call, _alignment: MessageBubbleAlignment, _theme: CometChatTheme): import("react/jsx-runtime").JSX.Element;
-    getLastConversationMessage(conversation: CometChat.Conversation, loggedInUser: CometChat.User, additionalParams?: any): string;
+    getLastConversationMessage(conversation: CometChat.Conversation, loggedInUser: CometChat.User, additionalConfigurations?: any): string;
     getAuxiliaryHeaderMenu(user?: CometChat.User, group?: CometChat.Group): any[];
 }

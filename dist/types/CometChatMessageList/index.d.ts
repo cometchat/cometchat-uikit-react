@@ -1,5 +1,5 @@
 import "@cometchat/uikit-elements";
-import { AvatarStyle, BackdropStyle, DateStyle, EmojiKeyboardStyle } from "@cometchat/uikit-elements";
+import { AvatarStyle, DateStyle, EmojiKeyboardStyle } from "@cometchat/uikit-elements";
 import { CometChatMessageTemplate, DatePatterns, MessageListAlignment, TimestampAlignment } from "@cometchat/uikit-resources";
 import { CometChatTextFormatter, MessageInformationConfiguration, MessageListStyle, ReactionsConfiguration } from "@cometchat/uikit-shared";
 interface IMessageListProps {
@@ -46,7 +46,6 @@ interface IMessageListProps {
     threadIndicatorIcon?: string;
     disableMentions?: boolean;
     textFormatters?: CometChatTextFormatter[];
-    backdropStyle?: BackdropStyle;
 }
 declare const CometChatMessageList: {
     (props: IMessageListProps): import("react/jsx-runtime").JSX.Element;

@@ -38,6 +38,8 @@ export declare const getMessageComposerStyle: (usersWithMessagesStyle: WithMessa
     background?: string | undefined;
 };
 export declare const getMessagesStyle: (messagesStyle?: MessagesStyle, withMessagesStyle?: WithMessagesStyle | undefined) => {
+    messageTextColor?: string | undefined;
+    messageTextFont?: string | undefined;
     height?: string | undefined;
     width?: string | undefined;
     border?: string | undefined;
@@ -45,25 +47,3 @@ export declare const getMessagesStyle: (messagesStyle?: MessagesStyle, withMessa
     background: string | undefined;
 };
 export declare const getEmptyMessageLayoutStyle: (isMobileView: boolean | undefined, activeUser: CometChat.User | undefined) => CSSProperties;
-export declare const getMessageInformationStyle: (messagesConfiguration: MessagesConfiguration | undefined, isMobileView: boolean | undefined) => {
-    width: string;
-    height: string;
-    titleTextFont?: string | undefined;
-    titleTextColor?: string | undefined;
-    emptyStateTextFont?: string | undefined;
-    emptyStateTextColor?: string | undefined;
-    errorStateTextFont?: string | undefined;
-    errorStateTextColor?: string | undefined;
-    sendIconTint?: string | undefined;
-    loadingIconTint?: string | undefined;
-    readIconTint?: string | undefined;
-    deliveredIconTint?: string | undefined;
-    subtitleTextFont?: string | undefined;
-    subtitleTextColor?: string | undefined;
-    dividerTint?: string | undefined;
-    captionTextFont?: string | undefined;
-    captionTextColor?: string | undefined;
-    border?: string | undefined;
-    borderRadius?: string | undefined;
-    background?: string | undefined;
-};

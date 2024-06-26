@@ -6,6 +6,9 @@ interface IBannedMembersProps {
     /**
      * Image URL for the back button
      *
+     * @remarks
+     * This prop will also be used if `backButton` prop is not provided
+     *
      * @defaultValue `./assets/backbutton.svg`
      */
     backButtonIconURL?: string;

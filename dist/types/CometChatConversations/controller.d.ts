@@ -1,4 +1,3 @@
-import { CometChat } from "@cometchat/chat-sdk-javascript";
 type Args = {
     conversationsRequestBuilder: CometChat.ConversationsRequestBuilder | null;
 };
@@ -61,13 +60,5 @@ export declare class ConversationsManager {
   * @returns - Function to remove the added SDK websocket listener
   */
     static attachConnestionListener(callback: () => void): () => void;
-    /**
-     * Determines if the last message should trigger an update based on its category and type.
-     *
-     * @param message - The last message sent or received in the conversation.
-     * @returns {boolean} - Returns true if the message should trigger an update, false otherwise.
-     */
-    static shouldLastMessageAndUnreadCountBeUpdated: (message: CometChat.BaseMessage) => any;
-    static shouldIncrementForCustomMessage(message: CometChat.CustomMessage): any;
 }
 export {};

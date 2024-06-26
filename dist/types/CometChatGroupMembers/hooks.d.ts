@@ -16,7 +16,6 @@ type Args = {
     updateGroupMemberScope: (newScope: string) => Promise<void>;
     searchKeyword: string;
     disableLoadingState: boolean;
-    groupMembersSearchText: React.MutableRefObject<string>;
 };
 export declare function Hooks(args: Args): void;
 export {};

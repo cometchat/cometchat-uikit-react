@@ -1,7 +1,7 @@
 import { AvatarStyle, ListItemStyle, MenuListStyle } from "@cometchat/uikit-elements";
-import { BannedMembersStyle, ListStyle } from "@cometchat/uikit-shared";
-import { CometChatTheme } from "@cometchat/uikit-resources";
 import { CSSProperties } from "react";
+import { CometChatTheme } from "@cometchat/uikit-resources";
+import { BannedMembersStyle, ListStyle } from "@cometchat/uikit-shared";
 type ButtonStyle = CSSProperties & {
     buttonIconTint: string;
 };

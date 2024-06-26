@@ -14,7 +14,7 @@ interface IListItemProps {
     menuView?: JSX.Element | null;
     hideSeparator?: boolean;
     avatarStyle?: AvatarStyle;
-    statusIndicatorStyle?: CSSProperties | null;
+    statusIndicatorStyle?: CSSProperties;
     listItemStyle?: ListItemStyle;
     onClick?: (customEvent: CustomEvent<{
         id: string;

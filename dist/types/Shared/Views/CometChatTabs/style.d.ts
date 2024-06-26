@@ -24,7 +24,7 @@ export declare function tabItemWrapperStyle(): {
     height: string;
     width: string;
 };
-export declare const getTabItemStyle: (tabAlignment: TabAlignment | undefined, tab: CometChatTabItem, activeTab: CometChatTabItem | null, placement: string, tabsStyle: TabsStyle | undefined) => CSSProperties;
+export declare const getTabItemStyle: (tabAlignment: TabAlignment | undefined, tab: CometChatTabItem, activeTab: CometChatTabItem | null, placement: string) => CSSProperties;
 export declare const TabPaneContentViewStyle: (tabStyle: BaseStyle | undefined) => CSSProperties;
 export declare function draggableStyle(): {
     width: string;

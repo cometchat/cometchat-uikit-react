@@ -57,7 +57,6 @@ type Args = {
     setUserMemberListType: React.Dispatch<React.SetStateAction<UserMemberListType | undefined>>;
     userMemberWrapperRef: any;
     getComposerId: Function;
-    parentMessageIdPropRef: any;
 };
 export declare function Hooks(args: Args): void;
 export {};

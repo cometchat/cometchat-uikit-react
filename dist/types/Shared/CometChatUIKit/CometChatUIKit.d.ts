@@ -6,7 +6,6 @@ declare class CometChatUIKit {
     static uiKitSettings: UIKitSettings | null;
     static SoundManager: typeof CometChatSoundManager;
     static Localize: typeof CometChatLocalize;
-    static conversationUpdateSettings: CometChat.ConversationUpdateSettings;
     static init(uiKitSettings: UIKitSettings | null): Promise<Object> | undefined;
     static defaultExtensions: ExtensionsDataSource[];
     static defaultAIFeatures: AIExtensionDataSource[];
