@@ -1,7 +1,9 @@
+/// <reference types="react" />
 type Args = {
     searchText: string;
     usersRequestBuilder: CometChat.UsersRequestBuilder | null;
     searchRequestBuilder: CometChat.UsersRequestBuilder | null;
+    usersSearchText: React.MutableRefObject<string>;
 };
 export declare class UsersManager {
     private usersRequest;
@@ -10,6 +12,7 @@ export declare class UsersManager {
      * Set `usersRequest` of the instance
      */
     constructor(args: Args);
+    private getDefaultRequestBuilder;
     /**
      * Calls `fetchNext` method of the set `usersRequest`
      */

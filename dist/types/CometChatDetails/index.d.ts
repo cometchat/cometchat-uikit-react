@@ -70,11 +70,22 @@ interface IDetailsProps {
      */
     privateGroupIcon?: string;
     /**
+     * @deprecated
+     *
+     * This property is deprecated as of version 4.3.8 due to newer property 'passwordGroupIcon'. It will be removed in subsequent versions.
+     */
+    /**
      * Image URL for the status indicator icon of a password-protected group
      *
      * @defaultValue `./assets/locked.svg`
      */
     protectedGroupIcon?: string;
+    /**
+       * Image URL for the status indicator icon of a password-protected group
+       *
+       * @defaultValue {undefined}
+       */
+    passwordGroupIcon?: string;
     /**
      * Function to create a list of `CometChatTemplate` instances from the `user` or `group` prop
      */

@@ -5,6 +5,7 @@ type Args = {
     searchRequestBuilder: CometChat.BannedMembersRequestBuilder | null;
     searchText: string;
     groupGuid: string;
+    bannedMembersSearchText: React.MutableRefObject<string>;
 };
 export declare class BannedMembersManager {
     private bannedMembersRequest;

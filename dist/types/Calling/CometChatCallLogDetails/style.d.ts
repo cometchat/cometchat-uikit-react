@@ -1,6 +1,7 @@
 /// <reference types="react" />
 import { CometChatTheme } from "@cometchat/uikit-resources";
 import { CallLogDetailsStyle } from "@cometchat/uikit-shared";
+import { ListItemStyle } from "@cometchat/uikit-elements";
 export declare function getProfileContainerStyle(): React.CSSProperties;
 export declare function getButtonContainerStyle(): React.CSSProperties;
 export declare function getBackButtonStyle(theme: CometChatTheme, style: CallLogDetailsStyle): {
@@ -17,3 +18,4 @@ export declare function getTitleStyle(theme: CometChatTheme, style: CallLogDetai
     color: string | undefined;
     background: string;
 };
+export declare function getListItemStyle(theme: CometChatTheme, style: any): ListItemStyle;

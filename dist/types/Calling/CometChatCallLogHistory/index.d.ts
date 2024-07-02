@@ -1,6 +1,6 @@
+import { CallLogHistoryStyle } from "@cometchat/uikit-shared";
 import { DatePatterns } from "@cometchat/uikit-resources";
 import { ListItemStyle } from "@cometchat/uikit-elements";
-import { CallLogHistoryStyle } from "@cometchat/uikit-shared";
 interface ICallLogHistoryProps {
     title?: string;
     emptyStateText?: string;

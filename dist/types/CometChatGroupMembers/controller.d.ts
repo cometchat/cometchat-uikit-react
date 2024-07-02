@@ -5,6 +5,7 @@ type Args = {
     groupMemberRequestBuilder: CometChat.GroupMembersRequestBuilder | null;
     searchRequestBuilder: CometChat.GroupMembersRequestBuilder | null;
     groupGuid: string;
+    groupMembersSearchText: React.MutableRefObject<string>;
 };
 export declare class GroupMembersManager {
     private groupMembersRequest;

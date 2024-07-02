@@ -27,7 +27,7 @@ export declare class MessagesDataSource implements DataSource {
     getSchedulerMessageTemplate(theme: CometChatTheme): CometChatMessageTemplate;
     getCardMessageTemplate(theme: CometChatTheme): CometChatMessageTemplate;
     getAllMessageTemplates(theme?: CometChatTheme, additionalConfigurations?: any): Array<CometChatMessageTemplate>;
-    getMessageTemplate(messageType: string, messageCategory: string, theme?: CometChatTheme): CometChatMessageTemplate | null;
+    getMessageTemplate(messageType: string, messageCategory: string, theme?: CometChatTheme, additionalConfigurations?: any): CometChatMessageTemplate | null;
     getMessageOptions(loggedInUser: CometChat.User, messageObject: CometChat.BaseMessage, theme: CometChatTheme, group?: CometChat.Group): Array<CometChatActionsIcon | CometChatActionsView>;
     getCommonOptions(loggedInUser: CometChat.User, messageObject: CometChat.BaseMessage, theme: CometChatTheme, group?: CometChat.Group): Array<CometChatActionsIcon | CometChatActionsView>;
     getAllMessageTypes(): Array<string>;

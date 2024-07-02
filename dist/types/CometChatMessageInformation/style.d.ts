@@ -1,7 +1,7 @@
 import { CometChatTheme } from "@cometchat/uikit-resources";
 import { CSSProperties } from "react";
-import { ReceiptStyle, DateStyle } from "@cometchat/uikit-elements";
-import { MessageInformationStyle } from "@cometchat/uikit-shared";
+import { ReceiptStyle, DateStyle, BackdropStyle } from "@cometchat/uikit-elements";
+import { BaseStyle, MessageInformationStyle } from "@cometchat/uikit-shared";
 type ButtonStyle = CSSProperties & {
     buttonIconTint?: string;
 };
@@ -44,4 +44,5 @@ export declare const getMessageInfoStyle: (theme: CometChatTheme, messageInfo?: 
 export declare const getReceiptTextStyle: (theme: CometChatTheme) => CSSProperties;
 export declare const getMessageTextStyle: (theme: CometChatTheme) => CSSProperties;
 export declare const getParentBubbleStyle: (alignBubble?: boolean) => CSSProperties;
+export declare function getBackdropStyle(backdropStyleObject: BaseStyle): BackdropStyle;
 export {};

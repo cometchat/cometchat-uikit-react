@@ -2,12 +2,14 @@ import React from "react";
 import { Action } from ".";
 type Args = {
     searchText: string;
-    groupsRequestBuilder: CometChat.GroupsRequestBuilder;
+    groupsRequestBuilder: CometChat.GroupsRequestBuilder | null;
     searchRequestBuilder: CometChat.GroupsRequestBuilder | null;
+    groupsSearchText: React.MutableRefObject<string>;
 };
 export declare class GroupsManager {
     private groupsRequest;
     private static loggedInUser;
+    private static defaultLimit;
     /**
      * Set `groupsRequest` of the instance
      */
@@ -16,6 +18,7 @@ export declare class GroupsManager {
      * Calls `fetchNext` method of the set `groupsRequest`
      */
     fetchNext(): Promise<[] | import("@cometchat/chat-sdk-javascript").Group[]>;
+    private getDefaultRequestBuilder;
     /**
      * Sets `loggedInUser` of the instance
      * @returns The logged-in user

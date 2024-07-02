@@ -1,6 +1,6 @@
 import { AIOptionsStyle, CometChatTextFormatter, MessageComposerStyle, UserMemberWrapperConfiguration } from "@cometchat/uikit-shared";
 import { ActionSheetStyle, MediaRecorderStyle } from "@cometchat/uikit-elements";
-import { AuxiliaryButtonAlignment, CometChatMessageComposerAction } from "@cometchat/uikit-resources";
+import { AuxiliaryButtonAlignment, CometChatMessageComposerAction, PreviewMessageMode } from "@cometchat/uikit-resources";
 import React, { JSX } from "react";
 type ComposerId = {
     parentMessageId: number | null;
@@ -54,7 +54,7 @@ interface IMessageComposerProps {
     /**
      * Function to call whenever a new text message is sent
      */
-    onSendButtonClick?: (message: CometChat.BaseMessage) => void;
+    onSendButtonClick?: (message: CometChat.BaseMessage, previewMessageMode?: PreviewMessageMode) => void;
     /**
      * Custom secondary button view
      */

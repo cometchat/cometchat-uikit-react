@@ -14,4 +14,13 @@ export declare const getMessageHeaderStyle: (messageHeaderConfiguration: Message
 export declare const getMessageListStyle: (messageListConfiguration: MessageListConfiguration | undefined) => MessageListStyle;
 export declare const getMessageComposerStyle: (messageComposerConfiguration: MessageComposerConfiguration | undefined) => MessageComposerStyle;
 export declare const getDetailsStyle: (detailsConfiguration: DetailsConfiguration | undefined, messagesStyle: MessagesStyle | undefined, theme: CometChatTheme) => DetailsStyle;
+export declare function detailsButtonStyle(theme: CometChatTheme): {
+    height: string;
+    width: string;
+    border: string;
+    borderRadius: string;
+    background: string;
+    buttonIconTint: string | undefined;
+    padding: number;
+};
 export declare const panelDivStyle: CSSProperties;
