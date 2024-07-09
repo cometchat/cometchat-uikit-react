@@ -12,6 +12,7 @@ export declare class AISmartRepliesDecorator extends DataSourceDecorator {
     group: CometChat.Group;
     theme: CometChatTheme;
     buttonRef: any;
+    isModalClosed: boolean;
     private closeCallback?;
     constructor(dataSource: DataSource, configuration?: AISmartRepliesConfiguration);
     childRefCallback: (childRef: React.RefObject<typeof CometChatButton>) => void;
