@@ -11,6 +11,7 @@ export declare const getUsersStyle: (usersConfiguration: UsersConfiguration | un
 export declare const getMessageHeaderStyle: (usersWithMessagesStyle: WithMessagesStyle | undefined, messagesConfiguration: MessagesConfiguration | undefined, isMobileView: boolean | undefined) => MessageHeaderStyle;
 export declare const getMessageComposerStyle: (usersWithMessagesStyle: WithMessagesStyle | undefined, messagesConfiguration: MessagesConfiguration | undefined, isMobileView: boolean | undefined) => {
     attachIcontint?: string | undefined;
+    liveReactionIconTint?: string | undefined;
     sendIconTint?: string | undefined;
     emojiIconTint?: string | undefined;
     AIIconTint?: string | undefined;

@@ -35,6 +35,7 @@ export declare const getConversationsStyle: (conversationsConfiguration: Convers
 export declare const getMessageHeaderStyle: (conversationsWithMessagesStyle: WithMessagesStyle | undefined, messagesConfiguration: MessagesConfiguration | undefined, isMobileView: boolean | undefined) => MessageHeaderStyle;
 export declare const getMessageComposerStyle: (conversationsWithMessagesStyle: WithMessagesStyle | undefined, messagesConfiguration: MessagesConfiguration | undefined, isMobileView: boolean | undefined) => {
     attachIcontint?: string | undefined;
+    liveReactionIconTint?: string | undefined;
     sendIconTint?: string | undefined;
     emojiIconTint?: string | undefined;
     AIIconTint?: string | undefined;

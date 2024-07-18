@@ -16,7 +16,7 @@ export declare function previewStyle(messageComposerStyle: MessageComposerStyle 
 export declare function getMentionsViewStyle(): CSSProperties;
 export declare function getMentionInfoIconStyle(messageComposerStyle: MessageComposerStyle | undefined, theme: CometChatTheme, mentionsWarningStyle: React.CSSProperties): mentionIconStyleType;
 export declare function textInputStyle(messageComposerStyle: MessageComposerStyle | undefined, theme: CometChatTheme): TextInputStyle;
-export declare function liveReactionButtonStyle(): {
+export declare function liveReactionButtonStyle(theme: CometChatTheme, style?: MessageComposerStyle): {
     height: string;
     width: string;
     border: string;

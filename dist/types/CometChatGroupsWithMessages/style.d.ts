@@ -11,6 +11,7 @@ export declare const getGroupsStyle: (groupsConfiguration: GroupsConfiguration |
 export declare const getMessageHeaderStyle: (groupsWithMessagesStyle: WithMessagesStyle | undefined, messagesConfiguration: MessagesConfiguration | undefined, isMobileView: boolean | undefined) => MessageHeaderStyle;
 export declare const getMessageComposerStyle: (groupsWithMessagesStyle: WithMessagesStyle | undefined, messagesConfiguration: MessagesConfiguration | undefined, isMobileView: boolean | undefined) => {
     attachIcontint?: string | undefined;
+    liveReactionIconTint?: string | undefined;
     sendIconTint?: string | undefined;
     emojiIconTint?: string | undefined;
     AIIconTint?: string | undefined;

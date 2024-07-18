@@ -5,6 +5,7 @@ type Args = {
 export declare class ConversationsManager {
     private static limit;
     private conversationsRequest;
+    private static conversationType;
     /**
      * Set `conversationsRequest` of the instance
      */
