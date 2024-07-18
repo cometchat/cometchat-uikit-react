@@ -1,6 +1,6 @@
 {
   "name": "@cometchat/chat-uikit-react",
-  "version": "4.3.15",
+  "version": "4.3.16",
   "description": "Ready-to-use Chat UI Components for React(Javascript/Web)",
   "author": "CometChat",
   "peerDependencies": {
