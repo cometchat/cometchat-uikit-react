@@ -58,6 +58,7 @@ type Args = {
     userMemberWrapperRef: any;
     getComposerId: Function;
     parentMessageIdPropRef: any;
+    propsText: string | undefined;
 };
 export declare function Hooks(args: Args): void;
 export {};
