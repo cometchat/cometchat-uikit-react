@@ -11,8 +11,5 @@ interface IConversationsWithMessagesProps {
     startConversationConfiguration?: ContactsConfiguration;
     startConversationIconURL?: string;
 }
-declare const CometChatConversationsWithMessages: {
-    (props: IConversationsWithMessagesProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IConversationsWithMessagesProps;
-};
+declare const CometChatConversationsWithMessages: (props: IConversationsWithMessagesProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatConversationsWithMessages };

@@ -6,8 +6,5 @@ interface ICallLogWithDetailsProps {
     callLogDetailsConfiguration?: CallLogDetailsConfiguration;
     callLogsConfiguration?: CallLogsConfiguration;
 }
-declare const CometChatCallLogsWithDetails: {
-    (props: ICallLogWithDetailsProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: ICallLogWithDetailsProps;
-};
+declare const CometChatCallLogsWithDetails: (props: ICallLogWithDetailsProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatCallLogsWithDetails };

@@ -12,5 +12,5 @@ export declare class MessageUtils {
     getContentView(message: CometChat.BaseMessage, template: CometChatMessageTemplate): any;
     getBubbleWrapper(message: CometChat.BaseMessage, template: CometChatMessageTemplate): any;
     getMessageBubble(baseMessage: CometChat.BaseMessage, template: CometChatMessageTemplate, messageBubbleStyle: any, alignment: MessageBubbleAlignment): any;
-    getUserStatusVisible(user: CometChat.User | CometChat.GroupMember | any): boolean;
+    getUserStatusVisible(user?: CometChat.User | CometChat.GroupMember): boolean;
 }

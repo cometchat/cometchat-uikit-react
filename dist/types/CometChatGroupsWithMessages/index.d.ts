@@ -10,8 +10,5 @@ interface IGroupsWithMessagesProps {
     joinGroupConfiguration?: JoinGroupConfiguration;
     onError?: ((error: CometChat.CometChatException) => void) | null;
 }
-declare const CometChatGroupsWithMessages: {
-    (props: IGroupsWithMessagesProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IGroupsWithMessagesProps;
-};
+declare const CometChatGroupsWithMessages: (props: IGroupsWithMessagesProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatGroupsWithMessages };

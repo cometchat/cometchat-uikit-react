@@ -8,8 +8,5 @@ interface IAISmartRepliesProps {
     backCallback?: () => void;
     configuration?: AISmartRepliesConfiguration;
 }
-declare const AISmartRepliesView: {
-    (props: IAISmartRepliesProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IAISmartRepliesProps;
-};
+declare const AISmartRepliesView: (props: IAISmartRepliesProps) => import("react/jsx-runtime").JSX.Element;
 export default AISmartRepliesView;

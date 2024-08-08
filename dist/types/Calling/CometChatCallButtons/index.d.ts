@@ -1,5 +1,4 @@
 import { CallButtonsStyle } from "@cometchat/uikit-shared";
-import { CometChat } from "@cometchat/chat-sdk-javascript";
 interface ICallButtonsBaseProps {
     voiceCallIconURL?: string;
     voiceCallIconText?: string;
@@ -21,25 +20,5 @@ interface ICallButtonsGroupProps extends ICallButtonsBaseProps {
     group: CometChat.Group;
 }
 type ICallButtonsProps = ICallButtonsUserProps | ICallButtonsGroupProps;
-declare const CometChatCallButtons: {
-    (props: ICallButtonsProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: {
-        voiceCallIconURL: string;
-        voiceCallIconText: any;
-        voiceCallIconHoverText: any;
-        videoCallIconURL: string;
-        videoCallIconText: any;
-        videoCallIconHoverText: any;
-        callButtonsStyle: {
-            width: string;
-            height: string;
-            border: string;
-            borderRadius: string;
-            background: string;
-        };
-        onVoiceCallClick: undefined;
-        onVideoCallClick: undefined;
-        onError: (error: CometChat.CometChatException) => void;
-    };
-};
+declare const CometChatCallButtons: (props: ICallButtonsProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatCallButtons };

@@ -7,8 +7,5 @@ interface TabsProps {
     keepAlive?: boolean;
     tabIconAlignment?: IconButtonAlignment;
 }
-declare const CometChatTabs: {
-    (props: TabsProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: TabsProps;
-};
+declare const CometChatTabs: (props: TabsProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatTabs };

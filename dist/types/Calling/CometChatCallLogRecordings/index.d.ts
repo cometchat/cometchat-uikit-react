@@ -17,8 +17,5 @@ interface ICallLogRecordingsProps {
     subtitleView?: any;
     tailView?: any;
 }
-declare const CometChatCallLogRecordings: {
-    (props: ICallLogRecordingsProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: ICallLogRecordingsProps;
-};
+declare const CometChatCallLogRecordings: (props: ICallLogRecordingsProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatCallLogRecordings };

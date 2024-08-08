@@ -21,8 +21,5 @@ interface IMessagesProps {
     hideDetails?: boolean;
     auxiliaryMenu?: any;
 }
-declare const CometChatMessages: {
-    (props: IMessagesProps): import("react/jsx-runtime").JSX.Element | null;
-    defaultProps: IMessagesProps;
-};
+declare const CometChatMessages: (props: IMessagesProps) => import("react/jsx-runtime").JSX.Element | null;
 export { CometChatMessages };

@@ -5,8 +5,5 @@ interface IAIConversationStarterProps {
     editReplyCallback?: (reply: string) => void;
     configuration?: AIConversationStarterConfiguration;
 }
-declare const AIConversationStarterView: {
-    (props: IAIConversationStarterProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IAIConversationStarterProps;
-};
+declare const AIConversationStarterView: (props: IAIConversationStarterProps) => import("react/jsx-runtime").JSX.Element;
 export default AIConversationStarterView;

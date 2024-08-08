@@ -23,8 +23,5 @@ interface ICallLogHistoryProps {
     listItemStyle?: ListItemStyle;
     callLogHistoryStyle?: CallLogHistoryStyle;
 }
-declare const CometChatCallLogHistory: {
-    (props: ICallLogHistoryProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: ICallLogHistoryProps;
-};
+declare const CometChatCallLogHistory: (props: ICallLogHistoryProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatCallLogHistory };

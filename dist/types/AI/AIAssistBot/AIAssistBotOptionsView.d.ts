@@ -7,8 +7,5 @@ interface IAIAssistBotProps {
     backCallback?: () => void;
     configuration?: AIAssistBotConfiguration;
 }
-declare const AIAssistBotOptoinsView: {
-    (props: IAIAssistBotProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IAIAssistBotProps;
-};
+declare const AIAssistBotOptoinsView: (props: IAIAssistBotProps) => import("react/jsx-runtime").JSX.Element;
 export default AIAssistBotOptoinsView;

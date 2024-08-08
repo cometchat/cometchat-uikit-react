@@ -6,8 +6,5 @@ interface IAIAssistBotProps {
     messageSendCallBack?: (message: string, bot: CometChat.User) => Promise<string>;
     closeCallback?: () => void;
 }
-declare const AIAssistBotChatView: {
-    (props: IAIAssistBotProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IAIAssistBotProps;
-};
+declare const AIAssistBotChatView: (props: IAIAssistBotProps) => import("react/jsx-runtime").JSX.Element;
 export default AIAssistBotChatView;

@@ -11,8 +11,5 @@ interface IOngoingCallProps {
     onError?: Function;
     callWorkflow?: CallWorkflow;
 }
-declare const CometChatOngoingCall: {
-    (props: IOngoingCallProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IOngoingCallProps;
-};
+declare const CometChatOngoingCall: (props: IOngoingCallProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatOngoingCall };

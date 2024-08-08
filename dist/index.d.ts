@@ -323,10 +323,7 @@ interface TabsProps {
     keepAlive?: boolean;
     tabIconAlignment?: IconButtonAlignment;
 }
-declare const CometChatTabs: {
-    (props: TabsProps): react_jsx_runtime.JSX.Element;
-    defaultProps: TabsProps;
-};
+declare const CometChatTabs: (props: TabsProps) => react_jsx_runtime.JSX.Element;
 
 interface IListProps<T> {
     /**
@@ -934,38 +931,18 @@ interface ICallButtonsBaseProps {
     callButtonsStyle?: CallButtonsStyle;
     onVoiceCallClick?: () => void;
     onVideoCallClick?: () => void;
-    onError?: (error: CometChat$1.CometChatException) => void;
+    onError?: (error: CometChat.CometChatException) => void;
 }
 interface ICallButtonsUserProps extends ICallButtonsBaseProps {
-    user: CometChat$1.User;
-    group?: CometChat$1.Group | null;
+    user: CometChat.User;
+    group?: CometChat.Group | null;
 }
 interface ICallButtonsGroupProps extends ICallButtonsBaseProps {
-    user?: CometChat$1.User | null;
-    group: CometChat$1.Group;
+    user?: CometChat.User | null;
+    group: CometChat.Group;
 }
 type ICallButtonsProps = ICallButtonsUserProps | ICallButtonsGroupProps;
-declare const CometChatCallButtons: {
-    (props: ICallButtonsProps): react_jsx_runtime.JSX.Element;
-    defaultProps: {
-        voiceCallIconURL: string;
-        voiceCallIconText: any;
-        voiceCallIconHoverText: any;
-        videoCallIconURL: string;
-        videoCallIconText: any;
-        videoCallIconHoverText: any;
-        callButtonsStyle: {
-            width: string;
-            height: string;
-            border: string;
-            borderRadius: string;
-            background: string;
-        };
-        onVoiceCallClick: undefined;
-        onVideoCallClick: undefined;
-        onError: (error: CometChat$1.CometChatException) => void;
-    };
-};
+declare const CometChatCallButtons: (props: ICallButtonsProps) => react_jsx_runtime.JSX.Element;
 
 interface IIncomingCallProps {
     call?: any;
@@ -993,10 +970,7 @@ interface IOngoingCallProps {
     onError?: Function;
     callWorkflow?: CallWorkflow;
 }
-declare const CometChatOngoingCall: {
-    (props: IOngoingCallProps): react_jsx_runtime.JSX.Element;
-    defaultProps: IOngoingCallProps;
-};
+declare const CometChatOngoingCall: (props: IOngoingCallProps) => react_jsx_runtime.JSX.Element;
 
 interface IOutgoingCallProps {
     call: CometChat.Call;
@@ -1044,37 +1018,21 @@ interface ICallLogsProps {
     listItemStyle?: ListItemStyle;
     outgoingCallConfiguration?: OutgoingCallConfiguration;
 }
-declare const CometChatCallLogs: {
-    (props: ICallLogsProps): react_jsx_runtime.JSX.Element;
-    defaultProps: ICallLogsProps;
-};
+declare const CometChatCallLogs: (props: ICallLogsProps) => react_jsx_runtime.JSX.Element;
 
 interface ICallLogDetailsProps {
     title?: string;
     backIconUrl?: string;
-    call: CometChat$1.Call;
+    call: CometChat.Call;
     onBackClick?: Function;
     avatarStyle?: AvatarStyle;
-    data?: (callLog: any, loggedInUser: CometChat$1.User, theme: CometChatTheme) => CometChatDetailsTemplate[];
+    data?: (callLog: any, loggedInUser: CometChat.User, theme: CometChatTheme) => CometChatDetailsTemplate[];
     callLogHistoryConfiguration?: CallLogHistoryConfiguration;
     callLogParticipantsConfiguration?: CallLogParticipantsConfiguration;
     callLogRecordingsConfiguration?: CallLogRecordingsConfiguration;
     callLogDetailsStyle?: CallLogDetailsStyle;
 }
-declare const CometChatCallLogDetails: {
-    (props: ICallLogDetailsProps): react_jsx_runtime.JSX.Element;
-    defaultProps: {
-        title: any;
-        backIconUrl: string;
-        onBackClick: undefined;
-        avatarStyle: AvatarStyle;
-        data: (callLog: any, loggedInUser: CometChat$1.User, theme: CometChatTheme) => CometChatDetailsTemplate[];
-        callLogHistoryConfiguration: CallLogHistoryConfiguration;
-        callLogParticipantsConfiguration: CallLogParticipantsConfiguration;
-        callLogRecordingsConfiguration: CallLogRecordingsConfiguration;
-        callLogDetailsStyle: CallLogDetailsStyle;
-    };
-};
+declare const CometChatCallLogDetails: (props: ICallLogDetailsProps) => react_jsx_runtime.JSX.Element;
 
 interface ICallLogHistoryProps {
     title?: string;
@@ -1098,10 +1056,7 @@ interface ICallLogHistoryProps {
     listItemStyle?: ListItemStyle;
     callLogHistoryStyle?: CallLogHistoryStyle;
 }
-declare const CometChatCallLogHistory: {
-    (props: ICallLogHistoryProps): react_jsx_runtime.JSX.Element;
-    defaultProps: ICallLogHistoryProps;
-};
+declare const CometChatCallLogHistory: (props: ICallLogHistoryProps) => react_jsx_runtime.JSX.Element;
 
 interface ICallLogParticipantsProps {
     title?: string;
@@ -1117,10 +1072,7 @@ interface ICallLogParticipantsProps {
     onBackClick?: Function;
     onItemClick?: Function;
 }
-declare const CometChatCallLogParticipants: {
-    (props: ICallLogParticipantsProps): react_jsx_runtime.JSX.Element;
-    defaultProps: ICallLogParticipantsProps;
-};
+declare const CometChatCallLogParticipants: (props: ICallLogParticipantsProps) => react_jsx_runtime.JSX.Element;
 
 interface ICallLogRecordingsProps {
     title?: string;
@@ -1138,10 +1090,7 @@ interface ICallLogRecordingsProps {
     subtitleView?: any;
     tailView?: any;
 }
-declare const CometChatCallLogRecordings: {
-    (props: ICallLogRecordingsProps): react_jsx_runtime.JSX.Element;
-    defaultProps: ICallLogRecordingsProps;
-};
+declare const CometChatCallLogRecordings: (props: ICallLogRecordingsProps) => react_jsx_runtime.JSX.Element;
 
 interface ICallLogWithDetailsProps {
     isMobileView?: boolean;
@@ -1150,10 +1099,7 @@ interface ICallLogWithDetailsProps {
     callLogDetailsConfiguration?: CallLogDetailsConfiguration;
     callLogsConfiguration?: CallLogsConfiguration;
 }
-declare const CometChatCallLogsWithDetails: {
-    (props: ICallLogWithDetailsProps): react_jsx_runtime.JSX.Element;
-    defaultProps: ICallLogWithDetailsProps;
-};
+declare const CometChatCallLogsWithDetails: (props: ICallLogWithDetailsProps) => react_jsx_runtime.JSX.Element;
 
 interface IAddMembersProps {
     /**
@@ -1858,10 +1804,7 @@ interface IConversationsWithMessagesProps {
     startConversationConfiguration?: ContactsConfiguration;
     startConversationIconURL?: string;
 }
-declare const CometChatConversationsWithMessages: {
-    (props: IConversationsWithMessagesProps): react_jsx_runtime.JSX.Element;
-    defaultProps: IConversationsWithMessagesProps;
-};
+declare const CometChatConversationsWithMessages: (props: IConversationsWithMessagesProps) => react_jsx_runtime.JSX.Element;
 
 interface IDetailsProps {
     /**
@@ -2469,10 +2412,7 @@ interface IGroupsWithMessagesProps {
     joinGroupConfiguration?: JoinGroupConfiguration;
     onError?: ((error: CometChat.CometChatException) => void) | null;
 }
-declare const CometChatGroupsWithMessages: {
-    (props: IGroupsWithMessagesProps): react_jsx_runtime.JSX.Element;
-    defaultProps: IGroupsWithMessagesProps;
-};
+declare const CometChatGroupsWithMessages: (props: IGroupsWithMessagesProps) => react_jsx_runtime.JSX.Element;
 
 interface IMessageBubbleProps {
     id: any;
@@ -2750,10 +2690,7 @@ interface IMessageListProps {
     textFormatters?: CometChatTextFormatter[];
     backdropStyle?: BackdropStyle;
 }
-declare const CometChatMessageList: {
-    (props: IMessageListProps): react_jsx_runtime.JSX.Element;
-    defaultProps: IMessageListProps;
-};
+declare const CometChatMessageList: (props: IMessageListProps) => react_jsx_runtime.JSX.Element;
 
 interface IMessagesProps {
     user?: CometChat.User;
@@ -2776,10 +2713,7 @@ interface IMessagesProps {
     hideDetails?: boolean;
     auxiliaryMenu?: any;
 }
-declare const CometChatMessages: {
-    (props: IMessagesProps): react_jsx_runtime.JSX.Element | null;
-    defaultProps: IMessagesProps;
-};
+declare const CometChatMessages: (props: IMessagesProps) => react_jsx_runtime.JSX.Element | null;
 
 interface IThreadedMessagesProps {
     parentMessage: CometChat.BaseMessage;
@@ -3190,10 +3124,7 @@ interface IUsersWithMessagesProps {
     usersConfiguration?: UsersConfiguration;
     onError?: Function;
 }
-declare const CometChatUsersWithMessages: {
-    (props: IUsersWithMessagesProps): react_jsx_runtime.JSX.Element;
-    defaultProps: IUsersWithMessagesProps;
-};
+declare const CometChatUsersWithMessages: (props: IUsersWithMessagesProps) => react_jsx_runtime.JSX.Element;
 
 interface ContactsProps {
     title?: string;
@@ -3205,7 +3136,7 @@ interface ContactsProps {
     closeIconURL?: string;
     onClose?: () => void;
     onItemClick?: (user?: CometChat.User, group?: CometChat.Group) => void;
-    onError: ((error: CometChat.CometChatException) => void) | null;
+    onError?: ((error: CometChat.CometChatException) => void) | null;
     submitButtonText?: string;
     hideSubmitButton?: boolean;
     selectionLimit?: number;
@@ -3213,10 +3144,7 @@ interface ContactsProps {
     contactsStyle: ContactsStyle;
     selectionMode?: SelectionMode;
 }
-declare const CometChatContacts: {
-    (props: ContactsProps): react_jsx_runtime.JSX.Element;
-    defaultProps: ContactsProps;
-};
+declare const CometChatContacts: (props: ContactsProps) => react_jsx_runtime.JSX.Element;
 
 interface MessageInformationProps {
     title?: string;

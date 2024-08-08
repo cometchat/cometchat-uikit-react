@@ -8,8 +8,5 @@ interface IUsersWithMessagesProps {
     usersConfiguration?: UsersConfiguration;
     onError?: Function;
 }
-declare const CometChatUsersWithMessages: {
-    (props: IUsersWithMessagesProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IUsersWithMessagesProps;
-};
+declare const CometChatUsersWithMessages: (props: IUsersWithMessagesProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatUsersWithMessages };

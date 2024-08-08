@@ -1,7 +1,7 @@
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { ListItemStyle } from "@cometchat/uikit-elements";
 import { CometChatTheme } from "@cometchat/uikit-resources";
-import { MessageHeaderStyle } from "@cometchat/uikit-shared";
+import { BaseStyle, MessageHeaderStyle } from "@cometchat/uikit-shared";
 import React from 'react';
 export declare const getMessageHeaderWrapperStyle: (messageHeaderStyle: MessageHeaderStyle, theme: CometChatTheme) => React.CSSProperties;
 export declare const MessageHeaderDivStyle: () => React.CSSProperties;
@@ -44,12 +44,7 @@ export declare const defaultAvatarStyle: (theme: CometChatTheme) => {
     outerViewBorder: string;
     outerViewBorderSpacing: string;
 };
-export declare const defaultStatusIndicatorStyle: () => {
-    height: string;
-    width: string;
-    border: string;
-    borderRadius: string;
-};
+export declare function statusIndicatorStyle(statusIndicatorStyleObject: BaseStyle | null): BaseStyle;
 export declare const defaultListItemStyle: (listItemStyle: ListItemStyle, theme: CometChatTheme) => ListItemStyle;
 export declare const getBackButtonStyle: (theme: CometChatTheme) => {
     height: string;

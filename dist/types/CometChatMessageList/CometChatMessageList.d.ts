@@ -48,8 +48,5 @@ interface IMessageListProps {
     textFormatters?: CometChatTextFormatter[];
     backdropStyle?: BackdropStyle;
 }
-declare const CometChatMessageList: {
-    (props: IMessageListProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IMessageListProps;
-};
+declare const CometChatMessageList: (props: IMessageListProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatMessageList };

@@ -33,8 +33,5 @@ interface ICallLogsProps {
     listItemStyle?: ListItemStyle;
     outgoingCallConfiguration?: OutgoingCallConfiguration;
 }
-declare const CometChatCallLogs: {
-    (props: ICallLogsProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: ICallLogsProps;
-};
+declare const CometChatCallLogs: (props: ICallLogsProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatCallLogs };

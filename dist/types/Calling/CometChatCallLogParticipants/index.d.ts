@@ -15,8 +15,5 @@ interface ICallLogParticipantsProps {
     onBackClick?: Function;
     onItemClick?: Function;
 }
-declare const CometChatCallLogParticipants: {
-    (props: ICallLogParticipantsProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: ICallLogParticipantsProps;
-};
+declare const CometChatCallLogParticipants: (props: ICallLogParticipantsProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatCallLogParticipants };

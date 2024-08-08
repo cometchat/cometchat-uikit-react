@@ -6,8 +6,5 @@ interface IAIConversationSummaryProps {
     closeCallback?: () => void;
     configuration?: AIConversationSummaryConfiguration;
 }
-declare const AIConversationSummaryView: {
-    (props: IAIConversationSummaryProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: IAIConversationSummaryProps;
-};
+declare const AIConversationSummaryView: (props: IAIConversationSummaryProps) => import("react/jsx-runtime").JSX.Element;
 export default AIConversationSummaryView;

@@ -10,7 +10,7 @@ interface ContactsProps {
     closeIconURL?: string;
     onClose?: () => void;
     onItemClick?: (user?: CometChat.User, group?: CometChat.Group) => void;
-    onError: ((error: CometChat.CometChatException) => void) | null;
+    onError?: ((error: CometChat.CometChatException) => void) | null;
     submitButtonText?: string;
     hideSubmitButton?: boolean;
     selectionLimit?: number;
@@ -18,8 +18,5 @@ interface ContactsProps {
     contactsStyle: ContactsStyle;
     selectionMode?: SelectionMode;
 }
-declare const CometChatContacts: {
-    (props: ContactsProps): import("react/jsx-runtime").JSX.Element;
-    defaultProps: ContactsProps;
-};
+declare const CometChatContacts: (props: ContactsProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatContacts };
