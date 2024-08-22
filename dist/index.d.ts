@@ -932,17 +932,10 @@ interface ICallButtonsBaseProps {
     onVoiceCallClick?: () => void;
     onVideoCallClick?: () => void;
     onError?: (error: CometChat.CometChatException) => void;
-}
-interface ICallButtonsUserProps extends ICallButtonsBaseProps {
-    user: CometChat.User;
+    user?: CometChat.User | null;
     group?: CometChat.Group | null;
 }
-interface ICallButtonsGroupProps extends ICallButtonsBaseProps {
-    user?: CometChat.User | null;
-    group: CometChat.Group;
-}
-type ICallButtonsProps = ICallButtonsUserProps | ICallButtonsGroupProps;
-declare const CometChatCallButtons: (props: ICallButtonsProps) => react_jsx_runtime.JSX.Element;
+declare const CometChatCallButtons: (props: ICallButtonsBaseProps) => react_jsx_runtime.JSX.Element;
 
 interface IIncomingCallProps {
     call?: any;
@@ -1597,6 +1590,11 @@ interface IConversationsProps {
      */
     selectionMode?: SelectionMode;
     /**
+     * @deprecated
+     *
+     * This property is deprecated as of version 4.3.19 due to newer property 'hideReceipt'. It will be removed in subsequent versions.
+     */
+    /**
      * Disable receipt status
      *
      * @remarks
@@ -1605,6 +1603,15 @@ interface IConversationsProps {
      * @defaultValue `false`
      */
     disableReceipt?: boolean;
+    /**
+   * hide receipt status
+   *
+   * @remarks
+   * If set to true, the receipt status of the message won't be displayed
+   *
+   * @defaultValue `false`
+   */
+    hideReceipt?: boolean;
     /**
      * List of actions available on mouse over on the default list item component
      */
@@ -2653,7 +2660,13 @@ interface IMessageListProps {
     emptyStateView?: any;
     errorStateView?: any;
     loadingStateView?: any;
+    /**
+     * @deprecated
+     *
+     * This property is deprecated as of version 4.3.19 due to newer property 'hideReceipt'. It will be removed in subsequent versions.
+     */
     disableReceipt?: boolean;
+    hideReceipt?: boolean;
     disableSoundForMessages?: boolean;
     customSoundForMessages?: string;
     readIcon?: string;
@@ -3141,7 +3154,7 @@ interface ContactsProps {
     hideSubmitButton?: boolean;
     selectionLimit?: number;
     tabVisibility?: TabsVisibility;
-    contactsStyle: ContactsStyle;
+    contactsStyle?: ContactsStyle;
     selectionMode?: SelectionMode;
 }
 declare const CometChatContacts: (props: ContactsProps) => react_jsx_runtime.JSX.Element;

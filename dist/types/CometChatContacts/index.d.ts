@@ -15,7 +15,7 @@ interface ContactsProps {
     hideSubmitButton?: boolean;
     selectionLimit?: number;
     tabVisibility?: TabsVisibility;
-    contactsStyle: ContactsStyle;
+    contactsStyle?: ContactsStyle;
     selectionMode?: SelectionMode;
 }
 declare const CometChatContacts: (props: ContactsProps) => import("react/jsx-runtime").JSX.Element;

@@ -10,15 +10,8 @@ interface ICallButtonsBaseProps {
     onVoiceCallClick?: () => void;
     onVideoCallClick?: () => void;
     onError?: (error: CometChat.CometChatException) => void;
-}
-interface ICallButtonsUserProps extends ICallButtonsBaseProps {
-    user: CometChat.User;
+    user?: CometChat.User | null;
     group?: CometChat.Group | null;
 }
-interface ICallButtonsGroupProps extends ICallButtonsBaseProps {
-    user?: CometChat.User | null;
-    group: CometChat.Group;
-}
-type ICallButtonsProps = ICallButtonsUserProps | ICallButtonsGroupProps;
-declare const CometChatCallButtons: (props: ICallButtonsProps) => import("react/jsx-runtime").JSX.Element;
+declare const CometChatCallButtons: (props: ICallButtonsBaseProps) => import("react/jsx-runtime").JSX.Element;
 export { CometChatCallButtons };

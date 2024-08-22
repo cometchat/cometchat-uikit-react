@@ -11,7 +11,13 @@ interface IMessageListProps {
     emptyStateView?: any;
     errorStateView?: any;
     loadingStateView?: any;
+    /**
+     * @deprecated
+     *
+     * This property is deprecated as of version 4.3.19 due to newer property 'hideReceipt'. It will be removed in subsequent versions.
+     */
     disableReceipt?: boolean;
+    hideReceipt?: boolean;
     disableSoundForMessages?: boolean;
     customSoundForMessages?: string;
     readIcon?: string;

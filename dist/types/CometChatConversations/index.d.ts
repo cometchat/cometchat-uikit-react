@@ -71,6 +71,11 @@ interface IConversationsProps {
      */
     selectionMode?: SelectionMode;
     /**
+     * @deprecated
+     *
+     * This property is deprecated as of version 4.3.19 due to newer property 'hideReceipt'. It will be removed in subsequent versions.
+     */
+    /**
      * Disable receipt status
      *
      * @remarks
@@ -79,6 +84,15 @@ interface IConversationsProps {
      * @defaultValue `false`
      */
     disableReceipt?: boolean;
+    /**
+   * hide receipt status
+   *
+   * @remarks
+   * If set to true, the receipt status of the message won't be displayed
+   *
+   * @defaultValue `false`
+   */
+    hideReceipt?: boolean;
     /**
      * List of actions available on mouse over on the default list item component
      */
