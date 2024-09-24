@@ -189,6 +189,13 @@ export type Action = {
     type: "updateGroup";
     group: CometChat.Group;
 } | {
+    type: "updateGroupForSDKEvents";
+    group: CometChat.Group;
+    newScope?: CometChat.GroupMemberScope;
+    newCount?: number;
+    hasJoined?: boolean;
+    addGroup?: boolean;
+} | {
     type: "removeGroup";
     guid: string;
 } | {
