@@ -58,6 +58,7 @@ type Args = {
     userMemberWrapperRef: any;
     getComposerId: Function;
     parentMessageIdPropRef: any;
+    isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean | undefined;
     propsText: string | undefined;
 };
 export declare function Hooks(args: Args): void;
