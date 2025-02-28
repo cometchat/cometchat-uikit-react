@@ -226,7 +226,7 @@ export function useCometChatMessageComposer(args: Args) {
     } catch (error) {
       errorHandler(error, "setAddToMsgInputText")
     }
-  }, [user?.getUid(), group?.getGuid(), propsText, dispatch]);
+  }, [user, group, propsText, dispatch]);
 
 
   useEffect(

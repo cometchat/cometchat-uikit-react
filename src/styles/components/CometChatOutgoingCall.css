@@ -89,7 +89,7 @@
     }
 
     /* Avatar size adjustment for smaller screens */
-    .cometchat-outgoing-call__avatar .cometchat-avatar {
+    .cometchat-outgoing-call .cometchat-outgoing-call__avatar .cometchat .cometchat-avatar {
         width: 120px;
         height: 120px;
     }

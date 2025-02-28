@@ -824,10 +824,11 @@ try {
   const mySetAddToMsgInputText = useCallback(
     function (text: string): void {
      try {
-      flushSync(() => {
-        dispatch({ type: "setAddToMsgInputText", addToMsgInputText: "" });
-      });
-      dispatch({ type: "setAddToMsgInputText", addToMsgInputText: text });
+      dispatch({ type: "setAddToMsgInputText", addToMsgInputText: "" });
+
+      setTimeout(() => {
+        dispatch({ type: "setAddToMsgInputText", addToMsgInputText: text });
+      }, 0);
      } catch (error) {
       errorHandler(error,"setAddToMsgInputText")
      }

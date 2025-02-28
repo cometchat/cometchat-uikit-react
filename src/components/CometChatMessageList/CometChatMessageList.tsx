@@ -485,7 +485,7 @@ const CometChatMessageList = (props: MessageListProps) => {
       errorHandler(error, "playAudio");
     }
   }, [disableSoundForMessages, customSoundForMessages]);
-  const renderShimmerBubble = (align: 'start' | 'end', key: number) => {
+  const renderShimmerBubble = (align: 'start' | 'end', key: string) => {
     return user || align == 'end' ? (
       <div key={key} className="cometchat-message-list__shimmer-body" style={{
         alignSelf: `flex-${align}`
@@ -493,19 +493,20 @@ const CometChatMessageList = (props: MessageListProps) => {
         <div className="cometchat-message-list__shimmer-item" />
       </div>
     ) : (
-      <div style={{
+      <div key={key} style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "flex-start"
       }}>
         <div className="cometchat-message-list__shimmer-leading-view"></div>
-
-
-        <div key={key} className="cometchat-message-list__shimmer-body" style={{
+  
+        <div className="cometchat-message-list__shimmer-body" style={{
           alignSelf: `flex-${align}`
         }}>
-          <div className="cometchat-message-list__shimmer-item-header" />          <div className="cometchat-message-list__shimmer-item" />
-        </div></div>
+          <div className="cometchat-message-list__shimmer-item-header" />          
+          <div className="cometchat-message-list__shimmer-item" />
+        </div>
+      </div>
     );
   };
 
@@ -516,14 +517,14 @@ const CometChatMessageList = (props: MessageListProps) => {
   );
   const getShimmer = (count: number) => {
     const shimmers = [];
-    shimmers.push(renderDateShimmer());
+    shimmers.push(<div key="date-shimmer">{renderDateShimmer()}</div>);
     for (let i = 1; i <= count; i++) {
       const align = i % 2 === 0 ? 'start' : 'end';
-      shimmers.push(renderShimmerBubble(align, i));
+      shimmers.push(renderShimmerBubble(align, `shimmer-${i}`));
     }
-
     return <>{shimmers}</>;
   };
+  
 
 
 
@@ -3459,11 +3460,14 @@ const CometChatMessageList = (props: MessageListProps) => {
         );
       } else {
         if ((i == 0 && !isOnBottomRef.current) || ((messageList.length < 10) && i == 0)) {
-          setDateHeader(item?.getSentAt());
+          
           dateHeaderRef.current = item?.getSentAt();
           if(!stickyDateHeaderRef.current){
             stickyDateHeaderRef.current = item?.getSentAt()
           }
+          setTimeout(() => {
+            setDateHeader(item?.getSentAt());
+          }, 0);
         }
         return null;
       }

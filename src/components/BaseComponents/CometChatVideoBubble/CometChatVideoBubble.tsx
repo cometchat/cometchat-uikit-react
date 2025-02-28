@@ -35,7 +35,9 @@ const CometChatVideoBubble = (props: VideoBubbleProps) => {
      * Function to request fullscreen when video starts to play.
      */
     const startVideoInFullscreen = () => {
+        if (!currentMediaPlayer.video || currentMediaPlayer.video !== videoRef.current) {
         closeCurrentMediaPlayer();
+        }
         const videoElement: any = videoRef.current;
         currentMediaPlayer.video = videoElement;
         if (videoElement) {

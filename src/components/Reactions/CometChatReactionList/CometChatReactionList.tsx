@@ -32,6 +32,9 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
     const [currentUIList, setCurrentUIList] = useState<CometChat.Reaction[]>([]);
     const [messageUpdated, setMessageUpdated] = useState<boolean>(true);
     const [isFirstRender, setIsFirstRender] = useState<boolean>(true);
+    const [isFetching, setIsFetching] = useState<boolean>(false);
+    const [hasMore, setHasMore] = useState<boolean>(true);
+
     const selectedRecRef = useRef<string>();
 
     const allText = localize("ALL");
@@ -40,6 +43,7 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
     const limit = CometChatUIKitConstants.requestBuilderLimits.reactionListLimit;
     const loggedInUser = CometChatUIKitLoginListener.getLoggedInUser();
     const parentRef = useRef<HTMLDivElement | null>(null);
+    const requestBuilderRef = useRef<CometChat.ReactionsRequestBuilder | undefined>(undefined);
     const errorHandler = useCometChatErrorHandler(onError);
 
     useEffect(() => {
@@ -81,25 +85,24 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
     const getRequestBuilder = useCallback(
         (reaction: string) => {
            try {
-            let requestBuilder;
             if (requestBuilderMap[reaction]) {
                 return requestBuilderMap[reaction];
             }
 
             if (reactionsRequestBuilder) {
-                requestBuilder = reactionsRequestBuilder;
+                requestBuilderRef.current = reactionsRequestBuilder;
             } else {
-                requestBuilder = new CometChat.ReactionsRequestBuilder().setLimit(
+                requestBuilderRef.current = new CometChat.ReactionsRequestBuilder().setLimit(
                     limit
                 );
             }
-            requestBuilder.setMessageId(messageObject?.getId());
+            requestBuilderRef.current.setMessageId(messageObject?.getId());
 
             if (reaction !== "all") {
-                requestBuilder.setReaction(reaction);
+                requestBuilderRef.current.setReaction(reaction);
             }
 
-            const request = requestBuilder.build();
+            const request = requestBuilderRef.current.build();
             setRequestBuilderMap((prevState) => {
                 return {
                     ...prevState, [reaction || "all"]: request
@@ -141,6 +144,9 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
         if (list.length == 0) {
             list = await requestBuilder.fetchPrevious();
         }
+        if (list.length < limit) {
+            setHasMore(false);
+        }
         setState(States.loaded);
         setReactionList((prev) => ({ ...prev, [reaction || "all"]: list }));
         return list;
@@ -178,22 +184,29 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
     const fetchNext = useCallback(
         async () => {
             try {
+                if (!hasMore || isFetching) return;
+                setIsFetching(true);
                 const requestBuilder = getRequestBuilder(selectedReaction)!;
                 if (!reactionList[selectedReaction] || (reactionList[selectedReaction] && reactionList[selectedReaction].length === 0)) {
+                    setIsFetching(false);
                     return;
                 } else {
                     const newList = await requestBuilder.fetchNext();
+                    if(requestBuilderRef.current && requestBuilderRef.current.limit && newList.length < requestBuilderRef.current.limit){
+                        setHasMore(false);
+                    }
                     setReactionList((prev) => ({
                         ...prev,
                         [selectedReaction]: [...prev[selectedReaction], ...newList],
                     }));
                     const updatedCurrentUIList = [...currentUIList, ...newList];
                     setCurrentUIList(updatedCurrentUIList);
+                    setIsFetching(false);
                 }
             } catch (error) {
                 errorHandler(error,"fetchNext")
             }
-        }, [setSelectedReaction, selectedReaction, reactionList, currentUIList]
+        }, [setSelectedReaction, selectedReaction, reactionList, currentUIList,hasMore,isFetching]
     );
 
     /* This function is used to return the total reactions count for a message. */
@@ -252,16 +265,22 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
 
     /* The purpose of this function is to update the state for reaction list. */
     const updateCurrentUIList = (reactions: ReactionCount[]) => {
+        if (!reactionList["all"] || reactionList["all"].length === 0) {
+            return;
+        }
         const tempReactionsArray: CometChat.Reaction[] = [];
         reactions.forEach((reaction) => {
-            const filteredReaction = reactionList["all"].filter((reactionItem) => {
-                return reactionItem.getReaction() === reaction.getReaction();
-            });
-            tempReactionsArray.push(filteredReaction[0]);
-        })
+            const filteredReaction = reactionList["all"]?.filter((reactionItem) => {
+                return reactionItem?.getReaction() === reaction?.getReaction();
+            }) || [];
+    
+            if (filteredReaction.length > 0) {
+                tempReactionsArray.push(filteredReaction[0]);
+            }
+        });
         setReactionList((prev) => ({ ...prev, ["all"]: tempReactionsArray }));
         setCurrentUIList(tempReactionsArray);
-    }
+    };
 
     /* Purpose of this function is to return the slider component view for reactions. */
     const showReactionsSlider = useCallback(() => {
@@ -300,6 +319,11 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
             errorHandler(error,"showReactionsSlider")
         }
     }, [messageReactions, selectedReaction]);
+    useEffect(() => {
+        if (!isFirstRender && !isFetching && requestBuilderRef.current && requestBuilderRef.current.limit &&  currentUIList.length < requestBuilderRef.current.limit) {
+            fetchNext();
+        }
+    }, [currentUIList.length, isFirstRender, fetchNext,isFetching]);
 
     return (
         <div className="cometchat cometchat-reaction-list" ref={parentRef}>
@@ -327,8 +351,8 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
                         <div
                             className="cometchat-reaction-list__list"
                             onScroll={(e: UIEvent<HTMLDivElement> & { target: { scrollHeight: number, scrollTop: number, clientHeight: number } }) => {
-                                const bottom =
-                                    e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight;
+                                const { scrollHeight, scrollTop, clientHeight } = e.target;
+                                const bottom = scrollHeight - scrollTop <= clientHeight + 10
                                 if (bottom) {
                                     fetchNext();
                                 }

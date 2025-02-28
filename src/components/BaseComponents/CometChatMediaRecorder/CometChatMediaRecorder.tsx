@@ -25,6 +25,8 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     const audioChunks = useRef<Blob[]>([]);
     const counterRunning = useRef<boolean>(true);
     const createMedia = useRef<boolean>(false);
+    const hasInitializedRef = useRef(false);
+
 
     useEffect(() => {
         if (autoRecording) {
@@ -33,10 +35,13 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         return () => {
             handleStopRecording();
             clearInterval(timerIntervalRef.current);
+            clearStream();
+            hasInitializedRef.current = false;
         };
     }, []);
 
     const startTimer = () => {
+        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = window.setInterval(() => {
             if (counterRunning.current) {
                 setCounter((prevCounter) => prevCounter + 1);
@@ -56,11 +61,15 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
 
     const initMediaRecorder = async () => {
         try {
+        if (hasInitializedRef.current) {
+            return;
+        }
+        hasInitializedRef.current = true;
+        clearStream();
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
             });
             streamRef.current = stream;
-
             const audioRecorder = new MediaRecorder(stream);
             audioRecorder.ondataavailable = (e: any) => {
                 if (e.data.size > 0) {
@@ -132,6 +141,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         stopTimer();
         clearStream();
         setMediaRecorder(undefined);
+        hasInitializedRef.current = false;
     };
 
     const handleCloseRecording = () => {
@@ -140,6 +150,8 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         createMedia.current = false
         onCloseRecording?.();
         reset();
+        hasInitializedRef.current = false;
+
     };
 
     const handleSubmitRecording = () => {
@@ -161,6 +173,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
 
     const clearStream = () => {
         streamRef.current?.getTracks().forEach((track) => track.stop());
+        streamRef.current = undefined;
     };
 
     const formatTime = (timeInSeconds: number): string => {
@@ -174,10 +187,11 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     const handlePauseRecording = () => {
         setIsPaused(true);
         pauseTimer();
+        if(mediaRecorder)
         (mediaRecorder as MediaRecorder).pause();
         counterRunning.current = false;
+        hasInitializedRef.current = false;        
     }
-
     return (
         <div className="cometchat" style={{
             height: "inherit",

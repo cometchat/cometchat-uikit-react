@@ -23,13 +23,13 @@ const CometChatActionSheet = (props: ActionSheetProps) => {
             width: "max-content"
         }}>
             <div className="cometchat-action-sheet">
-                {actions?.map((action: CometChatMessageComposerAction | CometChatActionsView) => {
-                    return <div className="cometchat-action-sheet__item" onClick={() => { onActionItemClick(action) }}>
+                {actions?.map((action: CometChatMessageComposerAction | CometChatActionsView,index) => {
+                    return <div className="cometchat-action-sheet__item" key={ `cometchat-action-sheet__item-${index}`} onClick={() => { onActionItemClick(action) }}>
                         <div
                             className="cometchat-action-sheet__item-icon"
                             style={action.iconURL ? { WebkitMask: `url(${action.iconURL}), center, center, no-repeat` } : undefined}
                         />
-                        <div className="cometchat-action-sheet__item-body">
+                        <div className="cometchat-action-sheet__item-body"   key={action.title || `action-${index}`}>
                             {action.title!}
                         </div>
                     </div>

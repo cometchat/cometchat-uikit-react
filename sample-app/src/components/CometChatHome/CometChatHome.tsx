@@ -560,7 +560,7 @@ function CometChatHome(props: { theme?: string }) {
         const { user } = props;
 
         const actionItemsArray = [{
-            "name": user.getBlockedByMe() ? localize("UNBLOCK") : localize("BLOCK"),
+            "name": user.getBlockedByMe() ? localize("UNBLOCK_USER") : localize("BLOCK_USER"),
             "icon": blockIcon
         }, {
             "name": localize("DELETE_CHAT"),
@@ -594,7 +594,7 @@ function CometChatHome(props: { theme?: string }) {
             CometChat.unblockUsers([UID]).then(
                 list => {
                     setActionItems([{
-                        "name": localize("BLOCK"),
+                        "name": localize("BLOCK_USER"),
                         "icon": blockIcon
                     }, {
                         "name": localize("DELETE_CHAT"),
@@ -631,9 +631,9 @@ function CometChatHome(props: { theme?: string }) {
             name: string;
             icon: string;
         }) => {
-            if (item.name == localize("BLOCK")) {
+            if (item.name == localize("BLOCK_USER")) {
                 setShowBlockUserDialog(true);
-            } else if (item.name == localize("UNBLOCK")) {
+            } else if (item.name == localize("UNBLOCK_USER")) {
                 onUnblockUserClicked();
             } else if (item.name == localize("DELETE_CHAT")) {
                 setShowDeleteConversationDialog(true);
@@ -645,7 +645,7 @@ function CometChatHome(props: { theme?: string }) {
                 if (user.getBlockedByMe()) {
                     setShowStatus(false);
                     setActionItems([{
-                        "name": localize("UNBLOCK"),
+                        "name": localize("UNBLOCK_USER"),
                         "icon": blockIcon
                     }, {
                         "name": localize("DELETE_CHAT"),
@@ -658,7 +658,7 @@ function CometChatHome(props: { theme?: string }) {
                 if (!user.getBlockedByMe()) {
                     setShowStatus(true);
                     setActionItems([{
-                        "name": localize("BLOCK"),
+                        "name": localize("BLOCK_USER"),
                         "icon": blockIcon
                     }, {
                         "name": localize("DELETE_CHAT"),
@@ -707,7 +707,7 @@ function CometChatHome(props: { theme?: string }) {
                     <CometChatConfirmDialog
                         title={localize("BLOCK_THIS_CONTACT")}
                         messageText={localize("CONFIRM_BLOCK_CONTACT")}
-                        confirmButtonText={localize("BLOCK")}
+                        confirmButtonText={localize("BLOCK_USER")}
                         onCancelClick={() => {
                             setShowBlockUserDialog(!showBlockUserDialog);
                         }}

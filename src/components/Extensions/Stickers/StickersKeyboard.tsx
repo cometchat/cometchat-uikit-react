@@ -207,17 +207,14 @@ const onWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
         ))}
       </div>
       <div className="cometchat-sticker-keyboard__list cometchat-sticker-keyboard__shimmer-list">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <>
-            {
-              Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="cometchat-sticker-keyboard__list-item cometchat-sticker-keyboard__shimmer-list-item"
-                />
-              ))
-            }
-          </>
+        {Array.from({ length: 3 }).map((_) => (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="cometchat-sticker-keyboard__list-item cometchat-sticker-keyboard__shimmer-list-item"
+                  />
+                ))
+              
         ))}
       </div>
     </>
@@ -284,24 +281,44 @@ const onWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
             ref={scrollRef} 
             onWheel={onWheel}
             >
-              {categoryStickerUrl.map(sticker => (
-                <React.Fragment key={sticker.stickerSetName}>
-                  <div className={`cometchat-sticker-keyboard__tab ${activeTab === sticker.stickerSetName ? "cometchat-sticker-keyboard__tab-active" : ""}`}>
-                    {sticker.stickerUrl && <img
-                      onClick={() => stickerSetClicked(sticker.stickerSetName)}
-                      src={sticker.stickerUrl}
-                    />
-                    }
-                  </div>
-                </React.Fragment>
-              ))}
+{
+  categoryStickerUrl.map((sticker, index) => (
+    <React.Fragment key={sticker.stickerSetName || `sticker-tab-${index}`}>
+      <div
+        className={`cometchat-sticker-keyboard__tab ${
+          activeTab === sticker.stickerSetName
+            ? "cometchat-sticker-keyboard__tab-active"
+            : ""
+        }`}
+      >
+        {sticker.stickerUrl && (
+          <img
+            onClick={() => stickerSetClicked(sticker.stickerSetName)}
+            src={sticker.stickerUrl}
+          />
+        )}
+      </div>
+    </React.Fragment>
+  ))
+}
+
             </div>
             <div className="cometchat-sticker-keyboard__list">
-              {activeStickerList.map(sticker => (
-                <div key={sticker.stickerUrl} onClick={(event) => sendStickerMessage(sticker)} >
-                  <img src={sticker.stickerUrl} alt={sticker.stickerSetName} className="cometchat-sticker-keyboard__list-item" />
-                </div>
-              ))}
+            {
+  activeStickerList.map((sticker, index) => (
+    <div
+      key={sticker.stickerUrl || `sticker-item-${index}`}
+      onClick={() => sendStickerMessage(sticker)}
+    >
+      <img
+        src={sticker.stickerUrl}
+        alt={sticker.stickerSetName}
+        className="cometchat-sticker-keyboard__list-item"
+      />
+    </div>
+  ))
+}
+
             </div>
           </>
         }

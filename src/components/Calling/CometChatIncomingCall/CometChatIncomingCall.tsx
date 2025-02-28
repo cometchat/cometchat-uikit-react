@@ -313,14 +313,15 @@ const CometChatIncomingCall = (props: IncomingCallProps) => {
       const ccCallRejected = CometChatCallEvents.ccCallRejected.subscribe(
         (call: CometChat.Call) => {
           clearStoredActiveCall()
-          if (call?.getSessionId() === callRef.current?.getSessionId()) {
+          if (call?.getSessionId() === callRef.current?.getSessionId() || call?.getSessionId() === currentOutgoingCallRef.current?.getSessionId()) {
             setShowOngoingCallScreen(false);
             setShowOutGoingCallScreen(false);
+            currentOutgoingCallRef.current = null;
+
           } else if (call?.getSessionId() === currentOutgoingCallRef.current?.getSessionId()) {
             currentOutgoingCallRef.current = null;
-          } else {
             setShowOutGoingCallScreen(false);
-          }
+          } 
         }
       );
       return () => {
