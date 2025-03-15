@@ -389,6 +389,8 @@
 	"NOT_SUPPORTED": "Denna meddelandetyp stöds inte",
 	"NO_USERS_FOUND": "Inga användare hittades",
 	"USERS_EMPTY_STATE_MESSAGE": "Vi kunde inte hitta några användare som matchar din sökning. Försök justera din sökning.",
-	"SAVE": "Spara"
-  }
+	"SAVE": "Spara",
+	"MESSAGE_TYPE_NOT_SUPPORTED": "Denna meddelandetyp stöds inte.",
+  "MESSAGE_ALREADY_TRANSLATED":"Det valda språket för översättning liknar språket i det ursprungliga meddelandet."
+}
   

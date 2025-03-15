@@ -79,6 +79,7 @@ const CometChatCreateGroup = ({ setShowCreateGroup, onGroupCreated = () => { } }
             <div className='cometchat-create-group__password-wrapper'>
                  {localize("PASSWORD")}
               <input
+                autoComplete="new-password"
                 type="password"
                 className='cometchat-create-group__input'
                 placeholder='Enter a password'

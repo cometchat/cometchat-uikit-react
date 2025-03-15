@@ -175,6 +175,7 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
                     <div className="cometchat-reactions-info-wrapper" key={`${reaction.getReaction()}-${index}`}
 >
                         <CometChatPopover
+                            useParentContainer={true}
                             showOnHover={true}
                             debounceOnHover={hoverDebounceTime}
                             placement={Placement.top}
@@ -235,6 +236,7 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
             const showActive = !!myReaction;
             return (
                 <CometChatPopover
+                    useParentContainer={true}
                     placement={moreListAlignment}
                     content={
                         <div >

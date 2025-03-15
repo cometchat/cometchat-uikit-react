@@ -137,6 +137,16 @@ export class ConversationsManager {
     
             onCustomMessageReceived: (customMessage: CometChat.CustomMessage) => {
                 callback(customMessage);
+            },
+
+            onSchedulerMessageReceived: (message: CometChat.InteractiveMessage) => {
+                callback(message);
+            },
+            onInteractiveMessageReceived: (
+                message: CometChat.InteractiveMessage
+            ) => {
+                callback(message);
+
             }
             
           }))

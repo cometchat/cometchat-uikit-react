@@ -55,47 +55,67 @@ export const CometChatCallDetailsInfo = (props: { call: any }) => {
 
     const getCallStatus = (call: CometChat.Call, loggedInUser: CometChat.User): string => {
         const isSentByMe = (call: any, loggedInUser: CometChat.User) => {
-            const senderUid: string = call.callInitiator?.getUid();
+            const senderUid: string = call.initiator?.getUid();
             return !senderUid || senderUid === loggedInUser?.getUid();
         }
         const callStatus: string = call.getStatus();
         const isSentByMeFlag: boolean = isSentByMe(call, loggedInUser!);
-        if (isSentByMeFlag) {
-            switch (callStatus) {
-                case CometChatUIKitConstants.calls.initiated:
+        switch (callStatus) {
+            case CometChatUIKitConstants.calls.initiated: {
+                if (isSentByMeFlag) {
                     return localize("OUTGOING_CALL");
-                case CometChatUIKitConstants.calls.cancelled:
-                    return localize("CANCELLED_CALL");
-                case CometChatUIKitConstants.calls.rejected:
-                    return localize("REJECTED_CALL");
-                case CometChatUIKitConstants.calls.busy:
-                    return localize("MISSED_CALL");
-                case CometChatUIKitConstants.calls.ended:
-                    return localize("CALL_ENDED");
-                case CometChatUIKitConstants.calls.ongoing:
-                    return localize("CALL_ANSWERED");
-                case CometChatUIKitConstants.calls.unanswered:
-                    return localize("UNANSWERED_CALL");
-                default:
-                    return localize("OUTGOING_CALL");
+                } else {
+                    return localize('INCOMING_CALL');
+                }
             }
-        } else {
-            switch (callStatus) {
-                case CometChatUIKitConstants.calls.initiated:
-                    return localize("INCOMING_CALL");
-                case CometChatUIKitConstants.calls.ongoing:
-                    return localize("CALL_ANSWERED");
-                case CometChatUIKitConstants.calls.ended:
-                    return localize("CALL_ENDED");
-                case CometChatUIKitConstants.calls.unanswered:
-                case CometChatUIKitConstants.calls.cancelled:
-                    return localize("MISSED_CALL");
-                case CometChatUIKitConstants.calls.busy:
-                    return localize("CALL_BUSY");
-                case CometChatUIKitConstants.calls.rejected:
-                    return localize("REJECTED_CALL");
-                default:
+            case CometChatUIKitConstants.calls.cancelled: {
+                if (isSentByMeFlag) {
                     return localize("OUTGOING_CALL");
+                } else {
+                    return localize("MISSED_CALL");
+                }
+            }
+            case CometChatUIKitConstants.calls.rejected: {
+                if (isSentByMeFlag) {
+                    return localize("OUTGOING_CALL");
+                } else {
+                    return localize("MISSED_CALL");
+                }
+            }
+            case CometChatUIKitConstants.calls.busy: {
+                if (isSentByMeFlag) {
+                    return localize("OUTGOING_CALL");
+                } else {
+                    return localize("MISSED_CALL");
+                }
+            }
+            case CometChatUIKitConstants.calls.ended: {
+                if (isSentByMeFlag) {
+                    return localize("OUTGOING_CALL");
+                } else {
+                    return localize('INCOMING_CALL');
+                }
+            }
+            case CometChatUIKitConstants.calls.ongoing: {
+                if (isSentByMeFlag) {
+                    return localize("OUTGOING_CALL");
+                } else {
+                    return localize('INCOMING_CALL');
+                }
+            }
+            case CometChatUIKitConstants.calls.unanswered: {
+                if (isSentByMeFlag) {
+                    return localize("OUTGOING_CALL");
+                } else {
+                    return localize("MISSED_CALL");
+                }
+            }
+            default: {
+                if (isSentByMeFlag) {
+                    return localize("OUTGOING_CALL");
+                } else {
+                    return localize('INCOMING_CALL');
+                }
             }
         }
     }
@@ -107,52 +127,64 @@ export const CometChatCallDetailsInfo = (props: { call: any }) => {
         }
         const isSentByMeFlag: boolean = isSentByMe(call, loggedInUser!);
         const callStatus = getCallStatus(call, loggedInUser!);
-        if (isSentByMeFlag) {
-            switch (callStatus) {
-                case localize("OUTGOING_CALL"):
+        switch (callStatus) {
+            case localize("OUTGOING_CALL"): {
+                if (isSentByMeFlag) {
                     return outgoingCallSuccess;
-                case localize("INCOMING_CALL"):
-                    return outgoingCallSuccess;
-                case localize("CANCELLED_CALL"):
-                    return outgoingCallSuccess;
-                case localize("REJECTED_CALL"):
-                    return callRejectedIcon;
-                case localize("CALL_BUSY"):
-                    return missedCallIcon;
-                case localize("CALL_ENDED"):
-                    return outgoingCallSuccess;
-                case localize("CALL_ANSWERED"):
-                    return outgoingCallSuccess;
-                case localize("UNANSWERED_CALL"):
-                    return missedCallIcon;
-                case localize("MISSED_CALL"):
-                    return missedCallIcon;
-                default:
-                    return "";
+                } else {
+                    return incomingCallSuccessIcon;
+                }
             }
-        } else {
-            switch (callStatus) {
-                case localize("OUTGOING_CALL"):
+            case localize("INCOMING_CALL"):
+                if (isSentByMeFlag) {
+                    return outgoingCallSuccess;
+                } else {
                     return incomingCallSuccessIcon;
-                case localize("INCOMING_CALL"):
-                    return incomingCallSuccessIcon;
-                case localize("CANCELLED_CALL"):
-                    return incomingCallIcon;
-                case localize("REJECTED_CALL"):
-                    return callRejectedIcon;
-                case localize("CALL_BUSY"):
+                }
+            case localize("CANCELLED_CALL"):
+                if (isSentByMeFlag) {
+                    return outgoingCallSuccess;
+                } else {
                     return missedCallIcon;
-                case localize("CALL_ENDED"):
-                    return incomingCallSuccessIcon;
-                case localize("CALL_ANSWERED"):
-                    return incomingCallSuccessIcon;
-                case localize("UNANSWERED_CALL"):
+                }
+            case localize("REJECTED_CALL"):
+                if (isSentByMeFlag) {
+                    return outgoingCallSuccess;
+                } else {
                     return missedCallIcon;
-                case localize("MISSED_CALL"):
+                }
+            case localize("CALL_BUSY"):
+                if (isSentByMeFlag) {
+                    return outgoingCallSuccess;
+                } else {
                     return missedCallIcon;
-                default:
-                    return "";
-            }
+                }
+            case localize("CALL_ENDED"):
+                if (isSentByMeFlag) {
+                    return outgoingCallSuccess;
+                } else {
+                    return incomingCallSuccessIcon;
+                }
+            case localize("CALL_ANSWERED"):
+                if (isSentByMeFlag) {
+                    return outgoingCallSuccess;
+                } else {
+                    return incomingCallSuccessIcon;
+                }
+            case localize("UNANSWERED_CALL"):
+                if (isSentByMeFlag) {
+                    return outgoingCallSuccess;
+                } else {
+                    return missedCallIcon;
+                }
+            case localize("MISSED_CALL"):
+                if (isSentByMeFlag) {
+                    return outgoingCallSuccess;
+                } else {
+                    return missedCallIcon;
+                }
+            default:
+                return "";
         }
     }
 

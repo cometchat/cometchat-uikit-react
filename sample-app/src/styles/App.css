@@ -1,5 +1,6 @@
 @import url('../../node_modules/@cometchat/chat-uikit-react/dist/styles/css-variables.css');
 
+
 .App {
     text-align: center;
     width: 100vw;
@@ -138,4 +139,19 @@
         margin-bottom: 0;
         overflow: hidden;
       }
+}
+body{
+    margin: 0;
+  }
+  
+.App {
+    box-sizing: border-box;
+    margin: 0;
+}
+.App > *{
+    box-sizing: border-box;
+    margin: 0;
+}
+.cometchat-root * {
+    box-sizing: border-box;
 }

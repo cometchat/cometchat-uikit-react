@@ -283,7 +283,9 @@ export class MessagesDataSource implements DataSource {
         item?.getCategory() !==
         CometChatUIKitConstants.MessageCategory.action &&
         item?.getCategory() !== CometChatUIKitConstants.MessageCategory.call &&
-        !item?.getDeletedAt()
+        !item?.getDeletedAt() &&
+        item?.getCategory() !==
+        CometChatUIKitConstants.MessageCategory.interactive
       ) {
         let state = MessageReceiptUtils.getReceiptStatus(item)
         return (
@@ -538,7 +540,10 @@ export class MessagesDataSource implements DataSource {
       ChatConfigurator.getDataSource().getVideoMessageTemplate(),
       ChatConfigurator.getDataSource().getAudioMessageTemplate(),
       ChatConfigurator.getDataSource().getFileMessageTemplate(),
-      ChatConfigurator.getDataSource().getGroupActionTemplate(additionalConfigurations)
+      ChatConfigurator.getDataSource().getGroupActionTemplate(additionalConfigurations),
+      ChatConfigurator.getDataSource().getFormMessageTemplate(),
+      ChatConfigurator.getDataSource().getSchedulerMessageTemplate(),
+      ChatConfigurator.getDataSource().getCardMessageTemplate(),
     ];
   }
 
@@ -585,6 +590,18 @@ export class MessagesDataSource implements DataSource {
         case CometChatUIKitConstants.MessageTypes.audio:
           _template =
             ChatConfigurator.getDataSource().getAudioMessageTemplate();
+          break;
+          case CometChatUIKitConstants.MessageTypes.form:
+          _template =
+            ChatConfigurator.getDataSource().getFormMessageTemplate();
+          break;
+        case CometChatUIKitConstants.MessageTypes.scheduler:
+          _template =
+            ChatConfigurator.getDataSource().getSchedulerMessageTemplate();
+          break;
+         case CometChatUIKitConstants.MessageTypes.card:
+          _template =
+            ChatConfigurator.getDataSource().getCardMessageTemplate();
           break;
       }
     }
@@ -700,6 +717,9 @@ export class MessagesDataSource implements DataSource {
       CometChatUIKitConstants.MessageTypes.video,
       CometChatUIKitConstants.MessageTypes.file,
       CometChatUIKitConstants.MessageTypes.groupMember,
+      CometChatUIKitConstants.MessageTypes.form,
+      CometChatUIKitConstants.MessageTypes.scheduler,
+      CometChatUIKitConstants.MessageTypes.card,
     ];
   }
 
@@ -711,6 +731,7 @@ export class MessagesDataSource implements DataSource {
     return [
       CometChatUIKitConstants.MessageCategory.message,
       !additionalConfigurations?.hideGroupActionMessages ? CometChatUIKitConstants.MessageCategory.action : "",
+      CometChatUIKitConstants.MessageCategory.interactive,
     ];
   }
 
@@ -1329,5 +1350,125 @@ export class MessagesDataSource implements DataSource {
       /((https?:\/\/|www\.)[^\s]+)/i,
     ]);
     return urlTextFormatter;
+  }
+  getFormMessageBubble(message: CometChat.InteractiveMessage, alignment:MessageBubbleAlignment): Element | JSX.Element {
+    return this.getDeleteMessageBubble(message, localize("MESSAGE_TYPE_NOT_SUPPORTED"),alignment);
+
+  }
+  getSchedulerMessageBubble(message: CometChat.InteractiveMessage,alignment:MessageBubbleAlignment): Element | JSX.Element {
+    return this.getDeleteMessageBubble(message, localize("MESSAGE_TYPE_NOT_SUPPORTED"),alignment);
+
+  }
+  getCardMessageBubble(message: CometChat.InteractiveMessage,alignment:MessageBubbleAlignment): Element | JSX.Element {
+    return this.getDeleteMessageBubble(message, localize("MESSAGE_TYPE_NOT_SUPPORTED"),alignment);
+
+  }
+  getFormMessageTemplate(): CometChatMessageTemplate {
+    return new CometChatMessageTemplate({
+      type: CometChatUIKitConstants.MessageTypes.form,
+      category: CometChatUIKitConstants.MessageCategory.interactive,
+      statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      contentView: (
+        message: CometChat.BaseMessage,
+        _alignment: MessageBubbleAlignment
+      ) => {
+        const formMessage: CometChat.InteractiveMessage = message as CometChat.InteractiveMessage;
+        if (formMessage.getDeletedAt() != null) {
+          return this.getDeleteMessageBubble(message);
+        }
+        return this.getFormMessageContentView(message as CometChat.InteractiveMessage,_alignment);
+      },
+      options: ChatConfigurator.getDataSource().getMessageOptions,
+      bottomView: (
+        _message: CometChat.BaseMessage,
+        _alignment: MessageBubbleAlignment
+      ) => {
+        return ChatConfigurator.getDataSource().getBottomView(
+          _message,
+          _alignment
+        );
+      },
+    });
+  }
+
+  getSchedulerMessageTemplate(): CometChatMessageTemplate {
+    return new CometChatMessageTemplate({
+      type: CometChatUIKitConstants.MessageTypes.scheduler,
+      category: CometChatUIKitConstants.MessageCategory.interactive,
+      statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      contentView: (
+        message: CometChat.BaseMessage,
+        _alignment: MessageBubbleAlignment
+      ) => {
+        const schedulerMessage: CometChat.InteractiveMessage = message as CometChat.InteractiveMessage;
+        if (schedulerMessage.getDeletedAt() != null) {
+          return this.getDeleteMessageBubble(message);
+        }
+        return this.getSchedulerMessageContentView(message as CometChat.InteractiveMessage,_alignment);
+      },
+      options: ChatConfigurator.getDataSource().getMessageOptions,
+      bottomView: (
+        _message: CometChat.BaseMessage,
+        _alignment: MessageBubbleAlignment
+      ) => {
+        return ChatConfigurator.getDataSource().getBottomView(
+          _message,
+          _alignment
+        );
+      },
+    });
+  }
+
+  getCardMessageTemplate(): CometChatMessageTemplate {
+    return new CometChatMessageTemplate({
+      type: CometChatUIKitConstants.MessageTypes.card,
+      category: CometChatUIKitConstants.MessageCategory.interactive,
+      statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      contentView: (
+        message: CometChat.BaseMessage,
+        _alignment: MessageBubbleAlignment
+      ) => {
+        const cardMessage: CometChat.InteractiveMessage = message as CometChat.InteractiveMessage;
+        if (cardMessage.getDeletedAt() != null) {
+          return this.getDeleteMessageBubble(message);
+        }
+        return this.getCardMessageContentView(message as CometChat.InteractiveMessage,_alignment);
+      },
+      options: ChatConfigurator.getDataSource().getMessageOptions,
+      bottomView: (
+        _message: CometChat.BaseMessage,
+        _alignment: MessageBubbleAlignment
+      ) => {
+        return ChatConfigurator.getDataSource().getBottomView(
+          _message,
+          _alignment
+        );
+      },
+    });
+  }
+  getFormMessageContentView(
+    message: CometChat.InteractiveMessage,
+    _alignment: MessageBubbleAlignment,
+
+  ): Element | JSX.Element {
+    return ChatConfigurator.getDataSource().getFormMessageBubble(
+      message,_alignment);
+  }
+  getSchedulerMessageContentView(
+    message: CometChat.InteractiveMessage,
+    _alignment: MessageBubbleAlignment,
+
+  ): Element | JSX.Element {
+    return ChatConfigurator.getDataSource().getSchedulerMessageBubble(
+      message,_alignment);
+  }
+
+  getCardMessageContentView(
+    message: CometChat.InteractiveMessage,
+    _alignment: MessageBubbleAlignment,
+
+  ): Element | JSX.Element {
+    return ChatConfigurator.getDataSource().getCardMessageBubble(
+      message,_alignment);
   }
 }

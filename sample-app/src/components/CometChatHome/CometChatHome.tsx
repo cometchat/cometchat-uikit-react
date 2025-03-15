@@ -482,7 +482,8 @@ function CometChatHome(props: { theme?: string }) {
 
         const updateGroupDetails = (eventGroup: CometChat.Group) => {
             if (eventGroup.getGuid() === group?.getGuid()) {
-                setGroup(eventGroup);
+                group.setMembersCount(eventGroup.getMembersCount());
+                setGroup(group);
             }
         }
 

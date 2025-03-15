@@ -1,9 +1,15 @@
-import { MouseEvent, useCallback, useState } from "react"
+import { MouseEvent, useCallback, useEffect, useState } from "react"
+interface ICometChatListItem {
+  id?: string;
+  onListItemClicked?: (input: { id: string }) => void;
+  menuRef: React.RefObject<HTMLDivElement>;
+}
 
 export const useCometChatListItem = ({
   id = "",
-  onListItemClicked = ({ id: string = "" }) => { }
-}) => {
+  onListItemClicked = ({id: string = ""}) => {},
+  menuRef,
+}:ICometChatListItem) => {
   const [isHovering, setIsHovering] = useState<boolean>(false);
   /* 
       This function is triggered on list item click. 
@@ -23,6 +29,22 @@ export const useCometChatListItem = ({
   const hideTail = () => {
     setIsHovering(false);
   };
+  useEffect(() => {
+    const handleOutsideClick = (event: globalThis.MouseEvent) => {
+        if (isHovering && menuRef.current && !menuRef.current.contains(event.target as Node)) {
+            setIsHovering(false)
+        }
+    };
+
+    if (isHovering) {
+        document.addEventListener("click", handleOutsideClick);
+    } else {
+        document.removeEventListener("click", handleOutsideClick);
+    }
+
+    return () => document.removeEventListener("click", handleOutsideClick);
+}, [isHovering]);
+
 
   return {
     listItemClick,

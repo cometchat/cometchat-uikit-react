@@ -389,6 +389,8 @@
 	"NOT_SUPPORTED": "Ez az üzenettípus nem támogatott",
 	"NO_USERS_FOUND": "Nem találhatók felhasználók",
 	"USERS_EMPTY_STATE_MESSAGE": "Nem találtunk a keresésnek megfelelő felhasználókat. Próbálja meg módosítani a keresést.",
-	"SAVE": "Mentés"
-  }
+	"SAVE": "Mentés",
+	"MESSAGE_TYPE_NOT_SUPPORTED": "Ez az üzenettípus nem támogatott.",
+  "MESSAGE_ALREADY_TRANSLATED":"A fordításhoz kiválasztott nyelv hasonló az eredeti üzenet nyelvéhez."
+}
   

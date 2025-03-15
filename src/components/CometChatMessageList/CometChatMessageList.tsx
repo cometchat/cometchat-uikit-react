@@ -1,5 +1,6 @@
 import { BaseMessage, CometChat } from "@cometchat/chat-sdk-javascript";
 import {
+  CSSProperties,
   useCallback,
   useEffect,
   useMemo,
@@ -1559,14 +1560,14 @@ const CometChatMessageList = (props: MessageListProps) => {
   const checkAndMarkMessageAsRead: (message: CometChat.BaseMessage) => void = useCallback(
     (message: CometChat.BaseMessage) => {
       try {
-        if (!hideReceipts &&
+        if (
           message.getSender().getUid() !== loggedInUserRef.current?.getUid()) {
           markMessageRead(message);
         }
       } catch (error) {
         errorHandler(error, "checkAndMarkMessageAsRead")
       }
-    }, [hideReceipts, markMessageRead])
+    }, [ markMessageRead])
 
   /**
    * Function to clear the count of new messages. If the last unread message exists, it marks it as read.
@@ -1723,18 +1724,20 @@ const CometChatMessageList = (props: MessageListProps) => {
                 let lastMessage: CometChat.BaseMessage =
                   messagesList[messagesList.length - 1];
                 let isMyMessage = lastMessage?.getSender().getUid() == loggedInUserRef.current?.getUid()
-                if (!lastMessage.getDeliveredAt() && !hideReceipts && !isMyMessage) {
+                if (!lastMessage.getDeliveredAt() && !isMyMessage) {
                   CometChat.markAsDelivered(lastMessage).then(() => {
-                    messagesList.forEach((m: CometChat.BaseMessage) => {
-                      if (
-                        m?.getId() <= lastMessage?.getId() &&
-                        !isMyMessage &&
-                        !m.getDeliveredAt()
-                      ) {
-                        m.setDeliveredAt(new Date().getTime());
-                      }
-                      return m;
-                    });
+                    if(lastMessage.getReceiverType() == CometChatUIKitConstants.MessageReceiverType.user && !hideReceipts){
+                      messagesList.forEach((m: CometChat.BaseMessage) => {
+                        if (
+                          m?.getId() <= lastMessage?.getId() &&
+                          !isMyMessage &&
+                          !m.getDeliveredAt()
+                        ) {
+                          m.setDeliveredAt(new Date().getTime());
+                        }
+                        return m;
+                      });
+                    }
                   });
                 }
                 if (
@@ -1743,8 +1746,8 @@ const CometChatMessageList = (props: MessageListProps) => {
                       lastMessage.getCategory() === CometChat.MessageCategory.CALL ||
                       lastMessage.getCategory() === CometChat.MessageCategory.ACTION))
                 ) {
-                  if (!hideReceipts) {
-                    CometChat.markAsRead(lastMessage).then(() => {
+                  CometChat.markAsRead(lastMessage).then(() => {
+                    if (!hideReceipts && lastMessage.getReceiverType() == CometChatUIKitConstants.MessageReceiverType.user) {
                       messagesList.forEach((m: CometChat.BaseMessage) => {
                         if (
                           m?.getId() <= lastMessage?.getId() &&
@@ -1757,12 +1760,13 @@ const CometChatMessageList = (props: MessageListProps) => {
                         }
                         return m;
                       });
-                      CometChatMessageEvents.ccMessageRead.next(lastMessage);
+                    } else {
+                      UnreadMessagesRef.current = [];
+                    }
+                    CometChatMessageEvents.ccMessageRead.next(lastMessage);
 
-                    });
-                  } else {
-                    UnreadMessagesRef.current = [];
-                  }
+                  });
+           
                 } else if (!isMyMessage) {
                   CometChatMessageEvents.ccMessageRead.next(lastMessage);
 
@@ -2326,15 +2330,24 @@ const CometChatMessageList = (props: MessageListProps) => {
   const messageReadAndDelivered: (message: CometChat.MessageReceipt) => void = useCallback(
     (messageReceipt: CometChat.MessageReceipt) => {
       try {
-        if (
-          messageReceipt.getReceiverType() ===
-          CometChatUIKitConstants.MessageReceiverType.user &&
-          messageReceipt.getSender().getUid() === userRef.current?.getUid() &&
-          messageReceipt.getReceiver() === loggedInUserRef.current?.getUid()
-        ) {
-          messageReceipt.getReceiptType() === "delivery"
-            ? markAllMessagAsDelivered(messageReceipt)
-            : markAllMessageAsRead(messageReceipt);
+        if (messageReceipt.getReceiverType() ===
+          CometChatUIKitConstants.MessageReceiverType.user) {
+          if (
+            messageReceipt.getSender().getUid() === userRef.current?.getUid() &&
+            messageReceipt.getReceiver() === loggedInUserRef.current?.getUid()
+          ) {
+            messageReceipt.getReceiptType() === "delivery"
+              ? markAllMessagAsDelivered(messageReceipt)
+              : markAllMessageAsRead(messageReceipt);
+          }
+        }
+        else {
+          if (messageReceipt.getReceiptType() === "deliveredToAll") {
+            markAllMessagAsDelivered(messageReceipt)
+          }
+          else if (messageReceipt.getReceiptType() === "readByAll") {
+            markAllMessageAsRead(messageReceipt);
+          }
         }
       } catch (error: any) {
         errorHandler(error, "messageReadAndDelivered");
@@ -2396,7 +2409,7 @@ const CometChatMessageList = (props: MessageListProps) => {
           updateReplyCount(message);
           updateUnreadReplyCount(message);
         } else {
-          if (!hideReceipts &&
+          if (
             message.getSender().getUid() !== loggedInUserRef.current?.getUid()) {
             CometChat.markAsDelivered(message)
           }
@@ -2879,11 +2892,10 @@ const CometChatMessageList = (props: MessageListProps) => {
           }
         }
       );
-
       const ccMessageTranslated = CometChatMessageEvents.ccMessageTranslated.subscribe(
         (obj: IMessages) => {
-          if (obj?.status === MessageStatus.success) {
             if (isPartOfCurrentChatForSDKEvent(obj.message)) {
+              if (obj?.status === MessageStatus.success) {
               toastTextRef.current = localize("MESSAGE_TRANSLATED");
               setShowToast(true);
               updateMessage(obj.message, false);
@@ -2891,10 +2903,13 @@ const CometChatMessageList = (props: MessageListProps) => {
                 updateView(obj.message);
               }, 100);
             }
-          }
+            else{
+              toastTextRef.current = localize("MESSAGE_ALREADY_TRANSLATED");
+              setShowToast(true);
+            }
+            }
         }
       );
-
       const ccMessageSent = CometChatMessageEvents.ccMessageSent.subscribe(
         (obj: IMessages) => {
           let { message, status } = obj;
@@ -2986,6 +3001,18 @@ const CometChatMessageList = (props: MessageListProps) => {
       onMessageReactionRemoved = CometChatMessageEvents.onMessageReactionRemoved.subscribe((reactionReceipt) => {
         messageReactionUpdated(reactionReceipt, false);
       });
+      const onFormMessageReceived = CometChatMessageEvents.onFormMessageReceived.subscribe((formMessage: CometChat.InteractiveMessage) => {
+        messageReceivedHandler(formMessage);
+      });
+      const onSchedulerMessageReceived = CometChatMessageEvents.onSchedulerMessageReceived.subscribe((schedulerMessage: CometChat.InteractiveMessage) => {
+        messageReceivedHandler(schedulerMessage);
+      });
+      const onCardMessageReceived = CometChatMessageEvents.onCardMessageReceived.subscribe((cardMessage: CometChat.InteractiveMessage) => {
+        messageReceivedHandler(cardMessage);
+      });
+      const onCustomInteractiveMessageReceived = CometChatMessageEvents.onCustomInteractiveMessageReceived.subscribe((customInteractiveMessage: CometChat.InteractiveMessage) => {
+        messageReceivedHandler(customInteractiveMessage);
+      });
 
       return () => {
         try {
@@ -3019,6 +3046,10 @@ const CometChatMessageList = (props: MessageListProps) => {
           onTransientMessageReceived?.unsubscribe();
           onMessageReactionAdded?.unsubscribe();
           onMessageReactionRemoved?.unsubscribe();
+          onFormMessageReceived?.unsubscribe();
+          onSchedulerMessageReceived?.unsubscribe();
+          onCardMessageReceived?.unsubscribe();
+          onCustomInteractiveMessageReceived?.unsubscribe();
         } catch (error: any) {
           errorHandler(error, "subscribeToUIEvents");
         }
@@ -3069,12 +3100,14 @@ const CometChatMessageList = (props: MessageListProps) => {
         const currentVisibleMessage = getMessageById(firstVisibleMessageId);
         if (currentVisibleMessage) {
           const messageDate = currentVisibleMessage.getSentAt();
-          if (isDateDifferent(dateHeaderRef.current, messageDate)) {
-            setDateHeader(messageDate);
-            dateHeaderRef.current = messageDate;
-            stickyDateHeaderRef.current = messageDate
+          setTimeout(() => {
+            if (isDateDifferent(dateHeaderRef.current, messageDate)) {
+              setDateHeader(messageDate);
+              dateHeaderRef.current = messageDate;
+              stickyDateHeaderRef.current = messageDate
 
-          }
+            }
+          }, 0);
         }
       }
     } catch (error) {
@@ -3489,13 +3522,25 @@ const CometChatMessageList = (props: MessageListProps) => {
   const getMessageBubble: (m: CometChat.BaseMessage, i: number) => JSX.Element = useCallback(
     (m: CometChat.BaseMessage, i: number) => {
       let _alignment = setBubbleAlignment(m);
-
-
+      const count = quickOptionsCount ?? 2;
+      let style: CSSProperties = {};
+      if (_alignment === MessageBubbleAlignment.left) {
+        style = {
+          width: `calc(100% - ${count * 36}px)`,
+          marginRight: "auto"
+        };
+      } else if (_alignment === MessageBubbleAlignment.right) {
+        style = {
+          width: `calc(100% - ${count * 36}px)`,
+          marginLeft: "auto"
+        };
+      }
       return (
         <div
-          style={{
-            width: "100%",
-          }}
+        style={{
+          width: "100%",
+          ...(m.getSender()  ? {} : style)
+        }}
           key={m.getId()}
         >
           {getMessageBubbleDateHeader(m, i)}
@@ -3745,7 +3790,7 @@ const CometChatMessageList = (props: MessageListProps) => {
         <div
           className='cometchat-message-list'
         >
-          {stickyDateHeaderRef.current &&  !hideStickyDate ? <div
+          {stickyDateHeaderRef.current &&  !hideStickyDate  && messageList.length > 0  ? <div
             className='cometchat-message-list__date-header'
           >
             <CometChatDate

@@ -1195,8 +1195,7 @@ try {
    */
   const handleSendVoiceMessage = useCallback(
     async (blob: Blob): Promise<void> => {
-      dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });
-      voiceRecordingBtnRef.current?.closePopover()
+      onVoiceRecordingBtnClick();
       try {
         const audioFile = new File(
           [blob],
@@ -1768,11 +1767,8 @@ return hideAttachmentButton || (hideAudioAttachmentOption && hideVideoAttachment
       <div className={`cometchat-message-composer__voice-recording-button ${state.contentToDisplay === "voiceRecording" ? "cometchat-message-composer__voice-recording-button-active" : ""}`}>
         <CometChatPopover
           ref={voiceRecordingBtnRef}
-          onOutsideClick={() => {
-            dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });
-          }}
           placement={Placement.top}
-          closeOnOutsideClick={true}
+          closeOnOutsideClick={false}
           content={state.contentToDisplay === "voiceRecording"
             ? defaultSecondaryContent
             : null}

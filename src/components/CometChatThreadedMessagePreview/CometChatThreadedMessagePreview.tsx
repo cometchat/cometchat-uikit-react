@@ -128,11 +128,53 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
                         }
                     }
                 );
+                const onFormMessageReceived =
+                CometChatMessageEvents.onFormMessageReceived.subscribe((message:CometChat.InteractiveMessage) => {
+                    if (
+                        message?.getParentMessageId() &&
+                        message.getParentMessageId() == parentMessage.getId()
+                    ) {
+                        setReplyCount((prevCount) => prevCount + 1);
+                    }
+                });
+            const onSchedulerMessageReceived =
+                CometChatMessageEvents.onSchedulerMessageReceived.subscribe((message:CometChat.InteractiveMessage) => {
+                    if (
+                        message?.getParentMessageId() &&
+                        message.getParentMessageId() == parentMessage.getId()
+                    ) {
+                        setReplyCount((prevCount) => prevCount + 1);
+                    }
+                });
+            const onCardMessageReceived =
+                CometChatMessageEvents.onCardMessageReceived.subscribe((message:CometChat.InteractiveMessage) => {
+                    if (
+                        message?.getParentMessageId() &&
+                        message.getParentMessageId() == parentMessage.getId()
+                    ) {
+                        setReplyCount((prevCount) => prevCount + 1);
+                    }
+                });
+            const onCustomInteractiveMessageReceived =
+                CometChatMessageEvents.onCustomInteractiveMessageReceived.subscribe(
+                    (message:CometChat.InteractiveMessage) => {
+                        if (
+                            message?.getParentMessageId() &&
+                            message.getParentMessageId() == parentMessage.getId()
+                        ) {
+                            setReplyCount((prevCount) => prevCount + 1);
+                        }
+                    }
+                );
 
             return () => {
                 onTextMessageReceived?.unsubscribe();
                 onMediaMessageReceived?.unsubscribe();
                 onCustomMessageReceived?.unsubscribe();
+                onFormMessageReceived?.unsubscribe();
+                onSchedulerMessageReceived?.unsubscribe();
+                onCardMessageReceived?.unsubscribe();
+                onCustomInteractiveMessageReceived?.unsubscribe();
             };
         }
         catch (error) {

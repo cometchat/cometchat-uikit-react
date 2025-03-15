@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Recorder from "./Helper/index.js";
 import { CometChatAudioBubble } from "../CometChatAudioBubble/CometChatAudioBubble";
-import { closeCurrentMediaPlayer, currentMediaPlayer } from "../../../utils/util";
+import {  currentAudioPlayer, currentMediaPlayer } from "../../../utils/util";
 
 interface MediaRecorderProps {
     autoRecording?: boolean;
@@ -27,7 +27,16 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     const createMedia = useRef<boolean>(false);
     const hasInitializedRef = useRef(false);
 
-
+  function pauseActiveMedia(){
+     if (currentAudioPlayer.instance && currentAudioPlayer.setIsPlaying) {
+        currentAudioPlayer.instance.pause();
+        currentAudioPlayer.setIsPlaying(false);
+      }
+    
+      if (currentMediaPlayer.video && !currentMediaPlayer.video.paused) {
+        currentMediaPlayer.video.pause();
+      }
+  }
     useEffect(() => {
         if (autoRecording) {
             handleStartRecording();
@@ -95,7 +104,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     };
 
     const handleStartRecording = async () => {
-        closeCurrentMediaPlayer();
+        pauseActiveMedia();
         const hasAudioInput = await navigator.mediaDevices.enumerateDevices()
             .then(devices => {
                 let hasMic = false;
@@ -135,7 +144,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
 
     const handleStopRecording = () => {
         setIsPaused(false);
-        closeCurrentMediaPlayer();
+        pauseActiveMedia();
         (mediaRecorder as MediaRecorder)?.stop();
         setIsRecording(false);
         stopTimer();
@@ -145,7 +154,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     };
 
     const handleCloseRecording = () => {
-        closeCurrentMediaPlayer();
+        pauseActiveMedia();
         currentMediaPlayer.mediaRecorder = null;
         createMedia.current = false
         onCloseRecording?.();
@@ -155,7 +164,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     };
 
     const handleSubmitRecording = () => {
-        closeCurrentMediaPlayer();
+        pauseActiveMedia();
         if (blobRef.current) {
             onSubmitRecording?.(blobRef.current);
             reset();
@@ -163,7 +172,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     };
 
     const reset = () => {
-        closeCurrentMediaPlayer();
+        pauseActiveMedia();
         setMediaRecorder(undefined);
         setMediaPreviewUrl(undefined);
         setIsRecording(false);

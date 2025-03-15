@@ -19,10 +19,13 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     // Moved useEffect logic to a separate function
     const initializeWaveSurfer = useCallback(() => {
+        setIsLoading(true);
         if (waveformRef.current) {
             const root = document.documentElement;
 
@@ -65,6 +68,7 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
             // Set duration when audio is ready
             wave.on('ready', () => {
                 setDuration(wave.getDuration());
+                setIsLoading(false);
             });
 
             // Update current time during playback
@@ -226,9 +230,9 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
             height: "fit-content",
             width: "fit-content"
         }}>
-            <div className={`cometchat-audio-bubble ${isSentByMe ? "cometchat-audio-bubble-outgoing" : "cometchat-audio-bubble-incoming"}`}>
+            <div className={`cometchat-audio-bubble ${isSentByMe ? "cometchat-audio-bubble-outgoing" : "cometchat-audio-bubble-incoming"}`} style={isLoading ? {cursor:"not-allowed"} : {}}>
                <div>
-               <div className="cometchat-audio-bubble__leading-view">
+               <div className="cometchat-audio-bubble__leading-view" style={isLoading ? {pointerEvents:"none"} : {}}  >
                     {isPlaying ? (
                         <div className="cometchat-audio-bubble__leading-view-pause" onClick={handlePlayPause}></div>
                     ) : (
@@ -242,7 +246,7 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
                     </div>
                 </div>
                </div>
-                <div className="cometchat-audio-bubble__tail-view">
+                <div className="cometchat-audio-bubble__tail-view" style={isLoading ? {pointerEvents:"none"} : {}} >
                     {isDownloading ? getProgressBar() : (
                         <div className="cometchat-audio-bubble__tail-view-download" onClick={downloadAudio}></div>
                     )}

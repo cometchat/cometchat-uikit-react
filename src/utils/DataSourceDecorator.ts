@@ -392,4 +392,69 @@ export abstract class DataSourceDecorator implements DataSource {
       this.dataSource ?? new MessagesDataSource()
     ).getMentionsFormattedText(message, subtitle, additionalConfigurations);
   }
+  getFormMessageContentView(
+    message: CometChat.InteractiveMessage,
+    alignment: MessageBubbleAlignment
+  ) {
+    return (
+      this.dataSource ?? new MessagesDataSource()
+    ).getFormMessageContentView(message, alignment);
+  }
+  getSchedulerMessageContentView(
+    message: CometChat.InteractiveMessage,
+    alignment: MessageBubbleAlignment
+  ) {
+    return (
+      this.dataSource ?? new MessagesDataSource()
+    ).getSchedulerMessageContentView(message, alignment);
+  }
+  getCardMessageContentView(
+    message: CometChat.InteractiveMessage,
+    alignment: MessageBubbleAlignment
+  ) {
+    return (
+      this.dataSource ?? new MessagesDataSource()
+    ).getCardMessageContentView(message, alignment);
+  }
+  getFormMessageTemplate(): CometChatMessageTemplate {
+    return (this.dataSource ?? new MessagesDataSource()).getFormMessageTemplate(
+
+    );
+  }
+  getSchedulerMessageTemplate(): CometChatMessageTemplate {
+    return (
+      this.dataSource ?? new MessagesDataSource()
+    ).getSchedulerMessageTemplate();
+  }
+  getCardMessageTemplate(): CometChatMessageTemplate {
+    return (this.dataSource ?? new MessagesDataSource()).getCardMessageTemplate(
+
+    );
+  }
+  getFormMessageBubble(
+    message: CometChat.InteractiveMessage,
+    alignment:MessageBubbleAlignment,
+  ) {
+    return (this.dataSource ?? new MessagesDataSource()).getFormMessageBubble(
+      message,
+      alignment,
+    );
+  }
+  getSchedulerMessageBubble(
+    message: CometChat.InteractiveMessage,
+    alignment:MessageBubbleAlignment,
+  ) {
+    return (
+      this.dataSource ?? new MessagesDataSource()
+    ).getSchedulerMessageBubble(message,  alignment);
+  }
+  getCardMessageBubble(
+    message: CometChat.InteractiveMessage,
+    alignment:MessageBubbleAlignment
+  ) {
+    return (this.dataSource ?? new MessagesDataSource()).getCardMessageBubble(
+      message,
+      alignment
+    );
+  }
 }

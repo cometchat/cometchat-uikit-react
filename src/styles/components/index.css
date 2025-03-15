@@ -55,6 +55,9 @@
 @import url('./CometChatThreadedMessagePreview.css');
 @import url('./CometChatToast.css');
 
+.cometchat * {
+    box-sizing: border-box;
+}
 
 
 

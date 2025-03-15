@@ -1,6 +1,7 @@
 
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { CometChatMessageEvents } from "../events/CometChatMessageEvents";
+import { CometChatUIKitConstants } from "../constants/CometChatUIKitConstants";
 
 export class ChatSdkEventInitializer {
     private static messageListenerId = `message_listener_${new Date().getTime()}`;
@@ -61,7 +62,26 @@ export class ChatSdkEventInitializer {
             },
             onMessageReactionRemoved: (reaction: CometChat.ReactionEvent) => {
                 CometChatMessageEvents.onMessageReactionRemoved.next(reaction);
-            }
+            },
+            onSchedulerMessageReceived: (message: CometChat.InteractiveMessage) => {
+                CometChatMessageEvents.onSchedulerMessageReceived.next(message);
+
+            },
+            onInteractiveMessageReceived: (
+                message: CometChat.InteractiveMessage
+            ) => {
+                switch (message.getType()) {
+                    case CometChatUIKitConstants.MessageTypes.form:
+                        CometChatMessageEvents.onFormMessageReceived.next(message);
+                        break;
+                    case CometChatUIKitConstants.MessageTypes.card:
+                        CometChatMessageEvents.onCardMessageReceived.next(message);
+                        break;
+                    default:
+                        CometChatMessageEvents.onCustomInteractiveMessageReceived.next(message);
+                        break;
+                }
+            },
         });
     }
 }

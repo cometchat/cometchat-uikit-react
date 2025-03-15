@@ -8,6 +8,10 @@
   height: 100%;
   background: var(--cometchat-background-color-04, #E8E8E8);
 }
+.cometchat-login__container *{
+  box-sizing: border-box;
+  margin: 0;
+}
 
 .cometchat-login__content {
   display: flex;

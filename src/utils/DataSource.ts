@@ -189,4 +189,39 @@ export abstract class DataSource {
     subtitle: string,
     additionalConfigurations?: Object | undefined
   ): string;
+  abstract getFormMessageContentView(
+    message: CometChat.InteractiveMessage,
+    alignment: MessageBubbleAlignment,
+
+  ): Element | JSX.Element;
+  abstract getSchedulerMessageContentView(
+    message: CometChat.InteractiveMessage,
+    alignment: MessageBubbleAlignment,
+
+  ): Element | JSX.Element;
+  abstract getCardMessageContentView(
+    message: CometChat.InteractiveMessage,
+    alignment: MessageBubbleAlignment,
+
+  ): Element | JSX.Element;
+  abstract getFormMessageTemplate(
+
+  ): CometChatMessageTemplate;
+  abstract getSchedulerMessageTemplate(
+
+  ): CometChatMessageTemplate;
+  abstract getCardMessageTemplate(
+
+  ):CometChatMessageTemplate;
+  abstract getFormMessageBubble(
+    message: CometChat.InteractiveMessage,
+    alignment:MessageBubbleAlignment,
+  ): Element | JSX.Element;
+  abstract getSchedulerMessageBubble(
+    message: CometChat.InteractiveMessage,
+    alignment:MessageBubbleAlignment,
+  ): Element | JSX.Element;
+  abstract getCardMessageBubble(
+    message: CometChat.InteractiveMessage,alignment:MessageBubbleAlignment
+  ): Element | JSX.Element;
 }

@@ -46,13 +46,13 @@ interface CallLogsProps {
    * Callback function triggered when a call log list item is clicked.
    * @returns void
    */
-  onItemClick?: (call:any)=>void;
+  onItemClick?: (call: any) => void;
 
   /**
    * Callback function triggered when the call button in the trailing view is clicked.
    * @returns void
    */
-  onCallButtonClicked?: (call:any)=>void;
+  onCallButtonClicked?: (call: any) => void;
 
   /**
    * Callback function triggered when the component encounters an error.
@@ -485,10 +485,9 @@ const CometChatCallLogs = (props: CallLogsProps) => {
           return <>{subtitleView(item)}</>;
         }
 
-        const iconClass = missedCall
-          ? "cometchat-call-logs__list-item-subtitle-icon-missed-call"
-          : isCallSentByMe
-            ? "cometchat-call-logs__list-item-subtitle-icon-outgoing-call"
+        const iconClass = isCallSentByMe
+          ? "cometchat-call-logs__list-item-subtitle-icon-outgoing-call" :
+          missedCall ? "cometchat-call-logs__list-item-subtitle-icon-missed-call"
             : "cometchat-call-logs__list-item-subtitle-icon-incoming-call";
 
         return (

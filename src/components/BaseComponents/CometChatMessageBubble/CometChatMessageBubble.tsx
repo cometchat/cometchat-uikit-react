@@ -66,6 +66,10 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
     [CometChatUIKitConstants.MessageTypes.audio + "_" + CometChatUIKitConstants.MessageCategory.call]: "cometchat-message-bubble__audio-call",
     [CometChatUIKitConstants.MessageTypes.video + "_" + CometChatUIKitConstants.MessageCategory.call]: "cometchat-message-bubble__video-call",
     [CometChatUIKitConstants.calls.meeting + "_" + CometChatUIKitConstants.MessageCategory.custom]: "cometchat-message-bubble__meeting-message",
+    [CometChatUIKitConstants.MessageTypes.card + "_" + CometChatUIKitConstants.MessageCategory.interactive]: "cometchat-message-bubble__card-message",
+    [CometChatUIKitConstants.MessageTypes.customInteractive + "_" + CometChatUIKitConstants.MessageCategory.interactive]: "cometchat-message-bubble__custom-interactive-message",
+    [CometChatUIKitConstants.MessageTypes.scheduler + "_" + CometChatUIKitConstants.MessageCategory.interactive]: "cometchat-message-bubble__scheduler-message",
+    [CometChatUIKitConstants.MessageTypes.form + "_" + CometChatUIKitConstants.MessageCategory.interactive]: "cometchat-message-bubble__form-message",
   }
   const messageRef = React.useRef<HTMLDivElement>(null);
   const   bodyViewRef
@@ -173,29 +177,30 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
   }
   /** Function to render the message options if they exist and the user is hovering */
   const getMessageOptions = () => {
-    if (options && options.length > 0 && isHovering) {
-      var optionHeight = "fit-content";
-      if (bodyViewRef.current) {
-        const height = bodyViewRef.current.clientHeight;
-        optionHeight = `${height}px`;
-      }
-      return (
-        <div className="cometchat-message-bubble__options"
-        style={isHovering && (footerView || bottomView || threadView ) ? {
-          height:optionHeight
-        }:undefined}
+    const visibilityStyles = isHovering
+  ? { opacity: 1, pointerEvents: 'auto' as const }
+  : { opacity: 0, pointerEvents: 'none' as const };
+    return (
+      <div
+        className="cometchat-message-bubble__options"
+        style={{
+          transition: 'opacity 0.2s ease-in-out',
+          ...visibilityStyles,
+        }}
+      >
+        <CometChatContextMenu
+          disableBackgroundInteraction={true}
+          useParentContainer={true}
+          key={isHovering ? 'hovered' : 'not-hovered'}
+          topMenuSize={topMenuSize}
+          data={options}
+          onOptionClicked={onOptionClicked}
+          placement={getPlacementAlignment()}
+        />
+      </div>
+    );
+  };
 
-        >
-          <CometChatContextMenu
-            topMenuSize={topMenuSize}
-            data={options}
-            onOptionClicked={onOptionClicked}
-            placement={getPlacementAlignment()}
-          />
-        </div>
-      )
-    }
-  }
   /** Function to determine the placement of the message options menu */
   const getPlacementAlignment = () => {
     if (isMobile()) {
@@ -253,6 +258,21 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
       return Placement.bottom
     }
   };
+  useEffect(() => {
+    const handleOverlayClicked = () => {
+      setIsHovering(false);
+    };
+
+    if (isHovering) {
+      window.addEventListener('overlayclick', handleOverlayClicked as EventListener);
+
+    }
+
+    return () => {
+      window.removeEventListener('overlayclick', handleOverlayClicked as EventListener);
+
+    };
+  }, [isHovering]);
 
 
   return (
@@ -274,7 +294,7 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
               height: "100%",
               background: "inherit"
             }}   onMouseLeave={hideMessageOptions}>
-              {getMessageOptions()}
+            {options && options.length > 0 ?  getMessageOptions() : null}
               <div
                 className="cometchat-message-bubble__body-wrapper"
               >

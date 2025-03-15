@@ -389,6 +389,8 @@
 	"NOT_SUPPORTED": "Jenis mesej ini tidak disokong",
 	"NO_USERS_FOUND": "Tiada Pengguna Dijumpai",
 	"USERS_EMPTY_STATE_MESSAGE": "Kami tidak dapat menemui pengguna yang sepadan dengan carian anda. Cuba laraskan carian anda.",
-	"SAVE": "Simpan"
-  }
+	"SAVE": "Simpan",
+	"MESSAGE_TYPE_NOT_SUPPORTED": "Šis pranešimo tipas nepalaikomas.",
+  "MESSAGE_ALREADY_TRANSLATED":"Bahasa yang dipilih untuk terjemahan adalah serupa dengan bahasa mesej asal."
+}
   

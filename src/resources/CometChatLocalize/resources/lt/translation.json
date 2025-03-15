@@ -389,6 +389,8 @@
 	"NOT_SUPPORTED": "Šio žinutės tipo nepalaikoma",
 	"NO_USERS_FOUND": "Vartotojų nerasta",
 	"USERS_EMPTY_STATE_MESSAGE": "Neradome vartotojų, atitinkančių jūsų paiešką. Pabandykite pakoreguoti paiešką.",
-	"SAVE": "Išsaugoti"
-  }
+	"SAVE": "Išsaugoti",
+	"MESSAGE_TYPE_NOT_SUPPORTED": "Šis pranešimo tipas nepalaikomas.",
+  "MESSAGE_ALREADY_TRANSLATED":"Pasirinkta vertimo kalba yra panaši į originalaus pranešimo kalbą."
+}
   

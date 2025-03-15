@@ -385,9 +385,11 @@
 	"GROUP_MSG_INFO_EMPTY_STATE_MESSAGE": "Waiting for recipients to receive and view the message",
 	"GROUP_MEMBER_EMPTY_STATE_MESSAGE" : "Add contacts to see them listed here.",
 	"REACHED_MAX_LIMIT":"You’ve reached the limit. You can add up to 12 options.",
-    "REQUIRED_FIELDS_WARNING":"Please fill in all required fields before creating a poll.",
+  "REQUIRED_FIELDS_WARNING":"Please fill in all required fields before creating a poll.",
 	"NOT_SUPPORTED" : "This message type is not supported",
 	"NO_USERS_FOUND": "No Users Found",
-    "USERS_EMPTY_STATE_MESSAGE": "We couldn’t find any users matching your search. Try adjusting your search.",
-	"SAVE" : "Save"
+  "USERS_EMPTY_STATE_MESSAGE": "We couldn’t find any users matching your search. Try adjusting your search.",
+	"SAVE" : "Save",
+	"MESSAGE_TYPE_NOT_SUPPORTED": "This message type is not supported.",
+  "MESSAGE_ALREADY_TRANSLATED":"Selected language for translation is similar to the language of the original message."
 }

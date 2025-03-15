@@ -1,6 +1,8 @@
 .cometchat-message-information {
-    width: 420px;
+    max-width: 420px;
+    width: 100%;
     height: fit-content;
+    max-height: 100%;
     flex-shrink: 0;
     border-radius: var(--cometchat-radius-5, 20px);
     border: 1px solid var(--cometchat-border-color-light, #F5F5F5);

@@ -64,6 +64,8 @@ export class MessageTranslationExtensionDecorator extends DataSourceDecorator {
         title: localize("TRANSLATE"),
         iconURL: TranslateIcon,
         onClick: function () {
+          const browserLang = navigator.language || navigator.languages[0];
+
           CometChat.callExtension(
             "message-translation",
             "POST",
@@ -71,31 +73,34 @@ export class MessageTranslationExtensionDecorator extends DataSourceDecorator {
             {
               msgId: messageObject.getId(),
               text: (messageObject as CometChat.TextMessage).getText(),
-              languages: navigator.languages,
+              languages: [browserLang],
             }
           )
             .then((message_translations: any) => {
-              if (
-                message_translations &&
-                message_translations.hasOwnProperty("translations")
-              ) {
-                let translatedMessage =
-                  message_translations["translations"]?.[0]?.[
-                  "message_translated"
-                  ];
-                if (translatedMessage && translatedMessage.trim()) {
-                  let metadata: any =
-                    (messageObject as CometChat.TextMessage).getMetadata() ||
-                    {};
+              const translations = message_translations.translations;
+              const translation = translations.find(
+                (t: any) => t.language_translated.toLowerCase() === browserLang.toLowerCase()
+              );
+              let fallbackLangCode = browserLang.includes("-")
+                ? browserLang.split("-")[0]
+                : browserLang;
+              if (browserLang === message_translations.language_original || fallbackLangCode == message_translations.language_original) {
+                CometChatMessageEvents.ccMessageTranslated.next({
+                  message: messageObject, status: MessageStatus.error
+                });
+              }
+              else{
+                const translatedMessage = translation.message_translated;
+                if (!translation?.message_translated || translation?.error) {
+                  return;
+                }   
+                const metadata: any =
+                    (messageObject as CometChat.TextMessage).getMetadata() || {};
                   metadata["translated_message"] = translatedMessage;
-                  (messageObject as CometChat.TextMessage).setMetadata(
-                    metadata
-                  );
+                  (messageObject as CometChat.TextMessage).setMetadata(metadata);
                   CometChatMessageEvents.ccMessageTranslated.next({
-                    message: messageObject as CometChat.TextMessage,
-                    status: MessageStatus.success,
+                    message: messageObject, status: MessageStatus.success
                   });
-                }
               }
             })
             .catch((error: any) => {

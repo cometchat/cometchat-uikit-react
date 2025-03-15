@@ -389,5 +389,7 @@
 	"NOT_SUPPORTED": "不支援此訊息類型",
 	"NO_USERS_FOUND": "未找到使用者",
 	"USERS_EMPTY_STATE_MESSAGE": "我們找不到符合您搜尋條件的使用者。請嘗試調整搜尋條件。",
-	"SAVE": "儲存"
+	"SAVE": "儲存",
+	"MESSAGE_TYPE_NOT_SUPPORTED": "此訊息類型不受支援。",
+	"MESSAGE_ALREADY_TRANSLATED":"所選的翻譯語言與原始訊息的語言相似。"
 }

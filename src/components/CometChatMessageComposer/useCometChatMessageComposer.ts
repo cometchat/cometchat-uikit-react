@@ -237,8 +237,30 @@ export function useCometChatMessageComposer(args: Args) {
       try {
         const subShowModal = CometChatUIEvents.ccShowModal.subscribe(
           (data: IModal) => {
-            dispatch({ type: "setShowPoll", showPoll: true });
-            createPollViewRef.current = data.child;
+            const { composerId } = data;
+            const parentMessageId = parentMessageIdPropRef?.current;
+            const userId = userPropRef.current?.getUid();
+            const groupId = groupPropRef.current?.getGuid();
+
+            if (
+              composerId
+            ) {
+              if (
+                (composerId.parentMessageId && parentMessageId && composerId.parentMessageId === parentMessageId) ||
+                (!parentMessageId && (composerId.user === userId || composerId.group === groupId)) ||
+                (!composerId.parentMessageId && !composerId.user && !composerId.group)
+              ) {
+                dispatch({ type: "setShowPoll", showPoll: true });
+                createPollViewRef.current = data.child;
+              }
+
+            }
+            else {
+              dispatch({ type: "setShowPoll", showPoll: true });
+              createPollViewRef.current = data.child;
+            }
+
+
           }
         );
 
@@ -292,14 +314,14 @@ export function useCometChatMessageComposer(args: Args) {
       if (!isMobileDevice()) {
         contentEditable?.focus();
       }
-      setSelection(window?.getSelection())
       if (!disableMentions) {
-        if (textFormatterArray.length) {
-          let foundMentionsFormatter = textFormatterArray.some(
+        if (textFormatterArray.length ) {
+          let mentionsFormatter = textFormatterArray.find(
             formatter => formatter instanceof CometChatMentionsFormatter
-          );
-
-          if (!foundMentionsFormatter) {
+          ) as CometChatMentionsFormatter | undefined;
+          if (mentionsFormatter) {
+            mentionsTextFormatterInstanceRef.current = mentionsFormatter
+          }
             mentionsTextFormatterInstanceRef.current.setLoggedInUser(
               CometChatUIKitLoginListener.getLoggedInUser()
             );
@@ -310,11 +332,15 @@ export function useCometChatMessageComposer(args: Args) {
               mentionsTextFormatterInstanceRef.current.setKeyDownCallBack(searchMentions);
               mentionsTextFormatterInstanceRef.current.setKeyUpCallBack(searchMentions);
             }
-            setTextFormatters(prevFormatters => [
-              ...prevFormatters,
-              mentionsTextFormatterInstanceRef.current,
-            ]);
-          }
+            setTextFormatters(prevFormatters => {
+            const newFormatter = mentionsTextFormatterInstanceRef.current;
+            if (!prevFormatters.includes(newFormatter)) {
+              return [...prevFormatters, newFormatter];
+            }
+            return prevFormatters;
+          });
+
+
         } else {
           mentionsTextFormatterInstanceRef.current.setLoggedInUser(
             CometChatUIKitLoginListener.getLoggedInUser()
@@ -326,20 +352,26 @@ export function useCometChatMessageComposer(args: Args) {
             mentionsTextFormatterInstanceRef.current.setKeyDownCallBack(searchMentions);
             mentionsTextFormatterInstanceRef.current.setKeyUpCallBack(searchMentions);
           }
-          setTextFormatters([
-            mentionsTextFormatterInstanceRef.current,
-          ]);
+          setTextFormatters(prevFormatters => {
+            const newFormatter = mentionsTextFormatterInstanceRef.current;
+            if (!prevFormatters.includes(newFormatter)) {
+              return [newFormatter];
+            }
+            return prevFormatters;
+          });
         }
         return () => {
           contentEditable.removeEventListener("paste", preventPaste);
           document.removeEventListener("selectionchange", triggerSelection);
         };
       }
+      if(window?.getSelection()){
+        setSelection(window?.getSelection());
+      }
     } catch (error) {
       errorHandler(error, "preventPaste")
     }
-  }, [disableMentions, setTextFormatters, textFormatterArray]);
-
+  }, [disableMentions, setTextFormatters, textFormatters]);
   /**
    * Handle user or group changes and reset the composer input accordingly.
    */

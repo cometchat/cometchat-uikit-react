@@ -389,6 +389,8 @@
 	"NOT_SUPPORTED": "Dieser Nachrichtentyp wird nicht unterstützt",
 	"NO_USERS_FOUND": "Keine Benutzer gefunden",
 	"USERS_EMPTY_STATE_MESSAGE": "Wir konnten keine Benutzer finden, die Ihrer Suche entsprechen. Versuchen Sie, Ihre Suche anzupassen.",
-	"SAVE": "Speichern"
+	"SAVE": "Speichern",
+	"MESSAGE_TYPE_NOT_SUPPORTED": "Dieser Nachrichtentyp wird nicht unterstützt.",
+  "MESSAGE_ALREADY_TRANSLATED":"Die ausgewählte Sprache für die Übersetzung ist der Sprache der Originalnachricht ähnlich."
   }
   

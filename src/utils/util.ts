@@ -216,3 +216,7 @@ export function formatDateFromTimestamp(timestamp:number) {
   export function isMobileDevice() {
     return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
   }
+  export function fireClickEvent(){
+    if(window)
+     window.dispatchEvent(new CustomEvent('overlayclick'));
+}

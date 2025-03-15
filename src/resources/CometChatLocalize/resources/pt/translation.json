@@ -389,6 +389,8 @@
 	"NOT_SUPPORTED": "Este tipo de mensagem não é suportado",
 	"NO_USERS_FOUND": "Nenhum usuário encontrado",
 	"USERS_EMPTY_STATE_MESSAGE": "Não conseguimos encontrar usuários que correspondam à sua pesquisa. Tente ajustar sua pesquisa.",
-	"SAVE": "Salvar"
+	"SAVE": "Salvar",
+	"MESSAGE_TYPE_NOT_SUPPORTED": "Este tipo de mensagem não é suportado.",
+  "MESSAGE_ALREADY_TRANSLATED":"O idioma selecionado para tradução é semelhante ao idioma da mensagem original."
   }
   

@@ -1,3 +1,15 @@
+## [5.0.4] - 13-03-2025
+
+## New
+- None
+
+## Enhancements
+- None
+
+## Fixes
+ - Resolved an issue where a **group owner** lost the "Delete & Exit" and "Add Members" options after removing a member who later rejoined the group.
+ - Resolved an issue where previously created group names and password suggestions appeared when creating a **new password-protected group**.
+
 ## [5.0.3] - 13-02-2025
 
 ## New

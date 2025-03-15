@@ -5,7 +5,8 @@ export class CometChatUIKitConstants {
         message: CometChat.CATEGORY_MESSAGE,
         custom: CometChat.CATEGORY_CUSTOM,
         action: CometChat.CATEGORY_ACTION,
-        call: CometChat.CATEGORY_CALL
+        call: CometChat.CATEGORY_CALL,
+        interactive: CometChat.CATEGORY_INTERACTIVE
     })
     static MessageTypes = Object.freeze({
         text: CometChat.MESSAGE_TYPE.TEXT,
@@ -16,6 +17,10 @@ export class CometChatUIKitConstants {
         delete: "delete",
         edited: "edited",
         groupMember: "groupMember",
+        form: "form",
+        card: "card",
+        customInteractive: "customInteractive",
+        scheduler: "scheduler"
     })
     static groupMemberAction = Object.freeze({
         ROLE: "role",
@@ -100,7 +105,6 @@ export class CometChatUIKitConstants {
         CUSTOM_MESSAGE_RECEIVED: "onCustomMessageReceived",
         TRANSIENT_MESSAGE_RECEIVED: "onTransientMessageReceived",
         INTERACTIVE_MESSAGE_RECEIVED: "onInteractiveMessageReceived",
-        INTERACTION_GOAL_COMPLETED: "onInteractionGoalCompleted",
         DELIVERY: "delivery",
         READ: "read",
         APP_SYSTEM: "app_system",

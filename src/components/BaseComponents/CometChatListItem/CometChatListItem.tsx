@@ -1,4 +1,4 @@
-import { MouseEvent, ReactNode, useState } from "react";
+import { MouseEvent, ReactNode, useRef, useState } from "react";
 import { CometChatAvatar } from "../CometChatAvatar/CometChatAvatar";
 import { useCometChatListItem } from "./useCometChatListItem";
 
@@ -44,13 +44,16 @@ const CometChatListItem = (props: ListItemProps) => {
         leadingView
     } = props;
 
+
+    const [isMenuVisible, setIsMenuVisible] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
     const {
         listItemClick,
         isHovering,
         hideTail,
         showTail
-    } = useCometChatListItem({ onListItemClicked, id });
-    const [isMenuVisible, setIsMenuVisible] = useState(false);
+    } = useCometChatListItem({ onListItemClicked, id,menuRef });
+
 
     return (
         <div className="cometchat" style={{
@@ -100,6 +103,7 @@ const CometChatListItem = (props: ListItemProps) => {
                         {trailingView}
                     </div>
                     <div
+                        ref={menuRef}
                         className={isHovering && menuView ? "cometchat-list-item__menu-view" : "cometchat-list-item__trailing-view-hidden"}
                         onClick={(event: MouseEvent<HTMLDivElement>) => {
                             if (event?.stopPropagation) {
