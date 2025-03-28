@@ -72,17 +72,31 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
     [CometChatUIKitConstants.MessageTypes.form + "_" + CometChatUIKitConstants.MessageCategory.interactive]: "cometchat-message-bubble__form-message",
   }
   const messageRef = React.useRef<HTMLDivElement>(null);
-  const   bodyViewRef
+  const bodyViewRef
   = React.useRef<HTMLDivElement>(null);
   const resizeObserver = useRef<ResizeObserver | null>(null);
   const previousHeightRef = useRef<number>(0);
   var timeoutId: NodeJS.Timeout | null = null;
+  const intersectionObserver = useRef<IntersectionObserver | null>(null);
   
   useEffect(() => {
     if (messageRef && messageRef.current && setRef) {
       setRef(messageRef);
     }
   }, [messageRef, setRef]);
+
+  const attachIntersectionObserver = useCallback(() => {
+    if (!intersectionObserver.current) {
+      intersectionObserver.current = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) {
+            hideMessageOptions();
+          }
+        }
+      }, { threshold: 0.1 });
+      intersectionObserver.current.observe(messageRef.current!);
+    }
+  }, []);
 
     /** 
      * Function to attach ResizeObserver to listen for height changes of text buble.
@@ -131,6 +145,10 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
     () => {
       timeoutId = setTimeout(() => {
         setIsHovering(false);
+        if (intersectionObserver.current && messageRef.current) {
+          intersectionObserver.current.unobserve(messageRef.current);
+          intersectionObserver.current = null;
+        }
       }, 150);
     }
   /** */
@@ -140,6 +158,7 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
         clearTimeout(timeoutId);
       }
       setIsHovering(true);
+      attachIntersectionObserver();
     }
   /** Function to render the leading view based on alignment*/
   const getLeadingView = () => {
@@ -178,14 +197,21 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
   /** Function to render the message options if they exist and the user is hovering */
   const getMessageOptions = () => {
     const visibilityStyles = isHovering
-  ? { opacity: 1, pointerEvents: 'auto' as const }
-  : { opacity: 0, pointerEvents: 'none' as const };
+      ? { opacity: 1, pointerEvents: 'auto' as const }
+      : { opacity: 0, pointerEvents: 'none' as const };
+    var optionHeight = "fit-content";
+    if (bodyViewRef.current) {
+      const height = bodyViewRef.current.clientHeight;
+      optionHeight = `${height}px`;
+    }
+    let style = { height: optionHeight }
     return (
       <div
         className="cometchat-message-bubble__options"
         style={{
           transition: 'opacity 0.2s ease-in-out',
           ...visibilityStyles,
+          ...((footerView || bottomView || threadView) && style)
         }}
       >
         <CometChatContextMenu
@@ -300,6 +326,11 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
               >
                 <div
                    onMouseEnter={showMessageOptions}
+                   onClick={()=>{
+                      if(!isHovering){
+                        showMessageOptions()
+                      }
+                   }}
                    ref={bodyViewRef}
                   className={`cometchat-message-bubble__body ${getBubbleTypeClassName()}`}
                 >

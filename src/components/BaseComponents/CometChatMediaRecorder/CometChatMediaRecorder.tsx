@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Recorder from "./Helper/index.js";
 import { CometChatAudioBubble } from "../CometChatAudioBubble/CometChatAudioBubble";
-import {  currentAudioPlayer, currentMediaPlayer } from "../../../utils/util";
+import { currentAudioPlayer, currentMediaPlayer, getThemeVariable } from "../../../utils/util";
+import { localize } from "../../../resources/CometChatLocalize/cometchat-localize";
 
 interface MediaRecorderProps {
     autoRecording?: boolean;
@@ -26,17 +27,19 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     const counterRunning = useRef<boolean>(true);
     const createMedia = useRef<boolean>(false);
     const hasInitializedRef = useRef(false);
+    const [hasError, setHasError] = useState(false);
 
-  function pauseActiveMedia(){
-     if (currentAudioPlayer.instance && currentAudioPlayer.setIsPlaying) {
-        currentAudioPlayer.instance.pause();
-        currentAudioPlayer.setIsPlaying(false);
-      }
-    
-      if (currentMediaPlayer.video && !currentMediaPlayer.video.paused) {
-        currentMediaPlayer.video.pause();
-      }
-  }
+
+    function pauseActiveMedia() {
+        if (currentAudioPlayer.instance && currentAudioPlayer.setIsPlaying) {
+            currentAudioPlayer.instance.pause();
+            currentAudioPlayer.setIsPlaying(false);
+        }
+
+        if (currentMediaPlayer.video && !currentMediaPlayer.video.paused) {
+            currentMediaPlayer.video.pause();
+        }
+    }
     useEffect(() => {
         if (autoRecording) {
             handleStartRecording();
@@ -68,16 +71,12 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         setCounter(0);
     };
 
-    const initMediaRecorder = async () => {
+    const initMediaRecorder = async (): Promise<MediaRecorder | null> => {
         try {
-        if (hasInitializedRef.current) {
-            return;
-        }
-        hasInitializedRef.current = true;
-        clearStream();
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-            });
+            if (hasInitializedRef.current) return null;
+            clearStream();
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            hasInitializedRef.current = true;
             streamRef.current = stream;
             const audioRecorder = new MediaRecorder(stream);
             audioRecorder.ondataavailable = (e: any) => {
@@ -87,9 +86,9 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
             };
             audioRecorder.onstop = () => {
                 if (createMedia.current) {
-                    const recordedBlob = new Blob(
-                        audioChunks.current, { type: audioChunks.current[0].type }
-                    );
+                    const recordedBlob = new Blob(audioChunks.current, {
+                        type: audioChunks.current[0].type,
+                    });
                     blobRef.current = recordedBlob;
                     const url = URL.createObjectURL(recordedBlob);
                     setMediaPreviewUrl(url);
@@ -98,50 +97,44 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
             };
             audioRecorder.start();
             setMediaRecorder(audioRecorder);
-        } catch (error) {
-            console.error("Error initializing media recorder:", error);
+            setHasError(false);
+            return audioRecorder;
+        } catch (error: any) {
+            if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+                setHasError(true);
+            }
+            hasInitializedRef.current = false;
+            return null;
         }
     };
 
     const handleStartRecording = async () => {
         pauseActiveMedia();
         const hasAudioInput = await navigator.mediaDevices.enumerateDevices()
-            .then(devices => {
-                let hasMic = false;
-                devices.forEach(device => {
-                    if (device.kind === 'audioinput') {
-                        hasMic = true;
-                    }
-                });
-                return hasMic;
-            });
-
-        if (hasAudioInput) {
-            counterRunning.current = true;
-            createMedia.current = true;
-            if (isPaused) {
-                currentMediaPlayer.mediaRecorder = mediaRecorder as MediaRecorder;
-                (mediaRecorder as MediaRecorder)?.resume();
-                setIsPaused(false);
+            .then(devices => devices.some(device => device.kind === 'audioinput'));
+        if (!hasAudioInput) {
+            return;
+        }
+        counterRunning.current = true;
+        createMedia.current = true;
+        if (isPaused) {
+            currentMediaPlayer.mediaRecorder = mediaRecorder as MediaRecorder;
+            (mediaRecorder as MediaRecorder)?.resume();
+            setIsPaused(false);
+            startTimer();
+            setIsRecording(true);
+        } else {
+            reset();
+            const recorder = await initMediaRecorder();
+            if (recorder) {
+                currentMediaPlayer.mediaRecorder = recorder;
+                setCounter(0);
                 startTimer();
                 setIsRecording(true);
-            } else {
-                reset();
-                initMediaRecorder().then(() => {
-                    (mediaRecorder as MediaRecorder)?.start();
-                    currentMediaPlayer.mediaRecorder = mediaRecorder as MediaRecorder;
-                    setCounter(0);
-                    startTimer();
-                    setIsRecording(true);
-                }).catch((error) => {
-                    console.error("Error starting recording:", error);
-                });
+                setHasError(false);
             }
-        } else {
-            console.warn("No audio input device present.");
         }
     };
-
     const handleStopRecording = () => {
         setIsPaused(false);
         pauseActiveMedia();
@@ -196,18 +189,54 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     const handlePauseRecording = () => {
         setIsPaused(true);
         pauseTimer();
-        if(mediaRecorder)
-        (mediaRecorder as MediaRecorder).pause();
+        if (mediaRecorder)
+            (mediaRecorder as MediaRecorder).pause();
         counterRunning.current = false;
-        hasInitializedRef.current = false;        
+        hasInitializedRef.current = false;
     }
+    useEffect(() => {
+        let permissionStatus: PermissionStatus;
+        navigator.permissions.query({ name: 'microphone' as PermissionName }).then((status) => {
+            permissionStatus = status;
+            status.onchange = () => {
+                if (status.state === "granted") {
+                    console.log(mediaPreviewUrl)
+                    setHasError(false);
+                    if (!mediaPreviewUrl) {
+                        handleStartRecording();
+                    }
+                } else if (status.state === "denied") {
+                    if (!mediaPreviewUrl) {
+                        handleCloseRecording();
+                    }
+                    setHasError(true);
+                }
+            };
+        });
+        return () => {
+            if (permissionStatus) {
+                permissionStatus.onchange = null;
+            }
+        };
+    }, [mediaPreviewUrl]);
     return (
         <div className="cometchat" style={{
             height: "inherit",
             width: "fit-content"
         }}>
-            <div className="cometchat-media-recorder">
-                {!mediaPreviewUrl ? (<div className="cometchat-media-recorder__recording">
+            {hasError ? <div className="cometchat-media-recorder__error">
+                <div className="cometchat-media-recorder__error-icon-wrapper">
+                    <div className="cometchat-media-recorder__error-icon">
+                    </div>
+                </div>
+                <div className="cometchat-media-recorder__error-content">
+                    <div className="cometchat-media-recorder__error-content-title">{localize("MEDIA_RECORDER_ERROR_TITLE")}</div>
+                    <div className="cometchat-media-recorder__error-content-subtitle">{localize("MEDIA_RECORDER_ERROR_SUBTITLE")}
+                    </div>
+                </div>
+            </div> : null}
+            <div className="cometchat-media-recorder" style={{...(hasError && {borderRadius:`0px 0px ${getThemeVariable("--cometchat-radius-4")} ${getThemeVariable("--cometchat-radius-4")}`})}}>
+                {!mediaPreviewUrl ? (<div className="cometchat-media-recorder__recording" style={{...(hasError && {borderRadius:`0px 0px ${getThemeVariable("--cometchat-radius-4")} ${getThemeVariable("--cometchat-radius-4")}`})}}>
                     {isRecording ? (
                         <div className="cometchat-media-recorder__recording-preview">
                             <div className="cometchat-media-recorder__recording-preview-recording">
@@ -269,10 +298,10 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
                                     <div className="cometchat-media-recorder__recording-control-delete-icon" />
                                 </div>
                                 <div
-                                    className="cometchat-media-recorder__recording-control-record"
+                                    className={`cometchat-media-recorder__recording-control-record ${hasError ? "cometchat-media-recorder__recording-control-error" : ""}`}
                                     onClick={handleStartRecording}
                                 >
-                                    <div className="cometchat-media-recorder__recording-control-record-icon" />
+                                    <div className={`cometchat-media-recorder__recording-control-record-icon`} />
                                 </div>
                                 <div
                                     className="cometchat-media-recorder__recording-control-stop"

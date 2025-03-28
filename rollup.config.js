@@ -44,7 +44,7 @@ export default [
       }),
       terser(),
     ],
-    external: ["react", "react-dom", "@cometchat/chat-sdk-javascript",  "@cometchat/calls-sdk-javascript"],
+    external: ["react", "react-dom","react/jsx-runtime", "@cometchat/chat-sdk-javascript",  "@cometchat/calls-sdk-javascript"],
   },
   {
     input: "src/index.ts",

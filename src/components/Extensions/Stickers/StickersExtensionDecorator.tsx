@@ -38,10 +38,6 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
    */
   public showStickerKeyboard: boolean = false;
 
-  private id: any;
-  private user?: CometChat.User;
-  private group?: CometChat.Group;
-
   /**
    * Constructs a new instance of StickersExtensionDecorator.
    * @param dataSource - The data source to be decorated.
@@ -91,10 +87,7 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
     user?: CometChat.User,
     group?: CometChat.Group
   ) {
-    this.id = id;
-    this.user = user;
-    this.group = group;
-    return this.getStickerAuxiliaryButton(id as any, user, group);
+    return this.getStickerAuxiliaryButton(id, user, group);
   }
 
   /**
@@ -144,6 +137,8 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
     return (
       <div className={`cometchat-message-composer__auxilary-button-view-sticker-button ${showKeyboard ? "cometchat-message-composer__auxilary-button-view-sticker-button-active" : ""}`}>
         <CometChatPopover
+          useParentContainer={true}
+          useParentHeight={false}
           ref={stickerKeyboardRef}
           placement={Placement.top}
           closeOnOutsideClick={true}
@@ -152,7 +147,7 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
           debounceOnHover={0}
           content={
             <StickersKeyboard
-              ccStickerClicked={(e: any) => this.sendSticker(e, closeSticker)}
+              ccStickerClicked={(e: any) => this.sendSticker(e, closeSticker,id)}
             />
           }
         >
@@ -175,19 +170,20 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
    * Sends a sticker message.
    * @param event - The event object containing sticker details.
    */
-  sendSticker(event: any, closeSticker: Function) {
+  sendSticker(event: any, closeSticker: Function,id:ComposerId) {
     try {
-      closeSticker()
+      closeSticker();
+      if(!id.group && !id.user) return;
       let details = event?.detail;
       let sticker = {
         name: details?.stickerName,
         URL: details?.stickerURL,
       };
-      const receiverId: string | undefined = this.user?.getUid() || this.group?.getGuid();
-      const receiverType: string = this.user
+      const receiverId: string | undefined = id.user || id.group!;
+      const receiverType: string = id.user
         ? CometChatUIKitConstants.MessageReceiverType.user
         : CometChatUIKitConstants.MessageReceiverType.group;
-      const { parentMessageId } = this.id;
+      const { parentMessageId } = id;
 
       const customData = {
         sticker_url: sticker.URL,

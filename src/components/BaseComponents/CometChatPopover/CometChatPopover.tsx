@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, ReactNode, useCallback, forwardRef, useImperativeHandle, CSSProperties, useLayoutEffect } from 'react';
-import { fireClickEvent, isMobileDevice } from '../../../utils/util';
+import { fireClickEvent } from '../../../utils/util';
 export enum Placement {
     top = 'top',
     right = 'right',
@@ -18,6 +18,7 @@ interface PopoverProps {
     onOutsideClick?: () => void;
     disableBackgroundInteraction?: boolean;
     useParentContainer?: boolean;
+    useParentHeight?: boolean;
 }
 
 const CometChatPopover = forwardRef<{
@@ -35,7 +36,8 @@ const CometChatPopover = forwardRef<{
             onOutsideClick,
             childClickHandler,
             disableBackgroundInteraction = false,
-            useParentContainer = false
+            useParentContainer = false,
+            useParentHeight = true
         },
         ref
     ) => {
@@ -185,6 +187,10 @@ const CometChatPopover = forwardRef<{
             const rect = childRef.current.getBoundingClientRect();
             const parentViewRect = parentViewRef.current.getBoundingClientRect();
             if (!rect || !parentViewRect) return;
+            if(!useParentHeight){
+                setPopoverHeight();
+                return;
+            }
         
             const availablePlacement = getAvailablePlacement(rect, height);
             let positionStyle:CSSProperties = {};
@@ -208,7 +214,36 @@ const CometChatPopover = forwardRef<{
             }
             
             setPositionStyleState(positionStyle);
-        }, [isOpen]);
+        }, [isOpen,useParentHeight]);
+        
+        const setPopoverHeight = useCallback(() => {
+            if (!popoverRef.current || !childRef.current) return;
+
+            const popoverWidth = popoverRef.current.scrollWidth;
+            const rect = childRef.current.getBoundingClientRect();
+
+            const parentRect = parentViewRef.current?.getBoundingClientRect() || {
+                left: 0,
+                right: window.innerWidth,
+                width: window.innerWidth,
+            };
+            const height = popoverRef.current.scrollHeight;
+            let positionStyle: CSSProperties = {};
+            if (placement === Placement.top) {
+                positionStyle.top = `${rect.top - height - 10}px`;
+            } else if (placement === Placement.bottom) {
+                positionStyle.top = `${rect.bottom + 10}px`;
+            }
+            const popoverLeft = rect.left + rect.width / 2 - popoverWidth / 2;
+            if (popoverLeft < parentRect.left) {
+                positionStyle.left = `${parentRect.left + 10}px`;
+            } else if (popoverLeft + popoverWidth > parentRect.right) {
+                positionStyle.left = `${parentRect.right - popoverWidth - 10}px`;
+            } else {
+                positionStyle.left = `${popoverLeft}px`;
+            }
+            setPositionStyleState(positionStyle);
+        }, [setPositionStyleState]);
         
         const getPopoverPositionStyle = useCallback(() => {
             if (useParentContainer) {

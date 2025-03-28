@@ -63,6 +63,23 @@ function CometChatHome(props: { theme?: string }) {
         if (appID === '' || region === '' || authKey === '') return false;
         return true;
     }
+    useEffect(()=>{
+        const listenerID = `HomeLoginListener_${new Date().getTime()}`;
+        CometChat.addLoginListener(
+            listenerID,
+            new CometChat.LoginListener({
+                logoutSuccess: () => {
+                    setSelectedItem(undefined);
+                    setNewChat(undefined);
+                    setAppState({ type: "updateSelectedItem", payload: undefined });
+                    setAppState({ type: "updateSelectedItemUser", payload: undefined });
+                    setAppState({ type: "updateSelectedItemGroup", payload: undefined });
+                    setAppState({ type: "newChat", payload: undefined });
+                },
+            })
+        );
+        return ()=> CometChat.removeConnectionListener(listenerID);
+    })
     useEffect((() => {
         let ccOwnershipChanged = CometChatGroupEvents.ccOwnershipChanged.subscribe(() => {
             toastTextRef.current = localize("GROUP_OWNERSHIP_TRANSFERRED_SUCCESSFULLY");
@@ -1088,8 +1105,19 @@ function CometChatHome(props: { theme?: string }) {
 
         useEffect(() => {
             requestBuilder();
-            let isUser = selectedItem instanceof CometChat.User;
-            if (isUser && (selectedItem as CometChat.User)?.getBlockedByMe()) {
+            let user: CometChat.User | null = null;
+
+            if (selectedItem instanceof CometChat.User) {
+                user = selectedItem;
+            } else if (
+                selectedItem instanceof CometChat.Conversation &&
+                selectedItem.getConversationType() === CometChat.RECEIVER_TYPE.USER &&
+                selectedItem.getConversationWith() instanceof CometChat.User
+            ) {
+                user = selectedItem.getConversationWith() as CometChat.User;
+            }
+
+            if (user?.getBlockedByMe()) {
                 setShowComposer(false);
             }
             const ccUserBlocked = CometChatUserEvents.ccUserBlocked.subscribe(user => {

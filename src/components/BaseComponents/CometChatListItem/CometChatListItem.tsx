@@ -23,6 +23,8 @@ interface ListItemProps {
     titleView?: ReactNode;
     /* html component which is used for showing leading  view. */
     leadingView?: ReactNode;
+    /* boolean flag to stop event propogation */
+    stopEventPropagation?: boolean;
 }
 
 /* 
@@ -41,7 +43,8 @@ const CometChatListItem = (props: ListItemProps) => {
         subtitleView,
         trailingView,
         titleView,
-        leadingView
+        leadingView,
+        stopEventPropagation = false
     } = props;
 
 
@@ -98,6 +101,11 @@ const CometChatListItem = (props: ListItemProps) => {
                         </div>
                     </div >
                     <div
+                     onClick={(event: MouseEvent<HTMLDivElement>) => {
+                        if (event?.stopPropagation && stopEventPropagation) {
+                            event.stopPropagation();
+                        }
+                    }}
                         className={!isHovering || (isHovering && !menuView) ? "cometchat-list-item__trailing-view" : "cometchat-list-item__trailing-view-hidden"}
                     >
                         {trailingView}

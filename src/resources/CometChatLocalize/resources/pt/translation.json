@@ -391,6 +391,8 @@
 	"USERS_EMPTY_STATE_MESSAGE": "Não conseguimos encontrar usuários que correspondam à sua pesquisa. Tente ajustar sua pesquisa.",
 	"SAVE": "Salvar",
 	"MESSAGE_TYPE_NOT_SUPPORTED": "Este tipo de mensagem não é suportado.",
-  "MESSAGE_ALREADY_TRANSLATED":"O idioma selecionado para tradução é semelhante ao idioma da mensagem original."
+    "MESSAGE_ALREADY_TRANSLATED":"O idioma selecionado para tradução é semelhante ao idioma da mensagem original.",
+	"MEDIA_RECORDER_ERROR_TITLE": "Acesso ao Microfone Necessário",
+    "MEDIA_RECORDER_ERROR_SUBTITLE": "Não conseguimos acessar seu microfone. Conceda permissão para iniciar a gravação."
   }
   

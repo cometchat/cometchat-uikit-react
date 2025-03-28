@@ -391,6 +391,8 @@
 	"USERS_EMPTY_STATE_MESSAGE": "Kami tidak dapat menemui pengguna yang sepadan dengan carian anda. Cuba laraskan carian anda.",
 	"SAVE": "Simpan",
 	"MESSAGE_TYPE_NOT_SUPPORTED": "Šis pranešimo tipas nepalaikomas.",
-  "MESSAGE_ALREADY_TRANSLATED":"Bahasa yang dipilih untuk terjemahan adalah serupa dengan bahasa mesej asal."
+    "MESSAGE_ALREADY_TRANSLATED":"Bahasa yang dipilih untuk terjemahan adalah serupa dengan bahasa mesej asal.",
+	"MEDIA_RECORDER_ERROR_TITLE": "Akses Mikrofon Diperlukan",
+    "MEDIA_RECORDER_ERROR_SUBTITLE": "Kami tidak dapat mengakses mikrofon anda. Sila berikan kebenaran mikrofon untuk memulakan rakaman."
 }
   

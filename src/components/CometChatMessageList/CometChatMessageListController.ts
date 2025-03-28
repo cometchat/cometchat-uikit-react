@@ -163,9 +163,8 @@ try {
 */
     static attachConnectionListener(callback: () => void): void {
       try {
-        const listenerId = "MessageList_connection_" + String(Date.now());
         CometChat.addConnectionListener(
-            listenerId,
+            this.connectionListenerId,
             new CometChat.ConnectionListener({
                 onConnected: (): void => {
                     console.log("ConnectionListener =>connected");

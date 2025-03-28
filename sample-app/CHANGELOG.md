@@ -1,3 +1,16 @@
+## [5.0.5] - 28-03-2025
+
+## New
+- None
+
+## Enhancements
+- None
+
+## Fixes
+- Fixed an issue where the unblock user option was not visible in Threads after blocking a user.
+- Fixed an issue where an error occurred when logging in with a new user after logging out while a conversation was open.
+- Addressed security vulnerabilities encountered when installing packages.
+
 ## [5.0.4] - 13-03-2025
 
 ## New

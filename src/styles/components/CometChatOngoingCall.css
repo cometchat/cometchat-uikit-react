@@ -1,4 +1,4 @@
-.cometchat-ongoing-call {
+.cometchat-ongoing-call,.cometchat:has(> .cometchat-ongoing-call) {
     width: 100%;
     height: 100%;
     border-radius: 0;

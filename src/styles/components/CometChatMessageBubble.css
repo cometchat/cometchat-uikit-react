@@ -49,7 +49,10 @@
     align-items: flex-start;
 }
 .cometchat-message-bubble__text-message .cometchat-message-bubble__body-content-view{
-    width: 100%;
+    width: fit-content;
+    display: flex;
+    align-self: flex-start;
+    max-width: 100%;
 }
 .cometchat-message-bubble  .cometchat-text-bubble__body-text{
 text-align: left;

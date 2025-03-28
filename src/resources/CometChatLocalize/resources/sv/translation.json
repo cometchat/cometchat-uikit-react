@@ -391,6 +391,8 @@
 	"USERS_EMPTY_STATE_MESSAGE": "Vi kunde inte hitta några användare som matchar din sökning. Försök justera din sökning.",
 	"SAVE": "Spara",
 	"MESSAGE_TYPE_NOT_SUPPORTED": "Denna meddelandetyp stöds inte.",
-  "MESSAGE_ALREADY_TRANSLATED":"Det valda språket för översättning liknar språket i det ursprungliga meddelandet."
+    "MESSAGE_ALREADY_TRANSLATED":"Det valda språket för översättning liknar språket i det ursprungliga meddelandet.",
+	"MEDIA_RECORDER_ERROR_TITLE": "Mikrofonåtkomst Krävs",
+    "MEDIA_RECORDER_ERROR_SUBTITLE": "Vi kunde inte komma åt din mikrofon. Vänligen ge mikrofontillstånd för att börja spela in."
 }
   

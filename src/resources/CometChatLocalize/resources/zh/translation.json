@@ -388,8 +388,10 @@
 	"REQUIRED_FIELDS_WARNING": "在创建投票之前，请填写所有必填字段",
 	"NOT_SUPPORTED":"不支持此消息类型",
 	"NO_USERS_FOUND": "未找到用户",
-  "USERS_EMPTY_STATE_MESSAGE": "我们找不到任何符合您搜索条件的用户。尝试调整搜索条件。",
+    "USERS_EMPTY_STATE_MESSAGE": "我们找不到任何符合您搜索条件的用户。尝试调整搜索条件。",
 	"SAVE":"保存",
 	"MESSAGE_TYPE_NOT_SUPPORTED": "此消息类型不受支持。",
-  "MESSAGE_ALREADY_TRANSLATED":"所选的翻译语言与原始消息的语言相似。"
+    "MESSAGE_ALREADY_TRANSLATED":"所选的翻译语言与原始消息的语言相似。",
+	"MEDIA_RECORDER_ERROR_TITLE": "需要麦克风访问权限",
+    "MEDIA_RECORDER_ERROR_SUBTITLE": "无法访问您的麦克风。请授予麦克风权限以开始录音。"
 }

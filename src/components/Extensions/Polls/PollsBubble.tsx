@@ -124,6 +124,10 @@ const PollsBubble = (props: PollsBubbleProps) => {
       id: pollId,
     }).catch(console.error);
   };
+  function getId(id:string | number){
+    let time = new Date().getTime();
+    return time + String(id);
+   }
   return (
     <div className="cometchat">
       <div className={`cometchat-polls-bubble ${alignment == MessageBubbleAlignment.left ? "cometchat-polls-bubble-incoming" : "cometchat-polls-bubble-outgoing"} `}>
@@ -140,8 +144,8 @@ const PollsBubble = (props: PollsBubbleProps) => {
               className="cometchat-polls-bubble__option-item">
               <div className="cometchat-poll-bubble__option-item-leading-view">
                 <CometChatRadioButton
-                  name={String(pollId)}
-                  id={option.id}
+                  name={getId(pollId)}
+                  id={getId(option.id)}
                   checked={option.selectedByLoggedInUser ? true : false} />
               </div>
 

@@ -1,6 +1,6 @@
 .cometchat-threaded-message-preview {
     display: flex;
-    width: 420px;
+    width: 100%;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;

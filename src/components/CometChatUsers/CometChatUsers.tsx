@@ -25,6 +25,7 @@ import errorIcon from "../../assets/list_error_state_icon.svg"
 import errorIconDark from "../../assets/list_error_state_icon_dark.svg"
 import { getThemeMode } from "../../utils/util";
 import { CometChatUIKitConstants } from "../../constants/CometChatUIKitConstants";
+import { MessageUtils } from "../../utils/MessageUtils";
 
 export interface UsersProps {
   /**
@@ -553,11 +554,13 @@ export function CometChatUsers(props: UsersProps) {
       try {
         const status = user.getStatus();
         const isActive = activeUser?.getUid() === user.getUid();
+        let userBlockedFlag = new MessageUtils().getUserStatusVisible(user) || hideUserStatus;
         return (
           <div
-            className={`cometchat-users__list-item ${hideUserStatus ? "" : `cometchat-users__list-item-${status}`} ${isActive ? `cometchat-users__list-item-active` : ""}`}
+            className={`cometchat-users__list-item ${userBlockedFlag ? "" : `cometchat-users__list-item-${status}`} ${isActive ? `cometchat-users__list-item-active` : ""}`}
           >
             <CometChatListItem
+              stopEventPropagation={true}
               id={user.getUid()}
               avatarURL={user.getAvatar()}
               avatarName={user.getName()}

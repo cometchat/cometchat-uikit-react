@@ -528,7 +528,12 @@ const CometChatCallLogs = (props: CallLogsProps) => {
           <div
             className={`cometchat-call-logs__list-item-trailing-view
           ${callType === CometChat.CALL_TYPE.VIDEO ? "cometchat-call-logs__list-item-trailing-view-video" : "cometchat-call-logs__list-item-trailing-view-audio"}`}
-            onClick={() => handleInfoClick?.(item)}
+            onClick={(e) => {
+              if (e.stopPropagation) {
+                e.stopPropagation();
+              }
+              handleInfoClick?.(item)
+            }}
           />
         );
       } catch (e) {

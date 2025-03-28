@@ -90,7 +90,7 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
     const getMaxVisibleEmojis = (availableWidth: number) => {
         try {
             const emojiWidth = 36;
-            const effectiveWidth = availableWidth;
+            const effectiveWidth = availableWidth <= 50 ? availableWidth : availableWidth - emojiWidth;
             const maxFitEmojis = Math.floor(effectiveWidth / emojiWidth);
             const adjustedMaxEmojis = Math.max(0, maxFitEmojis - 2);
             const num = Math.min(100, adjustedMaxEmojis);
@@ -238,6 +238,7 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
                 <CometChatPopover
                     useParentContainer={true}
                     placement={moreListAlignment}
+                    disableBackgroundInteraction={true}
                     content={
                         <div >
                             <CometChatReactionList

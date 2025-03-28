@@ -72,18 +72,19 @@ const CometChatVideoBubble = (props: VideoBubbleProps) => {
     /**
      * Function to handle fullscreen change.
     */
-const handleFullscreenChange = () => {
-    const videoElement: any = videoRef.current;
-    if (document.fullscreenElement) {
-        if (videoElement) {
+    const handleFullscreenChange = () => {
+        const videoElement = videoRef.current;
+        if (!videoElement) return;
+        if (!document.fullscreenElement) {
+            videoElement.style.display = "none";
+            requestAnimationFrame(() => {
+                videoElement.style.display = "block";
+            });
+            videoElement.style.objectFit = "cover";
+        } else {
             videoElement.style.objectFit = "contain";
         }
-    } else {
-        if (videoElement) {
-            videoElement.style.objectFit = "cover";
-        }
-    }
-};
+    };
 
     return (
         <div className="cometchat">

@@ -391,6 +391,8 @@
 	"USERS_EMPTY_STATE_MESSAGE": "Neradome vartotojų, atitinkančių jūsų paiešką. Pabandykite pakoreguoti paiešką.",
 	"SAVE": "Išsaugoti",
 	"MESSAGE_TYPE_NOT_SUPPORTED": "Šis pranešimo tipas nepalaikomas.",
-  "MESSAGE_ALREADY_TRANSLATED":"Pasirinkta vertimo kalba yra panaši į originalaus pranešimo kalbą."
+    "MESSAGE_ALREADY_TRANSLATED":"Pasirinkta vertimo kalba yra panaši į originalaus pranešimo kalbą.",
+	"MEDIA_RECORDER_ERROR_TITLE": "Reikalinga Prieiga prie Mikrofono",
+    "MEDIA_RECORDER_ERROR_SUBTITLE": "Nepavyko pasiekti jūsų mikrofono. Prašome suteikti leidimą naudoti mikrofoną, kad galėtumėte pradėti įrašymą."
 }
   

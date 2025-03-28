@@ -391,5 +391,8 @@
 	"USERS_EMPTY_STATE_MESSAGE": "我們找不到符合您搜尋條件的使用者。請嘗試調整搜尋條件。",
 	"SAVE": "儲存",
 	"MESSAGE_TYPE_NOT_SUPPORTED": "此訊息類型不受支援。",
-	"MESSAGE_ALREADY_TRANSLATED":"所選的翻譯語言與原始訊息的語言相似。"
+	"MESSAGE_ALREADY_TRANSLATED":"所選的翻譯語言與原始訊息的語言相似。",
+	"MEDIA_RECORDER_ERROR_TITLE": "需要麥克風存取權",
+    "MEDIA_RECORDER_ERROR_SUBTITLE": "我們無法存取您的麥克風。請授予麥克風權限以開始錄音。",
+    "media_recorder_error_button": "允許麥克風"
 }

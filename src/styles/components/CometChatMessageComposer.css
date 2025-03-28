@@ -57,12 +57,29 @@
     border: none;
 }
 
-/* Voice recording button popover content */
-.cometchat-message-composer__voice-recording-button .cometchat-popover__content {
+/* Voice recording button popover content */ .cometchat-message-composer__voice-recording-button .cometchat-popover__content {
     width: fit-content;
+    max-height: 300px;
+    height: fit-content;
+    min-height: 200px;
 }
 
+.cometchat-message-composer__voice-recording-button .cometchat-media-recorder {
+    max-height: 300px;
+    min-height: 220px;
+    overflow: hidden;
+}
 
+.cometchat-message-composer__voice-recording-button .cometchat-media-recorder__recording {
+    max-height: 300px;
+    min-height: 220px;
+}
+
+.cometchat-message-composer__voice-recording-button .cometchat-media-recorder__recorded {
+    max-height: 300px;
+    min-height: 220px;
+    justify-content: space-between;
+}
 
 .cometchat-message-composer__input .cometchat-mentions>span {
     color: var(--cometchat-text-color-highlight, #6852D6);

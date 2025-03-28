@@ -391,6 +391,8 @@
 	"USERS_EMPTY_STATE_MESSAGE": "Wir konnten keine Benutzer finden, die Ihrer Suche entsprechen. Versuchen Sie, Ihre Suche anzupassen.",
 	"SAVE": "Speichern",
 	"MESSAGE_TYPE_NOT_SUPPORTED": "Dieser Nachrichtentyp wird nicht unterstützt.",
-  "MESSAGE_ALREADY_TRANSLATED":"Die ausgewählte Sprache für die Übersetzung ist der Sprache der Originalnachricht ähnlich."
+    "MESSAGE_ALREADY_TRANSLATED":"Die ausgewählte Sprache für die Übersetzung ist der Sprache der Originalnachricht ähnlich.",
+	"MEDIA_RECORDER_ERROR_TITLE": "Mikrofonzugriff Erforderlich",
+    "MEDIA_RECORDER_ERROR_SUBTITLE": "Wir konnten nicht auf dein Mikrofon zugreifen. Bitte erteile die Mikrofonberechtigung, um mit der Aufnahme zu beginnen."
   }
   

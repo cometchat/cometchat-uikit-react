@@ -82,12 +82,7 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
             }
            return !showSubMenu
         })
-        setTimeout(() => {
-            getPopoverPositionStyle()
-        }, 0);
     }, [setPositionStyleState]);
-
-
 
     /* This function returns More button component. */
     const getMoreButton = useCallback(() => {
@@ -97,6 +92,9 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                 onClick={handleMenuClick}
                 className="cometchat-menu-list__sub-menu"
                 ref={moreButtonRef}
+                onMouseEnter={()=>{
+                    getPopoverPositionStyle();
+                }}
                 style={{
                     ...(disableBackgroundInteraction && showSubMenu && {
                         zIndex: 1000,
@@ -187,11 +185,11 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                 </div>
             )
         }
-    }, [placement, data, onOptionClicked, getMoreButton,disableBackgroundInteraction])
+    }, [placement, data, onOptionClicked, getMoreButton, disableBackgroundInteraction])
 
     const getTopMostCometChatElement = (): HTMLElement | undefined => {
-        if(!subMenuRef.current) return;
-        let current = subMenuRef.current;
+        if(!moreButtonRef.current) return;
+        let current = moreButtonRef.current;
         let topMostElement: HTMLElement | null = null;
         while (current) {
             if (current.classList?.contains('cometchat')) {
@@ -229,9 +227,8 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
     
     const calculatePopoverPosition = useCallback(() => {
         if (!moreButtonRef.current || !parentViewRef.current) return;
-        
-        const height = document.getElementById("subMenuContext")?.clientHeight || (48 * data.length);
-        const width = document.getElementById("subMenuContext")?.clientWidth || 160;
+        const height = subMenuRef.current?.clientHeight || (48 * data.length);
+        const width = subMenuRef.current?.clientWidth || 160;
         const rect = moreButtonRef.current?.getBoundingClientRect();
         const parentViewRect = parentViewRef.current.getBoundingClientRect();
         if (!rect || !parentViewRect) return;
@@ -267,8 +264,8 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
             return;
         }
     
-        const height = document.getElementById("subMenuContext")?.clientHeight || (48 * data.length);
-        const width = document.getElementById("subMenuContext")?.clientWidth || 160;
+        const height = subMenuRef.current?.clientHeight || (48 * data.length);
+        const width = subMenuRef.current?.clientWidth || 160;
         const rect = moreButtonRef.current?.getBoundingClientRect();
         if (!rect) return;
         
@@ -300,12 +297,6 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
         }
     }, [showSubMenu, positionStyleState, calculatePopoverPosition, useParentContainer]);
         
-    useEffect(() => {
-        if(useParentContainer){
-            parentViewRef.current = getTopMostCometChatElement() as HTMLDivElement;
-        }
-    }, [useParentContainer,showSubMenu]);
-        
     function getFullScreenOverlay() {
         return <div
             className="cometchat-popover__overlay"
@@ -329,6 +320,12 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
             onKeyDown={(e) => e?.stopPropagation()}
         />
     }
+    
+    useEffect(() => {
+        if(useParentContainer){
+            parentViewRef.current = getTopMostCometChatElement() as HTMLDivElement;
+        }
+    }, [useParentContainer,showSubMenu]);
 
     return (
         <div className="cometchat">
@@ -336,24 +333,24 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                 <div className="cometchat-menu-list__main-menu">
                     {getTopMenu()}
                 </div>
-                {showSubMenu &&
-                   <>
-                   {disableBackgroundInteraction  &&  getFullScreenOverlay()}
+                   {disableBackgroundInteraction  && showSubMenu &&  getFullScreenOverlay()}
                     <div
                         ref={subMenuRef}
                         className="cometchat-menu-list__sub-menu-list"
                         id="subMenuContext"
                         style={{
                             ...positionStyleState,
-                            ...(disableBackgroundInteraction  && {
+                        visibility: showSubMenu ? "visible" : "hidden",
+                        opacity: showSubMenu ? 1 : 0,
+                        pointerEvents: showSubMenu ? 'auto' : 'none',
+                        transition: 'visibility 0s, opacity 0.3s ease',
+                            ...(disableBackgroundInteraction  && showSubMenu && {
                                 zIndex: 1000,
-                                pointerEvents: 'auto',
                               }),
                           }}
                     >
                     {getSubMenu()}
                 </div>
-                   </>}
             </div>
         </div>
     )

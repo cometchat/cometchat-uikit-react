@@ -12,7 +12,8 @@
 
 .cometchat-conversation-starter__item {
   display: flex;
-  height: 33px;
+  min-height: 33px;
+  height: fit-content;
   padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-5, 20px);
   align-items: center;
   align-content: center;

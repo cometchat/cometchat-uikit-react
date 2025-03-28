@@ -46,6 +46,7 @@ import { CometChatConversationEvents } from "../../events/CometChatConversationE
 import CometChatToast from "../BaseComponents/CometChatToast/CometChatToast";
 import { throwError } from "rxjs";
 import { CometChatUIKit } from "../../CometChatUIKit/CometChatUIKit";
+import { MessageUtils } from "../../utils/MessageUtils";
 type Message =
   | CometChat.TextMessage
   | CometChat.MediaMessage
@@ -1573,20 +1574,21 @@ export function CometChatConversations(props: ConversationsProps) {
         const isActive = conversation.getConversationId() === activeConversationState?.getConversationId();
         let conversationType = conversation.getConversationType();
         let groupType;
-        let status
-
+        let status;
+        let userBlockedFlag = false;
         if (conversationType === CometChatUIKitConstants.MessageReceiverType.group) {
           groupType = (conversation.getConversationWith() as CometChat.Group).getType()
         };
 
         if (conversationType === CometChatUIKitConstants.MessageReceiverType.user) {
-          status = (conversation.getConversationWith() as CometChat.User).getStatus()
+          let user = (conversation.getConversationWith() as CometChat.User)
+          status = user.getStatus();
+          userBlockedFlag = new MessageUtils().getUserStatusVisible(user) && hideUserStatus
         };
-
         return (
           <div className={`cometchat-conversations__list-item
           ${groupType && !hideGroupType ? `cometchat-conversations__list-item-${groupType}` : ""}
-           ${status && !hideUserStatus ? `cometchat-conversations__list-item-${status}` : ""}
+           ${status && !userBlockedFlag ? `cometchat-conversations__list-item-${status}` : ""}
            ${isActive ? `cometchat-conversations__list-item-active` : ""}
         
         ` }>

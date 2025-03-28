@@ -75,15 +75,24 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
 
     const loggedInUser = useRef<CometChat.User | null>(null);
     const [replyCount, setReplyCount] = useState<number>(0);
+    const [updatedMessage, setUpdatedMessage] = useState<CometChat.BaseMessage>(parentMessage);
     const onErrorCallback = useCometChatErrorHandler(onError);
 
     useEffect(() => {
         try {
-            setReplyCount(parentMessage?.getReplyCount() ?? 0);
+            setReplyCount(updatedMessage?.getReplyCount() ?? 0);
         } catch (error) {
             onErrorCallback(error, 'useEffect');
         }
-    }, [parentMessage, setReplyCount]);
+    }, [updatedMessage, setReplyCount]);
+    
+    useEffect(() => {
+        try {
+            setUpdatedMessage(parentMessage);
+        } catch (error) {
+            onErrorCallback(error, 'useEffect');
+        }
+    }, [parentMessage]);
 
     useEffect(() => {
         try {
@@ -115,6 +124,17 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
                         ) {
                             setReplyCount((prevCount) => prevCount + 1);
                         }
+                    }
+                );
+                const onMessageEdited =
+                CometChatMessageEvents.onMessageEdited.subscribe(
+                    (message: CometChat.BaseMessage) => {
+                        setUpdatedMessage((prevMessage) => {
+                            if (!prevMessage.getEditedAt() || prevMessage.getEditedAt() != message.getEditedAt()) {
+                                return message;
+                            }
+                            return prevMessage;
+                        })
                     }
                 );
             const onCustomMessageReceived =
@@ -175,6 +195,7 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
                 onSchedulerMessageReceived?.unsubscribe();
                 onCardMessageReceived?.unsubscribe();
                 onCustomInteractiveMessageReceived?.unsubscribe();
+                onMessageEdited?.unsubscribe();
             };
         }
         catch (error) {
@@ -239,22 +260,22 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
     const getBubbleView = useCallback(() => {
         try {
             let alignment = MessageBubbleAlignment.right;
-            if (parentMessage && loggedInUser.current) {
-                if (messageBubbleView) return messageBubbleView(parentMessage);
+            if (updatedMessage && loggedInUser.current) {
+                if (messageBubbleView) return messageBubbleView(updatedMessage);
                 else {
                     const templatesArray = CometChatUIKit.getDataSource()?.getAllMessageTemplates();
-                    const template = templatesArray?.find((template: CometChatMessageTemplate) => template.type === parentMessage.getType() && template.category === parentMessage.getCategory());
+                    const template = templatesArray?.find((template: CometChatMessageTemplate) => template.type === updatedMessage.getType() && template.category === updatedMessage.getCategory());
                     if (!template) {
                         return <></>
                     }
-                    if (parentMessage.getSender()?.getUid() !== loggedInUser.current?.getUid()) {
+                    if (updatedMessage.getSender()?.getUid() !== loggedInUser.current?.getUid()) {
                         alignment = MessageBubbleAlignment.left;
                     } else {
                         alignment = MessageBubbleAlignment.right;
                     }
 
                     const view = new MessageUtils().getMessageBubble(
-                        parentMessage,
+                        updatedMessage,
                         template,
                         alignment
                     );
@@ -266,16 +287,16 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
             onErrorCallback(error, 'getBubbleView');
         }
         return null;
-    }, [parentMessage, messageBubbleView]);
+    }, [updatedMessage, messageBubbleView]);
 
     const getAdditionalClassName = useCallback(() => {
         try {
             const messageTypes = [CometChatUIKitConstants.MessageTypes.audio, CometChatUIKitConstants.MessageTypes.file, CometChatUIKitConstants.MessageTypes.text, CollaborativeDocumentConstants.extension_document, CollaborativeWhiteboardConstants.extension_whiteboard, StickersConstants.sticker];
-            if (parentMessage && messageTypes.includes(parentMessage.getType())) return "cometchat-threaded-message-preview__message-small";
+            if (updatedMessage && messageTypes.includes(updatedMessage.getType())) return "cometchat-threaded-message-preview__message-small";
         } catch (error) {
             onErrorCallback(error, 'getAdditionalClassName');
         }
-    }, [parentMessage]);
+    }, [updatedMessage]);
 
 
     return (
@@ -293,11 +314,11 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
                 <div className="cometchat-threaded-message-preview__content">
                     {!hideDate && <div className="cometchat-threaded-message-preview__content-time">
                         <CometChatDate
-                            timestamp={parentMessage.getSentAt()}
+                            timestamp={updatedMessage.getSentAt()}
                             pattern={DatePatterns.DayDate}
                         ></CometChatDate>
                     </div>}
-                    <div className={`cometchat-threaded-message-preview__message ${parentMessage.getSender()?.getUid() !== loggedInUser.current?.getUid() ? "cometchat-threaded-message-preview__message-incoming" : "cometchat-threaded-message-preview__message-outgoing"} ${getAdditionalClassName()}`}>
+                    <div className={`cometchat-threaded-message-preview__message ${updatedMessage.getSender()?.getUid() !== loggedInUser.current?.getUid() ? "cometchat-threaded-message-preview__message-incoming" : "cometchat-threaded-message-preview__message-outgoing"} ${getAdditionalClassName()}`}>
                         {getBubbleView()}
                     </div>
 

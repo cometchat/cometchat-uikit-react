@@ -232,3 +232,7 @@
 .cometchat-message-information .cometchat-list__header {
     border-bottom: none;
 }
+
+.cometchat-message-information .cometchat-message-bubble {
+    pointer-events: none;
+}
