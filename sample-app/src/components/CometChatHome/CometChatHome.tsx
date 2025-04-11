@@ -25,7 +25,8 @@ import { CometChatUserDetails } from "../CometChatDetails/CometChatUserDetails";
 import { CometChatThreadedMessages } from "../CometChatDetails/CometChatThreadedMessages";
 import { CometChatCallDetails } from "../CometChatCallLog/CometChatCallLogDetails";
 import { CometChatAlertPopup } from "../CometChatAlertPopup/CometChatAlertPopup";
-import { CometChatAvatar, CometChatButton, CometChatConfirmDialog, CometChatConversationEvents, CometChatGroupEvents, CometChatGroupMembers, CometChatGroups, CometChatIncomingCall, CometChatMessageEvents, CometChatToast, CometChatUIKit, CometChatUIKitConstants, CometChatUIKitLoginListener, CometChatUIKitUtility, CometChatUserEvents, CometChatUsers, IMessages, localize, CometChatUIEvents, IMouseEvent } from "@cometchat/chat-uikit-react";
+import { CometChatAvatar,CometChatButton,CometChatConfirmDialog, CometChatConversationEvents,CometChatGroupEvents,CometChatGroupMembers,CometChatGroups,CometChatIncomingCall,CometChatMessageEvents,CometChatToast,CometChatUIKit,CometChatUIKitConstants,CometChatUIKitLoginListener,CometChatUIKitUtility,CometChatUserEvents,CometChatUsers,CometChatUIEvents,localize,IMessages,IMouseEvent,IActiveChatChanged,MessageStatus,IGroupMemberAdded,IGroupMemberKickedBanned} from "@cometchat/chat-uikit-react";
+
 import { CallLog } from "@cometchat/calls-sdk-javascript";
 
 interface TabContentProps {
@@ -56,6 +57,8 @@ function CometChatHome(props: { theme?: string }) {
     const [showAlertPopup, setShowAlertPopup] = useState({ visible: false, description: "" });
     const [showToast, setShowToast] = useState(false);
     const toastTextRef = useRef<string>("");
+    const isFreshChatRef = useRef<boolean>(false);
+    const currentChatRef = useRef<CometChat.Conversation | null>(null)
 
     const { appState, setAppState } = useContext(AppContext);
 
@@ -63,6 +66,19 @@ function CometChatHome(props: { theme?: string }) {
         if (appID === '' || region === '' || authKey === '') return false;
         return true;
     }
+    useEffect(() => {
+        const chatChanged = CometChatUIEvents.ccActiveChatChanged.subscribe((activeChat: IActiveChatChanged) => {
+            if (activeChat && !activeChat.message) {
+                setAppState({ type: 'updateIsFreshChat', payload: true });
+                isFreshChatRef.current = true;
+            } else {
+                setAppState({ type: 'updateIsFreshChat', payload: false });
+                isFreshChatRef.current = false;
+
+            }
+        });
+        return () => chatChanged.unsubscribe();
+    }, []);
     useEffect(()=>{
         const listenerID = `HomeLoginListener_${new Date().getTime()}`;
         CometChat.addLoginListener(
@@ -267,6 +283,24 @@ function CometChatHome(props: { theme?: string }) {
             }
         }, [activeTab, selectedItem]);
 
+        const updateisFirstChat = ({ message, status }: IMessages) => {
+            const receiverId = message.getReceiverId();
+            const sender = message.getSender();
+            if ((appState.selectedItemUser && (appState.selectedItemUser.getUid() == receiverId || (appState.selectedItemUser.getUid() == sender.getUid() && receiverId == loggedInUser?.getUid())) || appState.selectedItemGroup && (appState.selectedItemGroup.getGuid() == receiverId || loggedInUser?.getUid() == receiverId)) && isFreshChatRef.current && status == MessageStatus.success) {
+                setAppState({ type: 'updateIsFreshChat', payload: false });
+                isFreshChatRef.current = false;
+                let conversationWith = appState.selectedItemUser ? appState.selectedItemUser.getUid() : appState.selectedItemGroup?.getGuid();
+                let conversationType = appState.selectedItemUser ? CometChatUIKitConstants.MessageReceiverType.user : CometChatUIKitConstants.MessageReceiverType.group
+                if (!conversationWith) return;
+                CometChat.getConversation(conversationWith, conversationType).then((conversation) => {
+                    setAppState({ type: "updateSelectedItem", payload: conversation });
+                    currentChatRef.current = conversation;
+
+                })
+            }
+
+        }
+
         const subscribeToEvents = () => {
             const ccUserBlocked = CometChatUserEvents.ccUserBlocked.subscribe(user => {
                 if (user.getBlockedByMe()) {
@@ -285,11 +319,28 @@ function CometChatHome(props: { theme?: string }) {
                     setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } })
                 }
             })
+            const ccMessageSent = CometChatMessageEvents.ccMessageSent.subscribe((data: IMessages) => {
+                updateisFirstChat(data)
+            });
+            const onTextMessageReceived = CometChatMessageEvents.onTextMessageReceived.subscribe((textMessage: CometChat.TextMessage) => {
+                updateisFirstChat({ message: textMessage, status: MessageStatus.success });
+            });
+            const onMediaMessageReceived = CometChatMessageEvents.onMediaMessageReceived.subscribe((mediaMessage: CometChat.MediaMessage) => {
+                updateisFirstChat({ message: mediaMessage, status: MessageStatus.success });
+
+            });
+            const onCustomMessageReceived = CometChatMessageEvents.onCustomMessageReceived.subscribe((customMessage: CometChat.CustomMessage) => {
+                updateisFirstChat({ message: customMessage, status: MessageStatus.success });
+            });
 
             return () => {
                 ccUserBlocked?.unsubscribe();
                 ccUserUnblocked?.unsubscribe();
                 ccMessageDeleted?.unsubscribe();
+                ccMessageSent?.unsubscribe();
+                onTextMessageReceived?.unsubscribe();
+                onMediaMessageReceived?.unsubscribe();
+                onCustomMessageReceived?.unsubscribe();
             };
         };
 
@@ -418,11 +469,17 @@ function CometChatHome(props: { theme?: string }) {
                     setNewChat({ user, group: undefined });
                     setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } });
                     setShowNewChat(false);
+                    setAppState({ type: "updateSelectedItemUser", payload: user });
+                    setAppState({ type: "updateSelectedItemGroup", payload: undefined});
                 }}
             />
                 : <CometChatGroups
                     groupsRequestBuilder={new CometChat.GroupsRequestBuilder().joinedOnly(true).setLimit(30)}
-                    onItemClick={(e: CometChat.Group) => joinGroup(e)} />;
+                    onItemClick={(e: CometChat.Group) => {
+                        setAppState({ type: "updateSelectedItemUser", payload: undefined });
+                        setAppState({ type: "updateSelectedItemGroup", payload: e });
+                        joinGroup(e)
+                    }} />;
         };
 
         return (
@@ -500,6 +557,8 @@ function CometChatHome(props: { theme?: string }) {
         const updateGroupDetails = (eventGroup: CometChat.Group) => {
             if (eventGroup.getGuid() === group?.getGuid()) {
                 group.setMembersCount(eventGroup.getMembersCount());
+                group.setScope(eventGroup.getScope())
+                group.setOwner(eventGroup.getOwner())
                 setGroup(group);
             }
         }
@@ -579,10 +638,12 @@ function CometChatHome(props: { theme?: string }) {
 
         const actionItemsArray = [{
             "name": user.getBlockedByMe() ? localize("UNBLOCK_USER") : localize("BLOCK_USER"),
-            "icon": blockIcon
+            "icon": blockIcon,
+            "id":"block_unblock_user"
         }, {
             "name": localize("DELETE_CHAT"),
-            "icon": deleteIcon
+            "icon": deleteIcon,
+            "id":"delete_chat"
         }]
         const [actionItems, setActionItems] = useState(actionItemsArray);
         const [showStatus, setShowStatus] = useState(true);
@@ -613,10 +674,12 @@ function CometChatHome(props: { theme?: string }) {
                 list => {
                     setActionItems([{
                         "name": localize("BLOCK_USER"),
-                        "icon": blockIcon
+                        "icon": blockIcon,
+                        "id":"block_unblock_user",
                     }, {
                         "name": localize("DELETE_CHAT"),
-                        "icon": deleteIcon
+                        "icon": deleteIcon,
+                        "id":"delete_chat",
                     }]);
                     user.setBlockedByMe(false);
                     CometChatUserEvents.ccUserUnblocked.next(user);
@@ -631,11 +694,13 @@ function CometChatHome(props: { theme?: string }) {
             return new Promise(async (resolve, reject) => {
                 CometChat.deleteConversation(UID, "user").then(
                     deletedConversation => {
-                        setSelectedItem(undefined);
                         setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } });
-                        CometChatConversationEvents.ccConversationDeleted.next((selectedItem as Conversation)!);
+                        CometChatConversationEvents.ccConversationDeleted.next(currentChatRef.current ?? (selectedItem as CometChat.Conversation));
+                        currentChatRef.current = null;
                         toastTextRef.current = localize("CHAT_DELETED_SUCCESSFULLY");
                         setShowToast(true);
+                        setSelectedItem(undefined);
+
                         return resolve();
                     }, error => {
                         console.log('error while deleting a conversation', error);
@@ -664,10 +729,12 @@ function CometChatHome(props: { theme?: string }) {
                     setShowStatus(false);
                     setActionItems([{
                         "name": localize("UNBLOCK_USER"),
-                        "icon": blockIcon
+                        "icon": blockIcon,
+                        "id":"block_unblock_user"
                     }, {
                         "name": localize("DELETE_CHAT"),
-                        "icon": deleteIcon
+                        "icon": deleteIcon,
+                        "id":"delete_chat"
                     }]);
                 }
                 updateUserAfterBlockUnblock(user);
@@ -677,10 +744,12 @@ function CometChatHome(props: { theme?: string }) {
                     setShowStatus(true);
                     setActionItems([{
                         "name": localize("BLOCK_USER"),
-                        "icon": blockIcon
+                        "icon": blockIcon,
+                        "id":"block_unblock_user"
                     }, {
                         "name": localize("DELETE_CHAT"),
-                        "icon": deleteIcon
+                        "icon": deleteIcon,
+                         "id":"delete_chat"
                     }]);
                 }
                 updateUserAfterBlockUnblock(user);
@@ -754,6 +823,7 @@ function CometChatHome(props: { theme?: string }) {
         type: 'scope' | 'alert'; // You can list the valid types here
         onClick: () => void;  // Function that triggers the action
         isAllowed: () => boolean; // Function that checks if the action is allowed
+        id?:string
     }
 
     const SideComponentGroup = (props: { group: CometChat.Group }) => {
@@ -767,9 +837,12 @@ function CometChatHome(props: { theme?: string }) {
         const [actionItems, setActionItems] = useState<ActionItem[]>([]);
         const [scopeChanged, setScopeChanged] = useState(false);
         const { group } = props;
-        const groupListener = "groupinfo_GroupListener_" + String(Date.now())
+        const groupListenerRef = useRef("groupinfo_GroupListener_" + String(Date.now()));
+        const [memberCount, setMemberCount] = useState(group.getMembersCount());
+        const [groupOwner, setGroupOwner] = useState(group.getOwner());
+        const { appState, setAppState } = useContext(AppContext);
         useEffect(() => {
-            CometChat.addGroupListener(groupListener, new CometChat.GroupListener({
+            CometChat.addGroupListener(groupListenerRef.current, new CometChat.GroupListener({
                 onGroupMemberScopeChanged: (
                     message: CometChat.Action,
                     changedUser: CometChat.GroupMember,
@@ -782,17 +855,71 @@ function CometChatHome(props: { theme?: string }) {
                     }
                     if (changedUser.getUid() == loggedInUser?.getUid()) {
                         setGroup(changedGroup)
+                        setGroupOwner(changedGroup.getOwner())
                         setScopeChanged(true);
                     }
                 },
+                onGroupMemberKicked: (message: CometChat.BaseMessage, kickedUser: CometChat.User, kickedBy: CometChat.User, kickedFrom: CometChat.Group): void => {
+                    setMemberCount(kickedFrom.getMembersCount())
+                    setGroup(kickedFrom);
+                    setGroupOwner(kickedFrom.getOwner())
+                },
+                onGroupMemberBanned: (message: CometChat.BaseMessage, bannedUser: CometChat.User, bannedBy: CometChat.User, bannedFrom: CometChat.Group): void => {
+                    setMemberCount(bannedFrom.getMembersCount())
+                    setGroup(bannedFrom);
+                    setGroupOwner(bannedFrom.getOwner())
+                },
+                onMemberAddedToGroup: (message: CometChat.BaseMessage, userAdded: CometChat.User, userAddedBy: CometChat.User, userAddedIn: CometChat.Group): void => {
+                    setMemberCount(userAddedIn.getMembersCount())
+                    setGroup(userAddedIn);
+                },
+                onGroupMemberLeft: (message: CometChat.BaseMessage, leavingUser: CometChat.GroupMember, group: CometChat.Group): void => {
+                    setMemberCount(group.getMembersCount())
+                    setGroupOwner(group.getOwner())
+                    setGroup(group);
+                },
+                onGroupMemberJoined: (message: CometChat.BaseMessage, joinedUser: CometChat.GroupMember, joinedGroup: CometChat.Group): void => {
+                    setMemberCount(joinedGroup.getMembersCount())
+                    setGroup(joinedGroup);
+                },
             }))
-        }, [group])
+
+            const ccGroupMemberAdded =
+            CometChatGroupEvents.ccGroupMemberAdded.subscribe(
+              (item: IGroupMemberAdded) => {
+                setMemberCount(item.userAddedIn.getMembersCount())
+                setGroup(item.userAddedIn);
+              }
+            );
+          const ccGroupMemberBanned =
+            CometChatGroupEvents.ccGroupMemberBanned.subscribe(
+              (item: IGroupMemberKickedBanned) => {
+                setMemberCount(item.kickedFrom.getMembersCount());
+                setGroup(item.kickedFrom);
+              }
+            );
+          const ccGroupMemberKicked =
+            CometChatGroupEvents.ccGroupMemberKicked.subscribe(
+              (item: IGroupMemberKickedBanned) => {
+                setMemberCount(item.kickedFrom.getMembersCount())
+                setGroup(item.kickedFrom);
+              }
+          );
+          return ()=>{
+            ccGroupMemberAdded?.unsubscribe();
+            ccGroupMemberBanned?.unsubscribe();
+            ccGroupMemberKicked?.unsubscribe();
+            CometChat.removeGroupListener(groupListenerRef.current);
+          }
+        },[group])
+
         useEffect(() => {
             setActionItems([
                 {
-                    "name": "Add Members",
+                    "name": localize("ADD_MEMBERS"),
                     "icon": addMembersIcon,
                     "type": "scope",
+                    "id":"add_members",
                     onClick: () => {
                         setShowAddMembers(!showAddMembers)
                     },
@@ -800,9 +927,10 @@ function CometChatHome(props: { theme?: string }) {
                         return isAdminOrOwner();
                     }
                 }, {
-                    "name": "Delete Chat",
+                    "name":localize("DELETE_CHAT"),
                     "icon": deleteIcon,
                     "type": "alert",
+                    "id":"delete_chat",
                     onClick: () => {
                         setShowDeleteGroupChatDialog(true);
                     },
@@ -810,9 +938,10 @@ function CometChatHome(props: { theme?: string }) {
                         return true;
                     }
                 }, {
-                    "name": "Leave",
+                    "name": localize("LEAVE"),
                     "icon": leaveGroupIcon,
                     "type": "alert",
+                    "id":"leave_group",
                     onClick: () => {
                         if (group.getOwner() == CometChatUIKitLoginListener.getLoggedInUser()?.getUid()) {
                             setShowTransferownershipDialog(!showTransferownershipDialog)
@@ -825,9 +954,10 @@ function CometChatHome(props: { theme?: string }) {
                         return group.getMembersCount() > 1 || (group.getMembersCount() == 1 && loggedInUser?.getUid() !== group.getOwner())
                     }
                 }, {
-                    "name": "Delete and Exit",
+                    "name": localize("DELETE_AND_EXIT"),
                     "icon": deleteIcon,
                     "type": "alert",
+                    "id":"delete_exit",
                     onClick: () => {
                         setShowDeleteGroup(!showDeleteGroup)
                     },
@@ -836,11 +966,11 @@ function CometChatHome(props: { theme?: string }) {
                     }
                 }
             ])
-        }, [scopeChanged, group])
+        }, [scopeChanged, group,memberCount])
 
 
         const isAdminOrOwner = () => {
-            return group.getScope() == CometChatUIKitConstants.groupMemberScope.admin || group.getScope() == CometChatUIKitConstants.groupMemberScope.owner;
+            return group.getScope() == CometChatUIKitConstants.groupMemberScope.admin || loggedInUser?.getUid() == groupOwner;
         }
 
         function transferOwnershipDialogView() {
@@ -975,7 +1105,8 @@ function CometChatHome(props: { theme?: string }) {
                     deletedConversation => {
                         setSelectedItem(undefined);
                         setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } });
-                        CometChatConversationEvents.ccConversationDeleted.next((selectedItem as Conversation)!);
+                        CometChatConversationEvents.ccConversationDeleted.next(currentChatRef.current ?? (selectedItem as Conversation)!);
+                        currentChatRef.current = null;
                         return resolve();
                     }, error => {
                         console.log('error while deleting a conversation', error);
@@ -1026,14 +1157,14 @@ function CometChatHome(props: { theme?: string }) {
 
                     <div className="side-component-content__action">
                         {actionItems.map((actionItem, index) => (
-                            actionItem.isAllowed() ? <div key={actionItem.name + index} className="side-component-content__action-item" onClick={() => {
+                            actionItem.isAllowed() ? <div key={actionItem.name + index} className={`side-component-content__action-item ${appState.isFreshChat && actionItem.id === 'delete_chat' ? 'side-component-content__action-item-disabled' : ''} `} onClick={() => {
                                 if (actionItem.onClick) {
                                     actionItem.onClick()
                                 }
                             }}>
                                 <div
                                     className={actionItem.type === "alert" ? "side-component-content__action-item-icon" : "side-component-content__action-item-icon-default"}
-                                    style={actionItem.icon ? { WebkitMask: `url(${actionItem.icon}), center, center, no-repeat` } : undefined}
+                                    style={actionItem.icon ? { WebkitMask: `url(${actionItem.icon}) center center no-repeat` } : undefined}
                                 />
                                 <div className={actionItem.type === "alert" ? "side-component-content__action-item-text" : "side-component-content__action-item-text-default"} >
                                     {actionItem.name}
@@ -1111,8 +1242,8 @@ function CometChatHome(props: { theme?: string }) {
                 user = selectedItem;
             } else if (
                 selectedItem instanceof CometChat.Conversation &&
-                selectedItem.getConversationType() === CometChat.RECEIVER_TYPE.USER &&
-                selectedItem.getConversationWith() instanceof CometChat.User
+                selectedItem?.getConversationType() === CometChat.RECEIVER_TYPE.USER &&
+                selectedItem?.getConversationWith() instanceof CometChat.User
             ) {
                 user = selectedItem.getConversationWith() as CometChat.User;
             }
@@ -1207,15 +1338,15 @@ function CometChatHome(props: { theme?: string }) {
 
     const subscribeToEvents = useCallback(() => {
         const ccConversationDeleted = CometChatConversationEvents.ccConversationDeleted.subscribe((conversation: Conversation) => {
-            if (newChat?.user && conversation.getConversationType() === CometChatUIKitConstants.MessageReceiverType.user) {
-                if ((conversation.getConversationWith() as User).getUid() === newChat.user.getUid()) {
+            if (newChat?.user && conversation?.getConversationType() === CometChatUIKitConstants.MessageReceiverType.user) {
+                if ((conversation?.getConversationWith() as User).getUid() === newChat.user.getUid()) {
                     setNewChat(undefined);
                     setAppState({ type: "newChat", payload: undefined });
                     setSelectedItem(undefined);
                     setAppState({ type: "updateSelectedItem", payload: undefined });
                 }
-            } else if (newChat?.group && conversation.getConversationType() === CometChatUIKitConstants.MessageReceiverType.group) {
-                if ((conversation.getConversationWith() as Group).getGuid() === newChat.group.getGuid()) {
+            } else if (newChat?.group && conversation?.getConversationType() === CometChatUIKitConstants.MessageReceiverType.group) {
+                if ((conversation?.getConversationWith() as Group).getGuid() === newChat.group.getGuid()) {
                     setNewChat(undefined);
                     setAppState({ type: "newChat", payload: undefined });
                     setSelectedItem(undefined);
@@ -1367,7 +1498,11 @@ function CometChatHome(props: { theme?: string }) {
                             setShowNewChat(true);
                             setAppState({ type: "updateSideComponent", payload: { type: "", visible: false } });
                         }}
-                        onGroupCreated={(group) => setSelectedItem(group)}
+                        onGroupCreated={(group) => {
+                            setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } })
+                            setSelectedItem(group)
+                        }
+                        }
 
                     />}
                 </div>

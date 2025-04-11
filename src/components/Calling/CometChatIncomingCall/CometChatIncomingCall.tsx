@@ -479,6 +479,7 @@ const CometChatIncomingCall = (props: IncomingCallProps) => {
               CometChatUIKitConstants.MessageReceiverType.user
             ) {
               CometChatUIKitCalls.endSession();
+              CometChat.clearActiveCall();
               CometChatCallEvents.ccCallEnded.next(null as any);
               closeCallScreen();
             }
@@ -523,7 +524,7 @@ const CometChatIncomingCall = (props: IncomingCallProps) => {
         <div className="cometchat-incoming-call__subtitle">
           <div
             className="cometchat-incoming-call__subtitle-icon"
-            style={{ WebkitMask: `url(${getCallTypeIcon()}), center, center, no-repeat` }}
+            style={{ WebkitMask: `url(${getCallTypeIcon()}) center center no-repeat` }}
           />
           <div className="cometchat-incoming-call__subtitle-text">
             {subtitleText}

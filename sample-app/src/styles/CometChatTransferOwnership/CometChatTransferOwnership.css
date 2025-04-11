@@ -27,8 +27,15 @@
 }
 
 .cometchat-transfer-ownership__buttons-wrapper .cometchat-button {
-    width: 190px;
+    width: 100%;
     font: var(--cometchat-font-button-medium);
+}
+
+.cometchat-transfer-ownership__transfer-button{
+    width: 48%;
+}
+.cometchat-transfer-ownership__cancel-button{
+    width: 49%;
 }
 
 .cometchat-transfer-ownership__buttons-wrapper>.cometchat {

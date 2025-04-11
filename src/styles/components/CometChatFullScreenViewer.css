@@ -61,8 +61,8 @@
   background-color: var(--cometchat-primary-button-icon, #FFFFFF);
   height: 32px;
   width: 32px;
-  -webkit-mask: url("../../assets/close.svg");
-  mask: url("../../assets/close.svg");
+  -webkit-mask: url("../../assets/close.svg")  center center no-repeat;
+  mask: url("../../assets/close.svg")  center center no-repeat;
   -webkit-mask-size: 100%;
   mask-size: 100%;
 }

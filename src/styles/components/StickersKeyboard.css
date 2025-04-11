@@ -165,8 +165,8 @@
 .cometchat-sticker-keyboard__empty-view-icon {
   width: 60px;
   height: 60px;
-  -webkit-mask-image: url("../../assets/sticker.svg");
-  mask-image: url("../../assets/sticker.svg");
+  -webkit-mask-image: url("../../assets/sticker.svg")  center center no-repeat;
+  mask-image: url("../../assets/sticker.svg")  center center no-repeat;
   -webkit-mask-size: 100%;
   mask-size: 100%;
   -webkit-mask-repeat: no-repeat;

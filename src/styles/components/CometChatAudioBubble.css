@@ -15,8 +15,8 @@
 
 /* Download icon for the tail view (right side of the audio bubble) */
 .cometchat-audio-bubble__tail-view-download {
-    mask: url("../../assets/download.svg");
-    -webkit-mask: url("../../assets/download.svg");
+    mask: url("../../assets/download.svg")  center center no-repeat;
+    -webkit-mask: url("../../assets/download.svg")  center center no-repeat;
     display: flex;
     width: 24px;
     height: 24px;
@@ -54,8 +54,8 @@
 
 /* Close/stop icon inside the progress view (positioned in the center) */
 .cometchat-audio-bubble__tail-view-download-stop {
-    mask: url("../../assets/close.svg");
-    -webkit-mask: url("../../assets/close.svg");
+    mask: url("../../assets/close.svg")  center center no-repeat;
+    -webkit-mask: url("../../assets/close.svg")  center center no-repeat;
     background: var(--cometchat-static-white);
     display: flex;
     width: 15px;

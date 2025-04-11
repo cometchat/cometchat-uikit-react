@@ -141,7 +141,7 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                                         title={menuData?.title}
                                         className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item` : `cometchat-menu-list__main-menu-item`}
                                     >
-                                        <div className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item-icon cometchat-menu-list__sub-menu-list-item-icon-${menuData.id}` : `cometchat-menu-list__main-menu-item-icon cometchat-menu-list__main-menu-item-icon-${menuData.id}`} style={menuData?.iconURL ? { WebkitMask: `url(${menuData?.iconURL}), center, center, no-repeat`,display:"flex" } : undefined} />
+                                        <div className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item-icon cometchat-menu-list__sub-menu-list-item-icon-${menuData.id}` : `cometchat-menu-list__main-menu-item-icon cometchat-menu-list__main-menu-item-icon-${menuData.id}`} style={menuData?.iconURL ? { WebkitMask: `url(${menuData?.iconURL}) center center no-repeat`,display:"flex" } : undefined} />
                                         {isSubMenu ? <label className={`cometchat-menu-list__sub-menu-item-title cometchat-menu-list__sub-menu-item-title-${menuData.id}`}>{menuData?.title}</label> : ""}
                                     </div>
                                 </div>
@@ -159,7 +159,7 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                                     onOptionClicked?.(menuData)
                                 }}
                             >
-                                <div className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item-icon cometchat-menu-list__sub-menu-list-item-icon-${menuData.id}` : `cometchat-menu-list__main-menu-item-icon cometchat-menu-list__main-menu-item-icon-${menuData.id}`} style={menuData?.iconURL ? { WebkitMask: `url(${menuData?.iconURL}), center, center, no-repeat` ,WebkitMaskSize:"contain",display:"flex"} : undefined} />
+                                <div className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item-icon cometchat-menu-list__sub-menu-list-item-icon-${menuData.id}` : `cometchat-menu-list__main-menu-item-icon cometchat-menu-list__main-menu-item-icon-${menuData.id}`} style={menuData?.iconURL ? { WebkitMask: `url(${menuData?.iconURL}) center center no-repeat` ,WebkitMaskSize:"contain",display:"flex"} : undefined} />
                                 {isSubMenu ? <label className={`cometchat-menu-list__sub-menu-item-title cometchat-menu-list__sub-menu-item-title-${menuData.id}`}>{menuData?.title}</label> : ""}
                             </div>
                         </div>

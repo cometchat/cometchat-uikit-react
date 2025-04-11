@@ -297,6 +297,7 @@ export function useCometChatMessageComposer(args: Args) {
         e.preventDefault();
         let clipboardData = e.clipboardData!.getData("text/plain");
         const sanitizedData = clipboardData
+          .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;");
         if (sanitizedData) {

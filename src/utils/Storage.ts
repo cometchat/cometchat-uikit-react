@@ -1,15 +1,33 @@
+import { CometChatUIKitConstants } from "../constants/CometChatUIKitConstants";
 
 /**
  * Utility class for managing local storage with change detection capabilities.
  * It is used in CometChatIncomingCall component.
  */
 export class StorageUtils {
+	private static isWindowListenerAttached = false;
+	private static storageKeyToRemove: string | null = null;
+
+	private static handleBeforeUnload = () => {
+		if (this.storageKeyToRemove) {
+			StorageUtils.removeItem(this.storageKeyToRemove);
+			if (this.isWindowListenerAttached) {
+				window.removeEventListener("beforeunload", this.handleBeforeUnload);
+				this.isWindowListenerAttached = false;
+				this.storageKeyToRemove = "";
+			}
+		}
+	};
 	/**
 	 * Attaches a callback function to the `storage` event, which is triggered when storage changes occur.
 	 * @param {EventListenerOrEventListenerObject} callback - The function to be called when the storage event is fired. This function will receive the storage event as an argument.
 	 */
 	static attachChangeDetection = (callback: EventListenerOrEventListenerObject) => {
 		window.addEventListener("storage", callback);
+		if (!this.isWindowListenerAttached) {
+			window.addEventListener("beforeunload", this.handleBeforeUnload);
+			this.isWindowListenerAttached = true;
+		}
 	};
 
 	/**
@@ -27,6 +45,9 @@ export class StorageUtils {
 	 */
 	static setItem = (storageKey: string, storageValue: string | CometChat.Call) => {
 		localStorage.setItem(storageKey, JSON.stringify(storageValue));
+		if(!this.storageKeyToRemove && storageKey == CometChatUIKitConstants.calls.activecall){
+			this.storageKeyToRemove = CometChatUIKitConstants.calls.activecall;
+		}
 	};
 
 	/**

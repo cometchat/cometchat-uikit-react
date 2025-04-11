@@ -13,6 +13,7 @@ import ConversationSummaryIcon from '../../assets/conversation_summary.svg';
 import { CometChatUIEvents } from "../../events/CometChatUIEvents";
 import { CometChatConversationSummary } from "../BaseComponents/CometChatConversationSummary/CometChatConversationSummary";
 import { PanelAlignment } from "../../Enums/Enums";
+import { ComposerId } from "../../utils/MessagesDataSource";
 
 /**
  * Interface for the props accepted by the CometChatMessageHeader component.
@@ -562,9 +563,26 @@ export const CometChatMessageHeader = (props: MessageHeaderProps) => {
         });
       };
     
-      const loadConversationSummary = (): void =>  {
-        CometChatUIEvents.ccShowPanel.next({  child: <CometChatConversationSummary getConversationSummary={getConversationSummary} closeCallback={closeSummaryPanel} />, position: PanelAlignment.messageListFooter });
-      }
+      function getComposerId(): ComposerId {
+        try {
+            const user = userRef.current;
+            if (user) {
+                return { user: user.getUid(), group: null, parentMessageId:null };
+            }
+            const group = groupRef.current;
+            if (group) {
+                return { user: null, group: group.getGuid(), parentMessageId:null };
+            }
+            return { user: null, group: null, parentMessageId:null };
+        } catch (error) {
+          onErrorCallback(error, "getComposerId");
+            return { user: null, group: null, parentMessageId: null };
+        }
+    }
+  
+    const loadConversationSummary = (): void =>  {
+      CometChatUIEvents.ccShowPanel.next({ child: <CometChatConversationSummary getConversationSummary={getConversationSummary} closeCallback={closeSummaryPanel} />, position: PanelAlignment.messageListFooter,composerId:getComposerId()});
+    }
     /** 
      * Shows the conversation summary button. 
      */

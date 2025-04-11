@@ -209,9 +209,9 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
       <div
         className="cometchat-message-bubble__options"
         style={{
-          transition: 'opacity 0.2s ease-in-out',
+          transition: isHovering ? 'opacity 0.2s ease-in-out' : 'opacity 0s ease-in-out',
           ...visibilityStyles,
-          ...((footerView || bottomView || threadView) && style)
+          ...(isHovering && (footerView || bottomView || threadView) && style)
         }}
       >
         <CometChatContextMenu

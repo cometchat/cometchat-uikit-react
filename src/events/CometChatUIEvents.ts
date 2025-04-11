@@ -42,6 +42,7 @@ export interface IPanel {
   configuration?: any;
   message?: CometChat.BaseMessage;
   position?: PanelAlignment;
+  composerId?:ComposerId;
 }
 export interface IModal {
   child?: any;

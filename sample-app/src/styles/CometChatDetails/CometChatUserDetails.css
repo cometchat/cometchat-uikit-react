@@ -108,3 +108,16 @@
     color: var(--cometchat-error-color, #F44649);
     font: var(--cometchat-font-heading4-regular, 400 16px Roboto);
 }
+
+.cometchat-user-details__content-action-item-disabled {
+    cursor: default;
+    pointer-events: none;
+}
+
+.cometchat-user-details__content-action-item-disabled .cometchat-user-details__content-action-item-icon {
+    background: var(--cometchat-text-color-disabled, #DCDCDC);
+}
+
+.cometchat-user-details__content-action-item-disabled .cometchat-user-details__content-action-item-text {
+    color: var(--cometchat-text-color-disabled, #DCDCDC);
+}

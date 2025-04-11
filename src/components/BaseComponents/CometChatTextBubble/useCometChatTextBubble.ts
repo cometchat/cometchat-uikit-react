@@ -4,6 +4,16 @@ export const useCometChatTextBubble = (props: { textFormatters: Array<CometChatT
         textFormatters,
     } = props;
 
+    const containsHTML = (input: string): boolean => {
+        const div = document.createElement("div");
+        div.innerHTML = input;
+        return div.children.length > 0;
+    };
+    const decodeHTML = (input: string): string => {
+        return input
+            .replace(/&(?!amp;|lt;|gt;|quot;|#39;|#\d+;)/g, "&amp;")
+            .replace(/&amp;(amp;|lt;|gt;|quot;|#39;|#\d+;)/g, "&$1")
+    };
     /*
         This function is used to update the message element with the updated text.
         It accepts html element and a required message string and updates the component by appending that string.
@@ -11,7 +21,11 @@ export const useCometChatTextBubble = (props: { textFormatters: Array<CometChatT
     const pasteHtml = (textElement: HTMLElement, text: string) => {
         try {
             let el = document.createElement("div");
-            el.innerHTML = text;
+            if (containsHTML(text)) {
+                el.innerHTML = decodeHTML(text);
+            } else {
+                el.textContent = text;
+            }
             let frag = document.createDocumentFragment();
             const clonedNodes = Array.from(el.childNodes);
             clonedNodes.forEach((node) => {

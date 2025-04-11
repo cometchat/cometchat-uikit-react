@@ -181,6 +181,7 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
                             placement={Placement.top}
                             key={reaction.getReaction()}
                             content={reactionPopupUi(reaction)}
+                            showTooltip={true}
                         >
                             {reactionChildUi(reaction)}
                         </CometChatPopover>

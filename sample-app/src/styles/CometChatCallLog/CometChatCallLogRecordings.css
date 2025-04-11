@@ -5,7 +5,7 @@
 }
 
 .cometchat-call-log-recordings__download {
-    -webkit-mask: url("../../assets/downloadRecording.svg");
+    -webkit-mask: url("../../assets/downloadRecording.svg")  center center no-repeat;
     background: var(--cometchat-icon-color-highlight);
     -webkit-mask-size: contain;
     height: 16px;

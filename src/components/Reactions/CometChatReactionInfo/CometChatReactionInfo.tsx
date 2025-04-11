@@ -236,21 +236,11 @@ export const CometChatReactionInfo: React.FC<ReactionInfoProps> = ({
                     : {}
             }
         >
-            {(placementState === Placement.bottom || placementState === Placement.right) ?
-                <div
-                    className={placementState === Placement.bottom ? "cometchat-reaction-info__tooltip" : "cometchat-reaction-info__tooltip-side"}
-                    style={{ transform: "rotate(180deg)" }}
-                /> : null}
             <div className="cometchat-reaction-info__content">
                 {state === States.loading && getLoadingStateView()}
                 {state === States.error && getErrorStateView()}
                 {state === States.loaded && getLoadedStateView()}
             </div>
-            {placementState === Placement.top || placementState === Placement.left ?
-                <div
-                    className={placementState === Placement.top ? "cometchat-reaction-info__tooltip" : "cometchat-reaction-info__tooltip-side"}
-                    style={{ transform: "rotate(0deg)" }}
-                /> : null}
         </div>
     );
 };

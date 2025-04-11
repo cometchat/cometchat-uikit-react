@@ -38,7 +38,7 @@ import { CometChatEditPreview } from "../BaseComponents/CometChatEditPreview/Com
 import { CometChatActionSheet } from "../BaseComponents/CometChatActionSheet/CometChatActionSheet";
 import { CometChatEmojiKeyboard } from "../BaseComponents/CometChatEmojiKeyboard/CometChatEmojiKeyboard";
 import { ComposerId } from '../../utils/MessagesDataSource';
-import { getThemeVariable, isMobileDevice, isSafari, processFileForAudio } from '../../utils/util';
+import { decodeHTML, getThemeVariable, isMobileDevice, isSafari, processFileForAudio } from '../../utils/util';
 import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
 import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
@@ -671,7 +671,7 @@ try {
         }
       }
 
-      let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : contentEditable?.innerHTML;
+      let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML);
       if (contentEditable?.innerHTML?.trim() == "<br>") {
         contentEditable.innerHTML = "";
       }
@@ -1464,7 +1464,7 @@ try {
     var contenteditable = getCurrentInput();
     let text  =  "";
     if(contenteditable?.innerHTML){
-     text = contenteditable.innerHTML.replace(/(<br>\s*)+$/, '');
+      text = decodeHTML(contenteditable.innerHTML).replace(/(<br>\s*)+$/, '');
     }
      handleSendButtonClick(text);
   } catch (error) {
@@ -1966,7 +1966,7 @@ return hideAttachmentButton || (hideAudioAttachmentOption && hideVideoAttachment
           return;
         }
         if (contenteditable?.textContent?.trim()) {
-          let textToDispatch = contenteditable?.innerHTML?.trim() == "<br>" ? undefined : contenteditable?.innerHTML.replace(/(<br>\s*)+$/, '');
+          let textToDispatch = contenteditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contenteditable?.innerHTML.replace(/(<br>\s*)+$/, ''));
           if (contenteditable?.innerHTML?.trim() == "<br>") {
             contenteditable.innerHTML = "";
           }
@@ -2165,7 +2165,7 @@ try {
             sel.current.removeAllRanges();
             sel.current.addRange(range.current);
             const contentEditable = getCurrentInput();
-            let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : contentEditable?.innerHTML;
+            let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML!);
             if (contentEditable?.innerHTML?.trim() == "<br>") {
               contentEditable.innerHTML = "";
             }

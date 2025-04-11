@@ -173,7 +173,7 @@
 }
 
 .cometchat-create-poll__button {
-  width: 388px;
+  width: 100%;
   height: 40px;
 }
 
@@ -236,6 +236,7 @@
   bottom: 0px;
   border-top: 1px solid var(--cometchat-border-color-light, #F5F5F5);
   padding: var(--cometchat-padding-3, 12px) var(--cometchat-padding-4, 16px) var(--cometchat-padding-5) var(--cometchat-padding-4, 16px);
+  width: 100%;
 
 }
 
@@ -290,4 +291,10 @@
 .cometchat-create-poll__body-options-add-button-disabled{
   color: var(--cometchat-text-color-disabled, #DCDCDC);
   font: var(--cometchat-font-caption1-medium);
+}
+
+@media (max-width: 768px) {
+  .cometchat-create-poll{
+   width: 360px;
+  }
 }

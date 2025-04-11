@@ -19,22 +19,6 @@
     justify-content: center;
 }
 
-.cometchat-reaction-info__tooltip {
-    width: 32px;
-    height: 6px;
-    background: var(--cometchat-static-black, #141414);
-    -webkit-mask: url("../../assets/tooltip.svg") center center no-repeat;
-    -webkit-mask-size: contain;
-}
-
-.cometchat-reaction-info__tooltip-side {
-    width: 6px;
-    height: 32px;
-    background: var(--cometchat-static-black, #141414);
-    -webkit-mask: url("../../assets/tooltip-side.svg") center center no-repeat;
-    -webkit-mask-size: contain;
-}
-
 .cometchat-reaction-info__emoji-text {
     display: flex;
     flex-direction: column;

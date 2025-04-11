@@ -34,8 +34,8 @@
 }
 
 .cometchat-conversation-summary__header-close-button {
-  mask: url("../../assets/close.svg");
-  -webkit-mask: url("../../assets/close.svg");
+  mask: url("../../assets/close.svg")  center center no-repeat;
+  -webkit-mask: url("../../assets/close.svg")  center center no-repeat;
   background-color: var(--cometchat-icon-color-primary, #141414);
   width: 20px;
   height: 20px;

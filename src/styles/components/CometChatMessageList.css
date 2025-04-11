@@ -554,96 +554,96 @@ width: fit-content;
 }
 
 .cometchat-message-bubble__video-call .cometchat-message-bubble__missed-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/missed_video_call_no_fill.svg");
+    -webkit-mask: url("../../assets/missed_video_call_no_fill.svg")  center center no-repeat;
     -webkit-mask-size: contain;
     background: var(--cometchat-error-color);
 }
 
 .cometchat-message-bubble__video-call .cometchat-message-bubble__ended-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/call_end_no_fill.svg");
+    -webkit-mask: url("../../assets/call_end_no_fill.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__video-call .cometchat-message-bubble__outgoing-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/outgoing_video_no_fill.svg");
+    -webkit-mask: url("../../assets/outgoing_video_no_fill.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__video-call .cometchat-message-bubble__incoming-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/incoming_video_no_fill.svg");
+    -webkit-mask: url("../../assets/incoming_video_no_fill.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__video-call .cometchat-message-bubble__busy-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/video_call_button.svg");
+    -webkit-mask: url("../../assets/video_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__video-call .cometchat-message-bubble__answered-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/video_call_button.svg");
+    -webkit-mask: url("../../assets/video_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__video-call .cometchat-message-bubble__unanswered-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/video_call_button.svg");
+    -webkit-mask: url("../../assets/video_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__video-call .cometchat-message-bubble__cancelled-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/video_call_button.svg");
+    -webkit-mask: url("../../assets/video_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__video-call .cometchat-message-bubble__rejected-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/video_call_button.svg");
+    -webkit-mask: url("../../assets/video_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 
 .cometchat-message-bubble__audio-call .cometchat-message-bubble__missed-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/phone_missed_no_fill.svg");
+    -webkit-mask: url("../../assets/phone_missed_no_fill.svg")  center center no-repeat;
     -webkit-mask-size: contain;
     background: var(--cometchat-error-color);
 
 }
 
 .cometchat-message-bubble__audio-call .cometchat-message-bubble__ended-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/call_end_no_fill.svg");
+    -webkit-mask: url("../../assets/call_end_no_fill.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__audio-call .cometchat-message-bubble__outgoing-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/phone_outgoing_no_fill.svg");
+    -webkit-mask: url("../../assets/phone_outgoing_no_fill.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__audio-call .cometchat-message-bubble__incoming-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/phone_incoming_no_fill.svg");
+    -webkit-mask: url("../../assets/phone_incoming_no_fill.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__audio-call .cometchat-message-bubble__busy-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/audio_call_button.svg");
+    -webkit-mask: url("../../assets/audio_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__audio-call .cometchat-message-bubble__answered-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/audio_call_button.svg");
+    -webkit-mask: url("../../assets/audio_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__audio-call .cometchat-message-bubble__unanswered-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/audio_call_button.svg");
+    -webkit-mask: url("../../assets/audio_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__audio-call .cometchat-message-bubble__cancelled-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/audio_call_button.svg");
+    -webkit-mask: url("../../assets/audio_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
 .cometchat-message-bubble__audio-call .cometchat-message-bubble__rejected-call .cometchat-action-bubble__icon {
-    -webkit-mask: url("../../assets/audio_call_button.svg");
+    -webkit-mask: url("../../assets/audio_call_button.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 
@@ -681,6 +681,7 @@ width: fit-content;
  */
 .cometchat-message-bubble__sticker-message .cometchat-message-bubble__status-info-view {
     background: rgba(20, 20, 20, 0.60);
+    align-items: center;
 }
 
 /**
@@ -690,6 +691,12 @@ width: fit-content;
     color: var(--cometchat-static-white, #F9F8FD);
 }
 
+.cometchat-message-bubble__sticker-message .cometchat-message-bubble__status-info-view > .cometchat{
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
 /**
  * Styling for the message information popup wrapper to create a centered overlay
  */

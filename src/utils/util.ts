@@ -220,3 +220,9 @@ export function formatDateFromTimestamp(timestamp:number) {
     if(window)
      window.dispatchEvent(new CustomEvent('overlayclick'));
 }
+
+export const decodeHTML = (input: string): string =>  {
+  const txt = document.createElement("textarea");
+  txt.innerHTML = input;
+  return txt.value;
+}

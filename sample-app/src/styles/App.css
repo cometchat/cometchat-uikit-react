@@ -122,6 +122,18 @@
 .conversations-wrapper .cometchat-list__header-title {
     border-right: none;
 }
+.side-component-content__action-item-disabled {
+    cursor: default;
+    pointer-events: none;
+}
+
+.side-component-content__action-item-disabled .side-component-content__action-item-icon {
+    background: var(--cometchat-text-color-disabled, #DCDCDC);
+}
+
+.side-component-content__action-item-disabled .side-component-content__action-item-text {
+    color: var(--cometchat-text-color-disabled, #DCDCDC);
+}
 
 
 @media (max-width: 768px) {

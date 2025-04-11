@@ -1,3 +1,18 @@
+## [5.0.6] - 11-04-2025
+
+## New
+- None
+
+## Enhancements
+- None
+
+## Fixes
+- Fixed an issue where the info page in the React Sample App did not close after creating a new group.
+- Fixed the issue where deleting a chat did not work for newly created conversations.
+- Resolved the visibility issue of the transfer ownership modal on some mobile devices.
+- Corrected the visibility of the "Leave group" option in the Sample App when the owner is the only member in the group.
+- Resolved an issue where group options and scope were not updated for the logged-in user after transferring group ownership.
+
 ## [5.0.5] - 28-03-2025
 
 ## New

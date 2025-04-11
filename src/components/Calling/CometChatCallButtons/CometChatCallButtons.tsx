@@ -228,6 +228,7 @@ const CometChatCallButtons = (props: CallButtonsPropsType) => {
               CometChatUIKitConstants.MessageReceiverType.user
             ) {
               CometChatUIKitCalls.endSession();
+              CometChat.clearActiveCall();
               CometChatCallEvents.ccCallEnded.next(null as any);
               closeCallScreen();
             }

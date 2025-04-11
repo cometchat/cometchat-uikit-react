@@ -56,4 +56,7 @@
     text-align: left;
     color: var(--cometchat-text-color-secondary);
     font: var(--cometchat-font-caption1-regular);
+    word-break: break-word;
+    width: 100%;
+    overflow: hidden;
 }

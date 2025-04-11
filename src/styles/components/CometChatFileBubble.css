@@ -65,8 +65,8 @@
 
 /* Download icon for the tail view (right side of the file bubble) */
 .cometchat-file-bubble__tail-view-download {
-    mask: url("../../assets/download.svg");
-    -webkit-mask: url("../../assets/download.svg");
+    mask: url("../../assets/download.svg")  center center no-repeat;
+    -webkit-mask: url("../../assets/download.svg")  center center no-repeat;
     display: flex;
     width: 20px;
     height: 20px;
@@ -125,8 +125,8 @@
 
 /* Close icon in the progress view to stop/cancel download */
 .cometchat-file-bubble__tail-view-download-stop {
-    mask: url("../../assets/close.svg");
-    -webkit-mask: url("../../assets/close.svg");
+    mask: url("../../assets/close.svg")  center center no-repeat;
+    -webkit-mask: url("../../assets/close.svg")  center center no-repeat;
     background: var(--cometchat-primary-color);
     display: flex;
     width: 12px;

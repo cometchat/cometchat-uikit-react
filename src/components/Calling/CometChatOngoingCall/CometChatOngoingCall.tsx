@@ -64,6 +64,7 @@ const CometChatOngoingCall = (props: OngoingCallProps) => {
         onCallEnded: () => {
           if (callWorkflow === CallWorkflow.defaultCalling) {
             CometChatUIKitCalls.endSession();
+            CometChat.clearActiveCall();
             CometChatCallEvents.ccCallEnded.next(null as any)
           }
         },

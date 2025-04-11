@@ -35,7 +35,7 @@
 }
 
 .cometchat-block-user-dialog__backdrop .cometchat-confirm-dialog__icon-wrapper-icon {
-    -webkit-mask: url("../../assets/block.svg");
+    -webkit-mask: url("../../assets/block.svg")  center center no-repeat;
     -webkit-mask-size: contain;
 }
 

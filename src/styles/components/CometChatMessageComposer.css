@@ -149,7 +149,7 @@
 }
 
 .cometchat-message-composer__header-error-state-icon {
-    -webkit-mask: url("../../assets/error_info.svg");
+    -webkit-mask: url("../../assets/error_info.svg")  center center no-repeat;
     width: 20px;
     height: 20px;
     -webkit-mask-size: contain;
