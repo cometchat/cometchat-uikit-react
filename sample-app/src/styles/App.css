@@ -1,5 +1,4 @@
-@import url('../../node_modules/@cometchat/chat-uikit-react/dist/styles/css-variables.css');
-
+@import url('@cometchat/chat-uikit-react/css-variables.css');
 
 .App {
     text-align: center;
