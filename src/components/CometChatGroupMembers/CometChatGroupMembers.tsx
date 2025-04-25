@@ -258,24 +258,27 @@ function stateReducer(state: State, action: Action): State {
     case "appendGroupMembers": {
       const { groupMembers, groupMembersManager, onEmpty, disableLoadingState } = action;
       if (
-        (groupMembersManager &&
-          [0].includes(groupMembersManager?.getCurrentPage()) && !groupMembers.length)) {
-        if (!groupMembers.length && onEmpty) {
+        groupMembersManager &&
+        [0].includes(groupMembersManager?.getCurrentPage()) &&
+        !groupMembers.length
+      ) {
+        if (onEmpty) {
           setTimeout(() => {
             onEmpty();
           });
-          newState = {
-            ...state,
-            fetchState: States.empty,
-          };
         }
-      } else if (groupMembers.length !== 0) {
         newState = {
           ...state,
-          groupMemberList:
-            disableLoadingState
-              ? [...groupMembers]
-              : [...state.groupMemberList, ...groupMembers],
+          fetchState: States.empty,
+        };
+      } else if (groupMembers.length !== 0) {
+        const existingIds = new Set(state.groupMemberList.map(member => member.getUid()));
+        const newUniqueMembers = groupMembers.filter(member => !existingIds.has(member.getUid()));
+        newState = {
+          ...state,
+          groupMemberList: disableLoadingState
+            ? [...newUniqueMembers]
+            : [...state.groupMemberList, ...newUniqueMembers],
         };
       }
       break;

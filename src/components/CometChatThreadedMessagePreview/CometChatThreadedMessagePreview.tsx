@@ -14,6 +14,7 @@ import { CollaborativeWhiteboardConstants } from "../Extensions/CollaborativeWhi
 import { StickersConstants } from "../Extensions/Stickers/StickersConstants";
 import { CometChatMessageEvents, IMessages } from "../../events/CometChatMessageEvents";
 import { useCometChatErrorHandler } from "../../CometChatCustomHooks";
+import {CometChatTextFormatter } from "../../formatters";
 
 interface ThreadedMessagePreviewProps {
     /**
@@ -59,6 +60,15 @@ interface ThreadedMessagePreviewProps {
      * @returns void
      */
     onError?: ((error: CometChat.CometChatException) => void) | null;
+    /**
+    * Hides the visibility of receipt in the Thread Header.
+    * @default false
+    */
+    hideReceipts?: boolean;
+    /**
+    * Array of text formatters for custom styling or formatting of message text bubbles.
+    */
+    textFormatters?: CometChatTextFormatter[];
 }
 
 const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => {
@@ -71,7 +81,9 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
         },
         hideDate = false,
         hideReplyCount = false,
-        template
+        template,
+        hideReceipts,
+        textFormatters
     } = props;
 
     const loggedInUser = useRef<CometChat.User | null>(null);
@@ -303,7 +315,9 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
                     const view = new MessageUtils().getMessageBubble(
                         updatedMessage,
                         bubbleTemplate,
-                        alignment
+                        alignment,
+                        hideReceipts,
+                        textFormatters
                     );
                     return view;
                 }

@@ -2782,8 +2782,19 @@ const CometChatMessageList = (props: MessageListProps) => {
     try {
       const ccShowOngoingCall = CometChatUIEvents.ccShowOngoingCall.subscribe(
         (data: IShowOngoingCall) => {
-          setShowCallscreen(true);
-          setOngoingCallView(data.child);
+          const shouldShowCallscreen =
+            data.child ? true : false;
+          const isParentMessageMatch =
+            data.message &&
+            ((data.message.getParentMessageId() &&
+              parentMessageIdRef.current &&
+              data.message.getParentMessageId() === parentMessageIdRef.current) ||
+              (!parentMessageIdRef.current && !data.message?.getParentMessageId()));
+
+          if (isParentMessageMatch || !data.message) {
+            setShowCallscreen(shouldShowCallscreen);
+            setOngoingCallView(data.child);
+          }
         }
       );
       const ccCallEnded = CometChatCallEvents.ccCallEnded.subscribe(
@@ -3881,6 +3892,8 @@ const CometChatMessageList = (props: MessageListProps) => {
             message={activeMessageInfo}
             onClose={hideMessageInformation}
             template={getMessageTemplate(activeMessageInfo)}
+            hideReceipts={hideReceipts}
+            textFormatters={textFormatters}
           />
         </div>
       )}

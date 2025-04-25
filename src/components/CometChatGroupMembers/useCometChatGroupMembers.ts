@@ -1,4 +1,4 @@
-import React, { JSX, useEffect } from "react";
+import React, { JSX, useEffect, useRef } from "react";
 
 import { Action } from "./CometChatGroupMembers";
 import { GroupMembersManager } from "./controller";
@@ -42,6 +42,9 @@ export function Hooks(args: Args) {
     hideUserStatus
   } = args;
 
+  const isFirstRenderRef = useRef<boolean>(true);
+
+
   useEffect(() => {
     try {
       if (groupMemberRequestBuilder?.searchKeyword) {
@@ -84,6 +87,7 @@ export function Hooks(args: Args) {
      */
     () => {
       try {
+        if(!isFirstRenderRef.current) return;
         groupMembersManagerRef.current = new GroupMembersManager({
           searchText,
           groupMemberRequestBuilder,
@@ -98,6 +102,7 @@ export function Hooks(args: Args) {
         fetchNextAndAppendGroupMembers(
           (fetchNextIdRef.current = "initialFetchNext_" + String(Date.now()))
         );
+        isFirstRenderRef.current = false;
       } catch (error) {
         errorHandler(error, 'useEffect');
       }

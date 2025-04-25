@@ -55,6 +55,7 @@ type Args = {
   text: string;
   getCurrentInput: Function
   isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean | undefined;
+  textMessageToEdit:CometChat.TextMessage | null;
 
 };
 
@@ -90,9 +91,32 @@ export function useCometChatMessageComposer(args: Args) {
     setUserMemberListType,
     getComposerId,
     isPartOfCurrentChatForUIEvent,
-    parentMessageIdPropRef, getCurrentInput } = args;
+    parentMessageIdPropRef, getCurrentInput, textMessageToEdit } = args;
   const isPreviewVisible = useRef<boolean>(false);
 
+  function handleMessageDeleted(message: CometChat.BaseMessage) {
+    let user = CometChatUIKitLoginListener.getLoggedInUser();
+    if (textMessageToEdit && textMessageToEdit.getId() == message.getId() && message.getSender().getUid() == user?.getUid()) {
+      dispatch({ type: "setTextMessageToEdit", textMessageToEdit: null });
+      dispatch({ type: "setText", text: "" });
+      emptyInputField()
+      mySetAddToMsgInputText("");
+    }
+  }
+
+  useEffect(() => {
+    const ccMessageDeleted = CometChatMessageEvents.ccMessageDeleted.subscribe((message: CometChat.BaseMessage) => {
+      handleMessageDeleted(message)
+    })
+    const onMessageDeleted = CometChatMessageEvents.onMessageDeleted.subscribe((deletedMessage: CometChat.BaseMessage) => {
+      handleMessageDeleted(deletedMessage);
+    });
+    return () => {
+      ccMessageDeleted?.unsubscribe();
+      onMessageDeleted?.unsubscribe();
+    };
+  }, [user, group, textMessageToEdit])
+  
   /**
     * Subscribes to message edited UI event and handles cases 
     * when a text message is being edited, updating the input field accordingly.

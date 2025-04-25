@@ -1,3 +1,15 @@
+## [5.0.7] - 25-04-2025
+
+## New 
+- None
+
+## Enhancements
+- None
+
+## Fixes
+- Resolved a problem where the input field remained active when the backdrop was open for password entry in password-protected groups.
+- Fixed an issue where the group owner scope was not updating when a user left a password-protected group.
+
 ## [5.0.6] - 11-04-2025
 
 ## New

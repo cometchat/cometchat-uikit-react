@@ -320,3 +320,10 @@ height: 58px;
 .cometchat-message-composer__secondary-button-view-attachment-button-5 .cometchat-popover__content{
     height: 285px; 
 }
+.cometchat-message-composer .cometchat-edit-preview__subtitle{
+    height: fit-content;
+    max-height: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -5,7 +5,7 @@ import { MessageBubbleAlignment } from "../Enums/Enums";
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { localize } from "../resources/CometChatLocalize/cometchat-localize";
 import { CometChatMessageTemplate } from "../modals";
-
+import { CometChatTextFormatter } from "../formatters";
 /**
  * Utility class for handling message display and styling.
  * It is used in CometChatMessageInformation component.
@@ -23,7 +23,8 @@ export class MessageUtils {
   getContentView(
     message: CometChat.BaseMessage,
     template: CometChatMessageTemplate,
-    alignment?:MessageBubbleAlignment
+    alignment?:MessageBubbleAlignment,
+    textFormatters?:CometChatTextFormatter[]
   ) {
     let view;
     const messageTypesMap: any = {};
@@ -36,7 +37,7 @@ export class MessageUtils {
     ) {
       view = messageTypesMap[
         `${message?.getCategory()}_${message?.getType()}`
-      ]?.contentView(message, alignment);
+      ]?.contentView(message, alignment,textFormatters);
       // default would be html string using lit components
       if (typeof view === "string") {
         return {
@@ -58,7 +59,8 @@ export class MessageUtils {
   getStatusInfoView(
     message: CometChat.BaseMessage,
     template: CometChatMessageTemplate,
-    alignment?: MessageBubbleAlignment
+    alignment?: MessageBubbleAlignment,
+    hideReceipts:boolean = false
   ) {
     let view;
     const messageTypesMap: any = {};
@@ -71,7 +73,7 @@ export class MessageUtils {
     ) {
       view = messageTypesMap[
         `${message?.getCategory()}_${message?.getType()}`
-      ]?.statusInfoView(message, alignment);
+      ]?.statusInfoView(message, alignment,hideReceipts);
       if (typeof view === "string") {
         return {
           html: view,
@@ -126,11 +128,13 @@ export class MessageUtils {
   getMessageBubble(
     baseMessage: CometChat.BaseMessage,
     template: CometChatMessageTemplate,
-    alignment: MessageBubbleAlignment
+    alignment: MessageBubbleAlignment,
+    hideReceipts?:boolean,
+    textFormatters?:CometChatTextFormatter[]
   ) {
     return this.getBubbleWrapper(baseMessage, template)
       ? this.getBubbleWrapper(baseMessage, template)
-      : <CometChatMessageBubble bottomView={null} headerView={null} options={[]} footerView={null} leadingView={null} statusInfoView={this.getStatusInfoView(baseMessage, template, alignment)} contentView={this.getContentView(baseMessage, template,alignment)} replyView={null} threadView={null} alignment={alignment} id={baseMessage?.getId() || baseMessage?.getMuid()} />
+      : <CometChatMessageBubble bottomView={null} headerView={null} options={[]} footerView={null} leadingView={null} statusInfoView={this.getStatusInfoView(baseMessage, template, alignment,hideReceipts)} contentView={this.getContentView(baseMessage, template,alignment,textFormatters)} replyView={null} threadView={null} alignment={alignment} id={baseMessage?.getId() || baseMessage?.getMuid()} />
   }
   /**
    *

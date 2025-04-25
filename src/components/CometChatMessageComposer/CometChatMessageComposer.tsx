@@ -1656,7 +1656,7 @@ return hideAttachmentButton || (hideAudioAttachmentOption && hideVideoAttachment
    } catch (error) {
     errorHandler(error,"onSecondaryBtnClick")
    }
-    }, [state.contentToDisplay]
+    }, [state.contentToDisplay,voiceRecordingBtnRef,aiBtnRef,emojiBtnRef]
   )
   /**
  * Handles the close event for the preview.
@@ -2273,7 +2273,8 @@ try {
     text: state.text,
     propsText: props.initialComposerText,
     getCurrentInput,
-    isPartOfCurrentChatForUIEvent
+    isPartOfCurrentChatForUIEvent,
+    textMessageToEdit:state.textMessageToEdit
   });
   // Main rendering of the message composer component
   return (

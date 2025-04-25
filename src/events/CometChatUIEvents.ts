@@ -36,6 +36,7 @@ export interface IOpenChat {
 }
 export interface IShowOngoingCall {
   child: any;
+  message?:CometChat.CustomMessage
 }
 export interface IPanel {
   child?: any;

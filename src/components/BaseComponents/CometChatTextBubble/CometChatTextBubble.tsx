@@ -42,6 +42,11 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
     const {
         pasteHtml
     } = useCometChatTextBubble({ textFormatters });
+
+    useEffect(()=>{
+        setIsExpanded(false)
+    },[text])
+    
     /**
      * Check if textFormatters are available
     */

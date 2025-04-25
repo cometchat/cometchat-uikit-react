@@ -1,5 +1,5 @@
 import { CometChat, Group, GroupType } from "@cometchat/chat-sdk-javascript";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../../context/AppContext";
 import "../../styles/CometChatSelector/CometChatSelector.css";
 import { CometChatAvatar, CometChatButton, CometChatGroupEvents, CometChatUIKitLoginListener, localize } from "@cometchat/chat-uikit-react";
@@ -20,6 +20,8 @@ export const CometChatJoinGroup = (props: joinPasswordGroupProps) => {
     const [showWrongPassword, setShowWrongPassword] = useState(false);
     const loggedInUser = CometChatUIKitLoginListener.getLoggedInUser();
     const { appState, setAppState } = useContext(AppContext);
+    const inputRef = useRef<HTMLInputElement>(null);
+
 
     const onPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setShowWrongPassword(false);
@@ -52,6 +54,16 @@ export const CometChatJoinGroup = (props: joinPasswordGroupProps) => {
             });
     }
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (inputRef.current) {
+                inputRef.current.focus();
+            }
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [group]);
+    
+
     return (
         <div className="join-group-password__wrapper">
             <div className="join-group-password">
@@ -78,7 +90,7 @@ export const CometChatJoinGroup = (props: joinPasswordGroupProps) => {
                     <div className="join-group-password__input-label">
                         {localize("PASSWORD")}
                     </div>
-                    <input placeholder={localize("ENTER_YOUR_PASSWORD")} value={password} onChange={onPasswordChange} />
+                    <input ref={inputRef} placeholder={localize("ENTER_YOUR_PASSWORD")} value={password} onChange={onPasswordChange} />
                     {showWrongPassword && <div className="join-group-password__input-wrong" >
                         {localize("INVALID_PASSWORD")}
                     </div>}

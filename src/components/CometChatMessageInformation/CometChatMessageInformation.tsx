@@ -13,6 +13,7 @@ import { DatePatterns, MessageBubbleAlignment, States } from "../../Enums/Enums"
 import closeIcon from "../../assets/close.svg";
 import { CometChatDate } from "../BaseComponents/CometChatDate/CometChatDate";
 import { useCometChatErrorHandler } from "../../CometChatCustomHooks";
+import { CometChatTextFormatter } from "../../formatters";
 
 interface MessageInformationProps {
   message: CometChat.BaseMessage;
@@ -27,6 +28,16 @@ interface MessageInformationProps {
    * Template for customizing the appearance of the message.
    */
   template?: CometChatMessageTemplate;
+  
+  /**
+  * Hides the visibility of receipt in the Message Information.
+  * @default false
+  */
+   hideReceipts?: boolean;
+   /**
+   * Array of text formatters for custom styling or formatting of message text bubbles.
+   */
+   textFormatters?: CometChatTextFormatter[];
 }
 
 const CometChatMessageInformation = (props: MessageInformationProps) => {
@@ -36,7 +47,9 @@ const CometChatMessageInformation = (props: MessageInformationProps) => {
     onError = (error: CometChat.CometChatException) => {
       console.log(error);
     },
-    template
+    template,
+    hideReceipts,
+    textFormatters
   } = props;
 
   const [state, setState] = useState<States>(States.loading);
@@ -118,7 +131,9 @@ const CometChatMessageInformation = (props: MessageInformationProps) => {
         const view = new MessageUtils().getMessageBubble(
           message,
           bubbleTemplate,
-          alignment
+          alignment,
+          hideReceipts,
+          textFormatters
         );
         return view;
       }

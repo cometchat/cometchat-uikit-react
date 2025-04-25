@@ -22,9 +22,9 @@ import { ConversationsManager } from "./controller";
 import { useCometChatConversations } from "./useCometChatConversations";
 import { CometChatTextFormatter } from "../../formatters/CometChatFormatters/CometChatTextFormatter";
 import { CometChatUIKitUtility } from "../../CometChatUIKit/CometChatUIKitUtility";
-import { MessageReceiptUtils, receipts } from "../../utils/MessageReceiptUtils";
+import { MessageReceiptUtils } from "../../utils/MessageReceiptUtils";
 import { ConversationUtils } from "../../utils/ConversationUtils";
-import { DatePatterns, MentionsTargetElement, Placement, SelectionMode, States, TitleAlignment } from "../../Enums/Enums";
+import { DatePatterns, MentionsTargetElement, Placement, Receipts, SelectionMode, States, TitleAlignment } from "../../Enums/Enums";
 import { CometChatActionsIcon, CometChatOption } from "../../modals";
 import { CometChatUIKitConstants } from "../../constants/CometChatUIKitConstants";
 import { localize } from "../../resources/CometChatLocalize/cometchat-localize";
@@ -56,7 +56,7 @@ type Message =
 
 interface ConversationsProps {
   /**
-   * Disables the display of message read receipts.
+   * Disables the display of message read Receipts.
    *
    * @remarks If set to `true`, the receipt status of the sent message won't be displayed.
    * @defaultValue `false`
@@ -1183,11 +1183,11 @@ export function CometChatConversations(props: ConversationsProps) {
       const receipt = MessageReceiptUtils.getReceiptStatus(conversation.getLastMessage())
       let messageStatus = "";
 
-      if (receipt === receipts.sent) {
+      if (receipt === Receipts.sent) {
         messageStatus = "sent";
-      } else if (receipt === receipts.delivered) {
+      } else if (receipt === Receipts.delivered) {
         messageStatus = "delivered";
-      } else if (receipt === receipts.read) {
+      } else if (receipt === Receipts.read) {
         messageStatus = "read";
       }
 

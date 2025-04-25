@@ -273,11 +273,11 @@ export class MessagesDataSource implements DataSource {
 * @returns {JSX.Element | null} Returns JSX.Element for receipt of a message bubble or null
 */
 
-  getBubbleStatusInfoReceipt: (item: CometChat.BaseMessage, hideReceipt?: boolean) => JSX.Element | null =
-    (item: CometChat.BaseMessage, hideReceipt?: boolean) => {
+  getBubbleStatusInfoReceipt: (item: CometChat.BaseMessage, hideReceipts?: boolean) => JSX.Element | null =
+    (item: CometChat.BaseMessage, hideReceipts?: boolean) => {
       if (
 
-        !hideReceipt &&
+        !hideReceipts &&
         (!item?.getSender() ||
           CometChatUIKitLoginListener.getLoggedInUser()?.getUid() === item?.getSender()?.getUid()) &&
         item?.getCategory() !==
@@ -320,7 +320,7 @@ export class MessagesDataSource implements DataSource {
       }
     }
   getStatusInfoView = (_messageObject: CometChat.BaseMessage,
-    _alignment: MessageBubbleAlignment, hideReceipt?: boolean, datePattern?: DatePatterns) => {
+    _alignment: MessageBubbleAlignment, hideReceipts?: boolean, datePattern?: DatePatterns) => {
     if (!(_messageObject instanceof CometChat.Action) && !(_messageObject instanceof CometChat.Call) && (_messageObject.getType() != "meeting" || (_messageObject.getType() == "meeting" && _messageObject.getDeletedAt()))) {
       return (
         <div
@@ -329,7 +329,7 @@ export class MessagesDataSource implements DataSource {
         {!_messageObject.getDeletedAt() && _messageObject.getType() == CometChatUIKitConstants.MessageTypes.text && _messageObject.getEditedAt() ? <span className="cometchat-message-bubble__status-info-view-helper-text"> {localize("EDITED")} </span>: null}
 
           {this.getBubbleStatusInfoDate(_messageObject, datePattern)}
-          {this.getBubbleStatusInfoReceipt(_messageObject, hideReceipt)}
+          {this.getBubbleStatusInfoReceipt(_messageObject, hideReceipts)}
         </div>
       );
     } else {
@@ -353,7 +353,8 @@ export class MessagesDataSource implements DataSource {
       statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
       contentView: (
         message: CometChat.BaseMessage,
-        _alignment: MessageBubbleAlignment
+        _alignment: MessageBubbleAlignment,
+        textFormatters?: CometChatTextFormatter[]
       ) => {
         let textMessage: CometChat.TextMessage =
           message as CometChat.TextMessage;
@@ -364,7 +365,7 @@ export class MessagesDataSource implements DataSource {
           textMessage,
           _alignment,
 
-          additionalConfigurations
+          {...additionalConfigurations,...{textFormatters:textFormatters}}
         );
       },
       options: ChatConfigurator.getDataSource().getMessageOptions,

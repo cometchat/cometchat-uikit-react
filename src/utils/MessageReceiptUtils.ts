@@ -1,3 +1,4 @@
+import { Receipts } from "../Enums/Enums";
 
 /**
  * Utility class for handling message receipt statuses.
@@ -12,55 +13,22 @@ export class MessageReceiptUtils {
    * the corresponding receipt icon.
    *
    * @param {CometChat.BaseMessage} messageObject - The message object for which to get the receipt status.
-   * @returns {receipts} - The receipt status icon.
+   * @returns {Receipts} - The receipt status icon.
    */
   static getReceiptStatus = (messageObject: CometChat.BaseMessage) => {
-    let icon = receipts.wait;
+    let icon = Receipts.wait;
     if ((messageObject as any)?.error || (messageObject as any)?.metadata?.error) {
-      icon = receipts.error;
+      icon = Receipts.error;
     }
     else if (messageObject?.getReadAt()) {
-      icon = receipts.read;
+      icon = Receipts.read;
     } else if (!messageObject?.getReadAt() && messageObject?.getDeliveredAt()) {
-      icon = receipts.delivered;
+      icon = Receipts.delivered;
     } else if (messageObject?.getSentAt() && messageObject?.getId()) {
-      icon = receipts.sent;
+      icon = Receipts.sent;
     } else {
-      icon = receipts.wait;
+      icon = Receipts.wait;
     }
     return icon
   }
-}
-
-/**
- * Enum representing different receipt statuses for a message.
- *
- * @readonly
- * @enum {number}
- */
-export enum receipts {
-  /**
-   * Status indicating that the message is waiting to be processed.
-   */
-  wait,
-
-  /**
-   * Status indicating that the message has been sent.
-   */
-  sent,
-
-  /**
-   * Status indicating that the message has been delivered.
-   */
-  delivered,
-
-  /**
-   * Status indicating that the message has been read.
-   */
-  read,
-
-  /**
-   * Status indicating that an error occurred with the message.
-   */
-  error
 }
