@@ -1,6 +1,8 @@
 import  {useEffect, useState } from 'react';
 import { States } from '../../../Enums/Enums';
 import { localize } from '../../../resources/CometChatLocalize/cometchat-localize';
+import { JSX } from "react";
+
 interface CometChatConversationStarterProps {
     getConversationStarters?: () => Promise<string[]>
     onSuggestionClicked?: (reply: string) => void

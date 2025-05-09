@@ -44,6 +44,7 @@ import { CometChatSoundManager } from "../../resources/CometChatSoundManager/Com
 import { CometChatConversationStarter } from "../BaseComponents/CometChatConversationStarter/CometChatConversationStarter";
 import { CometChatSmartReplies } from "../BaseComponents/CometChatSmartReplies/CometChatSmartReplies";
 import { ComposerId } from "../../utils/MessagesDataSource";
+import { JSX } from "react";
 
 /**
  * Props for the MessageList component.

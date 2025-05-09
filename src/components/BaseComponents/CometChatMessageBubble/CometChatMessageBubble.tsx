@@ -7,6 +7,7 @@ import { CollaborativeDocumentConstants } from "../../Extensions/CollaborativeDo
 import { CollaborativeWhiteboardConstants } from "../../Extensions/CollaborativeWhiteboard/CollaborativeWhiteboardConstants";
 import { PollsConstants } from "../../Extensions/Polls/PollsConstants";
 import { StickersConstants } from "../../Extensions/Stickers/StickersConstants";
+import { JSX } from "react";
 
 /**Interface defining the structure for MessageBubbleProps */
 interface MessageBubbleProps {

@@ -8,6 +8,7 @@ import { CometChatButton } from "../../BaseComponents/CometChatButton/CometChatB
 import { CometChatAvatar } from "../../BaseComponents/CometChatAvatar/CometChatAvatar";
 import { CometChatSoundManager } from "../../../resources/CometChatSoundManager/CometChatSoundManager";
 import { useCometChatErrorHandler } from "../../../CometChatCustomHooks";
+import { JSX } from "react";
 
 /**
  * Props interface for the outgoing call component

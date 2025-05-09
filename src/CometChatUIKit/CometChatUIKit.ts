@@ -100,7 +100,7 @@ class CometChatUIKit {
         return new Promise((resolve, reject) => {
             window.CometChatUiKit = {
                 name: "@cometchat/chat-uikit-react",
-                version: "5.0.8",
+                version: "5.0.9",
             };
             CometChat.init(uiKitSettings?.appId, appSettings).then(() => {
                 CometChat.getLoggedinUser().then((user: CometChat.User | null) => {

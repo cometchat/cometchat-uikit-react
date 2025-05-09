@@ -9,6 +9,8 @@ import { additionalParams } from "./ConversationUtils";
 import { CometChatActionsIcon, CometChatActionsView, CometChatMessageComposerAction, CometChatMessageTemplate } from "../modals/";
 import { DatePatterns, MessageBubbleAlignment } from "../Enums/Enums";
 import { ComposerId } from "./MessagesDataSource";
+import { JSX } from "react";
+
 /**
  * Class for providing message options and views.
  * It is used in AI and calling module and utils related to messages.

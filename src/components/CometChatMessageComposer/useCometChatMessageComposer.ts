@@ -174,8 +174,8 @@ export function useCometChatMessageComposer(args: Args) {
                     pasteHtmlAtCaret(finalText as string)
                   }
                 }
-                if (object.status === MessageStatus.success &&
-                  object.message instanceof CometChat.TextMessage) {
+                if ((object.status === MessageStatus.success &&
+                  object.message instanceof CometChat.TextMessage) || object.status === MessageStatus.cancelled) {
                   dispatch({
                     type: "setTextMessageToEdit",
                     textMessageToEdit: null,

@@ -36,18 +36,16 @@
   text-align: left;
   white-space: pre-line;
   overflow: auto;
+  width: 100%;
+  display: block;
 }
 
 .cometchat-tanslation-bubble-incoming .cometchat-tanslation-bubble__translated-text {
-  width: 100%;
-  display: flex;
   color: var(--cometchat-neutral-color-900, #141414);
 }
 
 
 .cometchat-tanslation-bubble-outgoing .cometchat-tanslation-bubble__translated-text {
-  width: 100%;
-  display: flex;
   color: var(--cometchat-static-white, #FFF);
 }
 

@@ -42,8 +42,6 @@ export function Hooks(args: Args) {
     hideUserStatus
   } = args;
 
-  const isFirstRenderRef = useRef<boolean>(true);
-
 
   useEffect(() => {
     try {
@@ -87,7 +85,6 @@ export function Hooks(args: Args) {
      */
     () => {
       try {
-        if(!isFirstRenderRef.current) return;
         groupMembersManagerRef.current = new GroupMembersManager({
           searchText,
           groupMemberRequestBuilder,
@@ -102,7 +99,6 @@ export function Hooks(args: Args) {
         fetchNextAndAppendGroupMembers(
           (fetchNextIdRef.current = "initialFetchNext_" + String(Date.now()))
         );
-        isFirstRenderRef.current = false;
       } catch (error) {
         errorHandler(error, 'useEffect');
       }

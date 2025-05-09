@@ -15,6 +15,7 @@ import { StickersConstants } from "../Extensions/Stickers/StickersConstants";
 import { CometChatMessageEvents, IMessages } from "../../events/CometChatMessageEvents";
 import { useCometChatErrorHandler } from "../../CometChatCustomHooks";
 import {CometChatTextFormatter } from "../../formatters";
+import { JSX } from "react";
 
 interface ThreadedMessagePreviewProps {
     /**

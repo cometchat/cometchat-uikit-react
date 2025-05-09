@@ -2,6 +2,8 @@ import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { CometChatMessageOption } from "./CometChatMessageOption";
 import { DatePatterns, MessageBubbleAlignment } from "../Enums/Enums";
 import { CometChatTextFormatter } from "../formatters";
+import { JSX } from "react";
+
 /**
  * CometChatMessageTemplate is a pre-defined structure for creating message views 
  * that can be used as a starting point or blueprint for creating message views, 

@@ -14,6 +14,7 @@ import closeIcon from "../../assets/close.svg";
 import { CometChatDate } from "../BaseComponents/CometChatDate/CometChatDate";
 import { useCometChatErrorHandler } from "../../CometChatCustomHooks";
 import { CometChatTextFormatter } from "../../formatters";
+import { JSX } from "react";
 
 interface MessageInformationProps {
   message: CometChat.BaseMessage;

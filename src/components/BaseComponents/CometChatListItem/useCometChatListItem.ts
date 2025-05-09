@@ -2,7 +2,7 @@ import { MouseEvent, useCallback, useEffect, useState } from "react"
 interface ICometChatListItem {
   id?: string;
   onListItemClicked?: (input: { id: string }) => void;
-  menuRef: React.RefObject<HTMLDivElement>;
+  menuRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const useCometChatListItem = ({

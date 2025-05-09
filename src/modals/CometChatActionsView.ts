@@ -1,4 +1,6 @@
 import { CometChatActions } from "./CometChatActions";
+import { JSX } from "react";
+
 
 /**
  * CometChatActionsView is a pre-defined structure for creating actions 

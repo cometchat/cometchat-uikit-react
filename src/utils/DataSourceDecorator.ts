@@ -7,6 +7,7 @@ import { CometChatTextFormatter } from "../formatters/CometChatFormatters/CometC
 import { additionalParams } from "./ConversationUtils";
 import {  CometChatActionsIcon, CometChatActionsView, CometChatMessageComposerAction, CometChatMessageTemplate} from "../modals";
 import { DatePatterns, MessageBubbleAlignment } from "../Enums/Enums";
+import { JSX } from "react";
 
 /**
  * This class is used in AI, calling and Extension modules.

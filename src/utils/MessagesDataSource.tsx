@@ -1,7 +1,7 @@
 import { ChatConfigurator } from "./ChatConfigurator";
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { DataSource } from "./DataSource";
-import React from "react";
+import React,{ JSX } from "react";
 import { CometChatUIKitLoginListener } from "../CometChatUIKit/CometChatUIKitLoginListener";
 import { ConversationUtils, additionalParams } from "./ConversationUtils";
 import { CometChatMentionsFormatter } from "../formatters/CometChatFormatters/CometChatMentionsFormatter/CometChatMentionsFormatter";

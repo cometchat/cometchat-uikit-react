@@ -23,6 +23,8 @@ export const CometChatMessages = (props: MessagesViewProps) => {
     } = props;
 
     const [showComposerState, setShowComposerState] = useState<boolean | undefined>(showComposer);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
 
     useEffect(() => {
         setShowComposerState(showComposer);
@@ -30,6 +32,15 @@ export const CometChatMessages = (props: MessagesViewProps) => {
             setShowComposerState(false);
         }
     }, [user, showComposer]);
+
+    useEffect(() => {
+        const handleResize = () => {
+          setIsMobile(window.innerWidth < 768);
+        };
+    
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+      }, []);
 
     return (
         <div className="cometchat-messages-wrapper">
@@ -39,6 +50,7 @@ export const CometChatMessages = (props: MessagesViewProps) => {
                     group={group}
                     auxiliaryButtonView={headerMenu()}
                     onBack={onBack}
+                    showBackButton={isMobile}
                 />
             </div>
             <div className="cometchat-message-list-wrapper">

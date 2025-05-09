@@ -24,6 +24,7 @@ import errorIcon from "../../../assets/list_error_state_icon.svg"
 import errorIconDark from "../../../assets/list_error_state_icon_dark.svg"
 import { getThemeMode } from "../../../utils/util";
 import { useCometChatErrorHandler } from "../../../CometChatCustomHooks";
+import { JSX } from "react";
 
 interface CallLogsProps {
   /**

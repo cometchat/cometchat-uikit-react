@@ -10,7 +10,7 @@ var callsSDK: any = null;
 try{
     callsSDK = require('@cometchat/calls-sdk-javascript');
 }catch(e){
-    console.warn("⚠️ Calls SDK is not installed. If you want to enable call functionality, install it using:\n\n" + "npm install @cometchat/calls-sdk-javascript\n");
+    
 }
 
 export var CometChatUIKitCalls: any = callsSDK?.CometChatCalls;

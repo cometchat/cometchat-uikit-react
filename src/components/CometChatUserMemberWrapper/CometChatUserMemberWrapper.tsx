@@ -1,6 +1,7 @@
 import { CometChatUsers } from '../CometChatUsers/CometChatUsers';
 import { CometChatGroupMembers } from '../CometChatGroupMembers/CometChatGroupMembers';
 import { UserMemberListType } from '../../Enums/Enums';
+import { JSX } from "react";
 
 export interface MentionsProps {
   userMemberListType?: UserMemberListType;

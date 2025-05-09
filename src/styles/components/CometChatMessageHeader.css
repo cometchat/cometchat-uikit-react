@@ -177,9 +177,3 @@ padding: 0;
       display: initial;
     }
 }
-
-@media (min-width: 769px) {
-    .cometchat-message-header__back-button {
-        display: none;
-    }
-}

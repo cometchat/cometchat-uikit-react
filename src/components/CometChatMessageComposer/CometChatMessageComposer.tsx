@@ -1287,8 +1287,9 @@ try {
    * @returns Should the component show the send button view
    */
   function shouldShowSendButton(): boolean {
+    let text = getCurrentInput()?.textContent;
     return (
-        state.text.trim() === "" ||
+      (!text || (text && text.trim() === "")) ||
       (state.textMessageToEdit !== null &&
         state.textMessageToEdit.getText() === state.text)
     );
@@ -1658,6 +1659,16 @@ return hideAttachmentButton || (hideAudioAttachmentOption && hideVideoAttachment
    }
     }, [state.contentToDisplay,voiceRecordingBtnRef,aiBtnRef,emojiBtnRef]
   )
+
+  function onEditPreviewClose(){
+    if(state.textMessageToEdit){
+      CometChatMessageEvents.ccMessageEdited.next({
+        message: state.textMessageToEdit,
+        status:MessageStatus.cancelled
+      })
+    }
+    onPreviewCloseClick()
+  }
   /**
  * Handles the close event for the preview.
  * - Resets the text message to edit and clears the text input field.
@@ -1895,7 +1906,7 @@ return hideAttachmentButton || (hideAudioAttachmentOption && hideVideoAttachment
     const messageToBeEdited = state.textMessageToEdit;
     return (
       <CometChatEditPreview
-        onClose={onPreviewCloseClick}
+        onClose={onEditPreviewClose}
         previewSubtitle={checkForMentions(messageToBeEdited)}
       />
     );

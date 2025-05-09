@@ -8,6 +8,7 @@ import { CometChatUIKitLoginListener } from "../../../CometChatUIKit/CometChatUI
 import { useCometChatErrorHandler } from "../../../CometChatCustomHooks";
 import { Subscription } from "rxjs";
 import { CometChatMessageEvents } from "../../../events/CometChatMessageEvents";
+import { JSX } from "react";
 
 interface ReactionListProps {
     /* Base message object of which reaction info is viewed. */
@@ -36,7 +37,7 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const [hasMore, setHasMore] = useState<boolean>(true);
 
-    const selectedRecRef = useRef<string>();
+    const selectedRecRef = useRef<string | undefined>(undefined);
 
     const allText = localize("ALL");
     const subtitleText = localize("CLICK_TO_REMOVE");

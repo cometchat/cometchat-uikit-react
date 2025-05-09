@@ -86,6 +86,7 @@ export enum MessageStatus {
   inprogress,
   success,
   error,
+  cancelled
 }
 
 /**
