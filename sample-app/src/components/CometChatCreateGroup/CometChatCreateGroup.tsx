@@ -1,13 +1,13 @@
 import React, { useContext, useState } from 'react';
 import "../../styles/CometChatCreateGroup/CometChatCreateGroup.css";
-import { CometChat, Group } from '@cometchat/chat-sdk-javascript';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { AppContext } from '../../context/AppContext';
 import { CometChatGroupEvents, localize } from '@cometchat/chat-uikit-react';
 
 
 interface CreateGroupProps {
   setShowCreateGroup: React.Dispatch<React.SetStateAction<boolean>>;
-  onGroupCreated?: (group: Group) => void;
+  onGroupCreated?: (group: CometChat.Group) => void;
 }
 
 const CometChatCreateGroup = ({ setShowCreateGroup, onGroupCreated = () => { } }: CreateGroupProps) => {

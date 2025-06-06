@@ -213,6 +213,11 @@ interface GroupMembersProps {
    * @returns A JSX element to be rendered as the trailing view.
    */
   trailingView?: (groupMember: CometChat.GroupMember) => JSX.Element;
+  /**
+   * Controls the visibility of the scrollbar in the list.
+   * @defaultValue `false`
+   */
+  showScrollbar?: boolean;
 }
 
 type State = {
@@ -411,7 +416,8 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
     hideKickMemberOption = false,
     hideScopeChangeOption = false,
     titleView,
-    leadingView
+    leadingView,
+    showScrollbar = false,
   } = props;
 
   const [state, dispatch] = useReducer(stateReducer, {
@@ -1048,9 +1054,10 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
   return (
     <div className="cometchat" style={{ width: "100%", height: "100%" }}>
       <div
-        className='cometchat-group-members'
+        className={`cometchat-group-members ${!showScrollbar ? 'cometchat-group-members-hide-scrollbar' : ''}`}
       >
         <CometChatList
+          showScrollbar={showScrollbar}
           searchPlaceholderText={searchPlaceholderTextRef.current}
           searchText={state.searchText}
           onSearch={onSearchTextChange}

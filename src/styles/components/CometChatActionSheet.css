@@ -15,11 +15,6 @@
     justify-content: flex-start;
 }
 
-.cometchat-action-sheet::-webkit-scrollbar,
-.cometchat-action-sheet::-webkit-scrollbar-thumb {
-    display: none;
-}
-
 .cometchat-action-sheet__item-icon {
     display: flex;
     width: 24px;

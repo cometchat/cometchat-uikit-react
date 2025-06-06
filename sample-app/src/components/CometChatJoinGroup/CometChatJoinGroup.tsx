@@ -1,11 +1,11 @@
-import { CometChat, Group, GroupType } from "@cometchat/chat-sdk-javascript";
+import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../../context/AppContext";
 import "../../styles/CometChatSelector/CometChatSelector.css";
 import { CometChatAvatar, CometChatButton, CometChatGroupEvents, CometChatUIKitLoginListener, localize } from "@cometchat/chat-uikit-react";
 
 interface joinPasswordGroupProps {
-    group: Group;
+    group: CometChat.Group;
     onHide?: () => void;
     onProtectedGroupJoin?: (group: CometChat.Group) => void;
 }
@@ -29,7 +29,7 @@ export const CometChatJoinGroup = (props: joinPasswordGroupProps) => {
     }
 
     const joinPrivateGroup = () => {
-        CometChat.joinGroup(group.getGuid(), group.getType() as GroupType, password)
+        CometChat.joinGroup(group.getGuid(), group.getType() as CometChat.GroupType, password)
             .then((response: any) => {
                 setAppState({ type: "updateShowJoinGroup", payload: false });
                 onHide();
@@ -82,7 +82,7 @@ export const CometChatJoinGroup = (props: joinPasswordGroupProps) => {
                             {group.getName()}
                         </div>
                         <div className="join-group-password__content-text-subtitle">
-                            {group.getMembersCount() + localize("MEMBERS")}
+                        {`${group.getMembersCount()} ${localize("MEMBERS")}`}
                         </div>
                     </div>
                 </div>

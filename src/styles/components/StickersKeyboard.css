@@ -74,29 +74,6 @@
   cursor: pointer;
 }
 
-.cometchat-sticker-keyboard__tabs::-webkit-scrollbar {
-  background: transparent;
-  height: 0px;
-  width: 0px;
-}
-
-.cometchat-sticker-keyboard__tabs::-webkit-scrollbar-thumb {
-  background: rgb(232, 229, 229);
-  border-radius: 8px;
-}
-
-.cometchat-sticker-keyboard__list::-webkit-scrollbar {
-  background: transparent;
-  width: 0px;
-}
-
-.cometchat-sticker-keyboard__list::-webkit-scrollbar-thumb {
-  background: rgb(232, 229, 229);
-  border-radius: 8px;
-}
-
-
-
 .cometchat-sticker-keyboard__shimmer-tabs {
   display: flex;
   padding: var(--cometchat-padding-2, 8px);

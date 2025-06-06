@@ -2,8 +2,8 @@
     background: var(--cometchat-background-color-03, #F5F5F5);
 }
 
-.messages-wrapper .cometchat-list__body::-webkit-scrollbar,
-.messages-wrapper .cometchat-list__body::-webkit-scrollbar-thumb {
+.messages-wrapper .cometchat-list-hide-scrollbar .cometchat-list__body::-webkit-scrollbar,
+.messages-wrapper .cometchat-list-hide-scrollbar .cometchat-list__body::-webkit-scrollbar-thumb {
     display: none;
 }
 
@@ -15,28 +15,32 @@
     height: 24px;
     cursor: pointer;
 }
-.messages-wrapper .message-composer-blocked{
+
+.messages-wrapper .message-composer-blocked {
     display: flex;
-width: 100%;
-height: 48px;
-padding: var(--cometchat-padding-3, 12px) var(--cometchat-padding-5, 20px);
-flex-direction: column;
-justify-content: center;
-align-items: center;
-gap: var(--cometchat-padding-1, 4px);
-flex-shrink: 0;
-background: var(--cometchat-background-color-04, #E8E8E8);
+    width: 100%;
+    height: 48px;
+    padding: var(--cometchat-padding-3, 12px) var(--cometchat-padding-5, 20px);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: var(--cometchat-padding-1, 4px);
+    flex-shrink: 0;
+    background: var(--cometchat-background-color-04, #E8E8E8);
 }
-.messages-wrapper .message-composer-blocked__text{
+
+.messages-wrapper .message-composer-blocked__text {
     color: var(--cometchat-text-color-secondary, #727272);
-font:var(--cometchat-font-body-regular);
+    font: var(--cometchat-font-body-regular);
 }
-.messages-wrapper .message-composer-blocked__text > a{
+
+.messages-wrapper .message-composer-blocked__text>a {
     text-decoration: underline;
     text-decoration-color: var(--cometchat-primary-color);
     cursor: pointer;
-    color: var(--cometchat-primary-color);;
+    color: var(--cometchat-primary-color);
 }
+
 .messages-wrapper .cometchat-header__info:hover {
     background: var(--cometchat-icon-color-highlight);
 }

@@ -81,12 +81,6 @@
     border-bottom: 1px solid var(--cometchat-border-color-light);
 }
 
-.cometchat-message-information__message::-webkit-scrollbar,
-.cometchat-message-information__message::-webkit-scrollbar-thumb {
-    display: none;
-}
-
-
 .cometchat-message-information__message .cometchat-message-bubble__wrapper {
     padding: 0px;
     width: 100%;
@@ -107,8 +101,13 @@
     gap: 0px;
 }
 
-.cometchat-message-information__receipts::-webkit-scrollbar,
-.cometchat-message-information__receipts::-webkit-scrollbar-thumb {
+.cometchat-message-information-hide-scrollbar .cometchat-message-information__receipts::-webkit-scrollbar,
+.cometchat-message-information-hide-scrollbar .cometchat-message-information__receipts::-webkit-scrollbar-thumb {
+    display: none;
+}
+
+.cometchat-message-information-hide-scrollbar .cometchat-message-information__message::-webkit-scrollbar,
+.cometchat-message-information-hide-scrollbar .cometchat-message-information__message::-webkit-scrollbar-thumb {
     display: none;
 }
 

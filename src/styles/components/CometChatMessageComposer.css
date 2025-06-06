@@ -327,3 +327,36 @@ height: 58px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+.cometchat-message-composer-hide-scrollbar .cometchat-action-sheet::-webkit-scrollbar,
+.cometchat-message-composer-hide-scrollbar .cometchat-action-sheet::-webkit-scrollbar-thumb {
+    display: none;
+}
+
+.cometchat-message-composer-hide-scrollbar .cometchat-emoji-keyboard__list::-webkit-scrollbar,
+.cometchat-message-composer-hide-scrollbar .cometchat-emoji-keyboard__list::-webkit-scrollbar-thumb,
+.cometchat-message-composer-hide-scrollbar .cometchat-emoji-keyboard__tabs::-webkit-scrollbar,
+.cometchat-message-composer-hide-scrollbar .cometchat-emoji-keyboard__tabs::-webkit-scrollbar-thumb {
+    display: none;
+}
+
+
+.cometchat-message-composer-hide-scrollbar .cometchat-sticker-keyboard__tabs::-webkit-scrollbar {
+    background: transparent;
+    height: 0px;
+    width: 0px;
+}
+
+.cometchat-message-composer-hide-scrollbar .cometchat-sticker-keyboard__tabs::-webkit-scrollbar-thumb {
+    background: rgb(232, 229, 229);
+    border-radius: 8px;
+}
+
+.cometchat-message-composer-hide-scrollbar .cometchat-sticker-keyboard__list::-webkit-scrollbar {
+    background: transparent;
+    width: 0px;
+}
+
+.cometchat-message-composer-hide-scrollbar .cometchat-sticker-keyboard__list::-webkit-scrollbar-thumb {
+    background: rgb(232, 229, 229);
+    border-radius: 8px;
+}

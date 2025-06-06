@@ -107,6 +107,11 @@
     display: none;
 }
 
+.cometchat-threaded-message-preview-hide-scrollbar .cometchat-threaded-message-preview__message::-webkit-scrollbar,
+.cometchat-threaded-message-preview-hide-scrollbar .cometchat-threaded-message-preview__message::-webkit-scrollbar-thumb {
+    display: none;
+}
+
 .cometchat-threaded-message-preview__message .cometchat-text-bubble .cometchat-text-bubble__read-more {
     display: none;
 }

@@ -34,13 +34,6 @@
     background: var(--cometchat-background-color-01, #FFF);
 }
 
-.cometchat-reaction-list__list::-webkit-scrollbar,
-.cometchat-reaction-list__list::-webkit-scrollbar-thumb,
-.cometchat-reaction-list__tabs::-webkit-scrollbar,
-.cometchat-reaction-list__tabs::-webkit-scrollbar-thumb {
-    display: none;
-}
-
 .cometchat-reaction-list__tabs-tab {
     display: flex;
     height: 40px;

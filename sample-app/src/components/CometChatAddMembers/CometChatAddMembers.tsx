@@ -1,7 +1,7 @@
 
 import { CSSProperties, JSX, useCallback, useRef, useState } from "react";
 import '../../styles/CometChatAddMembers/CometChatAddMembers.css';
-import { CometChat, User } from "@cometchat/chat-sdk-javascript";
+import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { useCometChatAddMembers } from "./useCometChatAddMembers";
 import SearchIcon from "../../assets/search.svg";
 import SpinnerIcon from "../../assets/Spinner.svg";
@@ -300,7 +300,7 @@ export function CometChatAddMembers(props: IAddMembersProps) {
         }
     }, [createGroupMemberFromUser, onSelectPropRef]);
 
-    const updateAddMembersList = (user: User) => {
+    const updateAddMembersList = (user: CometChat.User) => {
         const targetUid = user.getUid();
         const tmpMembersToAddList: CometChat.GroupMember[] = [];
         let updated = false;
@@ -429,7 +429,7 @@ export function CometChatAddMembers(props: IAddMembersProps) {
         );
     }
 
-    const onUsersSelected = (user: User) => {
+    const onUsersSelected = (user: CometChat.User) => {
         updateAddMembersList(user);
         if (membersToAddRef.current.length == 0) {
             setIsDisabled(true)

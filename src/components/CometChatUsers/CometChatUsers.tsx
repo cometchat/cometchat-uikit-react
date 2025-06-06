@@ -204,6 +204,12 @@ export interface UsersProps {
    * @returns A JSX element to be rendered as the trailing view.
    */
   trailingView?: (user: CometChat.User) => JSX.Element;
+  /**
+   * Controls the visibility of the scrollbar in the list list.
+   * 
+   * @defaultValue `false`
+   */
+  showScrollbar?: boolean;
 }
 
 type State = {
@@ -334,7 +340,8 @@ export function CometChatUsers(props: UsersProps) {
     disableLoadingState = false,
     leadingView,
     titleView,
-    trailingView
+    trailingView,
+    showScrollbar = false,
   } = props;
 
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -705,9 +712,10 @@ export function CometChatUsers(props: UsersProps) {
   return (
     <div className="cometchat" style={{ width: "100%", height: "100%", overflow: "hidden" }}>
       <div
-        className='cometchat-users'
+        className={`cometchat-users ${!showScrollbar ? "cometchat-users-hide-scrollbar" : ""}`}
       >
         <CometChatList
+          showScrollbar={showScrollbar}
           title={titleRef.current}
           hideSearch={state.fetchState === States.error || hideSearch}
           searchPlaceholderText={searchPlaceholderTextRef.current}

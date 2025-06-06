@@ -1,3 +1,15 @@
+## [5.0.9] - 06-06-2025
+
+## New
+- None 
+
+## Enhancements
+- None
+
+## Fixes
+- Fixed missing space in Join Group subtitle view. (e.g., "2members" → "2 members")
+- Cleaned up CSS formatting and syntax, and standardized property imports to use CometChat abstractions.
+
 ## [5.0.8] - 09-05-2025
 
 ## New 

@@ -728,3 +728,17 @@ width: fit-content;
     height: fit-content !important;
     max-height: 100%;
 }
+
+.cometchat-message-list-hide-scrollbar .cometchat-reaction-list__list::-webkit-scrollbar,
+.cometchat-message-list-hide-scrollbar .cometchat-reaction-list__list::-webkit-scrollbar-thumb,
+.cometchat-message-list-hide-scrollbar .cometchat-reaction-list__tabs::-webkit-scrollbar,
+.cometchat-message-list-hide-scrollbar .cometchat-reaction-list__tabs::-webkit-scrollbar-thumb {
+    display: none;
+}
+
+.cometchat-message-list-hide-scrollbar .cometchat-emoji-keyboard__list::-webkit-scrollbar,
+.cometchat-message-list-hide-scrollbar .cometchat-emoji-keyboard__list::-webkit-scrollbar-thumb,
+.cometchat-message-list-hide-scrollbar .cometchat-emoji-keyboard__tabs::-webkit-scrollbar,
+.cometchat-message-list-hide-scrollbar .cometchat-emoji-keyboard__tabs::-webkit-scrollbar-thumb {
+    display: none;
+}

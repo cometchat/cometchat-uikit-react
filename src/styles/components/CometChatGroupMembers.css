@@ -23,13 +23,12 @@
 }
 
 
-.cometchat-group-members .cometchat-list__body::-webkit-scrollbar {
-  background: transparent;
+.cometchat-group-members-hide-scrollbar .cometchat-list__body::-webkit-scrollbar {  background: transparent;
   height: 0px;
   width: 0px;
 }
 
-.cometchat-group-members .cometchat-list__body::-webkit-scrollbar-thumb {
+.cometchat-group-members-hide-scrollbar .cometchat-list__body::-webkit-scrollbar-thumb {
   background: transparent;
   border-radius: 8px;
 }
@@ -224,4 +223,8 @@
   100% {
     background-position: 468px 0;
   }
+}
+.cometchat-group-members-hide-scrollbar .cometchat-change-scope__list::-webkit-scrollbar,
+.cometchat-group-members-hide-scrollbar .cometchat-change-scope__list::-webkit-scrollbar-thumb {
+    display: none;
 }

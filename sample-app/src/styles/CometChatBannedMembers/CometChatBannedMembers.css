@@ -2,8 +2,8 @@
     height: 312px;
 }
 
-.cometchat-banned-members .cometchat-list__body::-webkit-scrollbar,
-.cometchat-banned-members .cometchat-list__body::-webkit-scrollbar-thumb {
+.cometchat-banned-members .cometchat-list-hide-scrollbar .cometchat-list__body::-webkit-scrollbar,
+.cometchat-banned-members .cometchat-list-hide-scrollbar .cometchat-list__body::-webkit-scrollbar-thumb {
     display: none;
 }
 

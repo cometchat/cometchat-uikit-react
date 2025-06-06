@@ -39,6 +39,11 @@ interface MessageInformationProps {
    * Array of text formatters for custom styling or formatting of message text bubbles.
    */
    textFormatters?: CometChatTextFormatter[];
+   /**
+   * Controls the visibility of the scrollbar in the list.
+   * @defaultValue `false`
+   */
+   showScrollbar?: boolean;
 }
 
 const CometChatMessageInformation = (props: MessageInformationProps) => {
@@ -50,7 +55,8 @@ const CometChatMessageInformation = (props: MessageInformationProps) => {
     },
     template,
     hideReceipts,
-    textFormatters
+    textFormatters,
+    showScrollbar = false,
   } = props;
 
   const [state, setState] = useState<States>(States.loading);
@@ -201,7 +207,7 @@ const CometChatMessageInformation = (props: MessageInformationProps) => {
   }
 
   return (
-    <div className="cometchat cometchat-message-information">
+    <div className={`cometchat cometchat-message-information ${!showScrollbar ? "cometchat-message-information-hide-scrollbar" : ""}`}>
       <div className="cometchat-message-information__header">
         <div className="cometchat-message-information__header-title">
           {localize("MESSAGE_INFORMATION")}
@@ -285,6 +291,7 @@ const CometChatMessageInformation = (props: MessageInformationProps) => {
                 <div className="cometchat-message-information__receipts">
                   {messageReceipts.length > 0 && (
                     <CometChatList
+                      showScrollbar={showScrollbar}
                       list={messageReceipts}
                       itemView={getListItem}
                       state={

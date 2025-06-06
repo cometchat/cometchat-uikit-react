@@ -289,6 +289,11 @@ interface MessageListProps {
    * A custom footer view component for the message list.
    */
   footerView?: JSX.Element;
+  /**
+    * Controls the visibility of the scrollbar in the list.
+    * @defaultValue `false`
+  */
+  showScrollbar?: boolean;
 
 }
 
@@ -336,6 +341,7 @@ const defaultProps: MessageListProps = {
   showSmartReplies: false,
   smartRepliesKeywords: ['what', 'when', 'why', 'who', 'where', 'how', '?'],
   smartRepliesDelayDuration: 10000,
+  showScrollbar: false,
 };
 
 const CometChatMessageList = (props: MessageListProps) => {
@@ -381,6 +387,7 @@ const CometChatMessageList = (props: MessageListProps) => {
     showSmartReplies,
     smartRepliesKeywords,
     smartRepliesDelayDuration,
+    showScrollbar
   } = { ...defaultProps, ...props };
   /**
    * All the useState useCometChatMessageList are declaired here. These trigger a rerender when updated.
@@ -3821,7 +3828,7 @@ const CometChatMessageList = (props: MessageListProps) => {
         boxSizing: "border-box"
       }}>
         <div
-          className='cometchat-message-list'
+         className={`cometchat-message-list ${!showScrollbar ? "cometchat-message-list-hide-scrollbar" : ""}`}
         >
           {stickyDateHeaderRef.current &&  !hideStickyDate  && messageList.length > 0  ? <div
             className='cometchat-message-list__date-header'
@@ -3841,6 +3848,7 @@ const CometChatMessageList = (props: MessageListProps) => {
 '
           >
             <CometChatList
+              showScrollbar={showScrollbar}
               scrolledUpCallback={updateIsOnBottom}
               headerView={undefined}
               hideSearch={true}
@@ -3890,6 +3898,7 @@ const CometChatMessageList = (props: MessageListProps) => {
       {showMessageInfoPopup && activeMessageInfo !== null && (
         <div className="cometchat-message-information__popup-wrapper">
           <CometChatMessageInformation
+            showScrollbar={showScrollbar}
             message={activeMessageInfo}
             onClose={hideMessageInformation}
             template={getMessageTemplate(activeMessageInfo)}

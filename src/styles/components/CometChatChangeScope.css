@@ -81,11 +81,6 @@
     overflow: auto;
 }
 
-.cometchat-change-scope__list::-webkit-scrollbar,
-.cometchat-change-scope__list::-webkit-scrollbar-thumb {
-    display: none;
-}
-
 .cometchat-change-scope__list-item {
     display: flex;
     min-width: 240px;

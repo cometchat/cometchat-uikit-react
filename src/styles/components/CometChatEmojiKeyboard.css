@@ -109,13 +109,6 @@
     border-radius: var(--cometchat-radius-2, 8px);
 }
 
-.cometchat-emoji-keyboard__list::-webkit-scrollbar,
-.cometchat-emoji-keyboard__list::-webkit-scrollbar-thumb,
-.cometchat-emoji-keyboard__tabs::-webkit-scrollbar,
-.cometchat-emoji-keyboard__tabs::-webkit-scrollbar-thumb {
-    display: none;
-}
-
 .cometchat-emoji-keyboard__list {
     width: 100%;
     height: 100%;

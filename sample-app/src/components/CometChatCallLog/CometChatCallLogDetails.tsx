@@ -1,6 +1,6 @@
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import "../../styles/CometChatCallLog/CometChatCallLogDetails.css";
-import { CometChat, User } from "@cometchat/chat-sdk-javascript";
+import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { CometChatCallDetailsInfo } from "./CometChatCallLogInfo";
 import { CometChatCallDetailsParticipants } from "./CometChatCallLogParticipants";
 import { CometChatCallDetailsRecording } from "./CometChatCallLogRecordings";
@@ -11,7 +11,7 @@ export const CometChatCallDetails = (props: { selectedItem: any, onBack?: () => 
     const { selectedItem, onBack } = props;
     const callDetailTabItems = [localize("PARTICIPANTS"), localize("RECORDING"), localize("HISTORY")];
     const [activeTab, setActiveTab] = useState("Participants");
-    const [user, setUser] = useState<User>();
+    const [user, setUser] = useState<CometChat.User>();
     const [subtitleText, setSubtitleText] = useState<string>();
 
     function verifyCallUser(call: any, loggedInUser: CometChat.User) {
@@ -53,7 +53,7 @@ export const CometChatCallDetails = (props: { selectedItem: any, onBack?: () => 
         const loggedInUser = CometChatUIKitLoginListener.getLoggedInUser();
         const callUser = verifyCallUser(selectedItem, loggedInUser!);
         if (selectedItem.receiverType === CometChatUIKitConstants.MessageReceiverType.user) {
-            CometChat.getUser(callUser.uid).then((response: User) => {
+            CometChat.getUser(callUser.uid).then((response: CometChat.User) => {
                 setUser(response);
             });
         }

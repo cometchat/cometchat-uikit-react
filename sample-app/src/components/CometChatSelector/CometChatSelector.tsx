@@ -3,7 +3,7 @@ import chatIcon from '../../assets/start_chat.svg';
 import createGroupIcon from '../../assets/create-group.svg';
 import logoutIcon from '../../assets/logout.svg';
 import userIcon from '../../assets/user.svg';
-import { Call, Conversation, Group, User } from "@cometchat/chat-sdk-javascript";
+import { CometChat } from "@cometchat/chat-sdk-javascript";
 import "../../styles/CometChatSelector/CometChatSelector.css";
 import { CometChatJoinGroup } from "../CometChatJoinGroup/CometChatJoinGroup";
 import CometChatCreateGroup from "../CometChatCreateGroup/CometChatCreateGroup";
@@ -13,17 +13,17 @@ import { useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
 
 interface SelectorProps {
-    group?: Group;
+    group?: CometChat.Group;
     showJoinGroup?: boolean;
     activeTab?: string;
-    activeItem?: User | Group | Conversation | Call;
-    onSelectorItemClicked?: (input: User | Group | Conversation | Call, type: string) => void;
-    onProtectedGroupJoin?: (group: Group) => void;
+    activeItem?: CometChat.User | CometChat.Group | CometChat.Conversation | CometChat.Call;
+    onSelectorItemClicked?: (input: CometChat.User | CometChat.Group | CometChat.Conversation | CometChat.Call, type: string) => void;
+    onProtectedGroupJoin?: (group: CometChat.Group) => void;
     showCreateGroup?: boolean;
     setShowCreateGroup?: Dispatch<SetStateAction<boolean>>;
     onHide?: () => void;
     onNewChatClicked?: () => void;
-    onGroupCreated?: (group: Group) => void;
+    onGroupCreated?: (group: CometChat.Group) => void;
 }
 
 export const CometChatSelector = (props: SelectorProps) => {
@@ -138,7 +138,7 @@ export const CometChatSelector = (props: SelectorProps) => {
                 )}
                 {activeTab == "chats" ? (
                     <CometChatConversations
-                        activeConversation={activeItem as Conversation}
+                        activeConversation={activeItem as CometChat.Conversation}
                         headerView={conversationsHeaderView()}
                         onItemClick={(e) => {
                             onSelectorItemClicked(e, "updateSelectedItem");
@@ -146,21 +146,21 @@ export const CometChatSelector = (props: SelectorProps) => {
                     />
                 ) : activeTab == "calls" ? (
                     <CometChatCallLogs
-                        activeCall={activeItem as Call}
-                        onItemClick={(e: Call) => {
+                        activeCall={activeItem as CometChat.Call}
+                        onItemClick={(e: CometChat.Call) => {
                             onSelectorItemClicked(e, "updateSelectedItemCall");
                         }}
                     />
                 ) : activeTab == "users" ? (
                     <CometChatUsers
-                        activeUser={activeItem as User}
+                        activeUser={activeItem as CometChat.User}
                         onItemClick={(e) => {
                             onSelectorItemClicked(e, "updateSelectedItemUser");
                         }}
                     />
                 ) : activeTab == "groups" ? (
                     <CometChatGroups
-                        activeGroup={activeItem as Group}
+                        activeGroup={activeItem as CometChat.Group}
                         headerView={groupsHeaderView()}
                         onItemClick={(e) => {
                             onSelectorItemClicked(e, "updateSelectedItemGroup");

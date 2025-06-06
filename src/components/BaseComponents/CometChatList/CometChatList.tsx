@@ -153,6 +153,11 @@ interface ListProps<T> {
    * @defaultValue `""`
    */
     title?: string;
+  /**
+   * Controls the visibility of the scrollbar in the list.
+   * @defaultValue `false`
+  */
+  showScrollbar?: boolean;
 }
 /**
  * Renders a list component that can display a title, search bar,
@@ -182,7 +187,8 @@ function List<T>(props: ListProps<T>): JSX.Element {
     onError,
     scrolledUpCallback,
     headerView,
-    title = ""
+    title = "",
+    showScrollbar = false,
   } = props;
   // Refs for DOM elements and other states
   const intersectionObserverRootRef = useRef<DivElementRef>(null);
@@ -385,7 +391,7 @@ function List<T>(props: ListProps<T>): JSX.Element {
       width: "100%",
       height: "100%"
     }}>
-      <div className="cometchat-list">
+      <div className={`cometchat-list ${!showScrollbar ? ' cometchat-list-hide-scrollbar' : ''}`}>
         <div className="cometchat-list__header">
           {headerView ?? null}
           {!headerView && title ? getTitle() : null}

@@ -70,6 +70,11 @@ interface ThreadedMessagePreviewProps {
     * Array of text formatters for custom styling or formatting of message text bubbles.
     */
     textFormatters?: CometChatTextFormatter[];
+    /**
+    * Controls the visibility of the scrollbar in the list.
+    * @defaultValue `false`
+    */
+    showScrollbar?: boolean;
 }
 
 const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => {
@@ -84,7 +89,8 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
         hideReplyCount = false,
         template,
         hideReceipts,
-        textFormatters
+        textFormatters,
+        showScrollbar = false
     } = props;
 
     const loggedInUser = useRef<CometChat.User | null>(null);
@@ -342,7 +348,7 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
 
     return (
         <div className="cometchat">
-            <div className="cometchat-threaded-message-preview">
+          <div className={`cometchat-threaded-message-preview ${!showScrollbar ? "cometchat-threaded-message-preview-hide-scrollbar" : ""}`}>
                 <div className="cometchat-threaded-message-preview__header">
                     <div className="cometchat-threaded-message-preview__header-title">
                         {localize("THREAD")}

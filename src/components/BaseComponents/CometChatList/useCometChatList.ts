@@ -154,7 +154,9 @@ export function useCometChatList(args: Args) {
                 if (shouldRootScrollToBottom) {
                     setTimeout(() => {
                         didComponentScrollToBottomRef.current = true;
-                        intersectionObserverBottomTargetRef.current?.scrollIntoView?.(false);
+                        if (rootElement) {
+                            rootElement.scrollTop = rootElement.scrollHeight;
+                        }
                     }, 50);
                 }
             });

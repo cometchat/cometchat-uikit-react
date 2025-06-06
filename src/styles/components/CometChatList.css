@@ -96,8 +96,8 @@
     justify-content: flex-start;
 }
 
-.cometchat-list__body::-webkit-scrollbar,
-.cometchat-list__body::-webkit-scrollbar-thumb {
+.cometchat-list-hide-scrollbar .cometchat-list__body::-webkit-scrollbar,
+.cometchat-list-hide-scrollbar .cometchat-list__body::-webkit-scrollbar-thumb {
     display: none;
 }
 
