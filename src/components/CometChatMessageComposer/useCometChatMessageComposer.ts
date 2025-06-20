@@ -385,14 +385,14 @@ export function useCometChatMessageComposer(args: Args) {
             return prevFormatters;
           });
         }
-        return () => {
-          contentEditable.removeEventListener("paste", preventPaste);
-          document.removeEventListener("selectionchange", triggerSelection);
-        };
       }
       if(window?.getSelection()){
         setSelection(window?.getSelection());
       }
+      return () => {
+        contentEditable.removeEventListener("paste", preventPaste);
+        document.removeEventListener("selectionchange", triggerSelection);
+      };
     } catch (error) {
       errorHandler(error, "preventPaste")
     }

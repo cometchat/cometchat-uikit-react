@@ -1481,7 +1481,7 @@ export function CometChatConversations(props: ConversationsProps) {
         for (let i = 0; i < defaultOptions.length; i++) {
           if (
             defaultOptions[i].id ===
-            CometChatUIKitConstants.ConversationOptions.delete
+            CometChatUIKitConstants.ConversationOptions.delete && !defaultOptions[i].onClick
           ) {
             defaultOptions[i].onClick = () => deleteOptionCallback(conversation);
           }
@@ -1499,14 +1499,10 @@ export function CometChatConversations(props: ConversationsProps) {
             data={curOptions as unknown as CometChatActionsIcon[]}
             topMenuSize={2}
             placement={Placement.left}
-            onOptionClicked={() => {
-              curOptions && curOptions.forEach((option: CometChatOption) => {
-                if (option) {
-                  if (option.id) {
-                    option.onClick?.(parseInt(String(option.id)));
-                  }
-                }
-              });
+            onOptionClicked={(menu?:CometChatOption | CometChatActionsIcon) => {
+              if(menu?.onClick){
+                menu.onClick(conversation)
+              }
             }}
           />
         </div>
