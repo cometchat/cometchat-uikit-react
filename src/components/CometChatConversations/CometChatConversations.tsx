@@ -511,7 +511,7 @@ function stateReducer(state: State, action: Action): State {
           }
         } else if (
           convWith instanceof CometChat.User &&
-          convWith?.getUid() === senderId
+          convWith?.getUid() === senderId && !convWith.getBlockedByMe() && !convWith.getHasBlockedMe()
         ) {
           id = convWith?.getUid();
           break;

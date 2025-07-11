@@ -85,9 +85,9 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
                 }
             };
             audioRecorder.onstop = () => {
-                if (createMedia.current) {
+                    if (createMedia.current && audioChunks.current.length > 0) {
                     const recordedBlob = new Blob(audioChunks.current, {
-                        type: audioChunks.current[0].type,
+                        type: audioChunks.current[0]?.type || 'audio/webm',
                     });
                     blobRef.current = recordedBlob;
                     const url = URL.createObjectURL(recordedBlob);
@@ -149,7 +149,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     const handleCloseRecording = () => {
         pauseActiveMedia();
         currentMediaPlayer.mediaRecorder = null;
-        createMedia.current = false
+        createMedia.current = false;
         onCloseRecording?.();
         reset();
         hasInitializedRef.current = false;
@@ -171,6 +171,8 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         setIsRecording(false);
         setIsPaused(false);
         clearStream();
+        audioChunks.current = [];
+        blobRef.current = undefined;
     };
 
     const clearStream = () => {

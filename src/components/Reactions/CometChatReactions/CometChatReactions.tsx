@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {CometChatReactionList} from "../CometChatReactionList/CometChatReactionList";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CometChatReactionList } from "../CometChatReactionList/CometChatReactionList";
 import { CometChatPopover } from "../../BaseComponents/CometChatPopover/CometChatPopover";
-import {CometChatReactionInfo} from "../CometChatReactionInfo/CometChatReactionInfo";
+import { CometChatReactionInfo } from "../CometChatReactionInfo/CometChatReactionInfo";
 import { MessageBubbleAlignment, Placement } from "../../../Enums/Enums";
 import { useCometChatErrorHandler } from "../../../CometChatCustomHooks";
 
@@ -23,7 +23,7 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
     onReactionListItemClick,
     reactionsRequestBuilder,
     hoverDebounceTime = 500,
-    onReactionClick,onError
+    onReactionClick, onError
 }) => {
     const errorHandler = useCometChatErrorHandler(onError);
 
@@ -59,40 +59,39 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
     /* This function is used to check and update the width and maximum visible emojis. */
     const attachObserver = useCallback(
         () => {
-         try {
-            const parentNode = parentRef.current?.parentNode?.parentNode;
-            let child = null;
-            if (parentNode) {
-                const childNode = parentNode.querySelector('.cometchat-message-bubble__body-content-view') || parentNode.firstChild;
-                if (childNode) {
-                    child = childNode
-                }
-            }     if (child && !resizeObserver.current) {
-                resizeObserver.current = new ResizeObserver((entries) => {
-                    for (const entry of entries) {
-                        const newWidth = entry.contentRect.width;
-                        if (previousWidth !== newWidth) {
-                            setPreviousWidth(newWidth);
-                            updateMaxVisibleEmojis(newWidth);
-                        }
+            try {
+                const parentNode = parentRef.current?.parentNode?.parentNode;
+                let child = null;
+                if (parentNode) {
+                    const childNode = parentNode.querySelector('.cometchat-message-bubble__body-content-view') || parentNode.firstElementChild;
+                    if (childNode) {
+                        child = childNode
                     }
-                });
-                resizeObserver.current.observe(child);
-            }
-         } catch (error) {
-            errorHandler(error, "attachObserver");
+                } if (child && !resizeObserver.current) {
+                    resizeObserver.current = new ResizeObserver((entries) => {
+                        for (const entry of entries) {
+                            const newWidth = entry.contentRect.width;
+                            if (previousWidth !== newWidth) {
+                                setPreviousWidth(newWidth);
+                                updateMaxVisibleEmojis(newWidth);
+                            }
+                        }
+                    });
+                    resizeObserver.current.observe(child);
+                }
+            } catch (error) {
+                errorHandler(error, "attachObserver");
 
-         }
+            }
         }, []
     )
 
     /* This function calculates and returns the number of maximum possible emojis. */
     const getMaxVisibleEmojis = (availableWidth: number) => {
         try {
-            const emojiWidth = 36;
-            const effectiveWidth = availableWidth <= 50 ? availableWidth : availableWidth - emojiWidth;
-            const maxFitEmojis = Math.floor(effectiveWidth / emojiWidth);
-            const adjustedMaxEmojis = Math.max(0, maxFitEmojis - 2);
+            const emojiWidth = 46;
+            const maxFitEmojis = Math.floor(availableWidth / emojiWidth);
+            const adjustedMaxEmojis = Math.max(0, maxFitEmojis);
             const num = Math.min(100, adjustedMaxEmojis);
             return num === 0 ? 1 : num;
         } catch (error) {
@@ -102,16 +101,20 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
     };
 
     /* This function returns the count of extra reaction items. */
-    const moreCount = useCallback(
+    const moreCount = useMemo(
         () => {
             try {
-                return messageReactions.length > maxVisibleEmojis
-                    ? messageReactions.length - maxVisibleEmojis
+                const totalReactions = messageReactions.length;
+                const showMore = totalReactions > maxVisibleEmojis && maxVisibleEmojis > 2;
+                const visibleCount = showMore ? maxVisibleEmojis - 1 : maxVisibleEmojis;
+                return totalReactions > visibleCount
+                    ? totalReactions - visibleCount
                     : 0;
             } catch (error) {
                 errorHandler(error, "moreCount");
                 return 0;
-            }        }, [messageReactions, maxVisibleEmojis]
+            }
+        }, [messageReactions, maxVisibleEmojis]
     );
 
     /* This function returns the position of the message bubble. */
@@ -165,31 +168,68 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
         }
     }, [messageObject, alignment]);
 
-
+ /* This function returns the Reaction detailed list on click of more reactions. */
+    const showMoreUi = useCallback(
+        () => {
+            return (
+                <CometChatPopover
+                    disableBackgroundInteraction={true}
+                    useParentContainer={true}
+                    placement={moreListAlignment}
+                    content={
+                        <div >
+                            <CometChatReactionList
+                                messageObject={messageObject}
+                                reactionsRequestBuilder={reactionsRequestBuilder}
+                                reactionItemClicked={onReactionListItemClick}
+                            />
+                        </div>
+                    }
+                    childClickHandler={(openContent: Function, e: Event) => {
+                        getPlacementAlignment(() => {
+                            openContent(e);
+                        });
+                    }}
+                >
+                    <div className="cometchat-reactions__more-reaction">
+                        <div className="cometchat-reactions__more-reaction-count">
+                            +{moreCount}
+                        </div>
+                    </div>
+                </CometChatPopover>
+            );
+        }, [moreListAlignment,messageObject,reactionsRequestBuilder,onReactionListItemClick,getPlacementAlignment,moreCount]
+    );
 
     /* This function returns view component for reaction info as tooltip. */
     const showReactions = useCallback(
-        () => {
-            return messageReactions.slice(0, maxVisibleEmojis).map((reaction,index) => {
-                return (
-                    <div className="cometchat-reactions-info-wrapper" key={`${reaction.getReaction()}-${index}`}
->
-                        <CometChatPopover
-                            useParentContainer={true}
-                            showOnHover={true}
-                            debounceOnHover={hoverDebounceTime}
-                            placement={Placement.top}
-                            key={reaction.getReaction()}
-                            content={reactionPopupUi(reaction)}
-                            showTooltip={true}
-                        >
-                            {reactionChildUi(reaction)}
-                        </CometChatPopover>
-                    </div>
-                );
-            });
+        () => { const totalReactions = messageReactions.length;
+                    const showMore = totalReactions > maxVisibleEmojis && maxVisibleEmojis > 2;
+                    const visibleCount = showMore ? maxVisibleEmojis - 1 : maxVisibleEmojis;
+                    const visibleReactions = messageReactions.slice(0, visibleCount);
+
+                    return (
+                        <>
+                            {visibleReactions.map((reaction, index) => (
+                                <div className="cometchat-reactions-info-wrapper" key={`${reaction.getReaction()}-${index}`}>
+                                    <CometChatPopover
+                                        useParentContainer={true}
+                                        showOnHover={true}
+                                        debounceOnHover={hoverDebounceTime}
+                                        placement={Placement.top}
+                                        key={reaction.getReaction()}
+                                        content={reactionPopupUi(reaction)}
+                                        showTooltip={true}
+                                    >
+                                        {reactionChildUi(reaction)}
+                                    </CometChatPopover>
+                                </div>
+                            ))}
+                           {moreCount > 0 && showMoreUi()}
+                        </>
+                    );
         },
-        [messageReactions, maxVisibleEmojis, setPopoverVisibility, popoverVisibility]
+        [messageReactions, maxVisibleEmojis,moreCount,showMoreUi]
     );
 
     /* This function returns Reaction Info component. */
@@ -229,41 +269,7 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
         );
     };
 
-    /* This function returns the Reaction detailed list on click of more reactions. */
-    const showMoreUi = useCallback(
-        (number: number) => {
-            const newReactionList = messageReactions.slice(-number);
-            const myReaction = newReactionList.find((reaction) => reaction.getReactedByMe());
-            const showActive = !!myReaction;
-            return (
-                <CometChatPopover
-                    useParentContainer={true}
-                    placement={moreListAlignment}
-                    disableBackgroundInteraction={true}
-                    content={
-                        <div >
-                            <CometChatReactionList
-                                messageObject={messageObject}
-                                reactionsRequestBuilder={reactionsRequestBuilder}
-                                reactionItemClicked={onReactionListItemClick}
-                            />
-                        </div>
-                    }
-                    childClickHandler={(openContent: Function, e: Event) => {
-                        getPlacementAlignment(() => {
-                            openContent(e);
-                        });
-                    }}
-                >
-                    <div className="cometchat-reactions__more-reaction">
-                        <div className="cometchat-reactions__more-reaction-count">
-                            +{number}
-                        </div>
-                    </div>
-                </CometChatPopover>
-            );
-        }, [messageReactions, moreListAlignment]
-    );
+   
 
     return (
         <div
@@ -273,7 +279,6 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
             onMouseLeave={() => setPopoverVisibility({})}
         >
             {showReactions()}
-            {moreCount() > 0 && showMoreUi(moreCount())}
         </div>
     );
 };
