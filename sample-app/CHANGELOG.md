@@ -1,3 +1,14 @@
+## [5.0.10] - 28-08-2025
+
+## New
+- None
+
+## Enhancements
+- None
+
+## Fixes
+- Fixed an issue where deleting a conversation did not hide user details as expected.
+
 ## [5.0.9] - 06-06-2025
 
 ## New

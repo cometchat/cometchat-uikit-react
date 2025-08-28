@@ -82,6 +82,9 @@
 
 /* Media query for screens with a max width of 600px */
 @media (max-width: 600px) {
+    .cometchat-outgoing-call{
+        padding: var(--cometchat-spacing-20) var(--cometchat-spacing-5) var(--cometchat-spacing-15) var(--cometchat-spacing-5);
+    }
 
     /* Font size for avatar text in smaller screens */
     .cometchat-outgoing-call__avatar .cometchat-avatar__text {
@@ -103,9 +106,13 @@
     .cometchat-outgoing-call__subtitle {
         font: var(--cometchat-font-body-regular);
     }
+    .cometchat-outgoing-call__avatar{
+        margin-bottom: auto;
+        margin-top: var(--cometchat-margin-10);
+    }
 
     /* Size and border radius adjustment for the container in smaller screens */
-    .cometchat-outgoing-call {
+    .cometchat-outgoing-call,.cometchat:has(> .cometchat-outgoing-call) {
         height: 100%;
         width: 100%;
         border-radius: 0;

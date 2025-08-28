@@ -4,7 +4,7 @@ import { CometChatTextFormatter } from '../formatters/CometChatFormatters/CometC
 import deleteIcon from '../assets/delete.svg';
 import { CometChatUIKitUtility } from '../CometChatUIKit/CometChatUIKitUtility';
 import { localize } from '../resources/CometChatLocalize/cometchat-localize';
-import { MessageBubbleAlignment } from '../Enums/Enums';
+import { MentionsTargetElement, MessageBubbleAlignment } from '../Enums/Enums';
 import { CometChatUIKitConstants } from '../constants/CometChatUIKitConstants';
 import {  CometChatOption } from '../modals';
 import { CometChatMentionsFormatter } from '../formatters/CometChatFormatters/CometChatMentionsFormatter/CometChatMentionsFormatter';
@@ -95,19 +95,45 @@ export class ConversationUtils {
     let messageObject: CometChat.BaseMessage = conversation.getLastMessage()
     switch (messageObject?.getType()) {
       case CometChatUIKitConstants.MessageTypes.text: {
+        let allFormatters: CometChatTextFormatter[] = [];
+  
         if (this.additionalParams) {
-          const formatters = this.additionalParams?.["textFormatters"] || [];
-          const regexList = formatters?.map((f: CometChatMentionsFormatter) => {
-            return f?.getRegexPatterns()
-          })
-          const lastMessage = (messageObject as CometChat.TextMessage)?.getText() || ""
-          message = CometChatUIKitUtility.sanitizeHtml(lastMessage, regexList?.flat());
+          const formatters = Array.isArray(this.additionalParams.textFormatters)
+            ? this.additionalParams.textFormatters
+            : [];
+          const customFormatters = Array.isArray(this.additionalParams.textFormattersList)
+            ? this.additionalParams.textFormattersList
+            : [];
+  
+          allFormatters = [...formatters, ...customFormatters].filter(f => !!f);
+  
+          let regexWhitelist: RegExp[] = [];
+          allFormatters.forEach(formatter => {
+            if (formatter && typeof formatter.getRegexPatterns === "function") {
+              const patterns = formatter.getRegexPatterns();
+              if (Array.isArray(patterns)) {
+                regexWhitelist.push(...patterns);
+              } else if (patterns) {
+                regexWhitelist.push(patterns);
+              }
+            }
+          });
+        let lastMessage: string | any = (messageObject as CometChat.TextMessage)?.getText() || "";
+          message = CometChatUIKitUtility.sanitizeHtml(lastMessage, regexWhitelist);
+
+          allFormatters.forEach(formatter => {
+            if (formatter && typeof formatter.getFormattedText === "function") {
+              message = formatter.getFormattedText(message, {
+                mentionsTargetElement: this.additionalParams?.mentionsTargetElement ?? MentionsTargetElement.conversation,
+              }) as string;
+            }
+          });
         } else {
           message = (messageObject as CometChat.TextMessage).getText() || ""
         }
       }
         break;
-      case CometChatUIKitConstants.MessageTypes.image:
+        case CometChatUIKitConstants.MessageTypes.image:
         message = localize("MESSAGE_IMAGE");
         break;
       case CometChatUIKitConstants.MessageTypes.file:

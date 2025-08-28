@@ -14,6 +14,8 @@ interface AudioBubbleProps {
 const CometChatAudioBubble = (props: AudioBubbleProps) => {
     const { src = "", isSentByMe = true } = props;
     const waveformRef = useRef<HTMLDivElement | null>(null);
+    const isPlayingRef = useRef<boolean>(false);
+
     const abortControllerRef = useRef<AbortController | null>(null);
     const [waveSurfer, setWaveSurfer] = useState<WaveSurfer | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -83,13 +85,18 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
                 wave.stop();
                 wave.seekTo(0);
                 setIsPlaying(false);
+                isPlayingRef.current = false;
+
             });
 
             // Clean up WaveSurfer instance on unmount
             return () => {
                 waveformRef.current = null;
                 currentAudioPlayer.instance = null;
-                closeCurrentMediaPlayer(false);
+                if (isPlayingRef.current){
+                    closeCurrentMediaPlayer(false);
+    
+                    }
             }
         }
     }, [src, isSentByMe]);
@@ -118,12 +125,14 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
             currentAudioPlayer.instance.pause();
             if (currentAudioPlayer.setIsPlaying) {
               currentAudioPlayer.setIsPlaying(false);
+              isPlayingRef.current = false;
             }
           }
           // Play or pause the current instance
           waveSurfer.playPause();
           const currentlyPlaying = waveSurfer.isPlaying();
           setIsPlaying(currentlyPlaying);
+          isPlayingRef.current = currentlyPlaying;
           // Update the global reference
           currentAudioPlayer.instance =  currentlyPlaying ? waveSurfer : null;
           currentAudioPlayer.setIsPlaying  = currentlyPlaying ? setIsPlaying : null;

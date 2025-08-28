@@ -400,6 +400,7 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
         const textSpan = document.createElement("span");
 
         textSpan.textContent = this.trackCharacter + userName;
+        textSpan.classList.add("cometchat-text");
         span.appendChild(textSpan);
 
         let count = 0;
@@ -774,6 +775,7 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
               span.classList.add("cometchat-mentions-outgoing");
             }
             const textSpan = document.createElement("span");
+            textSpan.classList.add("cometchat-text");
             if (alreadyMapped) {
               textSpan.textContent = capturedGroup;
             } else {

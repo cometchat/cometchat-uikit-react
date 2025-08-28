@@ -93,7 +93,7 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
         showScrollbar = false
     } = props;
 
-    const loggedInUser = useRef<CometChat.User | null>(null);
+    const loggedInUser = useRef<CometChat.User | null>(CometChatUIKitLoginListener.getLoggedInUser());
     const [replyCount, setReplyCount] = useState<number>(0);
     const [updatedMessage, setUpdatedMessage] = useState<CometChat.BaseMessage>(parentMessage);
     const onErrorCallback = useCometChatErrorHandler(onError);
@@ -113,14 +113,6 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
             onErrorCallback(error, 'useEffect');
         }
     }, [parentMessage]);
-
-    useEffect(() => {
-        try {
-            loggedInUser.current = CometChatUIKitLoginListener.getLoggedInUser();
-        } catch (error) {
-            onErrorCallback(error, 'useEffect');
-        }
-    }, []);
 
     const addListener = useCallback(() => {
         try {
@@ -273,7 +265,7 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
 
     useEffect(() => {
         try {
-            if (loggedInUser) {
+            if (loggedInUser.current) {
                 const removeListener = addListener();
                 const unsubscribeFromEvents = subscribeToEvents();
                 return () => {
@@ -284,7 +276,7 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
         } catch (error) {
             onErrorCallback(error, 'useEffect');
         }
-    }, [loggedInUser, addListener, subscribeToEvents]);
+    }, [addListener, subscribeToEvents]);
 
     /* This function returns close button view. */
     function getCloseBtnView() {

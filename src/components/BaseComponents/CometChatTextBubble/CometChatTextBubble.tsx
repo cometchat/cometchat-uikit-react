@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCometChatTextBubble } from "./useCometChatTextBubble";
-import { fireClickEvent, sanitizeHtml } from "../../../utils/util";
+import { fireClickEvent, sanitizeHtml, sanitizeToSpanOnly } from "../../../utils/util";
 import { localize } from "../../../resources/CometChatLocalize/cometchat-localize";
 import { CometChatTextFormatter } from "../../../formatters/CometChatFormatters/CometChatTextFormatter";
 import { MentionsTargetElement } from "../../../Enums/Enums";
@@ -46,35 +46,43 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
     useEffect(()=>{
         setIsExpanded(false)
     },[text])
-    
+
     /**
      * Check if textFormatters are available
     */
     useEffect(() => {
-        if (textFormatters) {
-            const regexList = textFormatters.map((f) => {
-                return f.getRegexPatterns()
-            })
-            setTextState(sanitizeHtml(text, regexList.flat()));
-        }
-
+        const regexList = textFormatters.map((f) => {
+            return f.getRegexPatterns()
+        });
+        
+        // Use the new sanitization function that preserves regex patterns
+        const sanitizedText = sanitizeToSpanOnly(text, regexList);
+        setTextState(sanitizedText);
     }, [text, textFormatters, setTextState]);
     useEffect(() => {
         if (textRef.current) {
             let finalText = textState;
-                if (textFormatters && textFormatters.length) {
-                    for (let i = 0; i < textFormatters.length; i++) {
-                        (finalText as string | void) = textFormatters[i].getFormattedText(finalText, {
-                            mentionsTargetElement: MentionsTargetElement.textbubble,
-                        });
-                    }   
-                    textRef.current.innerHTML = finalText;
+            if (textFormatters && textFormatters.length) {
+                const regexList = textFormatters.map((f) => {
+                    return f.getRegexPatterns()
+                });
+                
+                for (let i = 0; i < textFormatters.length; i++) {
+                    (finalText as string | void) = textFormatters[i].getFormattedText(finalText, {
+                        mentionsTargetElement: MentionsTargetElement.textbubble,
+                    });
+                }   
+                // Apply sanitization with regex preservation to the formatted text
+                finalText = sanitizeToSpanOnly(finalText, regexList);
             }
-                pasteHtml(textRef.current, finalText);
-                const isOverflowing = textRef.current.scrollHeight > 80;
-                setIsTruncated(isOverflowing);
+            
+            // Always use pasteHtml to handle proper rendering of span tags vs plain text
+            pasteHtml(textRef.current, finalText);
+            const isOverflowing = textRef.current.scrollHeight > 80;
+            setIsTruncated(isOverflowing);
         }
-    }, [text, textFormatters, setIsTruncated, pasteHtml,textState]);
+    }, [text, textFormatters, setIsTruncated, pasteHtml, textState]);
+
     return (
         <div className="cometchat">
             <div className={`cometchat-text-bubble  ${isSentByMe ? "cometchat-text-bubble-outgoing" : "cometchat-text-bubble-incoming"}`}>
@@ -83,15 +91,14 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
                         WebkitLineClamp: isExpanded ? 'unset' : 4,
                     }}>{textState}</p>
                     {isTruncated && !isExpanded && (
-                        <span className="cometchat-text-bubble__read-more
-" onClick={() => {
+                        <span className="cometchat-text-bubble__read-more" onClick={() => {
                                 setIsExpanded(true)
-                                fireClickEvent();
+                                fireClickEvent()
+
                             }}>{localize("READ_MORE")}</span>
                     )}
                     {isExpanded && isTruncated && (
-                        <span className="cometchat-text-bubble__read-less
-" onClick={() => {
+                        <span className="cometchat-text-bubble__read-less" onClick={() => {
                                 setIsExpanded(false)
                                 fireClickEvent()
                             }}>{localize("SHOW_LESS")}</span>

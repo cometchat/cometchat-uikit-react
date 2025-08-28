@@ -1,4 +1,5 @@
 import WaveSurfer from "../components/BaseComponents/CometChatAudioBubble/src/wavesurfer";
+import { CometChatTextFormatter } from "../formatters";
 
 interface MediaPlayer {
 video?:HTMLVideoElement | null,
@@ -226,3 +227,130 @@ export const decodeHTML = (input: string): string =>  {
   txt.innerHTML = input;
   return txt.value;
 }
+const getAttr = (tag: string, name: string): string | null => {
+  const re = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i");
+  const m = re.exec(tag);
+  return m ? (m[1] ?? m[2] ?? m[3] ?? "") : null;
+};
+const getDataAttrs = (tag: string): Array<[string, string]> => {
+  const out: Array<[string, string]> = [];
+  const re = /\b(data-[\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(tag))) out.push([m[1], m[2] ?? m[3] ?? m[4] ?? ""]);
+  return out;
+};
+
+// span tags, any other tag, and raw text
+const TOKENS = /<\/?span\b[^>]*>|<[^>]+>|[^<]+/gi;
+
+export const sanitizeHtmlStringToFragment = (html: string, textFormatterArray?: CometChatTextFormatter[]): DocumentFragment => {
+  const frag = document.createDocumentFragment();
+  const stack: HTMLElement[] = [];
+
+  const append = (n: Node) => {
+    (stack[stack.length - 1] ?? frag).appendChild(n);
+  };
+
+  let m: RegExpExecArray | null;
+  while ((m = TOKENS.exec(html))) {
+    const tok = m[0];
+
+    // opening <span ...>
+    if (/^<span\b/i.test(tok)) {
+      const cls = (getAttr(tok, "class") || "").trim();
+      if (cls) {
+        const el = document.createElement("span");
+        el.className = cls;
+
+        const ce = getAttr(tok, "contenteditable");
+        if (ce !== null) el.setAttribute("contenteditable", ce);
+        for (const [k, v] of getDataAttrs(tok)) el.setAttribute(k, v);
+
+        append(el);
+        stack.push(el);
+      } else {
+        // span with NO class → literal
+        append(document.createTextNode(tok));
+      }
+      continue;
+    }
+
+    // closing </span>
+    if (/^<\/span\b/i.test(tok)) {
+      if (stack.length) {
+        stack.pop();
+      } else {
+        // stray close → literal
+        append(document.createTextNode(tok));
+      }
+      continue;
+    }
+
+    // any other tag → literal
+    if (tok.startsWith("<")) {
+      append(document.createTextNode(tok));
+      continue;
+    }
+
+    // plain text
+    append(document.createTextNode(tok));
+  }
+
+  // Optional: register listeners on the spans we actually created
+  if (textFormatterArray?.length) {
+    const walk = (n: Node) => {
+      if (n instanceof HTMLElement && n.tagName.toLowerCase() === "span" && n.classList.length > 0) {
+        for (let i = 0; i < textFormatterArray.length; i++) {
+          textFormatterArray[i].registerEventListeners(n, n.classList);
+        }
+      }
+      n.childNodes.forEach(walk);
+    };
+    walk(frag);
+  }
+
+  return frag;
+};
+
+
+ /**
+  * Sanitizes HTML content to only allow span tags while keeping everything else as plain text
+  * Also removes any script or executable content
+  */
+export const sanitizeToSpanOnly = (htmlString: string, regexPatterns: RegExp[][]): string => {
+  if (!htmlString) return "";
+
+  // Remove script tags and their content
+  let sanitized = htmlString.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+  // Remove javascript: protocol
+  sanitized = sanitized.replace(/\son[a-zA-Z0-9_-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+
+  // Create a set of regex patterns that should be preserved
+  const allPatterns: RegExp[] = regexPatterns.flat();
+
+  // Track positions of regex matches to avoid sanitizing them
+  const preserveRanges: Array<{ start: number, end: number }> = [];
+
+  allPatterns.forEach(pattern => {
+    let match;
+    const flags = pattern.flags ?? '';
+    const globalPattern = new RegExp(pattern.source, flags.includes('g') ? flags : flags + 'g');
+    while ((match = globalPattern.exec(sanitized)) !== null) {
+      preserveRanges.push({
+        start: match.index,
+        end: match.index + match[0].length
+      });
+      // Prevent infinite loops on zero-length matches
+      if (match[0].length === 0) break;
+    }
+  });
+
+  // Sort ranges by start position
+  preserveRanges.sort((a, b) => a.start - b.start);
+
+  // Keep the original string as is - don't escape HTML tags
+  // The pasteHtml function will handle rendering only span tags as HTML
+  // and everything else as plain text
+  return sanitized;
+};

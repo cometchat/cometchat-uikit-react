@@ -89,8 +89,8 @@ const StickersKeyboard = (props: StickersKeyboardProps) => {
       defaultStickers.sort((a, b) => (a.stickerOrder ?? 0) - (b.stickerOrder ?? 0));
       customStickers.sort((a, b) => (a.stickerOrder ?? 0) - (b.stickerOrder ?? 0));
 
-      const stickerList = [...defaultStickers, ...customStickers];
-
+      const stickerList = [...defaultStickers, ...customStickers].flat();
+      
       if (stickerList.length === 0) {
         setState(States.empty);
         return;

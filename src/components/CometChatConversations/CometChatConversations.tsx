@@ -1306,7 +1306,7 @@ export function CometChatConversations(props: ConversationsProps) {
             />
             <div
               className={`cometchat-conversations__subtitle-text`}
-              dangerouslySetInnerHTML={{ __html: preserveEntities(subtitle) }}
+              dangerouslySetInnerHTML={{ __html: subtitle }}
             >
 
             </div>

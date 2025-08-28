@@ -1359,6 +1359,8 @@ function CometChatHome(props: { theme?: string }) {
                     setAppState({ type: "updateSelectedItem", payload: undefined });
                 }
             }
+            setAppState({ type: "updateShowMessagesSearch", payload: false });
+            setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } });
         })
 
         const ccOpenChat = CometChatUIEvents.ccOpenChat.subscribe((item) => {

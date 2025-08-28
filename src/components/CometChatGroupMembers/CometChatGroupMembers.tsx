@@ -235,6 +235,7 @@ export type Action =
     groupMembersManager?: GroupMembersManager | null;
     onEmpty?: () => void;
     disableLoadingState?: boolean;
+    hasScrolled?: boolean
   }
   | { type: "setGroupMemberList"; groupMemberList: CometChat.GroupMember[] }
   | { type: "setSearchText"; searchText: string }
@@ -261,7 +262,7 @@ function stateReducer(state: State, action: Action): State {
   const { type } = action;
   switch (type) {
     case "appendGroupMembers": {
-      const { groupMembers, groupMembersManager, onEmpty, disableLoadingState } = action;
+      const { groupMembers, groupMembersManager, onEmpty, disableLoadingState, hasScrolled } = action;
       if (
         groupMembersManager &&
         [0].includes(groupMembersManager?.getCurrentPage()) &&
@@ -281,7 +282,7 @@ function stateReducer(state: State, action: Action): State {
         const newUniqueMembers = groupMembers.filter(member => !existingIds.has(member.getUid()));
         newState = {
           ...state,
-          groupMemberList: disableLoadingState
+          groupMemberList: disableLoadingState && !hasScrolled
             ? [...newUniqueMembers]
             : [...state.groupMemberList, ...newUniqueMembers],
         };
@@ -466,7 +467,7 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
    * @param fetchId - Fetch Id to decide if the fetched data should be appended to the `groupMemberList` state
    */
   const fetchNextAndAppendGroupMembers = useCallback(
-    async (fetchId: string): Promise<void> => {
+    async (fetchId: string,hasScrolled?: boolean): Promise<void> => {
       const groupMembersManager = groupMembersManagerRef.current;
       if (!groupMembersManager) {
         return;
@@ -485,7 +486,8 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
           groupMembers,
           groupMembersManager,
           onEmpty,
-          disableLoadingState
+          disableLoadingState,
+          hasScrolled
         });
 
         dispatch({ type: "setFetchState", fetchState: States.loaded });
@@ -1069,7 +1071,8 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
           onScrolledToBottom={() =>
             fetchNextAndAppendGroupMembers(
               (fetchNextIdRef.current =
-                "onScrolledToBottom_" + String(Date.now()))
+                "onScrolledToBottom_" + String(Date.now())),
+                true
             )
           }
           state={state.fetchState === States.loaded && state.groupMemberList.length === 0 ? States.empty : state.fetchState}

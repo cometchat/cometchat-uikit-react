@@ -38,7 +38,7 @@ import { CometChatEditPreview } from "../BaseComponents/CometChatEditPreview/Com
 import { CometChatActionSheet } from "../BaseComponents/CometChatActionSheet/CometChatActionSheet";
 import { CometChatEmojiKeyboard } from "../BaseComponents/CometChatEmojiKeyboard/CometChatEmojiKeyboard";
 import { ComposerId } from '../../utils/MessagesDataSource';
-import { decodeHTML, getThemeVariable, isMobileDevice, isSafari, processFileForAudio } from '../../utils/util';
+import { decodeHTML, getThemeVariable, isMobileDevice, isSafari, processFileForAudio, sanitizeHtmlStringToFragment } from '../../utils/util';
 import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
 import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
@@ -1202,6 +1202,7 @@ try {
   const handleSendVoiceMessage = useCallback(
     async (blob: Blob): Promise<void> => {
       onVoiceRecordingBtnClick();
+      voiceRecordingBtnRef.current?.closePopover();
       try {
         const audioFile = new File(
           [blob],
@@ -1216,7 +1217,7 @@ try {
         errorHandler(error,"handleSendVoiceMessage");
       }
     },
-    [handleMediaMessageSend, errorHandler]
+    [handleMediaMessageSend, errorHandler, voiceRecordingBtnRef]
   );
 
   /**
@@ -2206,6 +2207,54 @@ try {
       }
     }, [state.addToMsgInputText, state.text]
   )
+   const renderSanitizedHtml = useCallback(
+    (html: string) => {
+      try {
+        if (sel.current && range.current) {
+          range.current.deleteContents();
+          // crucial: DO NOT use innerHTML. Build a fragment from raw string.
+          const frag = sanitizeHtmlStringToFragment(html, textFormatterArray);
+          range.current.insertNode(frag);
+
+          // restore caret
+          const contentEditable = getCurrentInput();
+          const lastNode = contentEditable?.lastChild || null;
+          if (lastNode) {
+            range.current = range.current.cloneRange();
+            range.current.setStartAfter(lastNode);
+            range.current.collapse(true);
+            sel.current.removeAllRanges();
+            sel.current.addRange(range.current);
+          }
+
+          // downstream state handling (unchanged)
+          if (contentEditable?.innerHTML?.trim() == "<br>") {
+            contentEditable.innerHTML = "";
+          }
+          let textToDispatch =
+            contentEditable?.innerHTML?.trim() == "<br>"
+              ? undefined
+              : decodeHTML(contentEditable?.innerHTML!);
+
+          if (textFormatterArray && textFormatterArray.length) {
+            for (let i = 0; i < textFormatterArray.length; i++) {
+              textToDispatch = textFormatterArray[i].getOriginalText(textToDispatch);
+            }
+          }
+          mySetAddToMsgInputText(textToDispatch!);
+
+        } else if (sel.current && sel.current.type != "Control") {
+          (sel as any).current.createRange().pasteHTML(html);
+        } else {
+          const contentEditable: any = getCurrentInput();
+          contentEditable.textContent = state.addToMsgInputText;
+        }
+      } catch (error) {
+        errorHandler(error, "renderSanitizedHtml");
+      }
+    },
+    [state.addToMsgInputText, state.text, textFormatterArray]
+  );
   /**
    * Creates the message input component, which includes a content 
    * editable div for user input and additional UI elements like 
@@ -2285,6 +2334,7 @@ try {
     setUserMemberListType,
     getComposerId,
     pasteHtmlAtCaret,
+    renderSanitizedHtml,
     parentMessageIdPropRef,
     emptyInputField,
     text: state.text,

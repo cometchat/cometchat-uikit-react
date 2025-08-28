@@ -431,14 +431,7 @@ export abstract class CometChatTextFormatter {
             span.style.color = this.textStyle?.formattedTextColor ?? "green";
             span.style.font = this.textStyle?.formattedTextFont;
             span.textContent = match;
-
-            const zeroWidthSpace = document.createElement("span");
-            zeroWidthSpace.classList.add(
-              this.cssClassMapping[0] + "-margin-space"
-            );
-            zeroWidthSpace.innerHTML = "\u200B";
-
-            span.appendChild(zeroWidthSpace);
+            span.insertAdjacentText('beforeend', "\u200B"); // Zero-width space to ensure proper
             return span.outerHTML + " ";
           }
         );
