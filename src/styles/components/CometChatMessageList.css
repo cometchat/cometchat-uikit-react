@@ -23,6 +23,10 @@
 .cometchat-message-list .cometchat-message-list__footer-smart-replies,.cometchat-message-list__footer-conversation-starter{
     width: 100%;
 }
+/* To remove the border of 1px */
+.cometchat-message-list .cometchat-list__header{
+    border-bottom: 0;
+}
 /* Body of the error state view */
 .cometchat-message-list__error-state-view-body {
     display: flex;

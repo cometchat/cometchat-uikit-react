@@ -209,10 +209,10 @@ function CometChatHome(props: { theme?: string }) {
 
 
     const TabComponent = () => {
-        const onTabClicked = (tabItem: { name: string; icon: string }) => {
+        const onTabClicked = (tabItem: { name: string; icon: string, id: string}) => {
             setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } });
             setNewChat(undefined);
-            setActiveTab(tabItem.name.toLowerCase());
+            setActiveTab(tabItem.id);
         }
 
         return (
@@ -511,7 +511,7 @@ function CometChatHome(props: { theme?: string }) {
                         setShowNewChat(false);
 
                     }} />
-                    <div className='cometchat-new-chat-view__header-title'>New Chat</div>
+                    <div className='cometchat-new-chat-view__header-title'>{localize('NEW_CHAT_TITLE')}</div>
                 </div>
 
                 {/* Tabs for User and Group */}

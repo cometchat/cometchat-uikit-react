@@ -154,11 +154,15 @@ export async function processFileForAudio(file: File): Promise<File> {
   
     // Write PCM data
     let offset = 44;
+    const channelData: Float32Array[] = [];
     for (let channel = 0; channel < numChannels; channel++) {
-      const channelData = audioBuffer.getChannelData(channel);
-      for (let i = 0; i < channelData.length; i++, offset += 2) {
-        const sample = Math.max(-1, Math.min(1, channelData[i])); // Clamp values
+      channelData[channel] = audioBuffer.getChannelData(channel);
+    }
+    for (let i = 0; i < audioBuffer.length; i++) {
+      for (let channel = 0; channel < numChannels; channel++) {
+        const sample = Math.max(-1, Math.min(1, channelData[channel][i])); // Clamp values
         view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true); // Write PCM sample
+        offset += 2;
       }
     }
   

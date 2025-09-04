@@ -326,7 +326,7 @@ const CometChatThreadedMessagePreview = (props: ThreadedMessagePreviewProps) => 
             onErrorCallback(error, 'getBubbleView');
         }
         return null;
-    }, [updatedMessage, messageBubbleView]);
+    }, [updatedMessage, hideReceipts, messageBubbleView]);
 
     const getAdditionalClassName = useCallback(() => {
         try {

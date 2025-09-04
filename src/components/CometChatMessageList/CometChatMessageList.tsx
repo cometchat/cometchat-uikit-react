@@ -3449,7 +3449,11 @@ const CometChatMessageList = (props: MessageListProps) => {
             hideReceipts,
             timePattern
           );
-        } else {
+        }
+        else if (item.getCategory() === CometChatUIKitConstants.MessageCategory.custom) {
+          return ChatConfigurator.getDataSource().getStatusInfoView(item, _alignment, hideReceipts, timePattern)
+        }
+        else{
           return null;
         }
       } catch (error: any) {

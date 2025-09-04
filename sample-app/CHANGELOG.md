@@ -1,3 +1,20 @@
+## [5.0.11] - 04-09-2025
+
+## New
+- None
+
+## Enhancements
+- None
+
+## Fixes
+- Fixed missing **localization** in the sample app for **call log details** and the **create group** components.
+
+## Deprecations
+- None
+
+## Removals
+- None
+
 ## [5.0.10] - 28-08-2025
 
 ## New

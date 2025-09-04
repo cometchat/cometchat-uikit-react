@@ -28,18 +28,18 @@ export const CometChatCallDetails = (props: { selectedItem: any, onBack?: () => 
             setSubtitleText("")
             return;
         }
-        setSubtitleText(user?.getStatus());
+        setSubtitleText(localize(`CALL_LOGS_USER_STATUS_${user?.getStatus().toUpperCase()}`));
         CometChat.addUserListener(
             userListenerId,
             new CometChat.UserListener({
                 onUserOnline: (onlineUser: CometChat.User) => {
                     if (user?.getUid() === onlineUser.getUid()) {
-                        setSubtitleText(onlineUser?.getStatus())
+                        setSubtitleText(localize("CALL_LOGS_USER_STATUS_ONLINE"));
                     }
                 },
                 onUserOffline: (offlineUser: CometChat.User) => {
                     if (user?.getUid() === offlineUser?.getUid()) {
-                        setSubtitleText(offlineUser?.getStatus())
+                        setSubtitleText(localize("CALL_LOGS_USER_STATUS_OFFLINE"));
                     }
                 },
             })
@@ -70,6 +70,27 @@ export const CometChatCallDetails = (props: { selectedItem: any, onBack?: () => 
     </div>
     }
 
+    const getLoadingView = () => {
+        return (
+            <div className='cometchat-call-log-details__header__shimmer__shimmer'>
+              {[...Array(1)].map((_, index) => (
+                <div key={index} className='cometchat-call-log-details__header__shimmer-item'>
+                  <div className='cometchat-call-log-details__header__shimmer-item-avatar'></div>
+                  <div className='cometchat-call-log-details__header__shimmer-item-body'>
+                    <div className='cometchat-call-log-details__header__shimmer-item-body-title-wrapper'>
+                      <div className='cometchat-call-log-details__header__shimmer-item-body-title'></div>
+                      <div className='cometchat-call-log-details__shimmer-item-body-subtitle'></div>
+                    </div>
+
+                    <div className='cometchat-call-log-details__header__shimmer-item-body-tail'></div>
+                    <div className='cometchat-call-log-details__header__shimmer-item-body-tail'></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+      };
+
     return (
         <div className="cometchat-call-log-details">
             <div className="cometchat-call-log-details__header">
@@ -77,9 +98,7 @@ export const CometChatCallDetails = (props: { selectedItem: any, onBack?: () => 
                 {localize("CALL_DETAILS")}
             </div>
             <div className="cometchat-call-log-details__call-log-item">
-            <CometChatListItem avatarName={user?.getName()}
-                        avatarURL={user?.getAvatar()}
-                        title={user?.getName() || ""} subtitleView={getSubtitleView()}  trailingView={getTrailingView()}/>
+            {user? <CometChatListItem avatarName={user?.getName()} avatarURL={user?.getAvatar()} title={user?.getName() || ""} subtitleView={getSubtitleView()}  trailingView={getTrailingView()}/> : getLoadingView()}
             </div>
             <CometChatCallDetailsInfo call={selectedItem} />
             <div className="cometchat-call-log-details__tabs">
