@@ -245,6 +245,10 @@ type State = {
 };
 
 export type Action =
+  {
+    type: "addConversationOfTheGroupAtTheTop";
+    conversation: CometChat.Conversation;
+  }
   | {
     type: "appendConversations";
     conversations: CometChat.Conversation[];
@@ -524,6 +528,14 @@ function stateReducer(state: State, action: Action): State {
         >(typingIndicatorMap);
         newTypingIndicatorMap.set(id, typingIndicator);
         newState = { ...state, typingIndicatorMap: newTypingIndicatorMap };
+      }
+      break;
+    }
+    case "addConversationOfTheGroupAtTheTop": {
+      const { conversation } = action;
+      const { conversationList } = state;
+      if(conversation){
+        newState = { ...state, conversationList: [conversation, ...conversationList] };
       }
       break;
     }

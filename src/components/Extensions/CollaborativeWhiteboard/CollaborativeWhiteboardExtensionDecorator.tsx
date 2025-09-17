@@ -205,7 +205,8 @@ export class CollaborativeWhiteBoardExtensionDecorator extends DataSourceDecorat
    * @param {string} whiteboardURL - The URL of the whiteboard document.
    */
   launchCollaborativeWhiteboardDocument(whiteboardURL: string) {
-    window.open(whiteboardURL, "", "fullscreen=yes, scrollbars=auto");
+    const username = CometChatUIKitLoginListener.getLoggedInUser()?.getName();
+    window.open(`${whiteboardURL}&username=${username}`, "", "fullscreen=yes, scrollbars=auto");
   }
 
   /**

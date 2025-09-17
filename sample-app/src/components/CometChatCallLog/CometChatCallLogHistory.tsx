@@ -251,6 +251,26 @@ export const CometChatCallDetailsHistory = (props: { call: any }) => {
         }
     }
 
+    const getLoadingView = () => {
+        return (
+          <div className='cometchat-call-log-history__shimmer'>
+            {[...Array(10)].map((_, index) => (
+              <div key={index} className='cometchat-call-log-history__shimmer-item'>
+                <div className='cometchat-call-log-history__shimmer-item-avatar'></div>
+                <div className='cometchat-call-log-history__shimmer-item-body'>
+                  <div className='cometchat-call-log-history__shimmer-item-body-title-wrapper'>
+                    <div className='cometchat-call-log-history__shimmer-item-body-title'></div>
+                    <div className='cometchat-call-log-history__shimmer-item-body-subtitle'></div>
+                  </div>
+
+                  <div className='cometchat-call-log-history__shimmer-item-body-tail'></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+    };
+
     const getListItem = useMemo(() => {
         return function (item: any, index: number): any {
             return (
@@ -268,7 +288,7 @@ export const CometChatCallDetailsHistory = (props: { call: any }) => {
 
     return (
         <div className="cometchat-call-log-history">
-            <CometChatList
+            {callListState === States.loading ? getLoadingView() : <CometChatList
                 hideSearch={true}
                 list={callList}
                 onScrolledToBottom={getCallList}
@@ -276,7 +296,7 @@ export const CometChatCallDetailsHistory = (props: { call: any }) => {
                 itemView={getListItem}
                 state={callListState}
                 showSectionHeader={false}
-            />
+            />}
         </div>
     )
 }

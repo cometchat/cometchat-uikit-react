@@ -930,7 +930,7 @@ export class MessagesDataSource implements DataSource {
         const newScope = message["data"]["extras"]["scope"]["new"];
         actionMessage = `${byString} ${localize(
           "MADE"
-        )} ${forString} ${newScope}`;
+        )} ${forString} ${localize(newScope.toUpperCase())}`;
         break;
       }
       default:

@@ -11,6 +11,7 @@ import { CometChatGroupEvents } from '../../events/CometChatGroupEvents';
 import { CometChatUserEvents } from '../../events/CometChatUserEvents';
 import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
 import { CometChatCallEvents } from '../../events/CometChatCallEvents';
+import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
 
 type Args = {
   conversationsRequestBuilder: CometChat.ConversationsRequestBuilder | null,
@@ -185,6 +186,22 @@ export function useCometChatConversations(args: Args) {
   }
   }, [dispatch])
 
+  const handleGroupCreated = async (group: CometChat.Group) => {
+    try {
+        const conversation = await CometChat.getConversation(
+            group.getGuid(),
+            CometChatUIKitConstants.MessageReceiverType.group
+        );
+        if (conversation) {
+            dispatch({
+              type: "addConversationOfTheGroupAtTheTop",
+              conversation: conversation 
+            });
+          }
+    } catch (error) {
+        console.error("Failed to fetch conversation:", error);
+    }
+};
 
   useEffect(
     /**
@@ -192,7 +209,10 @@ export function useCometChatConversations(args: Args) {
      */
     () => {
       try {
-        
+      
+        const groupCreatedSub = CometChatGroupEvents.ccGroupCreated.subscribe(group => {
+          handleGroupCreated(group);
+      });
       const groupMemberScopeChangedSub = CometChatGroupEvents.ccGroupMemberScopeChanged.subscribe(item => {
         dispatch({ type: "updateConversationLastMessageAndPlaceAtTheTop", message: item.message });
       });
@@ -264,6 +284,7 @@ export function useCometChatConversations(args: Args) {
         dispatch({ type: "updateConversationLastMessageAndPlaceAtTheTop", message });
       });
       return () => {
+        groupCreatedSub.unsubscribe();
         groupMemberScopeChangedSub.unsubscribe();
         groupMemberAddedSub.unsubscribe();
         groupMemberKickedSub.unsubscribe();

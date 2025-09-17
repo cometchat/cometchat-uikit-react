@@ -350,9 +350,9 @@ export function CometChatGroups(props: GroupsProps) {
     const onSearch = useCallback((searchText: string): void => {
         try {
             const trimmedText = searchText.trim();
-            if (searchText.length === 0 || (trimmedText.length === searchText.length && trimmedText.length > 0)) {
+            if (searchText.length === 0 || trimmedText.length > 0) {
                 groupsSearchText.current = ""
-                dispatch({ type: "setSearchText", searchText });
+                dispatch({ type: "setSearchText", searchText: trimmedText });
             }
         } catch (error) {
             errorHandler(error, 'onSearch');

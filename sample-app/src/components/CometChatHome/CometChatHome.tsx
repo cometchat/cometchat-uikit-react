@@ -1084,6 +1084,8 @@ function CometChatHome(props: { theme?: string }) {
                                     }
                                     setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } })
                                     setSelectedItem(undefined);
+                                    setAppState({ type: "updateSelectedItem", payload: undefined });
+                                    setAppState({ type: "updateSelectedItemGroup", payload: undefined });
                                     setShowLeaveGroup(!showLeaveGroup);
                                     toastTextRef.current = localize("GROUP_LEFT");
                                     setShowToast(true);
@@ -1146,7 +1148,7 @@ function CometChatHome(props: { theme?: string }) {
                                 name={group?.getName()}
                             />
                         </div>
-                        <div>
+                        <div className="side-component-content__title__wrapper">
                             <div className="side-component-content__title">
                                 {group?.getName()}
                             </div>

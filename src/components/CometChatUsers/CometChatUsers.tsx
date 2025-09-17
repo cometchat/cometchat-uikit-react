@@ -445,12 +445,11 @@ export function CometChatUsers(props: UsersProps) {
         const trimmedText = newSearchText.trim();
         if (
           newSearchText.length === 0 ||
-          (trimmedText.length === newSearchText.length && trimmedText.length > 0)
+          (trimmedText.length > 0)
         ) {
           usersSearchText.current = "";
-          dispatch({ type: "setSearchText", searchText: newSearchText });
+          dispatch({ type: "setSearchText", searchText: trimmedText });
         }
-        // dispatch({type: "setSearchText", searchText: newSearchText});
       } catch (error) {
         errorHandler(error, 'onSearch');
       }

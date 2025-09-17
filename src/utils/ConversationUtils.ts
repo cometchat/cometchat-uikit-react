@@ -224,7 +224,7 @@ export class ConversationUtils {
         break;
       case CometChatUIKitConstants.groupMemberAction.SCOPE_CHANGE: {
         const newScope = message["data"]["extras"]["scope"]["new"];
-        actionMessage = `${byString} ${localize("MADE")} ${forString} ${newScope}`;
+        actionMessage = `${byString} ${localize("MADE")} ${forString} ${localize(newScope.toUpperCase())}`;
         break;
       }
       default:
