@@ -15,7 +15,7 @@ import { CometChatSendButtonView } from '../BaseComponents/CometChatSendButtonVi
 import { CometChatAIAssistantTools } from '../../modals/CometChatAIAssistantTools';
 import { CometChatAIAssistantChatHistory } from '../CometChatAIAssistantChatHistory/CometChatAIAssistantChatHistory';
 import { CometChatMessageEvents, IMessages } from '../../events/CometChatMessageEvents';
-import { MessageStatus } from '../../Enums/Enums';
+import { MessageStatus, PreviewMessageMode } from '../../Enums/Enums';
 import { getLocalizedString } from '../../resources/CometChatLocalize/cometchat-localize';
 
 interface MessageComposerViewProps {
@@ -24,6 +24,7 @@ interface MessageComposerViewProps {
     startNewChat: boolean;
     onError?: (e: CometChat.CometChatException) => void;
     setParentMessageId: (id: number | null) => void;
+    onSendButtonClick?: (message: CometChat.BaseMessage,previewMessageMode?: PreviewMessageMode) => void;
 }
 
 interface AIAssistantChatProps {
@@ -32,6 +33,7 @@ interface AIAssistantChatProps {
     user: CometChat.User;
     onBackButtonClicked?: () => void;
     onCloseButtonClicked?: () => void;
+    onSendButtonClick?: (message: CometChat.BaseMessage,previewMessageMode?: PreviewMessageMode) => void;
     showBackButton?: boolean;
     showCloseButton?: boolean;
     headerItemView?: React.JSX.Element;
@@ -56,7 +58,7 @@ interface AIAssistantChatProps {
 /**
  * MessageComposerView component for AI Assistant Chat
  */
-const MessageComposerView = React.memo(({ user, parentMessageId, startNewChat, onError, setParentMessageId }: MessageComposerViewProps) => {
+const MessageComposerView = React.memo(({ user, parentMessageId, startNewChat, onError, setParentMessageId,onSendButtonClick }: MessageComposerViewProps) => {
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
     const [isStreaming, setIsStreaming] = useState(false);
     useEffect(() => {
@@ -114,6 +116,10 @@ const MessageComposerView = React.memo(({ user, parentMessageId, startNewChat, o
                     setIsButtonDisabled(true);
                 }
             }}
+            onSendButtonClick={onSendButtonClick ? (message: CometChat.BaseMessage) => {
+                setIsButtonDisabled(true);
+                onSendButtonClick(message);
+            } : undefined}
             user={user}
             onError={onError}
         />
@@ -132,6 +138,7 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
         user,
         onBackButtonClicked,
         onCloseButtonClicked,
+        onSendButtonClick,
         showBackButton = false,
         showCloseButton = false,
         headerItemView,
@@ -306,6 +313,7 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
                         startNewChat={startNewChat}
                         onError={onError}
                         setParentMessageId={setParentMessageId}
+                        onSendButtonClick={onSendButtonClick}
                     />
 
                 </div>
