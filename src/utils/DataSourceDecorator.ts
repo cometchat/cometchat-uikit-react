@@ -109,6 +109,39 @@ export abstract class DataSourceDecorator implements DataSource {
       alignment
     );
   }
+  getReplyView(
+    message: CometChat.BaseMessage,
+    alignment: MessageBubbleAlignment,
+    onReplyPreviewClick?: (messageToReply: CometChat.BaseMessage) => void,
+    textFormatters?: CometChatTextFormatter[]
+  ) {
+    return (this.dataSource ?? new MessagesDataSource()).getReplyView(
+      message,
+      alignment,
+      onReplyPreviewClick,
+      textFormatters
+    );
+  }
+
+  getMessagePreviewSubtitle(
+    message: CometChat.BaseMessage,
+    textFormatters?: CometChatTextFormatter[],
+    _alignment?: MessageBubbleAlignment
+  ): JSX.Element | null{
+    return (this.dataSource ?? new MessagesDataSource()).getMessagePreviewSubtitle(
+      message,
+      textFormatters,
+      _alignment
+    );
+  }
+
+  getMessagePreviewTitle(
+    message: CometChat.BaseMessage,
+    _alignment?: MessageBubbleAlignment
+  ): JSX.Element | null{
+    return (this.dataSource ?? new MessagesDataSource()).getMessagePreviewTitle(message, _alignment);
+  }
+
   getTextMessageContentView(
     message: CometChat.TextMessage,
     alignment: MessageBubbleAlignment,
@@ -278,12 +311,16 @@ export abstract class DataSourceDecorator implements DataSource {
   getStickerButton(
     id: ComposerId,
     user?: CometChat.User,
-    group?: CometChat.Group
+    group?: CometChat.Group,
+    messageToReply?: CometChat.BaseMessage | null,
+    closeReplyPreview?: () => void,
   ): JSX.Element | undefined {
     return (this.dataSource ?? new MessagesDataSource()).getStickerButton(
       id,
       user,
-      group
+      group,
+      messageToReply,
+      closeReplyPreview
     );
   }
   getId(): string {

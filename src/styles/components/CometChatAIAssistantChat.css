@@ -352,6 +352,7 @@ padding-bottom: var(--cometchat-padding-2);
 .cometchat-ai-assistant-chat .cometchat-text-bubble.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text {
     -webkit-line-clamp: initial !important;
     line-clamp: initial !important;
+    line-height: 1.75;
 }
 .cometchat-ai-assistant-chat .cometchat-text-bubble.cometchat-text-bubble-outgoing .cometchat-text-bubble__read-more,
 .cometchat-ai-assistant-chat .cometchat-text-bubble.cometchat-text-bubble-outgoing .cometchat-text-bubble__read-less {

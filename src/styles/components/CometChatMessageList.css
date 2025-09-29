@@ -684,7 +684,6 @@
  * Setting transparent background and gap for sticker message bubble
  */
 .cometchat-message-bubble__body-wrapper .cometchat-message-bubble__sticker-message {
-    background-color: transparent;
     gap: var(--cometchat-padding-2, 8px);
 }
 
@@ -758,6 +757,10 @@
 
 .cometchat-message-list__bubble-highlight {
     animation: backgroundFade 3s ease-out forwards;
+}
+
+.cometchat-message-list__bubble-highlight-longer {
+    animation: backgroundFade 5s ease-out forwards;
 }
 
 .cometchat-message-list-hide-scrollbar .cometchat-reaction-list__list::-webkit-scrollbar,

@@ -50,6 +50,12 @@ export abstract class DataSource {
     message: CometChat.BaseMessage,
     alignment: MessageBubbleAlignment
   ): Element | JSX.Element | null;
+  abstract getReplyView(
+    message: CometChat.BaseMessage,
+    alignment?: MessageBubbleAlignment,
+    onReplyPreviewClick?: (messageToReply: CometChat.BaseMessage) => void,
+    textFormatters?: CometChatTextFormatter[]
+  ): Element | JSX.Element | null;
   abstract getStatusInfoView(
     message: CometChat.BaseMessage,
     alignment: MessageBubbleAlignment,
@@ -82,6 +88,15 @@ export abstract class DataSource {
     alignment: MessageBubbleAlignment,
 
   ): Element | JSX.Element;
+  abstract getMessagePreviewSubtitle(
+    message: CometChat.BaseMessage,
+    textFormatters?: CometChatTextFormatter[],
+    _alignment?: MessageBubbleAlignment
+  ): JSX.Element | null;
+  abstract getMessagePreviewTitle(
+    message: CometChat.BaseMessage,
+    _alignment?: MessageBubbleAlignment
+  ): JSX.Element | null;
   abstract getAgentAssistantMessageTemplate(
     additionalConfigurations?: Object | undefined
   ): CometChatMessageTemplate;
@@ -140,7 +155,9 @@ export abstract class DataSource {
   abstract getStickerButton(
     id: ComposerId,
     user?: CometChat.User,
-    group?: CometChat.Group
+    group?: CometChat.Group,
+    messageToReply?: CometChat.BaseMessage | null,
+    closeReplyPreview?: () => void,
   ): JSX.Element | undefined;
   abstract getId(): string;
   abstract getDeleteMessageBubble(

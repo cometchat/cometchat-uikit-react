@@ -158,7 +158,7 @@ export const useCometChatTextBubble = (props: { textFormatters: Array<CometChatT
 
                     if (hasClassName) {
                         const spanElement = document.createElement('span');
-                        const allowedAttributes = ['class', 'style', 'data-uid', 'data-entity-type', 'data-entity-id'];
+                        const allowedAttributes = ['class', 'style', 'data-uid', 'data-capture-group', 'data-entity-type', 'data-entity-id'];
                         Object.keys(node.attributes).forEach(attrName => {
                             const attrValue = node.attributes[attrName];
                             if (allowedAttributes.includes(attrName.toLowerCase()) &&

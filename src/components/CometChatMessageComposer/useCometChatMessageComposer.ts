@@ -60,7 +60,7 @@ type Args = {
   getCurrentWindow: () => Window;
   getCurrentDocument: () => Document;
   onTextChange:((text: string) => void) | undefined;
-
+  messageToReplyRef: React.MutableRefObject<CometChat.BaseMessage | null>;
 
 };
 
@@ -97,7 +97,7 @@ export function useCometChatMessageComposer(args: Args) {
     setUserMemberListType,
     getComposerId,
     isPartOfCurrentChatForUIEvent,
-    parentMessageIdPropRef, getCurrentInput,textMessageToEdit,getCurrentWindow,getCurrentDocument,onTextChange } = args;
+    parentMessageIdPropRef, getCurrentInput,textMessageToEdit,getCurrentWindow,getCurrentDocument,onTextChange,messageToReplyRef } = args;
   const isPreviewVisible = useRef<boolean>(false);
   const autoFocusCompleted = useRef<boolean>(false);
 
@@ -149,6 +149,10 @@ export function useCometChatMessageComposer(args: Args) {
                 ) {
                   isPreviewVisible.current = true;
                   dispatch({
+                    type: "setMessageToReply",
+                    messageToReply: null,
+                  });
+                  dispatch({
                     type: "setTextMessageToEdit",
                     textMessageToEdit: object.message,
                   });
@@ -199,7 +203,6 @@ export function useCometChatMessageComposer(args: Args) {
             }
           }
         );
-
         const subComposeMessage = CometChatUIEvents.ccComposeMessage.subscribe(
           (text: string) => {
             dispatch({ type: "setText", text: "" });
@@ -250,6 +253,53 @@ export function useCometChatMessageComposer(args: Args) {
       textFormatterArray
     ]
   );
+
+  useEffect(() => {
+    const subMessageToReply = CometChatMessageEvents.ccReplyToMessage.subscribe(
+      (object: IMessages) => {
+        let parentId = object?.message?.getParentMessageId();
+        if ((parentMessageIdPropRef.current && parentId
+          && parentId === parentMessageIdPropRef.current)
+          || (!parentMessageIdPropRef.current && !parentId)) {
+            if (
+              object.status === MessageStatus.inprogress &&
+              object.message
+            ) {
+              dispatch({
+                type: "setTextMessageToEdit",
+                textMessageToEdit: null,
+              });
+              dispatch({
+                type: "setMessageToReply",
+                messageToReply: object.message,
+              });
+              emptyInputField()
+              if (pasteHtmlAtCaret) {
+                const sel = getCurrentWindow()?.getSelection();
+                setSelection(sel);
+                pasteHtmlAtCaret('')
+              }
+            }
+            if ((object.status === MessageStatus.success &&
+              object.message) || object.status === MessageStatus.cancelled) {
+              dispatch({
+                type: "setMessageToReply",
+                messageToReply: null,
+              });
+              messageToReplyRef.current = null;
+              emptyInputField();
+              isPreviewVisible.current = false;
+            }
+            else {
+              isPreviewVisible.current = true;
+            }
+          }
+        }
+    );
+    return () => {
+      subMessageToReply.unsubscribe();
+    }
+  },[])
   /**
   * Update text input when the conversation changes, preserving initial text from props
   */
@@ -521,3 +571,4 @@ export function useCometChatMessageComposer(args: Args) {
     }
   }, [user, group, disableMentions]);
 }
+

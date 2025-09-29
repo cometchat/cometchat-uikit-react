@@ -129,7 +129,7 @@ export { CometChatDropDown } from './components/BaseComponents/CometChatDropDown
 export { CometChatDocumentBubble } from './components/BaseComponents/CometChatDocumentBubble/CometChatDocumentBubble';
 export { CometChatDate } from './components/BaseComponents/CometChatDate/CometChatDate';
 export { CometChatDeleteBubble } from './components/BaseComponents/CometChatDeleteBubble/CometChatDeleteBubble';
-
+export {CometChatMessagePreview} from './components/BaseComponents/CometChatMessagePreview/CometChatMessagePreview'
 export { CometChatReactionInfo } from './components/Reactions/CometChatReactionInfo/CometChatReactionInfo';
 export { CometChatReactionList } from './components/Reactions/CometChatReactionList/CometChatReactionList';
 export { CometChatReactions } from './components/Reactions/CometChatReactions/CometChatReactions';

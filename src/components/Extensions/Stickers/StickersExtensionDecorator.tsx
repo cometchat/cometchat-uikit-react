@@ -85,9 +85,11 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
   override getStickerButton(
     id: ComposerId,
     user?: CometChat.User,
-    group?: CometChat.Group
+    group?: CometChat.Group,
+    messageToReply?: CometChat.BaseMessage | null,
+    closeReplyPreview?: () => void,
   ) {
-    return this.getStickerAuxiliaryButton(id, user, group);
+    return this.getStickerAuxiliaryButton(id, user, group, messageToReply, closeReplyPreview);
   }
 
   /**
@@ -101,7 +103,9 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
   getStickerAuxiliaryButton = (
     id: ComposerId,
     user?: CometChat.User,
-    group?: CometChat.Group
+    group?: CometChat.Group,
+    messageToReply?: CometChat.BaseMessage | null,
+    onReplyPreviewClose?: () => void
   ) => {
     const stickerKeyboardRef = React.createRef<{
       openPopover: () => void;
@@ -147,7 +151,7 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
           debounceOnHover={0}
           content={
             <StickersKeyboard
-              ccStickerClicked={(e: any) => this.sendSticker(e, closeSticker,id)}
+              ccStickerClicked={(e: any) => this.sendSticker(e, closeSticker,id, messageToReply, onReplyPreviewClose)}
             />
           }
         >
@@ -170,9 +174,12 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
    * Sends a sticker message.
    * @param event - The event object containing sticker details.
    */
-  sendSticker(event: any, closeSticker: Function,id:ComposerId) {
+  sendSticker(event: any, closeSticker: Function,id:ComposerId, messageToReply?: CometChat.BaseMessage | null, onReplyPreviewClose?: () => void) {
     try {
       closeSticker();
+      if(onReplyPreviewClose){
+        onReplyPreviewClose();
+      }
       if(!id.group && !id.user) return;
       let details = event?.detail;
       let sticker = {
@@ -203,7 +210,7 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
       if (parentMessageId) {
         customMessage.setParentMessageId(parentMessageId);
       }
-
+      
       customMessage.setMetadata({ incrementUnreadCount: true });
       customMessage.shouldUpdateConversation(true);
       (customMessage as any).setSentAt(
@@ -217,12 +224,22 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
         status: MessageStatus.inprogress,
       });
 
+      if(messageToReply){
+        customMessage.setQuotedMessage(messageToReply);
+        customMessage.setQuotedMessageId(messageToReply.getId());
+      }
       CometChat.sendCustomMessage(customMessage).then(
         (message) => {
           CometChatMessageEvents.ccMessageSent.next({
             message: message,
             status: MessageStatus.success,
           });
+          if(messageToReply){
+            CometChatMessageEvents.ccReplyToMessage.next({
+              message: messageToReply,
+              status:MessageStatus.success
+            });     
+          }
         },
         (error) => {
           customMessage.setMetadata({ error: true });
@@ -297,6 +314,15 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
       type: StickersConstants.sticker,
       category: CometChatUIKitConstants.MessageCategory.custom,
       statusInfoView: super.getStatusInfoView,
+      replyView: (
+        message: CometChat.BaseMessage,
+        _alignment?: MessageBubbleAlignment,
+        onReplyViewClicked?:(messageToReply: CometChat.BaseMessage) => void
+      ) => {
+        let documentMessage: CometChat.CustomMessage =
+          message as CometChat.CustomMessage;
+        return ChatConfigurator.getDataSource().getReplyView(documentMessage, _alignment, onReplyViewClicked);
+      },
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment

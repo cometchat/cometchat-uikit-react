@@ -291,6 +291,7 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
                         errorView={errorView}
                         onError={onError}
                         isAgentChat={true}
+                        hideReplyOption={true}
                         hideCopyMessageOption={true}
                         hideDateSeparator={true}
                         hideDeleteMessageOption={true}

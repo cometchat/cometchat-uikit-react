@@ -12,8 +12,14 @@
   box-sizing: border-box;
   max-width: 100%;
   overflow: hidden;
+  line-height: 1.75;
+  margin: 0;
+  margin-bottom: var(--cometchat-margin-2);
 }
 
+.cometchat-ai-assistant-message-bubble {
+  margin-top: calc(var(--cometchat-margin-1) * -1)
+}
 
 .cometchat-ai-assistant-message-bubble>p:not([class]) {
   text-align: left;
@@ -32,6 +38,10 @@
   text-align: left !important;
   color: var(--cometchat-text-color-primary);
 
+}
+
+.cometchat-ai-assistant-message-bubble li *{
+  vertical-align: top;
 }
 
 .cometchat-ai-assistant-message-bubble ol:not([class]),.cometchat-ai-assistant-message-bubble ul:not([class]) {
@@ -147,8 +157,7 @@
 }
 .cometchat-ai-assistant-message-bubble li{
   overflow: visible !important;
-  line-height: 20px;
-  padding: 0px 0px 6px 0px;
+  padding: 0;
 }
 .cometchat-ai-assistant-message-bubble > ol:first-child > li:first-child,
 .cometchat-ai-assistant-message-bubble > ul:first-child > li:first-child
@@ -162,11 +171,15 @@
 .cometchat-ai-assistant-message-bubble h4,
 .cometchat-ai-assistant-message-bubble h5,
 .cometchat-ai-assistant-message-bubble h6 {
-  line-height: 20px;
   font-size: initial;
   padding: var(--cometchat-padding-2) 0px;
   margin: 0;
 }
+
+.cometchat-ai-assistant-message-bubble > *:first-child *:first-child:not(:has(*)) ~ img{
+  margin-top: var(--cometchat-margin-1);
+}
+
 .cometchat-ai-assistant-message-bubble > h1:first-child,
 .cometchat-ai-assistant-message-bubble > h2:first-child,
 .cometchat-ai-assistant-message-bubble > h3:first-child,
@@ -179,10 +192,23 @@
   max-height: 300px;
   width: fit-content;
   border-radius: var(--cometchat-radius-2);
+  margin-block: var(--cometchat-margin-2) 0;
 }
-.cometchat-ai-assistant-message-bubble p{
-  line-height: 20px;
-  padding: var(--cometchat-padding-2) 0px;
+
+.cometchat-ai-assistant-message-bubble__image-intersection-start, .cometchat-ai-assistant-message-bubble__image-intersection-end{
+  display: none;
+}
+
+.cometchat-ai-assistant-message-bubble .cometchat-ai-assistant-message-bubble__image-intersection-start:not(.cometchat-ai-assistant-message-bubble__image-intersection-end ~ .cometchat-ai-assistant-message-bubble__image-intersection-start) {
+  display: block;
+  margin-top: -0.5em;
+}
+.cometchat-ai-assistant-message-bubble .cometchat-ai-assistant-message-bubble__image-intersection-end:not(:has(+ .cometchat-ai-assistant-message-bubble__image-intersection-start)) {
+  display: block;
+}
+
+.cometchat-ai-assistant-message-bubble .cometchat-ai-assistant-message-bubble__image-intersection-end:last-child {
+  margin-bottom: 0;
 }
 
 .cometchat-ai-assistant-message-bubble > ul:first-child li:first-child > p:first-child{
