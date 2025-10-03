@@ -101,6 +101,8 @@ const CreatePoll: React.FC<CreatePollProps> = ({
 
   const [type, setType] = useState<string>('');
 
+  const lastInputOptionRef = React.useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const initializeOptions = () => {
       setInputOptionItems(Array.from({ length: defaultAnswers }, () => ({ key: '', value: '' })));
@@ -140,6 +142,10 @@ useEffect(()=> {
    */
   const addPollOption = () => {
     setInputOptionItems((prevItems) => [...prevItems, { key: '', value: '' }]);
+    requestAnimationFrame(() => {
+      lastInputOptionRef.current?.scrollIntoView();
+      lastInputOptionRef.current?.focus();
+    });
   };
 
   /**
@@ -240,7 +246,7 @@ useEffect(()=> {
                         prevItems.map((item, index) => (index === i ? { ...item, value: e.target.value } : item))
                       )
                     }
-
+                    ref={i === inputOptionItems.length - 1 ? lastInputOptionRef : null}
                   />
                   {i > 1 &&
                     <button

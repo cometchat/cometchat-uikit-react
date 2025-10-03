@@ -39,7 +39,7 @@ import { CometChatCallEvents } from "../../events/CometChatCallEvents";
 import { CometChatMessageEvents, IMessages } from "../../events/CometChatMessageEvents";
 import { CometChatGroupEvents, IGroupLeft, IGroupMemberAdded, IGroupMemberKickedBanned, IGroupMemberScopeChanged } from "../../events/CometChatGroupEvents";
 import CometChatToast from "../BaseComponents/CometChatToast/CometChatToast";
-import { getThemeMode } from "../../utils/util";
+import { fireClickEvent, getThemeMode } from "../../utils/util";
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
 import { CometChatConversationStarter } from "../BaseComponents/CometChatConversationStarter/CometChatConversationStarter";
 import { CometChatSmartReplies } from "../BaseComponents/CometChatSmartReplies/CometChatSmartReplies";
@@ -411,12 +411,13 @@ const CometChatMessageList = (props: MessageListProps) => {
 
   const [showHeaderPanelView, setShowHeaderPanelView] = useState<boolean>(false);
   const [dateHeader, setDateHeader] = useState<number>(0);
-
+  const [stickyDateHeaderValue, setStickyDateHeaderValue] = useState<number>(0)
 
   /**
   * All the useRef useCometChatMessageList are declaired here. These do not trigger a rerender. They are used to get the updated values wherever required in the code.
    */
   const stickyDateHeaderRef = useRef<number>(0);
+  const uniqueIdRef = useRef<string | null>("");
   const loggedInUserRef = useRef<CometChat.User | null>(null);
   const isFirstReloadRef = useRef<boolean>(false);
   const elementRefs = useRef<any>({});
@@ -1081,6 +1082,7 @@ const CometChatMessageList = (props: MessageListProps) => {
               if (closePopover) {
                 closePopover()
               }
+              fireClickEvent();
               reactToMessages(args, messageObject);
             }}
           />
@@ -2432,8 +2434,10 @@ const CometChatMessageList = (props: MessageListProps) => {
           updateReplyCount(message);
           updateUnreadReplyCount(message);
         } else {
+          const shouldMarkDelivered = ((message.getReceiver() instanceof CometChat.Group) && group?.getGuid() === (message.getReceiver() as CometChat.Group).getGuid())
+          || (message?.getSender().getUid() === user?.getUid());
           if (
-            message.getSender().getUid() !== loggedInUserRef.current?.getUid()) {
+            message.getSender().getUid() !== loggedInUserRef.current?.getUid() && shouldMarkDelivered) {
             CometChat.markAsDelivered(message)
           }
         }
@@ -3115,15 +3119,36 @@ const CometChatMessageList = (props: MessageListProps) => {
     showFooterPanelView,
   ]);
 
+  const createUniqueUUID = useMemo(() => {
+    const parentMessageId = parentMessageIdRef.current ? parentMessageIdRef.current + "_" : "";
+    const uid = user?.getUid() ? user.getUid() + "_" : "";
+    const guid = group?.getGuid() ? group.getGuid() + "_" : "";
+    const uuid = uid + guid + parentMessageId + CometChatUIKitUtility.ID();
+    const currentId = uid + guid + parentMessageId;
+    if (!uniqueIdRef.current || !uniqueIdRef.current.includes(currentId)){
+      uniqueIdRef.current = "cometchat-message-list-" + uuid;
+    }
+    return uniqueIdRef.current;
+  }, [user, group, parentMessageIdRef]);
+
+  function getCurrentMessageList() {
+    if (!uniqueIdRef.current) {
+      return null;
+    }
+    return document.querySelector(`.${uniqueIdRef.current} .cometchat-list__body`)
+  }
+
   /**
    * Fuction to handle realtime date seperator update.
    *
    * @type {void}
    */
+
   const handleScroll = useCallback(() => {
-    try {
-      const messageListBody = document.querySelector(".cometchat-message-list .cometchat-list__body");
+    try{
+      const messageListBody = getCurrentMessageList()
       if (!messageListBody) return;
+
       let firstVisibleMessageId: any = null;
       Object.keys(elementRefs.current).some((messageId) => {
         const element = elementRefs.current[messageId];
@@ -3131,7 +3156,9 @@ const CometChatMessageList = (props: MessageListProps) => {
           const rect = element.current.getBoundingClientRect();
           const containerRect = messageListBody.getBoundingClientRect();
           const elementHeight = rect.bottom - rect.top;
-          const visibleHeight = Math.min(rect.bottom, containerRect.bottom) - Math.max(rect.top, containerRect.top);
+          const visibleHeight =
+            Math.min(rect.bottom, containerRect.bottom) -
+            Math.max(rect.top, containerRect.top);
           if (visibleHeight / elementHeight >= 0.1) {
             firstVisibleMessageId = messageId;
             return true;
@@ -3139,6 +3166,7 @@ const CometChatMessageList = (props: MessageListProps) => {
         }
         return false;
       });
+
       if (firstVisibleMessageId) {
         const currentVisibleMessage = getMessageById(firstVisibleMessageId);
         if (currentVisibleMessage) {
@@ -3146,33 +3174,31 @@ const CometChatMessageList = (props: MessageListProps) => {
           setTimeout(() => {
             if (isDateDifferent(stickyDateHeaderRef.current, messageDate)) {
               setDateHeader(messageDate);
-              stickyDateHeaderRef.current = messageDate
-
+              stickyDateHeaderRef.current = messageDate;
+              setStickyDateHeaderValue(messageDate);
             }
-          }, 0);
+          }, 0)
         }
       }
-    } catch (error) {
+    }
+    catch (error) {
       errorHandler(error, "handleScroll")
     }
-  }, [getMessageById, setDateHeader, messageList])
+  }, [getMessageById, setDateHeader, messageList, setStickyDateHeaderValue]);
 
   useEffect(() => {
-    try {
-      let listElement = document.querySelector(".cometchat-message-list .cometchat-list__body");
-      if (listElement) {
-        listElement.addEventListener("scroll", handleScroll)
-      }
-      return () => {
-        if (listElement) {
-          listElement.removeEventListener("scroll", handleScroll);
-        }
-      }
-    } catch (error) {
-      errorHandler(error, "addEventListener")
-    }
+    let listElement = getCurrentMessageList();
 
-  }, [handleScroll])
+    if (listElement) {
+      listElement.addEventListener("scroll", handleScroll);
+    }
+    return () => {
+      if (listElement) {
+        listElement.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [handleScroll]);
+
   /**
    * Function to close toast
    */
@@ -3514,6 +3540,24 @@ const CometChatMessageList = (props: MessageListProps) => {
     ]
   );
 
+  const shouldSetStickyHeader =
+  messageList.length > 0 &&
+  (
+    (!isOnBottomRef.current) ||
+    messageList.length < 10
+  );
+
+  useEffect(() => {
+  if (shouldSetStickyHeader) {
+    const sentAt = messageList[0]?.getSentAt();
+    if (sentAt) {
+      stickyDateHeaderRef.current = sentAt
+      console.log("setting from useEffect")
+      setStickyDateHeaderValue(sentAt);
+    }
+    handleScroll();
+  }
+}, [shouldSetStickyHeader, messageList, handleScroll, setStickyDateHeaderValue]);
 
   /**
  * Function to create date for the message bubble
@@ -3537,23 +3581,16 @@ const CometChatMessageList = (props: MessageListProps) => {
             ></CometChatDate>
           </div>
         );
-      } else {
-        if ((i == 0 && !isOnBottomRef.current) || ((messageList.length < 10) && i == 0)) {
-          if(!stickyDateHeaderRef.current){
-            stickyDateHeaderRef.current = item?.getSentAt()
-          }
-          setTimeout(() => {
-            handleScroll();
-          }, 0);
-        }
-        return null;
-      }
+      } 
+      return null;
+      
     },
     [
       datePattern,
       messageList,
       isDateDifferent,
-      hideDateSeparator
+      hideDateSeparator,
+      setStickyDateHeaderValue
     ]
   );
 
@@ -3832,13 +3869,13 @@ const CometChatMessageList = (props: MessageListProps) => {
         boxSizing: "border-box"
       }}>
         <div
-         className={`cometchat-message-list ${!showScrollbar ? "cometchat-message-list-hide-scrollbar" : ""}`}
+         className={`cometchat-message-list ${!showScrollbar ? "cometchat-message-list-hide-scrollbar" : ""} ${createUniqueUUID}`}
         >
-          {stickyDateHeaderRef.current &&  !hideStickyDate  && messageList.length > 0  ? <div
+          {stickyDateHeaderValue && !hideStickyDate && messageList.length > 0  ? <div
             className='cometchat-message-list__date-header'
           >
             <CometChatDate
-              timestamp={stickyDateHeaderRef.current ?? dateHeader}
+              timestamp={stickyDateHeaderValue ?? dateHeader}
               pattern={datePattern}
             ></CometChatDate>
           </div> : null}
@@ -3848,8 +3885,7 @@ const CometChatMessageList = (props: MessageListProps) => {
           >
             {getMessageListHeader()}
           </div>
-          <div className='cometchat-message-list__body
-'
+          <div className={`cometchat-message-list__body ${messageList.length > 0 ? "cometchat-message-list__body--spacing-top" : ""}`}
           >
             <CometChatList
               showScrollbar={showScrollbar}

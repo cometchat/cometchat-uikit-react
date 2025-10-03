@@ -1455,7 +1455,10 @@ try {
   const onTextInputEnter = useCallback(
     (text: string) => {
       setShowListForMentions(false);
-      
+      if((text === state.text) && state.textMessageToEdit){
+        CometChatMessageEvents.ccMessageEdited.next({message: state.textMessageToEdit, status: MessageStatus.cancelled})
+        return;
+      }
       if (typeof text === "string") handleSendButtonClick(text);
       // Empty the text in the message composer
       dispatch({ type: "setText", text: "" });
@@ -1558,7 +1561,9 @@ return hideAttachmentButton || (hideAudioAttachmentOption && hideVideoAttachment
         actions={actions}
         onActionItemClick={(action: CometChatMessageComposerAction | CometChatActionsView) => {
           showAttachments(action);
-
+          if(state.textMessageToEdit){
+            onEditPreviewClose();
+          }
         }}
       />
     );

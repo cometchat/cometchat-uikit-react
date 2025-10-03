@@ -48,6 +48,10 @@
     font-style: normal;
 }
 
+.cometchat-edit-preview p{
+    margin: 0;
+}
+
 /*
    Subtitle text inside the edit preview, containing the actual text being edited.
 */

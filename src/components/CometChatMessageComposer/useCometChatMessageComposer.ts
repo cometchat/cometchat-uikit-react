@@ -146,6 +146,10 @@ export function useCometChatMessageComposer(args: Args) {
                     type: "setTextMessageToEdit",
                     textMessageToEdit: object.message,
                   });
+                  dispatch({
+                    type: "setText",
+                    text: object.message.getData().text,
+                  });
                   emptyInputField()
                   if (renderSanitizedHtml) {
                     const sel = window?.getSelection();

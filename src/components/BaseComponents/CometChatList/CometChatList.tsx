@@ -398,7 +398,7 @@ function List<T>(props: ListProps<T>): JSX.Element {
           {getSearchBox()}
         </div>
         <div ref={intersectionObserverRootRef} className="cometchat-list__body">
-          <div ref={intersectionObserverTopTargetRef} style={{ height: "1px", minHeight: "1px" }}></div>
+          <div ref={intersectionObserverTopTargetRef} className="cometchat-list__body-intersection-top" style={{ height: "1px", minHeight: "1px" }}></div>
           {getList()}
           {getStateView()}
           <div ref={intersectionObserverBottomTargetRef} style={{ height: "1px", minHeight: "1px" }}></div>
