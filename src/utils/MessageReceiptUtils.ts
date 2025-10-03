@@ -27,12 +27,6 @@ export class MessageReceiptUtils {
       if (moderationStatus ===  CometChatUIKitConstants.moderationStatus.disapproved) {
         return Receipts.error;
       }
-      // Show waiting if moderation is pending
-      else if (
-        moderationStatus ===  CometChatUIKitConstants.moderationStatus.pending
-      ) {
-        return Receipts.wait;
-      }
     }
 
     const hasError =

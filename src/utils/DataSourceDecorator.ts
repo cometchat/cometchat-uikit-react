@@ -122,6 +122,10 @@ export abstract class DataSourceDecorator implements DataSource {
       textFormatters
     );
   }
+  
+  getFooterView(message: CometChat.BaseMessage) {
+    return (this.dataSource ?? new MessagesDataSource()).getFooterView(message);
+  }
 
   getMessagePreviewSubtitle(
     message: CometChat.BaseMessage,

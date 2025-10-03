@@ -39,7 +39,7 @@ import { CometChatCallEvents } from "../../events/CometChatCallEvents";
 import { CometChatMessageEvents, IMessages } from "../../events/CometChatMessageEvents";
 import { CometChatGroupEvents, IGroupLeft, IGroupMemberAdded, IGroupMemberKickedBanned, IGroupMemberScopeChanged } from "../../events/CometChatGroupEvents";
 import CometChatToast from "../BaseComponents/CometChatToast/CometChatToast";
-import { getThemeMode, sanitizeCalendarObject, useDebouncedCallback } from "../../utils/util";
+import { fireClickEvent, getThemeMode, sanitizeCalendarObject, useDebouncedCallback } from "../../utils/util";
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
 import { CometChatConversationStarter } from "../BaseComponents/CometChatConversationStarter/CometChatConversationStarter";
 import { CometChatSmartReplies } from "../BaseComponents/CometChatSmartReplies/CometChatSmartReplies";
@@ -467,6 +467,7 @@ const CometChatMessageList = (props: MessageListProps) => {
   /**
   * All the useRef useCometChatMessageList are declaired here. These do not trigger a rerender. They are used to get the updated values wherever required in the code.
    */
+  const uniqueIdRef = useRef<string | null>("");
   const stickyDateHeaderRef = useRef<number>(0);
   const loggedInUserRef = useRef<CometChat.User | null>(null);
   const isFirstReloadRef = useRef<boolean>(false);
@@ -714,13 +715,19 @@ const CometChatMessageList = (props: MessageListProps) => {
     }
   }, [emptyView]);
   const messagesTemplate = useMemo(() => {
-    return templates && templates.length > 0
-      ? templates
-      : ChatConfigurator.getDataSource().getAllMessageTemplates({
+    let messageTemplates: CometChatMessageTemplate[];
+    if(templates && templates.length > 0) messageTemplates = templates;
+    else {
+      const allTemplates = ChatConfigurator.getDataSource().getAllMessageTemplates({
         textFormatters,
         hideGroupActionMessages
+      })
+      messageTemplates = allTemplates.map((template: CometChatMessageTemplate) => {
+        return isAgentChat ? { ...template, replyView: null } : template;
       });
-  }, [templates]);
+    }
+    return messageTemplates;
+  }, [templates, isAgentChat]);
 
   const messagesTypesMap: any = useMemo(() => {
     let messagesTypesArray: { [key: string]: CometChatMessageTemplate } = {};
@@ -1503,6 +1510,9 @@ const CometChatMessageList = (props: MessageListProps) => {
                 if (element instanceof CometChatActionsView && !element?.customView) {
                   element.customView = onReactMessage(id!);
                 }
+                setTimeout(() => {
+                  fireClickEvent();
+                }, 10);
                 break;
               default:
                 break;
@@ -1731,7 +1741,7 @@ const CometChatMessageList = (props: MessageListProps) => {
           return messagesTypesMap[
             item?.getCategory() + "_" + item?.getType()
           ]?.bottomView(item, _alignment);
-        } else if (getIsMessageModerated(item) && !hideModerationView) {
+        } else if (!isAgentChat && getIsMessageModerated(item) && !hideModerationView) {
           return new MessageUtils().getModeratedMessageBottomView();
         }
         return null;
@@ -1740,7 +1750,7 @@ const CometChatMessageList = (props: MessageListProps) => {
         return null;
       }
     },
-    [messagesTypesMap, errorHandler, setBubbleAlignment, hideModerationView]
+    [messagesTypesMap, errorHandler, setBubbleAlignment, hideModerationView, isAgentChat]
   );
 
   /**
@@ -2632,7 +2642,13 @@ const CometChatMessageList = (props: MessageListProps) => {
             if (
               message.getType() === CometChatUIKitConstants.streamMessageTypes.run_started
             ) {
-              if (lastMessage?.getId() === message.getId()) {
+              if (
+                lastMessage?.getId() === message.getId() 
+                &&
+                (!lastMessage.getSender() ||
+                  lastMessage.getSender()?.getUid() ==
+                    loggedInUserRef.current?.getUid())
+              ) {
                 startStreamingMessage();
                 return [...prevMessageList, message];
               }
@@ -2829,8 +2845,10 @@ const CometChatMessageList = (props: MessageListProps) => {
           updateReplyCount(message);
           updateUnreadReplyCount(message);
         } else {
+          const shouldMarkDelivered = ((message.getReceiver() instanceof CometChat.Group) && group?.getGuid() === (message.getReceiver() as CometChat.Group).getGuid())
+          || (message?.getSender().getUid() === user?.getUid());
           if (
-            message.getSender().getUid() !== loggedInUserRef.current?.getUid()) {
+            message.getSender().getUid() !== loggedInUserRef.current?.getUid() && shouldMarkDelivered) {
             CometChat.markAsDelivered(message)
           }
         }
@@ -3257,6 +3275,25 @@ const CometChatMessageList = (props: MessageListProps) => {
     });
   };
 
+  const createUniqueUUID = useMemo(() => {
+    const parentMessageId = parentMessageIdRef.current ? parentMessageIdRef.current + "_" : "";
+    const uid = user?.getUid() ? user.getUid() + "_" : "";
+    const guid = group?.getGuid() ? group.getGuid() + "_" : "";
+    const uuid = uid + guid + parentMessageId + CometChatUIKitUtility.ID();
+    const currentId = uid + guid + parentMessageId;
+    if (!uniqueIdRef.current || !uniqueIdRef.current.includes(currentId)){
+      uniqueIdRef.current = "cometchat-message-list-" + uuid;
+    }
+    return uniqueIdRef.current;
+  }, [user, group, parentMessageIdRef]);
+
+  function getCurrentMessageList() {
+    if (!uniqueIdRef.current) {
+      return null;
+    }
+    return document.querySelector(`.${uniqueIdRef.current} .cometchat-list__body`)
+  }
+
   /**
  * Function to subscribe to UI events for handling various scenarios such as showing a dialog, handling group member events, handling message edits, etc.
  * @returns {() => void} A cleanup function to unsubscribe from the events.
@@ -3563,7 +3600,7 @@ const CometChatMessageList = (props: MessageListProps) => {
         onMessageModerated =
         CometChatMessageEvents.onMessageModerated.subscribe(
           (moderatedMessage: CometChat.BaseMessage) => {
-            updateMessageByMessageId(moderatedMessage);
+            updateMessageByMuid(moderatedMessage);
           }
         );
       }
@@ -3681,7 +3718,7 @@ const CometChatMessageList = (props: MessageListProps) => {
 
   const { debouncedCallback: debouncedUpdateVisibleArea } = useDebouncedCallback(
     () => {
-      const messageListBody = getCurrentDocument().querySelector(".cometchat-message-list .cometchat-list__body");
+      const messageListBody = getCurrentMessageList();
       if (!messageListBody) return;
 
       const { scrollTop, scrollHeight, clientHeight } = messageListBody;
@@ -3701,7 +3738,7 @@ const CometChatMessageList = (props: MessageListProps) => {
    */
   const handleScroll = useCallback(() => {
     try {
-      const messageListBody = getCurrentDocument().querySelector(".cometchat-message-list .cometchat-list__body");
+      const messageListBody = getCurrentMessageList();
       if (!messageListBody) return;
       debouncedUpdateVisibleArea();
       let firstVisibleMessageId: any = null;
@@ -3738,7 +3775,7 @@ const CometChatMessageList = (props: MessageListProps) => {
 
   useEffect(() => {
     try {
-      let listElement = getCurrentDocument().querySelector(".cometchat-message-list .cometchat-list__body");
+      let listElement = getCurrentMessageList();
       if (listElement) {
         listElement.addEventListener("scroll", handleScroll)
       }
@@ -4087,11 +4124,11 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
           headerView={getBubbleHeader(item)}
           footerView={getBubbleFooterView(item)}
           contentView={getContentView(item)}
-          bottomView={!isAgentChat && getBottomView(item)}
+          bottomView={getBottomView(item)}
           id={item?.getId() || item?.getMuid()}
           options={getMessageOptions(item)}
           alignment={setBubbleAlignment(item)}
-          replyView={!isAgentChat && getReplyView(item)}
+          replyView={getReplyView(item)}
           includeBottomViewHeight={shouldIncludeBottomViewHeight(item)}
           threadView={!isAgentChat && getBubbleThreadView(item)}
           statusInfoView={getStatusInfoView(item)}
@@ -4324,8 +4361,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
 
   const shouldShowEmptyState =
   isAgentChat && !parentMessageId && messageList.length === 0;
-
-
+  
   /**
    * Custom useCometChatMessageList for CometChatMessageList component.
    */
@@ -4366,7 +4402,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
         boxSizing: "border-box"
       }}>
         <div
-          className={`cometchat-message-list ${messageListState != States.loading && hasCompletedInitialLoad && !isMessageRepliedToAvailable && messageListState != States.empty && !isAgentChat ? 'cometchat-message-list-loaded' : ""} ${!showScrollbar ? "cometchat-message-list-hide-scrollbar" : ""}`}
+          className={`cometchat-message-list ${messageListState != States.loading && hasCompletedInitialLoad && !isMessageRepliedToAvailable && messageListState != States.empty && !isAgentChat ? 'cometchat-message-list-loaded' : ""} ${!showScrollbar ? "cometchat-message-list-hide-scrollbar" : ""} ${createUniqueUUID}`}
         >
           {stickyDateHeaderRef.current && showDateHeader && !hideStickyDate && messageList.length > 0 ? <div
             className='cometchat-message-list__date-header'
@@ -4382,7 +4418,12 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
           >
             {getMessageListHeader()}
           </div>
-          <div className="cometchat-message-list__body"
+          <div
+            className={`cometchat-message-list__body ${
+              !isAgentChat && messageList.length > 0
+                ? "cometchat-message-list__body--spacing-top"
+                : ""
+            }`}
           >
             <CometChatList
               showShimmerOnTop={(isAgentChat && !parentMessageId) ? false : isMessageRepliedToAvailable ? true : !hasCompletedInitialLoad}

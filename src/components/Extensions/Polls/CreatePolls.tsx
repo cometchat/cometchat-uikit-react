@@ -109,6 +109,8 @@ const CreatePoll: React.FC<CreatePollProps> = ({
 
   const [type, setType] = useState<string>('');
 
+  const lastInputOptionRef = React.useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const initializeOptions = () => {
       setInputOptionItems(Array.from({ length: defaultAnswers }, () => ({ key: '', value: '' })));
@@ -148,6 +150,10 @@ useEffect(()=> {
    */
   const addPollOption = () => {
     setInputOptionItems((prevItems) => [...prevItems, { key: '', value: '' }]);
+    requestAnimationFrame(() => {
+      lastInputOptionRef.current?.scrollIntoView();
+      lastInputOptionRef.current?.focus();
+    });
   };
 
   /**
@@ -257,7 +263,7 @@ useEffect(()=> {
                         prevItems.map((item, index) => (index === i ? { ...item, value: e.target.value } : item))
                       )
                     }
-
+                    ref={i === inputOptionItems.length - 1 ? lastInputOptionRef : null}
                   />
                   {i > 1 &&
                     <button
@@ -272,25 +278,22 @@ useEffect(()=> {
             className={`cometchat-create-poll__body-options-add-button ${ (inputOptionItems.length >= 12) ? "cometchat-create-poll__body-options-add-button-disabled": ""}`}
            disabled={(inputOptionItems.length >= 12)}
            onClick={addPollOption}>+ {addAnswerText}
-          </button>
+            </button>
           </div>
-        
         </div>
         <div className='cometchat-create-poll__footer'>
             {isErrorOrWarning && <div className='cometchat-create-poll__error'>
               <div className='cometchat-create-poll__error-icon'></div>
               <div className='cometchat-create-poll__error-text'>
-              {errorText}
+                {errorText}
               </div>
-            
             </div>
             }
             <div    className={`cometchat-create-poll__button ${!isCreatePollEnabled ? "cometchat-create-poll__button-disabled" : " "}`}>
             <CometChatButton
               onClick={createPoll} disabled={!isCreatePollEnabled} isLoading={isLoading && isCreatePollEnabled} text={createPollButtonText}/>
-            </div>
-    
           </div>
+        </div>
       </div>
     </div>
   );

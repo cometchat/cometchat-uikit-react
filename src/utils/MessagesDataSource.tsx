@@ -442,6 +442,19 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     return null;
   }
 
+  getFooterView(_messageObject: CometChat.BaseMessage) {
+    return _messageObject instanceof CometChat.AIAssistantMessage ? (
+      <div
+        title={getLocalizedString("message_list_option_copy")}
+        className="cometchat-ai-assistant-message-bubble__copy"
+        style={{ cursor: "pointer" }}
+        onClick={() =>
+          this.handleCopy(_messageObject as CometChat.AIAssistantMessage)
+        }
+      ></div>
+    ) : null;
+  }
+
   getTextMessageTemplate(
     additionalConfigurations?: additionalParams
   ): CometChatMessageTemplate {
@@ -543,9 +556,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       },
       options: undefined,
       footerView: (message: CometChat.BaseMessage) => {
-        return <div title={getLocalizedString("message_list_option_copy")} className="cometchat-ai-assistant-message-bubble__copy" style={{ cursor: 'pointer' }} onClick={() => this.handleCopy(message as CometChat.AIAssistantMessage)}>
-
-        </div>
+        return ChatConfigurator.getDataSource().getFooterView(message as CometChat.AIAssistantMessage);
       },
 
     });
@@ -564,8 +575,9 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
 
       },
       options: undefined,
-      footerView: undefined,
-
+      footerView: (message: CometChat.BaseMessage) => {
+        return ChatConfigurator.getDataSource().getFooterView(message as CometChat.AIToolResultMessage);
+      },
     });
   }
   getToolArgumentsMessageTemplate() {
@@ -582,9 +594,9 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
 
       },
       options: undefined,
-      footerView: undefined,
-
-
+      footerView: (message: CometChat.BaseMessage) => {
+        return ChatConfigurator.getDataSource().getFooterView(message as CometChat.AIToolArgumentMessage);
+      }
     });
   }
   getStreamMessageBubble(message: CometChat.CustomMessage) {

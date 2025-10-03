@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useCometChatTextBubble } from "./useCometChatTextBubble";
 import { fireClickEvent, sanitizeHtml, sanitizeToSpanOnly } from "../../../utils/util";
 import {getLocalizedString} from "../../../resources/CometChatLocalize/cometchat-localize";
@@ -78,10 +78,15 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
             
             // Always use pasteHtml to handle proper rendering of span tags vs plain text
             pasteHtml(textRef.current, finalText);
-            const isOverflowing = textRef.current.scrollHeight > 80;
-            setIsTruncated(isOverflowing);
         }
     }, [text, textFormatters, setIsTruncated, pasteHtml, textState]);
+
+    useLayoutEffect(()=>{
+        if(textRef.current){
+            const isOverflowing = textRef.current.scrollHeight >= 80;
+            setIsTruncated(isOverflowing);
+        }
+    },[text, setIsTruncated])
 
     return (
         <div className="cometchat">

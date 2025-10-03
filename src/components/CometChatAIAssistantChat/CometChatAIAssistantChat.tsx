@@ -17,6 +17,7 @@ import { CometChatAIAssistantChatHistory } from '../CometChatAIAssistantChatHist
 import { CometChatMessageEvents, IMessages } from '../../events/CometChatMessageEvents';
 import { MessageStatus, PreviewMessageMode } from '../../Enums/Enums';
 import { getLocalizedString } from '../../resources/CometChatLocalize/cometchat-localize';
+import { CometChatMessageTemplate } from '../../modals';
 
 interface MessageComposerViewProps {
     user: CometChat.User;
@@ -53,6 +54,7 @@ interface AIAssistantChatProps {
     emptyChatIntroMessageView?: React.JSX.Element;
     emptyChatImageView?: React.JSX.Element;
     aiAssistantTools?: CometChatAIAssistantTools;
+    templates?: CometChatMessageTemplate[];
 };
 
 /**
@@ -157,7 +159,8 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
         emptyChatGreetingView,
         emptyChatIntroMessageView,
         emptyChatImageView,
-        aiAssistantTools
+        aiAssistantTools,
+        templates
     } = props;
 
     const [startNewChat, setStartNewChat] = useState(false);
@@ -307,6 +310,7 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
                         disableSoundForMessages={true}
                         textFormatters={[]}
                         parentMessageId={goToMessage ? goToMessage?.getId() : undefined}
+                        templates={templates}
                     />
                     <MessageComposerView 
                         user={user}

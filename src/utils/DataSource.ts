@@ -56,6 +56,9 @@ export abstract class DataSource {
     onReplyPreviewClick?: (messageToReply: CometChat.BaseMessage) => void,
     textFormatters?: CometChatTextFormatter[]
   ): Element | JSX.Element | null;
+  abstract getFooterView(
+    message: CometChat.BaseMessage,
+  ): Element | JSX.Element | null;
   abstract getStatusInfoView(
     message: CometChat.BaseMessage,
     alignment: MessageBubbleAlignment,

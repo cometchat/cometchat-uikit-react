@@ -311,6 +311,10 @@
     box-sizing: border-box;
 }
 
+.cometchat-message-list__body--spacing-top .cometchat-list__body-intersection-top{
+    margin-bottom: var(--cometchat-spacing-8);
+}
+
 /* Message indicator inside message list */
 .cometchat-message-list__message-indicator {
     position: absolute;
