@@ -165,6 +165,12 @@ export class CometChatUIKitConstants {
         changeScope: "changeScope",
         groupMembers: "groupMembers",
     })
+
+    static mimeTypes = Object.freeze({
+        audio: "audio/*, .aac, .aif, .aiff, .caf, .mp3, .mp4, .wav, .m4a, .wma, .flac, .alac, .oga, .ra, .ram, .mid, .midi, .mka, .opus, .ac3, .amr, .ape, .dts, .wv, .tta, .pcm, .snd, .au, .cda, .vox, .m4b, .m3u, .pls, .ogg",
+        video: "video/*, .mov, .mp4, .m4v, .avi, .mpg, .mpeg, .m2ts, .mts, .3gp, .3g2, .flv, .wmv, .vob, .ts, .webm, .f4v, .f4a, .f4b, .swf, .rm, .rmvb, .divx, .xvid, .mxf, .asf, .amv, .smv, .avchd, .qt",
+        image: "image/*, .heic, .heif, .jpg, .jpeg, .png, .gif, .bmp, .tiff, .tif, .psd, .svg, .ico, .raw, .dng, .eps, .webp, .jfif, .jp2, .jpf, .jpx, .jpm, .mj2, .hdr, .exr, .pbm, .pgm, .ppm, .pnm, .tga, .dds, .svgz, .djvu, .ai, .cdr",
+    })
     static streamMessageTypes = Object.freeze({
         run_started: CometChat.AI_ASSISTANT_EVENTS.RUN_STARTED,
         text_message_start: CometChat.AI_ASSISTANT_EVENTS.TEXT_MESSAGE_START,

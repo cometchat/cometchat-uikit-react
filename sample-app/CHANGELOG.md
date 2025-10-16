@@ -1,3 +1,15 @@
+## [6.2.4] - 15-10-2025
+
+## New
+- None
+
+## Enhancements
+- None
+
+## Fixes
+- Fixed an issue where the search and details components did not close when switching chats by clicking on a mentioned user.
+- Resolved an issue where user statuses were not updating in real time in the Group Members section after adding users to a group.
+
 ## [6.2.3] - 17-09-2025
 
 ## New

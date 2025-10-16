@@ -16,14 +16,13 @@
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-top: var(--cometchat-margin-3);
   height: 20px;
   width: 20px;
   background: var(--cometchat-icon-color-secondary);
 
 }
 
-.cometchat-stream-message-bubble {
+.cometchat:has(> .cometchat-stream-message-bubble) {
   margin-top: calc(var(--cometchat-margin-1) * -1)
 }
 
@@ -49,8 +48,20 @@
 
 }
 
-.cometchat-stream-message-bubble li *{
+.cometchat-stream-message-bubble img,
+.cometchat-stream-message-bubble pre,
+.cometchat-stream-message-bubble canvas,
+.cometchat-stream-message-bubble svg,
+.cometchat-stream-message-bubble video,
+.cometchat-stream-message-bubble figure,
+.cometchat-stream-message-bubble table {
   vertical-align: top;
+}
+
+.cometchat-stream-message-bubble input[type="checkbox"] {
+  margin-right: var(--cometchat-margin-1);
+  position: relative;
+  top: 1px;
 }
 
 .cometchat-stream-message-bubble li:not([class]) {
@@ -227,7 +238,7 @@
   max-height: 300px;
   width: fit-content;
   border-radius: var(--cometchat-radius-2);
-  margin-block: var(--cometchat-margin-2) 0;
+  margin-top: var(--cometchat-margin-2);
 }
 
 .cometchat-stream-message-bubble > *:first-child *:first-child:not(:has(*)) ~ img{
@@ -238,10 +249,15 @@
   display: none;
 }
 
-.cometchat-stream-message-bubble .cometchat-stream-message-bubble__image-intersection-start:not(.cometchat-stream-message-bubble__image-intersection-end ~ .cometchat-stream-message-bubble__image-intersection-start) {
+.cometchat-stream-message-bubble .cometchat-stream-message-bubble__image-intersection-start:not(.cometchat-stream-message-bubble__image-intersection-end ~ .cometchat-stream-message-bubble__image-intersection-start, input[type="checkbox"] ~ .cometchat-stream-message-bubble__image-intersection-start) {
   display: block;
   margin-top: -0.5em;
 }
+
+.cometchat-stream-message-bubble .cometchat-stream-message-bubble__image-intersection-start:is(input[type="checkbox"] ~ .cometchat-stream-message-bubble__image-intersection-start) ~ img{
+  margin-top: var(--cometchat-margin-1);
+}
+
 .cometchat-stream-message-bubble .cometchat-stream-message-bubble__image-intersection-end:not(:has(+ .cometchat-stream-message-bubble__image-intersection-start)) {
   display: block;
 }

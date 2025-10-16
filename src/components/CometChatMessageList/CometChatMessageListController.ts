@@ -3,7 +3,6 @@ import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants
 import { handleWebsocketMessage, startStreamingMessage } from '../../services/stream-message.service';
 import { ChatConfigurator } from "../../utils/ChatConfigurator";
 import { CometChat } from "@cometchat/chat-sdk-javascript";
-import { createMessageCopy } from '../../utils/util';
 
 /**
 The MessageListManager is  responsible for controlling chat operations like fetching messages and managing listener lifecycles. It  attaches listeners for group and call activities for a particular user or group, which are activated when the chat is open and deactivated when it's closed or when switching to a new chat.
@@ -102,12 +101,6 @@ export class MessageListManager {
                     onAIAssistantEventReceived: (message: CometChat.AIAssistantBaseEvent) => {
                         if (message.getConversationId() && (!message.getConversationId().includes(user.getUid()) || !message.getConversationId().includes(CometChatUIKitLoginListener.getLoggedInUser()!.getUid()))) {
                             return;
-                        }
-                        if (message.getType() == CometChatUIKitConstants.streamMessageTypes.run_started) {
-                             const copiedMessage = createMessageCopy(message, user);
-                            if (copiedMessage) {
-                                addMessage(copiedMessage);
-                            }
                         }
                         handleWebsocketMessage(message);
                     }

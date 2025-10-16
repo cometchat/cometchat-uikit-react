@@ -70,7 +70,7 @@ const initializeMessageProcessor = () => {
 
       // Configure delays based on message type for realistic streaming experience
       if (msg.getType() === CometChatUIKitConstants.streamMessageTypes.run_started) {
-        delayTime = 2000; // Thinking delay before response begins
+        delayTime = 0; // Thinking delay before response begins
       }
       // Configure delays based on message type for realistic streaming experience
       else if (msg.getType() === CometChatUIKitConstants.streamMessageTypes.tool_call_args) {
@@ -80,7 +80,7 @@ const initializeMessageProcessor = () => {
         delayTime = 100;
       }
       else if (msg.getType() === CometChatUIKitConstants.streamMessageTypes.text_message_start) {
-        delayTime = 2000;
+        delayTime = 0;
       }
       else if (msg.getType() === CometChatUIKitConstants.streamMessageTypes.text_message_content) {
         delayTime = streamSpeed;
@@ -197,4 +197,8 @@ export const stopStreamingMessage = () => {
   }
   streamedMessages = {};
   streamingStateSubject.next(false);
+};
+
+export const emitStreamingState = (state: boolean) => {
+  streamingStateSubject.next(state);
 };

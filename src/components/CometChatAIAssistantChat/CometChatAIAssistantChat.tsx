@@ -63,13 +63,19 @@ interface AIAssistantChatProps {
 const MessageComposerView = React.memo(({ user, parentMessageId, startNewChat, onError, setParentMessageId,onSendButtonClick }: MessageComposerViewProps) => {
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
     const [isStreaming, setIsStreaming] = useState(false);
+    const parentMessageIdRef = useRef(parentMessageId);
+
+    useEffect(() => {
+        parentMessageIdRef.current = parentMessageId;
+    }, [parentMessageId]);
+
     useEffect(() => {
         const streamSubscription = streamingState$.subscribe(setIsStreaming);
         const ccMessageSent = CometChatMessageEvents.ccMessageSent.subscribe((data: IMessages) => {
-            if (data.status == MessageStatus.success && !data.message.getParentMessageId() && data.message.getReceiverId() == user.getUid() && !parentMessageId) {
+            if (data.status == MessageStatus.success && !data.message.getParentMessageId() && data.message.getReceiverId() == user.getUid() && !parentMessageIdRef.current) {
                 setParentMessageId(data.message.getId());
             }
-            if (data.status == MessageStatus.inprogress) {
+            if (data.status == MessageStatus.inprogress || data.status == MessageStatus.success) {
                 setIsStreaming(true)
             }
             else {
@@ -83,7 +89,7 @@ const MessageComposerView = React.memo(({ user, parentMessageId, startNewChat, o
              setIsButtonDisabled(true);
              stopStreamingMessage();
         };
-    }, [user, parentMessageId, setParentMessageId]);
+    }, [user, setParentMessageId]);
 
     return <div
         className={`cometchat-ai-assistant-chat__message-composer-view ${isStreaming && 'cometchat-ai-assistant-chat__message-composer-view--disabled'}`}
@@ -200,10 +206,10 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
     const onNewChatButtonClick = () => {
         // Force component rerender by updating state
         setStartNewChat(prev => !prev);
-        stopStreamingMessage();
         setGoToMessage(null)
         setParentMessageId(null);
         parentMessageIdRef.current = null;
+        stopStreamingMessage();
     }
 
     const onHistoryButtonClick = () => {
@@ -303,7 +309,6 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
                         hideMessageInfoOption={true}
                         hideMessagePrivatelyOption={true}
                         hideReactionOption={true}
-                        hideReceipts={true}
                         hideReplyInThreadOption={true}
                         hideStickyDate={true}
                         hideTranslateMessageOption={true}
@@ -334,7 +339,7 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
                                 setParentMessageId(message.getId());
                                 parentMessageIdRef.current = message.getId();
                                 setIsSidebarOpen(false);
-
+                                stopStreamingMessage();
                             }}
                             onClose={() => {
                                 setIsSidebarOpen(false)

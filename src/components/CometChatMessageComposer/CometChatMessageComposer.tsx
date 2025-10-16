@@ -39,7 +39,7 @@ import { CometChatEditPreview } from "../BaseComponents/CometChatEditPreview/Com
 import { CometChatActionSheet } from "../BaseComponents/CometChatActionSheet/CometChatActionSheet";
 import { CometChatEmojiKeyboard } from "../BaseComponents/CometChatEmojiKeyboard/CometChatEmojiKeyboard";
 import { ComposerId } from '../../utils/MessagesDataSource';
-import { decodeHTML, getThemeVariable, isMobileDevice, isSafari, processFileForAudio, sanitizeHtmlStringToFragment } from '../../utils/util';
+import { decodeHTML, getThemeVariable, shouldShowCustomMimeTypes, isMobileDevice, isSafari, processFileForAudio, sanitizeHtmlStringToFragment } from '../../utils/util';
 import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
 import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
@@ -1805,13 +1805,19 @@ try {
       if (typeof actionOnClick === "function") {
         actionOnClick();
       } else {
-        // Open the correct file picker
-        const acceptMap: Record<string, string> = {
+        let acceptMap: Record<string, string> = {
           [CometChatUIKitConstants.MessageTypes.image]: "image/*",
           [CometChatUIKitConstants.MessageTypes.video]: "video/*",
           [CometChatUIKitConstants.MessageTypes.audio]: "audio/*",
           [CometChatUIKitConstants.MessageTypes.file]: "*/*"
         };
+        // Open the correct file picker
+        if(shouldShowCustomMimeTypes()){
+          acceptMap[CometChatUIKitConstants.MessageTypes.image] = CometChatUIKitConstants.mimeTypes.image;
+          acceptMap[CometChatUIKitConstants.MessageTypes.video] = CometChatUIKitConstants.mimeTypes.video;
+          acceptMap[CometChatUIKitConstants.MessageTypes.audio] = CometChatUIKitConstants.mimeTypes.audio;
+        }
+
         const acceptValue = acceptMap[action.id] ?? "*/*";
         mediaFilePickerRef.current!.accept = acceptValue;
         mediaFilePickerRef.current!.click();

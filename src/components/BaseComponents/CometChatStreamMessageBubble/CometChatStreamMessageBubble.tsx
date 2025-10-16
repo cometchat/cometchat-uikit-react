@@ -46,21 +46,6 @@ const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubbleProps> 
     };
   }, [message]);
 
-  const handleCopy = useCallback(() => {
-    if (message?.getData()?.text) {
-      if (navigator && navigator.clipboard) {
-        navigator.clipboard.writeText(message?.getData()?.text);
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = message?.getData()?.text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-      }
-    }
-  }, [message]);
-
   const connectionStatusListener = useCallback(() => {
     const status = navigator.onLine ? 'online' : 'offline';
     if (status === "offline") {
@@ -134,13 +119,15 @@ const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubbleProps> 
         className='cometchat-stream-message-bubble'
       >
         
-        {(isStreaming && data && data.getType() === CometChatUIKitConstants.streamMessageTypes.run_started) && (
+        {(!data || (isStreaming && data && data.getType() === CometChatUIKitConstants.streamMessageTypes.run_started)) && (
           <span className="cometchat-stream-message-bubble__thinking">
             <span className="cometchat-stream-message-bubble__thinking-text">{getLocalizedString("ai_assistant_chat_thinking")}</span>
           </span>
         )}
-        {data && data.getType() !== CometChatUIKitConstants.streamMessageTypes.run_started && toolEventsMap.includes(data?.getType()) ?   <span className='cometchat-stream-message-bubble__tool-call-text cometchat-stream-message-bubble__thinking cometchat-stream-message-bubble__thinking-text'>
-          {executionText}
+        {data && data.getType() !== CometChatUIKitConstants.streamMessageTypes.run_started && toolEventsMap.includes(data?.getType()) ?   <span className='cometchat-stream-message-bubble__tool-call-text cometchat-stream-message-bubble__thinking '>
+          <span className='cometchat-stream-message-bubble__thinking-text'>
+            {executionText}
+          </span>
         </span> : null}
      
 
@@ -179,24 +166,20 @@ const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubbleProps> 
                 );
               },
               img({ node, ...props }: any) {
-              return (
-                <>
-                  <span className="cometchat-stream-message-bubble__image-intersection-start"></span>
-                  <img
-                    {...props}
-                  />
-                  <span className="cometchat-stream-message-bubble__image-intersection-end"></span>
-                </>
-              );
-            },
+                return (
+                  <>
+                    <span className="cometchat-stream-message-bubble__image-intersection-start"></span>
+                    <img
+                      {...props}
+                    />
+                    <span className="cometchat-stream-message-bubble__image-intersection-end"></span>
+                  </>
+                );
+              },
             }}
           />
         )}
 
-        {((data?.getType() === CometChatUIKitConstants.streamMessageTypes.run_finished || !isStreaming) && fullMessage && fullMessage.trim() !== "" && !hasError) && (
-          <div title={getLocalizedString("message_list_option_copy")} className="cometchat-stream-message-bubble__copy" style={{ cursor: 'pointer' }} onClick={handleCopy}>
-          </div>
-        )}
       </div>
         {hasError && <CometChatErrorView message={getLocalizedString("ai_assistant_chat_no_internet")} />}
 

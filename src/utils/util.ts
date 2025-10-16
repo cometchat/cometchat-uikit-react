@@ -427,6 +427,75 @@ export function createMessageCopy(msg:CometChat.AIAssistantBaseEvent,user:CometC
   return message as unknown as CometChat.BaseMessage;
   }
 
+export function createMessageCopyFromBaseMessage(
+  msg: CometChat.BaseMessage,
+  user: CometChat.User | undefined
+) {
+  let message = {
+    ...msg,
+    getId: () => msg.getId() ?? CometChatUIKitUtility.getUnixTimestamp(),
+    getMessageId: () => msg.getId() ?? CometChatUIKitUtility.getUnixTimestamp(),
+    getSender: () => user,
+    getReceiverType: () => CometChatUIKitConstants.MessageReceiverType.user,
+    getReceiver: () => CometChatUIKitLoginListener.getLoggedInUser(),
+    getCategory: () => CometChatUIKitConstants.MessageCategory.custom,
+    getType: () => CometChatUIKitConstants.streamMessageTypes.run_started,
+    getText: () => "",
+    getParentMessageId: () => "",
+    getSentAt: () => "",
+    getReactions: () => [],
+    getMentions: () => [],
+    setId: (value: number) => {},
+    setSender: (value: any) => {},
+    setReceiverType: (value: string) => {},
+    setReceiver: (value: any) => {},
+    setCategory: (value: string) => {},
+    setType: (value: string) => {},
+    setText: (value: string) => {},
+    setParentMessageId: (value: number) => {},
+    setSentAt: (value: number) => {},
+    setReactions: (reactions: any) => [],
+    setMentionedUsers: (mentionedUsers: any[]) => {},
+    setMuid: (value: string) => {},
+    getConversationId: () => "",
+    setConversationId: (value: string) => {},
+    getUnreadRepliesCount: () => 0,
+    setUnreadRepliesCount: (value: number) => {},
+    getStatus: () => "",
+    setStatus: (value: string) => {},
+    getDeliveredAt: () => 0,
+    setDeliveredAt: (value: number) => {},
+    getDeliveredToMeAt: () => 0,
+    setDeliveredToMeAt: (value: number) => {},
+    getReadAt: () => 0,
+    setReadAt: (value: number) => {},
+    getReadByMeAt: () => 0,
+    setReadByMeAt: (value: number) => {},
+    getEditedAt: () => 0,
+    setEditedAt: (value: number) => {},
+    getEditedBy: () => "",
+    setEditedBy: (value: string) => {},
+    getDeletedAt: () => 0,
+    setDeletedAt: (value: number) => {},
+    getDeletedBy: () => "",
+    setDeletedBy: (value: string) => {},
+    getReplyCount: () => 0,
+    setReplyCount: (value: number) => {},
+    getRawMessage: () => ({}),
+    setRawMessage: (rawMessage: Object) => {},
+    setHasMentionedMe: (hasMentionedMe: boolean) => {},
+    hasMentionedMe: () => false,
+    getData: () => {
+      return {
+        runId: msg.getId(),
+        threadId: ""
+      };
+    },
+    setData: (value: object) => {},
+    getMuid: () => CometChatUIKitUtility.getUnixTimestamp(),
+  };
+  return message as unknown as CometChat.BaseMessage;
+}
 
   export function isDarkMode(){
       return document.querySelector('[data-theme="dark"]') ? true : false;
@@ -473,3 +542,42 @@ export const sanitizeToSpanOnly = (htmlString: string, regexPatterns: RegExp[][]
   // and everything else as plain text
   return sanitized;
 };
+/**
+ * @function isIOS
+ * @description Checks if the current device is running iOS (iPhone, iPad, or iPod).
+ * It handles modern iPads (iOS 13+) which often report as 'Mac' but support touch.
+ * @returns {boolean} True if the device is running iOS, false otherwise.
+ */
+  const isIOS = (): boolean => { 
+    if (navigator.userAgent.includes("Mac") && 'ontouchend' in document) {
+      return true;
+  }
+
+  // 2. Check for classic iOS user agent strings (iPhone, iPad, iPod).
+  const userAgent = navigator.userAgent.toLowerCase();
+  return /iphone|ipad|ipod/.test(userAgent);
+}
+
+/**
+* @function isMac
+* @description Checks if the current device is running macOS.
+* It explicitly excludes modern iPads that mimic the Mac user agent but support touch.
+* @returns {boolean} True if the device is running macOS, false otherwise.
+*/
+  const isMac = (): boolean => {
+    if (navigator.userAgent.includes("Mac") && 'ontouchend' in document) {
+      return false;
+  }
+
+    const userAgent = navigator.userAgent.toLowerCase();
+    return /macintosh|mac os x/.test(userAgent);
+  }
+
+/**
+ * @function shouldShowCustomMimeTypes
+ * @description Returns true if the device is running either iOS (iPhone, iPad, iPod) or macOS.
+ * @returns {boolean} True if the device is an Apple device (iOS or macOS), false otherwise.
+ */
+ export const shouldShowCustomMimeTypes = (): boolean=>{
+  return isIOS() || isMac();
+}

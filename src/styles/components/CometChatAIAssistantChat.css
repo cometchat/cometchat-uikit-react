@@ -106,6 +106,19 @@
     width: auto;
 
 }
+
+.cometchat-ai-assistant-chat .cometchat-message-bubble__status-info-view-receipts-sent .cometchat-message-list__receipt {
+    background-color: var(--cometchat-icon-color-secondary);
+}
+
+.cometchat-ai-assistant-chat .cometchat-message-bubble__status-info-view-receipts-wait .cometchat-message-list__receipt {
+    background-color: var(--cometchat-icon-color-secondary);
+}
+
+.cometchat-ai-assistant-chat .cometchat-message-bubble__status-info-view-receipts-delivered .cometchat-message-list__receipt {
+    background-color: var(--cometchat-icon-color-secondary);
+}
+
 .cometchat-ai-assistant-chat .cometchat-message-bubble__status-info-view .cometchat-message-bubble__status-info-view-receipts-error {
     height: 12px;
     width: 12px;
@@ -398,6 +411,14 @@ background: var(--cometchat-error-color);
     width: 20px;
     background: var(--cometchat-icon-color-secondary);
 
+}
+.cometchat-ai-assistant-chat .cometchat-message-bubble-outgoing .cometchat-message-bubble__status-info-view{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.cometchat-ai-assistant-chat .cometchat-message-bubble-outgoing .cometchat-message-bubble__status-info-view .cometchat{
+    display: flex;
 }
 .cometchat-ai-assistant-chat__sidebar-overlay {
     position: absolute;

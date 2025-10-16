@@ -39,7 +39,7 @@ import { CometChatCallEvents } from "../../events/CometChatCallEvents";
 import { CometChatMessageEvents, IMessages } from "../../events/CometChatMessageEvents";
 import { CometChatGroupEvents, IGroupLeft, IGroupMemberAdded, IGroupMemberKickedBanned, IGroupMemberScopeChanged } from "../../events/CometChatGroupEvents";
 import CometChatToast from "../BaseComponents/CometChatToast/CometChatToast";
-import { fireClickEvent, getThemeMode, sanitizeCalendarObject, useDebouncedCallback } from "../../utils/util";
+import { createMessageCopyFromBaseMessage, fireClickEvent, getThemeMode, sanitizeCalendarObject, useDebouncedCallback } from "../../utils/util";
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
 import { CometChatConversationStarter } from "../BaseComponents/CometChatConversationStarter/CometChatConversationStarter";
 import { CometChatSmartReplies } from "../BaseComponents/CometChatSmartReplies/CometChatSmartReplies";
@@ -463,7 +463,7 @@ const CometChatMessageList = (props: MessageListProps) => {
   const [messageRepliedTo, setMessageRepliedTo] = useState<string>('');
   const [isMessageRepliedToAvailable, setIsMessageRepliedToAvailable] = useState<boolean>(false);
   const [quotedMessageId, setQuotedMessageId] = useState<string>('')
-
+  
   /**
   * All the useRef useCometChatMessageList are declaired here. These do not trigger a rerender. They are used to get the updated values wherever required in the code.
    */
@@ -490,6 +490,7 @@ const CometChatMessageList = (props: MessageListProps) => {
   const hasReachedBottomRef = useRef<boolean>(false);
   const hasVisibleAreaRef = useRef<boolean>(false);
   const pendingMessagesMapRef = useRef<{ [runId: string]: (CometChat.AIAssistantMessage | CometChat.AIToolArgumentMessage | CometChat.AIToolResultMessage)[] }>({});
+  const isStreamingRef = useRef<boolean>(false);
   var timeoutId: NodeJS.Timeout | null | number = null;
   const IframeContext = useCometChatFrameContext();
 
@@ -498,7 +499,9 @@ const CometChatMessageList = (props: MessageListProps) => {
   }
 
   const { debouncedCallback: debouncedSetMessageProgress } = useDebouncedCallback(
-    () => setIsMessageInProgress(false),
+    () => {
+      if(!isStreamingRef.current) setIsMessageInProgress(false);
+    },
     500
   );
 
@@ -863,7 +866,9 @@ const CometChatMessageList = (props: MessageListProps) => {
         const receiverType = message?.getReceiverType();
         const senderId = message?.getSender()?.getUid();
         if (parentMessageIdRef.current) {
-          if (message.getParentMessageId() === parentMessageIdRef.current || message.getId() === parentMessageIdRef.current) {
+          if (message.getParentMessageId() === parentMessageIdRef.current
+           || (isAgentChat && message.getId() === parentMessageIdRef.current)
+          ) {
             return true;
           }
         } else {
@@ -1427,6 +1432,9 @@ const CometChatMessageList = (props: MessageListProps) => {
             message: message,
             status: MessageStatus.inprogress,
           });
+          if(isOnBottomRef.current) setTimeout(() => {
+            scrollToBottom()
+          }, 100)
         }
       } catch (error: any) {
         errorHandler(error, "onEditMessage");
@@ -1451,6 +1459,9 @@ const CometChatMessageList = (props: MessageListProps) => {
             message: message,
             status: MessageStatus.inprogress,
           });
+          if(isOnBottomRef.current) setTimeout(() => {
+            scrollToBottom()
+          }, 100)
         }
       } catch (error: any) {
         errorHandler(error, "onReply");
@@ -2638,22 +2649,6 @@ const CometChatMessageList = (props: MessageListProps) => {
         }
         if (!hideGroupActionMessages || (hideGroupActionMessages && message.getCategory() !== CometChatUIKitConstants.MessageCategory.action)) {
           setMessageList((prevMessageList: CometChat.BaseMessage[]) => {
-            const lastMessage = prevMessageList.at(-1);
-            if (
-              message.getType() === CometChatUIKitConstants.streamMessageTypes.run_started
-            ) {
-              if (
-                lastMessage?.getId() === message.getId() 
-                &&
-                (!lastMessage.getSender() ||
-                  lastMessage.getSender()?.getUid() ==
-                    loggedInUserRef.current?.getUid())
-              ) {
-                startStreamingMessage();
-                return [...prevMessageList, message];
-              }
-              return prevMessageList;
-            }
             return [...prevMessageList, message];
           });
         }
@@ -3070,6 +3065,12 @@ const CometChatMessageList = (props: MessageListProps) => {
             if (runStartedIndex !== -1) {
               messageListCopy.splice(runStartedIndex, 1, ...(pendingMessages as CometChat.BaseMessage[]));
             }
+
+            const messageToMarkRead = messageListCopy.find((msg) => {
+              return Number(msg.getId()) == Number(runId) && msg.getSender().getUid() === loggedInUserRef.current?.getUid() && !msg.getReadAt()
+            })
+            messageToMarkRead?.setReadAt(CometChatUIKitUtility.getUnixTimestamp());
+
             return messageListCopy;
           });
 
@@ -3396,7 +3397,7 @@ const CometChatMessageList = (props: MessageListProps) => {
           let shouldAddMessage = !hasTargetMessageId || (hasTargetMessageId && hasReachedBottomRef.current)
           switch (status) {
             case MessageStatus.inprogress: {
-
+              
               setIsMessageInProgress(true);
               if (isPartOfCurrentChatForUIEvent(message) && shouldAddMessage) {
                 removeMessagesByType(CometChatUIKitConstants.streamMessageTypes.run_started);
@@ -3406,6 +3407,12 @@ const CometChatMessageList = (props: MessageListProps) => {
             }
             case MessageStatus.success: {
               if (isPartOfCurrentChatForUIEvent(message) && shouldAddMessage) {
+                
+                if(isAgentChat && totalMessagesCountRef.current > 0) {
+                  startStreamingMessage();
+                  let msg = createMessageCopyFromBaseMessage(message, user);
+                  addMessage(msg);
+                }
                 if (showNewMessagesBanner) {
                   setShowNewMessagesBanner(false);
                   UnreadMessagesRef.current = [];
@@ -3429,6 +3436,7 @@ const CometChatMessageList = (props: MessageListProps) => {
           }
         }
       );
+
       if (!isAgentChat) {
         onCustomMessageReceived = CometChatMessageEvents.onCustomMessageReceived.subscribe((customMessage: CometChat.CustomMessage) => {
           messageReceivedHandler(customMessage);
@@ -3618,6 +3626,7 @@ const CometChatMessageList = (props: MessageListProps) => {
                 pendingMessagesMapRef.current[runId] = [];
               }
               pendingMessagesMapRef.current[runId].push(message);
+              if(!isStreamingRef.current) processPendingMessages()
             }
           } catch (error: any) {
             errorHandler(error, "onAIAssistantMessageReceived");
@@ -4226,7 +4235,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
             className={isHighlighted ? "cometchat-message-list__bubble-highlight" : (moderationStatus && !isAgentChat) ? `cometchat-message-list__bubble-moderation-${moderationStatus}` : ""}
             style={{
               width: "100%",
-              ...(m.getSender() ? {} : style)
+              ...(isAgentChat ? {} : m.getSender() ? {} : style)
             }}
             key={m.getId()}>
             {getBubbleWrapper(m)
@@ -4310,8 +4319,8 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
  * @returns {States} - Returns the current state of the message list
  */
   const getCurrentMessageListState: () => States = useCallback(() => {
-    return messageListState
-  }, [messageListState]);
+    return messageListState !== States.error && messageList.length === 0 ? States.empty : messageListState;
+  }, [messageListState, messageList]);
   /**
    * Function to hide the message information
    */
@@ -4344,6 +4353,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
    */
   useEffect(() => {
     const subscription = streamingState$.subscribe((isStreaming) => {
+      isStreamingRef.current = isStreaming;
       if (!isStreaming) {
         // Streaming has ended, process pending messages
         processPendingMessages();
@@ -4358,9 +4368,6 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
       pendingMessagesMapRef.current = {};
     };
   }, [processPendingMessages]);
-
-  const shouldShowEmptyState =
-  isAgentChat && !parentMessageId && messageList.length === 0;
   
   /**
    * Custom useCometChatMessageList for CometChatMessageList component.
@@ -4402,7 +4409,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
         boxSizing: "border-box"
       }}>
         <div
-          className={`cometchat-message-list ${messageListState != States.loading && hasCompletedInitialLoad && !isMessageRepliedToAvailable && messageListState != States.empty && !isAgentChat ? 'cometchat-message-list-loaded' : ""} ${!showScrollbar ? "cometchat-message-list-hide-scrollbar" : ""} ${createUniqueUUID}`}
+          className={`cometchat-message-list ${getCurrentMessageListState() !== States.loading && hasCompletedInitialLoad && !isMessageRepliedToAvailable && getCurrentMessageListState() !== States.empty && getCurrentMessageListState() !== States.error && !isAgentChat ? 'cometchat-message-list-loaded' : ""} ${!showScrollbar ? "cometchat-message-list-hide-scrollbar" : ""} ${createUniqueUUID}`}
         >
           {stickyDateHeaderRef.current && showDateHeader && !hideStickyDate && messageList.length > 0 ? <div
             className='cometchat-message-list__date-header'
@@ -4437,7 +4444,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
               onScrolledToBottom={isAgentChat ? undefined : onBottomCallback}
               onScrolledToTop={isAgentChat && !parentMessageId ? undefined : onTopCallback}
               listItemKey='getMuid'
-              state={shouldShowEmptyState ? States.empty :  getCurrentMessageListState()}
+              state={getCurrentMessageListState()}
               loadingView={getLoaderHtml}
               hideError={hideError}
               errorView={getErrorHtml}

@@ -86,7 +86,7 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
             const isOverflowing = textRef.current.scrollHeight >= 80;
             setIsTruncated(isOverflowing);
         }
-    },[text, setIsTruncated])
+    },[text, textState, setIsTruncated])
 
     return (
         <div className="cometchat">
