@@ -1,3 +1,15 @@
+## [5.0.13] - 15-10-2025
+
+## New
+- None
+
+## Enhancements
+- None
+
+## Fixes
+- Fixed an issue where the details components did not close when switching chats by clicking on a mentioned user.
+- Resolved an issue where user statuses were not updating in real time in the Group Members section after adding users to a group.
+
 ## [5.0.12] - 17-09-2025
 
 ## New

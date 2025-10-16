@@ -1383,26 +1383,34 @@ function CometChatHome(props: { theme?: string }) {
         const openChatForUser = (user?: CometChat.User) => {
             const uid = user?.getUid();
             if (uid) {
-                setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } });
+                const closeSide = () => {
+                    setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } });
+                }
                 if (activeTab === "chats") {
                     CometChat.getConversation(uid!, CometChatUIKitConstants.MessageReceiverType.user).then(
                         (conversation) => {
-                            setNewChat(undefined);
-                            setSelectedItem(conversation);
-                            setAppState({ type: "updateSelectedItem", payload: conversation });
+                            if(!selectedItem  || !(selectedItem instanceof CometChat.Conversation) || selectedItem?.getConversationId() !== conversation.getConversationId()) {
+                                setNewChat(undefined);
+                                setSelectedItem(conversation);
+                                setAppState({ type: "updateSelectedItem", payload: conversation });
+                                closeSide();
+                            }
                         },
                         (error) => {
                             setNewChat({ user, group: undefined });
                             setSelectedItem(undefined);
+                            closeSide();
                         }
                     );
                 } else if (activeTab === "users") {
                     setNewChat(undefined);
                     setSelectedItem(user);
                     setAppState({ type: "updateSelectedItemUser", payload: user });
+                    closeSide();
                 } else if (activeTab === "groups") {
                     setNewChat({ user, group: undefined });
                     setSelectedItem(undefined);
+                    closeSide();
                 }
             }
         }

@@ -38,7 +38,7 @@ import { CometChatEditPreview } from "../BaseComponents/CometChatEditPreview/Com
 import { CometChatActionSheet } from "../BaseComponents/CometChatActionSheet/CometChatActionSheet";
 import { CometChatEmojiKeyboard } from "../BaseComponents/CometChatEmojiKeyboard/CometChatEmojiKeyboard";
 import { ComposerId } from '../../utils/MessagesDataSource';
-import { decodeHTML, getThemeVariable, isMobileDevice, isSafari, processFileForAudio, sanitizeHtmlStringToFragment } from '../../utils/util';
+import { decodeHTML, getThemeVariable, isMobileDevice, isSafari, processFileForAudio, sanitizeHtmlStringToFragment, shouldShowCustomMimeTypes } from '../../utils/util';
 import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
 import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
@@ -1255,7 +1255,8 @@ try {
     }
   
     const file = mediaFilePickerElement.files[0];
-    const expectedFileType = mediaFilePickerElement.accept.slice(0, -2);
+    const acceptAttr = mediaFilePickerElement.accept;
+    let expectedFileType = !acceptAttr || acceptAttr === "*/*" ? "file" : acceptAttr.split("/")[0]
     const actualFileType = expectedFileType === "file" ? "file" : file.type.split('/')[0];
     if (expectedFileType !== "file" && expectedFileType !== actualFileType) {
       dispatch({ type: "setShowValidationError", showValidationError: true });
@@ -1711,8 +1712,20 @@ return hideAttachmentButton || (hideAudioAttachmentOption && hideVideoAttachment
       if (typeof actionOnClick === "function") {
         actionOnClick();
       } else {
+        let acceptMap: Record<string, string> = {
+          [CometChatUIKitConstants.MessageTypes.image]: "image/*",
+          [CometChatUIKitConstants.MessageTypes.video]: "video/*",
+          [CometChatUIKitConstants.MessageTypes.audio]: "audio/*",
+          [CometChatUIKitConstants.MessageTypes.file]: "*/*"
+        };
+        if(shouldShowCustomMimeTypes()){
+          acceptMap[CometChatUIKitConstants.MessageTypes.image] = CometChatUIKitConstants.mimeTypes.image;
+          acceptMap[CometChatUIKitConstants.MessageTypes.video] = CometChatUIKitConstants.mimeTypes.video;
+          acceptMap[CometChatUIKitConstants.MessageTypes.audio] = CometChatUIKitConstants.mimeTypes.audio;
+        }
+        const acceptValue = acceptMap[action.id] ?? "*/*";
         // Open the correct file picker
-        mediaFilePickerRef.current!.accept = `${action.id}/*`;
+        mediaFilePickerRef.current!.accept = acceptValue;
         mediaFilePickerRef.current!.click();
       }
       dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });

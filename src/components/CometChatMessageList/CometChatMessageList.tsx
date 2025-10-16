@@ -1243,7 +1243,9 @@ const CometChatMessageList = (props: MessageListProps) => {
             message: message,
             status: MessageStatus.inprogress,
           });
-
+          if(isOnBottomRef.current) setTimeout(() => {
+            scrollToBottom()
+          }, 100)
         }
 
       } catch (error: any) {

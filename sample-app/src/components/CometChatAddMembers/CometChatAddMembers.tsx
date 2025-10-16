@@ -272,6 +272,7 @@ export function CometChatAddMembers(props: IAddMembersProps) {
         groupMember.setName(user.getName());
         groupMember.setGuid(groupPropRef.current.getGuid());
         groupMember.setAvatar(user?.getAvatar())
+        groupMember.setStatus(user.getStatus());
         return groupMember;
     }, [groupPropRef]);
 

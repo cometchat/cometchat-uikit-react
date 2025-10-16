@@ -358,3 +358,43 @@ export const sanitizeToSpanOnly = (htmlString: string, regexPatterns: RegExp[][]
   // and everything else as plain text
   return sanitized;
 };
+
+/**
+ * @function isIOS
+ * @description Checks if the current device is running iOS (iPhone, iPad, or iPod).
+ * It handles modern iPads (iOS 13+) which often report as 'Mac' but support touch.
+ * @returns {boolean} True if the device is running iOS, false otherwise.
+ */
+const isIOS = (): boolean => { 
+  if (navigator.userAgent.includes("Mac") && 'ontouchend' in document) {
+    return true;
+}
+
+// 2. Check for classic iOS user agent strings (iPhone, iPad, iPod).
+const userAgent = navigator.userAgent.toLowerCase();
+return /iphone|ipad|ipod/.test(userAgent);
+}
+
+/**
+* @function isMac
+* @description Checks if the current device is running macOS.
+* It explicitly excludes modern iPads that mimic the Mac user agent but support touch.
+* @returns {boolean} True if the device is running macOS, false otherwise.
+*/
+const isMac = (): boolean => {
+  if (navigator.userAgent.includes("Mac") && 'ontouchend' in document) {
+    return false;
+}
+
+  const userAgent = navigator.userAgent.toLowerCase();
+  return /macintosh|mac os x/.test(userAgent);
+}
+
+/**
+* @function shouldShowCustomMimeTypes
+* @description Returns true if the device is running either iOS (iPhone, iPad, iPod) or macOS.
+* @returns {boolean} True if the device is an Apple device (iOS or macOS), false otherwise.
+*/
+export const shouldShowCustomMimeTypes = (): boolean=>{
+return isIOS() || isMac();
+}

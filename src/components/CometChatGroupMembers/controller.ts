@@ -83,6 +83,7 @@ export class GroupMembersManager {
         groupMember.setGuid(group.getGuid());
         groupMember.setUid(user.getUid());
         groupMember.setAvatar(user?.getAvatar())
+        groupMember.setStatus(user.getStatus());
         return groupMember;
     }
 
