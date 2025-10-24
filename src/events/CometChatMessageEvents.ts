@@ -9,6 +9,7 @@ import { Subject } from 'rxjs';
 export class CometChatMessageEvents {
     static ccMessageSent: Subject<IMessages> = new Subject<IMessages>();
     static ccMessageEdited: Subject<IMessages> = new Subject<IMessages>();
+    static ccReplyToMessage: Subject<IMessages> = new Subject<IMessages>();
     static ccMessageTranslated: Subject<IMessages> = new Subject<IMessages>();
     static ccMessageRead: Subject<CometChat.BaseMessage> = new Subject<CometChat.BaseMessage>();
     static ccMessageDeleted: Subject<CometChat.BaseMessage> = new Subject<CometChat.BaseMessage>();

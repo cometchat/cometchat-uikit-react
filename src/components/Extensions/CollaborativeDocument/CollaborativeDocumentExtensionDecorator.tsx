@@ -6,8 +6,8 @@ import DocumentIcon from "../../../assets/collabrative_document.svg";
 import { CollaborativeDocumentConstants } from "./CollaborativeDocumentConstants";
 import { CometChatUIKitUtility } from "../../../CometChatUIKit/CometChatUIKitUtility";
 import { CometChatUIKitConstants } from "../../../constants/CometChatUIKitConstants";
-import { MessageBubbleAlignment } from "../../../Enums/Enums";
-import {getLocalizedString} from "../../../resources/CometChatLocalize/cometchat-localize";
+import { MessageBubbleAlignment, MessageStatus } from "../../../Enums/Enums";
+import { getLocalizedString } from "../../../resources/CometChatLocalize/cometchat-localize";
 import { CometChatMessageComposerAction, CometChatMessageTemplate } from "../../../modals";
 import { CometChatDocumentBubble } from "../../BaseComponents/CometChatDocumentBubble/CometChatDocumentBubble";
 import bannerImageUrlLight from "../../../assets/Collaborative_Document_Light.png";
@@ -15,6 +15,8 @@ import bannerImageUrlDark from "../../../assets/Collaborative_Document_Dark.png"
 import { CometChatUIKitLoginListener } from "../../../CometChatUIKit/CometChatUIKitLoginListener";
 import { getThemeMode, isMessageSentByMe } from "../../../utils/util";
 import { CometChatUIKit } from "../../../CometChatUIKit/CometChatUIKit";
+import { CometChatMessageEvents } from "../../../events/CometChatMessageEvents";
+import { ChatConfigurator } from "../../../utils/ChatConfigurator";
 
 
 
@@ -152,6 +154,15 @@ export class CollaborativeDocumentExtensionDecorator extends DataSourceDecorator
       type: CollaborativeDocumentConstants.extension_document,
       category: CometChatUIKitConstants.MessageCategory.custom,
       statusInfoView: super.getStatusInfoView,
+      replyView: (
+        message: CometChat.BaseMessage,
+        _alignment?: MessageBubbleAlignment,
+        onReplyViewClicked?:(messageToReply: CometChat.BaseMessage) => void
+      ) => {
+        let documentMessage: CometChat.CustomMessage =
+          message as CometChat.CustomMessage;
+        return ChatConfigurator.getDataSource().getReplyView(documentMessage, _alignment, onReplyViewClicked);
+      },
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment
@@ -159,9 +170,9 @@ export class CollaborativeDocumentExtensionDecorator extends DataSourceDecorator
         let documentMessage: CometChat.CustomMessage =
           message as CometChat.CustomMessage;
         if (documentMessage.getDeletedAt()) {
-          return super.getDeleteMessageBubble(documentMessage,undefined,_alignment);
+          return super.getDeleteMessageBubble(documentMessage, undefined, _alignment);
         }
-        return this.getDocumentContentView(documentMessage,_alignment);
+        return this.getDocumentContentView(documentMessage, _alignment);
       },
       options: (
         loggedInUser: CometChat.User,
@@ -192,7 +203,7 @@ export class CollaborativeDocumentExtensionDecorator extends DataSourceDecorator
    * @returns {JSX.Element} The document content view component.
    */
   getDocumentContentView(
-    documentMessage: CometChat.CustomMessage,alignment?:MessageBubbleAlignment) {
+    documentMessage: CometChat.CustomMessage, alignment?: MessageBubbleAlignment) {
     const documentURL = this.getDocumentURL(documentMessage);
     const documentTitle = getLocalizedString("message_list_collaborative_document_title");
     const documentButtonText = getLocalizedString("message_list_collaborative_document_open");
@@ -203,15 +214,15 @@ export class CollaborativeDocumentExtensionDecorator extends DataSourceDecorator
     const bannerImage = !isDarkMode ? bannerImageUrlLight : bannerImageUrlDark;
     return (
       <div className="cometchat-collaborative-document">
-      <CometChatDocumentBubble
-        title={documentTitle}
-        URL={documentURL}
-        subtitle={documentSubitle}
-        buttonText={documentButtonText}
-        onClicked={this.launchCollaborativeDocument}
-        bannerImage={bannerImage}
-        isSentByMe={alignment == MessageBubbleAlignment.right}
-      />
+        <CometChatDocumentBubble
+          title={documentTitle}
+          URL={documentURL}
+          subtitle={documentSubitle}
+          buttonText={documentButtonText}
+          onClicked={this.launchCollaborativeDocument}
+          bannerImage={bannerImage}
+          isSentByMe={alignment == MessageBubbleAlignment.right}
+        />
       </div>
     );
   }
@@ -263,15 +274,17 @@ export class CollaborativeDocumentExtensionDecorator extends DataSourceDecorator
    * @param {any} id - The identifier object containing user or group information.
    * @returns {CometChatMessageComposerAction[]} The list of attachment options including the new document action.
    */
-  override getAttachmentOptions(id: any,additionalConfigurations?:any) {
+  override getAttachmentOptions(id: any, additionalConfigurations?: any) {
     if (!id?.parentMessageId && !additionalConfigurations?.hideCollaborativeDocumentOption) {
+      let replyToMessageRef = additionalConfigurations.messageToReplyRef;
+      const replyToMessage: CometChat.BaseMessage | undefined =replyToMessageRef ? replyToMessageRef.current : null;
       let isUser = id?.user ? true : false;
       let receiverType: string = isUser
         ? CometChatUIKitConstants.MessageReceiverType.user
         : CometChatUIKitConstants.MessageReceiverType.group;
       let receiverId: string | undefined = isUser ? id.user : id.group;
       const messageComposerActions: CometChatMessageComposerAction[] =
-        super.getAttachmentOptions(id,additionalConfigurations);
+        super.getAttachmentOptions(id, additionalConfigurations);
       let newAction: CometChatMessageComposerAction =
         new CometChatMessageComposerAction({
           id: CollaborativeDocumentConstants.document,
@@ -280,13 +293,23 @@ export class CollaborativeDocumentExtensionDecorator extends DataSourceDecorator
             ? this.configuration?.getOptionIconURL()
             : DocumentIcon,
           onClick: () => {
-            CometChat.callExtension(
-              CollaborativeDocumentConstants.document,
-              CollaborativeDocumentConstants.post,
-              CollaborativeDocumentConstants.v1_create,
-              { receiver: receiverId, receiverType: receiverType }
-            ).then(
-              (res: any) => { },
+            const payload: any = {
+              receiver: receiverId,
+              receiverType: receiverType,
+            };
+
+            if (replyToMessage) {
+              payload.quotedMessageId = replyToMessage.getId();
+            }
+            if(additionalConfigurations.closeReplyPreview){
+              additionalConfigurations.closeReplyPreview();
+            }
+            CometChat.callExtension(CollaborativeDocumentConstants.document, CollaborativeDocumentConstants.post, CollaborativeDocumentConstants.v1_create, payload).then(
+              (res: any) => {
+                if(replyToMessageRef){
+                  CometChatMessageEvents.ccReplyToMessage.next({message: replyToMessageRef.current, status: MessageStatus.success});
+                }
+              },
               (error: any) => { }
             );
           },
@@ -294,7 +317,7 @@ export class CollaborativeDocumentExtensionDecorator extends DataSourceDecorator
       messageComposerActions.push(newAction);
       return messageComposerActions;
     } else {
-      return super.getAttachmentOptions(id,additionalConfigurations);
+      return super.getAttachmentOptions(id, additionalConfigurations);
     }
   }
 

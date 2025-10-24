@@ -4,6 +4,8 @@ import { PollsConstants } from './PollsConstants';
 import {getLocalizedString} from '../../../resources/CometChatLocalize/cometchat-localize';
 import { CometChatUIKitConstants } from '../../../constants/CometChatUIKitConstants';
 import { CometChatButton } from '../../BaseComponents/CometChatButton/CometChatButton';
+import { MessageStatus } from '../../../Enums/Enums';
+import { CometChatMessageEvents } from '../../../events/CometChatMessageEvents';
 
 
 interface CreatePollProps {
@@ -30,6 +32,11 @@ interface CreatePollProps {
    * Optional.
    */
   ccCloseClicked?: () => void;
+
+  /** 
+   * The message that is being replied to. 
+  */
+  replyToMessage?: CometChat.BaseMessage | null;
 
   /** 
    * Default number of answer options to display initially.
@@ -85,6 +92,7 @@ const CreatePoll: React.FC<CreatePollProps> = ({
   user,
   group,
   ccCloseClicked,
+  replyToMessage,
   defaultAnswers = 2,
   questionPlaceholderText = getLocalizedString('polls_question_placeholder'),
   answerPlaceholderText = getLocalizedString('polls_add_placeholder'),
@@ -176,16 +184,25 @@ useEffect(()=> {
     let optionList: any[] = [
       ...inputValue
     ];
-    CometChat.callExtension(PollsConstants.polls, PollsConstants.post, PollsConstants.v2_create, {
+    const payload: any = {
       question: inputQuestion,
       options: optionList,
       receiver: receiverId,
       receiverType: type,
-    })
+    };
+
+    if (replyToMessage) {
+      payload.quotedMessageId = replyToMessage.getId();
+    }
+
+    CometChat.callExtension(PollsConstants.polls, PollsConstants.post, PollsConstants.v2_create, payload)
       .then((response: any) => {
         setIsLoading(false)
         if (response?.success) {
           ccCloseClicked?.();
+          if(replyToMessage){
+            CometChatMessageEvents.ccReplyToMessage.next({message: replyToMessage, status: MessageStatus.success});
+          }
         }
       })
       .catch(() => {

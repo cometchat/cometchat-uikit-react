@@ -31,6 +31,8 @@ export class PollsExtensionDecorator extends DataSourceDecorator {
   /** The data source used by this decorator. */
   public newDataSource!: DataSource;
 
+  /** The message that is being replied to. */
+  public replyToMessage:CometChat.BaseMessage | undefined;
   /**
    * Constructs a PollsExtensionDecorator instance.
    * @param dataSource - The data source to decorate.
@@ -123,6 +125,15 @@ export class PollsExtensionDecorator extends DataSourceDecorator {
       type: PollsConstants.extension_poll,
       category: CometChatUIKitConstants.MessageCategory.custom,
       statusInfoView: super.getStatusInfoView,
+      replyView: (
+        message: CometChat.BaseMessage,
+        _alignment?: MessageBubbleAlignment,
+        onReplyViewClicked?:(messageToReply: CometChat.BaseMessage) => void
+      ) => {
+        let documentMessage: CometChat.CustomMessage =
+          message as CometChat.CustomMessage;
+        return ChatConfigurator.getDataSource().getReplyView(documentMessage, _alignment,onReplyViewClicked);
+      },
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment
@@ -206,6 +217,9 @@ export class PollsExtensionDecorator extends DataSourceDecorator {
    */
   override getAttachmentOptions(id: any,additionalConfigurations?:any) {
     if (!id?.parentMessageId && !additionalConfigurations?.hidePollsOption) {
+      let replyToMessageRef = additionalConfigurations.messageToReplyRef;
+      const replyToMessage: CometChat.BaseMessage | undefined =replyToMessageRef ? replyToMessageRef.current : null;
+      this.replyToMessage = replyToMessage;
       const messageComposerActions: CometChatMessageComposerAction[] =
         super.getAttachmentOptions(id,additionalConfigurations);
       let newAction: CometChatMessageComposerAction =
@@ -266,6 +280,7 @@ export class PollsExtensionDecorator extends DataSourceDecorator {
           user={user}
           group={group}
           ccCloseClicked={this.triggerCloseEvent}
+          replyToMessage={this.replyToMessage}
         />
       </div>
     );

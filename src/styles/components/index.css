@@ -61,6 +61,7 @@
 @import url('./CometChatStreamMessageBubble.css');
 @import url('./CometChatAIAssistantChatHistory.css');
 @import url('./CometChatErrorView.css');
+@import url('./CometChatMessagePreview.css');
 /* @import url('./CometChatToolCallResultBubble.css');
 @import url('./CometChatToolCallArgumentBubble.css'); */
 .cometchat * {
@@ -116,6 +117,10 @@ font:var(--cometchat-font-body-regular);
     color: var(--cometchat-info-color);
 }
 .cometchat-text-bubble .cometchat-url{
+    text-decoration: underline;
+}
+
+.cometchat-message-preview .cometchat-url{
     text-decoration: underline;
 }
 

@@ -219,8 +219,8 @@ box-sizing: border-box;
 
 
 .cometchat-conversations__subtitle-icon-collaborative-whiteboard{
-  -webkit-mask: url("../../assets/conversations_collaborative-whiteboard-message.svg") center center no-repeat;
-  mask: url("../../assets/conversations_collaborative-whiteboard-message.svg") center center no-repeat;
+  -webkit-mask: url("../../assets/collaborative_whiteboard.svg") center center no-repeat;
+  mask: url("../../assets/collaborative_whiteboard.svg") center center no-repeat;
   -webkit-mask-size: contain;
   mask-size: contain;
 }

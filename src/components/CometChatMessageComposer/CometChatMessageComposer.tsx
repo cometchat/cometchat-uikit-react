@@ -44,6 +44,7 @@ import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
 import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
 import { useCometChatFrameContext } from "../../context/CometChatFrameContext";
+import { CometChatMessagePreview } from "../BaseComponents/CometChatMessagePreview/CometChatMessagePreview";
 
 export type ContentToDisplay =
   | "attachments"
@@ -260,6 +261,10 @@ type State = {
   /** A reference to the text message that is currently being edited, or null if none. */
 
   textMessageToEdit: CometChat.TextMessage | null;
+
+  /** A reference to the message that the user is currently replying to, or null if no reply is active. */
+
+  messageToReply: CometChat.BaseMessage | null;
   /** The content that is currently being displayed in the composer (e.g., text, polls, media). */
 
   contentToDisplay: ContentToDisplay;
@@ -293,6 +298,13 @@ export type Action =
   | {
     type: "setTextMessageToEdit";
     textMessageToEdit: State["textMessageToEdit"];
+  }
+
+  /** Action to set the message that is being replied. */
+
+  | {
+    type: "setMessageToReply";
+    messageToReply: State["messageToReply"];
   }
   /** Action to change the content being displayed in the composer (e.g., text, polls). */
 
@@ -333,6 +345,9 @@ function stateReducer(state: State, action: Action) {
     case "setTextMessageToEdit":
       newState = { ...state, textMessageToEdit: action.textMessageToEdit };
       break;
+    case "setMessageToReply":
+      newState = { ...state, messageToReply: action.messageToReply };
+    break;
     case "setContentToDisplay":
       newState = { ...state, contentToDisplay: action.contentToDisplay };
       break;
@@ -410,6 +425,7 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
     text: initialText,
     addToMsgInputText: initialText,
     textMessageToEdit: null,
+    messageToReply: null,
     contentToDisplay: "none",
     loggedInUser: null,
     showPoll: false,
@@ -510,6 +526,7 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
   const userPropRef = useRefSync(user);
   const groupPropRef = useRefSync(group);
   const parentMessageIdPropRef = useRefSync(parentMessageId);
+  const messageToReplyRef = useRefSync<CometChat.BaseMessage| null>(null);
   const onSendButtonClickPropRef = useRefSync(onSendButtonClick);
   const [smartRepliesView, setSmartRepliesView] = React.useState<React.ReactNode | null>(null);
   const [textFormatterArray, setTextFormatters] = useState(textFormatters);
@@ -968,13 +985,19 @@ try {
               })
             );
           }
+          if (messageToReplyRef.current){
+            textMessage.setQuotedMessage(messageToReplyRef.current);
+            textMessage.setQuotedMessageId(messageToReplyRef.current.getId());
+          }
+          dispatch({
+            type: "setMessageToReply",
+            messageToReply: null,
+          });
+
           textMessage.setMentionedUsers(userObj);
           mentionedUsers = [];
         }
-        CometChatMessageEvents.ccMessageSent.next({
-          message: textMessage,
-          status: MessageStatus.inprogress,
-        });
+        CometChatMessageEvents.ccMessageSent.next({message: textMessage, status: MessageStatus.inprogress});
 
 
         const sentTextMessage = await sendTextMessage(textMessage);
@@ -983,6 +1006,7 @@ try {
             message: sentTextMessage,
             status: MessageStatus.success,
           });
+          CometChatMessageEvents.ccReplyToMessage.next({message: sentTextMessage, status: MessageStatus.success})
           playAudioIfSoundNotDisabled();
         }
       } catch (error) {
@@ -1057,7 +1081,6 @@ try {
           );
           mySetAddToMsgInputText("");
           if (editedMessage) {
-
             CometChatMessageEvents.ccMessageEdited.next({
               message: editedMessage,
               status: MessageStatus.success,
@@ -1158,6 +1181,15 @@ try {
       if (parentMessageId !== null) {
         mediaMessage.setParentMessageId(parentMessageId);
       }
+      if (messageToReplyRef.current){
+        mediaMessage.setQuotedMessage(messageToReplyRef.current);
+        mediaMessage.setQuotedMessageId(messageToReplyRef.current.getId());
+      }
+      dispatch({
+        type: "setMessageToReply",
+        messageToReply: null,
+      });
+
       return mediaMessage;
       } catch (error) {
         errorHandler(error,"getMediaMessage");
@@ -1176,6 +1208,7 @@ try {
     ): Promise<T | undefined> => {
       try {
         const sentMediaMessage = await CometChat.sendMediaMessage(mediaMessage);
+        CometChatMessageEvents.ccReplyToMessage.next({message: mediaMessage, status: MessageStatus.success})
         return sentMediaMessage as T;
       } catch (error) {
         handleSDKError(error, mediaMessage, false);
@@ -1277,7 +1310,8 @@ try {
     }
   
     const file = mediaFilePickerElement.files[0];
-    const expectedFileType = mediaFilePickerElement.accept.slice(0, -2);
+    const acceptAttr = mediaFilePickerElement.accept;
+    let expectedFileType = !acceptAttr || acceptAttr === "*/*" ? "file" : acceptAttr.split("/")[0]
     const actualFileType = expectedFileType === "file" ? "file" : file.type.split('/')[0];
     if (expectedFileType !== "file" && expectedFileType !== actualFileType) {
       dispatch({ type: "setShowValidationError", showValidationError: true });
@@ -1569,7 +1603,7 @@ try {
     } else {
       actions = ChatConfigurator.getDataSource().getAttachmentOptions(
         getComposerId(),
-        {hideAudioAttachmentOption,hideCollaborativeDocumentOption,hideCollaborativeWhiteboardOption,hideFileAttachmentOption,hideImageAttachmentOption,hideVideoAttachmentOption,hidePollsOption}
+        {hideAudioAttachmentOption,hideCollaborativeDocumentOption,hideCollaborativeWhiteboardOption,hideFileAttachmentOption,hideImageAttachmentOption,hideVideoAttachmentOption,hidePollsOption, messageToReplyRef, closeReplyPreview}
       );
     }
     for (let i = 0; i < actions.length; i++) {
@@ -1638,7 +1672,9 @@ try {
       const stickerButton = ChatConfigurator.getDataSource().getStickerButton(
         getComposerId(),
         user,
-        group
+        group,
+        messageToReplyRef.current,
+        closeReplyPreview
       );
   
       return (
@@ -1712,6 +1748,28 @@ try {
     }
     onPreviewCloseClick()
   }
+
+
+  function onReplyPreviewClose(){
+    if(state.messageToReply){
+      CometChatMessageEvents.ccReplyToMessage.next({
+        message: state.messageToReply,
+        status:MessageStatus.cancelled
+      })
+    }
+    dispatch({
+      type: "setMessageToReply",
+      messageToReply: null,
+    });
+  }
+
+  function closeReplyPreview(){
+    messageToReplyRef.current = null;
+    dispatch({
+      type: "setMessageToReply",
+      messageToReply: null,
+    });
+  }
   /**
  * Handles the close event for the preview.
  * - Resets the text message to edit and clears the text input field.
@@ -1743,7 +1801,14 @@ try {
         actionOnClick();
       } else {
         // Open the correct file picker
-        mediaFilePickerRef.current!.accept = `${action.id}/*`;
+        const acceptMap: Record<string, string> = {
+          [CometChatUIKitConstants.MessageTypes.image]: "image/*",
+          [CometChatUIKitConstants.MessageTypes.video]: "video/*",
+          [CometChatUIKitConstants.MessageTypes.audio]: "audio/*",
+          [CometChatUIKitConstants.MessageTypes.file]: "*/*"
+        };
+        const acceptValue = acceptMap[action.id] ?? "*/*";
+        mediaFilePickerRef.current!.accept = acceptValue;
         mediaFilePickerRef.current!.click();
       }
       dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });
@@ -1801,7 +1866,7 @@ try {
 
           </div>
         ) : null}
-        {headerView ?? getTextMessageEditPreview()}
+        {headerView ??( getTextMessageEditPreview() || getReplyMessagePreview())}
       </div>
     );
   }
@@ -1967,6 +2032,28 @@ try {
     );
   }
 
+   /**
+    * Creates the preview view for text messages being edited, 
+    * formatting mentions within the message and returning a preview 
+    * component with the formatted text.
+    */
+   function getReplyMessagePreview(): JSX.Element | null {
+    if (state.messageToReply === null) {
+      return null;
+    }
+    messageToReplyRef.current = state.messageToReply;
+    return (
+      <CometChatMessagePreview
+      onClose={onReplyPreviewClose}
+      message={messageToReplyRef.current}
+      hideCloseButton={false}
+      previewTitle={ChatConfigurator.getDataSource().getMessagePreviewTitle(messageToReplyRef.current)}
+      previewSubtitle={ChatConfigurator.getDataSource().getMessagePreviewSubtitle(messageToReplyRef.current)}
+    />
+    );
+  }
+
+
   /**
    * Creates the file picker component for selecting media files to send. 
    * The input element is hidden and triggers the media message 
@@ -2067,21 +2154,30 @@ try {
    */
   const onKeyUp = useCallback(
     (event: any) => {
-      if (event.keyCode === 13 && !event.shiftKey || (event.keyCode === 13 && !event.shiftKey && enterKeyBehavior == EnterKeyBehavior.None)) {
+      const keyUpCheck = event.keyCode === 13 && !event.shiftKey;
+      if (keyUpCheck || 
+          (keyUpCheck && enterKeyBehavior == EnterKeyBehavior.None)) {
         event.preventDefault();
         return;
       }
+      
+      // Add this check to prevent infinite loops
+      if (!event.isTrusted) {
+        return;
+      }
+      
       if(isSafari()){
         updateSelection()
-
       }
+      
       const element = getCurrentInput() as HTMLElement;
-
+      
       if (event.keyCode === 8) {
         if (element.innerHTML === '<br>') {
           emptyInputField();
         }
       }
+      
       if (textFormatterArray && textFormatterArray.length) {
         for (let i = 0; i < textFormatterArray.length; i++) {
           if (element) {
@@ -2091,7 +2187,13 @@ try {
             currentSelectionForRegex.current!,
             currentSelectionForRegexRange.current!
           );
-          textFormatterArray[i].onKeyUp(event);
+          
+          // Add try-catch and prevent event propagation
+          try {
+            textFormatterArray[i].onKeyUp(event);
+          } catch (error) {
+            console.error('Error in text formatter onKeyUp:', error);
+          }
         }
       }
     }, [textFormatterArray, user, group]
@@ -2399,7 +2501,8 @@ try {
     textMessageToEdit:state.textMessageToEdit,
     getCurrentWindow,
     getCurrentDocument,
-    onTextChange
+    onTextChange,
+    messageToReplyRef
   });
   // Main rendering of the message composer component
   return (
@@ -2409,7 +2512,6 @@ try {
         {showListForMentions && !disableMentions && (
           <div
             className='cometchat-mention-list'
-
             ref={userMemberWrapperRef}>
             <CometChatUserMemberWrapper
               userMemberListType={userMemberListType}
@@ -2429,7 +2531,7 @@ try {
           className={`cometchat-message-composer ${!showScrollbar ? 'cometchat-message-composer-hide-scrollbar' : ''}`}
         >
           {getMediaFilePicker()}
-          { state.showValidationError  || state.showMentionsCountWarning || headerView ||  getTextMessageEditPreview() ? getHeaderView() : null}
+          { state.showValidationError  || state.showMentionsCountWarning || headerView ||  getTextMessageEditPreview() || getReplyMessagePreview() ? getHeaderView() : null}
           {getTextInput()}
         </div>
       </div></>

@@ -25,6 +25,7 @@ import PlaceholderImage from "../assets/image_placeholder.png";
 import PrivateMessageIcon from "../assets/send_message_privately.svg";
 import ReactionIcon from "../assets/add_reaction_icon.svg";
 import ThreadIcon from "../assets/reply_in_thread.svg";
+import Reply from "../assets/reply.svg";
 import VideoIcon from "../assets/videocam.svg";
 import { CometChatTextBubble } from "../components/BaseComponents/CometChatTextBubble/CometChatTextBubble";
 import { CometChatDeleteBubble } from "../components/BaseComponents/CometChatDeleteBubble/CometChatDeleteBubble";
@@ -52,6 +53,11 @@ import { CometChatAIAssistantMessageBubble } from "../components/BaseComponents/
 import { CometChatStreamMessageBubble } from "../components/BaseComponents/CometChatStreamMessageBubble/CometChatStreamMessageBubble";
 import { CometChatToolCallResultBubble } from "../components/BaseComponents/CometChatToolCallResultBubble/CometChatToolCallResultBubble";
 import { CometChatToolCallArgumentBubble } from "../components/BaseComponents/CometChatToolCallArgumentBubble/CometChatToolCallArgumentBubble";
+import { CometChatMessagePreview } from "../components/BaseComponents/CometChatMessagePreview/CometChatMessagePreview";
+import { CollaborativeDocumentConstants } from "../components/Extensions/CollaborativeDocument/CollaborativeDocumentConstants";
+import { CollaborativeWhiteboardConstants } from "../components/Extensions/CollaborativeWhiteboard/CollaborativeWhiteboardConstants";
+import { PollsConstants } from "../components/Extensions/Polls/PollsConstants";
+import { StickersConstants } from "../components/Extensions/Stickers/StickersConstants";
 export type ComposerId = { parentMessageId: number | null, user: string | null, group: string | null };
 /**
  * Utility class that extends DataSource and provides getters for message options.
@@ -60,6 +66,7 @@ export type ComposerId = { parentMessageId: number | null, user: string | null, 
 
 export interface additionalParamsOptions {
   hideReplyInThreadOption?: boolean,
+  hideReplyOption?: boolean,
   hideTranslateMessageOption?: boolean,
   hideReactionOption?: boolean,
   hideEditMessageOption?: boolean,
@@ -98,10 +105,20 @@ export class MessagesDataSource implements DataSource {
   }
 
   getReplyInThreadOption(): CometChatActionsIcon {
+    const replyString = getLocalizedString("message_list_option_reply")
     return new CometChatActionsIcon({
       id: CometChatUIKitConstants.MessageOption.replyInThread,
-      title: getLocalizedString("message_list_option_reply"),
+      title: replyString !== '' ? replyString : getLocalizedString("message_list_option_reply_in_thread"),
       iconURL: ThreadIcon,
+      onClick: undefined as unknown as (id: number) => void,
+    });
+  }
+
+  getReplyOption(): CometChatActionsIcon {
+    return new CometChatActionsIcon({
+      id: CometChatUIKitConstants.MessageOption.replyMessage,
+      title: getLocalizedString("message_list_option_reply_to_message"),
+      iconURL: Reply,
       onClick: undefined as unknown as (id: number) => void,
     });
   }
@@ -161,6 +178,9 @@ export class MessagesDataSource implements DataSource {
     let messageOptionList: Array<CometChatActionsIcon | CometChatActionsView> = [];
     if (!additionalParams?.hideReactionOption) {
       messageOptionList.push(this.getReactionOption());
+    }
+    if (!additionalParams?.hideReplyOption) {
+      messageOptionList.push(this.getReplyOption());
     }
     if (!messageObject.getParentMessageId() && !additionalParams?.hideReplyInThreadOption) {
       messageOptionList.push(this.getReplyInThreadOption());
@@ -278,8 +298,8 @@ export class MessagesDataSource implements DataSource {
 * @returns {JSX.Element | null} Returns JSX.Element for receipt of a message bubble or null
 */
 
-  getBubbleStatusInfoReceipt: (item: CometChat.BaseMessage, hideReceipts?: boolean,showError?:boolean) => JSX.Element | null =
-    (item: CometChat.BaseMessage, hideReceipts?: boolean, showError?: boolean) => {
+getBubbleStatusInfoReceipt: (item: CometChat.BaseMessage, hideReceipts?: boolean,showError?:boolean) => JSX.Element | null =
+(item: CometChat.BaseMessage, hideReceipts?: boolean, showError?: boolean) => {
       if (
 
         !hideReceipts &&
@@ -300,17 +320,17 @@ export class MessagesDataSource implements DataSource {
         );
       } else {
         if (showError) {
-           let state = MessageReceiptUtils.getReceiptStatus(item);
+          let state = MessageReceiptUtils.getReceiptStatus(item);
           if(state === Receipts.error){
-             return (
+            return (
               <div className={`cometchat-receipts cometchat-message-bubble__status-info-view-receipts cometchat-message-bubble__status-info-view-receipts-${this.getReceiptClass(state)} cometchat-receipts-${this.getReceiptClass(state)}`}>
-            <div className="cometchat-message-list__receipt"></div>
-          </div>
-             )
+                <div className="cometchat-message-list__receipt"></div>
+              </div>
+            )
           }
-        
+
         }
-           
+
 
         return null;
       }
@@ -367,7 +387,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
           {!_messageObject.getDeletedAt() && _messageObject.getType() == CometChatUIKitConstants.MessageTypes.text && _messageObject.getEditedAt() ? <span className="cometchat-message-bubble__status-info-view-helper-text">  {getLocalizedString("message_list_action_edited")} </span> : null}
 
           {this.getBubbleStatusInfoDate(_messageObject, messageSentAtDateTimeFormat)}
-          {this.getBubbleStatusInfoReceipt(_messageObject, hideReceipts,showError)}
+          {!hideReceipts && this.getBubbleStatusInfoReceipt(_messageObject, hideReceipts,showError)}
         </div>
       );
     } else {
@@ -382,6 +402,46 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     return null;
   }
 
+  getReplyView(
+    _messageObject: CometChat.BaseMessage,
+    _alignment: MessageBubbleAlignment,
+    onReplyPreviewClick?: (messageToReply: CometChat.BaseMessage) => void,
+    textFormatters?: CometChatTextFormatter[]
+  ) {
+    // Use default text formatters if textFormatters is undefined
+    const finalTextFormatters = textFormatters || ChatConfigurator.getDataSource().getAllTextFormatters({});
+
+    let isMessageModerated = false;
+    if(_messageObject instanceof CometChat.TextMessage || _messageObject instanceof CometChat.MediaMessage){
+      if(_messageObject.getModerationStatus() === CometChatUIKitConstants.moderationStatus.disapproved){
+        isMessageModerated = true;
+      }
+    }
+    const hasQuotedMessage = _messageObject.getQuotedMessage();
+      if (hasQuotedMessage &&
+        !(_messageObject instanceof CometChat.Action) &&
+        !(_messageObject instanceof CometChat.Call) &&
+        !(_messageObject.getType() == "meeting") &&
+        !(_messageObject.getDeletedAt())
+        ) {
+      return <div style={{ width: '100%' }} onClick={() => {
+        if(onReplyPreviewClick){
+          onReplyPreviewClick(_messageObject)
+        }
+      }}>
+        <CometChatMessagePreview 
+          hideCloseButton={true} 
+          message={_messageObject.getQuotedMessage()} 
+          isMessageModerated={isMessageModerated}
+          textFormatters={finalTextFormatters}
+          previewTitle={this.getMessagePreviewTitle(_messageObject.getQuotedMessage(), _alignment)}
+          previewSubtitle={this.getMessagePreviewSubtitle(_messageObject.getQuotedMessage(), textFormatters, _alignment)}
+        />
+      </div>;
+    }
+    return null;
+  }
+
   getTextMessageTemplate(
     additionalConfigurations?: additionalParams
   ): CometChatMessageTemplate {
@@ -389,6 +449,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       type: CometChatUIKitConstants.MessageTypes.text,
       category: CometChatUIKitConstants.MessageCategory.message,
       statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      replyView: ChatConfigurator.getDataSource().getReplyView,
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment,
@@ -482,8 +543,8 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       },
       options: undefined,
       footerView: (message: CometChat.BaseMessage) => {
-        return <div title={getLocalizedString("message_list_option_copy")}  className="cometchat-ai-assistant-message-bubble__copy" style={{ cursor: 'pointer' }} onClick={() => this.handleCopy(message as CometChat.AIAssistantMessage)}>
-         
+        return <div title={getLocalizedString("message_list_option_copy")} className="cometchat-ai-assistant-message-bubble__copy" style={{ cursor: 'pointer' }} onClick={() => this.handleCopy(message as CometChat.AIAssistantMessage)}>
+
         </div>
       },
 
@@ -553,6 +614,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       type: CometChatUIKitConstants.MessageTypes.audio,
       category: CometChatUIKitConstants.MessageCategory.message,
       statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      replyView: ChatConfigurator.getDataSource().getReplyView,
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment
@@ -585,6 +647,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       type: CometChatUIKitConstants.MessageTypes.video,
       category: CometChatUIKitConstants.MessageCategory.message,
       statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      replyView: ChatConfigurator.getDataSource().getReplyView,
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment
@@ -617,6 +680,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       type: CometChatUIKitConstants.MessageTypes.image,
       category: CometChatUIKitConstants.MessageCategory.message,
       statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      replyView: ChatConfigurator.getDataSource().getReplyView,
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment
@@ -663,6 +727,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       type: CometChatUIKitConstants.MessageTypes.file,
       category: CometChatUIKitConstants.MessageCategory.message,
       statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      replyView: ChatConfigurator.getDataSource().getReplyView,
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment
@@ -908,6 +973,9 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     if (!additionalParams?.hideReactionOption) {
       messageOptionList.push(this.getReactionOption());
     }
+    if (!additionalParams?.hideReplyOption) {
+      messageOptionList.push(this.getReplyOption());
+    }
     if (!messageObject?.getParentMessageId() && !additionalParams?.hideReplyInThreadOption) {
       messageOptionList.push(this.getReplyInThreadOption());
     }
@@ -958,9 +1026,11 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
 
   getStickerButton(
     id: ComposerId,
-
+    
     user?: CometChat.User,
-    group?: CometChat.Group
+    group?: CometChat.Group,
+    messageToReply?: CometChat.BaseMessage | null,
+    closeReplyPreview?: () => void,
   ): JSX.Element | undefined {
     return undefined;
   }
@@ -1494,6 +1564,157 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     return message;
   }
 
+  /**
+ * Helper method to get subtitle JSX element for message preview
+ * @param message - The message object
+ * @param textFormatters - Text formatters to apply
+ * @param _alignment - Alignment of the message bubble
+ * @returns JSX element for subtitle or null
+ */
+getMessagePreviewSubtitle(
+  message: CometChat.BaseMessage,
+  textFormatters?: CometChatTextFormatter[],
+  _alignment?: MessageBubbleAlignment
+): JSX.Element | null {
+  try {
+    if (!message) return null;
+    const messageType = message.getType();
+    const attachments: any = (message as CometChat.MediaMessage).getAttachments?.();
+
+    // Helper functions for creating subtitle elements
+    const createSubtitleWrapper = (iconType: string, text: string, iconClass?: string) => {
+      const finalIconClass = iconClass || `cometchat-message-preview__subtitle-icon-${iconType}`;
+      
+      return (
+        <div className="cometchat-message-preview__subtitle">
+          <div className={`cometchat-message-preview__subtitle-icon ${finalIconClass}`} />
+          <div className="cometchat-message-preview__subtitle-text">{text}</div>
+        </div>
+      );
+    };
+
+    const createCallWrapper = (callType: string, direction: string, text: string, iconClass?: string) => {
+      const finalIconClass = iconClass || `cometchat-message-preview__subtitle-icon-${callType}-${direction}`;
+      
+      return (
+        <div className="cometchat-message-preview__subtitle cometchat-message-preview__subtitle-call">
+          <div className={`cometchat-message-preview__subtitle-icon ${finalIconClass}`} />
+          <div className="cometchat-message-preview__subtitle-text">{text}</div>
+        </div>
+      );
+    };
+
+    const createSimpleWrapper = (iconType: string, text: string, iconClass?: string) => {
+      const finalIconClass = iconClass || `cometchat-message-preview__subtitle-icon-${iconType}`;
+      
+      return (
+        <div className="cometchat-message-preview__subtitle">
+          <div className={`cometchat-message-preview__subtitle-icon ${finalIconClass}`} />
+          <div className="cometchat-message-preview__subtitle-text">{text}</div>
+        </div>
+      );
+    };
+
+    const createTextWrapper = (text: string) => {
+      const finalTextFormatters = textFormatters || ChatConfigurator.getDataSource().getAllTextFormatters({});
+      let formattedText = text;
+      finalTextFormatters.forEach((formatter)=>{
+        formatter.setMessage(message);
+        formatter.setMessageBubbleAlignment(_alignment!);
+      })
+
+      for (let i = 0; i < finalTextFormatters.length; i++) {
+        (formattedText as string | void) = finalTextFormatters[i].getFormattedText(formattedText, {
+            mentionsTargetElement: MentionsTargetElement.textbubble,
+        });
+    }  
+
+      return (
+        <div className="cometchat-message-preview__subtitle" key={message.getId()}>
+          <div 
+            className="cometchat-message-preview__subtitle-text"
+            dangerouslySetInnerHTML={{ __html: formattedText }}
+          />
+        </div>
+      );
+    };
+
+    // Handle deleted messages first
+    if (message.getDeletedAt()) {
+      return createSimpleWrapper('deleted', getLocalizedString("message_preview_deleted_message"));
+    }
+
+    // Handle different message types
+    switch (messageType) {
+      case CometChatUIKitConstants.MessageTypes.text:
+        const messageText = (message as CometChat.TextMessage).getText();
+        return createTextWrapper(messageText);
+
+      case CometChatUIKitConstants.MessageTypes.image:
+        return attachments ? createSubtitleWrapper('image', attachments[0].name, 'cometchat-message-preview__subtitle-icon-image') : null;
+      
+      case CometChatUIKitConstants.MessageTypes.video:
+        return attachments ? createSubtitleWrapper('video', attachments[0].name, 'cometchat-message-preview__subtitle-icon-video') : null;
+      
+      case CometChatUIKitConstants.MessageTypes.audio:
+        return attachments ? createSubtitleWrapper('audio', attachments[0].name, 'cometchat-message-preview__subtitle-icon-audio') : null;
+      
+      case CometChatUIKitConstants.MessageTypes.file:
+        return attachments ? createSubtitleWrapper('file', attachments[0].name, 'cometchat-message-preview__subtitle-icon-file') : null;
+      
+      case CometChatUIKitConstants.calls.meeting:
+        try {
+          const customData = (message as CometChat.CustomMessage).getCustomData() as any;
+          const callType = customData?.callType || 'meeting';
+          const isOutgoing = message.getSender().getUid() === CometChatUIKitLoginListener.getLoggedInUser()?.getUid();
+          const direction = isOutgoing ? 'outgoing' : 'incoming';
+          const callText = `${isOutgoing ? 'Outgoing' : 'Incoming'} ${callType} call`;
+          const iconClass = `cometchat-message-preview__subtitle-icon-meeting-${direction}-${callType}`;
+          return createCallWrapper(callType, direction, callText, iconClass);
+        } catch (callError) {
+          return createSimpleWrapper('meeting', 'Call', 'cometchat-message-preview__subtitle-icon-meeting');
+        }
+      
+      case PollsConstants.extension_poll:
+        return createSimpleWrapper('poll', 'Poll', 'cometchat-message-preview__subtitle-icon-poll');
+      
+      case StickersConstants.sticker:
+        return createSimpleWrapper('sticker', getLocalizedString('message_composer_sticker_hover'), 'cometchat-message-preview__subtitle-icon-sticker');
+      
+      case CollaborativeWhiteboardConstants.extension_whiteboard:
+        return createSimpleWrapper('collaborative-whiteboard', getLocalizedString("messsage_composer_collaborative_whiteboard"), 'cometchat-message-preview__subtitle-icon-collaborative-whiteboard');
+      
+      case CollaborativeDocumentConstants.extension_document:
+        return createSimpleWrapper('collaborative-document', getLocalizedString("messsage_composer_collaborative_document"), 'cometchat-message-preview__subtitle-icon-collaborative-document');
+      
+      default:
+        return (
+          <div className="cometchat-message-preview__subtitle">
+            <div className="cometchat-message-preview__subtitle-icon cometchat-message-preview__subtitle-icon-unsupported" />
+            <div className="cometchat-message-preview__subtitle-text">Unsupported message</div>
+          </div>
+        );
+    }
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Helper method to get title JSX element for message preview
+ * @param message - The message object
+ * @param _alignment - Alignment of the message bubble
+ * @returns JSX element for subtitle or null
+ */
+getMessagePreviewTitle(message: CometChat.BaseMessage, _alignment?: MessageBubbleAlignment): JSX.Element | null {
+    if (!message) return null;
+    const isSentByMe = message.getSender().getUid() === CometChatUIKitLoginListener.getLoggedInUser()?.getUid();
+    return (
+      <div className={`cometchat-message-preview__title`}>
+        {isSentByMe ? getLocalizedString("conversation_subtitle_you_message") : message.getSender().getName()}
+      </div>
+    );
+}
 
 
   getAuxiliaryHeaderMenu(user?: CometChat.User, group?: CometChat.Group, additionalConfigurations?: any): Element[] | JSX.Element[] {
@@ -1590,6 +1811,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       type: CometChatUIKitConstants.MessageTypes.form,
       category: CometChatUIKitConstants.MessageCategory.interactive,
       statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      replyView: ChatConfigurator.getDataSource().getReplyView,
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment
@@ -1618,6 +1840,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       type: CometChatUIKitConstants.MessageTypes.scheduler,
       category: CometChatUIKitConstants.MessageCategory.interactive,
       statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      replyView: ChatConfigurator.getDataSource().getReplyView,
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment
@@ -1646,6 +1869,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       type: CometChatUIKitConstants.MessageTypes.card,
       category: CometChatUIKitConstants.MessageCategory.interactive,
       statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      replyView: ChatConfigurator.getDataSource().getReplyView,
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment

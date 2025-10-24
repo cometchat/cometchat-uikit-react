@@ -7,7 +7,7 @@ import WhiteboardIcon from "../../../assets/collaborative_whiteboard.svg";
 import { CollaborativeWhiteboardConstants } from "./CollaborativeWhiteboardConstants";
 import { CometChatUIKitUtility } from "../../../CometChatUIKit/CometChatUIKitUtility";
 import { CometChatUIKitConstants } from "../../../constants/CometChatUIKitConstants";
-import { DocumentIconAlignment, MessageBubbleAlignment } from "../../../Enums/Enums";
+import { DocumentIconAlignment, MessageBubbleAlignment, MessageStatus } from "../../../Enums/Enums";
 import {getLocalizedString} from "../../../resources/CometChatLocalize/cometchat-localize";
 import { CometChatMessageComposerAction, CometChatMessageTemplate } from "../../../modals";
 import { CometChatDocumentBubble } from "../../BaseComponents/CometChatDocumentBubble/CometChatDocumentBubble";
@@ -16,6 +16,8 @@ import bannerImageUrlDark from "../../../assets/Collaborative_Whiteboard_Dark.pn
 import { CometChatUIKitLoginListener } from "../../../CometChatUIKit/CometChatUIKitLoginListener";
 import { getThemeMode, isMessageSentByMe } from "../../../utils/util";
 import { CometChatUIKit } from "../../../CometChatUIKit/CometChatUIKit";
+import { ChatConfigurator } from "../../../utils/ChatConfigurator";
+import { CometChatMessageEvents } from "../../../events/CometChatMessageEvents";
 /**
  * Decorator class for extending functionality related to collaborative whiteboard.
  * @extends DataSourceDecorator
@@ -133,6 +135,15 @@ export class CollaborativeWhiteBoardExtensionDecorator extends DataSourceDecorat
       type: CollaborativeWhiteboardConstants.extension_whiteboard,
       category: CometChatUIKitConstants.MessageCategory.custom,
       statusInfoView: super.getStatusInfoView,
+      replyView: (
+        message: CometChat.BaseMessage,
+        _alignment?: MessageBubbleAlignment,
+        onReplyViewClicked?:(messageToReply: CometChat.BaseMessage) => void
+      ) => {
+        let documentMessage: CometChat.CustomMessage =
+          message as CometChat.CustomMessage;
+        return ChatConfigurator.getDataSource().getReplyView(documentMessage, _alignment, onReplyViewClicked);
+      },
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment
@@ -251,6 +262,8 @@ export class CollaborativeWhiteBoardExtensionDecorator extends DataSourceDecorat
    */
   override getAttachmentOptions(id: any,additionalConfigurations?:any) {
     if (!id?.parentMessageId && !additionalConfigurations?.hideCollaborativeWhiteboardOption) {
+      let replyToMessageRef = additionalConfigurations.messageToReplyRef;
+      const replyToMessage: CometChat.BaseMessage | undefined =replyToMessageRef ? replyToMessageRef.current : null;
       let isUser = id?.user ? true : false;
       let receiverType: string = isUser
         ? CometChatUIKitConstants.MessageReceiverType.user
@@ -266,13 +279,28 @@ export class CollaborativeWhiteBoardExtensionDecorator extends DataSourceDecorat
             ? this.configuration?.getOptionIconURL()
             : WhiteboardIcon,
           onClick: () => {
+            const payload: any = {
+              receiver: receiverId,
+              receiverType: receiverType,
+            };
+
+            if (replyToMessage) {
+              payload.quotedMessageId = replyToMessage.getId();
+            }
+            if(additionalConfigurations.closeReplyPreview){
+              additionalConfigurations.closeReplyPreview();
+            }
             CometChat.callExtension(
               CollaborativeWhiteboardConstants.whiteboard,
               CollaborativeWhiteboardConstants.post,
               CollaborativeWhiteboardConstants.v1_create,
-              { receiver: receiverId, receiverType: receiverType }
+              payload
             ).then(
-              (res: any) => { },
+              (res: any) => { 
+                if(replyToMessageRef){
+                  CometChatMessageEvents.ccReplyToMessage.next({message: replyToMessageRef.current, status: MessageStatus.success});
+                }
+              },
               (error: any) => {
                 console.log("error in sending whiteboard", error);
               }

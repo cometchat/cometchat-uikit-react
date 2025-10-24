@@ -40,6 +40,12 @@ class CometChatMessageTemplate {
     headerView: ((message: CometChat.BaseMessage, alignment: MessageBubbleAlignment) => Element | JSX.Element | null) | null = null;
 
     /**
+     * Custom component to customize the reply view section for each message bubble.
+     * @type {(message:CometChat.BaseMessage,alignment:MessageBubbleAlignment)=> Element | JSX.Element | null}
+     */
+    replyView: ((message: CometChat.BaseMessage, alignment?: MessageBubbleAlignment, onReplyViewClicked?:(messageToReply: CometChat.BaseMessage) => void, textFormatters?: CometChatTextFormatter[]) => Element | JSX.Element | null) | null = null;
+
+    /**
      * Custom component to customize the footer section for each message bubble.
      * By default, it displays the reactions.
      * @type {(message:CometChat.BaseMessage,alignment:MessageBubbleAlignment)=> Element | JSX.Element | null}

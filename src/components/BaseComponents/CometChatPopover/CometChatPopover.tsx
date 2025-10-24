@@ -55,6 +55,7 @@ const CometChatPopover = forwardRef<{
         const childRef = useRef<HTMLDivElement>(null);
         const parentViewRef = useRef<HTMLDivElement | null>(null);
         const availablePositionRef = useRef<Placement>(Placement.top);
+        const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
         useImperativeHandle(ref, () => ({
             openPopover() {
                 getPopoverPositionStyle();
@@ -112,27 +113,50 @@ const CometChatPopover = forwardRef<{
         }, [isOpen]);
 
         useEffect(() => {
+            const handleResize = () => {
+                if (!isOpen) return;
+                if (resizeTimeoutRef.current) {
+                    clearTimeout(resizeTimeoutRef.current);
+                }
+                resizeTimeoutRef.current = setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        getPopoverPositionStyle();
+                    });
+                },0);
+            };
+
             const handleScroll = () => {
                 if (!isOpen || !childRef.current) return;
                 const rect = childRef.current.getBoundingClientRect();
+                const windowHeight = getCurrentWindow().innerHeight;
+                const windowWidth = getCurrentWindow().innerWidth;
                 if (
-                    rect.top < 0 ||
-                    rect.left < 0 ||
-                    rect.bottom > getCurrentWindow().innerHeight ||
-                    rect.right > getCurrentWindow().innerWidth
+                    rect.bottom < 0 ||
+                    rect.top > windowHeight ||
+                    rect.right < 0 ||
+                    rect.left > windowWidth
                 ) {
                     setIsOpen(false);
                     if (onOutsideClick) {
                         onOutsideClick()
                     }
+                } else {
+                    requestAnimationFrame(() => {
+                        getPopoverPositionStyle();
+                    });
                 }
             };
-            getCurrentWindow().addEventListener('resize', handleScroll);
-            getCurrentWindow().addEventListener('scroll', handleScroll, true);
-            return () => {
-                getCurrentWindow().removeEventListener('resize', handleScroll);
-                getCurrentWindow().removeEventListener('scroll', handleScroll);
-            };
+            if (isOpen) {
+                getCurrentWindow().addEventListener('resize', handleResize);
+                getCurrentWindow().addEventListener('scroll', handleScroll, true);
+                return () => {
+                    getCurrentWindow().removeEventListener('resize', handleResize);
+                    getCurrentWindow().removeEventListener('scroll', handleScroll);
+                    if (resizeTimeoutRef.current) {
+                        clearTimeout(resizeTimeoutRef.current);
+                    }
+                };
+            }
         }, [isOpen]);
         /**
          * Updates the popover's position when opened and resets it when closed.
@@ -200,7 +224,7 @@ const CometChatPopover = forwardRef<{
             const width = popoverRef.current.scrollWidth;
             const rect = childRef.current.getBoundingClientRect();
             const parentViewRect = parentViewRef.current.getBoundingClientRect();
-            if (!rect || !parentViewRect) return;
+            if (!rect || !parentViewRect) return; 
             if(!useParentHeight){
                 setPopoverHeight();
                 return;
@@ -228,7 +252,7 @@ const CometChatPopover = forwardRef<{
             }
             
             setPositionStyleState(positionStyle);
-        }, [isOpen,useParentHeight]);
+        }, [isOpen, useParentHeight, getAvailablePlacement, showTooltip]);
 
         const setPopoverHeight = useCallback(() => {
             if (!popoverRef.current || !childRef.current) return;
@@ -242,7 +266,7 @@ const CometChatPopover = forwardRef<{
                 width: getCurrentWindow().innerWidth,
             };
             const height = popoverRef.current.scrollHeight;
-            let positionStyle: CSSProperties = {};
+            let positionStyle: CSSProperties = {};      
             if (placement === Placement.top) {
                 positionStyle.top = `${rect.top - height - 10}px`;
             } else if (placement === Placement.bottom) {
@@ -258,7 +282,7 @@ const CometChatPopover = forwardRef<{
             }
 
             setPositionStyleState(positionStyle);
-        }, [setPositionStyleState]);
+        }, [placement]);
         
         const getPopoverPositionStyle = useCallback(() => {
             if (useParentContainer) {
@@ -296,10 +320,8 @@ const CometChatPopover = forwardRef<{
                     : `${rect.top - 10}px`;
             }
             
-            if (Object.keys(positionStyleState).length === 0) {
-                setPositionStyleState(positionStyle);
-            }
-        }, [isOpen, positionStyleState, calculatePopoverPosition, useParentContainer]);
+            setPositionStyleState(positionStyle);
+        }, [isOpen, calculatePopoverPosition, useParentContainer, getAvailablePlacement]);
         
 
         const onPopoverMouseEnter = () => {

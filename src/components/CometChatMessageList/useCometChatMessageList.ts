@@ -31,6 +31,7 @@ function useCometChatMessageList(
 	showSmartReplies?:boolean,
 	goToMessageId?:string,
 	isAgentChat?:boolean,
+	messageRepliedTo?: string
 
 ): void {
 		/**
@@ -55,7 +56,7 @@ function useCometChatMessageList(
 					errorHandler(error,"getLoggedinUser");
 				}
 			);
-	}, [user, group,errorHandler]);
+	}, [user, group,errorHandler,messageRepliedTo]);
 	/**
 	* useEffect hook to subscribe to SDK and UI events when the component launches for the first time, or when changing from one chat to another.
 	**/
@@ -85,7 +86,7 @@ function useCometChatMessageList(
 				}
 				unsubscribeEvents = subscribeToUIEvents();
 				setMessageList([]);
-				if(isFirstReloadRef.current && goToMessageId){
+				if(isFirstReloadRef.current && (goToMessageId || messageRepliedTo)){
 				setScrollListToBottom(false);
 				isOnBottomRef.current = false;
 				}
@@ -95,7 +96,6 @@ function useCometChatMessageList(
 				}
 				if(!isAgentChat || (isAgentChat &&  parentMessageId)){
 				fetchPreviousMessages();
-
 				}
 				smartReplyViewRef.current = null;
 			}
@@ -107,7 +107,7 @@ function useCometChatMessageList(
 		} catch (error) {
 			errorHandler(error,"useEffect")
 		}
-	}, [user, group,isAgentChat]);
+	}, [user, group,isAgentChat, messageRepliedTo]);
 	/**
 	 * useEffect hook to store the first and last message ID in the messageList array. These are used to fetch new messages after a particular message when the connection gets reestablished after being interrupted.
 	**/

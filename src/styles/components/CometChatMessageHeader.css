@@ -8,7 +8,7 @@
     flex: 1 0 0;
     align-self: stretch;
     justify-content: space-between;
-    height: 64px;
+    height: 63px;
     background: var(--cometchat-background-color-01);
     width: 100%;
     overflow: hidden;

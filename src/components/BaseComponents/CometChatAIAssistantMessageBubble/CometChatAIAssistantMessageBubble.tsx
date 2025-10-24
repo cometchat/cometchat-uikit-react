@@ -3,7 +3,9 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
-import { getThemeMode } from '../../../utils/util';
+import { getThemeMode, isMobileDevice } from '../../../utils/util';
+import { CometChatFullScreenViewer } from '../CometChatFullScreenViewer/CometChatFullScreenViewer';
+import { CometChatUIEvents } from '../../../events/CometChatUIEvents';
 
 interface CometChatAIAssistantMessageBubbleProps {
   message?: CometChat.AIAssistantMessage
@@ -69,7 +71,33 @@ const CometChatAIAssistantMessageBubble: React.FC<CometChatAIAssistantMessageBub
                   {children}
                 </a>
               );
-            }
+            },
+            img({ node, ...props }: any) {
+              return (
+                <>
+                  <span className="cometchat-ai-assistant-message-bubble__image-intersection-start"></span>
+                  <img
+                    {...props}
+                    onClick={() => {
+                      if (!isMobileDevice() && message)
+                        CometChatUIEvents.ccShowDialog.next({
+                          child: (
+                            <CometChatFullScreenViewer
+                              url={props.src}
+                              ccCloseClicked={() => {
+                                CometChatUIEvents.ccHideDialog.next();
+                              }}
+                              message={message}
+                            />
+                          ),
+                          confirmCallback: null,
+                        });
+                    }}
+                  />
+                  <span className="cometchat-ai-assistant-message-bubble__image-intersection-end"></span>
+                </>
+              );
+            },
           }}
         />
       </div>

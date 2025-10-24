@@ -23,7 +23,7 @@ interface FullScreenViewerProps {
     /**
      * The media message containing the image.
      */
-    message: CometChat.MediaMessage;
+    message: CometChat.BaseMessage;
 
     /**
      * Format for timestamps associated with images in the message list.

@@ -177,7 +177,18 @@ const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubbleProps> 
                     {children}
                   </a>
                 );
-              }
+              },
+              img({ node, ...props }: any) {
+              return (
+                <>
+                  <span className="cometchat-stream-message-bubble__image-intersection-start"></span>
+                  <img
+                    {...props}
+                  />
+                  <span className="cometchat-stream-message-bubble__image-intersection-end"></span>
+                </>
+              );
+            },
             }}
           />
         )}
