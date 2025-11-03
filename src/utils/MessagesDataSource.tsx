@@ -68,6 +68,7 @@ export interface additionalParamsOptions {
   hideReplyInThreadOption?: boolean,
   hideReplyOption?: boolean,
   hideTranslateMessageOption?: boolean,
+  hideCustomTranslateMessageOption?: boolean,
   hideReactionOption?: boolean,
   hideEditMessageOption?: boolean,
   hideDeleteMessageOption?: boolean,

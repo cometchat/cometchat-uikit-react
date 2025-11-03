@@ -115,6 +115,12 @@ interface MessageListProps {
   hideTranslateMessageOption?: boolean;
 
   /**
+   * Hides the custom translate option.
+   * @default false
+   */
+  hideCustomTranslateMessageOption?: boolean;
+
+  /**
    * Hides the option to edit messages.
    * @default false
    */
@@ -357,6 +363,7 @@ const defaultProps: MessageListProps = {
   onReactionListItemClick: undefined,
   textFormatters: [],
   hideTranslateMessageOption: false,
+  hideCustomTranslateMessageOption: false,
   hideReplyInThreadOption: false,
   hideReplyOption: false,
   hideReactionOption: false,
@@ -405,6 +412,7 @@ const CometChatMessageList = (props: MessageListProps) => {
     hideReplyInThreadOption,
     hideReplyOption,
     hideTranslateMessageOption,
+    hideCustomTranslateMessageOption,
     hideReactionOption,
     hideEditMessageOption,
     hideDeleteMessageOption,
@@ -1565,6 +1573,7 @@ const CometChatMessageList = (props: MessageListProps) => {
                     hideReplyInThreadOption,
                     hideReplyOption,
                     hideTranslateMessageOption,
+                    hideCustomTranslateMessageOption,
                     hideReactionOption,
                     hideEditMessageOption,
                     hideDeleteMessageOption,
@@ -1589,6 +1598,7 @@ const CometChatMessageList = (props: MessageListProps) => {
       errorHandler,
       hideReplyInThreadOption,
       hideTranslateMessageOption,
+      hideCustomTranslateMessageOption,
       hideReactionOption,
       hideEditMessageOption,
       hideReplyOption,

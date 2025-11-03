@@ -11,6 +11,8 @@ export class CometChatMessageEvents {
     static ccMessageEdited: Subject<IMessages> = new Subject<IMessages>();
     static ccReplyToMessage: Subject<IMessages> = new Subject<IMessages>();
     static ccMessageTranslated: Subject<IMessages> = new Subject<IMessages>();
+    static ccCustomTranslateRequested: Subject<CometChat.TextMessage> = new Subject<CometChat.TextMessage>();
+    static ccCustomTranslateExecute: Subject<ICustomTranslatePayload> = new Subject<ICustomTranslatePayload>();
     static ccMessageRead: Subject<CometChat.BaseMessage> = new Subject<CometChat.BaseMessage>();
     static ccMessageDeleted: Subject<CometChat.BaseMessage> = new Subject<CometChat.BaseMessage>();
     /**
@@ -54,4 +56,16 @@ export class CometChatMessageEvents {
 export interface IMessages {
     message: CometChat.BaseMessage;
     status: MessageStatus;
+}
+
+export interface ICustomTranslateLanguage {
+    code: string;
+    name: string;
+    flagUrl?: string;
+}
+
+export interface ICustomTranslatePayload {
+    message: CometChat.TextMessage;
+    language: ICustomTranslateLanguage;
+    languages: ICustomTranslateLanguage[];
 }

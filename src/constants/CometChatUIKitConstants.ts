@@ -61,6 +61,7 @@ export class CometChatUIKitConstants {
         replyMessage: "reply",
         replyInThread: "replyInThread",
         translateMessage: "translate",
+        translateCustomMessage: "translateCustom",
         reactToMessage: "react",
         messageInformation: "messageInformation",
         copyMessage: "copy",

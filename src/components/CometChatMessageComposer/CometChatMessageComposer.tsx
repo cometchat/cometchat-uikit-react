@@ -45,6 +45,7 @@ import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
 import { useCometChatFrameContext } from "../../context/CometChatFrameContext";
 import { CometChatMessagePreview } from "../BaseComponents/CometChatMessagePreview/CometChatMessagePreview";
+import { CometChatClipboardImagePreview } from "../BaseComponents/CometChatClipboardImagePreview/CometChatClipboardImagePreview";
 
 export type ContentToDisplay =
   | "attachments"
@@ -58,6 +59,11 @@ type MediaMessageFileType =
   | typeof CometChatUIKitConstants.MessageTypes.audio
   | typeof CometChatUIKitConstants.MessageTypes.file;
 export type ActionOnClickType = (() => void) | null;
+
+type ClipboardPreviewState = {
+  file: File;
+  objectUrl: string;
+};
 
 interface MessageComposerProps {
   /**
@@ -149,6 +155,14 @@ interface MessageComposerProps {
    * @defaultValue `false`
    */
   hideSendButton?: boolean;
+
+  /**
+   * Enables clipboard image paste detection for the message composer.
+   * When enabled, pasting an image from the clipboard shows a preview
+   * with options to send or discard it.
+   * @defaultValue `false`
+   */
+  enableClipboardImagePaste?: boolean;
 
   /**
    * The user to send messages to. This prop specifies the recipient of the message.
@@ -406,11 +420,12 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
     hideCollaborativeDocumentOption = false,
     hideCollaborativeWhiteboardOption = false,
     hideAttachmentButton = false,
-    hideVoiceRecordingButton = false,
-    hideEmojiKeyboardButton = false,
-    hideStickersButton = false,
-    hideSendButton = false,
-    textFormatters = [],
+      hideVoiceRecordingButton = false,
+      hideEmojiKeyboardButton = false,
+      hideStickersButton = false,
+      hideSendButton = false,
+      enableClipboardImagePaste = false,
+      textFormatters = [],
     enterKeyBehavior = EnterKeyBehavior.SendMessage,
     disableSoundForMessage = false,
     customSoundForMessage,
@@ -537,10 +552,20 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
   const range = React.useRef<Range | undefined>(undefined);
   const [showListForMentions, setShowListForMentions] = useState(false);
   const mentionsTextFormatterInstanceRef =
-    useRef<CometChatMentionsFormatter>(
-      ChatConfigurator.getDataSource().getMentionsTextFormatter({})
-    );
+      useRef<CometChatMentionsFormatter>(
+        ChatConfigurator.getDataSource().getMentionsTextFormatter({})
+      );
   const [mentionsSearchCount, setMentionsSearchCount] = useState(0);
+  const [clipboardPreview, setClipboardPreview] = useState<ClipboardPreviewState | null>(null);
+  const [isSendingClipboardPreview, setIsSendingClipboardPreview] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (clipboardPreview?.objectUrl) {
+        URL.revokeObjectURL(clipboardPreview.objectUrl);
+      }
+    };
+  }, [clipboardPreview]);
 
   const [userMemberListType, setUserMemberListType] = useState<
     UserMemberListType | undefined
@@ -1300,10 +1325,10 @@ try {
    * Wrapper around `handleMediaMessageSend`
    */
   const handleMediaMessageSendWrapper = useCallback(async (): Promise<void> => {
-   try {
-    const mediaFilePickerElement = mediaFilePickerRef.current;
-    if (
-      !mediaFilePickerElement?.files?.length ||
+     try {
+      const mediaFilePickerElement = mediaFilePickerRef.current;
+      if (
+        !mediaFilePickerElement?.files?.length ||
       userPropRef.current?.getBlockedByMe()
     ) {
       return;
@@ -1339,11 +1364,132 @@ try {
    }
   }, [
     handleMediaMessageSend,
-    errorHandler,
-    getMediaMessage,
-    onSendButtonClickPropRef,
-    userPropRef,
-  ]);
+     errorHandler,
+      getMediaMessage,
+      onSendButtonClickPropRef,
+      userPropRef,
+    ]);
+
+    const clearClipboardPreview = useCallback(() => {
+      setClipboardPreview((previous) => {
+        if (previous?.objectUrl) {
+          URL.revokeObjectURL(previous.objectUrl);
+        }
+        return null;
+      });
+      setIsSendingClipboardPreview(false);
+    }, [setClipboardPreview, setIsSendingClipboardPreview]);
+
+    const handleClipboardPreviewSend = useCallback(async (): Promise<void> => {
+      if (!clipboardPreview || isSendingClipboardPreview) {
+        return;
+      }
+
+      if (userPropRef.current?.getBlockedByMe()) {
+        clearClipboardPreview();
+        return;
+      }
+
+      setIsSendingClipboardPreview(true);
+      try {
+        const fileType = CometChatUIKitConstants.MessageTypes.image as MediaMessageFileType;
+        const onSendButtonClick = onSendButtonClickPropRef.current;
+
+        if (onSendButtonClick) {
+          await Promise.all([
+            onSendButtonClick(
+              await getMediaMessage(clipboardPreview.file, fileType),
+              PreviewMessageMode.none
+            ),
+          ]);
+        } else {
+          await handleMediaMessageSend(clipboardPreview.file, fileType);
+        }
+        clearClipboardPreview();
+      } catch (error) {
+        errorHandler(error, "handleClipboardPreviewSend");
+      } finally {
+        setIsSendingClipboardPreview(false);
+      }
+    }, [
+      clearClipboardPreview,
+      clipboardPreview,
+      errorHandler,
+      getMediaMessage,
+      handleMediaMessageSend,
+      isSendingClipboardPreview,
+      onSendButtonClickPropRef,
+      setIsSendingClipboardPreview,
+      userPropRef,
+    ]);
+
+    const handleComposerPaste = useCallback(
+      (event: React.ClipboardEvent<HTMLDivElement>) => {
+        if (!enableClipboardImagePaste) {
+          return;
+        }
+
+        if (isSendingClipboardPreview) {
+          return;
+        }
+
+        try {
+          const clipboardData = event.clipboardData;
+          if (!clipboardData) {
+            return;
+          }
+
+          let imageFile: File | null = null;
+          const items = clipboardData.items;
+
+          if (items && items.length) {
+            for (let index = 0; index < items.length; index += 1) {
+              const item = items[index];
+              if (item.kind === "file" && item.type.startsWith("image/")) {
+                imageFile = item.getAsFile();
+                if (imageFile) {
+                  break;
+                }
+              }
+            }
+          }
+
+          if (!imageFile && clipboardData.files?.length) {
+            const candidate = clipboardData.files[0];
+            if (candidate?.type?.startsWith("image/")) {
+              imageFile = candidate;
+            }
+          }
+
+          if (!imageFile) {
+            return;
+          }
+
+          event.preventDefault();
+          const extensionFromType = imageFile.type?.split("/")[1] || "png";
+          const normalizedFile =
+            imageFile.name && imageFile.name.trim().length
+              ? imageFile
+              : new File([imageFile], `clipboard-image-${Date.now()}.${extensionFromType}`, {
+                  type: imageFile.type || "image/png",
+                });
+
+          const objectUrl = URL.createObjectURL(normalizedFile);
+          setClipboardPreview((previous) => {
+            if (previous?.objectUrl) {
+              URL.revokeObjectURL(previous.objectUrl);
+            }
+            return {
+              file: normalizedFile,
+              objectUrl,
+            };
+          });
+        } catch (error) {
+          errorHandler(error, "handleComposerPaste");
+        }
+      },
+      [enableClipboardImagePaste, errorHandler, isSendingClipboardPreview, setClipboardPreview]
+    );
   
 
   /**
@@ -1842,34 +1988,63 @@ try {
     * Creates the header view for the message composer, displaying 
     * either the provided headerView or the text message edit preview.
     */
-  function getHeaderView(): JSX.Element {
-    if(state.showValidationError){
-      setTimeout(() => {
-        dispatch({ type: "setShowValidationError", showValidationError: false });
-      }, 5000);
+  function getClipboardPreview(): JSX.Element | null {
+    if (!clipboardPreview) {
+      return null;
     }
 
-    let errorText = state.showMentionsCountWarning ? getLocalizedString("message_composer_mention_limit_warning") : getLocalizedString("message_composer_wrong_file_type");
-    return (
-      <div
-        className='cometchat-message-composer__header'
-      >
-        {state.showMentionsCountWarning || state.showValidationError ? (
-          <div className='cometchat-message-composer__header-error-state'
-          >
-            <div className='cometchat-message-composer__header-error-state-icon-wrapper'>
-              <div className='cometchat-message-composer__header-error-state-icon
-         '></div>
-            </div>
-            <span className='cometchat-message-composer__header-error-state-text
-         '>{errorText}</span>
+    const sendLabel = getLocalizedString("message_composer_send_message_icon_hover");
+    const cancelLabel = getLocalizedString("change_scope_confirm_no");
+    const fallbackName = getLocalizedString("message_composer_attach_image");
+    const fileName =
+      clipboardPreview.file.name && clipboardPreview.file.name.trim().length
+        ? clipboardPreview.file.name
+        : fallbackName;
 
-          </div>
-        ) : null}
-        {headerView ??( getTextMessageEditPreview() || getReplyMessagePreview())}
-      </div>
+    return (
+      <CometChatClipboardImagePreview
+        imageUrl={clipboardPreview.objectUrl}
+        fileName={fileName}
+        sendLabel={sendLabel}
+        cancelLabel={cancelLabel}
+        isSending={isSendingClipboardPreview}
+        onSend={handleClipboardPreviewSend}
+        onCancel={clearClipboardPreview}
+      />
     );
   }
+
+  function getHeaderView(): JSX.Element {
+      if(state.showValidationError){
+        setTimeout(() => {
+          dispatch({ type: "setShowValidationError", showValidationError: false });
+        }, 5000);
+      }
+  
+      let errorText = state.showMentionsCountWarning ? getLocalizedString("message_composer_mention_limit_warning") : getLocalizedString("message_composer_wrong_file_type");
+      const clipboardPreviewElement = getClipboardPreview();
+      const defaultHeaderContent = getTextMessageEditPreview() || getReplyMessagePreview();
+      const headerContent = clipboardPreviewElement ?? (headerView ?? defaultHeaderContent);
+      return (
+        <div
+          className='cometchat-message-composer__header'
+        >
+          {state.showMentionsCountWarning || state.showValidationError ? (
+            <div className='cometchat-message-composer__header-error-state'
+            >
+              <div className='cometchat-message-composer__header-error-state-icon-wrapper'>
+                <div className='cometchat-message-composer__header-error-state-icon
+           '></div>
+              </div>
+              <span className='cometchat-message-composer__header-error-state-text
+           '>{errorText}</span>
+  
+            </div>
+          ) : null}
+          {headerContent}
+        </div>
+      );
+    }
 
   /**
     * Creates the voice recording view, including the media recorder 
@@ -2425,6 +2600,7 @@ try {
           contentEditable={checkPlainTextAvailability(false)}
           onMouseDown={handleMouseDown}
           onInput={onTextInputChange}
+          onPaste={handleComposerPaste}
           className={`cometchat-message-composer__input ${parentMessageIdPropRef.current ? "cometchat-message-composer__input-thread" : ""} ${isMobileDevice() ? "cometchat-message-composer__input-mobile" : ""} ${createUniqueUUID}`}
           data-placeholder={placeholderText}
           ref={textInputRef}
@@ -2531,8 +2707,8 @@ try {
           className={`cometchat-message-composer ${!showScrollbar ? 'cometchat-message-composer-hide-scrollbar' : ''}`}
         >
           {getMediaFilePicker()}
-          { state.showValidationError  || state.showMentionsCountWarning || headerView ||  getTextMessageEditPreview() || getReplyMessagePreview() ? getHeaderView() : null}
-          {getTextInput()}
+            { state.showValidationError  || state.showMentionsCountWarning || headerView || clipboardPreview ||  getTextMessageEditPreview() || getReplyMessagePreview() ? getHeaderView() : null}
+          {clipboardPreview ? null : getTextInput()}
         </div>
       </div></>
   );
