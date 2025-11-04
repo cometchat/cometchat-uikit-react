@@ -426,33 +426,16 @@ export class MessageTranslationExtensionDecorator extends DataSourceDecorator {
               fallbackLower
           );
 
-        if (
-          !translation?.message_translated ||
-          translation?.error ||
-          targetLower === originalLower ||
-          fallbackLower === originalLower
-        ) {
-          metadata[MessageTranslationExtensionDecorator.CUSTOM_TRANSLATION_KEY] =
-            {
-              translatedText: previousTranslation,
-              languages: mergedLanguages,
-              language: previousLanguage,
-              isLoading: false,
-            };
-          message.setMetadata(metadata);
-          CometChatMessageEvents.ccMessageTranslated.next({
-            message,
-            status: MessageStatus.error,
-          });
-          return;
-        }
-
-        const translatedMessage = translation.message_translated;
+        const translatedMessage =
+          typeof translation?.message_translated === "string" &&
+          translation.message_translated.length > 0
+            ? translation.message_translated
+            : message.getText();
         const resolvedLanguage: ICustomTranslateLanguage = {
           ...selectedLanguage,
           name:
             selectedLanguage?.name ||
-            translation.language_translated ||
+            translation?.language_translated ||
             selectedLanguage.code,
         };
 
