@@ -265,7 +265,7 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
                     </div>
                 </div>
                </div>
-                <div className="cometchat-audio-bubble__tail-view" style={isLoading ? {pointerEvents:"none"} : {}} >
+                <div className="cometchat-audio-bubble__tail-view" style={isLoading ? {pointerEvents:"none"} : !isDownloading ? { display: 'flex', alignSelf: 'center' } : {}} >
                     {isDownloading ? getProgressBar() : (
                         <div className="cometchat-audio-bubble__tail-view-download" onClick={downloadAudio}></div>
                     )}

@@ -4,7 +4,7 @@
     display: flex;
     background: transparent;
     display: flex;
-    padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-2, 8px) 0px var(--cometchat-padding-2, 8px);
+    padding: 8px;
     flex-direction: row;
     align-items: flex-start;
     align-self: stretch;
