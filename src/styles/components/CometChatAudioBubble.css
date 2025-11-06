@@ -157,7 +157,7 @@ circle.cometchat-audio-bubble__tail-view-download-progress-foreground {
 
 /* Outgoing audio bubble (message sent by the user) background */
 .cometchat-audio-bubble-outgoing {
-    background: var(--cometchat-primary-color);
+    background: var(--cometchat-static-bubble-background);
 }
 
 /* Incoming audio bubble (message received by the user) background */
