@@ -33,7 +33,7 @@ const CometChatAvatar = (props: CometChatAvatarProps) => {
                     <img src={image} className="cometchat-avatar__image" />
                     :
                     <span className="cometchat-avatar__text">
-                        {(splitName.length && splitName.length > 1) ? splitName[0].substring(0, 1).toUpperCase() + splitName[1].substring(0, 1).toUpperCase() : name.substring(0, 2).toUpperCase()}
+                        {name?.trim().substring(0, 1).toUpperCase()}
                     </span>
                 }
             </div>
