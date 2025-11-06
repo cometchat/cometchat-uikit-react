@@ -40,7 +40,7 @@ export function getCommonDateFormat(customFormat?: CalendarObject): CalendarObje
   const defaultFormat = {
     today: "hh:mm A",
     yesterday: "Yesterday",
-    otherDays: "DD/MM/YYYY"
+    otherDays: "DD MMM, YYYY"
   };
 
   const globalCalendarFormat = sanitizeCalendarObject(CometChatLocalize.calendarObject);

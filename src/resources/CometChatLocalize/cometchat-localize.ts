@@ -359,7 +359,7 @@ class CometChatLocalize {
         } else if (diffInDays <= 7 && calendarObject.lastWeek) {
             return this.formatDateFromPattern(date, calendarObject.lastWeek);
         } else {
-            return this.formatDateFromPattern(date, calendarObject.otherDays || "DD/MM/YYYY");
+            return this.formatDateFromPattern(date, calendarObject.otherDays || "DD MMM, YYYY");
         }
     }
 

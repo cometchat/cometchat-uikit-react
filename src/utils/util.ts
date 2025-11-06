@@ -216,11 +216,14 @@ export async function processFileForAudio(file: File): Promise<File> {
 export function formatDateFromTimestamp(timestamp:number) {
     const date = new Date(timestamp * 1000); // Convert to milliseconds
     const day = date.getDate();
-    const month = date.getMonth() + 1; // getMonth() is zero-based
+    // const month = date.getMonth(); // getMonth() is zero-based
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[date.getMonth()];
     const year = date.getFullYear();
   
-    // Format as DD/MM/YYYY
-    return `${day}/${month}/${year}`;
+    // Format as DD MMM, YYYY
+    return `${day} ${month}, ${year}`;
   }
 
   export function isMobileDevice() {

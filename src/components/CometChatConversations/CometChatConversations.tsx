@@ -1578,7 +1578,7 @@ export function CometChatConversations(props: ConversationsProps) {
     const defaultFormat = {
       today: `hh:mm A`,
       yesterday: `[${getLocalizedString("yesterday")}]`,
-      otherDays: "DD/MM/YYYY",
+      otherDays: "DD MMM, YYYY",
     };
 
     var globalCalendarFormat = sanitizeCalendarObject(CometChatLocalize.calendarObject)
