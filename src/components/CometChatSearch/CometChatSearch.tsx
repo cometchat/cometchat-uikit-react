@@ -409,6 +409,7 @@ interface SearchProps {
   onError?: (error: CometChat.CometChatException) => void;
 
   conversationType ?: "user" | "group";
+  SideActions : any;
 }
 
 /**
@@ -448,7 +449,8 @@ export function CometChatSearch(props: SearchProps) {
     guid,
     conversationOptions,
     onError,
-    conversationType
+    conversationType,
+    SideActions
   } = props;
 
 
@@ -876,7 +878,7 @@ export function CometChatSearch(props: SearchProps) {
 
           )}
           </div>
-
+         {SideActions}
         </div>
       </div>
 
