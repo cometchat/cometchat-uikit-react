@@ -79,6 +79,27 @@
     padding-bottom: 0px;
 }
 
+.cometchat-media-caption-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cometchat-padding-0-5, 4px);
+}
+
+.cometchat-media-caption-wrapper--outgoing {
+    align-items: flex-end;
+}
+
+.cometchat-media-caption-wrapper--incoming {
+    align-items: flex-start;
+}
+
+.cometchat-media-caption-text {
+    margin: 0;
+    font: var(--cometchat-font-caption1-regular);
+    color: var(--cometchat-text-color-secondary);
+    word-break: break-word;
+}
+
 /* Text bubble inside message bubble */
 .cometchat-message-bubble .cometchat-delete-bubble {
     padding-bottom: 0px;

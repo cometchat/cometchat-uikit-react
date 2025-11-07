@@ -172,6 +172,11 @@
     white-space: nowrap;
 }
 
+.cometchat-message-composer__clipboard-preview-status {
+    font: var(--cometchat-font-caption1-regular);
+    color: var(--cometchat-text-color-secondary);
+}
+
 .cometchat-message-composer__clipboard-preview-actions {
     display: flex;
     flex-wrap: wrap;

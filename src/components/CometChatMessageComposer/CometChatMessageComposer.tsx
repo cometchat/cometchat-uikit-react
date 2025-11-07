@@ -65,6 +65,14 @@ type ClipboardPreviewState = {
   objectUrl: string;
 };
 
+type PendingAttachmentState = {
+  file: File;
+  fileType: MediaMessageFileType;
+  objectUrl?: string;
+};
+
+const UPLOADING_STATUS_TEXT = "Uploading...";
+
 interface MessageComposerProps {
   /**
    * The initial text pre-filled in the message input when the component mounts.
@@ -557,6 +565,8 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
       );
   const [mentionsSearchCount, setMentionsSearchCount] = useState(0);
   const [clipboardPreview, setClipboardPreview] = useState<ClipboardPreviewState | null>(null);
+  const [pendingAttachment, setPendingAttachment] = useState<PendingAttachmentState | null>(null);
+  const [isSendingPendingAttachment, setIsSendingPendingAttachment] = useState(false);
   const [isSendingClipboardPreview, setIsSendingClipboardPreview] = useState(false);
 
   useEffect(() => {
@@ -566,6 +576,14 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
       }
     };
   }, [clipboardPreview]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingAttachment?.objectUrl) {
+        URL.revokeObjectURL(pendingAttachment.objectUrl);
+      }
+    };
+  }, [pendingAttachment]);
 
   const [userMemberListType, setUserMemberListType] = useState<
     UserMemberListType | undefined
@@ -1186,10 +1204,11 @@ try {
   const getMediaMessage = useCallback(
     async (
       file: File,
-      fileType: MediaMessageFileType
+      fileType: MediaMessageFileType,
+      options?: { caption?: string }
     ): Promise<CometChat.MediaMessage> => {
       try {
-        
+
       const processedFile = fileType == CometChatUIKitConstants.MessageTypes.audio ? await processFileForAudio(file) :  await processFile(file);
       processedFile.type.replace("webm","wav")
       const { receiverId, receiverType } = getReceiverDetails();
@@ -1201,7 +1220,12 @@ try {
       );
       mediaMessage.setSentAt(CometChatUIKitUtility.getUnixTimestamp());
       mediaMessage.setMuid(CometChatUIKitUtility.ID());
-      mediaMessage.setMetadata({ file: processedFile });
+      const metadata: Record<string, unknown> = { file: processedFile };
+      const caption = options?.caption?.trim();
+      if (caption) {
+        metadata.captionedMediaMessage = caption;
+      }
+      mediaMessage.setMetadata(metadata);
       const parentMessageId = parentMessageIdPropRef.current;
       if (parentMessageId !== null) {
         mediaMessage.setParentMessageId(parentMessageId);
@@ -1244,36 +1268,42 @@ try {
     [handleSDKError]
   );
 
+  const sendMediaMessageInstance = useCallback(
+    async (mediaMessage: CometChat.MediaMessage): Promise<void> => {
+      CometChatMessageEvents.ccMessageSent.next({
+        message: mediaMessage,
+        status: MessageStatus.inprogress,
+      });
+
+      const sentMediaMessage = await sendMediaMessage(mediaMessage);
+      if (sentMediaMessage) {
+        CometChatMessageEvents.ccMessageSent.next({
+          message: sentMediaMessage,
+          status: MessageStatus.success,
+        });
+        playAudioIfSoundNotDisabled();
+      }
+    },
+    [playAudioIfSoundNotDisabled, sendMediaMessage]
+  );
+
   /**
    * Handles sending media message
    */
   const handleMediaMessageSend = useCallback(
-    async (file: File, fileType: MediaMessageFileType): Promise<void> => {
+    async (
+      file: File,
+      fileType: MediaMessageFileType,
+      options?: { caption?: string }
+    ): Promise<void> => {
       try {
-        const mediaMessage = await getMediaMessage(file, fileType);
-        CometChatMessageEvents.ccMessageSent.next({
-          message: mediaMessage,
-          status: MessageStatus.inprogress,
-        });
-
-        const sentMediaMessage = await sendMediaMessage(mediaMessage);
-        if (sentMediaMessage) {
-          CometChatMessageEvents.ccMessageSent.next({
-            message: sentMediaMessage,
-            status: MessageStatus.success,
-          });
-          playAudioIfSoundNotDisabled();
-
-        }
+        const mediaMessage = await getMediaMessage(file, fileType, options);
+        await sendMediaMessageInstance(mediaMessage);
       } catch (error) {
         errorHandler(error,"handleMediaMessageSend");
       }
     },
-    [playAudioIfSoundNotDisabled,
-      getMediaMessage,
-      sendMediaMessage,
-      errorHandler,
-    ]
+    [getMediaMessage, sendMediaMessageInstance, errorHandler]
   );
 
   /**
@@ -1325,50 +1355,59 @@ try {
    * Wrapper around `handleMediaMessageSend`
    */
   const handleMediaMessageSendWrapper = useCallback(async (): Promise<void> => {
-     try {
+    try {
       const mediaFilePickerElement = mediaFilePickerRef.current;
       if (
         !mediaFilePickerElement?.files?.length ||
-      userPropRef.current?.getBlockedByMe()
-    ) {
-      return;
-    }
-  
-    const file = mediaFilePickerElement.files[0];
-    const acceptAttr = mediaFilePickerElement.accept;
-    let expectedFileType = !acceptAttr || acceptAttr === "*/*" ? "file" : acceptAttr.split("/")[0]
-    const actualFileType = expectedFileType === "file" ? "file" : file.type.split('/')[0];
-    if (expectedFileType !== "file" && expectedFileType !== actualFileType) {
-      dispatch({ type: "setShowValidationError", showValidationError: true });
-      mediaFilePickerElement.value = "";
-      return;
-    }
-  
-    const onSendButtonClick = onSendButtonClickPropRef.current;
-    if (onSendButtonClick) {
-      try {
-        await Promise.all([
-          onSendButtonClick(await getMediaMessage(file, actualFileType), PreviewMessageMode.none),
-        ]);
-      } catch (error) {
-        errorHandler(error,"onSendButtonClick");
+        userPropRef.current?.getBlockedByMe()
+      ) {
+        return;
       }
-    } else {
-      await handleMediaMessageSend(file, actualFileType);
-    }
-  
-    mediaFilePickerElement.value = "";
-   } catch (error) {
-    errorHandler(error, "handleMediaMessageSendWrapper")
 
-   }
-  }, [
-    handleMediaMessageSend,
-     errorHandler,
-      getMediaMessage,
-      onSendButtonClickPropRef,
-      userPropRef,
-    ]);
+      const file = mediaFilePickerElement.files[0];
+      const acceptAttr = mediaFilePickerElement.accept;
+      const expectedFileType =
+        !acceptAttr || acceptAttr === "*/*" ? "file" : acceptAttr.split("/")[0];
+      const actualFileType =
+        expectedFileType === "file" ? "file" : file.type.split("/")[0];
+
+      if (expectedFileType !== "file" && expectedFileType !== actualFileType) {
+        dispatch({ type: "setShowValidationError", showValidationError: true });
+        mediaFilePickerElement.value = "";
+        return;
+      }
+
+      setPendingAttachment((previous) => {
+        if (previous?.objectUrl) {
+          URL.revokeObjectURL(previous.objectUrl);
+        }
+        let objectUrl: string | undefined;
+        if (file.type?.startsWith("image/") || file.type?.startsWith("video/")) {
+          objectUrl = URL.createObjectURL(file);
+        }
+        return {
+          file,
+          fileType: (actualFileType as MediaMessageFileType) ?? CometChatUIKitConstants.MessageTypes.file,
+          objectUrl,
+        };
+      });
+      mediaFilePickerElement.value = "";
+      const inputElement = getCurrentInput() as HTMLElement | null;
+      inputElement?.focus();
+    } catch (error) {
+      errorHandler(error, "handleMediaMessageSendWrapper");
+    }
+  }, [dispatch, errorHandler, setPendingAttachment, userPropRef]);
+
+    const clearPendingAttachment = useCallback(() => {
+      setPendingAttachment((previous) => {
+        if (previous?.objectUrl) {
+          URL.revokeObjectURL(previous.objectUrl);
+        }
+        return null;
+      });
+      setIsSendingPendingAttachment(false);
+    }, [setPendingAttachment, setIsSendingPendingAttachment]);
 
     const clearClipboardPreview = useCallback(() => {
       setClipboardPreview((previous) => {
@@ -1379,6 +1418,84 @@ try {
       });
       setIsSendingClipboardPreview(false);
     }, [setClipboardPreview, setIsSendingClipboardPreview]);
+
+    const getComposerCaptionText = useCallback((): string => {
+      const contenteditable = getCurrentInput() as HTMLElement | null;
+      if (!contenteditable) {
+        return "";
+      }
+
+      const rawHtml = contenteditable.innerHTML ?? "";
+      const trimmedHtml = rawHtml.trim();
+      if (!trimmedHtml || trimmedHtml === "<br>") {
+        return "";
+      }
+
+      let captionText = decodeHTML(
+        rawHtml.replace(/(<br>\s*)+$/, "")
+      );
+
+      if (textFormatterArray && textFormatterArray.length) {
+        for (let index = 0; index < textFormatterArray.length; index += 1) {
+          captionText = textFormatterArray[index].getOriginalText(captionText);
+        }
+      }
+
+      return captionText?.trim?.() ?? "";
+    }, [textFormatterArray]);
+
+    const handlePendingAttachmentSend = useCallback(
+      async (): Promise<void> => {
+        if (!pendingAttachment || isSendingPendingAttachment) {
+          return;
+        }
+
+        if (userPropRef.current?.getBlockedByMe()) {
+          clearPendingAttachment();
+          return;
+        }
+
+        setIsSendingPendingAttachment(true);
+        try {
+          const caption = getComposerCaptionText();
+          const mediaMessage = await getMediaMessage(
+            pendingAttachment.file,
+            pendingAttachment.fileType,
+            caption ? { caption } : undefined
+          );
+          const onSendButtonClick = onSendButtonClickPropRef.current;
+          if (onSendButtonClick) {
+            await Promise.all([
+              onSendButtonClick(mediaMessage, PreviewMessageMode.none),
+            ]);
+          } else {
+            await sendMediaMessageInstance(mediaMessage);
+          }
+          clearPendingAttachment();
+          dispatch({ type: "setText", text: "" });
+          emptyInputField();
+          mySetAddToMsgInputText("");
+        } catch (error) {
+          errorHandler(error, "handlePendingAttachmentSend");
+        } finally {
+          setIsSendingPendingAttachment(false);
+        }
+      },
+      [
+        clearPendingAttachment,
+        dispatch,
+        emptyInputField,
+        errorHandler,
+        getComposerCaptionText,
+        getMediaMessage,
+        isSendingPendingAttachment,
+        mySetAddToMsgInputText,
+        onSendButtonClickPropRef,
+        pendingAttachment,
+        sendMediaMessageInstance,
+        userPropRef,
+      ]
+    );
 
     const handleClipboardPreviewSend = useCallback(async (): Promise<void> => {
       if (!clipboardPreview || isSendingClipboardPreview) {
@@ -1392,20 +1509,27 @@ try {
 
       setIsSendingClipboardPreview(true);
       try {
-        const fileType = CometChatUIKitConstants.MessageTypes.image as MediaMessageFileType;
+        const fileType =
+          CometChatUIKitConstants.MessageTypes.image as MediaMessageFileType;
+        const caption = getComposerCaptionText();
+        const mediaMessage = await getMediaMessage(
+          clipboardPreview.file,
+          fileType,
+          caption ? { caption } : undefined
+        );
         const onSendButtonClick = onSendButtonClickPropRef.current;
 
         if (onSendButtonClick) {
           await Promise.all([
-            onSendButtonClick(
-              await getMediaMessage(clipboardPreview.file, fileType),
-              PreviewMessageMode.none
-            ),
+            onSendButtonClick(mediaMessage, PreviewMessageMode.none),
           ]);
         } else {
-          await handleMediaMessageSend(clipboardPreview.file, fileType);
+          await sendMediaMessageInstance(mediaMessage);
         }
         clearClipboardPreview();
+        dispatch({ type: "setText", text: "" });
+        emptyInputField();
+        mySetAddToMsgInputText("");
       } catch (error) {
         errorHandler(error, "handleClipboardPreviewSend");
       } finally {
@@ -1414,13 +1538,43 @@ try {
     }, [
       clearClipboardPreview,
       clipboardPreview,
+      dispatch,
       errorHandler,
+      getComposerCaptionText,
       getMediaMessage,
-      handleMediaMessageSend,
       isSendingClipboardPreview,
+      emptyInputField,
+      mySetAddToMsgInputText,
       onSendButtonClickPropRef,
+      sendMediaMessageInstance,
       setIsSendingClipboardPreview,
       userPropRef,
+    ]);
+
+    const sendComposerContent = useCallback(async (): Promise<void> => {
+      if (pendingAttachment) {
+        await handlePendingAttachmentSend();
+        return;
+      }
+
+      if (clipboardPreview) {
+        await handleClipboardPreviewSend();
+        return;
+      }
+
+      const captionText = getComposerCaptionText();
+      if (captionText.length === 0) {
+        return;
+      }
+
+      await handleSendButtonClick(captionText);
+    }, [
+      clipboardPreview,
+      getComposerCaptionText,
+      handleClipboardPreviewSend,
+      handlePendingAttachmentSend,
+      handleSendButtonClick,
+      pendingAttachment,
     ]);
 
     const handleComposerPaste = useCallback(
@@ -1494,14 +1648,28 @@ try {
 
   /**
    * @returns Should the component show the send button view
-   */
+  */
   function shouldShowSendButton(): boolean {
-    let text = getCurrentInput()?.textContent;
-    return (
-      (!text || (text && text.trim() === "")) ||
-      (state.textMessageToEdit !== null &&
-        state.textMessageToEdit.getText() === state.text)
-    );
+    const text = getCurrentInput()?.textContent ?? "";
+    const hasText = text.trim().length > 0;
+    const hasPendingMedia = Boolean(pendingAttachment || clipboardPreview);
+    const isEditingSameText =
+      state.textMessageToEdit !== null &&
+      state.textMessageToEdit.getText() === state.text;
+
+    if (hasPendingMedia) {
+      return false;
+    }
+
+    if (!hasText) {
+      return true;
+    }
+
+    if (state.textMessageToEdit !== null) {
+      return isEditingSameText;
+    }
+
+    return false;
   }
   /**
    * Function to render the send button.
@@ -1654,44 +1822,25 @@ try {
  * 
  * @param text The current input text when Enter is pressed.
  */
-  const onTextInputEnter = useCallback(
-    (text: string) => {
-      setShowListForMentions(false);
-      
-      if (typeof text === "string") handleSendButtonClick(text);
-      // Empty the text in the message composer
-      dispatch({ type: "setText", text: "" });
-
-      mySetAddToMsgInputText("");
-    }, [state.textMessageToEdit, setShowListForMentions]
-  )
+  const onTextInputEnter = useCallback(async () => {
+    setShowListForMentions(false);
+    try {
+      await sendComposerContent();
+    } catch (error) {
+      errorHandler(error, "onTextInputEnter");
+    }
+  }, [errorHandler, sendComposerContent, setShowListForMentions]);
   /**
  * Callback to handle the send button click event.
  * - Triggers the send message action using the current text from the state.
  */
-  const onSendclick = useCallback(() => {
-  try {
-    var contenteditable = getCurrentInput();
-    if (contenteditable?.textContent?.trim()) {
-      let textToDispatch = contenteditable?.innerHTML?.trim() === "<br>" ? undefined : decodeHTML(contenteditable?.innerHTML.replace(/(<br>\s*)+$/, ''));
-      if (contenteditable?.innerHTML?.trim() == "<br>") {
-        contenteditable.innerHTML = "";
-      }
-      if (textFormatterArray && textFormatterArray.length) {
-        for (let i = 0; i < textFormatterArray.length; i++) {
-          textToDispatch =
-            textFormatterArray[i].getOriginalText(textToDispatch);
-        }
-      }
-      if(textToDispatch){
-        handleSendButtonClick(textToDispatch);
-
-      }
+  const onSendclick = useCallback(async () => {
+    try {
+      await sendComposerContent();
+    } catch (error) {
+      errorHandler(error, "onSendclick");
     }
-  } catch (error) {
-    errorHandler(error,"onSendclick")
-  }
-  }, [state.text, handleSendButtonClick])
+  }, [errorHandler, sendComposerContent]);
 
   /**
  * Function to handle emoji click events.
@@ -1993,7 +2142,6 @@ try {
       return null;
     }
 
-    const sendLabel = getLocalizedString("message_composer_send_message_icon_hover");
     const cancelLabel = getLocalizedString("change_scope_confirm_no");
     const fallbackName = getLocalizedString("message_composer_attach_image");
     const fileName =
@@ -2005,12 +2153,63 @@ try {
       <CometChatClipboardImagePreview
         imageUrl={clipboardPreview.objectUrl}
         fileName={fileName}
-        sendLabel={sendLabel}
         cancelLabel={cancelLabel}
         isSending={isSendingClipboardPreview}
-        onSend={handleClipboardPreviewSend}
+        statusText={isSendingClipboardPreview ? UPLOADING_STATUS_TEXT : undefined}
         onCancel={clearClipboardPreview}
       />
+    );
+  }
+
+  function getPendingAttachmentPreview(): JSX.Element | null {
+    if (!pendingAttachment) {
+      return null;
+    }
+
+    const cancelLabel = getLocalizedString("change_scope_confirm_no");
+    const fallbackName = getLocalizedString("message_composer_attach_file");
+    const fileName =
+      pendingAttachment.file.name && pendingAttachment.file.name.trim().length
+        ? pendingAttachment.file.name
+        : fallbackName;
+
+    const statusText = isSendingPendingAttachment ? UPLOADING_STATUS_TEXT : undefined;
+    if (pendingAttachment.objectUrl && pendingAttachment.file.type?.startsWith("image/")) {
+      return (
+        <CometChatClipboardImagePreview
+          imageUrl={pendingAttachment.objectUrl}
+          fileName={fileName}
+          cancelLabel={cancelLabel}
+          isSending={isSendingPendingAttachment}
+          statusText={statusText}
+          onCancel={clearPendingAttachment}
+        />
+      );
+    }
+
+    return (
+      <div className="cometchat-message-composer__clipboard-preview">
+        <div className="cometchat-message-composer__clipboard-preview-details">
+          <span className="cometchat-message-composer__clipboard-preview-title">
+            {fileName}
+          </span>
+          {statusText ? (
+            <span className="cometchat-message-composer__clipboard-preview-status">
+              {statusText}
+            </span>
+          ) : null}
+          <div className="cometchat-message-composer__clipboard-preview-actions">
+            <button
+              type="button"
+              onClick={clearPendingAttachment}
+              className="cometchat-message-composer__clipboard-preview-cancel"
+              disabled={isSendingPendingAttachment}
+            >
+              {cancelLabel}
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -2023,8 +2222,12 @@ try {
   
       let errorText = state.showMentionsCountWarning ? getLocalizedString("message_composer_mention_limit_warning") : getLocalizedString("message_composer_wrong_file_type");
       const clipboardPreviewElement = getClipboardPreview();
+      const pendingAttachmentPreview = getPendingAttachmentPreview();
       const defaultHeaderContent = getTextMessageEditPreview() || getReplyMessagePreview();
-      const headerContent = clipboardPreviewElement ?? (headerView ?? defaultHeaderContent);
+      const headerContent =
+        clipboardPreviewElement ??
+        pendingAttachmentPreview ??
+        (headerView ?? defaultHeaderContent);
       return (
         <div
           className='cometchat-message-composer__header'
@@ -2283,7 +2486,7 @@ try {
   * and applying any relevant text formatting before sending.
   */
   const onKeyDown = useCallback(
-    (event: any) => {
+    async (event: any) => {
       var contenteditable = getCurrentInput();
       if (event.keyCode === 13 && !event.shiftKey) {
         if(enterKeyBehavior == EnterKeyBehavior.NewLine){
@@ -2293,19 +2496,7 @@ try {
         if(enterKeyBehavior == EnterKeyBehavior.None){
           return;
         }
-        if (contenteditable?.textContent?.trim()) {
-          let textToDispatch = contenteditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contenteditable?.innerHTML.replace(/(<br>\s*)+$/, ''));
-          if (contenteditable?.innerHTML?.trim() == "<br>") {
-            contenteditable.innerHTML = "";
-          }
-          if (textFormatterArray && textFormatterArray.length) {
-            for (let i = 0; i < textFormatterArray.length; i++) {
-              textToDispatch =
-                textFormatterArray[i].getOriginalText(textToDispatch);
-            }
-          }
-          onTextInputEnter(textToDispatch!)
-        }
+        await onTextInputEnter();
         return;
       }
       if (textFormatterArray && textFormatterArray.length) {
@@ -2320,7 +2511,7 @@ try {
           textFormatterArray[i].onKeyDown(event);
         }
       }
-    }, [textFormatterArray, user, group, state.textMessageToEdit]
+    }, [enterKeyBehavior, onTextInputEnter, textFormatterArray, user, group]
   )
 
   /**
@@ -2404,15 +2595,17 @@ try {
   * Empties the content of the message composer input field 
   * and sets focus back to it for immediate user input.
   */
-  const emptyInputField = () => {
-try {
-  let contentEditable: any = getCurrentInput();
-  contentEditable.textContent = "";
-  contentEditable?.focus();
-} catch (error) {
-  errorHandler(error,"emptyInputField")
-}
-  };
+  function emptyInputField(): void {
+    try {
+      const contentEditable = getCurrentInput() as HTMLElement | null;
+      if (contentEditable) {
+        contentEditable.textContent = "";
+        contentEditable.focus();
+      }
+    } catch (error) {
+      errorHandler(error, "emptyInputField");
+    }
+  }
   /**
  * Sets the current selection and updates caret position and 
  * range for text formatting tools if the selection is a 
@@ -2707,8 +2900,16 @@ try {
           className={`cometchat-message-composer ${!showScrollbar ? 'cometchat-message-composer-hide-scrollbar' : ''}`}
         >
           {getMediaFilePicker()}
-            { state.showValidationError  || state.showMentionsCountWarning || headerView || clipboardPreview ||  getTextMessageEditPreview() || getReplyMessagePreview() ? getHeaderView() : null}
-          {clipboardPreview ? null : getTextInput()}
+            { state.showValidationError
+              || state.showMentionsCountWarning
+              || headerView
+              || clipboardPreview
+              || pendingAttachment
+              || getTextMessageEditPreview()
+              || getReplyMessagePreview()
+              ? getHeaderView()
+              : null}
+          {getTextInput()}
         </div>
       </div></>
   );

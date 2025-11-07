@@ -1,31 +1,22 @@
 import { FC, useCallback } from "react";
-import { CometChatButton } from "../CometChatButton/CometChatButton";
 
 interface CometChatClipboardImagePreviewProps {
   imageUrl: string;
   fileName: string;
-  sendLabel: string;
   cancelLabel: string;
   isSending: boolean;
-  onSend: () => void;
+  statusText?: string;
   onCancel: () => void;
 }
 
 const CometChatClipboardImagePreview: FC<CometChatClipboardImagePreviewProps> = ({
   imageUrl,
   fileName,
-  sendLabel,
   cancelLabel,
   isSending,
-  onSend,
+  statusText,
   onCancel,
 }) => {
-  const handleSend = useCallback(() => {
-    if (!isSending) {
-      onSend();
-    }
-  }, [isSending, onSend]);
-
   const handleCancel = useCallback(() => {
     if (!isSending) {
       onCancel();
@@ -45,13 +36,12 @@ const CometChatClipboardImagePreview: FC<CometChatClipboardImagePreviewProps> = 
         <span className="cometchat-message-composer__clipboard-preview-title">
           {fileName}
         </span>
+        {isSending && statusText ? (
+          <span className="cometchat-message-composer__clipboard-preview-status">
+            {statusText}
+          </span>
+        ) : null}
         <div className="cometchat-message-composer__clipboard-preview-actions">
-          <CometChatButton
-            text={sendLabel}
-            isLoading={isSending}
-            disabled={isSending}
-            onClick={handleSend}
-          />
           <button
             type="button"
             onClick={handleCancel}

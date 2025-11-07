@@ -1299,9 +1299,16 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
   getAudioMessageBubble(
     audioUrl: string,
     message: CometChat.MediaMessage,
-    title?: string, alignment?: MessageBubbleAlignment): Element | JSX.Element {
-    return <CometChatAudioBubble isSentByMe={alignment == MessageBubbleAlignment.right}
-      src={audioUrl} />;
+    title?: string,
+    alignment?: MessageBubbleAlignment
+  ): Element | JSX.Element {
+    const bubble = (
+      <CometChatAudioBubble
+        isSentByMe={alignment == MessageBubbleAlignment.right}
+        src={audioUrl}
+      />
+    );
+    return this.wrapMediaBubbleWithCaption(bubble, message);
   }
   /**
    * Function to check mimeType and return the iconUrl of that type
@@ -1373,7 +1380,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     const size = this.getFileSize(attachment?.getSize() ?? metadataFile?.size);
     const icon = this.getFileType(mimeType);
     const subtitle = `${size} ${attachment?.getExtension() ? `• ${attachment.getExtension()}` : ''}`.trim();
-    return (
+    const bubble = (
       <CometChatFileBubble
         fileTypeIconURL={icon}
         subtitle={subtitle}
@@ -1382,6 +1389,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
         isSentByMe={alignment == MessageBubbleAlignment.right}
       />
     );
+    return this.wrapMediaBubbleWithCaption(bubble, message);
   }
 
   getImageMessageBubble(
@@ -1401,7 +1409,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
         message={message}
       />
     );
-    return (
+    const bubble = (
       <CometChatImageBubble
         src={imageUrl}
         placeholderImage={placeholderImage}
@@ -1414,6 +1422,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
         } : undefined}
       />
     );
+    return this.wrapMediaBubbleWithCaption(bubble, message);
   }
 
   getVideoMessageBubble(
@@ -1425,11 +1434,47 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
   ): Element | JSX.Element {
 
 
-    return (
+    const bubble = (
       <CometChatVideoBubble
         isSentByMe={this.getIsSentByMe(message)}
         src={videoUrl}
       />
+    );
+    return this.wrapMediaBubbleWithCaption(bubble, message);
+  }
+
+  getMediaCaption(message: CometChat.MediaMessage): string | null {
+    try {
+      const metadata = message?.getMetadata?.();
+      const caption = (metadata as Record<string, unknown> | null | undefined)?.captionedMediaMessage;
+      if (typeof caption === "string") {
+        const trimmed = caption.trim();
+        return trimmed.length ? trimmed : null;
+      }
+    } catch (error) {
+      // no-op: metadata might be unavailable
+    }
+    return null;
+  }
+
+  wrapMediaBubbleWithCaption(
+    bubble: JSX.Element,
+    message: CometChat.MediaMessage
+  ): JSX.Element {
+    const caption = this.getMediaCaption(message);
+    if (!caption) {
+      return bubble;
+    }
+    const isSentByMe = this.getIsSentByMe(message);
+    const alignmentClass = isSentByMe
+      ? "cometchat-media-caption-wrapper--outgoing"
+      : "cometchat-media-caption-wrapper--incoming";
+
+    return (
+      <div className={`cometchat-media-caption-wrapper ${alignmentClass}`}>
+        {bubble}
+        <p className="cometchat-media-caption-text">{caption}</p>
+      </div>
     );
   }
 
