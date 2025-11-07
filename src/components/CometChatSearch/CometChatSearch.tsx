@@ -407,6 +407,8 @@ interface SearchProps {
    * @param error - The error that occurred during a search operation
    */
   onError?: (error: CometChat.CometChatException) => void;
+
+  conversationType ?: "user" | "group";
 }
 
 /**
@@ -445,7 +447,8 @@ export function CometChatSearch(props: SearchProps) {
     uid,
     guid,
     conversationOptions,
-    onError
+    onError,
+    conversationType
   } = props;
 
 
@@ -622,7 +625,8 @@ export function CometChatSearch(props: SearchProps) {
     hideError: false,
     onError,
     uid,
-    guid
+    guid,
+    conversationType
   });
   const shouldRenderConversations = useCallback(() => {
     // If searchIn is empty, search in both conversations and messages
