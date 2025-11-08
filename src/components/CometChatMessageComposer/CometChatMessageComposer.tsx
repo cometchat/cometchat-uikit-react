@@ -244,6 +244,13 @@ interface MessageComposerProps {
   ) => void;
 
   /**
+   * Callback function triggered after the send button flow completes.
+   *
+   * @returns void
+   */
+  onSendButtonClickExtended?: () => void | Promise<void>;
+
+  /**
    * A custom view for the send button to customize its appearance or behavior.
    */
   sendButtonView?: JSX.Element;
@@ -412,6 +419,7 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
     initialComposerText: initialText = "",
     onTextChange,
     onSendButtonClick,
+    onSendButtonClickExtended,
     onError,
     sendButtonView,
     auxiliaryButtonView,
@@ -551,6 +559,7 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
   const parentMessageIdPropRef = useRefSync(parentMessageId);
   const messageToReplyRef = useRefSync<CometChat.BaseMessage| null>(null);
   const onSendButtonClickPropRef = useRefSync(onSendButtonClick);
+  const onSendButtonClickExtendedPropRef = useRefSync(onSendButtonClickExtended);
   const [smartRepliesView, setSmartRepliesView] = React.useState<React.ReactNode | null>(null);
   const [textFormatterArray, setTextFormatters] = useState(textFormatters);
   const [mentionsSearchTerm, setMentionsSearchTerm] = useState("");
@@ -1146,43 +1155,58 @@ try {
   const handleSendButtonClick = useCallback(
     async (textToDispatch: string): Promise<void> => {
       try {
-        
-      let text = textToDispatch;
-      if (textFormatterArray && textFormatterArray.length) {
-        for (let i = 0; i < textFormatterArray.length; i++) {
-          text =
-            textFormatterArray[i].getOriginalText(textToDispatch);
+        let text = textToDispatch;
+        if (textFormatterArray && textFormatterArray.length) {
+          for (let i = 0; i < textFormatterArray.length; i++) {
+            text = textFormatterArray[i].getOriginalText(textToDispatch);
+          }
         }
-      }
-      if (
-        (text = text.trim()).length === 0 ||
-        (state.textMessageToEdit !== null &&
-          state.textMessageToEdit.getText() === text)
-      ) {
-        return;
-      }
-      if (state.contentToDisplay === "emojiKeyboard") {
-        dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });
-      }
-      if (state.contentToDisplay === "voiceRecording") {
-        dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });
-      }
-      dispatch({ type: "setText", text: "" });
-      emptyInputField()
-      let onSendButtonClick:
-        | ((message: CometChat.BaseMessage, previewMessageMode?: PreviewMessageMode) => void)
-        | undefined;
-      if (state.textMessageToEdit !== null) {
-        dispatch({ type: "setTextMessageToEdit", textMessageToEdit: null });
-        await handleEditTextMessageSend(text, state.textMessageToEdit);
-      } else if ((onSendButtonClick = onSendButtonClickPropRef.current)) {
-          await Promise.all([onSendButtonClick(getTextMessage(text), PreviewMessageMode.none)]);
-       
-      } else {
-        await handleTextMessageSend(text);
-      }
+        if (
+          (text = text.trim()).length === 0 ||
+          (state.textMessageToEdit !== null &&
+            state.textMessageToEdit.getText() === text)
+        ) {
+          return;
+        }
+        if (state.contentToDisplay === "emojiKeyboard") {
+          dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });
+        }
+        if (state.contentToDisplay === "voiceRecording") {
+          dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });
+        }
+        dispatch({ type: "setText", text: "" });
+        emptyInputField();
+        let onSendButtonClick:
+          | ((
+              message: CometChat.BaseMessage,
+              previewMessageMode?: PreviewMessageMode
+            ) => void)
+          | undefined;
+        if (state.textMessageToEdit !== null) {
+          dispatch({ type: "setTextMessageToEdit", textMessageToEdit: null });
+          await handleEditTextMessageSend(text, state.textMessageToEdit);
+        } else if ((onSendButtonClick = onSendButtonClickPropRef.current)) {
+          await Promise.all([
+            onSendButtonClick(getTextMessage(text), PreviewMessageMode.none),
+          ]);
+        } else {
+          await handleTextMessageSend(text);
+        }
       } catch (error) {
-        errorHandler(error,"handleSendButtonClick");
+        errorHandler(error, "handleSendButtonClick");
+      } finally {
+        const onSendButtonClickExtended =
+          onSendButtonClickExtendedPropRef.current;
+        if (onSendButtonClickExtended) {
+          try {
+            await onSendButtonClickExtended();
+          } catch (onSendButtonClickExtendedError) {
+            console.error(
+              "Error in onSendButtonClickExtended callback",
+              onSendButtonClickExtendedError
+            );
+          }
+        }
       }
     },
     [
@@ -1195,7 +1219,9 @@ try {
       getTextMessage,
       onSendButtonClickPropRef,
       userPropRef,
-      textFormatterArray    ]
+      onSendButtonClickExtendedPropRef,
+      textFormatterArray
+    ]
   );
 
   /**
