@@ -1473,7 +1473,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     return (
       <div className={`cometchat-media-caption-wrapper ${alignmentClass}`}>
         {bubble}
-        <p className="cometchat-media-caption-text">{caption}</p>
+        <span className="cometchat-media-caption-text">{caption}</span>
       </div>
     );
   }
