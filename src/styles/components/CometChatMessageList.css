@@ -94,10 +94,13 @@
 }
 
 .cometchat-media-caption-text {
-    margin: 0;
-    font: var(--cometchat-font-caption1-regular);
-    color: var(--cometchat-text-color-secondary);
-    word-break: break-word;
+  color: #fff !important;
+  font-family: var(--font-lexend-deca), sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  word-wrap: break-word;
+  line-height: 21px;
+  padding: 4px !important
 }
 
 /* Text bubble inside message bubble */
