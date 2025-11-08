@@ -24,16 +24,17 @@
   position: relative;
   flex: 1;
   overflow: hidden;
+  display: flex;
 }
 
 .cometchat-search__input {
   display: flex;
   align-items: center;
-  min-height: 36px;
+  height: 36px;
   padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-3, 12px);
   gap: var(--cometchat-spacing-1, 4px);
   flex: 1 0 0;
-  align-self: stretch;
+  align-self: center;
   border-radius: var(--cometchat-radius-max, 1000px);
   border: 1px solid var(--cometchat-border-color-dark, #DCDCDC);
   background: var(--cometchat-background-color-03, #F5F5F5);
