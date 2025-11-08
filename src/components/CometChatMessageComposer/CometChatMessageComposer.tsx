@@ -248,7 +248,10 @@ interface MessageComposerProps {
    *
    * @returns void
    */
-  onSendButtonClickExtended?: () => void | Promise<void>;
+  onSendButtonClickExtended?: (
+    message: CometChat.BaseMessage,
+    previewMessageMode?: PreviewMessageMode
+  ) => void | Promise<void>;
 
   /**
    * A custom view for the send button to customize its appearance or behavior.
@@ -1022,7 +1025,7 @@ try {
    * Handles sending text message
    */
   const handleTextMessageSend = useCallback(
-    async (text: string): Promise<void> => {
+    async (text: string): Promise<CometChat.BaseMessage | undefined> => {
       try {
         const textMessage = getTextMessage(text);
         let mentionedUsers =
@@ -1061,6 +1064,7 @@ try {
           CometChatMessageEvents.ccReplyToMessage.next({message: sentTextMessage, status: MessageStatus.success})
           playAudioIfSoundNotDisabled();
         }
+        return sentTextMessage;
       } catch (error) {
         errorHandler(error,"handleTextMessageSend");
       }
@@ -1121,15 +1125,22 @@ try {
     async (
       newText: string,
       textMessage: CometChat.TextMessage
-    ): Promise<void> => {
+    ): Promise<CometChat.BaseMessage | undefined> => {
       try {
+        const editedMessageInstance = getEditedTextMessage(
+          newText,
+          textMessage.getId()
+        );
         if (onSendButtonClickPropRef.current) {
-          onSendButtonClickPropRef.current(getEditedTextMessage(newText, textMessage.getId()), PreviewMessageMode.edit)
+          onSendButtonClickPropRef.current(
+            editedMessageInstance,
+            PreviewMessageMode.edit
+          );
           mySetAddToMsgInputText("");
-        }
-        else {
+          return editedMessageInstance;
+        } else {
           const editedMessage = await sendEditedTextMessage(
-            getEditedTextMessage(newText, textMessage.getId())
+            editedMessageInstance
           );
           mySetAddToMsgInputText("");
           if (editedMessage) {
@@ -1138,12 +1149,13 @@ try {
               status: MessageStatus.success,
             });
           }
+          return editedMessage ?? editedMessageInstance;
         }
       } catch (error) {
         errorHandler(error,"handleEditTextMessageSend");
       }
     },
-    [sendEditedTextMessage, getEditedTextMessage, errorHandler]
+    [sendEditedTextMessage, getEditedTextMessage, errorHandler, onSendButtonClickPropRef, mySetAddToMsgInputText]
   );
 
   /**
@@ -1154,6 +1166,8 @@ try {
    */
   const handleSendButtonClick = useCallback(
     async (textToDispatch: string): Promise<void> => {
+      let callbackMessage: CometChat.BaseMessage | undefined;
+      let callbackPreviewMode: PreviewMessageMode | undefined;
       try {
         let text = textToDispatch;
         if (textFormatterArray && textFormatterArray.length) {
@@ -1184,22 +1198,33 @@ try {
           | undefined;
         if (state.textMessageToEdit !== null) {
           dispatch({ type: "setTextMessageToEdit", textMessageToEdit: null });
-          await handleEditTextMessageSend(text, state.textMessageToEdit);
+          callbackPreviewMode = PreviewMessageMode.edit;
+          callbackMessage = await handleEditTextMessageSend(
+            text,
+            state.textMessageToEdit
+          );
         } else if ((onSendButtonClick = onSendButtonClickPropRef.current)) {
+          const textMessage = getTextMessage(text);
+          callbackPreviewMode = PreviewMessageMode.none;
+          callbackMessage = textMessage;
           await Promise.all([
-            onSendButtonClick(getTextMessage(text), PreviewMessageMode.none),
+            onSendButtonClick(textMessage, PreviewMessageMode.none),
           ]);
         } else {
-          await handleTextMessageSend(text);
+          callbackPreviewMode = PreviewMessageMode.none;
+          callbackMessage = await handleTextMessageSend(text);
         }
       } catch (error) {
         errorHandler(error, "handleSendButtonClick");
       } finally {
         const onSendButtonClickExtended =
           onSendButtonClickExtendedPropRef.current;
-        if (onSendButtonClickExtended) {
+        if (onSendButtonClickExtended && callbackMessage) {
           try {
-            await onSendButtonClickExtended();
+            await onSendButtonClickExtended(
+              callbackMessage,
+              callbackPreviewMode
+            );
           } catch (onSendButtonClickExtendedError) {
             console.error(
               "Error in onSendButtonClickExtended callback",
