@@ -183,8 +183,8 @@
 
 .cometchat-message-header .cometchat-list-item .cometchat-avatar {
     display: flex;
-    width: 40px;
-    height: 40px;
+    width: 40px !important;
+    height: 40px !important;
     justify-content: center;
     align-items: center;
     flex-shrink: 0;
