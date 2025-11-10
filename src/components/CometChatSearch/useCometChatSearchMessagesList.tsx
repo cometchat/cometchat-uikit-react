@@ -147,6 +147,8 @@ interface UseCometChatSearchMessagesListProps {
   loggedInUser?: CometChat.User | null;
 
   conversationType?:  "user" | "group";
+
+  userTags?: any;
 }
 
 
@@ -239,7 +241,8 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
     guid,
     hideError = false,
     loggedInUser,
-    conversationType
+    conversationType,
+    userTags
   } = props;
 
   // Initialize state
@@ -830,13 +833,17 @@ const getMessageTitle = useCallback((message: CometChat.BaseMessage): string => 
     if (!shouldRender()) {
       return null;
     }
-    let filteredMessageList = messageState.messageList = messageState.messageList.filter((message) => message.getReceiverType() == conversationType);
+
+    let role = userTags[0] == 'prospect' ? 'prospect' : userTags[0] == 'ambassadors' ? 'ambassador' : userTags[0] == "college_admin" ? "staff" : "support";
+    let filteredMessageList = messageState.messageList.filter((message) => message.getReceiverType() == conversationType);
+    filteredMessageList = filteredMessageList.filter((message : any) => message.receiver.role == role);
 
     return (
       <div className={`cometchat-search__messages ${!alwaysShowSeeMore || activeFilters.length > 0 ? "cometchat-search__messages-full" : ""}`}>
         <CometChatList
           title={getLocalizedString("search_messages_header")}
           hideSearch={true}
+          // list={messageState.messageList}
           list={filteredMessageList}
           listItemKey='getId'
           itemView={getListItem()}

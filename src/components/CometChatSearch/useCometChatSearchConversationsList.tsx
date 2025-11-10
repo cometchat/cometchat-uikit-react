@@ -177,6 +177,8 @@ interface UseCometChatSearchConversationsListProps {
    * The logged-in user object.
    */
   loggedInUser?: CometChat.User | null;
+  conversationType?:  "user" | "group"
+  userTags?: any
 }
 
 
@@ -759,7 +761,9 @@ export function useCometChatSearchConversationsList(props: UseCometChatSearchCon
     activeFilters = [],
     useScrollPagination = false,
     hideError = false,
-    loggedInUser
+    loggedInUser,
+    userTags,
+    conversationType
   } = props;
 
   // Initialize state
@@ -1833,12 +1837,17 @@ export function useCometChatSearchConversationsList(props: UseCometChatSearchCon
       return null;
     }
 
+    let role = userTags[0] == 'prospect' ? 'prospect' : userTags[0] == 'ambassadors' ? 'ambassador' : userTags[0] == "college_admin" ? "staff" : "support";
+    let filteredConversationList = conversationState.conversationList.filter((conv : any) => conv.conversationType == conversationType && conv.conversationWith.role == role);
+
+
     return (
       <div className={`cometchat-search__conversations ${useScrollPagination || activeFilters.length > 0 ? "cometchat-search__conversations-full" : ""}`} >
         <CometChatList
           title={getLocalizedString("search_conversation_header")}
           hideSearch={true}
-          list={conversationState.conversationList}
+          // list={conversationState.conversationList}
+          list={filteredConversationList}
           listItemKey='getConversationId'
           itemView={getListItem()}
           showSectionHeader={false}

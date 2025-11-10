@@ -410,6 +410,7 @@ interface SearchProps {
 
   conversationType ?: "user" | "group";
   SideActions : any;
+  userTags ?: any
 }
 
 /**
@@ -450,7 +451,8 @@ export function CometChatSearch(props: SearchProps) {
     conversationOptions,
     onError,
     conversationType,
-    SideActions
+    SideActions,
+    userTags
   } = props;
 
 
@@ -605,7 +607,9 @@ export function CometChatSearch(props: SearchProps) {
     options: conversationOptions,
     hideReceipts,
     loggedInUser,
-    textFormatters
+    textFormatters,
+    conversationType,
+    userTags
   });
 
   const { renderMessagesList } = useCometChatSearchMessagesList({
@@ -628,7 +632,8 @@ export function CometChatSearch(props: SearchProps) {
     onError,
     uid,
     guid,
-    conversationType
+    conversationType,
+    userTags,
   });
   const shouldRenderConversations = useCallback(() => {
     // If searchIn is empty, search in both conversations and messages
