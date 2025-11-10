@@ -201,37 +201,29 @@ export class CometChatUIKitUtility {
   };
 
   /**
-   * Sanitizes an HTML string by escaping tags not matching the whitelist.
-   *
-   * @param htmlString - The HTML string to sanitize.
-   * @param whitelistRegExes - A list of regular expressions to match allowed tags.
-   * @returns The sanitized HTML string.
+   * Process and sanitize text to escape dangerous HTML while preserving mention formatting
+   * @param text The text string that may contain HTML and mentions
+   * @returns Sanitized string with dangerous HTML escaped but mentions preserved
    */
-  static sanitizeHtml(htmlString: string, whitelistRegExes: RegExp[]) {
-    if (!htmlString) {
-      return "";
-    }
+  static sanitizeText(text: string): string {
+    if (!text || typeof text !== 'string') return text;
 
-    if (!Array.isArray(whitelistRegExes)) {
-      return htmlString;
-    }
+    return text.replace(/<[^>]*>/g, (match) => {
+      const inner = match.slice(1,-1).trim();
 
-    let returnString = htmlString;
+      // Proper HTML tags: optional / then letter
+      if (/^\/?[a-zA-Z]/.test(inner)) {
+        return match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
 
-    try {
-      returnString = htmlString.replace(/<[^>]+>?/g, function (match) {
-        const combinedRegex = new RegExp(
-          "(" + whitelistRegExes.map((regex) => regex.source).join("|") + ")"
-        );
-        return combinedRegex.test(match)
-          ? match
-          : match.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      });
-    } catch (error) {
-      console.log(error);
-    }
+      // Pseudo-tags like <@uid:...> without closing tag => leave as-is
+      if (/^@/.test(inner)) {
+        return match;
+      }
 
-    return returnString;
+      // Empty tags, fragments, or any invalid HTML → escape so they render literally
+      return match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    });
   }
 
   static convertBlobToWav = async (audioBlob: { arrayBuffer: () => any }) => {

@@ -58,6 +58,7 @@ import { CollaborativeDocumentConstants } from "../components/Extensions/Collabo
 import { CollaborativeWhiteboardConstants } from "../components/Extensions/CollaborativeWhiteboard/CollaborativeWhiteboardConstants";
 import { PollsConstants } from "../components/Extensions/Polls/PollsConstants";
 import { StickersConstants } from "../components/Extensions/Stickers/StickersConstants";
+import { CometChatUIKitUtility } from "../CometChatUIKit/CometChatUIKitUtility";
 export type ComposerId = { parentMessageId: number | null, user: string | null, group: string | null };
 /**
  * Utility class that extends DataSource and provides getters for message options.
@@ -1521,6 +1522,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       loggedInUser,
       config as any  // toDo remove any
     );
+    message = CometChatUIKitUtility.sanitizeText(message);
     let messageObject = conversation.getLastMessage();
 
 
@@ -1629,7 +1631,7 @@ getMessagePreviewSubtitle(
 
     const createTextWrapper = (text: string) => {
       const finalTextFormatters = textFormatters || ChatConfigurator.getDataSource().getAllTextFormatters({});
-      let formattedText = text;
+      let formattedText = CometChatUIKitUtility.sanitizeText(text);
       finalTextFormatters.forEach((formatter)=>{
         formatter.setMessage(message);
         formatter.setMessageBubbleAlignment(_alignment!);

@@ -41,32 +41,6 @@ export function closeCurrentMediaPlayer(pauseAudio: boolean = true) {
     currentMediaPlayer.mediaRecorder.stop();
   }
 }
-export function sanitizeHtml(htmlString: string, whitelistRegExes: RegExp[]) {
-    if (!htmlString) {
-        return "";
-    }
-
-    if (!Array.isArray(whitelistRegExes)) {
-        return htmlString;
-    }
-
-    let returnString = htmlString;
-
-    try {
-        returnString = htmlString.replace(/<[^>]+>?/g, function (match) {
-            const combinedRegex = new RegExp(
-                "(" + whitelistRegExes.map((regex) => regex.source).join("|") + ")"
-            );
-            return combinedRegex.test(match)
-                ? match
-                : match.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        });
-    } catch (error) {
-        console.log(error);
-    }
-
-    return returnString;
-}
 
 export function isMessageSentByMe(message: CometChat.BaseMessage, loggedInUser: CometChat.User) {
     return (
@@ -501,47 +475,6 @@ export function createMessageCopyFromBaseMessage(
       return document.querySelector('[data-theme="dark"]') ? true : false;
   }
 
- /**
-  * Sanitizes HTML content to only allow span tags while keeping everything else as plain text
-  * Also removes any script or executable content
-  */
-export const sanitizeToSpanOnly = (htmlString: string, regexPatterns: RegExp[][]): string => {
-  if (!htmlString) return "";
-
-  // Remove script tags and their content
-  let sanitized = htmlString.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-
-  // Remove javascript: protocol
-  sanitized = sanitized.replace(/\son[a-zA-Z0-9_-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
-
-  // Create a set of regex patterns that should be preserved
-  const allPatterns: RegExp[] = regexPatterns.flat();
-
-  // Track positions of regex matches to avoid sanitizing them
-  const preserveRanges: Array<{ start: number, end: number }> = [];
-
-  allPatterns.forEach(pattern => {
-    let match;
-    const flags = pattern.flags ?? '';
-    const globalPattern = new RegExp(pattern.source, flags.includes('g') ? flags : flags + 'g');
-    while ((match = globalPattern.exec(sanitized)) !== null) {
-      preserveRanges.push({
-        start: match.index,
-        end: match.index + match[0].length
-      });
-      // Prevent infinite loops on zero-length matches
-      if (match[0].length === 0) break;
-    }
-  });
-
-  // Sort ranges by start position
-  preserveRanges.sort((a, b) => a.start - b.start);
-
-  // Keep the original string as is - don't escape HTML tags
-  // The pasteHtml function will handle rendering only span tags as HTML
-  // and everything else as plain text
-  return sanitized;
-};
 /**
  * @function isIOS
  * @description Checks if the current device is running iOS (iPhone, iPad, or iPod).

@@ -562,7 +562,7 @@ export const CometChatMessageHeader = (props: MessageHeaderProps) => {
         } catch (error) {
             onErrorCallback(error, 'getItemView');
         }
-    }, [userRef, groupRef, itemView, getSubtitleView]);
+    }, [itemView, onItemClick, userRef, groupRef, getSubtitleView, titleView, trailingView, leadingView, onErrorCallback]);
     /** 
      * Generates the back button for the message header. 
      * Currently, it returns an empty div but can be extended with back button functionality.

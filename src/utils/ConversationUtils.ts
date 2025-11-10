@@ -94,12 +94,8 @@ export class ConversationUtils {
     switch (messageObject?.getType()) {
       case CometChatUIKitConstants.MessageTypes.text: {
         if (this.additionalParams) {
-          const formatters = this.additionalParams?.["textFormatters"] || [];
-          const regexList = formatters?.map((f: CometChatMentionsFormatter) => {
-            return f?.getRegexPatterns()
-          })
           const lastMessage = (messageObject as CometChat.TextMessage)?.getText() || ""
-          message = CometChatUIKitUtility.sanitizeHtml(lastMessage, regexList?.flat());
+          message = CometChatUIKitUtility.sanitizeText(lastMessage);
         } else {
           message = (messageObject as CometChat.TextMessage).getText() || ""
         }

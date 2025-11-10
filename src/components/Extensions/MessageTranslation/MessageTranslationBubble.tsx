@@ -63,33 +63,13 @@ const MessageTranslationBubble = (props: IMessageTranslationBubbleProps) => {
     return IframeContext?.iframeDocument || document;
   }
 
-  useEffect(() => {
-    if (textFormatters) {
-
-      const textElement = textElementRef.current;
-
-      let finalText: string | void = translatedText;
-
-      if (textFormatters && textFormatters.length) {
-        textFormatters.forEach((formatter: CometChatTextFormatter) => {
-          finalText = formatter.getFormattedText(finalText!, {
-            mentionsTargetElement: MentionsTargetElement.textbubble,
-          });
-        });
-      }
-      textElement!.textContent = "";
-
-      pasteHtml(textElement, finalText);
-    }
-  }, [textFormatters]);
-
   /**
    * Inserts HTML content into a text element and applies text formatters if any.
    * 
    * @param {HTMLDivElement} textElement - The target element to insert HTML content into.
    * @param {string} html - The HTML content to insert.
    */
-  function pasteHtml(textElement: HTMLDivElement | null, html: string) {
+  const pasteHtml = useCallback((textElement: HTMLDivElement | null, html: string) => {
     try {
       let el = getCurrentDocument().createElement("div");
       el.innerHTML = html;
@@ -114,9 +94,29 @@ const MessageTranslationBubble = (props: IMessageTranslationBubbleProps) => {
     } catch (error) {
       console.log(error);
     }
-  }
+  }, [getCurrentDocument, textFormatters]);
 
-  if (!translatedText && translatedText?.trim().length) {
+  useEffect(() => {
+    if (textFormatters) {
+
+      const textElement = textElementRef.current;
+
+      let finalText: string | void = translatedText;
+
+      if (textFormatters.length) {
+        textFormatters.forEach((formatter: CometChatTextFormatter) => {
+          finalText = formatter.getFormattedText(finalText!, {
+            mentionsTargetElement: MentionsTargetElement.textbubble,
+          });
+        });
+      }
+      textElement!.textContent = "";
+
+      pasteHtml(textElement, finalText);
+    }
+  }, [textFormatters, pasteHtml, translatedText]);
+
+  if (!translatedText || !translatedText.trim().length) {
     return null
   }
 

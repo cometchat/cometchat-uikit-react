@@ -1,4 +1,4 @@
-import { JSX, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { JSX, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useCometChatErrorHandler } from "../../CometChatCustomHooks";
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { CometChatListItem } from "../BaseComponents/CometChatListItem/CometChatListItem";
@@ -210,6 +210,27 @@ function stateReducer(state: State, action: Action): State {
   return newState;
 }
 
+function LinkPreviewImage(props: {
+  url: string;
+  viewClass: string;
+  iconClass: string;
+}) {
+  const { url, viewClass, iconClass } = props;
+  const [failed, setFailed] = useState(false);
+  if (failed || !url) {
+    return (
+      <div className={`${viewClass} ${viewClass}-link`}>
+        <div className={iconClass}></div>
+      </div>
+    );
+  }
+  return (
+    <div className={`${viewClass} ${viewClass}-link`}>
+      <img src={url} onError={() => setFailed(true)} alt="" loading="lazy" />
+    </div>
+  );
+}
+
 /**
  * Hook for managing and rendering a list of messages in the search component
  */
@@ -405,12 +426,9 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
           if (message instanceof CometChat.TextMessage) {
             const metadata = message.getMetadata();
             if (hasLink(metadata)) {
-              if (getLinkPreview(message)) {
-                return (
-                  <div className={`${viewClass} ${viewClass}-link`}>
-                    <img src={getLinkPreview(message)}></img>
-                  </div>
-                );
+              const previewUrl = getLinkPreview(message);
+              if (previewUrl) {
+                return <LinkPreviewImage url={previewUrl} viewClass={viewClass} iconClass={iconClass} />;
               }
               else {
                 return (
@@ -481,8 +499,7 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
   const getFormattedMessageText = useCallback((message: CometChat.TextMessage): string => {
     try {
       let text = (message as CometChat.TextMessage).getText();
-      let finalText = text;
-      finalText = CometChatUIKitUtility.sanitizeHtml(finalText, regexPatterns);
+      let finalText = CometChatUIKitUtility.sanitizeText(text);
       let formatters = textFormatters ?? ChatConfigurator.getDataSource().getAllTextFormatters({ mentionsTargetElement: MentionsTargetElement.conversation });
 
       if (message) {

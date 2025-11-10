@@ -740,7 +740,10 @@
 
 }
 
-
+.cometchat-search__messages-leading-view-link > img {
+  height: 32px;
+  width: 32px;
+}
 
 .cometchat-search__messages-leading-view-audio.cometchat-search__messages-leading-view {
   background-color: var(--cometchat-primary-color, #6852D6);

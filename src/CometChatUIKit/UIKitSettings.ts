@@ -1,4 +1,5 @@
 
+import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { CallingExtension } from "../components/Calling/CallingExtension";
 import { ExtensionsDataSource } from "../components/Extensions/ExtensionsDataSource";
 
@@ -89,6 +90,12 @@ export class UIKitSettings {
     readonly callingExtension?:CallingExtension;
 
   /**
+   * Storage mode for persisting data.
+   * @type {CometChat.StorageMode}
+   */
+  readonly storageMode: CometChat.StorageMode
+
+  /**
    * Private constructor to initialize the settings using the provided builder.
    * @param {UIKitSettingsBuilder} builder - The builder instance containing the settings configuration.
    */
@@ -106,6 +113,7 @@ export class UIKitSettings {
     this.extensions = builder.extensions;
     this.callingExtension  = builder.callingExtension;
     this.roles = builder.roles;
+    this.storageMode = builder.storageMode || CometChat.StorageMode.LOCAL;
   }
 
   /**
@@ -195,6 +203,14 @@ export class UIKitSettings {
     public getCallsExtension(): ExtensionsDataSource {
       return this.callingExtension!;
     }
+
+  /**
+   * Retrieves the storage mode.
+   * @returns {CometChat.StorageMode} The storage mode.
+   */
+  public getStorageMode(): CometChat.StorageMode {
+    return this.storageMode;
+  }
 }
 
 export class UIKitSettingsBuilder {
@@ -276,6 +292,12 @@ export class UIKitSettingsBuilder {
    * @type {string}
    */
   clientHost?: string;
+
+  /** 
+   * Storage mode for persisting data.
+   * @type {CometChat.StorageMode}
+   */
+  storageMode?: CometChat.StorageMode
 
   /**
   * Builds and returns an instance of UIKitSettings.
@@ -405,4 +427,14 @@ export class UIKitSettingsBuilder {
       this.callingExtension = callingExtension;
       return this
     }
+
+  /** 
+   * Sets the storage mode.
+   * @param {CometChat.StorageMode} storageMode - The storage mode.
+   * @returns {UIKitSettingsBuilder} The builder instance.
+  */
+  public setStorageMode(storageMode: CometChat.StorageMode): UIKitSettingsBuilder {
+    this.storageMode = storageMode;
+    return this;
+  }
 }
