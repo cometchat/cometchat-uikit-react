@@ -21,6 +21,8 @@
     flex-shrink: 0;
     border-radius: var(--cometchat-radius-max, 1000px);
     border: 1.5px solid var(--cometchat-border-color-default, #E8E8E8);
+    background: #c8c1dd;
+    margin-top: 10px;
 }
 
 .cometchat-radiobutton:hover .cometchat-radiobutton__selected {
