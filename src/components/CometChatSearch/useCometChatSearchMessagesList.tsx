@@ -838,13 +838,15 @@ const getMessageTitle = useCallback((message: CometChat.BaseMessage): string => 
     let filteredMessageList = messageState.messageList.filter((message) => message.getReceiverType() == conversationType);
     filteredMessageList = filteredMessageList.filter((message : any) => message.receiver.role == role);
 
+    let communityMessageList = messageState.messageList.filter((message) => message.getReceiverType() == conversationType);
+
     return (
       <div className={`cometchat-search__messages ${!alwaysShowSeeMore || activeFilters.length > 0 ? "cometchat-search__messages-full" : ""}`}>
         <CometChatList
           title={getLocalizedString("search_messages_header")}
           hideSearch={true}
           // list={messageState.messageList}
-          list={filteredMessageList}
+          list={userTags[0] == '0' ? communityMessageList : filteredMessageList}
           listItemKey='getId'
           itemView={getListItem()}
           showSectionHeader={false}

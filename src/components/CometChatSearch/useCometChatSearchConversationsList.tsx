@@ -1840,6 +1840,8 @@ export function useCometChatSearchConversationsList(props: UseCometChatSearchCon
     let role = userTags[0] == 'prospect' ? 'prospect' : userTags[0] == 'ambassadors' ? 'ambassador' : userTags[0] == "college_admin" ? "staff" : "support";
     let filteredConversationList = conversationState.conversationList.filter((conv : any) => conv.conversationType == conversationType && conv.conversationWith.role == role);
 
+    let communityConversationList = conversationState.conversationList.filter((conv : any) => conv.conversationType == conversationType);
+
 
     return (
       <div className={`cometchat-search__conversations ${useScrollPagination || activeFilters.length > 0 ? "cometchat-search__conversations-full" : ""}`} >
@@ -1847,7 +1849,7 @@ export function useCometChatSearchConversationsList(props: UseCometChatSearchCon
           title={getLocalizedString("search_conversation_header")}
           hideSearch={true}
           // list={conversationState.conversationList}
-          list={filteredConversationList}
+          list={userTags[0] == '0' ? communityConversationList : filteredConversationList}
           listItemKey='getConversationId'
           itemView={getListItem()}
           showSectionHeader={false}
