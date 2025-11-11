@@ -50,6 +50,64 @@ import { useCometChatFrameContext } from "../../context/CometChatFrameContext";
 import { MessageUtils } from "../../utils/MessageUtils";
 import { startStreamingMessage, streamingState$ } from "../../services/stream-message.service";
 
+
+/**
+ * Global scroll-to-message API
+ */
+export type ScrollToMessageHandler = (message: CometChat.BaseMessage, gotoParent?: boolean) => Promise<void> | void;
+let _externalScrollHandler: ScrollToMessageHandler | null = null;
+
+/**
+ * Queue for global calls made before handler is registered.
+ */
+type QueuedGlobalRequest = {
+  message: CometChat.BaseMessage;
+  gotoParent?: boolean;
+  resolve: () => void;
+  reject: (err?: any) => void;
+};
+const _queuedGlobalRequests: QueuedGlobalRequest[] = [];
+
+/**
+ * Register a handler (called by CometChatMessageList when it mounts).
+ * When a handler is registered we drain any queued global requests.
+ */
+export const registerScrollToMessageHandler = (handler: ScrollToMessageHandler | null) => {
+  _externalScrollHandler = handler;
+  if (handler && _queuedGlobalRequests.length > 0) {
+    // drain queued requests
+    const queued = _queuedGlobalRequests.splice(0);
+    queued.forEach(async (req) => {
+      try {
+        await Promise.resolve(handler(req.message, req.gotoParent));
+        req.resolve();
+      } catch (err) {
+        req.reject(err);
+      }
+    });
+  }
+};
+
+/**
+ * Call this from anywhere to request the message list scroll to a specific message.
+ * Pass gotoParent=true to scroll to the parent message (useful when clicking a reply).
+ * Returns a Promise that resolves once the scroll (or fetch+scroll) completes or rejects on error.
+ */
+export const scrollToMessageGlobal = (message: CometChat.BaseMessage, gotoParent: boolean = false): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (_externalScrollHandler) {
+      try {
+        Promise.resolve(_externalScrollHandler(message, gotoParent)).then(resolve).catch(reject);
+      } catch (err) {
+        reject(err);
+      }
+    } else {
+      // handler not registered yet (component not mounted) — queue the request
+      _queuedGlobalRequests.push({ message, gotoParent, resolve, reject });
+    }
+  });
+};
+
 /**
  * Props for the MessageList component.
  */
@@ -500,7 +558,7 @@ const CometChatMessageList = (props: MessageListProps) => {
     () => setIsMessageInProgress(false),
     500
   );
-
+  
   useEffect((() => {
     let ccOwnershipChanged = CometChatGroupEvents.ccOwnershipChanged.subscribe((groupMember) => {
       if (groupMember.group.getGuid() === groupRef.current?.getGuid?.()) {
@@ -4357,6 +4415,105 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
     isAgentChat,
     messageRepliedTo
   );
+
+    // queue for requests received while this component is loading
+  const pendingExternalRequestsRef = useRef<
+    { message: CometChat.BaseMessage; gotoParent?: boolean; resolve: () => void; reject: (err?: any) => void }[]
+  >([]);
+
+  useEffect(() => {
+    // register global handler so other modules can call scrollToMessageGlobal(...)
+    registerScrollToMessageHandler((message: CometChat.BaseMessage, gotoParent: boolean = false) => {
+      return new Promise<void>(async (resolve, reject) => {
+        try {
+          const targetId = gotoParent && message.getParentMessageId()
+            ? String(message.getParentMessageId())
+            : String(message.getId());
+          if (!targetId) {
+            resolve();
+            return;
+          }
+
+          // If already loaded in the list, scroll immediately
+          const existsInList = messageList.some((m) => String(m.getId()) === targetId);
+          if (existsInList && messageListState === States.loaded) {
+            scrollToMessage(targetId);
+            resolve();
+            return;
+          }
+
+          // If list currently loading, queue the request to be processed when loaded
+          if (messageListState === States.loading) {
+            pendingExternalRequestsRef.current.push({ message, gotoParent, resolve, reject });
+            return;
+          }
+
+          // Otherwise trigger fetch + loading flow the component already uses.
+          setShouldScrollToMessage(true);
+          setQuotedMessageId(targetId);
+          setMessageRepliedTo("");
+          setHasTargetMessageId(true);
+          setShouldScrollDirectly(false);
+
+          await fetchPreviousMessages();
+
+          // once fetchPreviousMessages resolves, effects will handle scrollToMessage
+          resolve();
+        } catch (error: any) {
+          errorHandler(error, "externalScrollHandler");
+          reject(error);
+        }
+      });
+    });
+
+    return () => {
+      // unregister on unmount
+      registerScrollToMessageHandler(null);
+    };
+    // keep relevant dependencies so handler sees latest state and functions
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messageList, messageListState, fetchPreviousMessages, scrollToMessage, errorHandler]);
+
+  // process any queued external requests once list becomes loaded (or when messages arrive)
+  useEffect(() => {
+    if (messageListState === States.loaded && pendingExternalRequestsRef.current.length > 0) {
+      const pending = pendingExternalRequestsRef.current.splice(0);
+      pending.forEach(async (req) => {
+        try {
+          const message = req.message;
+          const gotoParent = req.gotoParent;
+          const targetId = gotoParent && message.getParentMessageId()
+            ? String(message.getParentMessageId())
+            : String(message.getId());
+          if (!targetId) {
+            req.resolve();
+            return;
+          }
+
+          const existsInList = messageList.some((m) => String(m.getId()) === targetId);
+          if (existsInList) {
+            scrollToMessage(targetId);
+            req.resolve();
+            return;
+          }
+
+          // trigger the fetch flow for this specific target
+          setShouldScrollToMessage(true);
+          setQuotedMessageId(targetId);
+          setMessageRepliedTo("");
+          setHasTargetMessageId(true);
+          setShouldScrollDirectly(false);
+
+          await fetchPreviousMessages();
+
+          req.resolve();
+        } catch (err) {
+          req.reject(err);
+        }
+      });
+    }
+  }, [messageListState, messageList, fetchPreviousMessages, scrollToMessage, errorHandler]);
+
   return (
     <>
       <div className="cometchat" style={{

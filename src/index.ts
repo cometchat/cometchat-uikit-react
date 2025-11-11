@@ -55,6 +55,7 @@ export { CometChatMessageBubble } from './components/BaseComponents/CometChatMes
 export { CometChatMessageComposer } from './components/CometChatMessageComposer/CometChatMessageComposer';
 export { CometChatMessageHeader } from './components/CometChatMessageHeader/CometChatMessageHeader';
 export { CometChatMessageList } from './components/CometChatMessageList/CometChatMessageList';
+export { registerScrollToMessageHandler, scrollToMessageGlobal } from "./components/CometChatMessageList/CometChatMessageList";
 
 export { CometChatUsers } from './components/CometChatUsers/CometChatUsers';
 
