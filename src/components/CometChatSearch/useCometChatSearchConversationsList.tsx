@@ -178,7 +178,8 @@ interface UseCometChatSearchConversationsListProps {
    */
   loggedInUser?: CometChat.User | null;
   conversationType?:  "user" | "group"
-  userTags?: any
+  userTags?: any;
+  panelType?: string
 }
 
 
@@ -763,7 +764,8 @@ export function useCometChatSearchConversationsList(props: UseCometChatSearchCon
     hideError = false,
     loggedInUser,
     userTags,
-    conversationType
+    conversationType,
+    panelType
   } = props;
 
   // Initialize state
@@ -1849,7 +1851,7 @@ export function useCometChatSearchConversationsList(props: UseCometChatSearchCon
           title={getLocalizedString("search_conversation_header")}
           hideSearch={true}
           // list={conversationState.conversationList}
-          list={userTags[0] == '0' ? communityConversationList : filteredConversationList}
+          list={panelType === "admin" ? (userTags[0] == '0' ? communityConversationList : filteredConversationList) : conversationState.conversationList}
           listItemKey='getConversationId'
           itemView={getListItem()}
           showSectionHeader={false}

@@ -149,6 +149,7 @@ interface UseCometChatSearchMessagesListProps {
   conversationType?:  "user" | "group";
 
   userTags?: any;
+  panelType?: string;
 }
 
 
@@ -242,7 +243,8 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
     hideError = false,
     loggedInUser,
     conversationType,
-    userTags
+    userTags,
+    panelType
   } = props;
 
   // Initialize state
@@ -835,9 +837,10 @@ const getMessageTitle = useCallback((message: CometChat.BaseMessage): string => 
     }
 
     let role = userTags[0] == 'prospect' ? 'prospect' : userTags[0] == 'ambassadors' ? 'ambassador' : userTags[0] == "college_admin" ? "staff" : "support";
+    let myRole = panelType === "admin" ? "staff" : panelType === "prospect" ? "prospect" : panelType === "ambassador" ? "ambassador" : "support";
     let filteredMessageList = messageState.messageList.filter((message) => message.getReceiverType() == conversationType);
-    filteredMessageList = filteredMessageList.filter((message : any) => message.receiver.role == role);
-
+    filteredMessageList = filteredMessageList.filter((message : any) => (message.receiver.role == role && message.sender.role == myRole) || (message.receiver.role == myRole && message.sender.role == role));
+    
     let communityMessageList = messageState.messageList.filter((message) => message.getReceiverType() == conversationType);
 
     return (
@@ -846,7 +849,7 @@ const getMessageTitle = useCallback((message: CometChat.BaseMessage): string => 
           title={getLocalizedString("search_messages_header")}
           hideSearch={true}
           // list={messageState.messageList}
-          list={userTags[0] == '0' ? communityMessageList : filteredMessageList}
+          list={panelType === "admin" ? (userTags[0] == '0' ? communityMessageList : filteredMessageList) : messageState.messageList}
           listItemKey='getId'
           itemView={getListItem()}
           showSectionHeader={false}
