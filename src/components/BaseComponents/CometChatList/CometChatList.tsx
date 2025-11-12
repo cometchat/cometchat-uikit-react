@@ -402,7 +402,9 @@ function List<T>(props: ListProps<T>): JSX.Element {
         res = getErrorView();
         break;
       case States.empty:
-        res = getEmptyView();
+        if (list.length === 0) {
+          res = getEmptyView();
+        }
         break;
       case States.loaded:
         break;
