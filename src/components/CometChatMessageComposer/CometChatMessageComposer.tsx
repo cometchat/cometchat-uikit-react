@@ -1515,6 +1515,11 @@ try {
             caption ? { caption } : undefined
           );
           const onSendButtonClick = onSendButtonClickPropRef.current;
+            setIsSendingPendingAttachment(false);
+            clearPendingAttachment();
+            dispatch({ type: "setText", text: "" });
+            emptyInputField();
+            mySetAddToMsgInputText("");
           if (onSendButtonClick) {
             await Promise.all([
               onSendButtonClick(mediaMessage, PreviewMessageMode.none),
@@ -1522,10 +1527,6 @@ try {
           } else {
             await sendMediaMessageInstance(mediaMessage);
           }
-          clearPendingAttachment();
-          dispatch({ type: "setText", text: "" });
-          emptyInputField();
-          mySetAddToMsgInputText("");
         } catch (error) {
           errorHandler(error, "handlePendingAttachmentSend");
         } finally {
