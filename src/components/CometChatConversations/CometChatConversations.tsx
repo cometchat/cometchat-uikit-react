@@ -362,7 +362,7 @@ function stateReducer(state: State, action: Action): State {
             ),
           ];
         }
-        newState = { ...state, conversationList: conversations, fetchState: States.loaded,};
+        newState = { ...state, conversationList: conversations};
       }
       break;
     case "setConversationList": {
@@ -389,7 +389,6 @@ function stateReducer(state: State, action: Action): State {
         ...state,
         conversationList,
         typingIndicatorMap: newTypingIndicatorMap,
-        fetchState: conversationList.length ? States.loaded : States.empty,
       };
       break;
     }
@@ -461,7 +460,6 @@ function stateReducer(state: State, action: Action): State {
         newState = {
           ...state,
           conversationList: [conversation, ...conversationList],
-          fetchState: States.loaded,
         };
       }
       break;
@@ -479,7 +477,6 @@ function stateReducer(state: State, action: Action): State {
       newState = {
         ...state,
         conversationList: [conversation, ...conversations],
-        fetchState: States.loaded,
       };
       break;
     }
@@ -932,7 +929,7 @@ export function CometChatConversations(props: ConversationsProps) {
         const conversations = await conversationManager.fetchNext();
 
         if (conversations.length !== 0 && fetchNextIdRef.current === fetchId) {
-          const removeOldConversation = isConnected;
+          let removeOldConversation = isConnected ? true : false;
           dispatch({
             type: "appendConversations",
             conversations,
@@ -956,9 +953,8 @@ export function CometChatConversations(props: ConversationsProps) {
           });
         }
         if (
-          conversations.length === 0 &&
-          state.conversationList.length === 0 &&
-          fetchNextIdRef.current === fetchId
+          conversations.length == 0 &&
+          conversationListRef.current.length == 0
         ) {
           dispatch({ type: "setFetchState", fetchState: States.empty });
         }
@@ -966,18 +962,13 @@ export function CometChatConversations(props: ConversationsProps) {
           attachListenerOnFetch.current = false;
         }
       } catch (error) {
-        if (state.conversationList.length <= 0) {
+        if (conversationListRef.current.length <= 0) {
           dispatch({ type: "setFetchState", fetchState: States.error });
         }
         errorHandler(error, "fetchNextAndAppendConversations");
       }
     },
-    [
-      dispatch,
-      state.conversationList.length,
-      conversationsRequestBuilder,
-      errorHandler,
-    ]
+    [dispatch]
   );
 
   const getIncrementUnreadCountBoolFromMetaData = useCallback(
