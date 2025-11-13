@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useCometChatTextBubble } from "./useCometChatTextBubble";
-import { fireClickEvent, sanitizeHtml, sanitizeToSpanOnly } from "../../../utils/util";
+import { fireClickEvent } from "../../../utils/util";
 import { localize } from "../../../resources/CometChatLocalize/cometchat-localize";
 import { CometChatTextFormatter } from "../../../formatters/CometChatFormatters/CometChatTextFormatter";
 import { MentionsTargetElement } from "../../../Enums/Enums";
+import { CometChatUIKitUtility } from "../../../CometChatUIKit/CometChatUIKitUtility";
 
 interface TextBubbleProps {
     /* text to be displayed as a message. */
@@ -40,7 +41,7 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
       };
 
     const {
-        pasteHtml
+        appendTextInHtml
     } = useCometChatTextBubble({ textFormatters });
 
     useEffect(()=>{
@@ -51,35 +52,23 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
      * Check if textFormatters are available
     */
     useEffect(() => {
-        const regexList = textFormatters.map((f) => {
-            return f.getRegexPatterns()
-        });
-        
-        // Use the new sanitization function that preserves regex patterns
-        const sanitizedText = sanitizeToSpanOnly(text, regexList);
+        const sanitizedText = CometChatUIKitUtility.sanitizeText(text);
         setTextState(sanitizedText);
     }, [text, textFormatters, setTextState]);
     useEffect(() => {
         if (textRef.current) {
             let finalText = textState;
             if (textFormatters && textFormatters.length) {
-                const regexList = textFormatters.map((f) => {
-                    return f.getRegexPatterns()
-                });
-                
                 for (let i = 0; i < textFormatters.length; i++) {
                     (finalText as string | void) = textFormatters[i].getFormattedText(finalText, {
                         mentionsTargetElement: MentionsTargetElement.textbubble,
                     });
                 }   
-                // Apply sanitization with regex preservation to the formatted text
-                finalText = sanitizeToSpanOnly(finalText, regexList);
             }
             
-            // Always use pasteHtml to handle proper rendering of span tags vs plain text
-            pasteHtml(textRef.current, finalText);
+            appendTextInHtml(textRef.current, finalText);
         }
-    }, [text, textFormatters, setIsTruncated, pasteHtml, textState]);
+    }, [text, textFormatters, setIsTruncated, textState, appendTextInHtml]);
 
     useLayoutEffect(()=>{
         if(textRef.current){

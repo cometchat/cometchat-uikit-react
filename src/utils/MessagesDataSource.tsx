@@ -47,6 +47,7 @@ import { CometChatUIEvents } from "../events/CometChatUIEvents";
 import { CometChatDate } from "../components/BaseComponents/CometChatDate/CometChatDate";
 import { MessageReceiptUtils } from "./MessageReceiptUtils";
 import { isMobileDevice } from "./util";
+import { CometChatUIKitUtility } from "../CometChatUIKit/CometChatUIKitUtility";
 export type ComposerId = { parentMessageId: number | null, user: string | null, group: string | null };
 /**
  * Utility class that extends DataSource and provides getters for message options.
@@ -1252,6 +1253,7 @@ export class MessagesDataSource implements DataSource {
       loggedInUser,
       config as any  // toDo remove any
     );
+    message = CometChatUIKitUtility.sanitizeText(message);
     let messageObject = conversation.getLastMessage();
 
 

@@ -57,33 +57,13 @@ const MessageTranslationBubble = (props: IMessageTranslationBubbleProps) => {
   const { children, helpText, translatedText, alignment, textFormatters, isSentByMe } = { ...defaultProps, ...props }
   const textElementRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (textFormatters) {
-
-      const textElement = textElementRef.current;
-
-      let finalText: string | void = translatedText;
-
-      if (textFormatters && textFormatters.length) {
-        textFormatters.forEach((formatter: CometChatTextFormatter) => {
-          finalText = formatter.getFormattedText(finalText!, {
-            mentionsTargetElement: MentionsTargetElement.textbubble,
-          });
-        });
-      }
-      textElement!.textContent = "";
-
-      pasteHtml(textElement, finalText);
-    }
-  }, [textFormatters]);
-
-  /**
+    /**
    * Inserts HTML content into a text element and applies text formatters if any.
    * 
    * @param {HTMLDivElement} textElement - The target element to insert HTML content into.
    * @param {string} html - The HTML content to insert.
    */
-  function pasteHtml(textElement: HTMLDivElement | null, html: string) {
+  const pasteHtml = useCallback((textElement: HTMLDivElement | null, html: string) => {
     try {
       let el = document.createElement("div");
       el.innerHTML = html;
@@ -108,9 +88,29 @@ const MessageTranslationBubble = (props: IMessageTranslationBubbleProps) => {
     } catch (error) {
       console.log(error);
     }
-  }
+  }, [textFormatters])
 
-  if (!translatedText && translatedText?.trim().length) {
+  useEffect(() => {
+    if (textFormatters) {
+
+      const textElement = textElementRef.current;
+
+      let finalText: string | void = translatedText;
+
+      if (textFormatters.length) {
+        textFormatters.forEach((formatter: CometChatTextFormatter) => {
+          finalText = formatter.getFormattedText(finalText!, {
+            mentionsTargetElement: MentionsTargetElement.textbubble,
+          });
+        });
+      }
+      textElement!.textContent = "";
+
+      pasteHtml(textElement, finalText);
+    }
+  }, [pasteHtml, textFormatters, translatedText]);
+
+  if (!translatedText || !translatedText.trim().length) {
     return null
   }
 

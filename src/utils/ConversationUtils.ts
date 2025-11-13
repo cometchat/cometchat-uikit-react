@@ -119,7 +119,7 @@ export class ConversationUtils {
             }
           });
         let lastMessage: string | any = (messageObject as CometChat.TextMessage)?.getText() || "";
-          message = CometChatUIKitUtility.sanitizeHtml(lastMessage, regexWhitelist);
+          message = CometChatUIKitUtility.sanitizeText(lastMessage);
 
           allFormatters.forEach(formatter => {
             if (formatter && typeof formatter.getFormattedText === "function") {

@@ -20,6 +20,7 @@ import { CometChatUIEvents } from "../../events/CometChatUIEvents";
 import { CometChatUIKitCalls } from "../../CometChatUIKit/CometChatCalls";
 import { CometChatActionBubble } from "../BaseComponents/CometChatActionBubble/CometChatActionBubble";
 import { CometChatDate } from "../BaseComponents/CometChatDate/CometChatDate";
+import { CometChatUIKitUtility } from "../../CometChatUIKit/CometChatUIKitUtility";
 
 const CallingConstants = Object.freeze({
   meeting: "meeting",
@@ -372,6 +373,7 @@ export class CallingExtensionDecorator extends DataSourceDecorator {
         additionalParams &&
         !additionalParams.disableMentions
       ) {
+        actionMessage = CometChatUIKitUtility.sanitizeText(actionMessage);
         actionMessage = this.getMentionsFormattedText(
           messageObject,
           actionMessage,

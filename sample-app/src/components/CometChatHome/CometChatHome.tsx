@@ -1383,6 +1383,7 @@ function CometChatHome(props: { theme?: string }) {
         const openChatForUser = (user?: CometChat.User) => {
             const uid = user?.getUid();
             if (uid) {
+                if(uid === loggedInUser?.getUid()) return;
                 const closeSide = () => {
                     setAppState({ type: "updateSideComponent", payload: { visible: false, type: "" } });
                 }

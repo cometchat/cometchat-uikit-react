@@ -13,6 +13,7 @@ import { MentionsTargetElement, MessageStatus, UserMemberListType } from "../../
 import { CometChatMessageEvents, IMessages } from "../../events/CometChatMessageEvents";
 import { CometChatUIEvents, IMentionsCountWarning, IModal } from "../../events/CometChatUIEvents";
 import { isMobileDevice } from "../../utils/util";
+import { CometChatUIKitUtility } from "../../CometChatUIKit/CometChatUIKitUtility";
 
 type Args = {
   dispatch: React.Dispatch<Action>;
@@ -328,17 +329,10 @@ export function useCometChatMessageComposer(args: Args) {
       const preventPaste = (e: ClipboardEvent) => {
         e.preventDefault();
         let clipboardData = e.clipboardData!.getData("text/plain");
-        const sanitizedData = clipboardData
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
+        const sanitizedData = CometChatUIKitUtility.sanitizeText(clipboardData);
         if (sanitizedData) {
-          contentEditable.removeEventListener("paste", preventPaste);
           pasteHtmlAtCaret(sanitizedData);
           dispatch({ type: "setText", text: sanitizedData });
-          setTimeout(() => {
-            contentEditable.addEventListener("paste", preventPaste);
-          }, 0);
         }
       }
 
