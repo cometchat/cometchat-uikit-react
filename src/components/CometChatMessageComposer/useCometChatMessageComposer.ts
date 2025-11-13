@@ -62,6 +62,8 @@ type Args = {
   getCurrentDocument: () => Document;
   onTextChange:((text: string) => void) | undefined;
   messageToReplyRef: React.MutableRefObject<CometChat.BaseMessage | null>;
+  mentionsUsersRequestBuilder?: CometChat.UsersRequestBuilder;
+  mentionsGroupMembersRequestBuilder?: CometChat.GroupMembersRequestBuilder;
 
 };
 
@@ -98,7 +100,7 @@ export function useCometChatMessageComposer(args: Args) {
     setUserMemberListType,
     getComposerId,
     isPartOfCurrentChatForUIEvent,
-    parentMessageIdPropRef, getCurrentInput,textMessageToEdit,getCurrentWindow,getCurrentDocument,onTextChange,messageToReplyRef } = args;
+    parentMessageIdPropRef, getCurrentInput,textMessageToEdit,getCurrentWindow,getCurrentDocument,onTextChange,messageToReplyRef,mentionsUsersRequestBuilder,mentionsGroupMembersRequestBuilder } = args;
   const isPreviewVisible = useRef<boolean>(false);
   const autoFocusCompleted = useRef<boolean>(false);
 
@@ -548,9 +550,9 @@ export function useCometChatMessageComposer(args: Args) {
 
           setUserMemberListType(listType);
 
-          const requestBuilder = new CometChat.GroupMembersRequestBuilder(
-            group.getGuid()
-          ).setLimit(15);
+          // Use custom request builder if provided, otherwise create default one
+          const requestBuilder = mentionsGroupMembersRequestBuilder || 
+            new CometChat.GroupMembersRequestBuilder(group.getGuid()).setLimit(15);
           setGroupMembersRequestBuilder(requestBuilder);
         }
 
@@ -559,14 +561,14 @@ export function useCometChatMessageComposer(args: Args) {
 
           setUserMemberListType(listType);
 
-          const requestBuilder = new CometChat.UsersRequestBuilder().setLimit(15);
-
+          // Use custom request builder if provided, otherwise create default one
+          const requestBuilder = mentionsUsersRequestBuilder || 
+            new CometChat.UsersRequestBuilder().setLimit(15);
           setUsersRequestBuilder(requestBuilder);
         }
       }
     } catch (error) {
       errorHandler(error, "useEffect")
     }
-  }, [user, group, disableMentions]);
+  }, [user, group, disableMentions, mentionsUsersRequestBuilder, mentionsGroupMembersRequestBuilder]);
 }
-

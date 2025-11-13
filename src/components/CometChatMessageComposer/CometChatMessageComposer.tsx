@@ -246,6 +246,20 @@ interface MessageComposerProps {
  * @defaultValue ""
  */
   placeholderText?: string;
+
+  /**
+   * Custom request builder for mentions user list.
+   * @defaultValue `undefined` - Uses default internal request builder.
+   * 
+   */
+  mentionsUsersRequestBuilder?: CometChat.UsersRequestBuilder;
+
+  /**
+   * Custom request builder for mentions group members list.
+   * @defaultValue `undefined` - Uses default internal request builder
+   * 
+   */
+  mentionsGroupMembersRequestBuilder?: CometChat.GroupMembersRequestBuilder;
 }
 
 /**
@@ -415,7 +429,9 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
     disableSoundForMessage = false,
     customSoundForMessage,
     showScrollbar = false,
-    placeholderText = getLocalizedString('message_composer_placeholder')
+    placeholderText = getLocalizedString('message_composer_placeholder'),
+    mentionsUsersRequestBuilder,
+    mentionsGroupMembersRequestBuilder
   } = props;
   
   /**
@@ -2513,7 +2529,9 @@ try {
     getCurrentWindow,
     getCurrentDocument,
     onTextChange,
-    messageToReplyRef
+    messageToReplyRef,
+    mentionsUsersRequestBuilder,
+    mentionsGroupMembersRequestBuilder
   });
   // Main rendering of the message composer component
   return (

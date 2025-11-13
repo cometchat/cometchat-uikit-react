@@ -1500,6 +1500,7 @@ function CometChatHome(props: { theme?: string }) {
                 setAppState({ type: "updateShowMessagesSearch", payload: false })
             }
             if (uid) {
+                if(uid === loggedInUser?.getUid()) return;
                 if (activeTab === "chats") {
                     CometChat.getConversation(uid!, CometChatUIKitConstants.MessageReceiverType.user).then(
                         (conversation) => {
