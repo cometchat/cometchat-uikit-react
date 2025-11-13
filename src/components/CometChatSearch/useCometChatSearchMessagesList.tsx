@@ -842,6 +842,7 @@ const getMessageTitle = useCallback((message: CometChat.BaseMessage): string => 
     filteredMessageList = filteredMessageList.filter((message : any) => (message.receiver.role == role && message.sender.role == myRole) || (message.receiver.role == myRole && message.sender.role == role));
     
     let communityMessageList = messageState.messageList.filter((message) => message.getReceiverType() == conversationType);
+    let typebasedMessageList = messageState.messageList.filter((message : any) => message.getReceiverType() == conversationType);
 
     return (
       <div className={`cometchat-search__messages ${!alwaysShowSeeMore || activeFilters.length > 0 ? "cometchat-search__messages-full" : ""}`}>
@@ -849,7 +850,7 @@ const getMessageTitle = useCallback((message: CometChat.BaseMessage): string => 
           title={getLocalizedString("search_messages_header")}
           hideSearch={true}
           // list={messageState.messageList}
-          list={panelType === "admin" ? (userTags[0] == '0' ? communityMessageList : filteredMessageList) : messageState.messageList}
+          list={panelType === "admin" ? (userTags[0] == '0' ? communityMessageList : filteredMessageList) : typebasedMessageList }
           listItemKey='getId'
           itemView={getListItem()}
           showSectionHeader={false}
