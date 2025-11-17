@@ -2375,6 +2375,19 @@ try {
       );
     }
 
+  function handleVoiceRecordingClose() {
+    try {
+      voiceRecordingBtnRef.current?.closePopover();
+      dispatch({
+        type: "setContentToDisplay",
+        contentToDisplay: "none",
+      });
+      setActivePopover("none");
+    } catch (error) {
+      errorHandler(error, "handleVoiceRecordingClose");
+    }
+  }
+
   /**
     * Creates the voice recording view, including the media recorder 
     * and a button to initiate voice recording. The button's appearance 
@@ -2384,6 +2397,7 @@ try {
     const defaultSecondaryContent = (
       <CometChatMediaRecorder
         onSubmitRecording={handleSendVoiceMessage}
+        onCloseRecording={handleVoiceRecordingClose}
         autoRecording={true}
       />
 
