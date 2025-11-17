@@ -575,6 +575,7 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
       useRef<CometChatMentionsFormatter>(
         ChatConfigurator.getDataSource().getMentionsTextFormatter({})
       );
+  const mentionsDisabledForMediaRef = useRef(false);
   const [mentionsSearchCount, setMentionsSearchCount] = useState(0);
   const [clipboardPreview, setClipboardPreview] = useState<ClipboardPreviewState | null>(null);
   const [pendingAttachment, setPendingAttachment] = useState<PendingAttachmentState | null>(null);
@@ -701,6 +702,13 @@ try {
   const searchMentions = useCallback(
     (searchTerm: any) => {
       try {
+        if (mentionsDisabledForMediaRef.current) {
+          setShowListForMentions(false);
+          setMentionsSearchTerm("");
+          mentionsSearchTermTemp.current = "";
+          setMentionsSearchCount(1);
+          return;
+        }
         if (!searchTerm || !searchTerm.length) {
           setMentionsSearchTerm("");
           mentionsSearchTermTemp.current = "";
@@ -932,6 +940,72 @@ try {
     },
     [dispatch]
   );
+
+  useEffect(() => {
+    try {
+      const hasMediaInComposer = Boolean(pendingAttachment || clipboardPreview);
+      mentionsDisabledForMediaRef.current = hasMediaInComposer;
+      if (!hasMediaInComposer) {
+        return;
+      }
+
+      setShowListForMentions(false);
+      setMentionsSearchTerm("");
+      mentionsSearchTermTemp.current = "";
+      setMentionsSearchCount(1);
+
+      const contentEditable = getCurrentInput() as HTMLElement | null;
+      if (!contentEditable) {
+        return;
+      }
+
+      const mentionSpans = Array.from(
+        contentEditable.querySelectorAll(".cometchat-mentions")
+      );
+      if (!mentionSpans.length) {
+        return;
+      }
+
+      const activeDocument = getCurrentDocument() ?? document;
+      mentionSpans.forEach((mentionSpan) => {
+        const text = mentionSpan.textContent ?? "";
+        const textNode = activeDocument.createTextNode(text);
+        mentionSpan.replaceWith(textNode);
+      });
+
+      mentionsTextFormatterInstanceRef.current.resetCometChatUserGroupMembers();
+      mentionsTextFormatterInstanceRef.current.reset();
+
+      const flattenedText = contentEditable.textContent ?? "";
+      if (!flattenedText.trim()) {
+        emptyInputField();
+      } else {
+        contentEditable.textContent = flattenedText;
+      }
+
+      dispatch({ type: "setText", text: flattenedText });
+      mySetAddToMsgInputText(flattenedText);
+      if (onTextChange) {
+        onTextChange(flattenedText);
+      }
+    } catch (error) {
+      errorHandler(error, "mediaMentionsCleanup");
+    }
+  }, [
+    clipboardPreview,
+    dispatch,
+    emptyInputField,
+    errorHandler,
+    getCurrentDocument,
+    getCurrentInput,
+    mySetAddToMsgInputText,
+    onTextChange,
+    pendingAttachment,
+    setMentionsSearchCount,
+    setMentionsSearchTerm,
+    setShowListForMentions,
+    mentionsTextFormatterInstanceRef,
+  ]);
 
   /**
    * Handles SDK errors
