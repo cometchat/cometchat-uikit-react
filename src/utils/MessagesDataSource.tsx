@@ -1661,18 +1661,35 @@ getMessagePreviewSubtitle(
     };
 
     const createTextWrapper = (text: string) => {
-      const finalTextFormatters = textFormatters || ChatConfigurator.getDataSource().getAllTextFormatters({});
+      const finalTextFormatters =
+        textFormatters && textFormatters.length
+          ? [...textFormatters]
+          : ChatConfigurator.getDataSource().getAllTextFormatters({});
       let formattedText = text;
-      finalTextFormatters.forEach((formatter)=>{
+      const mentionedUsers = message.getMentionedUsers
+        ? message.getMentionedUsers()
+        : [];
+      const loggedInUser = CometChatUIKitLoginListener.getLoggedInUser();
+
+      finalTextFormatters.forEach((formatter) => {
         formatter.setMessage(message);
         formatter.setMessageBubbleAlignment(_alignment!);
-      })
+        if (formatter instanceof CometChatMentionsFormatter) {
+          if (mentionedUsers.length) {
+            formatter.setCometChatUserGroupMembers(mentionedUsers);
+          }
+          if (loggedInUser) {
+            formatter.setLoggedInUser(loggedInUser);
+          }
+        }
+      });
 
       for (let i = 0; i < finalTextFormatters.length; i++) {
         (formattedText as string | void) = finalTextFormatters[i].getFormattedText(formattedText, {
-            mentionsTargetElement: MentionsTargetElement.textbubble,
+          mentionsTargetElement: MentionsTargetElement.textbubble,
         });
-    }  
+      }
+    
 
       return (
         <div className="cometchat-message-preview__subtitle" key={message.getId()}>

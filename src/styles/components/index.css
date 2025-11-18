@@ -85,7 +85,7 @@ font:var(--cometchat-font-body-regular);
     align-items: center;
     cursor: pointer;
 }
-.cometchat-mentions-outgoing.cometchat-mentions-you{
+/* .cometchat-mentions-outgoing.cometchat-mentions-you{
     background: rgba(255, 171, 0, 0.20);
 }
 .cometchat-mentions-outgoing.cometchat-mentions-other{
@@ -96,7 +96,7 @@ font:var(--cometchat-font-body-regular);
 }
 .cometchat-mentions-incoming.cometchat-mentions-other{
     background: rgba(104, 82, 214, 0.20);
-}
+} */
 .cometchat-mentions-outgoing.cometchat-mentions-you > span{
     color: var(--cometchat-warning-color);
 
