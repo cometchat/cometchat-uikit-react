@@ -59,6 +59,7 @@ type MediaMessageFileType =
   | typeof CometChatUIKitConstants.MessageTypes.audio
   | typeof CometChatUIKitConstants.MessageTypes.file;
 export type ActionOnClickType = (() => void) | null;
+const DEFAULT_TEXT_FORMATTERS: CometChatTextFormatter[] = [];
 
 type ClipboardPreviewState = {
   file: File;
@@ -444,7 +445,7 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
       hideStickersButton = false,
       hideSendButton = false,
       enableClipboardImagePaste = false,
-      textFormatters = [],
+      textFormatters = DEFAULT_TEXT_FORMATTERS,
     enterKeyBehavior = EnterKeyBehavior.SendMessage,
     disableSoundForMessage = false,
     customSoundForMessage,
