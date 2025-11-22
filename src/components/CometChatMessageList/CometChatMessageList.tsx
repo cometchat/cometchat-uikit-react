@@ -249,6 +249,17 @@ interface MessageListProps {
   group?: CometChat.Group;
 
   /**
+   * Callback invoked when a message avatar is clicked.
+   *
+   * @param message - The message whose avatar was clicked.
+   * @param sender - The sender associated with the message.
+   */
+  onProfileClick?: (message: CometChat.BaseMessage, sender?: CometChat.User | null) => void;
+
+  
+  isAllowedToViewProfile?: (targetUser?: CometChat.User | null) => boolean;
+
+  /**
    * Instance of the `CometChat.ReactionsRequestBuilder` for managing message reactions.
    */
   reactionsRequestBuilder?: CometChat.ReactionsRequestBuilder;
@@ -406,6 +417,8 @@ const defaultProps: MessageListProps = {
   parentMessageId: 0,
   user: undefined,
   group: undefined,
+  onProfileClick: undefined,
+  isAllowedToViewProfile: undefined,
   emptyView: undefined,
   errorView: undefined,
   loadingView: undefined,
@@ -454,6 +467,8 @@ const CometChatMessageList = (props: MessageListProps) => {
     parentMessageId,
     user,
     group,
+    onProfileClick,
+    isAllowedToViewProfile,
     emptyView,
     errorView,
     loadingView,
@@ -3946,10 +3961,20 @@ const CometChatMessageList = (props: MessageListProps) => {
             showHeaderTitle(item)) || (item.getCategory() === CometChatUIKitConstants.MessageCategory.agentic) || (item.getType() === CometChatUIKitConstants.streamMessageTypes.run_started)) &&
           !hideAvatar
         ) {
+          const sender = item?.getSender ? item?.getSender() : null;
+          const avatarUser = sender ?? loggedInUserRef.current;
+          const avatarName = avatarUser?.getName() || "";
+          const avatarImage = avatarUser?.getAvatar();
+          const canClick = !!sender && typeof isAllowedToViewProfile === "function" && isAllowedToViewProfile(sender);
+          const avatarClickHandler = onProfileClick
+            ? () => onProfileClick(item, avatarUser ?? null)
+            : undefined;
           return (
             <CometChatAvatar
-              name={item?.getSender() ? item?.getSender()?.getName() : loggedInUserRef.current?.getName()!}
-              image={item?.getSender() ? item?.getSender()?.getAvatar() : loggedInUserRef.current?.getAvatar()!}
+              name={avatarName}
+              image={avatarImage}
+              disablePointer={!canClick}
+              onClick={avatarClickHandler}
             ></CometChatAvatar>
           );
         } else {
@@ -3959,7 +3984,7 @@ const CometChatMessageList = (props: MessageListProps) => {
         errorHandler(error, "getBubbleLeadingView")
       }
     },
-    [showHeaderTitle, hideAvatar]
+    [showHeaderTitle, hideAvatar, onProfileClick]
   );
 
   /**

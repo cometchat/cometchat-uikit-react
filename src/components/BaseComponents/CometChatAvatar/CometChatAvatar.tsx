@@ -4,6 +4,11 @@ interface BaseProps {
     name?: string;
     /** URL of the avatar image to be displayed. */
     image?: string;
+    /** Optional click handler for the avatar. */
+    onClick?: () => void;
+    
+    /** Disable pointer cursor even when click handler is present. */
+    disablePointer?: boolean;
 }
 type CometChatAvatarProps = BaseProps & { name: string } | BaseProps & { image: string }
 
@@ -16,9 +21,13 @@ const CometChatAvatar = (props: CometChatAvatarProps) => {
     const {
         image = "",
         name = "",
+        onClick,
+        disablePointer
     } = props;
 
     const splitName = name.split(" ");
+    const isClickable = typeof onClick === "function";
+    const shouldShowPointer = isClickable && !disablePointer;
 
     return (
         <div className="cometchat" style={{
@@ -28,7 +37,11 @@ const CometChatAvatar = (props: CometChatAvatarProps) => {
             justifyContent: "center",
             alignItems: "center"
         }}>
-            <div className="cometchat-avatar">
+            <div
+                className="cometchat-avatar"
+                onClick={onClick}
+                style={shouldShowPointer ? { cursor: "pointer" } : undefined}
+            >
                 {image ?
                     <img src={image} className="cometchat-avatar__image" />
                     :
