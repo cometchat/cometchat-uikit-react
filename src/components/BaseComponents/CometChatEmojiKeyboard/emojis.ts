@@ -1669,32 +1669,32 @@ export const Emojis = [
           char: "🧖‍♂️",
           fitzpatrick_scale: true
         },
-        couple_with_heart_woman_man: {
-          keywords: [
-            "pair",
-            "love",
-            "like",
-            "affection",
-            "human",
-            "dating",
-            "valentines",
-            "marriage"
-          ],
-          char: "💑"
-        },
-        couple_with_heart_woman_woman: {
-          keywords: [
-            "pair",
-            "love",
-            "like",
-            "affection",
-            "human",
-            "dating",
-            "valentines",
-            "marriage"
-          ],
-          char: "👩‍❤️‍👩"
-        },
+        // couple_with_heart_woman_man: {
+        //   keywords: [
+        //     "pair",
+        //     "love",
+        //     "like",
+        //     "affection",
+        //     "human",
+        //     "dating",
+        //     "valentines",
+        //     "marriage"
+        //   ],
+        //   char: "💑"
+        // },
+        // couple_with_heart_woman_woman: {
+        //   keywords: [
+        //     "pair",
+        //     "love",
+        //     "like",
+        //     "affection",
+        //     "human",
+        //     "dating",
+        //     "valentines",
+        //     "marriage"
+        //   ],
+        //   char: "👩‍❤️‍👩"
+        // },
         // couple_with_heart_man_man: {
         //   keywords: [
         //     "pair",
@@ -1708,28 +1708,28 @@ export const Emojis = [
         //   ],
         //   char: "👨‍❤️‍👨"
         // },
-        couplekiss_man_woman: {
-          keywords: [
-            "pair",
-            "valentines",
-            "love",
-            "like",
-            "dating",
-            "marriage"
-          ],
-          char: "💏"
-        },
-        couplekiss_woman_woman: {
-          keywords: [
-            "pair",
-            "valentines",
-            "love",
-            "like",
-            "dating",
-            "marriage"
-          ],
-          char: "👩‍❤️‍💋‍👩"
-        },
+        // couplekiss_man_woman: {
+        //   keywords: [
+        //     "pair",
+        //     "valentines",
+        //     "love",
+        //     "like",
+        //     "dating",
+        //     "marriage"
+        //   ],
+        //   char: "💏"
+        // },
+        // couplekiss_woman_woman: {
+        //   keywords: [
+        //     "pair",
+        //     "valentines",
+        //     "love",
+        //     "like",
+        //     "dating",
+        //     "marriage"
+        //   ],
+        //   char: "👩‍❤️‍💋‍👩"
+        // },
         // couplekiss_man_man: {
         //   keywords: [
         //     "pair",
