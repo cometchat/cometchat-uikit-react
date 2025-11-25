@@ -276,6 +276,7 @@ function stateReducer(state: State, action: Action): State {
         }
         newState = {
           ...state,
+          groupMemberList: [],
           fetchState: States.empty,
         };
       } else if (groupMembers.length !== 0) {
@@ -496,7 +497,7 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
         errorHandler(error, 'fetchNextAndAppendGroupMembers');
       }
     },
-    [dispatch, errorHandler]
+    [disableLoadingState, dispatch, errorHandler, onEmpty]
   );
 
   /**

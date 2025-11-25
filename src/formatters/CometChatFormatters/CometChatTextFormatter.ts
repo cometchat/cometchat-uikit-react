@@ -253,12 +253,12 @@ export abstract class CometChatTextFormatter {
    * @param {string|null} inputText - The text to format.
    * @return {string|void} - The original or formatted input text, or void if editing was done based on cursor position.
    */
-  getFormattedText(inputText: string | null, params: { mentionsTargetElement: MentionsTargetElement }): string | void {
-    if (!inputText) {
-      return;
-    }
-
+  getFormattedText(inputText: string, params: { mentionsTargetElement: MentionsTargetElement }): string | void {
     return this.onRegexMatch(inputText);
+  }
+
+  getFormattedTextForEntity(entity: any): void {
+    return;
   }
 
   /**
@@ -416,7 +416,7 @@ export abstract class CometChatTextFormatter {
    * @param {string|null} inputText - The text to apply regex match.
    * @return {string} - The replaced text.
    */
-  protected onRegexMatch(inputText?: string | null): string {
+  protected onRegexMatch(inputText?: string | null, entity?: any): string {
     let replacedText = inputText ?? "";
     for (let i = 0; i < this.regexPatterns.length; i++) {
       let regexPattern = this.regexPatterns[i];

@@ -22,7 +22,6 @@ type Args = {
   pasteHtmlAtCaret: (text: string) => void;
   renderSanitizedHtml: (text: string) => void;
   textFormatters: Array<CometChatTextFormatter>;
-  disableMentions: boolean;
   textFormatterArray: Array<CometChatTextFormatter>;
   mentionsTextFormatterInstanceRef: React.MutableRefObject<CometChatMentionsFormatter>;
   setTextFormatters: React.Dispatch<
@@ -76,7 +75,6 @@ export function useCometChatMessageComposer(args: Args) {
     renderSanitizedHtml,
     propsText,
     text,
-    disableMentions,
     textFormatterArray,
     currentSelectionForRegex,
     currentSelectionForRegexRange,
@@ -172,6 +170,16 @@ export function useCometChatMessageComposer(args: Args) {
                       for (let i = 0; i < textFormatterArray.length; i++) {
                         if (textFormatterArray[i] instanceof CometChatMentionsFormatter) {
                           (textFormatterArray[i] as CometChatMentionsFormatter).setCometChatUserGroupMembers(object.message.getMentionedUsers())
+                          if (!object.message.getDeletedAt()) {
+                            const channelRegex = /<@all:(.*?)>/g;
+                            const text = object.message.getText();
+                            const matches = Array.from(
+                              text.matchAll(channelRegex)
+                            );
+                            const mentionedChannels = matches.map((m) => m[1]);
+                            
+                            (textFormatterArray[i] as CometChatMentionsFormatter).setCometChatMentionedChannels(mentionedChannels);
+                          }
                         }
 
                         const element = getCurrentInput() as HTMLElement;
@@ -406,7 +414,6 @@ export function useCometChatMessageComposer(args: Args) {
         contentEditable?.focus();
         autoFocusCompleted.current = true;
       }
-      if (!disableMentions) {
         if (textFormatterArray.length ) {
           let mentionsFormatter = textFormatterArray.find(
             formatter => formatter instanceof CometChatMentionsFormatter
@@ -453,7 +460,6 @@ export function useCometChatMessageComposer(args: Args) {
           });
         }
    
-      }
       if(getCurrentWindow()?.getSelection()){
         setSelection(getCurrentWindow()?.getSelection());
       }
@@ -464,7 +470,7 @@ export function useCometChatMessageComposer(args: Args) {
     } catch (error) {
       errorHandler(error, "preventPaste")
     }
-  }, [disableMentions, setTextFormatters,textFormatters]);
+  }, [setTextFormatters,textFormatters]);
 
   /**
    * Handle user or group changes and reset the composer input accordingly.
@@ -544,7 +550,6 @@ export function useCometChatMessageComposer(args: Args) {
       if (pasteHtmlAtCaret && propsText) {
         pasteHtmlAtCaret(propsText)
       }
-      if (!disableMentions) {
         if (group) {
           const listType = UserMemberListType.groupmembers;
 
@@ -566,9 +571,8 @@ export function useCometChatMessageComposer(args: Args) {
             new CometChat.UsersRequestBuilder().setLimit(15);
           setUsersRequestBuilder(requestBuilder);
         }
-      }
     } catch (error) {
       errorHandler(error, "useEffect")
     }
-  }, [user, group, disableMentions, mentionsUsersRequestBuilder, mentionsGroupMembersRequestBuilder]);
+  }, [user, group, mentionsUsersRequestBuilder, mentionsGroupMembersRequestBuilder]);
 }

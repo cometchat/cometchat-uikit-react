@@ -21,6 +21,7 @@ import EditIcon from "../assets/edit_icon.svg";
 import FileIcon from "../assets/document_icon.svg";
 import ImageIcon from "../assets/photo.svg";
 import InformationIcon from "../assets/info_icon.svg";
+import ReportIcon from "../assets/warning_neutral.svg";
 import PlaceholderImage from "../assets/image_placeholder.png";
 import PrivateMessageIcon from "../assets/send_message_privately.svg";
 import ReactionIcon from "../assets/add_reaction_icon.svg";
@@ -75,6 +76,7 @@ export interface additionalParamsOptions {
   hideMessagePrivatelyOption?: boolean,
   hideCopyMessageOption?: boolean,
   hideMessageInfoOption?: boolean,
+  hideFlagMessageOption?: boolean,
 }
 
 export class MessagesDataSource implements DataSource {
@@ -151,6 +153,15 @@ export class MessagesDataSource implements DataSource {
     });
   }
 
+  getReportOption(): CometChatActionsIcon {
+    return new CometChatActionsIcon({
+      id: CometChatUIKitConstants.MessageOption.flagMessage,
+      title: getLocalizedString("message_list_option_flag_message"),
+      iconURL: ReportIcon,
+      onClick: undefined as unknown as (id: number) => void,
+    });
+  }
+
   isSentByMe(
     loggedInUser: CometChat.User,
     message: CometChat.BaseMessage
@@ -194,6 +205,9 @@ export class MessagesDataSource implements DataSource {
     }
     if (isSentByMe && !additionalParams?.hideMessageInfoOption) {
       messageOptionList.push(this.getMessageInfoOption());
+    }
+    if (!isSentByMe && !additionalParams?.hideFlagMessageOption && messageObject.getCategory() === CometChatUIKitConstants.MessageCategory.message) {
+      messageOptionList.push(this.getReportOption());
     }
     if ((isSentByMe || (!isParticipant && group)) && !additionalParams?.hideDeleteMessageOption)
       messageOptionList.push(this.getDeleteOption());
@@ -995,6 +1009,13 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     if (isSentByMe && !additionalParams?.hideMessageInfoOption) {
       messageOptionList.push(this.getMessageInfoOption());
     }
+    if (
+      !isSentByMe &&
+      !additionalParams?.hideFlagMessageOption &&
+      messageObject.getCategory() === CometChatUIKitConstants.MessageCategory.message
+    ) {
+      messageOptionList.push(this.getReportOption());
+    }
     if ((isSentByMe || (!isParticipant && group)) && !additionalParams?.hideDeleteMessageOption)
       messageOptionList.push(this.getDeleteOption());
 
@@ -1255,6 +1276,20 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
               message.getMentionedUsers()
             );
           }
+
+          if (
+            message.getType() === CometChatUIKitConstants.MessageTypes.text &&
+            !message.getDeletedAt()
+          ) {
+            const channelRegex = /<@all:(.*?)>/g;
+            const text = message.getText();
+            const matches = Array.from(text.matchAll(channelRegex));
+            const mentionedChannels = matches.map((m) => m[1]);
+            mentionsTextFormatter.setCometChatMentionedChannels(
+              mentionedChannels
+            );
+          }
+          
           mentionsTextFormatter.setLoggedInUser(
             CometChatUIKitLoginListener.getLoggedInUser()!
           );
@@ -1542,6 +1577,20 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
                 messageObject.getMentionedUsers()
               );
             }
+            if (
+              messageObject.getType() ===
+                CometChatUIKitConstants.MessageTypes.text &&
+              !messageObject.getDeletedAt()
+            ) {
+              const channelRegex = /<@all:(.*?)>/g;
+              const text = messageObject.getText() as string;
+              const matches = Array.from(text.matchAll(channelRegex));
+              const mentionedChannels = matches.map((m) => m[1]);
+              mentionsTextFormatter.setCometChatMentionedChannels(
+                mentionedChannels
+              );
+            }
+            
             mentionsTextFormatter.setLoggedInUser(
               CometChatUIKitLoginListener.getLoggedInUser()!
             );
@@ -1750,30 +1799,39 @@ getMessagePreviewTitle(message: CometChat.BaseMessage, _alignment?: MessageBubbl
       mentionsTargetElement: MentionsTargetElement
     }
   ) {
-    const regex = /<@uid:(.*?)>/g;
+    const userRegex = /<@uid:(.*?)>/g;
+    const channelRegex = /<@all:(.*?)>/g;
     let messageText = message.getText();
     let messageTextTmp: string = subtitle;
-    let match = regex.exec(messageText);
+    let userMatch = userRegex.exec(messageText);
+    let channelMatch = channelRegex.exec(messageText);
     let cometChatUsers: Array<CometChat.User | CometChat.GroupMember> = [];
+    let cometChatChannels: Array<string> = [];
     let mentionedUsers = message.getMentionedUsers();
-    while (match !== null) {
+    while (userMatch !== null) {
       let user;
       for (let i = 0; i < mentionedUsers.length; i++) {
-        if (match[1] == mentionedUsers[i].getUid()) {
+        if (userMatch[1] == mentionedUsers[i].getUid()) {
           user = mentionedUsers[i];
         }
       }
       if (user) {
         cometChatUsers.push(user);
       }
-      match = regex.exec(messageText);
+      userMatch = userRegex.exec(messageText);
     }
+    while (channelMatch !== null) {
+      cometChatChannels.push(channelMatch[1]);
+      channelMatch = channelRegex.exec(messageText);
+    }
+
     let mentionsFormatter = this.getMentionsTextFormatter({
 
     });
 
     mentionsFormatter.setClasses(["cc-mentions"]);
     mentionsFormatter.setCometChatUserGroupMembers(cometChatUsers);
+    mentionsFormatter.setCometChatMentionedChannels(cometChatChannels);
 
     messageTextTmp = mentionsFormatter.getFormattedText(
       messageTextTmp,

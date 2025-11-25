@@ -722,9 +722,9 @@
 }
 
 /**
- * Styling for the message information popup wrapper to create a centered overlay
+ * Styling for the message information popup wrapper and flag message dialog wrapper to create a centered overlay
  */
-.cometchat-message-information__popup-wrapper {
+.cometchat-message-information__popup-wrapper, .cometchat-message-list__flag-message-dialog-wrapper {
     display: flex;
     position: fixed;
     z-index: 3;
@@ -778,5 +778,10 @@
 .cometchat-message-list-hide-scrollbar .cometchat-emoji-keyboard__list::-webkit-scrollbar-thumb,
 .cometchat-message-list-hide-scrollbar .cometchat-emoji-keyboard__tabs::-webkit-scrollbar,
 .cometchat-message-list-hide-scrollbar .cometchat-emoji-keyboard__tabs::-webkit-scrollbar-thumb {
+    display: none;
+}
+
+.cometchat-message-list__flag-message-dialog-hide-scrollbar .cometchat-flag-message-dialog__remark-input::-webkit-scrollbar,
+.cometchat-message-list__flag-message-dialog-hide-scrollbar .cometchat-flag-message-dialog__remark-input::-webkit-scrollbar-thumb {
     display: none;
 }

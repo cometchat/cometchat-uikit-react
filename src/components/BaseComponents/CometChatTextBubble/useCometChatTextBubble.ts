@@ -34,93 +34,149 @@ export const useCometChatTextBubble = (props: { textFormatters: Array<CometChatT
 
             // Process the container to handle nested content properly
             const processNode = (node: Node): DocumentFragment => {
-                const fragment = document.createDocumentFragment();
+              const fragment = document.createDocumentFragment();
 
-                if (node.nodeType === Node.TEXT_NODE) {
-                    // Text nodes are always rendered as plain text
-                    const textSpan = document.createElement('span');
-                    textSpan.style.whiteSpace = 'pre-wrap';
-                    textSpan.textContent = node.textContent || '';
-                    fragment.appendChild(textSpan);
-                } else if (node.nodeType === Node.ELEMENT_NODE) {
-                    const element = node as Element;
+              if (node.nodeType === Node.TEXT_NODE) {
+                // Text nodes are always rendered as plain text
+                const textSpan = document.createElement("span");
+                textSpan.style.whiteSpace = "pre-wrap";
+                textSpan.textContent = node.textContent || '';
+                fragment.appendChild(textSpan);
+              } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const element = node as Element;
 
-                    if (element.tagName.toLowerCase() === 'span') {
-                        // Check if span has any class name
-                        const className = element.getAttribute('class') || '';
-                        const hasClassName = className.trim().length > 0;
+                if (element.tagName.toLowerCase() === "span") {
+                  // Check if span has any class name
+                  const className = element.getAttribute("class") || "";
+                  const hasClassName = className.trim().length > 0;
 
-                        if (hasClassName) {
-                            // For span elements with any class name, create a new span and render as HTML
-                            const spanElement = document.createElement('span');
+                  if (hasClassName) {
+                    // For span elements with any class name, create a new span and render as HTML
+                    const spanElement = document.createElement("span");
 
-                            // Copy allowed attributes
-                            const allowedAttributes = ['class', 'style', 'data-uid', 'data-entity-type', 'data-entity-id'];
-                            for (let i = 0; i < element.attributes.length; i++) {
-                                const attr = element.attributes[i];
-                                if (allowedAttributes.includes(attr.name.toLowerCase()) &&
-                                    !attr.name.toLowerCase().startsWith('on') &&
-                                    !attr.value.toLowerCase().includes('javascript:')) {
-                                    spanElement.setAttribute(attr.name, attr.value);
-                                }
-                            }
-
-                            // Set the text content as plain text (this handles nested HTML)
-                            spanElement.textContent = element.textContent || '';
-
-                            // Add event listeners if needed
-                            if (textFormatters && textFormatters.length) {
-                                for (let i = 0; i < textFormatters.length; i++) {
-                                    textFormatters[i].registerEventListeners(
-                                        spanElement,
-                                        spanElement.classList
-                                    );
-                                }
-                            }
-
-                            fragment.appendChild(spanElement);
-                        } else {
-                            // For span elements without any class name, render as plain text including the tags
-                            const textSpan = document.createElement('span');
-                            textSpan.style.whiteSpace = 'pre-wrap';
-
-                            // Reconstruct the original HTML as text
-                            const tempDiv = document.createElement('div');
-                            tempDiv.appendChild(element.cloneNode(true));
-                            textSpan.textContent = tempDiv.innerHTML;
-
-                            fragment.appendChild(textSpan);
-                        }
-                    } else {
-                        // For all other elements, render as plain text including the tags
-                        const textSpan = document.createElement('span');
-                        textSpan.style.whiteSpace = 'pre-wrap';
-
-                        // Reconstruct the original HTML as text
-                        const tempDiv = document.createElement('div');
-                        tempDiv.appendChild(element.cloneNode(true));
-                        textSpan.textContent = tempDiv.innerHTML;
-
-                        fragment.appendChild(textSpan);
+                    // Copy allowed attributes
+                    const allowedAttributes = [
+                      "class",
+                      "style",
+                      "data-uid",
+                      "data-entity-type",
+                      "data-entity-id",
+                    ];
+                    for (let i = 0; i < element.attributes.length; i++) {
+                      const attr = element.attributes[i];
+                      if (
+                        allowedAttributes.includes(attr.name.toLowerCase()) &&
+                        !attr.name.toLowerCase().startsWith("on") &&
+                        !attr.value.toLowerCase().includes("javascript:")
+                      ) {
+                        spanElement.setAttribute(attr.name, attr.value);
+                      }
                     }
-                }
 
-                return fragment;
+                    // Process child nodes recursively to preserve nested spans
+                    const processChildNodes = (
+                      parentElement: Element,
+                      targetElement: HTMLElement
+                    ) => {
+                      Array.from(parentElement.childNodes).forEach(
+                        (childNode) => {
+                          if (childNode.nodeType === Node.TEXT_NODE) {
+                            targetElement.appendChild(
+                              document.createTextNode(
+                                childNode.textContent || ""
+                              )
+                            );
+                          } else if (childNode.nodeType === Node.ELEMENT_NODE) {
+                            const childElement = childNode as Element;
+                            if (childElement.tagName.toLowerCase() === "span") {
+                              const nestedSpan = document.createElement("span");
+
+                              // Copy allowed attributes for child span
+                              for (
+                                let i = 0;
+                                i < childElement.attributes.length;
+                                i++
+                              ) {
+                                const attr = childElement.attributes[i];
+                                if (
+                                  allowedAttributes.includes(
+                                    attr.name.toLowerCase()
+                                  ) &&
+                                  !attr.name.toLowerCase().startsWith("on") &&
+                                  !attr.value
+                                    .toLowerCase()
+                                    .includes("javascript:")
+                                ) {
+                                  nestedSpan.setAttribute(
+                                    attr.name,
+                                    attr.value
+                                  );
+                                }
+                              }
+
+                              // Recursively process nested content
+                              processChildNodes(childElement, nestedSpan);
+                              targetElement.appendChild(nestedSpan);
+                            } else {
+                              // For non-span elements, add as text
+                              targetElement.appendChild(
+                                document.createTextNode(childElement.outerHTML)
+                              );
+                            }
+                          }
+                        }
+                      );
+                    };
+
+                    processChildNodes(element, spanElement);
+
+                    if (textFormatters && textFormatters.length) {
+                      for (let i = 0; i < textFormatters.length; i++) {
+                        textFormatters[i].registerEventListeners(
+                          spanElement,
+                          spanElement.classList
+                        );
+                      }
+                    }
+
+                    fragment.appendChild(spanElement);
+                  } else {
+                    // For span elements without any class name, render as plain text including the tags
+                    const textSpan = document.createElement("span");
+                    textSpan.style.whiteSpace = "pre-wrap";
+
+                    const tempDiv = document.createElement("div");
+                    tempDiv.appendChild(element.cloneNode(true));
+                    textSpan.textContent = tempDiv.innerHTML;
+
+                    fragment.appendChild(textSpan);
+                  }
+                } else {
+                  // For all other elements, render as plain text including the tags
+                  const textSpan = document.createElement("span");
+                  textSpan.style.whiteSpace = "pre-wrap";
+
+                  const tempDiv = document.createElement("div");
+                  tempDiv.appendChild(element.cloneNode(true));
+                  textSpan.textContent = tempDiv.innerHTML;
+
+                  fragment.appendChild(textSpan);
+                }
+              }
+
+              return fragment;
             };
 
-            // Process all child nodes
             const finalFragment = document.createDocumentFragment();
-            Array.from(tempContainer.childNodes).forEach(node => {
-                finalFragment.appendChild(processNode(node));
+            Array.from(tempContainer.childNodes).forEach((node) => {
+              finalFragment.appendChild(processNode(node));
             });
 
-            // Clear and append the processed content
             textElement.textContent = "";
             textElement.appendChild(finalFragment);
 
         } catch (error) {
             console.error("Error in appendTextInHtml:", error);
-            // Fallback: render everything as plain text
             textElement.textContent = text;
         }
     };

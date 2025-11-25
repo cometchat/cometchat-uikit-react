@@ -63,6 +63,7 @@ export class CometChatUIKitConstants {
         translateMessage: "translate",
         reactToMessage: "react",
         messageInformation: "messageInformation",
+        flagMessage: "flagMessage",
         copyMessage: "copy",
         shareMessage: "share",
         forwardMessage: "forward",

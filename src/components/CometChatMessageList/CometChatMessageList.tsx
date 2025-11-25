@@ -49,6 +49,7 @@ import { JSX } from 'react';
 import { useCometChatFrameContext } from "../../context/CometChatFrameContext";
 import { MessageUtils } from "../../utils/MessageUtils";
 import { startStreamingMessage, streamingState$ } from "../../services/stream-message.service";
+import { CometChatFlagMessageDialog } from "../CometChatFlagMessageDialog/CometChatFlagMessageDialog";
 
 /**
  * Props for the MessageList component.
@@ -327,6 +328,16 @@ interface MessageListProps {
     * @defaultValue `false`
   */
   isAgentChat?: boolean;
+  /**
+   * hides the "Flag Message" option from message actions menu
+   * @defaultValue `false`
+   */
+  hideFlagMessageOption?: boolean;
+  /**
+   * hides the remark text area in the flag dialog
+   * @defaultValue `false`
+   */
+  hideFlagRemarkField?: boolean;
 }
 
 const defaultProps: MessageListProps = {
@@ -375,7 +386,9 @@ const defaultProps: MessageListProps = {
   smartRepliesDelayDuration: 10000,
   goToMessageId: "",
   showScrollbar: false,
-  isAgentChat: false
+  isAgentChat: false,
+  hideFlagMessageOption: false,
+  hideFlagRemarkField: false
 };
 
 const CometChatMessageList = (props: MessageListProps) => {
@@ -427,7 +440,9 @@ const CometChatMessageList = (props: MessageListProps) => {
     stickyDateTimeFormat,
     goToMessageId,
     showScrollbar,
-    isAgentChat
+    isAgentChat,
+    hideFlagMessageOption,
+    hideFlagRemarkField
   } = { ...defaultProps, ...props };
   /**
    * All the useState useCometChatMessageList are declaired here. These trigger a rerender when updated.
@@ -442,6 +457,9 @@ const CometChatMessageList = (props: MessageListProps) => {
   const [showMessageInfoPopup, setShowMessageInfoPopup] = useState<boolean>(false);
   const [activeMessageInfo, setActiveMessageInfo] =
     useState<CometChat.BaseMessage | null>(null); // should be state.
+  const [showFlagMessageDialog, setShowFlagMessageDialog] = useState<boolean>(false);
+  const [currentFlagMessage, setCurrentFlagMessage] =
+      useState<CometChat.BaseMessage | null>(null); 
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [ongoingCallView, setOngoingCallView] = useState<any>(null);
   const [showNewMessagesBanner, setShowNewMessagesBanner] = useState<boolean>(false);
@@ -1041,22 +1059,34 @@ const CometChatMessageList = (props: MessageListProps) => {
 */
   const getMentionsTextWithoutStyle: (message: CometChat.TextMessage) => string = (message: CometChat.TextMessage) => {
     try {
-      const regex = /<@uid:(.*?)>/g;
+      const userRegex = /<@uid:(.*?)>/g;
+      const channelRegex = /<@all:(.*?)>/g;
       let messageText = message.getText();
       let messageTextTmp = message.getText();
-      let match = regex.exec(messageText);
+      let userMatch = userRegex.exec(messageText);
+      let channelMatch = channelRegex.exec(messageText);
       let mentionedUsers = message.getMentionedUsers();
-      while (match !== null) {
+      while (userMatch !== null) {
         let user;
         for (let i = 0; i < mentionedUsers.length; i++) {
-          if (match[1] === mentionedUsers[i].getUid()) {
+          if (userMatch[1] === mentionedUsers[i].getUid()) {
             user = mentionedUsers[i];
           }
         }
         if (user) {
-          messageTextTmp = messageTextTmp.replace(match[0], "@" + user?.getName());
+          messageTextTmp = messageTextTmp.replace(userMatch[0], "@" + user?.getName());
         }
-        match = regex.exec(messageText);
+        userMatch = userRegex.exec(messageText);
+      }
+      while (channelMatch !== null) {
+        messageTextTmp = messageTextTmp.replace(
+          channelMatch[0],
+          "@" +
+            (getLocalizedString(
+              `message_composer_mention_${channelMatch[1]}`
+            ) || channelMatch[1])
+        );
+        channelMatch = channelRegex.exec(messageText);
       }
       return messageTextTmp;
     } catch (error) {
@@ -1340,6 +1370,29 @@ const CometChatMessageList = (props: MessageListProps) => {
     },
     [errorHandler, isOnBottomRef, getMessageById]
   );
+  /**
+ * Function to retrieve a specific message by its ID from the message list.
+ * If the message is found, the CometChatFlagMessageDialog component will be opened.
+ *
+ * @param {number} id - The ID of the message to open the flag message dialog for.
+ * @returns {void}
+ */
+  const onOpenFlagMessageDialog: (id: number) => void = useCallback(
+    (id: number) => {
+      try {
+        let message: CometChat.BaseMessage | undefined = getMessageById(id);
+        if (message) {
+          isOnBottomRef.current = false;
+          setScrollListToBottom(false);
+          setCurrentFlagMessage(message);
+          setShowFlagMessageDialog(true);
+        }
+      } catch (error: any) {
+        errorHandler(error, "onOpenFlagMessageDialog");
+      }
+    },
+    [errorHandler, isOnBottomRef, getMessageById, setScrollListToBottom, setCurrentFlagMessage, setShowFlagMessageDialog]
+  );
 
   /**
  * Function to retrieve a specific message by its ID from the message list.
@@ -1512,6 +1565,11 @@ const CometChatMessageList = (props: MessageListProps) => {
                   element.onClick = onOpenMessageInfo;
                 }
                 break;
+              case CometChatUIKitConstants.MessageOption.flagMessage:
+                if (element instanceof CometChatActionsIcon && !element.onClick) {
+                  element.onClick = onOpenFlagMessageDialog;
+                }
+                break;
               case CometChatUIKitConstants.MessageOption.sendMessagePrivately:
                 if (element instanceof CometChatActionsIcon && !element.onClick) {
                   element.onClick = onMessagePrivately;
@@ -1592,6 +1650,7 @@ const CometChatMessageList = (props: MessageListProps) => {
                     hideMessagePrivatelyOption,
                     hideCopyMessageOption,
                     hideMessageInfoOption,
+                    hideFlagMessageOption
                   }),
                 msgObject?.getId()
               );
@@ -1617,6 +1676,7 @@ const CometChatMessageList = (props: MessageListProps) => {
       hideMessagePrivatelyOption,
       hideCopyMessageOption,
       hideMessageInfoOption,
+      hideFlagMessageOption
     ]
   );
 
@@ -4329,6 +4389,33 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
   };
 
   /**
+   * Function to hide the flag message dialog
+   */
+  const hideFlagMessageDialog: () => void = () => {
+    setShowFlagMessageDialog(false);
+  };
+  
+  /**
+   * Function to flag a message
+   * @param {string} messageId - The ID of the message to be flagged
+   * @param {string} reasonId - The reason ID for flagging the message
+   * @param {string} [remark] - Optional remark for flagging the message
+   * @returns {Promise<boolean>} - Returns a promise that resolves to true if the message was flagged successfully, false otherwise
+   */
+  const flagMessage = useCallback(
+    async (messageId: string, reasonId: string, remark?: string) => {
+      try{ 
+        await CometChat.flagMessage(messageId, { reasonId, remark });
+        toastTextRef.current = getLocalizedString("flag_message_reported");
+        setShowToast(true);
+        return true;
+      } catch (error) {
+        errorHandler(error, "flagMessage");
+        return false;
+      }
+  }, [errorHandler]);
+
+  /**
  * Function to get the message template based on the message type and category
  * @param {CometChat.BaseMessage} selectedMessage - The message for which the template needs to be fetched
  * @returns {CometChatMessageTemplate} - Returns the template of the selected message
@@ -4498,6 +4585,17 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
             hideReceipts={hideReceipts}
             textFormatters={textFormatters}
             showScrollbar={showScrollbar}
+          />
+        </div>
+      )}
+
+      {showFlagMessageDialog && currentFlagMessage !== null && (
+        <div className={`cometchat-message-list__flag-message-dialog-wrapper ${!showScrollbar ? "cometchat-message-list__flag-message-dialog-hide-scrollbar" : ""}`} onClick={hideFlagMessageDialog}>
+          <CometChatFlagMessageDialog
+            message={currentFlagMessage}
+            onSubmit={flagMessage}
+            onClose={hideFlagMessageDialog}
+            hideFlagRemarkField={hideFlagRemarkField}
           />
         </div>
       )}

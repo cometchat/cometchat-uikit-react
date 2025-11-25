@@ -164,6 +164,16 @@ export class MessageTranslationExtensionDecorator extends DataSourceDecorator {
                 message.getMentionedUsers()
               );
             }
+            if (!message.getDeletedAt()) {
+              const channelRegex = /<@all:(.*?)>/g;
+              const text = message.getText();
+              const matches = Array.from(text.matchAll(channelRegex));
+              const mentionedChannels = matches.map((m) => m[1]);
+              mentionsTextFormatter.setCometChatMentionedChannels(
+                mentionedChannels
+              );
+            }
+
             mentionsTextFormatter.setLoggedInUser(
               CometChatUIKitLoginListener.getLoggedInUser()!
             );

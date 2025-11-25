@@ -10,7 +10,7 @@ import {
   useRefSync,
 } from "../../CometChatCustomHooks";
 import { ChatConfigurator } from "../../utils/ChatConfigurator";
-import { CometChat } from "@cometchat/chat-sdk-javascript";
+import { CometChat, ConversationsRequest } from "@cometchat/chat-sdk-javascript";
 import { CometChatCheckbox } from "../BaseComponents/CometChatCheckbox/CometChatCheckbox";
 import { CometChatList } from "../BaseComponents/CometChatList/CometChatList";
 import { CometChatListItem } from "../BaseComponents/CometChatListItem/CometChatListItem";
@@ -948,6 +948,42 @@ export function CometChatConversations(props: ConversationsProps) {
     []
   );
 
+  const hideConversation = useCallback(
+    (conversationsRequest: ConversationsRequest | null, message: CometChat.BaseMessage): boolean => {
+      try {
+
+        if (
+          conversationsRequest &&
+          conversationsRequest.getConversationType() &&
+          message.getReceiverType() !==
+            conversationsRequest.getConversationType()
+        ) return true;
+
+        const isOnlyAgentic = conversationsRequest?.getOnlyAgentic() || false;
+        const hideAgentic = conversationsRequest?.getHideAgentic() || false;
+
+        const messageReceiverType = message.getReceiverType();
+
+        if (messageReceiverType === CometChatUIKitConstants.MessageReceiverType.group) {
+          if (isOnlyAgentic) return true;
+        }
+        else {
+          const messageReceiver = message.getReceiver() as CometChat.User;
+          const messageSender = message.getSender();
+          if (messageSender.getRole() !== "@agentic" && messageReceiver.getRole() !== "@agentic" && isOnlyAgentic) {
+            return true;
+          }
+          else if ((messageSender.getRole() === "@agentic" || messageReceiver.getRole() === "@agentic") && hideAgentic) {
+            return true;
+          }
+        }
+        return false;
+      } catch (error) {
+        errorHandler(error, "hideConversation");
+        return false;
+      }
+  }, [errorHandler]);
+
   /**
    * Updates the unreadCount of `conversation` & moves it to the top of the `conversationList`
    */
@@ -957,10 +993,9 @@ export function CometChatConversations(props: ConversationsProps) {
       newMessage: CometChat.BaseMessage
     ): void => {
       try {
-
         const message = newMessage || conversation.getLastMessage();
         // Exit if conversation type passed in ConversationsRequestBuilder doesn't match the message receiver type.
-        if (conversationsRequestBuilder && conversationsRequestBuilder.build().getConversationType() && message.getReceiverType() !== conversationsRequestBuilder.build().getConversationType()) {
+        if (hideConversation(conversationsRequestBuilder?.build() || null, message)) {
           return;
         }
 
@@ -992,7 +1027,7 @@ export function CometChatConversations(props: ConversationsProps) {
         errorHandler(error, "updateConversationList")
       }
     },
-    [dispatch, state.loggedInUser, getIncrementUnreadCountBoolFromMetaData]
+    [dispatch, state.loggedInUser, getIncrementUnreadCountBoolFromMetaData, hideConversation, conversationsRequestBuilder]
   );
   /**
  * Function to close toast
@@ -1048,7 +1083,7 @@ export function CometChatConversations(props: ConversationsProps) {
           CometChat.markAsDelivered(message);
         }
         if (
-          !disableSoundForMessages &&
+          !disableSoundForMessages && !hideConversation(conversationsRequestBuilder?.build() || null, message) &&
           !(
             (message.getCategory() ===
               CometChatUIKitConstants.MessageCategory.custom &&
@@ -1088,6 +1123,8 @@ export function CometChatConversations(props: ConversationsProps) {
       getIncrementUnreadCountBoolFromMetaData,
       disableSoundForMessages,
       customSoundForMessagesRef,
+      hideConversation,
+      conversationsRequestBuilder
     ]
   );
 
@@ -1875,7 +1912,8 @@ export function CometChatConversations(props: ConversationsProps) {
     loggedInUser: state.loggedInUser,
     activeConversation,
     setActiveConversationState,
-    hideUserStatus
+    hideUserStatus,
+    hideConversation
   });
 
   return (

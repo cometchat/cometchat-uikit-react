@@ -312,6 +312,7 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
                         hideReplyInThreadOption={true}
                         hideStickyDate={true}
                         hideTranslateMessageOption={true}
+                        hideFlagMessageOption={true}
                         disableSoundForMessages={true}
                         textFormatters={[]}
                         parentMessageId={goToMessage ? goToMessage?.getId() : undefined}

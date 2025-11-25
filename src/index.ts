@@ -60,6 +60,7 @@ export { CometChatUsers } from './components/CometChatUsers/CometChatUsers';
 
 export { CometChatMessageInformation } from './components/CometChatMessageInformation/CometChatMessageInformation';
 
+export { CometChatFlagMessageDialog } from './components/CometChatFlagMessageDialog/CometChatFlagMessageDialog';
 // AI
 
 export { CometChatUIKitCalls } from './CometChatUIKit/CometChatCalls';

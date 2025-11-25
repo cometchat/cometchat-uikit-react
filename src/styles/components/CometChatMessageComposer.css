@@ -165,14 +165,13 @@
 
 /* Mentions wrapper styling */
 .cometchat-mention-list {
+    overflow: auto;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
     z-index: 2;
     min-height: 45px;
     padding: 0 0 1px 0;
     width: fit-content;
-    align-self: flex-start;
     min-width: 320px;
     bottom: 100%;
     left: 0;
@@ -182,18 +181,17 @@
     border: 1px solid var(--cometchat-background-color-01);
     background: var(--cometchat-background-color-01);
     box-shadow: 0 12px 16px 4px rgba(16, 24, 40, 0.08), 0 4px 6px 4px rgba(16, 24, 40, 0.03);
-}
-
-.cometchat-mention-list .cometchat-list {
-    max-height: 336px;
+    scrollbar-width: none;
 }
 
 .cometchat-mention-list>.cometchat {
-    overflow: hidden;
     border-radius: inherit;
 }
 .cometchat-mention-list .cometchat-list .cometchat-list__header-title{
     display: none;
+}
+.cometchat-mention-list .cometchat-list__item-wrapper{
+    cursor: pointer;
 }
 
 /* Message input area */

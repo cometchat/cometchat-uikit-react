@@ -27,7 +27,11 @@ type Args = {
   loggedInUser: CometChat.User | null,
   activeConversation: Conversation | null,
   setActiveConversationState: React.Dispatch<React.SetStateAction<Conversation | null>>,
-  hideUserStatus?:boolean
+  hideUserStatus?:boolean,
+  hideConversation: (
+    conversationsRequest: CometChat.ConversationsRequest | null,
+    message: CometChat.BaseMessage
+  ) => boolean;
 };
 
 export function useCometChatConversations(args: Args) {
@@ -45,7 +49,8 @@ export function useCometChatConversations(args: Args) {
     loggedInUser,
     activeConversation,
     setActiveConversationState,
-    hideUserStatus
+    hideUserStatus,
+    hideConversation
   } = args;
 
   const isFirstRenderRef = useRef<boolean>(true);
@@ -260,7 +265,7 @@ export function useCometChatConversations(args: Args) {
       });
       const messageSentSub = CometChatMessageEvents.ccMessageSent.subscribe(item => {
         if (item.status === MessageStatus.success) {
-          if (builtBuilder && builtBuilder.getConversationType() && item.message.getReceiverType() !== builtBuilder.getConversationType()) {
+          if (hideConversation(builtBuilder, item.message)) {
             return;
           }
           CometChat.CometChatHelper.getConversationFromMessage(item.message).then(conversation => {

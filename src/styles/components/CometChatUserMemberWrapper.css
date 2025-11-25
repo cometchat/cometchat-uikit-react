@@ -1,0 +1,25 @@
+.cometchat-special-mentions-list .cometchat-special-mentions-list__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+  cursor: pointer;
+}
+
+.cometchat-special-mentions-list .cometchat-special-mentions-list__item:hover {
+  background: var(--cometchat-white-hover, #FAFAFA);
+}
+
+.cometchat-special-mentions-list .cometchat-special-mentions-list__item .cometchat-special-mentions-list__item-name {
+  padding: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cometchat-special-mentions-list .cometchat-special-mentions-list__item .cometchat-special-mentions-list__item-name .cometchat-special-mentions-list__item-name-subtext{
+  color: var(--cometchat-neutral-color-700);
+  font: var(--cometchat-font-body-regular);
+}

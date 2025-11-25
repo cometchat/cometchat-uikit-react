@@ -63,6 +63,7 @@ export function useCometChatUsers(args: Args) {
         () => {
             try {
                 dispatch({ type: "setIsFirstReload", isFirstReload: true });
+                usersSearchText.current = searchKeyword;
                 usersManagerRef.current = new UsersManager({ searchText, usersRequestBuilder, searchRequestBuilder, usersSearchText });
                 if (!disableLoadingState) {
                     dispatch({ type: "setUserList", userList: [] });
@@ -71,7 +72,7 @@ export function useCometChatUsers(args: Args) {
             } catch (error) {
                 errorHandler(error, 'useEffect');
             }
-        }, [searchText, usersRequestBuilder, searchRequestBuilder, fetchNextAndAppendUsers, dispatch, fetchNextIdRef, usersManagerRef]);
+        }, [searchText, usersRequestBuilder, searchRequestBuilder, fetchNextAndAppendUsers, dispatch, fetchNextIdRef, usersManagerRef, disableLoadingState, searchKeyword]);
 
     useEffect(
         /**
