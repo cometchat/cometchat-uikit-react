@@ -31,6 +31,15 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     const [hasError, setHasError] = useState(false);
     const [permissionState, setPermissionState] = useState<PermissionState>('prompt');
     const permissionStatusRef = useRef<PermissionStatus | null>(null);
+    const permissionProbeStreamRef = useRef<MediaStream | null>(null);
+
+    const stopStreamTracks = (stream?: MediaStream | null) => {
+        if (!stream) return;
+        stream.getTracks().forEach((track) => {
+            track.stop();
+            track.onended = null;
+        });
+    };
     
 
   function pauseActiveMedia(){
@@ -53,7 +62,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
             // Fallback for browsers that don't support permissions API
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                stream.getTracks().forEach(track => track.stop());
+                stopStreamTracks(stream);
                 return 'granted';
             } catch (err: any) {
                 if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -78,6 +87,8 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
             handleStopRecording();
             clearInterval(timerIntervalRef.current);
             clearStream();
+            stopStreamTracks(permissionProbeStreamRef.current);
+            permissionProbeStreamRef.current = null;
             hasInitializedRef.current = false;
             if (permissionStatusRef.current) {
                 permissionStatusRef.current.onchange = null;
@@ -171,11 +182,27 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         }
         
         // Check permission state before starting
-        const currentPermissionState = await checkMicrophonePermission();
+        let currentPermissionState = await checkMicrophonePermission();
         if (currentPermissionState === 'denied') {
             setHasError(true);
             setPermissionState('denied');
             return;
+        } else if (currentPermissionState === 'prompt'){
+            try {
+                permissionProbeStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stopStreamTracks(permissionProbeStreamRef.current);
+                permissionProbeStreamRef.current = null;
+                currentPermissionState = 'granted';
+                setPermissionState('granted');
+            } catch (err: any) {
+                stopStreamTracks(permissionProbeStreamRef.current);
+                permissionProbeStreamRef.current = null;
+                const denied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';
+                currentPermissionState = denied ? 'denied' : 'prompt';
+                setPermissionState(currentPermissionState);
+                setHasError(true);
+                return;
+            }
         }
         counterRunning.current = true;
         createMedia.current = true;
@@ -215,6 +242,8 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         setIsRecording(false);
         stopTimer();
         clearStream();
+        stopStreamTracks(permissionProbeStreamRef.current);
+        permissionProbeStreamRef.current = null;
         setMediaRecorder(undefined);
         hasInitializedRef.current = false;
     };
