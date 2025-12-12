@@ -1105,7 +1105,7 @@ const CometChatMessageList = (props: MessageListProps) => {
       try {
         setMessageList((prevMessageList: CometChat.BaseMessage[]) => {
           const messages = prevMessageList.map((m: CometChat.BaseMessage) => {
-            if (m.getMuid() === message.getMuid()) {
+            if (m.getMuid() === message.getMuid() && (!getIsMessageModerated(m) || getIsMessageModerated(message))) {
               return message;
             } else {
               return m;

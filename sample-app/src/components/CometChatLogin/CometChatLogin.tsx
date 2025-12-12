@@ -53,7 +53,7 @@ const CometChatLogin = () => {
   async function fetchDefaultUsers() {
     try {
       const response = await fetch(
-       "https://assets.cometchat.io/sampleapp/v2/sampledata.json"
+       "https://assets.cc-cluster-2.io/sampleapp/v2/sampledata.json"
       );
       const data: UserJson = await response.json();
       setDefaultUsers(data.users);

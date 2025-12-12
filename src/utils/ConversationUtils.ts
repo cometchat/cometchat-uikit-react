@@ -129,6 +129,10 @@ export class ConversationUtils {
    */
   static getLastMessageCustom(conversation: CometChat.Conversation) {
     let msgObject: CometChat.CustomMessage = conversation.getLastMessage()
+    const text = msgObject.getConversationText();
+    if (text) {
+      return text;
+    }
     return msgObject.getType()
 
   }

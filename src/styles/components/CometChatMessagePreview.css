@@ -270,6 +270,13 @@
     mask-size: contain;
   }
   
+  .cometchat-message-preview__subtitle-icon-unsupported {
+    -webkit-mask: url("../../assets/file_unsupported.svg") center center no-repeat;
+    mask: url("../../assets/file_unsupported.svg") center center no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+  }
+  
   .cometchat-message-preview__subtitle-icon-none {
     display: none;
   }

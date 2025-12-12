@@ -1376,6 +1376,11 @@ export function CometChatConversations(props: ConversationsProps) {
           )
         }
 
+        let iconClass = iconName ? `cometchat-conversations__subtitle-icon-${iconName}` : "cometchat-conversations__subtitle-icon-none";
+        if(iconName === "unsupported") {
+          iconClass += ` cometchat-conversations__subtitle-icon-${lastMessage?.getType()}`;
+        }
+
         return (
           <div
             className="cometchat-conversations__subtitle-text-wrapper"
@@ -1385,7 +1390,7 @@ export function CometChatConversations(props: ConversationsProps) {
               (lastMessage.getCategory() != CometChatUIKitConstants.MessageCategory.custom || (lastMessage.getCategory() == CometChatUIKitConstants.MessageCategory.custom &&
                 lastMessage.getType() !== CometChatUIKitConstants.calls.meeting)) && <span className={`cometchat-conversations__subtitle-text-sender`}>{getLastMessageSenderName}:</span>}
             <div
-              className={`cometchat-conversations__subtitle-icon ${iconName ? `cometchat-conversations__subtitle-icon-${iconName}` : "cometchat-conversations__subtitle-icon-none"}`}
+              className={`cometchat-conversations__subtitle-icon ${iconClass}`}
             />
             <div
               className={`cometchat-conversations__subtitle-text`}
@@ -1483,7 +1488,7 @@ export function CometChatConversations(props: ConversationsProps) {
           iconName = "collaborative-document";
           break;
         default:
-          iconName = "";
+          iconName = "unsupported";
           break;
       }
       if (message.getDeletedAt() || message.getCategory() === CometChatUIKitConstants.MessageCategory.interactive) {

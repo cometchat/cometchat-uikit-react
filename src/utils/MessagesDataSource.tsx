@@ -1751,6 +1751,9 @@ getMessagePreviewSubtitle(
         return createSimpleWrapper('collaborative-document', getLocalizedString("messsage_composer_collaborative_document"), 'cometchat-message-preview__subtitle-icon-collaborative-document');
       
       default:
+        if (message instanceof CometChat.CustomMessage) {
+          return createSimpleWrapper('unsupported', message.getConversationText() || message.getType(), `cometchat-message-preview__subtitle-icon-unsupported cometchat-message-preview__subtitle-icon-${message.getType()}`);
+        }
         return (
           <div className="cometchat-message-preview__subtitle">
             <div className="cometchat-message-preview__subtitle-icon cometchat-message-preview__subtitle-icon-unsupported" />
