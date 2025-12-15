@@ -129,7 +129,7 @@ export const CometChatReactionInfo: React.FC<ReactionInfoProps> = ({
                     if (reaction?.reactedBy?.uid === loggedInUser?.getUid()) {
                         fetchedReactionNames.unshift(youText);
                     } else {
-                        fetchedReactionNames.push(reaction?.reactedBy?.name);
+                        fetchedReactionNames.push(reaction?.getReactedBy()?.getName());
                     }
                 });
                 setReactionNames(fetchedReactionNames);
