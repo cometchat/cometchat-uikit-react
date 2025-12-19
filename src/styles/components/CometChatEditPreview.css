@@ -46,6 +46,7 @@
     font: var(--cometchat-font-body-regular);
     color: var(--cometchat-text-color-primary);
     font-style: normal;
+    margin: var(--cometchat-margin-1);
 }
 
 /*
@@ -59,4 +60,5 @@
     word-break: break-word;
     width: 100%;
     overflow: hidden;
+    margin: var(--cometchat-margin-1);
 }

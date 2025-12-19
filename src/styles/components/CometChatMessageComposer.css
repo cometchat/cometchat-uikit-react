@@ -36,6 +36,28 @@
     background: var(--cometchat-primary-color);
 }
 
+/* Voice recording action button styling (mic button when composer is empty) */
+.cometchat-message-composer__voice-recording-action {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    padding: var(--cometchat-padding-1, 4px);
+    justify-content: center;
+    align-items: center;
+    gap: var(--cometchat-padding-1, 4px);
+    border-radius: 60px;
+}
+
+/* Default state for the voice recording action button */
+.cometchat-message-composer__voice-recording-action .cometchat-button {
+    cursor: pointer;
+}
+
+/* Active state for the voice recording action button */
+.cometchat-message-composer__voice-recording-action-active {
+    cursor: pointer;
+}
+
 
 /* Sticker button popover content */
 .cometchat-message-composer__auxilary-button-view-sticker-button .cometchat-popover__content {
@@ -89,6 +111,16 @@
 .cometchat-message-composer__input .cometchat-mentions-you>span {
     color: var(--cometchat-warning-color, #FFAB00);
     font: var(--cometchat-font-body-regular);
+}
+
+.cometchat-message-composer__input-container{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 0;
 }
 
 /* Styling for buttons with no specific class */
@@ -278,26 +310,50 @@
     display: none;
 }
 
+.cometchat-message-composer__input-wrapper {
+    position: relative;
+    width: calc(100% - 72px);
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    border: 1px solid #CBD6E2;
+    border-radius: 20px;
+    padding: 4px 0;
+}
+
+/* Width adjustment when attachment button is visible */
+.cometchat-message-composer__input-wrapper--with-attachment {
+    width: calc(100% - 96px);
+}
+
 /* Message input area */
 .cometchat-message-composer__input {
     width: 100%;
     outline: none;
     background: transparent;
     overflow-y: auto;
-    min-height: 30px;
+    min-height: 32px;
     user-select: text;
     white-space: pre-wrap;
     overflow-wrap: break-word;
     text-align: left;
     box-sizing: border-box;
-    border-bottom: 1px solid var(--cometchat-border-color-light);
-    padding: var(--cometchat-padding-3, 12px);
+    /* border-bottom: 1px solid var(--cometchat-border-color-light); */
+    padding: var(--cometchat-padding-1, 8px) 0 var(--cometchat-padding-1, 8px) var(--cometchat-padding-4, 16px);
     color: var(--cometchat-text-color-primary);
     text-overflow: ellipsis;
     font: var(--cometchat-font-body-regular);
     max-height: 150px;
     scrollbar-width: none;
     cursor: text;
+    line-height: 24px;
+}
+
+/* Disabled state for composer input (when voice recording is active) */
+.cometchat-message-composer__input-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 /* Auxiliary button container */
@@ -343,9 +399,14 @@
     background: var(--cometchat-static-white);
 }
 
+/* Voice recording action button icon default styling */
+ .cometchat-message-composer__buttons .cometchat-message-composer__voice-recording-action .cometchat-button .cometchat-button__icon {
+    background: var(--cometchat-icon-color-secondary);
+}
+
 /* Icon styling for buttons with no specific class */
  .cometchat-message-composer__buttons .cometchat-button .cometchat-button__icon {
-    background: var(--cometchat-icon-color-secondary);
+    background: var(--secondary-color-TL);
 }
 
  .cometchat-message-composer__buttons .cometchat-button .cometchat-button__icon:hover {
@@ -353,6 +414,15 @@
 }
 
  .cometchat-message-composer__buttons .cometchat-message-composer__send-button .cometchat-button .cometchat-button__icon:hover {
+    background: var(--cometchat-static-white);
+}
+
+/* Voice recording action button icon hover and active state */
+ .cometchat-message-composer__buttons .cometchat-message-composer__voice-recording-action .cometchat-button .cometchat-button__icon:hover {
+    background: var(--cometchat-primary-color);
+}
+
+ .cometchat-message-composer__buttons .cometchat-message-composer__voice-recording-action-active .cometchat-button .cometchat-button__icon {
     background: var(--cometchat-static-white);
 }
 
@@ -384,6 +454,7 @@
  */
 .cometchat-message-composer__secondary-button-view-attachment-button .cometchat-action-sheet{
     min-width: 200px;
+    border: 1px solid #CBD6E2;
 }
 .cometchat-message-composer__secondary-button-view-attachment-button-1 .cometchat-popover__content{
 height: 58px;

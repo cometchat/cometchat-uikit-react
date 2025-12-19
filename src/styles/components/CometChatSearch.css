@@ -744,6 +744,12 @@
 
 }
 
+.cometchat-search__messages-leading-view-link img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 
 
 .cometchat-search__messages-leading-view-audio.cometchat-search__messages-leading-view {

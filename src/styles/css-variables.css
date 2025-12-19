@@ -312,6 +312,13 @@ Define border colors for UI elements,
   --cometchat-fab-button-icon: var(--cometchat-static-white);
   --cometchat-white-hover: var(--cometchat-neutral-color-100);
   --cometchat-white-pressed: var(--cometchat-neutral-color-300);
+
+    /* 
+  Styling for TruLeague colors
+  */
+
+  --secondary-color-TL: #494f73;
+  --text-secondary-color-TL: #cbd6e2;
 }
 
 [data-theme="dark"] {
@@ -422,4 +429,12 @@ Define border colors for UI elements,
   --cometchat-fab-button-icon: var(--cometchat-static-white);
   --cometchat-white-hover: var(--cometchat-neutral-color-100);
   --cometchat-white-pressed: var(--cometchat-neutral-color-300);
+
+  
+  /* 
+  Styling for TruLeague colors
+  */
+
+  --secondary-color-TL: #494f73;
+  --text-secondary-color-TL: #cbd6e2;
 }

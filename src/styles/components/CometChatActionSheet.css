@@ -49,6 +49,10 @@
     width: 100%;
 }
 
+.cometchat-action-sheet__item:not(:last-child) {
+    border-bottom: 1px solid #CBD6E2;
+}
+
 .cometchat-action-sheet__item:hover  {
     background: var(--cometchat-white-hover);
 }

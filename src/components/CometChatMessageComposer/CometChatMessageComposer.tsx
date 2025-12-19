@@ -1774,7 +1774,7 @@ try {
   
 
   /**
-   * @returns Should the component show the send button view
+   * @returns Should the component show the send button (true when has text, false shows mic)
   */
   function shouldShowSendButton(): boolean {
     const text = getCurrentInput()?.textContent ?? "";
@@ -1784,36 +1784,96 @@ try {
       state.textMessageToEdit !== null &&
       state.textMessageToEdit.getText() === text;
 
+    // Show send button when there's media pending
     if (hasPendingMedia) {
-      return false;
-    }
-
-    if (!hasText) {
       return true;
     }
 
-    if (state.textMessageToEdit !== null) {
-      return isEditingSameText;
+    // Show mic icon (not send) when no text
+    if (!hasText) {
+      return false;
     }
 
-    return false;
+    // Show mic icon when editing same text (no changes)
+    if (state.textMessageToEdit !== null) {
+      return !isEditingSameText;
+    }
+
+    // Show send button when there's text
+    return true;
   }
   /**
-   * Function to render the send button.
+   * Function to render the combined mic/send button (WhatsApp style).
+   * - Shows mic icon when composer is empty (opens voice recording)
+   * - Shows send icon when there's text (sends message)
    * - If `sendButtonView` is provided, it uses the custom send button view.
-   * - Otherwise, it displays a default send button.
    * 
-   * @returns JSX.Element The send button element.
+   * @returns JSX.Element The mic or send button element.
    */
-  function getSendButton(): JSX.Element {
-    if (sendButtonView) {
-      return <div onClick={onSendclick}>
-        {sendButtonView}
-      </div>
+  function getMicOrSendButton(): JSX.Element {
+    const showSend = shouldShowSendButton();
+    // If editing a message, only show send button, never mic
+    if (state.textMessageToEdit !== null) {
+      if (sendButtonView) {
+        return <div onClick={onSendclick}>{sendButtonView}</div>;
+      }
+      return (
+        <div className={`cometchat-message-composer__send-button ${showSend ? "cometchat-message-composer__send-button-active" : ""}`}>
+          <CometChatButton
+            onClick={onSendclick}
+            iconURL={SendIconFill}
+            hoverText={getLocalizedString("message_composer_send_message_icon_hover")}
+          />
+        </div>
+      );
     }
+
+    // Show mic icon when composer is empty
+    if (!showSend && !hideVoiceRecordingButton) {
+      const micButton = (
+        <div
+          className={`cometchat-message-composer__voice-recording-action ${state.contentToDisplay === "voiceRecording" ? "cometchat-message-composer__voice-recording-action-active" : ""}`}
+        >
+          <CometChatButton
+            onClick={onVoiceRecordingBtnClick}
+            hoverText={getLocalizedString(
+              "message_composer_voice_notes_icon_hover"
+            )}
+            iconURL={
+              state.contentToDisplay === "voiceRecording"
+                ? MicIconFill
+                : MicIcon
+            }
+          />
+        </div>
+      );
+
+      return (
+        <div className={`cometchat-message-composer__voice-recording-button ${state.contentToDisplay === "voiceRecording" ? "cometchat-message-composer__voice-recording-button-active" : ""}`}>
+          <CometChatPopover
+            useParentHeight={false}
+            useParentContainer={true}
+            ref={voiceRecordingBtnRef}
+            placement={Placement.top}
+            closeOnOutsideClick={false}
+            content={state.contentToDisplay === "voiceRecording"
+              ? <CometChatMediaRecorder
+                  onSubmitRecording={handleSendVoiceMessage}
+                  onCloseRecording={handleVoiceRecordingClose}
+                  autoRecording={true}
+                />
+              : null}
+          >
+            {micButton}
+          </CometChatPopover>
+        </div>
+      );
+    }
+
+    // Show send icon when there's text
     return (
       <div
-        className={`cometchat-message-composer__send-button ${shouldShowSendButton() ? "" : "cometchat-message-composer__send-button-active"}`}
+        className={`cometchat-message-composer__send-button ${showSend ? "cometchat-message-composer__send-button-active" : ""}`}
       >
         <CometChatButton
           onClick={onSendclick}
@@ -2108,7 +2168,6 @@ try {
   
       return (
         <div className="cometchat-message-composer__default-buttons">
-          {hideVoiceRecordingButton ? null : getVoiceRecordingView()}
           {hideEmojiKeyboardButton || isMobileDevice() ? null : getEmojiKeyboardView()}
           {hideStickersButton ? null : stickerButton}
         </div>
@@ -2933,37 +2992,85 @@ try {
    * buttons and views for sending messages, creating polls, etc.
    */
   function getTextInput(): JSX.Element {
+    const isRecording = state.contentToDisplay === "voiceRecording";
+    const hasAttachmentButton = !shouldShowAttachmentButton();
+    const hasAuxiliaryView = !!auxiliaryButtonView;
+    const showFirstButtonsDiv = hasAttachmentButton || hasAuxiliaryView;
+    
     return (
-      <>
+      <div className="cometchat-message-composer__input-container">
+        {showFirstButtonsDiv && (
+          <div
+            className='cometchat-message-composer__buttons'
+            style={{
+              display: "flex",
+              padding: `${getThemeVariable(
+                "--cometchat-padding-2"
+              )} ${getThemeVariable("--cometchat-padding-2")}`,
+              justifyContent: "space-between",
+              alignItems: "center",
+              alignSelf: "stretch",
+              gap: getThemeVariable("--cometchat-padding-4"),
+            }}
+          >
+            {hasAttachmentButton && getActionsheetView()}
+            {getAuxiliaryView()}
+          </div>
+        )}
+        <div className={`cometchat-message-composer__input-wrapper ${hasAttachmentButton ? "cometchat-message-composer__input-wrapper--with-attachment" : ""}`}>
         <div
           onKeyUp={onKeyUp}
           onKeyDown={onKeyDown}
-          contentEditable={checkPlainTextAvailability(false)}
+          contentEditable={
+            isRecording ? false : checkPlainTextAvailability(false)
+          }
           onMouseDown={handleMouseDown}
           onInput={onTextInputChange}
           onPaste={handleComposerPaste}
-          className={`cometchat-message-composer__input ${parentMessageIdPropRef.current ? "cometchat-message-composer__input-thread" : ""} ${isMobileDevice() ? "cometchat-message-composer__input-mobile" : ""} ${createUniqueUUID}`}
+          className={`cometchat-message-composer__input ${
+            parentMessageIdPropRef.current
+              ? "cometchat-message-composer__input-thread"
+              : ""
+          } ${
+            isMobileDevice() ? "cometchat-message-composer__input-mobile" : ""
+          } ${createUniqueUUID} ${
+            isRecording ? "cometchat-message-composer__input-disabled" : ""
+          }`}
           data-placeholder={placeholderText}
           ref={textInputRef}
         ></div>
+          <div
+            className='cometchat-message-composer__buttons emoji'
+            style={{
+              display: "flex",
+              padding: `0 ${getThemeVariable(
+                "--cometchat-padding-2"
+              )} 0 ${getThemeVariable("--cometchat-padding-2")}`,
+              justifyContent: "space-between",
+              alignItems: "center",
+              alignSelf: "stretch",
+              gap: getThemeVariable("--cometchat-padding-4"),
+            }}
+          >
+          {getDefaultButtons()}
+          </div>
+        </div>
         <div
-        className="cometchat-message-composer__buttons"
+          className='cometchat-message-composer__buttons'
           style={{
             display: "flex",
-            padding: `${getThemeVariable('--cometchat-padding-2')} ${getThemeVariable('--cometchat-padding-2')}`,
+            padding: `${getThemeVariable(
+              "--cometchat-padding-2"
+            )} ${getThemeVariable("--cometchat-padding-2")}`,
             justifyContent: "space-between",
             alignItems: "center",
             alignSelf: "stretch",
-            gap: getThemeVariable('--cometchat-padding-4')
+            gap: getThemeVariable("--cometchat-padding-4"),
           }}
         >
-          {shouldShowAttachmentButton() ? null :  getActionsheetView()}
-          {getDefaultButtons()}
-          {getAuxiliaryView()}
-          {hideSendButton ? null : getSendButton()}
+          {hideSendButton ? null : getMicOrSendButton()}
         </div>
-      </>
-
+      </div>
     );
   }
   /**
