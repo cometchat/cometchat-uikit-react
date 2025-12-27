@@ -799,3 +799,30 @@
 .cometchat-message-list-hide-scrollbar .cometchat-emoji-keyboard__tabs::-webkit-scrollbar-thumb {
     display: none;
 }
+
+/* Older messages loader - small spinner at top when fetching previous messages */
+.cometchat-message-list__older-messages-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+}
+
+.cometchat-message-list__older-messages-loader-icon {
+    width: 24px;
+    height: 24px;
+    background-color: #494f73;
+    -webkit-mask-image: url("../../assets/bars-fade.svg");
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-image: url("../../assets/bars-fade.svg");
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+}

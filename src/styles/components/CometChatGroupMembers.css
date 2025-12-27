@@ -230,3 +230,30 @@
  .cometchat-group-members-hide-scrollbar .cometchat-change-scope__list::-webkit-scrollbar-thumb {
     display: none;
 }
+
+/* Loading more spinner at bottom when fetching more members */
+.cometchat-group-members__loading-more {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 0;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.cometchat-group-members__loading-more-icon {
+    width: 24px;
+    height: 24px;
+    background-color: #494f73;
+    -webkit-mask-image: url("../../assets/bars-fade.svg");
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-image: url("../../assets/bars-fade.svg");
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+}

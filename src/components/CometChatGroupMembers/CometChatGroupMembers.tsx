@@ -5,6 +5,7 @@ import {
   useContext,
   useReducer,
   useRef,
+  useState,
 } from "react";
 import {
   useCometChatErrorHandler,
@@ -432,6 +433,7 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
   const groupMembersManagerRef = useRef<GroupMembersManager | null>(null);
   const loggedInUserRef = useRef<CometChat.User | null>(null);
   const fetchNextIdRef = useRef("");
+  const [isFetchingMore, setIsFetchingMore] = useState<boolean>(false);
 
   const groupPropRef = useRefSync(group);
   const errorHandler = useCometChatErrorHandler(onError);
@@ -475,9 +477,15 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
       if (!disableLoadingState) {
         dispatch({ type: "setFetchState", fetchState: States.loading });
       }
+      if (hasScrolled) {
+        setIsFetchingMore(true);
+      }
       try {
         const groupMembers = await groupMembersManager.fetchNext();
         if (fetchId !== fetchNextIdRef.current) {
+          if (hasScrolled) {
+            setIsFetchingMore(false);
+          }
           return;
         }
 
@@ -491,8 +499,14 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
         });
 
         dispatch({ type: "setFetchState", fetchState: States.loaded });
+        if (hasScrolled) {
+          setIsFetchingMore(false);
+        }
       } catch (error) {
         dispatch({ type: "setFetchState", fetchState: States.error });
+        if (hasScrolled) {
+          setIsFetchingMore(false);
+        }
         errorHandler(error, 'fetchNextAndAppendGroupMembers');
       }
     },
@@ -1083,6 +1097,11 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
           headerView={headerView}
 
         />
+        {isFetchingMore && (
+          <div className="cometchat-group-members__loading-more">
+            <div className="cometchat-group-members__loading-more-icon" />
+          </div>
+        )}
         {getGroupMemberScopeChangeModal()}
       </div>
 

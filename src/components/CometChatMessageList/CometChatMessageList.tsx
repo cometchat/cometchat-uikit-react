@@ -542,6 +542,7 @@ const CometChatMessageList = (props: MessageListProps) => {
   const [showScrollToBottom, setShowScrollToBottom] = useState<boolean>(false);
   const [isMessageInProgress, setIsMessageInProgress] = useState<boolean>(false);
   const [hasCompletedInitialLoad, setHasCompletedInitialLoad] = useState<boolean>(isAgentChat && !parentMessageId ? true : false);
+  const [isFetchingOlderMessages, setIsFetchingOlderMessages] = useState<boolean>(false);
   const [shouldScrollDirectly, setShouldScrollDirectly] = useState<boolean>(true);
   const [hasVisibleArea, setHasVisibleArea] = useState<boolean>(false);
   const [scrollToEnd, setScrollToEnd] = useState<boolean>(false);
@@ -3277,15 +3278,19 @@ const CometChatMessageList = (props: MessageListProps) => {
         if (messageListManagerRef.current && messageListManagerRef.current.next) {
           messageListManagerRef.current.next = null;
         }
+        setIsFetchingOlderMessages(true);
         fetchPreviousMessages().then(
           (success) => {
+            setIsFetchingOlderMessages(false);
             resolve(success);
           },
           (error) => {
+            setIsFetchingOlderMessages(false);
             reject(error);
           }
         );
       } catch (error: any) {
+        setIsFetchingOlderMessages(false);
         errorHandler(error, "onTopCallback");
       }
     });
@@ -4666,6 +4671,13 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
           </div>
           <div className="cometchat-message-list__body"
           >
+            {
+            isFetchingOlderMessages && hasCompletedInitialLoad &&
+            (
+              <div className="cometchat-message-list__older-messages-loader">
+                <div className="cometchat-message-list__older-messages-loader-icon" />
+              </div>
+            )}
             <CometChatList
               showShimmerOnTop={(isAgentChat && !parentMessageId) ? false : isMessageRepliedToAvailable ? true : !hasCompletedInitialLoad}
               showScrollbar={showScrollbar}
