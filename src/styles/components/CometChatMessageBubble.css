@@ -17,14 +17,23 @@
     margin-bottom: 5px;
 }
 .cometchat-message-bubble .cometchat-reactions{
-    width: 100%;
     margin-top: -4px;
+    position: relative;
 }
 .cometchat-message-bubble-outgoing .cometchat-reactions{
-    justify-content: flex-end;
-}
-.cometchat-message-bubble-incoming .cometchat-reactions{
+    background-color: var(--secondary-color);
     justify-content: flex-start;
+    border-radius: 30px;
+    border-radius: 999px;
+    border: 1px solid #CBD6E2
+}
+
+.cometchat-message-bubble-incoming .cometchat-reactions{
+    background-color: var(--cometchat-neutral-color-50);
+    justify-content: flex-end;
+    border-radius: 30px;
+    border-radius: 999px;
+    border: 1px solid #CBD6E2
 }
 /* Avatar styles inside the message bubble */
 .cometchat-message-bubble__leading-view {
