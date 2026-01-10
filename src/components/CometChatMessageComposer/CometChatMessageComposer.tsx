@@ -39,7 +39,7 @@ import { CometChatEditPreview } from "../BaseComponents/CometChatEditPreview/Com
 import { CometChatActionSheet } from "../BaseComponents/CometChatActionSheet/CometChatActionSheet";
 import { CometChatEmojiKeyboard } from "../BaseComponents/CometChatEmojiKeyboard/CometChatEmojiKeyboard";
 import { ComposerId } from '../../utils/MessagesDataSource';
-import { decodeHTML, getThemeVariable, isMobileDevice, isSafari, processFileForAudio, sanitizeHtmlStringToFragment } from '../../utils/util';
+import { decodeHTML, getThemeVariable, isMobileDevice, isSafari, isSvgFile, processFileForAudio, sanitizeHtmlStringToFragment, sanitizeSvgFile } from '../../utils/util';
 import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
 import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
@@ -491,28 +491,35 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
   }>();
   /**
  * Processes a file by reading its binary content and creating a new File object.
+ * SVG files are sanitized to remove potentially malicious content before processing.
  * @param {File} file - The file to be processed.
  * @returns {Promise<File>} A promise that resolves with the processed file.
  */
-function processFile(file: File): Promise<File> {
-  return new Promise((resolve, reject) => {
+async function processFile(file: File): Promise<File> {
   try {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result !== null) {
-        resolve(new File([reader.result], file.name, file));
-      }
-    };
-    reader.onerror = () => {
-      reject(
-        new Error(`Converting the file named "${file.name}" to binary failed`)
-      );
+    let fileToProcess = file;
+    if (isSvgFile(file)) {
+      fileToProcess = await sanitizeSvgFile(file);
     }
-    reader.readAsArrayBuffer(file);
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result !== null) {
+          resolve(new File([reader.result], fileToProcess.name, fileToProcess));
+        }
+      };
+      reader.onerror = () => {
+        reject(
+          new Error(`Converting the file named "${fileToProcess.name}" to binary failed`)
+        );
+      };
+      reader.readAsArrayBuffer(fileToProcess);
+    });
   } catch (error) {
-    errorHandler(error,"processFile")
+    errorHandler(error, "processFile");
+    throw error;
   }
-  });
 }
   /*
   * isPartOfCurrentChatForUIEvent: To check if the message belongs for this list and is not part of thread even for current list

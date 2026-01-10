@@ -477,6 +477,82 @@ export const sanitizeToSpanOnly = (htmlString: string, regexPatterns: RegExp[][]
   return sanitized;
 };
 
+/**
+ * Sanitizes SVG file content by removing potentially malicious elements and attributes.
+ * Removes: scripts, event handlers, external references, use/foreignObject elements, etc.
+ * @param file - The SVG file to sanitize
+ * @returns Promise<File> - A new sanitized SVG file
+ */
+export async function sanitizeSvgFile(file: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        let svgContent = reader.result as string;
+        
+        // Remove script tags and their content
+        svgContent = svgContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+        
+        // Remove on* event handlers (onclick, onload, onerror, etc.)
+        // Handle double-quoted values (can contain single quotes inside)
+        svgContent = svgContent.replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '');
+        // Handle single-quoted values (can contain double quotes inside)
+        svgContent = svgContent.replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '');
+        // Handle unquoted values
+        svgContent = svgContent.replace(/\son[a-z]+\s*=\s*[^\s>"']+/gi, '');
+        
+        // Remove javascript: URLs
+        svgContent = svgContent.replace(/javascript\s*:/gi, '');
+        
+        // Remove data: URLs that could contain scripts (keep safe data URIs for images)
+        svgContent = svgContent.replace(/data\s*:\s*text\/html/gi, 'data:text/plain');
+        svgContent = svgContent.replace(/data\s*:\s*application\/javascript/gi, '');
+        
+        // Remove <foreignObject> elements (can contain HTML/scripts)
+        svgContent = svgContent.replace(/<foreignObject[^>]*>[\s\S]*?<\/foreignObject>/gi, '');
+        
+        // Remove <use> elements with external references (potential SSRF)
+        svgContent = svgContent.replace(/<use[^>]*href\s*=\s*["']https?:\/\/[^"']*["'][^>]*\/>/gi, '');
+        svgContent = svgContent.replace(/<use[^>]*xlink:href\s*=\s*["']https?:\/\/[^"']*["'][^>]*\/>/gi, '');
+        
+        // Remove set and animate elements that can execute scripts
+        svgContent = svgContent.replace(/<set[^>]*onbegin[^>]*>[\s\S]*?<\/set>/gi, '');
+        svgContent = svgContent.replace(/<animate[^>]*onbegin[^>]*>[\s\S]*?<\/animate>/gi, '');
+        
+        // Remove xlink:href with javascript
+        svgContent = svgContent.replace(/xlink:href\s*=\s*["']javascript:[^"']*["']/gi, '');
+        
+        // Remove href with javascript
+        svgContent = svgContent.replace(/href\s*=\s*["']javascript:[^"']*["']/gi, '');
+        
+        // Remove external entity references
+        svgContent = svgContent.replace(/<!ENTITY[^>]*>/gi, '');
+        svgContent = svgContent.replace(/<!DOCTYPE[^>]*>/gi, '');
+        
+        const sanitizedBlob = new Blob([svgContent], { type: 'image/svg+xml' });
+        const sanitizedFile = new File([sanitizedBlob], file.name, {
+          type: 'image/svg+xml',
+          lastModified: file.lastModified,
+        });
+        resolve(sanitizedFile);
+      } catch (error) {
+        reject(new Error(`Failed to sanitize SVG file: ${file.name}`));
+      }
+    };
+    reader.onerror = () => reject(new Error(`Failed to read SVG file: ${file.name}`));
+    reader.readAsText(file);
+  });
+}
+
+/**
+ * Checks if a file is an SVG based on its type or extension.
+ * @param file - The file to check
+ * @returns boolean - True if the file is an SVG
+ */
+export function isSvgFile(file: File): boolean {
+  return file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+}
+
 export const encryptName = (message: string) => {
   const shift = 3;
   let encryptedMessage = "";
