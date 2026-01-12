@@ -89,6 +89,15 @@ export class MessageListManager {
     }
 
     /**
+     * Function to get the limit set in the messagesRequestBuilder.
+     *
+     * @returns {number | undefined}
+     */
+    getLimit: () => number | undefined = (): number | undefined => {
+        return this.messagesRequest?.getLimit();
+    }
+
+    /**
      * Function to attach the group and call listeners for a particular user/group. This listener is attached when the chat is opened and is removed once the chat is closed or when switching to a new chat, where it creates a new listener for the particular chat.
      *
      * @param {Function} callback

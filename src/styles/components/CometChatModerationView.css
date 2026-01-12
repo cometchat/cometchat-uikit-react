@@ -22,4 +22,5 @@
     color: var(--cometchat-error-color, #F44649);
     text-align: left;
     font: var(--cometchat-font-body-regular);
+    margin: 0;
 }

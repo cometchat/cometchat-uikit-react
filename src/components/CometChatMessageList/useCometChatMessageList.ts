@@ -66,7 +66,6 @@ function useCometChatMessageList(
 			if (setDateHeader) {
 				setDateHeader(null)
 			}
-			let unsubscribeEvents: (() => void) | undefined;
 			if (CometChatUIKitLoginListener.getLoggedInUser() && (user || group)) {
 			messageIdRef.current = { prevMessageId: 0, nextMessageId: 0 };
             totalMessagesCountRef.current = 0;
@@ -84,7 +83,6 @@ function useCometChatMessageList(
 				if(!parentMessageId || (parentMessageId && isAgentChat)){
 					MessageListManager.attachListeners(isAgentChat || false,updateMessage,addMessage,user);
 				}
-				unsubscribeEvents = subscribeToUIEvents();
 				setMessageList([]);
 				if(isFirstReloadRef.current && (goToMessageId || messageRepliedTo)){
 				setScrollListToBottom(false);
@@ -101,13 +99,27 @@ function useCometChatMessageList(
 			}
 			return () => {
 				MessageListManager?.removeListeners?.();
-				unsubscribeEvents?.();
 	
 			}
 		} catch (error) {
 			errorHandler(error,"useEffect")
 		}
 	}, [user, group,isAgentChat, messageRepliedTo]);
+
+
+	useEffect(() => {
+		try {
+			let unsubscribeEvents: (() => void) | undefined;
+			unsubscribeEvents = subscribeToUIEvents();
+
+			return () => {
+				unsubscribeEvents?.();
+			}
+		} catch (error) {
+			errorHandler(error,"useEffect")
+		}
+	}, [errorHandler, subscribeToUIEvents]);
+
 	/**
 	 * useEffect hook to store the first and last message ID in the messageList array. These are used to fetch new messages after a particular message when the connection gets reestablished after being interrupted.
 	**/

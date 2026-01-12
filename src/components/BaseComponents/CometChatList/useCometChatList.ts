@@ -53,7 +53,6 @@ export function useCometChatList(args: Args) {
                 if (didComponentScrollToBottomRef.current && relevantEntry.isIntersecting) {
 
                     didComponentScrollToBottomRef.current = false;
-                    return;
                 }
                 if (!relevantEntry.isIntersecting || stopCallingOnScrolledToBottomCallback || rootElement.scrollHeight <= rootElement.clientHeight) {
                     return;

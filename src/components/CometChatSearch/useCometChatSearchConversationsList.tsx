@@ -239,12 +239,16 @@ export type Action =
     type: "resetUnreadCountAndSetReadAtIfLastMessage";
     message: CometChat.BaseMessage;
   }
+  | { type: "resetUnreadCount";
+    conversation: CometChat.Conversation;
+  }
   | {
     type: "setLastMessageReadOrDeliveredAt";
     updateReadAt: boolean;
     messageReceipt: CometChat.MessageReceipt;
   }
-  | { type: "setHasMoreResults"; hasMoreResults: boolean };
+  | { type: "setHasMoreResults"; hasMoreResults: boolean }
+  | { type: "updateConversation", conversation: CometChat.Conversation };
 
 /**
  * Checks if `message` is a base message
@@ -662,6 +666,27 @@ function stateReducer(state: State, action: Action): State {
       }
       break;
     }
+    case "resetUnreadCount": {
+      const { conversationList } = state;
+      const { conversation } = action;
+      const targetIdx = conversationList.findIndex(
+        (conv) => conv.getConversationId() === conversation.getConversationId()
+      );
+      if (targetIdx > -1) {
+        newState = {
+          ...state,
+          conversationList: conversationList.map((conv, i) => {
+            if (i === targetIdx) {
+              const newConv = CometChatUIKitUtility.clone(conv);
+              newConv.setUnreadMessageCount(0);
+              return newConv;
+            }
+            return conv;
+          }),
+        };
+      }
+      break;
+    }
     case "updateConversationLastMessageAndPlaceAtTheTop": {
       const { message } = action;
       const targetMessageId = message?.getId();
@@ -687,6 +712,25 @@ function stateReducer(state: State, action: Action): State {
             newConv,
             ...conversationList.filter((conv, i) => i !== targetIdx),
           ],
+        };
+      }
+      break;
+    }
+    case "updateConversation": {
+      const { conversation } = action;
+      const { conversationList } = state;
+      const targetIdx = conversationList.findIndex(
+        (conv) => conv.getConversationId() === conversation.getConversationId()
+      );
+      if (targetIdx > -1) {
+        newState = {
+          ...state,
+          conversationList: conversationList.map((conv, i) => {
+            if (i === targetIdx) {
+              return conversation;
+            }
+            return conv;
+          }),
         };
       }
       break;
@@ -1055,8 +1099,27 @@ export function useCometChatSearchConversationsList(props: UseCometChatSearchCon
             }
           }
         );
+
+      const ccUpdateConversation =
+        CometChatConversationEvents.ccUpdateConversation.subscribe(
+          (conversation: CometChat.Conversation) => {
+            if (conversation) {
+              dispatch({ type: "updateConversation", conversation: conversation });
+            }
+          }
+        );
+
+      const conversationReadSub = 
+        CometChatConversationEvents.ccMarkConversationAsRead.subscribe(
+          (conversation: CometChat.Conversation) => {
+            dispatch({ type: "resetUnreadCount", conversation });
+          }
+        );
+
       return () => {
         ccConversationDeleted.unsubscribe();
+        conversationReadSub.unsubscribe();
+        ccUpdateConversation.unsubscribe();
       }
     } catch (error) {
       errorHandler(error, "ccConversationDeleted")

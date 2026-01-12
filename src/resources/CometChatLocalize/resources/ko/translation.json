@@ -215,6 +215,7 @@
     "message_list_option_message_privately": "비공개 메시지",
     "message_list_option_copy": "복사",
     "message_list_option_info": "정보",
+    "message_list_option_mark_as_unread": "읽지 않음으로 표시",
     "message_list_option_flag_message": "신고",
     "message_list_action_edited": "편집됨",
     "message_list_action_added": "추가됨",

@@ -21,6 +21,7 @@ import EditIcon from "../assets/edit_icon.svg";
 import FileIcon from "../assets/document_icon.svg";
 import ImageIcon from "../assets/photo.svg";
 import InformationIcon from "../assets/info_icon.svg";
+import MarkUnreadIcon from "../assets/mark_unread.svg";
 import ReportIcon from "../assets/warning_neutral.svg";
 import PlaceholderImage from "../assets/image_placeholder.png";
 import PrivateMessageIcon from "../assets/send_message_privately.svg";
@@ -75,6 +76,7 @@ export interface additionalParamsOptions {
   hideDeleteMessageOption?: boolean,
   hideMessagePrivatelyOption?: boolean,
   hideCopyMessageOption?: boolean,
+  hideMarkAsUnreadOption?: boolean,
   hideMessageInfoOption?: boolean,
   hideFlagMessageOption?: boolean,
 }
@@ -153,6 +155,15 @@ export class MessagesDataSource implements DataSource {
     });
   }
 
+  getMarkAsUnreadOption(): CometChatActionsIcon {
+    return new CometChatActionsIcon({
+      id: CometChatUIKitConstants.MessageOption.markAsUnread,
+      title: getLocalizedString("message_list_option_mark_as_unread"),
+      iconURL: MarkUnreadIcon,
+      onClick: undefined as unknown as (id: number) => void,
+    });
+  }
+
   getReportOption(): CometChatActionsIcon {
     return new CometChatActionsIcon({
       id: CometChatUIKitConstants.MessageOption.flagMessage,
@@ -199,6 +210,9 @@ export class MessagesDataSource implements DataSource {
     }
     if (!additionalParams?.hideCopyMessageOption) {
       messageOptionList.push(this.getCopyOption());
+    }
+    if (!isSentByMe && !additionalParams?.hideMarkAsUnreadOption) {
+      messageOptionList.push(this.getMarkAsUnreadOption());
     }
     if ((isSentByMe || (!isParticipant && group)) && !additionalParams?.hideEditMessageOption) {
       messageOptionList.push(this.getEditOption());
@@ -1008,6 +1022,9 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     }
     if (isSentByMe && !additionalParams?.hideMessageInfoOption) {
       messageOptionList.push(this.getMessageInfoOption());
+    }
+    if (!isSentByMe && !additionalParams?.hideMarkAsUnreadOption) {
+      messageOptionList.push(this.getMarkAsUnreadOption());
     }
     if (
       !isSentByMe &&

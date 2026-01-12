@@ -6,6 +6,9 @@ import { CometChat } from '@cometchat/chat-sdk-javascript';
  */
 export class CometChatConversationEvents {
     static ccConversationDeleted: Subject<CometChat.Conversation> = new Subject();
+    static ccUpdateConversation: Subject<CometChat.Conversation> = new Subject();
+    static ccMarkConversationAsRead: Subject<CometChat.Conversation> = new Subject<CometChat.Conversation>();
+
     /**
       * Publishes a conversation event.
       * @param {Subject<CometChat.Conversation>} event - The event to publish.

@@ -182,8 +182,27 @@ export function useCometChatConversations(args: Args) {
           }
         }
       );
+
+      const ccUpdateConversation =
+      CometChatConversationEvents.ccUpdateConversation.subscribe(
+        (conversation: CometChat.Conversation) => {
+          if (conversation) {
+            dispatch({ type: "updateConversation", conversation: conversation });
+          }
+        }
+      );
+
+      const conversationReadSub = 
+      CometChatConversationEvents.ccMarkConversationAsRead.subscribe(
+        (conversation: CometChat.Conversation) => {
+          dispatch({ type: "resetUnreadCount", conversation });
+        }
+      );
+
     return () => {
       ccConversationDeleted.unsubscribe();
+      ccUpdateConversation.unsubscribe();
+      conversationReadSub.unsubscribe();
     }
   } catch (error) {
     errorHandler(error,"ccConversationDeleted")

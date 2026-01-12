@@ -215,6 +215,7 @@
     "message_list_option_message_privately": "私信",
     "message_list_option_copy": "复制",
     "message_list_option_info": "信息",
+    "message_list_option_mark_as_unread": "标记为未读",
     "message_list_option_flag_message": "举报",
     "message_list_action_edited": "已编辑",
     "message_list_action_added": "已添加",

@@ -304,13 +304,17 @@ export type Action =
     type: "resetUnreadCountAndSetReadAtIfLastMessage";
     message: CometChat.BaseMessage;
   }
+  | { type: "resetUnreadCount";
+    conversation: CometChat.Conversation;
+  }
   | {
     type: "setLastMessageReadOrDeliveredAt";
     updateReadAt: boolean;
     messageReceipt: CometChat.MessageReceipt;
   }
   | { type: "setLoggedInUser"; loggedInUser: CometChat.User | null }
-  | { type: "setIsFirstReload"; isFirstReload: boolean };
+  | { type: "setIsFirstReload"; isFirstReload: boolean }
+  | { type: "updateConversation", conversation: CometChat.Conversation };
 
 /**
  * Checks if `message` is a base message
@@ -757,6 +761,27 @@ function stateReducer(state: State, action: Action): State {
       }
       break;
     }
+    case "resetUnreadCount": {
+      const { conversationList } = state;
+      const { conversation } = action;
+      const targetIdx = conversationList.findIndex(
+        (conv) => conv.getConversationId() === conversation.getConversationId()
+      );
+      if (targetIdx > -1) {
+        newState = {
+          ...state,
+          conversationList: conversationList.map((conv, i) => {
+            if (i === targetIdx) {
+              const newConv = CometChatUIKitUtility.clone(conv);
+              newConv.setUnreadMessageCount(0);
+              return newConv;
+            }
+            return conv;
+          }),
+        };
+      }
+      break;
+    }
     case "updateConversationLastMessageAndPlaceAtTheTop": {
       const { message } = action;
       const targetMessageId = message?.getId();
@@ -792,6 +817,25 @@ function stateReducer(state: State, action: Action): State {
     case "setIsFirstReload":
       newState = { ...state, isFirstReload: action.isFirstReload };
       break;
+    case "updateConversation": {
+      const { conversation } = action;
+      const { conversationList } = state;
+      const targetIdx = conversationList.findIndex(
+        (conv) => conv.getConversationId() === conversation.getConversationId()
+      );
+      if (targetIdx > -1) {
+        newState = {
+          ...state,
+          conversationList: conversationList.map((conv, i) => {
+            if (i === targetIdx) {
+              return conversation;
+            }
+            return conv;
+          }),
+        };
+      }
+      break;
+    }
 
     default: {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

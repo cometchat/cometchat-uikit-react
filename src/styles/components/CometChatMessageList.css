@@ -753,6 +753,27 @@
     max-height: 100%;
 }
 
+.cometchat-message-list__new-message-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--cometchat-spacing-4);
+    width: 100%;
+    padding: var(--cometchat-margin-4) var(--cometchat-spacing-7);
+}
+
+.cometchat-message-list__new-message-divider span{
+    text-wrap: nowrap;
+    font: var(--cometchat-font-body-medium);
+    color: var(--cometchat-error-color);
+}
+
+.cometchat-message-list__new-message-divider div {
+    width: 100%;
+    height: 1px;
+    background-color: var(--cometchat-error-color);
+}
+
 @keyframes backgroundFade {
     0% { background-color: var(--cometchat-extended-primary-color-200); }
     50% { background-color: var(--cometchat-extended-primary-color-100); }
