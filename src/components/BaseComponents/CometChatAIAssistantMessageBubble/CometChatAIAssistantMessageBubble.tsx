@@ -79,7 +79,7 @@ const CometChatAIAssistantMessageBubble: React.FC<CometChatAIAssistantMessageBub
                   <img
                     {...props}
                     onClick={() => {
-                      if (!isMobileDevice() && message)
+                      if (message)
                         CometChatUIEvents.ccShowDialog.next({
                           child: (
                             <CometChatFullScreenViewer

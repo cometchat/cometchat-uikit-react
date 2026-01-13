@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import filetype from '../../../assets/file_type_unsupported.png'
+import { sendMessageToMobileApp } from "../../../utils/MobileBridge";
+import { usePanelType } from "../../../context/PanelTypeContext";
 interface FileBubbleProps {
     /* url of the file present in the message. */
     fileURL: string;
@@ -27,14 +29,36 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
         isSentByMe = true
     } = props;
 
+    const panelType = usePanelType();
+    const isPanelMobile = panelType?.toLowerCase() === "mobile";
+
     const [progress, setProgress] = useState(0);
     const [isDownloading, setIsDownloading] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
+
+    const getAttachmentFileName = () => {
+        if (title) {
+            return title;
+        }
+        const urlParts = fileURL.split("/");
+        return urlParts[urlParts.length - 1] || "File";
+    };
 
     /**
      * Function to download the file and show download progress bar
      */
     const downloadFile = async () => {
+        if (isPanelMobile) {
+            sendMessageToMobileApp({
+                type: "DOWNLOAD_MEDIA",
+                payload: {
+                    url: fileURL,
+                    mediaType: "file",
+                    fileName: getAttachmentFileName(),
+                },
+            });
+            return;
+        }
         const url = fileURL;
         setIsDownloading(true);
         try {
@@ -61,7 +85,7 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
             const blob = new Blob(chunks);
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = title ?? "File";
+            link.download = getAttachmentFileName();
             link.click();
         } catch (error: any) {
 

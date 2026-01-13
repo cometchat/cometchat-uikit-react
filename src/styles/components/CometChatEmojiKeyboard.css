@@ -67,6 +67,13 @@
     gap: var(--cometchat-spacing-2, 8px);
 }
 
+.cometchat-emoji-keyboard__emoji-list_mobile_app {
+    flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .cometchat-emoji-keyboard__list-item {
     font-size: 24px;
     cursor: pointer;

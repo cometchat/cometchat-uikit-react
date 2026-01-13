@@ -2,6 +2,8 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import WaveSurfer from "./src/wavesurfer";
 import { closeCurrentMediaPlayer, currentAudioPlayer } from "../../../utils/util";
 import { useCometChatFrameContext } from "../../../context/CometChatFrameContext";
+import { sendMessageToMobileApp } from "../../../utils/MobileBridge";
+import { usePanelType } from "../../../context/PanelTypeContext";
 interface AudioBubbleProps {
     /* URL of the audio to be played. */
     src: string;
@@ -26,6 +28,8 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
 
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const panelType = usePanelType();
+    const isPanelMobile = panelType?.toLowerCase() === "mobile";
 
     const IframeContext = useCometChatFrameContext();
     const getCurrentDocument = () => {
@@ -151,7 +155,25 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
       };
 
     // Function to download the audio and show download progress
+    const getFileNameFromUrl = (value: string, fallback: string) => {
+        const urlParts = value.split("/");
+        const fileName = urlParts[urlParts.length - 1];
+        return fileName && fileName.length ? fileName : fallback;
+    };
+
     const downloadAudio = async () => {
+        const fileName = getFileNameFromUrl(src, "audio");
+        if (isPanelMobile) {
+            sendMessageToMobileApp({
+                type: "DOWNLOAD_MEDIA",
+                payload: {
+                    url: src,
+                    mediaType: "audio",
+                    fileName,
+                },
+            });
+            return;
+        }
         setIsDownloading(true);
         try {
             abortControllerRef.current = new AbortController();
@@ -180,10 +202,6 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
             setIsDownloading(false);
             const blob = new Blob(chunks, { type: 'audio/mpeg' }); // Specify the MIME type for MP3
             const link = getCurrentDocument().createElement('a');
-    
-            // Use the original URL to extract the filename
-            const urlParts = src.split('/');
-            const fileName = urlParts[urlParts.length - 1];
     
             // Set the download attribute with the correct filename
             link.href = URL.createObjectURL(blob);

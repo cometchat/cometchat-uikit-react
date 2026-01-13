@@ -127,8 +127,10 @@
 }
 
 .cometchat-thread-header__message-small {
-    min-height: fit-content;
-    max-height: 150px;
+    /* min-height: fit-content;
+    max-height: 150px; */
+    display: flex;
+    flex : fit-content;
 }
 
 .cometchat-thread-header__message-incoming {

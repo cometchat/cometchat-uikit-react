@@ -32,6 +32,8 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     const [permissionState, setPermissionState] = useState<PermissionState>('prompt');
     const permissionStatusRef = useRef<PermissionStatus | null>(null);
     const permissionProbeStreamRef = useRef<MediaStream | null>(null);
+    const isReactNative = useRef<boolean>(false);
+    const permissionRequestPending = useRef<boolean>(false);
 
     const stopStreamTracks = (stream?: MediaStream | null) => {
         if (!stream) return;
@@ -42,19 +44,29 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     };
     
 
-  function pauseActiveMedia(){
-     if (currentAudioPlayer.instance && currentAudioPlayer.setIsPlaying) {
-        currentAudioPlayer.instance.pause();
-        currentAudioPlayer.setIsPlaying(false);
-      }
-    
-      if (currentMediaPlayer.video && !currentMediaPlayer.video.paused) {
-        currentMediaPlayer.video.pause();
-      }
-  }
+    function pauseActiveMedia(){
+        if (currentAudioPlayer.instance && currentAudioPlayer.setIsPlaying) {
+            currentAudioPlayer.instance.pause();
+            currentAudioPlayer.setIsPlaying(false);
+        }
+        
+        if (currentMediaPlayer.video && !currentMediaPlayer.video.paused) {
+            currentMediaPlayer.video.pause();
+        }
+    }
 
-      // Enhanced permission check function
+    // Check if running in React Native WebView
+    useEffect(() => {
+        isReactNative.current = !!(window as any).ReactNativeWebView || (window as any).isRNReady;
+    }, []);
+
+    // Enhanced permission check function
     const checkMicrophonePermission = async (): Promise<PermissionState> => {
+        // If in React Native, assume permission is handled natively
+        if (isReactNative.current) {
+            return 'granted';
+        }
+
         try {
             const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
             return permission.state;
@@ -119,6 +131,8 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         try {
             if (hasInitializedRef.current) return null;
             clearStream();
+
+            // For React Native, getUserMedia will trigger native permission flow
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             hasInitializedRef.current = true;
             streamRef.current = stream;
@@ -174,6 +188,11 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     };
 
     const handleStartRecording = async () => {
+        // Prevent multiple simultaneous permission requests
+        if (permissionRequestPending.current) {
+            return;
+        }
+
         pauseActiveMedia();
         const hasAudioInput = await navigator.mediaDevices.enumerateDevices()
             .then(devices => devices.some(device => device.kind === 'audioinput'));
@@ -181,7 +200,8 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
             return;
         }
         
-        // Check permission state before starting
+    // For React Native, permissions are handled natively
+    if (!isReactNative.current) {
         let currentPermissionState = await checkMicrophonePermission();
         if (currentPermissionState === 'denied') {
             setHasError(true);
@@ -204,6 +224,10 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
                 return;
             }
         }
+    } else {
+        setPermissionState('granted');
+    }
+    
         counterRunning.current = true;
         createMedia.current = true;
         const recorder = mediaRecorder as MediaRecorder;
@@ -221,6 +245,9 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
             }
         } else {
             reset();
+        permissionRequestPending.current = true;
+        
+        try {
             const recorder = await initMediaRecorder();
             if (recorder) {
                 currentMediaPlayer.mediaRecorder = recorder;
@@ -232,6 +259,9 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
             } else {
                 setIsRecording(false);
                 createMedia.current = false;
+            }
+        } finally {
+            permissionRequestPending.current = false;
             }
         }
     };
@@ -246,6 +276,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         permissionProbeStreamRef.current = null;
         setMediaRecorder(undefined);
         hasInitializedRef.current = false;
+        permissionRequestPending.current = false;
     };
 
     const handleCloseRecording = () => {
@@ -274,6 +305,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         clearStream();
         audioChunks.current = [];
         blobRef.current = undefined;
+        permissionRequestPending.current = false;
     };
 
     const clearStream = () => {
@@ -303,7 +335,13 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         counterRunning.current = false;
         hasInitializedRef.current = false;        
     }
+
+    // Permission monitoring (only for non-React Native)
     useEffect(() => {
+        if (isReactNative.current) {
+            return;
+        }
+
         const setupPermissionMonitoring = async () => {
             try {
                 const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
@@ -346,11 +384,11 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
                 permissionStatusRef.current.onchange = null;
             }
         };
-    }, []);
-    // Separate effect to handle auto-recording when permission is granted
+    }, [mediaRecorder]);
+
+    // Auto-recording effect
     useEffect(() => {
-        if (permissionState === 'granted' && !hasError && !mediaPreviewUrl && !isRecording && autoRecording && !userCancelledRecording.current) {
-            // Small delay to ensure state is updated
+        if (permissionState === 'granted' && !hasError && !mediaPreviewUrl && !isRecording && autoRecording && !userCancelledRecording.current && !permissionRequestPending.current) {
             const timer = setTimeout(() => {
                 handleStartRecording();
             }, 100);

@@ -943,8 +943,8 @@
 
 .cometchat-search__body-filter-active {
   border-radius: var(--cometchat-radius-max, 1000px);
-  border: 1px solid var(--cometchat-neutral-color-800, #434343);
-  background: var(--cometchat-neutral-color-900, #141414);
+  /* border: 1px solid var(--cometchat-neutral-color-800, #434343); */
+  background: var(--secondary-color);
 
 }
 

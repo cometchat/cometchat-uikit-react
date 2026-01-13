@@ -9,6 +9,7 @@ interface EmojiKeyboardProps {
     emojiData?: CometChatEmojiCategory[];
     /* callback function which is triggered on any emoji click. */
     onEmojiClick?: (emoji: string) => void;
+    panelType?: string
 }
 
 /* 
@@ -20,6 +21,7 @@ const CometChatEmojiKeyboard = (props: EmojiKeyboardProps) => {
     const {
         emojiData = [],
         onEmojiClick,
+        panelType
     } = props;
 
     const {
@@ -48,7 +50,7 @@ const CometChatEmojiKeyboard = (props: EmojiKeyboardProps) => {
 
     const getEmojiListComponent = (emojiData: { [key: string]: CometChatEmoji }) => {
         return (
-            <div className="cometchat-emoji-keyboard__emoji-list">
+            <div className={ panelType === "mobile" ? "cometchat-emoji-keyboard__emoji-list_mobile_app" : "cometchat-emoji-keyboard__emoji-list"}>
                 {Object.keys(emojiData).map((item: string, index: number) =>
                     <div
                         key={item + index}

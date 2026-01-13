@@ -1,4 +1,4 @@
-import { JSX, ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import { CSSProperties, JSX, ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { useCometChatErrorHandler, useRefSync } from "../../CometChatCustomHooks";
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { useCometChatMessageHeader } from "./useCometChatMessageHeader";
@@ -153,6 +153,18 @@ interface MessageHeaderProps {
      */
 
     onItemClick?: () => void;
+
+    /**
+     * Identifies the panel type in which the header is rendered.
+     * When set to "mobile" the background can be customized via `mobilePanelBackgroundColor`.
+     */
+    panelType?: string;
+
+    /**
+     * Custom background color to apply when `panelType` is set to "mobile".
+     */
+    mobilePanelBackgroundColor?: string;
+
   }
 
 /** Functional component for rendering the CometChatMessageHeader */
@@ -182,8 +194,26 @@ export const CometChatMessageHeader = (props: MessageHeaderProps) => {
         showBackButton = false,
         showSearchOption = false,
         onSearchOptionClicked = () => {},
-        onItemClick = () => {}
+        onItemClick = () => {},
+        panelType,
+        mobilePanelBackgroundColor
     } = props;
+
+    const isMobilePanel = useMemo(() => panelType?.toLowerCase() === "mobile", [panelType]);
+
+    const mobilePanelBackground = useMemo(() => {
+        if (isMobilePanel && mobilePanelBackgroundColor) {
+            return mobilePanelBackgroundColor;
+        }
+        return undefined;
+    }, [isMobilePanel, mobilePanelBackgroundColor]);
+
+    const messageHeaderStyle = useMemo<CSSProperties | undefined>(() => {
+        if (mobilePanelBackground) {
+            return { background: mobilePanelBackground };
+        }
+        return undefined;
+    }, [mobilePanelBackground]);
 
     /** States and ref used in the component */
     const [subtitleText, setSubtitleText] = useState('');
@@ -554,7 +584,7 @@ export const CometChatMessageHeader = (props: MessageHeaderProps) => {
                 return itemView;
             } else {
                 return (
-                    <CometChatListItem onListItemClicked={onItemClick} avatarName={userRef.current?.getName() || groupRef.current?.getName()}
+                    <CometChatListItem style={messageHeaderStyle} onListItemClicked={onItemClick} avatarName={userRef.current?.getName() || groupRef.current?.getName()}
                         avatarURL={userRef.current?.getAvatar() || groupRef.current?.getIcon() || ""}
                         title={userRef.current?.getName() || groupRef.current?.getName() || ""} subtitleView={getSubtitleView()} titleView={titleView} trailingView={trailingView} leadingView={leadingView} />
                 )
@@ -571,12 +601,23 @@ export const CometChatMessageHeader = (props: MessageHeaderProps) => {
         try {
         if (hideBackButton && !showBackButton) return null;
 
+            if (panelType?.toLowerCase() === "mobile") {
+                return (
+                    <div onClick={() => {
+                        if (onBack) {
+                            onBack()
+                        }
+                    }} className="cometchat-message-header__back-button_mobile_app">
+                    </div>
+                )
+            }
+
             return (
                 <div onClick={() => {
                     if (onBack) {
                         onBack()
                     }
-                }} className="cometchat-message-header__back-button">
+                }} className={isMobilePanel ? "cometchat-message-header__back-button-mobile" : "cometchat-message-header__back-button"}>
                 </div>
             );
         } catch (error) {
@@ -744,10 +785,10 @@ export const CometChatMessageHeader = (props: MessageHeaderProps) => {
             width: "100%",
             display: "flex"
         }}>
-            <div className="cometchat-message-header">
+            <div className={`cometchat-message-header ${isMobilePanel ? "cometchat-message-header--mobile" : ""}`} style={messageHeaderStyle}>
                 <div>
                     {getBackButton()}
-                    <div className="cometchat-message-header__listitem">
+                    <div className="cometchat-message-header__listitem" style={messageHeaderStyle}>
                         {getItemView()}
                     </div>
                 </div>

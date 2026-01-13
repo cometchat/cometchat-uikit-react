@@ -48,7 +48,9 @@ import { ComposerId } from "../../utils/MessagesDataSource";
 import { JSX } from 'react';
 import { useCometChatFrameContext } from "../../context/CometChatFrameContext";
 import { MessageUtils } from "../../utils/MessageUtils";
+import { PanelTypeContext } from "../../context/PanelTypeContext";
 import { startStreamingMessage, streamingState$ } from "../../services/stream-message.service";
+import { sendMessageToMobileApp } from "../../utils/MobileBridge";
 
 
 /**
@@ -409,6 +411,9 @@ interface MessageListProps {
     * @defaultValue `false`
   */
   isAgentChat?: boolean;
+
+  panelType? : string;
+  primaryColor?: string;
 }
 
 const defaultProps: MessageListProps = {
@@ -459,7 +464,7 @@ const defaultProps: MessageListProps = {
   smartRepliesDelayDuration: 10000,
   goToMessageId: "",
   showScrollbar: false,
-  isAgentChat: false
+  isAgentChat: false,
 };
 
 const CometChatMessageList = (props: MessageListProps) => {
@@ -513,7 +518,9 @@ const CometChatMessageList = (props: MessageListProps) => {
     stickyDateTimeFormat,
     goToMessageId,
     showScrollbar,
-    isAgentChat
+    isAgentChat,
+    panelType,
+    primaryColor
   } = { ...defaultProps, ...props };
   /**
    * All the useState useCometChatMessageList are declaired here. These trigger a rerender when updated.
@@ -743,8 +750,8 @@ const CometChatMessageList = (props: MessageListProps) => {
   * All the Private variables are declaired here for internal use.
    */
   const errorHandler = useCometChatErrorHandler(onError);
-  let isFetchingPreviousMessages = false,
-    threadedAlignment: MessageBubbleAlignment = MessageBubbleAlignment.left;
+  const isFetchingPreviousMessagesRef = useRef(false);
+  let threadedAlignment: MessageBubbleAlignment = MessageBubbleAlignment.left;
   const getLoaderHtml: JSX.Element = useMemo(() => {
     if (loadingView) {
       return (
@@ -1396,6 +1403,7 @@ const CometChatMessageList = (props: MessageListProps) => {
               }
               reactToMessages(args, messageObject);
             }}
+            panelType={panelType}
           />
         }
       } catch (error) {
@@ -1424,6 +1432,7 @@ const CometChatMessageList = (props: MessageListProps) => {
             text = getMentionsTextWithoutStyle(message);
           }
           toastTextRef.current = getLocalizedString("message_list_message_copied");
+          sendMessageToMobileApp({ type: 'COPIED_TO_CLIPBOARD', payload: { text: text } });
           setShowToast(true);
           navigator?.clipboard?.writeText(text);
         }
@@ -2137,8 +2146,8 @@ const CometChatMessageList = (props: MessageListProps) => {
           }
         }
 
-        if (!isFetchingPreviousMessages) {
-          isFetchingPreviousMessages = true;
+        if (!isFetchingPreviousMessagesRef.current) {
+          isFetchingPreviousMessagesRef.current = true;
           let targetMessageId = (shouldScrollToMessage && (goToMessageId || quotedMessageId))
             ? Number(goToMessageId || quotedMessageId)
             : messageIdRef.current.prevMessageId;
@@ -2245,7 +2254,7 @@ const CometChatMessageList = (props: MessageListProps) => {
                   }
                 }, 0);
               }
-              isFetchingPreviousMessages = false;
+              isFetchingPreviousMessagesRef.current = false;
               if (messagesList && messagesList.length > 0) {
                 let lastMessage: CometChat.BaseMessage =
                   messagesList[messagesList.length - 1];
@@ -2322,7 +2331,7 @@ const CometChatMessageList = (props: MessageListProps) => {
               }
             },
             (error: CometChat.CometChatException) => {
-              isFetchingPreviousMessages = false;
+              isFetchingPreviousMessagesRef.current = false;
               if (messageList?.length <= 0) {
                 setMessageListState(States.error);
               }
@@ -4237,10 +4246,14 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
           replyView={!isAgentChat && getReplyView(item)}
           includeBottomViewHeight={shouldIncludeBottomViewHeight(item)}
           threadView={!isAgentChat && getBubbleThreadView(item)}
+          disableSwipeGesture={Boolean(parentMessageId)}
           statusInfoView={getStatusInfoView(item)}
           type={item.getDeletedAt() ? CometChatUIKitConstants.MessageTypes.delete : item.getType()}
           category={item.getDeletedAt() ? CometChatUIKitConstants.MessageCategory.action : item.getCategory()}
           topMenuSize={computeQuickOptionsCount(item, quickOptionsCount)}
+          panelType={panelType}
+          primaryColor={primaryColor}
+          senderUid={item?.getSender()?.getUid()}
         ></CometChatMessageBubble>
       );
     },
@@ -4645,6 +4658,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
   ]);
 
   return (
+  <PanelTypeContext.Provider value={panelType}>
     <>
       <div className="cometchat" style={{
         height: "inherit",
@@ -4748,6 +4762,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
         </div>
       )}
     </>
+  </PanelTypeContext.Provider>
   );
 };
 

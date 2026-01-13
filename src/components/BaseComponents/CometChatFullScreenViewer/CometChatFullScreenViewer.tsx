@@ -107,7 +107,7 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
     /**
      * Handles the close button click event.
      */
-    const handleCloseClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    const handleCloseClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.TouchEvent<HTMLButtonElement>) => {
         event.stopPropagation();
         if (ccCloseClicked) {
             ccCloseClicked();
@@ -192,6 +192,7 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
                 <button
                     className="cometchat-fullscreen-viewer__close-button"
                     onClick={handleCloseClick}
+                    onTouchEnd={handleCloseClick}
                 />
 
 

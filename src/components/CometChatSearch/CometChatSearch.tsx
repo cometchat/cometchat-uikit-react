@@ -690,7 +690,15 @@ export function CometChatSearch(props: SearchProps) {
   const renderResults = () => {
     // If there's no search query and no filters, show initial view
     if ((!searchText || searchText.trim() === "") && activeFilters.length === 0) {
-      return initialView || getDefaultInitialView();
+
+      if (initialView) {
+        return (
+          <div className="cometchat-search__results">
+            {initialView}
+          </div>
+        )
+      }
+      return getDefaultInitialView();
     }
 
     // Check if both sections would be rendered but are empty
@@ -850,15 +858,21 @@ export function CometChatSearch(props: SearchProps) {
     return filteredAvailableFilters;
   }, [activeFilters, getAvailableFilters, searchIn, uid, guid]);
 
-  // Auto-focus the search input when component mounts
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (searchInputRef.current) {
-                searchInputRef.current.focus();
-            }
-        }, 100);
-        return () => clearTimeout(timer);
-    }, []);
+  // Auto-focus the search input when component mounts (skip mobile to avoid keyboard issues)
+  useEffect(() => {
+
+    if (panelType === "mobile") {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="cometchat-search">

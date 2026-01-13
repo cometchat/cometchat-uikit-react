@@ -1994,7 +1994,7 @@ export function CometChatConversations(props: ConversationsProps) {
   });
 
   return (
-    <div className="cometchat" style={{ width: "100%", height: "100%" }}>
+    <div className="cometchat" style={{ width: "100%", height: "100%",display: 'flex', flex : 1 }}>
       <div
         className={`cometchat-conversations ${
           !showScrollbar ? "cometchat-conversations-hide-scrollbar" : ""

@@ -35,6 +35,11 @@
     color: var(--cometchat-text-color-highlight);
 }
 
+.cometchat-message-header--mobile .cometchat-message-header__subtitle,
+.cometchat-message-header--mobile .cometchat-message-header__subtitle.cometchat-message-header__subtitle-typing {
+    color: white;
+}
+
 /* Container for the title of the list item within the message header */
 
 .cometchat-message-header .cometchat-list-item__title-container {
@@ -70,6 +75,32 @@
     -webkit-mask-size: contain;
     background: var(--cometchat-icon-color-primary);
     cursor: pointer;
+}
+
+.cometchat-message-header__back-button-mobile{
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-mask: url('../../assets//arrow_back.svg');
+    -webkit-mask-size: contain;
+    background: white;
+    cursor: pointer;
+}
+
+.cometchat-message-header__back-button_mobile_app{
+    width: 10px;
+    height: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-mask: url('../../assets//mobile-back-vector.svg');
+    -webkit-mask-size: contain;
+    background: white;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    margin-right: 8px;
 }
 
 .cometchat-message-header .cometchat-message-header__conversation-summary-button .cometchat-button {

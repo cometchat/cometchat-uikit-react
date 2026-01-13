@@ -1,4 +1,4 @@
-import { MouseEvent, ReactNode, useRef, useState } from "react";
+import { CSSProperties, MouseEvent, ReactNode, useRef, useState } from "react";
 import { CometChatAvatar } from "../CometChatAvatar/CometChatAvatar";
 import { useCometChatListItem } from "./useCometChatListItem";
 
@@ -25,6 +25,8 @@ interface ListItemProps {
     leadingView?: ReactNode;
     /* boolean flag to stop event propogation */
     stopEventPropagation?: boolean;
+    /* custom style overrides applied to the list item container */
+    style?: CSSProperties;
 }
 
 /* 
@@ -44,7 +46,8 @@ const CometChatListItem = (props: ListItemProps) => {
         trailingView,
         titleView,
         leadingView,
-        stopEventPropagation = false
+        stopEventPropagation = false,
+        style
     } = props;
 
 
@@ -72,6 +75,7 @@ const CometChatListItem = (props: ListItemProps) => {
                     setIsMenuVisible(false)
                 }}
                 className="cometchat-list-item"
+                style={style}
                 id={id}
                 onClick={listItemClick}
             >

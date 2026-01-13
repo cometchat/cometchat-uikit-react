@@ -1414,12 +1414,12 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
         src={imageUrl}
         placeholderImage={placeholderImage}
         isSentByMe={this.getIsSentByMe(message)}
-        onImageClicked={!isMobileDevice() ? () => {
+        onImageClicked={() => {
           CometChatUIEvents.ccShowDialog.next({
             child: fullScreenViewer,
             confirmCallback: null,
           });
-        } : undefined}
+        }}
       />
     );
     return this.wrapMediaBubbleWithCaption(bubble, message);
