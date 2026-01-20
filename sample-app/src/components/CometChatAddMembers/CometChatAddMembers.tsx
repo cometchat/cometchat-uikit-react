@@ -219,7 +219,6 @@ export function CometChatAddMembers(props: IAddMembersProps) {
     const membersToAddRef = useRef<CometChat.GroupMember[]>([]);
     const selectionModeRef = useRef(selectionMode);
     const loggedInUserRef = useRef<CometChat.User | null>(null);
-    const onSelectPropRef = useRefSync(onSelect);
     const groupPropRef = useRefSync(group);
     const onBackPropRef = useRefSync(onBack);
     const onAddMembersButtonClickPropRef = useRefSync(onAddMembersButtonClick);
@@ -227,7 +226,10 @@ export function CometChatAddMembers(props: IAddMembersProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [isDisabled, setIsDisabled] = useState(true);
     const [isError, setIsError] = useState(false);
-    /**
+    const [membersCount, setMembersCount] = useState(0);
+    // Track selected users internally
+    const selectedUsersMapRef = useRef<Map<string, CometChat.User>>(new Map());
+    
     /**
      * Creates a `CometChat.GroupMember` instance from the provided `user`
      */
@@ -241,48 +243,28 @@ export function CometChatAddMembers(props: IAddMembersProps) {
     }, [groupPropRef]);
 
     /**
-     * Updates `membersToAddRef`
-     *
-     * @remarks
-     * This function makes sure `membersToAddRef` is in sync with the UI
+     * Handles individual user selection changes from CometChatUsers
+     * Tracks selected users internally and updates state accordingly
      */
-    const onSelectWrapper = useCallback((user: CometChat.User, selected: boolean): void => {
-
-        if (onSelectPropRef.current) {
-            return onSelectPropRef.current(user, selected);
+    const handleSelect = useCallback((user: CometChat.User, selected: boolean): void => {
+        if (selected) {
+            selectedUsersMapRef.current.set(user.getUid(), user);
+        } else {
+            selectedUsersMapRef.current.delete(user.getUid());
         }
-        if (selectionModeRef.current === SelectionMode.single) {
-            membersToAddRef.current = [createGroupMemberFromUser(user)];
-        }
-        else if (selectionModeRef.current === SelectionMode.multiple) {
-            updateAddMembersList(user);
-        }
-        if (membersToAddRef.current.length == 0) {
-            setIsDisabled(true)
-        }
-        else {
-            setIsDisabled(false);
-        }
-    }, [createGroupMemberFromUser, onSelectPropRef]);
-
-    const updateAddMembersList = (user: CometChat.User) => {
-        const targetUid = user.getUid();
-        const tmpMembersToAddList: CometChat.GroupMember[] = [];
-        let updated = false;
-        for (let i = 0; i < membersToAddRef.current.length; i++) {
-            const curMember = membersToAddRef.current[i];
-            if (targetUid === curMember.getUid()) {
-                updated = true;
-            }
-            else {
-                tmpMembersToAddList.push(curMember);
-            }
-        }
-        if (!updated) {
-            tmpMembersToAddList.push(createGroupMemberFromUser(user));
-        }
-        membersToAddRef.current = tmpMembersToAddList;
-    }
+        
+        // Convert selected users to group members
+        const selectedUsersList = Array.from(selectedUsersMapRef.current.values());
+        membersToAddRef.current = selectedUsersList.map(u => createGroupMemberFromUser(u));
+        
+        // Update button disabled state and count based on selection
+        const count = selectedUsersList.length;
+        setMembersCount(count);
+        setIsDisabled(count === 0);
+        
+        // Call the original onSelect prop if provided
+        onSelect?.(user, selected);
+    }, [createGroupMemberFromUser, onSelect]);
 
     /**
      * Creates a `CometChat.Action` instance
@@ -322,6 +304,7 @@ export function CometChatAddMembers(props: IAddMembersProps) {
             if (onAddBtnClick) {
                 onAddBtnClick(group.getGuid(), membersToAddRef.current);
                 membersToAddRef.current = [];
+                setMembersCount(0);
                 return;
             }
             const UIDsToRemove: Set<string> = new Set();
@@ -353,6 +336,7 @@ export function CometChatAddMembers(props: IAddMembersProps) {
                 });
             }
             membersToAddRef.current = [];
+            setMembersCount(0);
             onBackPropRef.current?.();
         }
         catch (error) {
@@ -380,28 +364,56 @@ export function CometChatAddMembers(props: IAddMembersProps) {
     }
 
     /**
+     * Gets the localized button text based on member count
+     */
+    function getButtonText(): string {
+        if (buttonText && buttonText !== getLocalizedString("add_members")) {
+            return buttonText;
+        }
+        if (membersCount === 0) {
+            return getLocalizedString("add_members");
+        }
+        if (membersCount === 1) {
+            // Prefer dedicated singular key for better localization
+            const singular = getLocalizedString("add_member");
+            if (singular && singular !== "") {
+                return singular;
+            }
+            // Fallback to plural template with n = 1, if available
+            const nSingular = getLocalizedString("add_n_members");
+            if (nSingular && nSingular !== "") {
+                return nSingular.replace("{n}", "1");
+            }
+            // Final English fallback
+            const generic = getLocalizedString("add_members");
+            return generic && generic !== "" ? generic : "";
+        }
+        const n = getLocalizedString("add_n_members");
+        // Fallback if localization key is missing
+        if (!n || n === "") {
+            // Use localized fallback instead of hardcoded English string
+            const generic = getLocalizedString("add_members");
+            return generic && generic !== "" ? generic : "";
+        }
+        const text = n.replace("{n}", membersCount.toString());
+        return text;
+    }
+
+    /**
      * Creates add members button view
      */
     function getAddMembersBtnView() {
+        const buttonTextValue = getButtonText();
         return (
             <div className={`cometchat-add-members__add-btn-wrapper ${isDisabled ? "cometchat-add-members__add-btn-wrapper-disabled" : ""}`}>
                 <CometChatButton
+                    key={`add-btn-${membersCount}`}
                     isLoading={isLoading}
-                    text={buttonText}
+                    text={buttonTextValue}
                     onClick={onAddBtnClickWrapper}
                 />
             </div>
         );
-    }
-
-    const onUsersSelected = (user: CometChat.User) => {
-        updateAddMembersList(user);
-        if (membersToAddRef.current.length == 0) {
-            setIsDisabled(true)
-        }
-        else {
-            setIsDisabled(false);
-        }
     }
 
     useCometChatAddMembers({
@@ -427,14 +439,13 @@ export function CometChatAddMembers(props: IAddMembersProps) {
                 onError={onError}
                 options={options}
                 selectionMode={selectionMode}
-                onSelect={onSelectWrapper}
+                onSelect={handleSelect}
                 usersRequestBuilder={usersRequestBuilder}
                 searchRequestBuilder={searchRequestBuilder}
                 itemView={listItemView}
                 subtitleView={subtitleView}
-                onItemClick={onUsersSelected}
                 activeUser={undefined}
-
+                showSelectedUsersPreview={true}
             />
             {isError ? <div className="cometchat-add-members_error-view">
                 {getLocalizedString("member_error_subtitle")}

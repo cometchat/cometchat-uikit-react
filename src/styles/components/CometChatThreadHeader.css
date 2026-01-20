@@ -165,3 +165,7 @@
     background: var(--cometchat-border-color-default, #E8E8E8);
     flex: 1;
 }
+
+.cometchat-thread-header__message .cometchat-message-preview {
+    cursor: not-allowed;
+}

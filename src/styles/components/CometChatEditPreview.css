@@ -46,12 +46,14 @@
     font: var(--cometchat-font-body-regular);
     color: var(--cometchat-text-color-primary);
     font-style: normal;
+    margin: 0;
 }
 
 /*
    Subtitle text inside the edit preview, containing the actual text being edited.
 */
 .cometchat-edit-preview__subtitle {
+    margin: 0;
     font-style: normal;
     text-align: left;
     color: var(--cometchat-text-color-secondary);

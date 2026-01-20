@@ -288,7 +288,6 @@ export function useCometChatMessageComposer(args: Args) {
                 type: "setMessageToReply",
                 messageToReply: object.message,
               });
-              emptyInputField()
               if (pasteHtmlAtCaret) {
                 const sel = getCurrentWindow()?.getSelection();
                 setSelection(sel);
@@ -302,7 +301,6 @@ export function useCometChatMessageComposer(args: Args) {
                 messageToReply: null,
               });
               messageToReplyRef.current = null;
-              emptyInputField();
               isPreviewVisible.current = false;
             }
             else {

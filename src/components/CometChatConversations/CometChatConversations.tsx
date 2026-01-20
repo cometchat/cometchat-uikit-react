@@ -1499,7 +1499,8 @@ export function CometChatConversations(props: ConversationsProps) {
     try {
 
       let iconName = "";
-      switch (message.getType()) {
+      const messageType = message.getType()
+      switch (messageType) {
 
         case CometChatUIKitConstants.MessageTypes.text:
           const messageText = (message as CometChat.TextMessage).getText();
@@ -1532,7 +1533,11 @@ export function CometChatConversations(props: ConversationsProps) {
           iconName = "collaborative-document";
           break;
         default:
-          iconName = "unsupported";
+          const allMessageTypes = new Set(Object.values(CometChatUIKitConstants.MessageTypes));
+          if (!allMessageTypes.has(messageType) && message.getCategory() === CometChatUIKitConstants.MessageCategory.custom) {
+            iconName = "unsupported";
+          }
+          else iconName = "";
           break;
       }
       if (message.getDeletedAt() || message.getCategory() === CometChatUIKitConstants.MessageCategory.interactive) {

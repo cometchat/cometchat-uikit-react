@@ -1,3 +1,14 @@
+## [6.2.5] - 19-01-2026
+## New
+- None
+
+## Enhancements
+- Added a selected users preview in the `CometChatUsers` component, allowing users to review selected members before adding them to a group.
+
+## Fixes
+- Fixed an issue where the unban success toast was not displayed when a member was unbanned from a group.
+- Fixed an issue where users were unblocked even when clicking outside the **Unblock User** confirmation button.
+
 ## [6.2.4] - 15-10-2025
 
 ## New

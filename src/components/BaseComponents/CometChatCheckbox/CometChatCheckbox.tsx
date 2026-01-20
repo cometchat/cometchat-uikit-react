@@ -7,7 +7,7 @@ interface CheckboxProps {
     /* flag used for enabling/diisabling the button. */
     disabled?: boolean;
     /* callback which is triggered on check-box value is changed. */
-    onCheckBoxValueChanged: (input: { checked: boolean, labelText: string | undefined }) => void;
+    onCheckBoxValueChanged: (input: { checked: boolean, labelText: string | undefined, shiftKey?: boolean, metaKey?: boolean }) => void;
 }
 
 /* 
@@ -22,13 +22,13 @@ const CometChatCheckbox = (props: CheckboxProps) => {
         onCheckBoxValueChanged = () => { },
     } = props;
 
-    const { updateCheckbox, isChecked } = useCometChatCheckbox({ checked, onCheckBoxValueChanged });
+    const { updateCheckbox, isChecked, handleClick } = useCometChatCheckbox({ checked, onCheckBoxValueChanged });
 
     return (
         <div className="cometchat">
             <div className="cometchat-checkbox">
                 <label className="cometchat-checkbox__label">
-                    <input id="checkbox-id" type="checkbox" onChange={updateCheckbox} disabled={disabled} checked={isChecked} />
+                    <input id="checkbox-id" type="checkbox" onChange={updateCheckbox} onClick={handleClick} disabled={disabled} checked={isChecked} />
                     <span className="cometchat-checkbox__checkmark"></span>
                     {labelText}
                 </label>

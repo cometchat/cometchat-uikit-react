@@ -709,7 +709,6 @@ export function CometChatSearch(props: SearchProps) {
   const handleClearSearch = () => {
     setSearchText("");
     setSearchValue("");
-    setActiveFilters([]);
   };
   
   const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

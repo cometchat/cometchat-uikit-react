@@ -145,11 +145,12 @@ export class MessageUtils {
     alignment: MessageBubbleAlignment,
     messageSentAtDateTimeFormat?:CalendarObject,
     hideReceipts?:boolean,
-    textFormatters?:CometChatTextFormatter[]
+    textFormatters?:CometChatTextFormatter[],
+    replyView?: JSX.Element | null
   ) {
     return this.getBubbleWrapper(baseMessage, template)
       ? this.getBubbleWrapper(baseMessage, template)
-      : <CometChatMessageBubble bottomView={null} headerView={null} options={[]} footerView={null} leadingView={null} statusInfoView={this.getStatusInfoView(baseMessage, template, alignment,messageSentAtDateTimeFormat,hideReceipts)} contentView={this.getContentView(baseMessage, template,alignment,textFormatters)} replyView={null} threadView={null} alignment={alignment} id={baseMessage?.getId() || baseMessage?.getMuid()} />
+      : <CometChatMessageBubble bottomView={null} headerView={null} options={[]} footerView={null} leadingView={null} statusInfoView={this.getStatusInfoView(baseMessage, template, alignment,messageSentAtDateTimeFormat,hideReceipts)} contentView={this.getContentView(baseMessage, template,alignment,textFormatters)} replyView={replyView ?? null} threadView={null} alignment={alignment} id={baseMessage?.getId() || baseMessage?.getMuid()} />
   }
   /**
    *

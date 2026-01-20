@@ -356,13 +356,27 @@ const CometChatThreadHeader = (props: CometChatThreadHeaderProps) => {
                         alignment = MessageBubbleAlignment.right;
                     }
 
+                    let replyViewElement: JSX.Element | null = null;
+                    try {
+                        const dataSource = CometChatUIKit.getDataSource();
+                        replyViewElement = dataSource?.getReplyView(
+                            updatedMessage,
+                            alignment,
+                            undefined,
+                            textFormatters
+                        ) as JSX.Element | null;
+                    } catch (error) {
+                        onErrorCallback(error, 'getReplyView');
+                    }
+
                     const view = new MessageUtils().getMessageBubble(
                         updatedMessage,
                         bubbleTemplate,
                         alignment,
                         messageSentAtDateTimeFormat,
                         hideReceipts,
-                        textFormatters
+                        textFormatters,
+                        replyViewElement
                     );
                     return view;
                 }

@@ -12,7 +12,7 @@ interface ListItemProps {
     /* title text to be used for list view. */
     title: string;
     /* callback which is triggered on click of the list item. */
-    onListItemClicked?: (input: { id?: string }) => void;
+    onListItemClicked?: (input: { id?: string; shiftKey?: boolean; metaKey?: boolean }) => void;
     /* html component which is used for showing menu. */
     menuView?: ReactNode;
     /* html component which is used for showing subtitle view. */

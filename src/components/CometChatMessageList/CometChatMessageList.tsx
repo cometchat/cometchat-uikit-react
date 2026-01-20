@@ -1186,11 +1186,17 @@ const CometChatMessageList = (props: MessageListProps) => {
  * @param {CometChat.BaseMessage} message - The message object, which needs to be replaced in the list.
  * @returns {void}
  */
-  const updateMessageByMuid: (message: CometChat.BaseMessage) => void = useCallback(
-    (message: CometChat.BaseMessage) => {
+  const updateMessageByMuid: (
+    message: CometChat.BaseMessage,
+    isSentMessage?: boolean
+  ) => void = useCallback(
+    (message: CometChat.BaseMessage, isSentMessage: boolean = false) => {
       try {
         setMessageList((prevMessageList: CometChat.BaseMessage[]) => {
           const messages = prevMessageList.map((m: CometChat.BaseMessage) => {
+            if(m.getId() && m.getId() === message.getId() && isSentMessage){
+              return m
+            }
             if (m.getMuid() === message.getMuid() && (!getIsMessageModerated(m) || getIsMessageModerated(message))) {
               return message;
             } else {
@@ -1272,12 +1278,20 @@ const CometChatMessageList = (props: MessageListProps) => {
    * @param {boolean} replaceByMuid - Optional flag to determine whether replacement should use MUID. If not provided, defaults to `false`.
    * @returns {void}
    */
-  const updateMessage: (message: CometChat.BaseMessage, replaceByMuid?: boolean) => void = useCallback(
-    (message: CometChat.BaseMessage, replaceByMuid: boolean = false) => {
+    const updateMessage: (
+      message: CometChat.BaseMessage,
+      replaceByMuid?: boolean,
+      isSentMessage?: boolean
+    ) => void = useCallback(
+      (
+        message: CometChat.BaseMessage,
+        replaceByMuid: boolean = false,
+        isSentMessage: boolean = false
+      ) => {
       try {
         if (replaceByMuid) {
           setScrollListToBottom(true);
-          updateMessageByMuid(message);
+          updateMessageByMuid(message, isSentMessage);
         } else {
           setScrollListToBottom(false);
           updateMessageByMessageId(message);
@@ -3691,8 +3705,9 @@ const CometChatMessageList = (props: MessageListProps) => {
                   if (showNewMessagesBanner) {
                     setShowNewMessagesBanner(false);
                   }
-                  updateMessage(CometChatUIKitUtility.clone(message), true);
+                  updateMessage(CometChatUIKitUtility.clone(message), true, true);
                 }
+
                 unreadMessagesCountRef.current = 0;
                 setNewMessagesText("")
               }

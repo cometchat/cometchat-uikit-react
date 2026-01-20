@@ -30,7 +30,7 @@
 
 
 .cometchat-sticker-keyboard__tab{
-  padding: var(--cometchat-padding-1,4px);
+  padding: var(--cometchat-padding-1, 4px);
 }
 .cometchat-sticker-keyboard__tab-active{
   border-bottom: 2px solid var(--cometchat-primary-color, #6852D6);

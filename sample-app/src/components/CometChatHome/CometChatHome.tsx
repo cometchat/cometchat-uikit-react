@@ -127,6 +127,10 @@ function CometChatHome(props: { theme?: string }) {
             toastTextRef.current = getLocalizedString("member_banned");
             setShowToast(true)
         })
+        let ccGroupMemberUnbanned = CometChatGroupEvents.ccGroupMemberUnbanned.subscribe(() => {
+            toastTextRef.current = getLocalizedString("member_unbanned");
+            setShowToast(true)
+        })
         let ccGroupMemberKicked = CometChatGroupEvents.ccGroupMemberKicked.subscribe(() => {
             toastTextRef.current = getLocalizedString("member_removed");
             setShowToast(true)
@@ -136,6 +140,7 @@ function CometChatHome(props: { theme?: string }) {
             ccGroupMemberScopeChanged?.unsubscribe();
             ccGroupMemberAdded?.unsubscribe();
             ccGroupMemberBanned?.unsubscribe();
+            ccGroupMemberUnbanned?.unsubscribe();
             ccGroupMemberKicked?.unsubscribe();
         }
 

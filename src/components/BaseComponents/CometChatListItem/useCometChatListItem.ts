@@ -2,7 +2,7 @@ import { MouseEvent, useCallback, useEffect, useState } from "react"
 import { useCometChatFrameContext } from "../../../context/CometChatFrameContext";
 interface ICometChatListItem {
   id?: string;
-  onListItemClicked?: (input: { id: string }) => void;
+  onListItemClicked?: (input: { id: string; shiftKey?: boolean; metaKey?: boolean }) => void;
   menuRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -25,7 +25,7 @@ export const useCometChatListItem = ({
     if (event && event?.stopPropagation) {
       event.stopPropagation();
     }
-    onListItemClicked({ id: id });
+    onListItemClicked({ id: id, shiftKey: event?.shiftKey, metaKey: event?.metaKey });
   };
 
   const showTail = () => {

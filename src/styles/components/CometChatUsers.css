@@ -7,6 +7,28 @@
   gap: 0px;
   flex-shrink: 0;
   background: var(--cometchat-background-color-01, #FFF);
+  position: relative;
+  /* Prevent native text selection highlight when using Shift+Click to select user ranges */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Allow text selection in input fields */
+.cometchat-users input,
+.cometchat-users .cometchat-search-bar__input {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Hide selection highlight only for list items (not inputs) */
+.cometchat-users__list-item::selection,
+.cometchat-users__list-item *::selection {
+  background: transparent;
+  color: inherit;
 }
 
 .cometchat-users__empty-state-view {
@@ -132,6 +154,10 @@
 
 .cometchat-users__list-item {
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .cometchat-users__list-item .cometchat-avatar {
@@ -157,4 +183,131 @@
   100% {
     background-position: 468px 0;
   }
+}
+
+.cometchat-users__selected-preview {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-height: 30vh;
+  padding-top: var(--cometchat-padding-4, 16px);
+  padding-left: var(--cometchat-padding-4, 16px);
+  padding-right: var(--cometchat-padding-4, 16px);
+  padding-bottom: 0;
+  background: var(--cometchat-background-color-01, #FFF);
+  border-top: 1px solid var(--cometchat-border-color-light, #F5F5F5);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 10;
+}
+
+/* Hide scrollbar when showScrollbar is false */
+.cometchat-users__selected-preview-hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.cometchat-users__selected-preview-hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.cometchat-users__selected-preview-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cometchat-padding-2, 8px);
+  max-height: calc(2 * (32px + var(--cometchat-padding-2, 8px)));
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar when showScrollbar is false */
+.cometchat-users__selected-preview-container-hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.cometchat-users__selected-preview-container-hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.cometchat-users__selected-preview-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  border: 1px solid var(--cometchat-border-color-default, #E8E8E8);
+  padding: var(--cometchat-padding-1, 4px);
+  background: var(--cometchat-background-color-03, #F5F5F5);
+  border-radius: var(--cometchat-radius-max, 1000px);
+  height: 32px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.cometchat-users__selected-preview-chip .cometchat-avatar {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.cometchat-users__selected-preview-chip .cometchat-avatar .cometchat-avatar__text {
+  font: var( --cometchat-font-caption1-bold);
+}
+
+.cometchat-users__selected-preview-chip-name {
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-body-medium);
+  max-width: 48px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cometchat-users__selected-preview-chip-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cometchat-users__selected-preview-chip-close img {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.cometchat-users__selected-preview-chip-close:hover img {
+  opacity: 1;
+}
+
+.cometchat-users__selected-preview-chip-close-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.cometchat-users__selected-preview-chip-close-button .cometchat-button {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  height: fit-content;
+  width: fit-content;
+}
+
+.cometchat-users__selected-preview-chip-close-button .cometchat-button .cometchat-button__icon {
+  height: 24px;
+  width: 24px;
+  background: var(--cometchat-icon-color-secondary);
 }

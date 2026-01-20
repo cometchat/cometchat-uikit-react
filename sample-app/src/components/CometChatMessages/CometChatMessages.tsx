@@ -80,6 +80,8 @@ export const CometChatMessages = (props: MessagesViewProps) => {
                     onThreadRepliesClick={(message: CometChat.BaseMessage) => onThreadRepliesClick(message)}
                     goToMessageId={goToMessageId}
                     textFormatters={searchKeyword && searchKeyword.trim() !== "" ? getFormatters() : undefined}
+                    startFromUnreadMessages={true}
+                    showMarkAsUnreadOption={true}
                 />
             </div>
             {showComposerState ? <div className="cometchat-composer-wrapper">
@@ -87,16 +89,19 @@ export const CometChatMessages = (props: MessagesViewProps) => {
                     user={user}
                     group={group}
                 />
-            </div> : <div className="message-composer-blocked" onClick={() => {
-                if (user) {
-                    CometChat.unblockUsers([user?.getUid()]).then(() => {
-                        user.setBlockedByMe(false);
-                        CometChatUserEvents.ccUserUnblocked.next(user);
-                    })
-                }
-            }}>
+            </div> : <div className="message-composer-blocked">
                 <div className="message-composer-blocked__text">
-                    {getLocalizedString("cannot_send_to_blocked_user")} <a>   {getLocalizedString("click_to_unblock")}</a>
+                    {getLocalizedString("cannot_send_to_blocked_user")} 
+                    <a onClick={() => {
+                        if (user) {
+                            CometChat.unblockUsers([user?.getUid()]).then(() => {
+                                user.setBlockedByMe(false);
+                                CometChatUserEvents.ccUserUnblocked.next(user);
+                            })
+                        }
+                    }}> 
+                        {getLocalizedString("click_to_unblock")}
+                    </a>
                 </div>
             </div>}
         </div>

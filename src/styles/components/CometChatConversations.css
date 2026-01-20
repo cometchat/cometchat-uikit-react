@@ -259,13 +259,13 @@ box-sizing: border-box;
 .cometchat-conversations__trailing-view {
   display: flex;
   flex-direction: column;
-  gap: var(--cometchat-padding-1,4px);
+  gap: var(--cometchat-padding-1, 4px);
 }
 
 .cometchat-conversations__trailing-view-badge {
   display: flex;
   justify-content: flex-end;
-  gap: var(--cometchat-padding-1,4px);
+  gap: var(--cometchat-padding-1, 4px);
 }
 
 .cometchat-conversations__trailing-view-badge-count {
