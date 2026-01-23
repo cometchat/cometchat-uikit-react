@@ -341,7 +341,7 @@ export class CollaborativeDocumentExtensionDecorator extends DataSourceDecorator
       message.getType() === CollaborativeDocumentConstants.extension_document &&
       message.getCategory() === CometChatUIKitConstants.MessageCategory.custom
     ) {
-      return getLocalizedString("conversation_subtitle_collaborative_document");
+      return (message instanceof CometChat.CustomMessage && message.getConversationText()) || getLocalizedString("conversation_subtitle_collaborative_document");
     } else {
       return super.getLastConversationMessage(
         conversation,

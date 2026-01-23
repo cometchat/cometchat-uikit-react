@@ -428,7 +428,7 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
       message.getType() === StickersConstants.sticker &&
       message.getCategory() === CometChatUIKitConstants.MessageCategory.custom
     ) {
-      return getLocalizedString("conversation_subtitle_sticker");
+      return (message instanceof CometChat.CustomMessage && message.getConversationText()) || getLocalizedString("conversation_subtitle_sticker");
     } else {
       return super.getLastConversationMessage(
         conversation,

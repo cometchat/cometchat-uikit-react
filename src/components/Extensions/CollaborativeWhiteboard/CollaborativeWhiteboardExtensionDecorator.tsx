@@ -336,7 +336,7 @@ export class CollaborativeWhiteBoardExtensionDecorator extends DataSourceDecorat
       CollaborativeWhiteboardConstants.extension_whiteboard &&
       message.getCategory() === CometChatUIKitConstants.MessageCategory.custom
     ) {
-      return getLocalizedString("conversation_subtitle_collaborative_whiteboard");
+      return (message instanceof CometChat.CustomMessage && message.getConversationText()) || getLocalizedString("conversation_subtitle_collaborative_whiteboard");
     } else {
       return super.getLastConversationMessage(
         conversation,

@@ -25,6 +25,7 @@ function useCometChatMessageList(
 	subscribeToUIEvents: Function,
 	showSmartRepliesRef: MutableRefObject<any>,
 	addMessage:(message: CometChat.BaseMessage) => void,
+	canFetchPreviousRef: MutableRefObject<boolean>,
 	setDateHeader?: Function,
 	parentMessageId?: number,
 	hideGroupActionMessages?: boolean,
@@ -69,6 +70,7 @@ function useCometChatMessageList(
 			if (CometChatUIKitLoginListener.getLoggedInUser() && (user || group)) {
 			messageIdRef.current = { prevMessageId: 0, nextMessageId: 0 };
             totalMessagesCountRef.current = 0;
+            canFetchPreviousRef.current = true; 
 				messageListManagerRef.current = {
 					previous: new MessageListManager(
 						errorHandler,

@@ -1756,16 +1756,16 @@ getMessagePreviewSubtitle(
         }
       
       case PollsConstants.extension_poll:
-        return createSimpleWrapper('poll', 'Poll', 'cometchat-message-preview__subtitle-icon-poll');
+        return createSimpleWrapper('poll', (message instanceof CometChat.CustomMessage && message.getConversationText()) || getLocalizedString('conversation_subtitle_poll'), 'cometchat-message-preview__subtitle-icon-poll');
       
       case StickersConstants.sticker:
-        return createSimpleWrapper('sticker', getLocalizedString('message_composer_sticker_hover'), 'cometchat-message-preview__subtitle-icon-sticker');
+        return createSimpleWrapper('sticker', (message instanceof CometChat.CustomMessage && message.getConversationText()) || getLocalizedString('message_composer_sticker_hover'), 'cometchat-message-preview__subtitle-icon-sticker');
       
       case CollaborativeWhiteboardConstants.extension_whiteboard:
-        return createSimpleWrapper('collaborative-whiteboard', getLocalizedString("messsage_composer_collaborative_whiteboard"), 'cometchat-message-preview__subtitle-icon-collaborative-whiteboard');
+        return createSimpleWrapper('collaborative-whiteboard', (message instanceof CometChat.CustomMessage && message.getConversationText()) || getLocalizedString("messsage_composer_collaborative_whiteboard"), 'cometchat-message-preview__subtitle-icon-collaborative-whiteboard');
       
       case CollaborativeDocumentConstants.extension_document:
-        return createSimpleWrapper('collaborative-document', getLocalizedString("messsage_composer_collaborative_document"), 'cometchat-message-preview__subtitle-icon-collaborative-document');
+        return createSimpleWrapper('collaborative-document', (message instanceof CometChat.CustomMessage && message.getConversationText()) || getLocalizedString("messsage_composer_collaborative_document"), 'cometchat-message-preview__subtitle-icon-collaborative-document');
       
       default:
         if (message instanceof CometChat.CustomMessage) {

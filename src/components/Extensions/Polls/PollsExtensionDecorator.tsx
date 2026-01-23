@@ -313,7 +313,7 @@ export class PollsExtensionDecorator extends DataSourceDecorator {
       message.getType() === PollsConstants.extension_poll &&
       message.getCategory() === CometChatUIKitConstants.MessageCategory.custom
     ) {
-      return getLocalizedString("conversation_subtitle_poll");
+      return (message instanceof CometChat.CustomMessage && message.getConversationText()) || getLocalizedString("conversation_subtitle_poll");
     } else {
       return super.getLastConversationMessage(
         conversation,

@@ -530,6 +530,7 @@ const CometChatMessageList = (props: MessageListProps) => {
   const hasReachedBottomRef = useRef<boolean>(false);
   const includesLastReadMessageRef = useRef<boolean>(false);
   const hasVisibleAreaRef = useRef<boolean>(false);
+  const canFetchPreviousRef = useRef<boolean>(true);
   const pendingMessagesMapRef = useRef<{ [runId: string]: (CometChat.AIAssistantMessage | CometChat.AIToolArgumentMessage | CometChat.AIToolResultMessage)[] }>({});
   const isStreamingRef = useRef<boolean>(false);
   const currentConversationRef = useRef<CometChat.Conversation | null>(null);
@@ -547,6 +548,12 @@ const CometChatMessageList = (props: MessageListProps) => {
     },
     500
   );
+
+  useEffect(() => {
+    if(isAgentChat && !parentMessageId) {
+      hasReachedBottomRef.current = true;
+    }
+  }, [isAgentChat, parentMessageId]);
 
   useEffect((() => {
     let ccOwnershipChanged = CometChatGroupEvents.ccOwnershipChanged.subscribe((groupMember) => {
@@ -2164,6 +2171,8 @@ const CometChatMessageList = (props: MessageListProps) => {
 
         if (isPartOfCurrentChatForSDKEvent(messages[0])) {
           try {
+            canFetchPreviousRef.current = true;
+            
             setMessageList((prevMessageList: CometChat.BaseMessage[]) => {
               const existingMessageIds = new Set(prevMessageList.map(message => message.getId()));
               const uniqueMessages = messages.filter(message => !existingMessageIds.has(message.getId()));
@@ -2453,6 +2462,7 @@ const CometChatMessageList = (props: MessageListProps) => {
                   if (totalMessagesCountRef.current === 0) {
                     setMessageListState(States.empty);
                     hasReachedBottomRef.current = true;
+                    canFetchPreviousRef.current = false;
                   } else if ((!targetMessageIdToUse) && !hasCompletedInitialLoad) {
                     markInitialLoadComplete()
                   }
@@ -3445,6 +3455,10 @@ const CometChatMessageList = (props: MessageListProps) => {
   const onTopCallback: () => Promise<boolean | CometChat.CometChatException> = useCallback(() => {
     return new Promise((resolve, reject) => {
       try {
+        if (!canFetchPreviousRef.current) {
+          resolve(true);
+          return;
+        }
         setScrollListToBottom(false);
         isOnBottomRef.current = false;
         if (messageListManagerRef.current && messageListManagerRef.current.next) {
@@ -3492,6 +3506,7 @@ const CometChatMessageList = (props: MessageListProps) => {
     setShouldScrollToMessage(true);
     currentConversationRef.current = null;
     isFirstReloadRef.current = true;
+    canFetchPreviousRef.current = true;
     fetchPreviousMessages();
   }, [
     fetchPreviousMessages,
@@ -4740,6 +4755,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
     subscribeToUIEvents,
     showSmartRepliesRef,
     addMessage,
+    canFetchPreviousRef,
     setDateHeader,
     parentMessageId,
     hideGroupActionMessages,
