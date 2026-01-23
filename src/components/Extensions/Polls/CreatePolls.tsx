@@ -224,8 +224,6 @@ useEffect(()=> {
           <button
             className="cometchat-create-poll__header-close-icon"
             onClick={() => ccCloseClicked && ccCloseClicked()}
-            aria-label="Close poll creation"
-            type="button"
           />
         </div>
         <div className="cometchat-create-poll__body">
@@ -265,8 +263,6 @@ useEffect(()=> {
                     <button
                       className="cometchat-create-poll__body-option-remove-button"
                       onClick={() => removePollOption(i)}
-                      aria-label={`Remove option ${i + 1}`}
-                      type="button"
                     />
                   }
                 </div>

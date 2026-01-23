@@ -325,21 +325,18 @@ export const CometChatReactionList: React.FC<ReactionListProps> = ({
             });
     
             return reactionsObject.map((reactionObject) => (
-                <button
-                    type="button"
+                <div
                     className={`cometchat-reaction-list__tabs-tab ${selectedReaction === reactionObject.id && "cometchat-reaction-list__tabs-tab-active"}`}
                     onClick={() => { setSelectedReaction(reactionObject.id); selectedRecRef.current = reactionObject.id }}
                     key={reactionObject.id}
-                    aria-label={`Filter by ${reactionObject.reaction} reaction, ${reactionObject.count} reactions`}
-                    aria-pressed={selectedReaction === reactionObject.id}
                 >
-                    <span className={`cometchat-reaction-list__tabs-tab-emoji ${selectedReaction === reactionObject.id && "cometchat-reaction-list__tabs-tab-emoji-active"}`} aria-hidden="true">
+                    <div className={`cometchat-reaction-list__tabs-tab-emoji ${selectedReaction === reactionObject.id && "cometchat-reaction-list__tabs-tab-emoji-active"}`}>
                         {reactionObject.reaction}
-                    </span>
-                    <span className={`cometchat-reaction-list__tabs-tab-count ${selectedReaction === reactionObject.id && "cometchat-reaction-list__tabs-tab-count-active"}`} aria-hidden="true">
+                    </div>
+                    <div className={`cometchat-reaction-list__tabs-tab-count ${selectedReaction === reactionObject.id && "cometchat-reaction-list__tabs-tab-count-active"}`}>
                         {reactionObject.count}
-                    </span>
-                </button>
+                    </div>
+                </div>
             ));
         } catch (error) {
             errorHandler(error,"showReactionsSlider")

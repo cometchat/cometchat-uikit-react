@@ -96,14 +96,13 @@ const CometChatSmartReplies = (props: CometChatSmartRepliesProps) => {
                 const loadedView = (
                     <div className="cometchat-smart-replies__items-container">
                         {replies.map((reply, index) => (
-                            <button
-                                key={index}
-                                className="cometchat-smart-replies__item-button"
-                                aria-label={`Send smart reply: ${reply}`}
-                                onClick={() => onSuggestionClicked && onSuggestionClicked(reply)}
-                            >
-                                {reply}
-                            </button>
+                            <div key={index} className="cometchat-smart-replies__item" onClick={() => onSuggestionClicked && onSuggestionClicked(reply)}>
+                                <button
+                                    className="cometchat-smart-replies__item-button"
+                                    >
+                                    {reply}
+                                </button>
+                            </div>
                         ))}
                     </div>
                 );
@@ -124,7 +123,6 @@ const CometChatSmartReplies = (props: CometChatSmartRepliesProps) => {
                         </div>
                         <button
                             className="cometchat-smart-replies__header-close-button"
-                            aria-label="Close smart replies"
                             onClick={() => closeCallback && closeCallback()}
                         />
                     </div>

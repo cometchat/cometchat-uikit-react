@@ -277,53 +277,45 @@ const onWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
         {
           state === States.loaded &&
           <>
-            <div className="cometchat-sticker-keyboard__tabs" role="tablist" aria-label="Sticker categories"  
+            <div className="cometchat-sticker-keyboard__tabs"   
             ref={scrollRef} 
             onWheel={onWheel}
             >
 {
   categoryStickerUrl.map((sticker, index) => (
     <React.Fragment key={sticker.stickerSetName || `sticker-tab-${index}`}>
-      <button
-        type="button"
+      <div
         className={`cometchat-sticker-keyboard__tab ${
           activeTab === sticker.stickerSetName
             ? "cometchat-sticker-keyboard__tab-active"
             : ""
         }`}
-        onClick={() => stickerSetClicked(sticker.stickerSetName)}
-        aria-label={sticker.stickerSetName}
-        aria-selected={activeTab === sticker.stickerSetName}
-        role="tab"
       >
         {sticker.stickerUrl && (
           <img
+            onClick={() => stickerSetClicked(sticker.stickerSetName)}
             src={sticker.stickerUrl}
-            alt={sticker.stickerSetName}
           />
         )}
-      </button>
+      </div>
     </React.Fragment>
   ))
 }
 
             </div>
-            <div className="cometchat-sticker-keyboard__list" role="listbox" aria-label="Stickers">
+            <div className="cometchat-sticker-keyboard__list">
             {
   activeStickerList.map((sticker, index) => (
-    <button
-      type="button"
+    <div
       key={sticker.stickerUrl || `sticker-item-${index}`}
       onClick={() => sendStickerMessage(sticker)}
-      className="cometchat-sticker-keyboard__list-item-button"
-      aria-label={`Send ${sticker.stickerSetName} sticker`}
     >
       <img
         src={sticker.stickerUrl}
         alt={sticker.stickerSetName}
         className="cometchat-sticker-keyboard__list-item"
       />
-    </button>
+    </div>
   ))
 }
 

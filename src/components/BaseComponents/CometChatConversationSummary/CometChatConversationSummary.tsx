@@ -135,8 +135,6 @@ const CometChatConversationSummary = (props: CometChatConversationSummaryProps) 
                         <button
                             className="cometchat-conversation-summary__header-close-button"
                             onClick={() => closeCallback!()}
-                            aria-label="Close conversation summary"
-                            type="button"
                         />
                     </div>
                     <div className="cometchat-conversation-summary__body">

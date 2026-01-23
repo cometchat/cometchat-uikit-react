@@ -193,8 +193,6 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
                     className="cometchat-fullscreen-viewer__close-button"
                     onClick={handleCloseClick}
                     onTouchEnd={handleCloseClick}
-                    aria-label="Close full screen viewer"
-                    type="button"
                 />
 
 

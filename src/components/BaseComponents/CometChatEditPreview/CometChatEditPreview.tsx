@@ -32,11 +32,9 @@ const CometChatEditPreview: FC<EditPreviewProps> = ({
             <div className="cometchat-edit-preview">
                 <p className="cometchat-edit-preview__title" >{previewTitle}</p>
                 <p className="cometchat-edit-preview__subtitle">{previewSubtitle}</p>
-                <button
-                    type="button"
+                <div
                     className="cometchat-edit-preview__close"
                     onClick={onClose}
-                    aria-label="Close edit preview"
                 />
             </div>
         </div>

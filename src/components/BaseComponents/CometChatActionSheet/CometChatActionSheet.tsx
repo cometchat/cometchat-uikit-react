@@ -22,25 +22,17 @@ const CometChatActionSheet = (props: ActionSheetProps) => {
             height: "inherit",
             width: "max-content"
         }}>
-           <div className="cometchat-action-sheet" role="menu">
+           <div className="cometchat-action-sheet">
                 {actions?.map((action: CometChatMessageComposerAction | CometChatActionsView,index) => {
-                    return <button 
-                        className="cometchat-action-sheet__item" 
-                        key={`cometchat-action-sheet__item-${index}`} 
-                        onClick={() => { onActionItemClick(action) }}
-                        aria-label={action.title || 'Action'}
-                        role="menuitem"
-                        type="button"
-                    >
-                        <span
+                    return <div className="cometchat-action-sheet__item" key={ `cometchat-action-sheet__item-${index}`} onClick={() => { onActionItemClick(action) }}>
+                        <div
                             className="cometchat-action-sheet__item-icon"
                             style={action.iconURL ? { WebkitMask: `url(${action.iconURL}) center center no-repeat` } : undefined}
-                            aria-hidden="true"
                         />
-                        <span className="cometchat-action-sheet__item-body" key={action.title || `action-${index}`}>
+                        <div className="cometchat-action-sheet__item-body"   key={action.title || `action-${index}`}>
                             {action.title!}
-                        </span>
-                    </button>
+                        </div>
+                    </div>
                 })}
             </div>
         </div>

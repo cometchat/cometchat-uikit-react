@@ -762,7 +762,7 @@ const CometChatMessageList = (props: MessageListProps) => {
     } else {
       return (
         <div className="cometchat-message-list__shimmer">
-          {getShimmer(12)}
+          {getShimmer(10)}
         </div>
       );
     }
@@ -780,7 +780,7 @@ const CometChatMessageList = (props: MessageListProps) => {
     } else {
       return (
         <div className='cometchat-message-list__error-state-view'>
-          <img className='cometchat-message-list__error-state-view-icon' src={isDarkMode ? ErrorStateIconDark : ErrorStateIcon} alt="Error loading messages">
+          <img className='cometchat-message-list__error-state-view-icon' src={isDarkMode ? ErrorStateIconDark : ErrorStateIcon}>
 
           </img>
           <div className='cometchat-message-list__error-state-view-body'>

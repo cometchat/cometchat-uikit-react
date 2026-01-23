@@ -578,7 +578,7 @@ export function CometChatGroups(props: GroupsProps) {
             return (
                 <div className="cometchat-groups__empty-state-view">
                     <div className="cometchat-groups__empty-state-view-icon">
-                        <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="No groups found" />
+                        <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="" />
                     </div>
                     <div className="cometchat-groups__empty-state-view-body">
                         <div className="cometchat-groups__empty-state-view-body-title">{getLocalizedString("group_empty_title")}</div>
@@ -610,7 +610,7 @@ export function CometChatGroups(props: GroupsProps) {
             return (
                 <div className="cometchat-groups__error-state-view">
                     <div className="cometchat-groups__error-state-view-icon">
-                        <img src={isDarkMode ? errorIconDark : errorIcon} alt="Error loading groups" />
+                        <img src={isDarkMode ? errorIconDark : errorIcon} alt="" />
                     </div>
                     <div className="cometchat-groups__error-state-view-body">
                         <div className="cometchat-groups__error-state-view-body-title">{getLocalizedString("group_error_title")}</div>

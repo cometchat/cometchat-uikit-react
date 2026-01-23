@@ -136,17 +136,12 @@ const PollsBubble = (props: PollsBubbleProps) => {
         >
           {pollQuestion}
         </div>
-        <ul className="cometchat-polls-bubble__options" role="radiogroup" aria-label="Poll options">
+        <ul className="cometchat-polls-bubble__options">
           {pollOptions.map((option) => (
             <li
               key={option.id}
               onClick={() => answerPollQuestion(option)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); answerPollQuestion(option); } }}
-              className="cometchat-polls-bubble__option-item"
-              role="radio"
-              aria-checked={option.selectedByLoggedInUser ? true : false}
-              tabIndex={0}
-            >
+              className="cometchat-polls-bubble__option-item">
               <div className="cometchat-poll-bubble__option-item-leading-view">
                 <CometChatRadioButton
                   name={getId(pollId)}

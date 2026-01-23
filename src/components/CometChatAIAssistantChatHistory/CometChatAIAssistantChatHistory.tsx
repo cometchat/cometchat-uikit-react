@@ -288,18 +288,11 @@ const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryP
     return (
       <div className='cometchat-ai-assistant-chat-history__list-item-container'>
         {getMessageDateHeader(message, i)}
-        <div 
-          onClick={() => {
-            if (onMessageClicked) {
-              onMessageClicked(message);
-            }
-          }} 
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (onMessageClicked) { onMessageClicked(message); } } }}
-          className="cometchat-ai-assistant-chat-history__list-item"
-          role="button"
-          tabIndex={0}
-          aria-label="Open chat message"
-        >
+        <div onClick={() => {
+          if (onMessageClicked) {
+            onMessageClicked(message);
+          }
+        }} className="cometchat-ai-assistant-chat-history__list-item">
           <div className="cometchat-ai-assistant-chat-history__list-item-text">
             {getMessageText(message)}
           </div>
@@ -401,7 +394,7 @@ const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryP
         <div
           className='cometchat-ai-assistant-chat-history__empty-state-view-icon'
         >
-          <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="No chat history" />
+          <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="" />
         </div>
         <div className='cometchat-ai-assistant-chat-history__empty-state-view-body'>
           <div className='cometchat-ai-assistant-chat-history__empty-state-view-body-title'>
@@ -428,7 +421,7 @@ const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryP
     return (
       <div className='cometchat-ai-assistant-chat-history__error-state-view'>
         <div className='cometchat-ai-assistant-chat-history__error-state-view-icon'>
-          <img src={isDarkMode ? errorIconDark : errorIcon} alt="Error occurred" />
+          <img src={isDarkMode ? errorIconDark : errorIcon} alt="" />
         </div>
         <div className='cometchat-ai-assistant-chat-history__error-state-view-body'>
           <div className='cometchat-ai-assistant-chat-history__error-state-view-body-title'>
@@ -449,10 +442,8 @@ const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryP
         <button
           className="cometchat-ai-assistant-chat-history__close"
           onClick={onClose}
-          aria-label="Close chat history"
-          type="button"
         >
-          <span className="cometchat-ai-assistant-chat-history__close-icon" aria-hidden="true"></span>
+          <span className="cometchat-ai-assistant-chat-history__close-icon"></span>
         </button>
       </div>
       {!hideNewChat && getNewChatButton()}
