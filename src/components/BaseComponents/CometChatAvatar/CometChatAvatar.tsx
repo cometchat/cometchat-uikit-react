@@ -40,12 +40,16 @@ const CometChatAvatar = (props: CometChatAvatarProps) => {
             <div
                 className="cometchat-avatar"
                 onClick={onClick}
+                onKeyDown={isClickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } } : undefined}
+                role={isClickable ? "button" : undefined}
+                tabIndex={isClickable ? 0 : undefined}
+                aria-label={isClickable ? `View ${name || 'user'} profile` : undefined}
                 style={shouldShowPointer ? { cursor: "pointer" } : undefined}
             >
                 {image ?
-                    <img src={image} className="cometchat-avatar__image" />
+                    <img src={image} className="cometchat-avatar__image" alt={`${name || 'User'} avatar`} />
                     :
-                    <span className="cometchat-avatar__text">
+                    <span className="cometchat-avatar__text" aria-label={`${name || 'User'} avatar`}>
                         {name?.trim().substring(0, 1).toUpperCase()}
                     </span>
                 }

@@ -108,6 +108,7 @@ const CometChatConversationStarter = (props: CometChatConversationStarterProps) 
                         <div key={reply} className="cometchat-conversation-starter__item">
                             <button
                                 className="cometchat-conversation-starter__item-button"
+                                aria-label={`Send suggestion: ${reply}`}
                                 onClick={() => onSuggestionClicked && onSuggestionClicked(reply)} >{reply}</button>
                         </div>
                     ))}

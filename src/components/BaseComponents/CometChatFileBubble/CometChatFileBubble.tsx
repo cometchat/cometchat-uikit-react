@@ -135,7 +135,7 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
                         }}
                     ></circle>
                 </svg>
-                <div className="cometchat-file-bubble__tail-view-download-stop" onClick={cancelDownload}></div>
+                <button type="button" className="cometchat-file-bubble__tail-view-download-stop" onClick={cancelDownload} aria-label="Cancel download"></button>
             </div>
         )
     }, [isDownloading, progress])
@@ -145,7 +145,7 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
         <div className="cometchat">
             <div className={`cometchat-file-bubble ${isSentByMe ? "cometchat-file-bubble-outgoing" : "cometchat-file-bubble-incoming"}`}>
                <div>
-               <img src={fileTypeIconURL ?? filetype} className="cometchat-file-bubble__leading-view"></img>
+               <img src={fileTypeIconURL ?? filetype} className="cometchat-file-bubble__leading-view" alt="File type icon" />
                 <div className="cometchat-file-bubble__body
         ">
                     <div className="cometchat-file-bubble__body-name">
@@ -157,7 +157,7 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
 
                 <div className="cometchat-file-bubble__tail-view">
 
-                    {isDownloading ? getProgressBar() : <div className="cometchat-file-bubble__tail-view-download" onClick={downloadFile} ></div>}
+                    {isDownloading ? getProgressBar() : <button type="button" className="cometchat-file-bubble__tail-view-download" onClick={downloadFile} aria-label="Download file"></button>}
                 </div>
             </div >
         </div>

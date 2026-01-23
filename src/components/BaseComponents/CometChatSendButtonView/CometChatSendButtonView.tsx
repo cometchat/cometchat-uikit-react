@@ -9,16 +9,21 @@ const CometChatSendButtonView = ({ isButtonDisabled }: { isButtonDisabled: boole
   }, []);
 
   return (
-    <div
+    <button
+      type="button"
+      aria-label={isStreaming ? "Stop streaming message" : "Send message"}
+      disabled={isButtonDisabled}
       onClick={() => {
         if (isStreaming) {
           stopStreamingMessage();
         }
-      }} className={`cometchat-ai-assistant-chat__send-button-view ${!isButtonDisabled && 'cometchat-ai-assistant-chat__send-button-view--active'}
+      }}
+      className={`cometchat-ai-assistant-chat__send-button-view ${!isButtonDisabled && 'cometchat-ai-assistant-chat__send-button-view--active'}
                   ${isStreaming && 'cometchat-ai-assistant-chat__send-button-view--streaming'}
-                  `}>
-      <div className='cometchat-ai-assistant-chat__send-button-icon'></div>
-    </div>
+                  `}
+    >
+      <span className="cometchat-ai-assistant-chat__send-button-icon" aria-hidden="true"></span>
+    </button>
   );
 };
 

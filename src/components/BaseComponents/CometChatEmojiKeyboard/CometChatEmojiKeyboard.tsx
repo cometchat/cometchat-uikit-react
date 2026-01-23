@@ -50,16 +50,18 @@ const CometChatEmojiKeyboard = (props: EmojiKeyboardProps) => {
 
     const getEmojiListComponent = (emojiData: { [key: string]: CometChatEmoji }) => {
         return (
-            <div className={ panelType === "mobile" ? "cometchat-emoji-keyboard__emoji-list_mobile_app" : "cometchat-emoji-keyboard__emoji-list"}>
+            <div className={ panelType === "mobile" ? "cometchat-emoji-keyboard__emoji-list_mobile_app" : "cometchat-emoji-keyboard__emoji-list"} role="listbox" aria-label="Emoji list">
                 {Object.keys(emojiData).map((item: string, index: number) =>
-                    <div
+                    <button
+                        type="button"
                         key={item + index}
                         className="cometchat-emoji-keyboard__list-item"
                         title={item}
+                        aria-label={`Select emoji ${item}`}
                         onClick={() => { onEmojiClick?.(emojiData[item].char) }}
                     >
                         {getEmojiData(emojiData[item])}
-                    </div>
+                    </button>
                 )}
             </div>
         )
@@ -104,21 +106,28 @@ const CometChatEmojiKeyboard = (props: EmojiKeyboardProps) => {
                 <div className="cometchat-emoji-keyboard__tabs"
                     ref={scrollRef}
                     onWheel={onWheel}
+                    role="tablist"
+                    aria-label="Emoji categories"
                 >
                     {emojiDataState.map((emoji: CometChatEmojiCategory, counter: number) =>
-                        <div
+                        <button
+                            type="button"
                             key={counter + emoji.id}
                             onClick={() => { scrollToElement(emoji.id) }}
                             title={getLocalizedString(emoji.name)}
+                            aria-label={getLocalizedString(emoji.name)}
+                            aria-selected={activeCategory === emoji.id}
+                            role="tab"
                             className={activeCategory == emoji.id ? "cometchat-emoji-keyboard__tab-active cometchat-emoji-keyboard__tab" : "cometchat-emoji-keyboard__tab"}
                         >
-                            <div title={getLocalizedString(emoji.name)}>
-                                <div
+                            <span title={getLocalizedString(emoji.name)}>
+                                <span
                                     style={emoji.symbolURL ? { WebkitMask: `url(${emoji.symbolURL}) center center no-repeat` } : undefined}
                                     className={`cometchat-emoji-keyboard__tab-icon`}
+                                    aria-hidden="true"
                                 />
-                            </div>
-                        </div>)}
+                            </span>
+                        </button>)}
                 </div>
                 <div className="cometchat-emoji-keyboard__search">
                     <CometChatSearchBar

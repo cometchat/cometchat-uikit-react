@@ -104,11 +104,15 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
     /* This function returns More button component. */
     const getMoreButton = useCallback(() => {
         return (
-            <div
+            <button
+                type="button"
                 title={moreIconHoverText}
                 onClick={handleMenuClick}
                 className="cometchat-menu-list__sub-menu"
                 ref={moreButtonRef}
+                aria-label={moreIconHoverText || "More options"}
+                aria-expanded={showSubMenu}
+                aria-haspopup="menu"
                 onMouseEnter={()=>{
                     getPopoverPositionStyle();
                 }}
@@ -119,11 +123,11 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                       }),
                   }}
             >
-                <div
+                <span
                     className="cometchat-menu-list__sub-menu-icon"
-
+                    aria-hidden="true"
                 />
-            </div>
+            </button>
         )
     }, [moreIconHoverText, handleMenuClick,showSubMenu,disableBackgroundInteraction])
 

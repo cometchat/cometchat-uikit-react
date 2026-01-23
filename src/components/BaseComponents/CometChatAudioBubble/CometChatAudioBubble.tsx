@@ -257,7 +257,7 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
                     />
                 </svg>
 
-                <div className="cometchat-audio-bubble__tail-view-download-stop" onClick={cancelDownload}></div>
+                <button type="button" className="cometchat-audio-bubble__tail-view-download-stop" onClick={cancelDownload} aria-label="Cancel download"></button>
             </div>
         );
     }, [isDownloading, progress]);
@@ -271,9 +271,9 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
                <div>
                <div className="cometchat-audio-bubble__leading-view" style={isLoading ? {pointerEvents:"none"} : {}}  >
                     {isPlaying ? (
-                        <div className="cometchat-audio-bubble__leading-view-pause" onClick={handlePlayPause}></div>
+                        <button type="button" className="cometchat-audio-bubble__leading-view-pause" onClick={handlePlayPause} aria-label="Pause audio"></button>
                     ) : (
-                        <div className="cometchat-audio-bubble__leading-view-play" onClick={handlePlayPause}></div>
+                        <button type="button" className="cometchat-audio-bubble__leading-view-play" onClick={handlePlayPause} aria-label="Play audio"></button>
                     )}
                 </div>
                 <div className="cometchat-audio-bubble__body">
@@ -285,7 +285,7 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
                </div>
                 <div className="cometchat-audio-bubble__tail-view" style={isLoading ? {pointerEvents:"none"} : !isDownloading ? { display: 'flex', alignSelf: 'center' } : {}} >
                     {isDownloading ? getProgressBar() : (
-                        <div className="cometchat-audio-bubble__tail-view-download" onClick={downloadAudio}></div>
+                        <button type="button" className="cometchat-audio-bubble__tail-view-download" onClick={downloadAudio} aria-label="Download audio"></button>
                     )}
                 </div>
             </div>

@@ -352,6 +352,9 @@ const CometChatPopover = forwardRef<{
         function getFullScreenOverlay() {
             return <div
                 className="cometchat-popover__overlay"
+                role="presentation"
+                tabIndex={-1}
+                aria-label="Popover overlay"
                 style={{
                     position: 'fixed',
                     top: 0,

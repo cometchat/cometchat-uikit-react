@@ -78,6 +78,10 @@ const CometChatListItem = (props: ListItemProps) => {
                 style={style}
                 id={id}
                 onClick={listItemClick}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); listItemClick(e as any); } }}
+                role="button"
+                tabIndex={0}
+                aria-label={title}
             >
                 {!leadingView ?
                     avatarName?.trim()?.length > 0 ||
