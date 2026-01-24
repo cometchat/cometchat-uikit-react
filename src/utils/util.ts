@@ -246,8 +246,25 @@ export function formatDateFromTimestamp(timestamp:number) {
 }
 
 export const decodeHTML = (input: string): string =>  {
+  let cleanedInput = input;
+  
+  // Remove <font> tags from Chrome translate
+  cleanedInput = cleanedInput.replace(/<\/?font\b[^>]*>/gi, '');
+  
+  // Convert <div> tags to newlines (WhatsApp mobile paste)
+  // Replace opening <div> with newline (except if it's the first element)
+  cleanedInput = cleanedInput.replace(/(<div\b[^>]*>)/gi, '\n');
+  // Remove closing </div> tags
+  cleanedInput = cleanedInput.replace(/<\/div>/gi, '');
+  
+  // Convert <br> tags to newlines
+  cleanedInput = cleanedInput.replace(/<br\s*\/?>/gi, '\n');
+  
+  // Clean up newlines at the very start
+  cleanedInput = cleanedInput.replace(/^\n+/, '');
+  
   const txt = document.createElement("textarea");
-  txt.innerHTML = input;
+  txt.innerHTML = cleanedInput;
   return txt.value;
 }
 
