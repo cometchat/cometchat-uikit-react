@@ -26,8 +26,8 @@ const CometChatAvatar = (props: CometChatAvatarProps) => {
     } = props;
 
     const splitName = name.split(" ");
-    const isClickable = typeof onClick === "function";
-    const shouldShowPointer = isClickable && !disablePointer;
+    const hasClickHandler = typeof onClick === "function";
+    const isInteractive = hasClickHandler && !disablePointer;
 
     return (
         <div className="cometchat" style={{
@@ -39,8 +39,8 @@ const CometChatAvatar = (props: CometChatAvatarProps) => {
         }}>
             <div
                 className="cometchat-avatar"
-                onClick={onClick}
-                style={shouldShowPointer ? { cursor: "pointer" } : undefined}
+                onClick={isInteractive ? onClick : undefined}
+                style={isInteractive ? { cursor: "pointer" } : undefined}
             >
                 {image ?
                     <img src={image} className="cometchat-avatar__image" />
