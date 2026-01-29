@@ -309,6 +309,11 @@ try {
     static shouldLastMessageAndUnreadCountBeUpdated = (message: CometChat.BaseMessage) => {
 
        try {
+         // Skip messages from app_system sender - don't update conversation with these
+         const senderUid = message?.getSender?.()?.getUid?.();
+         if (senderUid === CometChatUIKitConstants.messages.APP_SYSTEM) {
+             return false;
+         }
          // Checking if the message is a custom message
          let isCustomMessage = message?.getCategory() === CometChatUIKitConstants.MessageCategory.custom
          // Check if the message is a reply to another message

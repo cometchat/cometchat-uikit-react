@@ -218,18 +218,34 @@ export function useCometChatConversations(args: Args) {
           handleGroupCreated(group);
       });
       const groupMemberScopeChangedSub = CometChatGroupEvents.ccGroupMemberScopeChanged.subscribe(item => {
+        // Skip app_system messages - don't update conversation last message
+        if (!ConversationsManager.shouldLastMessageAndUnreadCountBeUpdated(item.message)) {
+          return;
+        }
         dispatch({ type: "updateConversationLastMessageAndPlaceAtTheTop", message: item.message });
       });
       const groupMemberAddedSub = CometChatGroupEvents.ccGroupMemberAdded.subscribe(item => {
         const message = item.messages[item.messages.length - 1];
+        // Skip app_system messages
+        if (message && !ConversationsManager.shouldLastMessageAndUnreadCountBeUpdated(message)) {
+          return;
+        }
         if (message) {
           dispatch({ type: "updateConversationLastMessageAndGroupAndPlaceAtTheTop", group: item.userAddedIn, message });
         }
       });
       const groupMemberKickedSub = CometChatGroupEvents.ccGroupMemberKicked.subscribe(item => {
+        // Skip app_system messages
+        if (!ConversationsManager.shouldLastMessageAndUnreadCountBeUpdated(item.message)) {
+          return;
+        }
         dispatch({ type: "updateConversationLastMessageAndGroupAndPlaceAtTheTop", group: item.kickedFrom, message: item.message });
       });
       const groupMemberBannedSub = CometChatGroupEvents.ccGroupMemberBanned.subscribe(item => {
+        // Skip app_system messages
+        if (!ConversationsManager.shouldLastMessageAndUnreadCountBeUpdated(item.message)) {
+          return;
+        }
         dispatch({ type: "updateConversationLastMessageAndGroupAndPlaceAtTheTop", group: item.kickedFrom, message: item.message });
       });
       const groupDeletedSub = CometChatGroupEvents.ccGroupDeleted.subscribe(group => {

@@ -2057,7 +2057,11 @@ const CometChatMessageList = (props: MessageListProps) => {
           try {
             setMessageList((prevMessageList: CometChat.BaseMessage[]) => {
               const existingMessageIds = new Set(prevMessageList.map(message => message.getId()));
-              const uniqueMessages = messages.filter(message => !existingMessageIds.has(message.getId()));
+              // Filter out app_system messages and duplicates
+              const uniqueMessages = messages.filter(message => 
+                !existingMessageIds.has(message.getId()) && 
+                message?.getSender?.()?.getUid?.() !== CometChatUIKitConstants.messages.APP_SYSTEM
+              );
               const updatedMessageList = [...uniqueMessages, ...prevMessageList];
               return updatedMessageList;
             });
@@ -2753,9 +2757,28 @@ const CometChatMessageList = (props: MessageListProps) => {
      * @param {CometChat.BaseMessage} message - The message to be added.
      * @returns {void}
      */
+  /**
+   * Helper function to check if a message is from the app_system sender.
+   * Messages from app_system should be hidden from the message list.
+   * @param {CometChat.BaseMessage} message - The message to check.
+   * @returns {boolean} - Returns true if the message is from app_system.
+   */
+  const isAppSystemMessage = useCallback((message: CometChat.BaseMessage): boolean => {
+    try {
+      const senderUid = message?.getSender?.()?.getUid?.();
+      return senderUid === CometChatUIKitConstants.messages.APP_SYSTEM;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const addMessage: (message: CometChat.BaseMessage) => void = useCallback(
     (message: CometChat.BaseMessage) => {
       try {
+        // Skip messages from app_system sender
+        if (isAppSystemMessage(message)) {
+          return;
+        }
         if (showSmartRepliesRef.current) {
           toggleSmartReplyView(message);
         }
@@ -2787,7 +2810,7 @@ const CometChatMessageList = (props: MessageListProps) => {
         errorHandler(error, "addMessage");
       }
     },
-    [errorHandler, scrollListToBottom, hasCompletedInitialLoad]
+    [errorHandler, scrollListToBottom, hasCompletedInitialLoad, isAppSystemMessage]
   );
 
   /**
