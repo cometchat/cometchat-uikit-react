@@ -1593,15 +1593,9 @@ try {
           const caption = getComposerCaptionText();
           const mediaMessage = await getMediaMessage(
             pendingAttachment.file,
-            pendingAttachment.fileType,
-            caption ? { caption } : undefined
+            pendingAttachment.fileType
           );
           const onSendButtonClick = onSendButtonClickPropRef.current;
-            setIsSendingPendingAttachment(false);
-            clearPendingAttachment();
-            dispatch({ type: "setText", text: "" });
-            emptyInputField();
-            mySetAddToMsgInputText("");
           if (onSendButtonClick) {
             await Promise.all([
               onSendButtonClick(mediaMessage, PreviewMessageMode.none),
@@ -1609,6 +1603,16 @@ try {
           } else {
             await sendMediaMessageInstance(mediaMessage);
           }
+          
+          if (caption && caption.trim().length > 0) {
+            await handleTextMessageSend(caption);
+          }
+          
+          setIsSendingPendingAttachment(false);
+          clearPendingAttachment();
+          dispatch({ type: "setText", text: "" });
+          emptyInputField();
+          mySetAddToMsgInputText("");
         } catch (error) {
           errorHandler(error, "handlePendingAttachmentSend");
         } finally {
@@ -1622,6 +1626,7 @@ try {
         errorHandler,
         getComposerCaptionText,
         getMediaMessage,
+        handleTextMessageSend,
         isSendingPendingAttachment,
         mySetAddToMsgInputText,
         onSendButtonClickPropRef,
@@ -1648,8 +1653,7 @@ try {
         const caption = getComposerCaptionText();
         const mediaMessage = await getMediaMessage(
           clipboardPreview.file,
-          fileType,
-          caption ? { caption } : undefined
+          fileType
         );
         const onSendButtonClick = onSendButtonClickPropRef.current;
 
@@ -1660,6 +1664,11 @@ try {
         } else {
           await sendMediaMessageInstance(mediaMessage);
         }
+        
+        if (caption && caption.trim().length > 0) {
+          await handleTextMessageSend(caption);
+        }
+        
         clearClipboardPreview();
         dispatch({ type: "setText", text: "" });
         emptyInputField();
@@ -1676,6 +1685,7 @@ try {
       errorHandler,
       getComposerCaptionText,
       getMediaMessage,
+      handleTextMessageSend,
       isSendingClipboardPreview,
       emptyInputField,
       mySetAddToMsgInputText,
