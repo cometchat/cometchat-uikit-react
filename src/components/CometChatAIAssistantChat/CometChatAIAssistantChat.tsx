@@ -55,6 +55,8 @@ interface AIAssistantChatProps {
     emptyChatImageView?: React.JSX.Element;
     aiAssistantTools?: CometChatAIAssistantTools;
     templates?: CometChatMessageTemplate[];
+    parentMessageId?: number;
+    loadLastAgentConversation?: boolean;
 };
 
 /**
@@ -166,14 +168,17 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
         emptyChatIntroMessageView,
         emptyChatImageView,
         aiAssistantTools,
-        templates
+        templates,
+        parentMessageId,
+        loadLastAgentConversation = false
     } = props;
 
     const [startNewChat, setStartNewChat] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [goToMessage, setGoToMessage] = useState<CometChat.BaseMessage | null>(null);
-    const [parentMessageId, setParentMessageId] = useState<number | null>(null);
-    const parentMessageIdRef = useRef<number | null>(null);
+    const [goToMessageId, setGoToMessageId] = useState<number | null>(null);
+    const [loadLastAgentConversationState, setLoadLastAgentConversationState] = useState<boolean>(loadLastAgentConversation ?? false);
+    const [activeParentMessageId, setActiveParentMessageId] = useState<number | null>(null);
+    const activeParentMessageIdRef = useRef<number | null>(null);
 
     // Use suggestions from props if available, otherwise use default suggestions
     const displaySuggestions = suggestedMessages.length > 0 ? suggestedMessages : (user.getMetadata() as any)?.suggestedMessages as string[];
@@ -183,6 +188,18 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
             setAIAssistantTools(aiAssistantTools)
         }
     }, [aiAssistantTools])
+
+    useEffect(() => {
+      if (parentMessageId) {
+            setGoToMessageId(parentMessageId);
+            setActiveParentMessageId(parentMessageId);
+            activeParentMessageIdRef.current = parentMessageId;
+      }
+    }, [parentMessageId]);
+
+    useEffect(() => {
+        setLoadLastAgentConversationState(loadLastAgentConversation ?? false);
+    }, [loadLastAgentConversation])
 
 
     // Function to set auxiliary view in message header.
@@ -206,10 +223,11 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
     const onNewChatButtonClick = () => {
         // Force component rerender by updating state
         setStartNewChat(prev => !prev);
-        setGoToMessage(null)
-        setParentMessageId(null);
-        parentMessageIdRef.current = null;
+        setGoToMessageId(null)
+        setActiveParentMessageId(null);
+        activeParentMessageIdRef.current = null;
         stopStreamingMessage();
+        setLoadLastAgentConversationState(false);
     }
 
     const onHistoryButtonClick = () => {
@@ -262,8 +280,10 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
     );
 
     function onDeleteChat(id?: number) {
-        if (id) {
-            if (parentMessageIdRef.current && id === parentMessageIdRef.current) {
+        const activeParentId = Number(activeParentMessageIdRef.current)
+        const msgId = Number(id);
+        if (msgId) {
+            if (activeParentId && msgId === activeParentId) {
                 onNewChatButtonClick();
             }
         }
@@ -293,7 +313,7 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
                         onError={onError}
                     />
                     <CometChatMessageList
-                        key={`message-list-${startNewChat}-${goToMessage ? goToMessage?.getId() : 'none'}`}
+                        key={`message-list-${startNewChat}-${goToMessageId ?? 'none'}-${loadLastAgentConversationState}`}
                         user={user}
                         emptyView={emptyView || defaultEmptyView}
                         loadingView={loadingView}
@@ -315,15 +335,16 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
                         hideFlagMessageOption={true}
                         disableSoundForMessages={true}
                         textFormatters={[]}
-                        parentMessageId={goToMessage ? goToMessage?.getId() : undefined}
+                        parentMessageId={goToMessageId ?? undefined}
                         templates={templates}
+                        loadLastAgentConversation={loadLastAgentConversationState}
                     />
                     <MessageComposerView 
                         user={user}
-                        parentMessageId={parentMessageId}
+                        parentMessageId={activeParentMessageId}
                         startNewChat={startNewChat}
                         onError={onError}
-                        setParentMessageId={setParentMessageId}
+                        setParentMessageId={setActiveParentMessageId}
                         onSendButtonClick={onSendButtonClick}
                     />
 
@@ -336,15 +357,21 @@ const CometChatAIAssistantChatComponent = (props: AIAssistantChatProps) => {
                             hideNewChat={hideNewChat}
                             onNewChatClicked={onDeleteChat}
                             onMessageClicked={(message: CometChat.BaseMessage) => {
-                                setGoToMessage(message);
-                                setParentMessageId(message.getId());
-                                parentMessageIdRef.current = message.getId();
+                                setGoToMessageId(message.getId());
+                                setActiveParentMessageId(message.getId());
+                                activeParentMessageIdRef.current = message.getId();
                                 setIsSidebarOpen(false);
                                 stopStreamingMessage();
                             }}
                             onClose={() => {
                                 setIsSidebarOpen(false)
-                            }} user={user} />
+                            }} 
+                            onEmpty={() => {
+                                setLoadLastAgentConversationState(false);
+                            }}
+                            user={user} 
+                            loadLastAgentConversation={parentMessageId === undefined ? loadLastAgentConversationState : false}
+                        />
                     </div>
                 </div>
 

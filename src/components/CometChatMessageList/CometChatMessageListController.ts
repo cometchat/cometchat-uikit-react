@@ -60,6 +60,9 @@ export class MessageListManager {
                     builder.withParent(true)
                 }
             }
+            if (isAgentChat) {
+                builder.hideDeletedMessages(true)
+            }
             if (user) {
                 builder.setUID(user.getUid())
                 builder.guid = undefined;

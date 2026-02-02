@@ -32,7 +32,8 @@ function useCometChatMessageList(
 	showSmartReplies?:boolean,
 	goToMessageId?:string,
 	isAgentChat?:boolean,
-	messageRepliedTo?: string
+	messageRepliedTo?: string,
+	loadLastAgentConversation?: boolean
 
 ): void {
 		/**
@@ -94,9 +95,12 @@ function useCometChatMessageList(
 				setScrollListToBottom(true);
 				isOnBottomRef.current = true;
 				}
-				if(!isAgentChat || (isAgentChat &&  parentMessageId)){
-				fetchPreviousMessages();
-				}
+				if (
+          !isAgentChat ||
+          (isAgentChat && parentMessageId)
+        ) {
+          fetchPreviousMessages();
+        }
 				smartReplyViewRef.current = null;
 			}
 			return () => {
@@ -106,7 +110,7 @@ function useCometChatMessageList(
 		} catch (error) {
 			errorHandler(error,"useEffect")
 		}
-	}, [user, group,isAgentChat, messageRepliedTo]);
+	}, [user, group, isAgentChat, parentMessageId, loadLastAgentConversation, messageRepliedTo]);
 
 
 	useEffect(() => {

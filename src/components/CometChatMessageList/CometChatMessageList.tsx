@@ -351,6 +351,12 @@ interface MessageListProps {
    * @defaultValue `false`
    */
   hideFlagRemarkField?: boolean;
+
+  /**
+   * Loads the most recent existing agent conversation if one is available. Used to set state as loading when enabled.
+   * @default false
+   */
+  loadLastAgentConversation?: boolean;
 }
 
 const defaultProps: MessageListProps = {
@@ -403,7 +409,8 @@ const defaultProps: MessageListProps = {
   showScrollbar: false,
   isAgentChat: false,
   hideFlagMessageOption: false,
-  hideFlagRemarkField: false
+  hideFlagRemarkField: false,
+  loadLastAgentConversation: false,
 };
 
 const CometChatMessageList = (props: MessageListProps) => {
@@ -459,7 +466,8 @@ const CometChatMessageList = (props: MessageListProps) => {
     isAgentChat,
     hideFlagMessageOption,
     hideFlagRemarkField,
-    showMarkAsUnreadOption
+    showMarkAsUnreadOption,
+    loadLastAgentConversation,
   } = { ...defaultProps, ...props };
   /**
    * All the useState useCometChatMessageList are declaired here. These trigger a rerender when updated.
@@ -468,7 +476,9 @@ const CometChatMessageList = (props: MessageListProps) => {
   const [scrollListToBottom, setScrollListToBottom] = useState<boolean>(true);
   const [showToast, setShowToast] = useState<boolean>(false);
   const [messageListState, setMessageListState] = useState<States>(
-    isAgentChat && !parentMessageId ? States.empty : States.loading
+    isAgentChat && !parentMessageId ? 
+    loadLastAgentConversation ? States.loading : 
+    States.empty : States.loading
   );
   const [showCallScreen, setShowCallscreen] = useState<boolean>(false);
   const [showMessageInfoPopup, setShowMessageInfoPopup] = useState<boolean>(false);
@@ -855,8 +865,11 @@ const CometChatMessageList = (props: MessageListProps) => {
       try {
         const receiverId = message?.getReceiverId();
         const receiverType = message?.getReceiverType();
-        if (parentMessageIdRef.current) {
-          if (message.getParentMessageId() === parentMessageIdRef.current || message.getId() === parentMessageIdRef.current) {
+        const parentMsgId = Number(message.getParentMessageId());
+        const msgId = Number(message.getId());
+        const currentParentId = Number(parentMessageIdRef.current);
+        if (currentParentId) {
+          if (parentMsgId === currentParentId || msgId === currentParentId) {
             return true;
           }
         } else {
@@ -971,8 +984,11 @@ const CometChatMessageList = (props: MessageListProps) => {
         const receiverType = message?.getReceiverType();
         const senderId = message?.getSender()?.getUid();
         if (parentMessageIdRef.current) {
-          if (message.getParentMessageId() === parentMessageIdRef.current
-           || (isAgentChat && message.getId() === parentMessageIdRef.current)
+          const parentMsgId = Number(message.getParentMessageId());
+          const msgId = Number(message.getId());
+          const currentParentId = Number(parentMessageIdRef.current);
+          if (parentMsgId === currentParentId
+           || (isAgentChat && msgId === currentParentId)
           ) {
             return true;
           }
@@ -995,7 +1011,7 @@ const CometChatMessageList = (props: MessageListProps) => {
       } catch (error) {
         errorHandler(error, "isPartOfCurrentChatForSDKEvent")
       }
-    }, []
+    }, [isAgentChat, errorHandler]
   )
 
   /*
@@ -2237,7 +2253,7 @@ const CometChatMessageList = (props: MessageListProps) => {
         let shouldStartFromUnreadMessages = startFromUnreadMessages;
         
         // If no explicit goToMessageId/quotedMessageId and no lastReadMessageId, try to fetch from conversation
-        if  ((userRef.current || groupRef.current) && !currentConversationRef.current) {
+        if  ((userRef.current || groupRef.current) && !currentConversationRef.current && !isAgentChat) {
           conversationLastReadId = await getConversationAndSetLastReadMessage();
           if(currentConversationRef.current) {
             unreadMessageCount = (currentConversationRef.current as CometChat.Conversation).getUnreadMessageCount() || 0;
@@ -4639,6 +4655,9 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
  * @returns {States} - Returns the current state of the message list
  */
   const getCurrentMessageListState: () => States = useCallback(() => {
+    if (messageListState === States.loading) {
+      return States.loading;
+    }
     return messageListState !== States.error && messageList.length === 0 ? States.empty : messageListState;
   }, [messageListState, messageList]);
   /**
@@ -4762,7 +4781,8 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
     showSmartReplies,
     goToMessageId,
     isAgentChat,
-    messageRepliedTo
+    messageRepliedTo,
+    loadLastAgentConversation
   );
   return (
     <>

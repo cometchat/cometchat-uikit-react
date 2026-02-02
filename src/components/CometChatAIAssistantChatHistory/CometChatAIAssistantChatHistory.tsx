@@ -54,6 +54,17 @@ interface CometChatAIAssistantChatHistoryProps {
   */
    hideNewChat?: boolean;
 
+  /**
+   * Callback function triggered when the chat history is empty.
+   * Useful for handling UI state when no conversations exist.
+   */
+  onEmpty?: (() => void) | undefined;
+
+  /**
+   * Loads the most recent existing agent conversation if one is available, by clicking it.
+   * @default false
+   */
+  loadLastAgentConversation?: boolean;
 }
 
 const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryProps) => {
@@ -64,7 +75,9 @@ const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryP
     onClose,
     onMessageClicked,
     onNewChatClicked,
-    hideNewChat
+    hideNewChat,
+    loadLastAgentConversation = false,
+    onEmpty
   } = props;
 
   // State variables
@@ -127,7 +140,7 @@ const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryP
   /**
    * Function to fetch previous messages
    */
-  const fetchPreviousMessages = useCallback(() => {
+  const fetchPreviousMessages = useCallback((shouldLoadLastConversation: boolean = false) => {
     return new Promise<boolean>(async (resolve, reject) => {
       try {
         if (isFetchingRef.current) {
@@ -160,10 +173,15 @@ const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryP
 
           if (messages.length > 0) {
             await appendMessages(messages.reverse());
+            
+            if (shouldLoadLastConversation)
+              onMessageClicked?.(messages[0]);
+
             setListState(States.loaded);
           } else {
             if (messages.length == 0 && messagesCountRef.current === 0) {
               setListState(States.empty);
+              onEmpty?.();
             } else {
               setListState(States.loaded);
             }
@@ -181,7 +199,7 @@ const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryP
         reject(error);
       }
     });
-  }, [appendMessages, errorHandler]);
+  }, [appendMessages, errorHandler, onMessageClicked]);
 
   /**
    * Callback to be executed when the list is scrolled to the top
@@ -365,7 +383,7 @@ const CometChatAIAssistantChatHistory = (props: CometChatAIAssistantChatHistoryP
           messagesCountRef.current = 0;
           setMessageList([]);
           setListState(States.loading);
-          fetchPreviousMessages();
+          fetchPreviousMessages(loadLastAgentConversation);
         }
       } catch (error) {
         errorHandler(error, "useEffect - initialization");
