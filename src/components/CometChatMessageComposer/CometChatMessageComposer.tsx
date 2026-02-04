@@ -82,6 +82,12 @@ interface MessageComposerProps {
   initialComposerText?: string;
 
   /**
+   * The initial message to reply to when the component mounts.
+   * This allows setting the composer in reply mode on mount.
+   */
+  initialMessageToReply?: CometChat.BaseMessage | null;
+
+  /**
    * Disables the typing indicator for the current message composer.
    * @defaultValue `false`
    */
@@ -421,6 +427,7 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
     user,
     group,
     initialComposerText: initialText = "",
+    initialMessageToReply = null,
     onTextChange,
     onSendButtonClick,
     onSendButtonClickExtended,
@@ -460,7 +467,7 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
     text: initialText,
     addToMsgInputText: initialText,
     textMessageToEdit: null,
-    messageToReply: null,
+    messageToReply: initialMessageToReply,
     contentToDisplay: "none",
     loggedInUser: null,
     showPoll: false,
@@ -568,7 +575,7 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
   const userPropRef = useRefSync(user);
   const groupPropRef = useRefSync(group);
   const parentMessageIdPropRef = useRefSync(parentMessageId);
-  const messageToReplyRef = useRefSync<CometChat.BaseMessage| null>(null);
+  const messageToReplyRef = useRefSync<CometChat.BaseMessage| null>(initialMessageToReply);
   const onSendButtonClickPropRef = useRefSync(onSendButtonClick);
   const onSendButtonClickExtendedPropRef = useRefSync(onSendButtonClickExtended);
   const [smartRepliesView, setSmartRepliesView] = React.useState<React.ReactNode | null>(null);
