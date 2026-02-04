@@ -3,6 +3,7 @@ import {
   JSX,
   useCallback,
   useContext,
+  useEffect,
   useReducer,
   useRef,
   useState,
@@ -434,6 +435,7 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
   const loggedInUserRef = useRef<CometChat.User | null>(null);
   const fetchNextIdRef = useRef("");
   const [isFetchingMore, setIsFetchingMore] = useState<boolean>(false);
+  const [hasMoreMembers, setHasMoreMembers] = useState<boolean>(true);
 
   const groupPropRef = useRefSync(group);
   const errorHandler = useCometChatErrorHandler(onError);
@@ -459,6 +461,10 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
     },
     [dispatch]
   );
+
+  useEffect(() => {
+    setHasMoreMembers(true);
+  }, [state.searchText]);
 
   /**
    * Initiates a fetch request and appends the fetched group members to the `groupMemberList` state
@@ -487,6 +493,9 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
             setIsFetchingMore(false);
           }
           return;
+        }
+        if (groupMembers.length === 0) {
+          setHasMoreMembers(false);
         }
 
         dispatch({
@@ -1097,7 +1106,7 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
           headerView={headerView}
 
         />
-        {isFetchingMore && (
+        {isFetchingMore && hasMoreMembers && (
           <div className="cometchat-group-members__loading-more">
             <div className="cometchat-group-members__loading-more-icon" />
           </div>

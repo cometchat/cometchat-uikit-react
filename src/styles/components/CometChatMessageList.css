@@ -807,10 +807,10 @@
     align-items: center;
     padding: 5px 0;
     position: absolute;
-    top: 0;
+    top: var(--cc-loader-top, 48px);
     left: 0;
     right: 0;
-    z-index: 1;
+    z-index: 10;
 }
 
 .cometchat-message-list__older-messages-loader-icon {

@@ -224,7 +224,7 @@ function List<T>(props: ListProps<T>): JSX.Element {
     onSearchBarClicked,
     showShimmerOnTop = false,
     showScrollbar = false,
-    scrollToEnd = false
+    scrollToEnd = false,
   } = props;
   // Refs for DOM elements and other states
   const intersectionObserverRootRef = useRef<DivElementRef>(null);
