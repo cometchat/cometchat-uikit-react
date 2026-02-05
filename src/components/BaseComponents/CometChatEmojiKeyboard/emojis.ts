@@ -2195,6 +2195,10 @@ export const Emojis = [
           keywords: ["animal", "chicken", "bird"],
           char: "🐤"
         },
+        moose: {
+          keywords: ["animal", "moose", "deer", "elk", "antlers"],
+          char: "🫎"
+        },
         hatching_chick: {
           keywords: ["animal", "chicken", "egg", "born", "baby", "bird"],
           char: "🐣"
