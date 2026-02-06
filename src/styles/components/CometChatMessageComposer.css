@@ -448,6 +448,7 @@
 }
 .cometchat-message-composer__input-mobile{
     font: var( --cometchat-font-heading4-regular);
+    line-height: 1.5;
 }
 /**
  * Default styling for each options in actionsheet
