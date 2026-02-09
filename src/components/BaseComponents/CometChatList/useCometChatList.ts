@@ -15,6 +15,7 @@ type Args = {
     didTopObserverCallbackRunRef: React.MutableRefObject<boolean>,
     errorHandler: (error: unknown) => void,
     scrolledUpCallback?: (boolean?: boolean) => void,
+    observeScrollFromViewport?: boolean,
 };
 
 export function useCometChatList(args: Args) {
@@ -29,7 +30,8 @@ export function useCometChatList(args: Args) {
         scrollHeightTupleRef,
         didTopObserverCallbackRunRef,
         errorHandler,
-        scrolledUpCallback
+        scrolledUpCallback,
+        observeScrollFromViewport = false,
     } = args;
     useEffect(
         /**
@@ -54,7 +56,7 @@ export function useCometChatList(args: Args) {
 
                     didComponentScrollToBottomRef.current = false;
                 }
-                if (!relevantEntry.isIntersecting || stopCallingOnScrolledToBottomCallback || rootElement.scrollHeight <= rootElement.clientHeight) {
+                if (!relevantEntry.isIntersecting || stopCallingOnScrolledToBottomCallback || (!observeScrollFromViewport && rootElement.scrollHeight <= rootElement.clientHeight)) {
                     return;
                 }
                 stopCallingOnScrolledToBottomCallback = true;
@@ -67,13 +69,13 @@ export function useCometChatList(args: Args) {
                 stopCallingOnScrolledToBottomCallback = false;
 
             }
-            const options = { root: rootElement, threshold: 0.1 };
+            const options = { root: !observeScrollFromViewport ? rootElement : null, threshold: 0.1 };
             const observer = new IntersectionObserver(observerCallBack, options);
             observer.observe(targetElement);
             return () => {
                 observer.unobserve(targetElement);
             };
-        }, [errorHandler, didComponentScrollToBottomRef, intersectionObserverBottomTargetRef, intersectionObserverRootRef, onScrolledToBottomRef, scrolledUpCallback]);
+        }, [errorHandler, didComponentScrollToBottomRef, intersectionObserverBottomTargetRef, intersectionObserverRootRef, onScrolledToBottomRef, scrolledUpCallback, observeScrollFromViewport]);
 
     useEffect(
         /**

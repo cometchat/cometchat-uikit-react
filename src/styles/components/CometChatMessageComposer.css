@@ -187,6 +187,11 @@
 .cometchat-mention-list>.cometchat {
     border-radius: inherit;
 }
+
+.cometchat-mention-list .cometchat-users .cometchat-list{
+    max-height: 336px;
+}
+
 .cometchat-mention-list .cometchat-list .cometchat-list__header-title{
     display: none;
 }

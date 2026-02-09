@@ -185,6 +185,7 @@ export function CometChatUserMemberWrapper(props: MentionsProps) {
               onError={onError}
               disableLoadingState={true}
               emptyView={<></>}
+              observeScrollFromViewport={true}
             />
           )}
         </>

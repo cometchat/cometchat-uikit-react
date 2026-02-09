@@ -219,6 +219,19 @@ interface GroupMembersProps {
    * @defaultValue `false`
    */
     showScrollbar?: boolean;
+
+  /**
+   * @internal
+   * 
+   * Skips the scroll height check when triggering onScrolledToBottom callback in CometChatList.
+   * When true, the callback fires even if the list content fits within the list body container.
+   * Uses the screen/viewport as the intersection root instead of the list body,
+   * so the callback triggers when the bottom of the list becomes visible on screen.
+   * Useful when the list is embedded in a parent scrollable container.
+   *
+   * @defaultValue `false`
+   */
+  observeScrollFromViewport?: boolean;
 }
 
 type State = {
@@ -421,6 +434,7 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
     titleView,
     leadingView,
     showScrollbar = false,
+    observeScrollFromViewport = false,
   } = props;
 
   const [state, dispatch] = useReducer(stateReducer, {
@@ -1082,7 +1096,7 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
           errorView={getErrorView()}
           hideError={hideError}
           headerView={headerView}
-
+          observeScrollFromViewport={observeScrollFromViewport}
         />
         {getGroupMemberScopeChangeModal()}
       </div>

@@ -487,9 +487,7 @@ function stateReducer(state: State, action: Action): State {
             isAMessage(lastMessage) &&
             String(lastMessage.getId()) === targetMessageId
           ) {
-            return updateReadAt
-              ? !lastMessage.getReadAt()
-              : !lastMessage.getDeliveredAt();
+            return updateReadAt ? !lastMessage.getReadAt() : true;
           }
         }
         return false;

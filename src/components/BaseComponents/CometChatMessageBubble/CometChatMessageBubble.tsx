@@ -27,6 +27,7 @@ interface MessageBubbleProps {
   topMenuSize?: number,
   type?: string,
   category?: string,
+  toggleOptionsVisibility? : boolean
 };
 /**
  * React component for displaying different types of messages in the message list.
@@ -49,7 +50,8 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
     alignment = MessageBubbleAlignment.right,
     topMenuSize = 2,
     type, category,
-    setRef
+    setRef,
+    toggleOptionsVisibility
   } = props;
 
   /**Mapping message types and categories to specific class names
@@ -204,9 +206,11 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
   }
   /** Function to render the message options if they exist and the user is hovering */
   const getMessageOptions = () => {
-    const visibilityStyles = isHovering
-  ? { opacity: 1, pointerEvents: 'auto' as const }
-  : { opacity: 0, pointerEvents: 'none' as const };
+    const visibilityStyles =
+      isHovering && toggleOptionsVisibility
+        ? { opacity: 1, pointerEvents: "auto" as const }
+        : { opacity: 0, pointerEvents: "none" as const };
+
     var optionHeight = "fit-content";
     if (bodyViewRef.current) {
       const height = bodyViewRef.current.clientHeight;

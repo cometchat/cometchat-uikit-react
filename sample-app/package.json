@@ -1,16 +1,16 @@
 {
   "name": "sample-app",
-  "version": "6.2.5",
+  "version": "6.2.6",
   "description": "React App made using CometChat React v6 UI Kit.",
   "author": "CometChat",
   "private": true,
   "dependencies": {
     "@cometchat/calls-sdk-javascript": "^4.2.2",
     "@cometchat/chat-sdk-javascript": "^4.1.6",
-    "@cometchat/chat-uikit-react": "~6.3.8",
+    "@cometchat/chat-uikit-react": "~6.3.11",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-router-dom": "6.14.2",
+    "react-router-dom": "^6.30.3",
     "react-scripts": "5.0.1",
     "web-vitals": "2.1.4"
   },

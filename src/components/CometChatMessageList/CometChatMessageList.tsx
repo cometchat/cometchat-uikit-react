@@ -37,7 +37,7 @@ import ErrorStateIconDark from '../../assets/list_error_state_icon_dark.svg'
 import { CometChatUIEvents, IDialog, IPanel, IShowOngoingCall } from "../../events/CometChatUIEvents";
 import { CometChatCallEvents } from "../../events/CometChatCallEvents";
 import { CometChatMessageEvents, IMessages } from "../../events/CometChatMessageEvents";
-import { CometChatGroupEvents, IGroupLeft, IGroupMemberAdded, IGroupMemberKickedBanned, IGroupMemberScopeChanged } from "../../events/CometChatGroupEvents";
+import { CometChatGroupEvents, IGroupLeft, IGroupMemberAdded, IGroupMemberKickedBanned, IGroupMemberScopeChanged, IGroupMemberUnBanned } from "../../events/CometChatGroupEvents";
 import CometChatToast from "../BaseComponents/CometChatToast/CometChatToast";
 import { createMessageCopyFromBaseMessage, fireClickEvent, getThemeMode, sanitizeCalendarObject, useDebouncedCallback } from "../../utils/util";
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
@@ -591,12 +591,19 @@ const CometChatMessageList = (props: MessageListProps) => {
         groupRef.current = groupMember.kickedFrom;
       }
     })
+    let ccGroupMemberUnbanned = CometChatGroupEvents.ccGroupMemberUnbanned.subscribe((groupMember) => {
+      if (groupMember.unbannedFrom.getGuid() === groupRef.current?.getGuid?.()) {
+        groupRef.current = groupMember.unbannedFrom;
+      }
+    })
+    
     return () => {
       ccOwnershipChanged?.unsubscribe();
       ccGroupMemberScopeChanged?.unsubscribe();
       ccGroupMemberAdded?.unsubscribe();
       ccGroupMemberBanned?.unsubscribe();
       ccGroupMemberKicked?.unsubscribe();
+      ccGroupMemberUnbanned?.unsubscribe();
     }
   }), [groupRef]);
 
@@ -3624,6 +3631,7 @@ const CometChatMessageList = (props: MessageListProps) => {
       let ccMessageSent: Subscription;
       let ccGroupMemberAdded: Subscription;
       let ccGroupMemberBanned: Subscription;
+      let ccGroupMemberUnBanned: Subscription
       let ccGroupMemberKicked: Subscription;
       let ccGroupMemberScopeChanged: Subscription;
       let ccGroupLeft: Subscription;
@@ -3657,6 +3665,7 @@ const CometChatMessageList = (props: MessageListProps) => {
       // let onAIToolResultReceived:Subscription;
       // let onAIToolArgumentsReceived:Subscription;
       let onAIAssistantMessageReceived: Subscription;
+      
       ccShowDialog = CometChatUIEvents.ccShowDialog.subscribe(
         (data: IDialog) => {
           imageModerationDialogRef.current = data.child;
@@ -3830,6 +3839,13 @@ const CometChatMessageList = (props: MessageListProps) => {
               groupActionMessageReceived(item.message, item.kickedFrom);
             }
           );
+        ccGroupMemberUnBanned = CometChatGroupEvents.ccGroupMemberUnbanned.subscribe(
+            (item : IGroupMemberUnBanned) => {
+              if (item.message) {
+                groupActionMessageReceived(item.message, item.unbannedFrom);
+              }
+            }
+          );
         ccGroupMemberKicked =
           CometChatGroupEvents.ccGroupMemberKicked.subscribe(
             (item: IGroupMemberKickedBanned) => {
@@ -3993,6 +4009,7 @@ const CometChatMessageList = (props: MessageListProps) => {
           ccMessageSent?.unsubscribe();
           ccGroupMemberAdded?.unsubscribe();
           ccGroupMemberBanned?.unsubscribe();
+          ccGroupMemberUnBanned?.unsubscribe();
           ccGroupMemberKicked?.unsubscribe();
           ccGroupMemberScopeChanged?.unsubscribe();
           ccGroupLeft?.unsubscribe();
@@ -4442,6 +4459,24 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
   };
 
   /**
+   * Determines whether message options (react, reply, etc.) should be visible for a given message.
+   * Returns false if the message is currently being moderated (pending status) to prevent
+   * layout shifts while moderation is in progress.
+   * 
+   * @param {CometChat.BaseMessage} item - The message to check visibility for
+   * @returns {boolean} - Returns false if moderation status is "pending", true otherwise
+   */
+  const getOptionsVisibility = (item: CometChat.BaseMessage): boolean => {
+    if (item instanceof CometChat.TextMessage || item instanceof CometChat.MediaMessage) {
+      const moderationStatus = item.getModerationStatus();
+      if (moderationStatus === CometChatUIKitConstants.moderationStatus.pending) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
  * Function to generate a message bubble
  * @param {CometChat.BaseMessage} item - The message for which the bubble needs to be created
  * @param {number} i - The index of the message
@@ -4470,6 +4505,7 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
           type={item.getDeletedAt() ? CometChatUIKitConstants.MessageTypes.delete : item.getType()}
           category={item.getDeletedAt() ? CometChatUIKitConstants.MessageCategory.action : item.getCategory()}
           topMenuSize={computeQuickOptionsCount(item, quickOptionsCount)}
+          toggleOptionsVisibility={getOptionsVisibility(item)}
         ></CometChatMessageBubble>
       );
     },

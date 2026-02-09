@@ -190,6 +190,19 @@ interface ListProps<T> {
    * 
    */
   scrollToEnd?:boolean;
+
+  /**
+   * @internal
+   * 
+   * Skips the scroll height check when triggering onScrolledToBottom callback in CometChatList.
+   * When true, the callback fires even if the list content fits within the list body container.
+   * Uses the screen/viewport as the intersection root instead of the list body,
+   * so the callback triggers when the bottom of the list becomes visible on screen.
+   * Useful when the list is embedded in a parent scrollable container.
+   *
+   * @defaultValue `false`
+   */
+  observeScrollFromViewport?: boolean;
 }
 /**
  * Renders a list component that can display a title, search bar,
@@ -224,7 +237,8 @@ function List<T>(props: ListProps<T>): JSX.Element {
     onSearchBarClicked,
     showShimmerOnTop = false,
     showScrollbar = false,
-    scrollToEnd = false
+    scrollToEnd = false,
+    observeScrollFromViewport = false
   } = props;
   // Refs for DOM elements and other states
   const intersectionObserverRootRef = useRef<DivElementRef>(null);
@@ -425,7 +439,8 @@ function List<T>(props: ListProps<T>): JSX.Element {
     scrollHeightTupleRef,
     didTopObserverCallbackRunRef,
     errorHandler,
-    scrolledUpCallback
+    scrolledUpCallback,
+    observeScrollFromViewport
   });
   /**
  * Renders the title view if the title prop is provided.

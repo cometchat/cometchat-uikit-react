@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import unbanIconURL from "../../assets/close.svg";
 import "../../styles/CometChatBannedMembers/CometChatBannedMembers.css";
-import { CometChatButton, CometChatGroupEvents, CometChatList, CometChatListItem, CometChatUIKitLoginListener, IGroupMemberUnBanned, States, getLocalizedString } from "@cometchat/chat-uikit-react";
+import { CometChatButton, CometChatGroupEvents, CometChatList, CometChatListItem, CometChatUIKitLoginListener, IGroupMemberUnBanned, States, getLocalizedString, CometChatUIKitConstants, CometChatUIKitUtility} from "@cometchat/chat-uikit-react";
 
 interface bannedMembersProp {
     group: CometChat.Group;
@@ -29,27 +29,61 @@ export const CometChatBannedMembers = (props: bannedMembersProp) => {
         );
     }, [group]);
 
-    const unbanMember = useCallback(async (bannedMember: CometChat.User): Promise<void> => {
+    const unbanMember = useCallback(
+      async (bannedMember: CometChat.User): Promise<void> => {
         try {
-            CometChat.unbanGroupMember(group.getGuid(), bannedMember.getUid()).then(() => {
-                const unbannedUser: IGroupMemberUnBanned = {
-                    unbannedUser: bannedMember,
-                    unbannedBy: CometChatUIKitLoginListener.getLoggedInUser()!,
-                    unbannedFrom: group,
-                }
-                CometChatGroupEvents.ccGroupMemberUnbanned.next(unbannedUser);
-                setBannedMembers((prevState) => {
-                    const filteredMembers = prevState.filter((filterMember) => {
-                        return bannedMember.getUid() !== filterMember.getUid();
-                    })
-                    return filteredMembers;
-                })
+          CometChat.unbanGroupMember(
+            group.getGuid(),
+            bannedMember.getUid(),
+          ).then(() => {
+            const loggedInUser = CometChatUIKitLoginListener.getLoggedInUser()!;
+
+            const actionMessage = new CometChat.Action(
+              group.getGuid(),
+              CometChatUIKitConstants.MessageTypes.groupMember,
+              CometChatUIKitConstants.MessageReceiverType.group,
+              CometChatUIKitConstants.MessageCategory
+                .action as CometChat.MessageCategory,
+            );
+            actionMessage.setAction(
+              CometChatUIKitConstants.groupMemberAction.UNBANNED,
+            );
+            actionMessage.setActionBy(
+              CometChatUIKitUtility.clone(loggedInUser),
+            );
+            actionMessage.setActionFor(CometChatUIKitUtility.clone(group));
+            actionMessage.setActionOn(
+              CometChatUIKitUtility.clone(bannedMember),
+            );
+            actionMessage.setReceiver(CometChatUIKitUtility.clone(group));
+            actionMessage.setSender(CometChatUIKitUtility.clone(loggedInUser));
+            actionMessage.setConversationId("group_" + group.getGuid());
+            actionMessage.setMuid(CometChatUIKitUtility.ID());
+            actionMessage.setMessage(
+              `${loggedInUser.getName()} unbanned ${bannedMember.getName()}`,
+            );
+            actionMessage.setSentAt(CometChatUIKitUtility.getUnixTimestamp());
+
+            const unbannedUser: IGroupMemberUnBanned = {
+              message: actionMessage,
+              unbannedUser: bannedMember,
+              unbannedBy: loggedInUser,
+              unbannedFrom: group,
+            };
+            CometChatGroupEvents.ccGroupMemberUnbanned.next(unbannedUser);
+            setBannedMembers((prevState) => {
+              const filteredMembers = prevState.filter((filterMember) => {
+                return bannedMember.getUid() !== filterMember.getUid();
+              });
+              return filteredMembers;
             });
+          });
+        } catch (error) {
+          console.log(error);
         }
-        catch (error) {
-            console.log(error);
-        }
-    }, [group]);
+      },
+      [group],
+    );
 
     function getDefaultListTailView(bannedMember: CometChat.User): JSX.Element | null {
         return (

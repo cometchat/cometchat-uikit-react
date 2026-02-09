@@ -1,3 +1,13 @@
+## [6.2.6] - 09-02-2026
+## New
+- None
+
+## Enhancements
+- None
+
+## Fixes
+- Fixed an issue where the “unbanned” system message did not appear in real time in the message list.
+
 ## [6.2.5] - 19-01-2026
 ## New
 - None
