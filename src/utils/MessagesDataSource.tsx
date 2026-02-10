@@ -182,6 +182,9 @@ export class MessagesDataSource implements DataSource {
     if (!additionalParams?.hideReplyOption) {
       messageOptionList.push(this.getReplyOption());
     }
+    if (group && !isSentByMe && !additionalParams?.hideMessagePrivatelyOption) {
+      messageOptionList.push(this.getSendMessagePrivatelyOption());
+    }
     if (!messageObject.getParentMessageId() && !additionalParams?.hideReplyInThreadOption) {
       messageOptionList.push(this.getReplyInThreadOption());
     }
@@ -196,9 +199,6 @@ export class MessagesDataSource implements DataSource {
     }
     if ((isSentByMe || (!isParticipant && group)) && !additionalParams?.hideDeleteMessageOption)
       messageOptionList.push(this.getDeleteOption());
-    if (group && !isSentByMe && !additionalParams?.hideMessagePrivatelyOption) {
-      messageOptionList.push(this.getSendMessagePrivatelyOption());
-    }
     return messageOptionList;
   }
   getIsSentByMe(message: CometChat.BaseMessage) {

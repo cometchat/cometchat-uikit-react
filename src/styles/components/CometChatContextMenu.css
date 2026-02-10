@@ -56,11 +56,11 @@
 .cometchat-menu-list__menu {
     display: flex;
     height: 48px;
-    width: 100%;
+    /* width: 100%; */
     align-items: center;
     gap: var(--cometchat-padding-2, 12px);
     align-self: stretch;
-    background: var(--cometchat-background-color-01, #FFF);
+    /* background: var(--cometchat-background-color-01, #FFF); */
 }
 
 .cometchat-menu-list__main-menu-item-icon {
