@@ -866,9 +866,10 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       isParticipant = true;
     }
 
-    if (moderationStatus === CometChatUIKitConstants.moderationStatus.pending) {
-      return [];
-    } else if (moderationStatus === CometChatUIKitConstants.moderationStatus.disapproved) {
+    // if (moderationStatus === CometChatUIKitConstants.moderationStatus.pending) {
+    //   return [];
+    // } else 
+      if (moderationStatus === CometChatUIKitConstants.moderationStatus.disapproved) {
       let isSentByMe: boolean = this.isSentByMe(loggedInUser, messageObject);
       _optionList = [];
       if ((isSentByMe || (!isParticipant && group)) && !additionalParams?.hideDeleteMessageOption)

@@ -28,11 +28,11 @@ export class MessageReceiptUtils {
         return Receipts.error;
       }
       // Show waiting if moderation is pending
-      else if (
-        moderationStatus ===  CometChatUIKitConstants.moderationStatus.pending
-      ) {
-        return Receipts.wait;
-      }
+      // else if (
+      //   moderationStatus ===  CometChatUIKitConstants.moderationStatus.pending
+      // ) {
+      //   return Receipts.wait;
+      // }
     }
 
     const hasError =
