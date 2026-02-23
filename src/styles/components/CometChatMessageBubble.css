@@ -69,7 +69,7 @@
     margin-right: auto;
 }
 .cometchat-message-bubble__panel-mobile .cometchat-message-bubble__body {
-    width: fit-content;
+    /* width: fit-content; */
     max-inline-size: 92vw;
 }
 
