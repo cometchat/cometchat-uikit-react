@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { CometChatLocalize } from "../../../resources/CometChatLocalize/cometchat-localize";
 import { CalendarObject } from "../../../utils/CalendarObject";
 interface DateProps {
@@ -26,11 +26,20 @@ const CometChatDate = (props: DateProps) => {
         
     },[calendarObject,timestamp])
 
+    // Generate ISO date string for machine-readable datetime attribute
+    const isoDateTime = useMemo(() => {
+        try {
+            return new Date(timestamp * 1000).toISOString();
+        } catch {
+            return undefined;
+        }
+    }, [timestamp]);
+
     return (
         <div className="cometchat">
-            <div className="cometchat-date">
+            <time className="cometchat-date" dateTime={isoDateTime}>
                 {getFormattedDate()}
-            </div>
+            </time>
         </div>
     )
 }

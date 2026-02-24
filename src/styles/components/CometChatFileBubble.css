@@ -64,6 +64,23 @@
 }
 
 /* Download icon for the tail view (right side of the file bubble) */
+.cometchat-file-bubble__tail-view-download-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.cometchat-file-bubble__tail-view-download-wrapper:focus {
+    outline: 2px solid var(--cometchat-primary-color);
+    outline-offset: 2px;
+}
+
+.cometchat-file-bubble-outgoing .cometchat-file-bubble__tail-view-download-wrapper:focus {
+    outline-color: var(--cometchat-static-white);
+}
+
 .cometchat-file-bubble__tail-view-download {
     mask: url("../../assets/download.svg") center center no-repeat;
     -webkit-mask: url("../../assets/download.svg") center center no-repeat;
@@ -75,7 +92,6 @@
     mask-size: contain;
     -webkit-mask-size: contain;
     background: var(--cometchat-primary-color);
-    cursor: pointer;
 }
 
 /* Adjustments for incoming file bubble name text color */
@@ -123,6 +139,28 @@
     transform: rotate(-90deg);
 }
 
+/* Wrapper for stop download icon with focus outline */
+.cometchat-file-bubble__tail-view-download-stop-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.cometchat-file-bubble__tail-view-download-stop-wrapper:focus {
+    outline: 2px solid var(--cometchat-primary-color);
+    outline-offset: 1px;
+}
+
+.cometchat-file-bubble-outgoing .cometchat-file-bubble__tail-view-download-stop-wrapper:focus {
+    outline-color: var(--cometchat-static-white);
+}
+
 /* Close icon in the progress view to stop/cancel download */
 .cometchat-file-bubble__tail-view-download-stop {
     mask: url("../../assets/close.svg") center center no-repeat;
@@ -133,13 +171,8 @@
     height: 12px;
     justify-content: center;
     align-items: center;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     -webkit-mask-size: contain;
     mask-size: contain;
-    cursor: pointer;
 }
 
 /* Background circle for the download progress */

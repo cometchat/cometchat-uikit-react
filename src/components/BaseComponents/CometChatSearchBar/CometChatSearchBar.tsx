@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useCometChatSearchBar } from "./useCometChatSearchBar";
 import {getLocalizedString} from "../../../resources/CometChatLocalize/cometchat-localize";
 
@@ -9,6 +10,8 @@ interface SearchBarProps {
     placeholderText?: string;
     /* callback which is triggered after value of the input is changed. */
     onChange?: (input: { value?: string }) => void;
+    /** Accessible label for the search input */
+    ariaLabel?: string;
 }
 
 /*
@@ -21,18 +24,31 @@ const CometChatSearchBar = (props: SearchBarProps) => {
         searchText = "",
         placeholderText = getLocalizedString("search_placeholder"),
         onChange = ({ value = "" }) => { },
+        ariaLabel,
     } = props;
 
     const { searchValue, onInputChange } = useCometChatSearchBar({ searchText, onChange });
+    const searchId = useId();
 
     return (
         <div className="cometchat" style={{
             height: "inherit",
             width: "inherit"
         }}>
-            <div className="cometchat-search-bar">
-                <div className="cometchat-search-bar__icon"></div>
-                <input className="cometchat-search-bar__input" onChange={onInputChange} placeholder={placeholderText} value={searchValue}></input>
+            <div className="cometchat-search-bar" role="search">
+                <div className="cometchat-search-bar__icon" aria-hidden="true"></div>
+                <label htmlFor={searchId} className="cometchat-visually-hidden">
+                    {ariaLabel || placeholderText || "Search"}
+                </label>
+                <input
+                    id={searchId}
+                    type="search"
+                    className="cometchat-search-bar__input"
+                    onChange={onInputChange}
+                    placeholder={placeholderText}
+                    value={searchValue}
+                    aria-label={ariaLabel || placeholderText || "Search"}
+                />
             </div>
         </div>
     )

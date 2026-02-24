@@ -649,7 +649,7 @@ export function CometChatUsers(props: UsersProps) {
       return (
         <div className="cometchat-users__empty-state-view">
           <div className="cometchat-users__empty-state-view-icon">
-            <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="" />
+            <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="No users found" />
           </div>
           <div className="cometchat-users__empty-state-view-body">
             <div className="cometchat-users__empty-state-view-body-title">{getLocalizedString("user_empty_title")}</div>
@@ -681,7 +681,7 @@ export function CometChatUsers(props: UsersProps) {
       return (
         <div className="cometchat-users__error-state-view">
           <div className="cometchat-users__error-state-view-icon">
-            <img src={isDarkMode ? errorIconDark : errorIcon} alt="" />
+            <img src={isDarkMode ? errorIconDark : errorIcon} alt="Error loading users" />
           </div>
           <div className="cometchat-users__error-state-view-body">
             <div className="cometchat-users__error-state-view-body-title">{getLocalizedString("user_error_title")}</div>

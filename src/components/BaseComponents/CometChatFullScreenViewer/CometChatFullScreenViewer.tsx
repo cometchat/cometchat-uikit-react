@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CometChatListItem } from '../CometChatListItem/CometChatListItem';
 import { CometChatLocalize } from '../../../resources/CometChatLocalize/cometchat-localize';
 import {getLocalizedString} from '../../../resources/CometChatLocalize/cometchat-localize';
@@ -45,6 +45,54 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
     const [image, setImage] = useState<string>();
     const [isDownloading, setIsDownloading] = useState(true);
     const [progress, setProgress] = useState(0);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+    // Focus the close button when the viewer opens
+    useEffect(() => {
+        closeButtonRef.current?.focus();
+    }, []);
+
+    // Focus trap: keep focus inside the full screen viewer
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                ccCloseClicked?.();
+                return;
+            }
+
+            if (e.key !== 'Tab') return;
+
+            const container = containerRef.current;
+            if (!container) return;
+
+            const focusableElements = container.querySelectorAll<HTMLElement>(
+                'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+
+            if (focusableElements.length === 0) return;
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey) {
+                // Shift+Tab: if on first element, wrap to last
+                if (document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement.focus();
+                }
+            } else {
+                // Tab: if on last element, wrap to first
+                if (document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement.focus();
+                }
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [ccCloseClicked]);
 
     useEffect(() => {
         const updateImage = () => {
@@ -167,7 +215,13 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
       }
     return (
         <div className="cometchat">
-            <div className="cometchat-fullscreen-viewer">
+            <div
+                className="cometchat-fullscreen-viewer"
+                ref={containerRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label={getLocalizedString("message_list_full_screen_viewer")}
+            >
                 <div className="cometchat-fullscreen-viewer__header">
                     <div className='cometchat-fullscreen-viewer__header-item'>
                         <CometChatListItem
@@ -190,10 +244,15 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
                 </div>
 
                 <button
-                    className="cometchat-fullscreen-viewer__close-button"
+                    ref={closeButtonRef}
+                    className="cometchat-fullscreen-viewer__close-button-wrapper"
                     onClick={handleCloseClick}
                     onTouchEnd={handleCloseClick}
-                />
+                    aria-label="Close full screen viewer"
+                    type="button"
+                >
+                    <span className="cometchat-fullscreen-viewer__close-button-icon" aria-hidden="true" />
+                </button>
 
 
             </div>

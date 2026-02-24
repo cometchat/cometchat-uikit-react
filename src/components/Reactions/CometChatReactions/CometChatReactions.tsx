@@ -259,16 +259,17 @@ export const CometChatReactions: React.FC<ReactionsProps> = ({
         return (
             <button
                 className={reaction?.getReactedByMe() ? "cometchat-reactions__reaction-you" : "cometchat-reactions__reaction"}
+                aria-label={`Reacted with ${reaction.getReaction()} ${reaction.getCount()} times${reaction?.getReactedByMe() ? ', you reacted' : ''}`}
                 onClick={() => {
                     if (onReactionClick) {
                         onReactionClick(reaction, messageObject);
                     }
                 }}
             >
-                <span className="cometchat-reactions__reaction-emoji">
+                <span className="cometchat-reactions__reaction-emoji" aria-hidden="true">
                     {reaction.getReaction()}
                 </span>
-                <span className="cometchat-reactions__reaction-count">
+                <span className="cometchat-reactions__reaction-count" aria-hidden="true">
                     {reaction.getCount()}
                 </span>
             </button>

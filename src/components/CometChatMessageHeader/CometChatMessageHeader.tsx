@@ -194,7 +194,7 @@ export const CometChatMessageHeader = (props: MessageHeaderProps) => {
         showBackButton = false,
         showSearchOption = false,
         onSearchOptionClicked = () => {},
-        onItemClick = () => {},
+        onItemClick,
         panelType,
         mobilePanelBackgroundColor
     } = props;
@@ -559,7 +559,7 @@ export const CometChatMessageHeader = (props: MessageHeaderProps) => {
      * Otherwise, it checks if the user is blocked and returns a default subtitle if not blocked.
      */
     const getSubtitleView = useCallback(() => {
-        try {
+       try {
             if (subtitleView) {
                 return subtitleView;
             }
@@ -603,11 +603,25 @@ export const CometChatMessageHeader = (props: MessageHeaderProps) => {
 
             if (panelType?.toLowerCase() === "mobile") {
                 return (
-                    <div onClick={() => {
-                        if (onBack) {
-                            onBack()
-                        }
-                    }} className="cometchat-message-header__back-button_mobile_app">
+                    <div
+                        onClick={() => {
+                            if (onBack) {
+                                onBack();
+                            }
+                        }}
+                        className="cometchat-message-header__back-button_mobile_app-wrapper"
+                        role="button"
+                        aria-label="Back"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                                if (onBack) {
+                                    onBack();
+                                }
+                            }
+                        }}
+                    >
+                        <div className="cometchat-message-header__back-button_mobile_app" />
                     </div>
                 )
             }

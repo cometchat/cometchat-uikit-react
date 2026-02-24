@@ -1962,7 +1962,7 @@ export function CometChatConversations(props: ConversationsProps) {
     return (
       <div className="cometchat-conversations__error-state-view">
         <div className="cometchat-conversations__error-state-view-icon">
-          <img src={isDarkMode ? errorIconDark : errorIcon} alt="" />
+          <img src={isDarkMode ? errorIconDark : errorIcon} alt="Error loading conversations" />
         </div>
         <div className="cometchat-conversations__error-state-view-body">
           <div className="cometchat-conversations__error-state-view-body-title">

@@ -56,7 +56,7 @@
 .cometchat-menu-list__menu {
     display: flex;
     height: 48px;
-    /* width: 100%; */
+    width: 100%;
     align-items: center;
     gap: var(--cometchat-padding-2, 12px);
     align-self: stretch;
@@ -106,6 +106,9 @@
     border-radius: var(--cometchat-radius-max, 1000px);
     background: var(--cometchat-background-color-01, #FFF);
     box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+    border: none;
+    padding: 0;
+    cursor: pointer;
 }
 
 .cometchat-menu-list__sub-menu-icon {
@@ -123,4 +126,37 @@
     align-items: center;
     gap: var(--cometchat-padding-2, 8px);
     align-self: stretch;
+}
+
+/* Focus styles for keyboard accessibility - only show on Tab focus, not click */
+.cometchat-menu-list__main-menu-item:focus-visible {
+    outline: 2px solid var(--cometchat-primary-color, #6852D6);
+    outline-offset: 2px;
+}
+
+.cometchat-menu-list__sub-menu-list-item:focus-visible {
+    outline: none;
+    background: var(--cometchat-primary-color-light, #F3F0FF);
+    box-shadow: inset 2px 0 0 var(--cometchat-primary-color, #6852D6);
+}
+
+.cometchat-menu-list__sub-menu:focus-visible {
+    outline: 2px solid var(--cometchat-primary-color, #6852D6);
+    outline-offset: 2px;
+}
+
+/* Remove outline on mouse click focus */
+.cometchat-menu-list__main-menu-item:focus:not(:focus-visible),
+.cometchat-menu-list__sub-menu-list-item:focus:not(:focus-visible),
+.cometchat-menu-list__sub-menu:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+    .cometchat-menu-list__main-menu-item:focus-visible,
+    .cometchat-menu-list__sub-menu-list-item:focus-visible,
+    .cometchat-menu-list__sub-menu:focus-visible {
+        outline: 2px solid CanvasText;
+    }
 }

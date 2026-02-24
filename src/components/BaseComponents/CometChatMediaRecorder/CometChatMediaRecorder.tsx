@@ -34,6 +34,8 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
     const permissionProbeStreamRef = useRef<MediaStream | null>(null);
     const isReactNative = useRef<boolean>(false);
     const permissionRequestPending = useRef<boolean>(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const previousFocusRef = useRef<HTMLElement | null>(null);
 
     const stopStreamTracks = (stream?: MediaStream | null) => {
         if (!stream) return;
@@ -397,11 +399,79 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         }
     }, [permissionState, hasError, mediaPreviewUrl, isRecording, autoRecording]);
 
+    // Store previous focus and auto-focus first interactive element on mount
+    useEffect(() => {
+        previousFocusRef.current = document.activeElement as HTMLElement;
+        
+        // Focus first interactive element
+        const container = containerRef.current;
+        if (container) {
+            const firstFocusable = container.querySelector<HTMLElement>(
+                'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+            firstFocusable?.focus();
+        }
+
+        return () => {
+            // Restore focus when unmounting
+            previousFocusRef.current?.focus();
+        };
+    }, []);
+
+    // Focus trap: keep focus inside the recorder and handle Escape
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCloseRecording();
+                return;
+            }
+
+            if (e.key !== 'Tab') return;
+
+            const container = containerRef.current;
+            if (!container) return;
+
+            const focusableElements = container.querySelectorAll<HTMLElement>(
+                'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [role="button"]:not([aria-disabled="true"])'
+            );
+
+            if (focusableElements.length === 0) return;
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey) {
+                // Shift+Tab: if on first element, wrap to last
+                if (document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement.focus();
+                }
+            } else {
+                // Tab: if on last element, wrap to first
+                if (document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement.focus();
+                }
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     return (
-        <div className="cometchat" style={{
-            height: "inherit",
-            width: "fit-content"
-        }}>
+        <div
+            className="cometchat"
+            ref={containerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={getLocalizedString("media_recorder_title") || "Audio recorder"}
+            style={{
+                height: "inherit",
+                width: "fit-content"
+            }}
+        >
             {hasError ? <div className="cometchat-media-recorder__error">
                 <div className="cometchat-media-recorder__error-icon-wrapper">
                     <div className="cometchat-media-recorder__error-icon">
@@ -436,35 +506,71 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
                             </div>
                         </div>
                     )}
-                    <div className="cometchat-media-recorder__recording-control">
+                    <div className="cometchat-media-recorder__recording-control" role="group" aria-label="Recording controls">
                         {isRecording ? (
                             <>
                                 <div
                                     className="cometchat-media-recorder__recording-control-delete"
                                     onClick={handleCloseRecording}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="Delete recording"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleCloseRecording();
+                                        }
+                                    }}
                                 >
-                                    <div className="cometchat-media-recorder__recording-control-delete-icon" />
+                                    <div className="cometchat-media-recorder__recording-control-delete-icon" aria-hidden="true" />
                                 </div>
                                 {isPaused ?
                                     <div
                                         className="cometchat-media-recorder__recording-control-record"
                                         onClick={handleStartRecording}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label="Resume recording"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handleStartRecording();
+                                            }
+                                        }}
                                     >
-                                        <div className="cometchat-media-recorder__recording-control-record-icon" />
+                                        <div className="cometchat-media-recorder__recording-control-record-icon" aria-hidden="true" />
                                     </div>
                                     :
                                     <div
                                         className="cometchat-media-recorder__recording-control-pause"
                                         onClick={handlePauseRecording}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label="Pause recording"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handlePauseRecording();
+                                            }
+                                        }}
                                     >
-                                        <div className="cometchat-media-recorder__recording-control-pause-icon" />
+                                        <div className="cometchat-media-recorder__recording-control-pause-icon" aria-hidden="true" />
                                     </div>
                                 }
                                 <div
                                     className="cometchat-media-recorder__recording-control-stop"
                                     onClick={handleStopRecording}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="Stop recording"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleStopRecording();
+                                        }
+                                    }}
                                 >
-                                    <div className="cometchat-media-recorder__recording-control-stop-icon" />
+                                    <div className="cometchat-media-recorder__recording-control-stop-icon" aria-hidden="true" />
                                 </div>
                             </>
                         ) : (
@@ -472,20 +578,47 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
                                 <div
                                     className="cometchat-media-recorder__recording-control-delete"
                                     onClick={handleCloseRecording}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="Cancel recording"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleCloseRecording();
+                                        }
+                                    }}
                                 >
-                                    <div className="cometchat-media-recorder__recording-control-delete-icon" />
+                                    <div className="cometchat-media-recorder__recording-control-delete-icon" aria-hidden="true" />
                                 </div>
                                 <div
                                     className={`cometchat-media-recorder__recording-control-record ${hasError ? "cometchat-media-recorder__recording-control-error" : ""}`}
                                     onClick={handleStartRecording}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="Start recording"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleStartRecording();
+                                        }
+                                    }}
                                 >
-                                    <div className={`cometchat-media-recorder__recording-control-record-icon`} />
+                                    <div className={`cometchat-media-recorder__recording-control-record-icon`} aria-hidden="true" />
                                 </div>
                                 <div
                                     className="cometchat-media-recorder__recording-control-stop"
                                     onClick={handleStopRecording}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="Stop recording"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleStopRecording();
+                                        }
+                                    }}
                                 >
-                                    <div className="cometchat-media-recorder__recording-control-stop-icon" />
+                                    <div className="cometchat-media-recorder__recording-control-stop-icon" aria-hidden="true" />
                                 </div>
                             </>
                         )}
@@ -494,24 +627,51 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
                 ) : (
                     <div className="cometchat-media-recorder__recorded">
                         <CometChatAudioBubble src={mediaPreviewUrl} isSentByMe={true} />
-                        <div className="cometchat-media-recorder__recorded-control">
+                        <div className="cometchat-media-recorder__recorded-control" role="group" aria-label="Recording actions">
                             <div
                                 className="cometchat-media-recorder__recorded-control-delete"
                                 onClick={handleCloseRecording}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Delete recording"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleCloseRecording();
+                                    }
+                                }}
                             >
-                                <div className="cometchat-media-recorder__recorded-control-delete-icon" />
+                                <div className="cometchat-media-recorder__recorded-control-delete-icon" aria-hidden="true" />
                             </div>
                             <div
                                 className="cometchat-media-recorder__recorded-control-send"
                                 onClick={handleSubmitRecording}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Send recording"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleSubmitRecording();
+                                    }
+                                }}
                             >
-                                <div className="cometchat-media-recorder__recorded-control-send-icon" />
+                                <div className="cometchat-media-recorder__recorded-control-send-icon" aria-hidden="true" />
                             </div>
                             <div
                                 className="cometchat-media-recorder__recorded-control-record"
                                 onClick={handleStartRecording}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Record new"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleStartRecording();
+                                    }
+                                }}
                             >
-                                <div className="cometchat-media-recorder__recorded-control-record-icon" />
+                                <div className="cometchat-media-recorder__recorded-control-record-icon" aria-hidden="true" />
                             </div>
                         </div>
                     </div>

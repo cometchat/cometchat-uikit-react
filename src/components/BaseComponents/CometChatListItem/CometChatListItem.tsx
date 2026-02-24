@@ -11,7 +11,7 @@ interface ListItemProps {
     avatarName?: string;
     /* title text to be used for list view. */
     title: string;
-    /* callback which is triggered on click of the list item. */
+    /* callback which is triggered on click of the list item. If not provided, the item will be display-only (not interactive). */
     onListItemClicked?: (input: { id?: string }) => void;
     /* html component which is used for showing menu. */
     menuView?: ReactNode;
@@ -40,7 +40,7 @@ const CometChatListItem = (props: ListItemProps) => {
         avatarURL = "",
         avatarName = "",
         title = "",
-        onListItemClicked = () => { },
+        onListItemClicked,
         menuView,
         subtitleView,
         trailingView,
@@ -49,6 +49,8 @@ const CometChatListItem = (props: ListItemProps) => {
         stopEventPropagation = false,
         style
     } = props;
+
+    const isInteractive = typeof onListItemClicked === 'function';
 
 
     const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -77,7 +79,11 @@ const CometChatListItem = (props: ListItemProps) => {
                 className="cometchat-list-item"
                 style={style}
                 id={id}
-                onClick={listItemClick}
+                onClick={isInteractive ? listItemClick : undefined}
+                onKeyDown={isInteractive ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); listItemClick(e as any); } } : undefined}
+                role={isInteractive ? "button" : undefined}
+                tabIndex={isInteractive ? 0 : undefined}
+                aria-label={isInteractive ? `Open conversation with ${title}` : undefined}
             >
                 {!leadingView ?
                     avatarName?.trim()?.length > 0 ||

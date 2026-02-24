@@ -51,11 +51,14 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
         openPopover: () => void;
         closePopover: () => void;
     }>();
-    const moreButtonRef = useRef<HTMLDivElement>(null);
+    const moreButtonRef = useRef<HTMLButtonElement>(null);
     const subMenuRef = useRef<HTMLDivElement>(null);
     const [positionStyleState, setPositionStyleState] = useState<CSSProperties>({});
+    const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+    const menuItemRefs = useRef<(HTMLDivElement | null)[]>([]);
     const parentViewRef = useRef<HTMLDivElement | null>(null);
     const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const getPopoverPositionStyleRef = useRef<() => void>(() => {});
     const IframeContext = useCometChatFrameContext();
     
     const getCurrentWindow = ()=>{
@@ -101,14 +104,123 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
         })
     }, [setPositionStyleState]);
 
+    // Close submenu and restore focus to more button
+    const closeSubMenu = useCallback(() => {
+        setShowSubMenu(false);
+        setFocusedIndex(-1);
+        // Restore focus to more button
+        requestAnimationFrame(() => {
+            moreButtonRef.current?.focus();
+        });
+    }, []);
+
+    // Get the submenu items for keyboard navigation
+    const getSubMenuItems = useCallback(() => {
+        return data.slice(topMenuSize > 0 ? topMenuSize - 1 : 0);
+    }, [data, topMenuSize]);
+
+    // Handle keyboard navigation in submenu
+    const handleSubMenuKeyDown = useCallback((e: React.KeyboardEvent) => {
+        const subMenuItems = getSubMenuItems();
+        const itemCount = subMenuItems.length;
+
+        switch (e.key) {
+            case 'Escape':
+                e.preventDefault();
+                e.stopPropagation();
+                closeSubMenu();
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                setFocusedIndex((prev) => {
+                    const next = prev < itemCount - 1 ? prev + 1 : 0;
+                    return next;
+                });
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setFocusedIndex((prev) => {
+                    const next = prev > 0 ? prev - 1 : itemCount - 1;
+                    return next;
+                });
+                break;
+            case 'Home':
+                e.preventDefault();
+                setFocusedIndex(0);
+                break;
+            case 'End':
+                e.preventDefault();
+                setFocusedIndex(itemCount - 1);
+                break;
+            case 'Tab':
+                // Trap focus within submenu
+                e.preventDefault();
+                if (e.shiftKey) {
+                    setFocusedIndex((prev) => (prev > 0 ? prev - 1 : itemCount - 1));
+                } else {
+                    setFocusedIndex((prev) => (prev < itemCount - 1 ? prev + 1 : 0));
+                }
+                break;
+            default:
+                break;
+        }
+    }, [getSubMenuItems, closeSubMenu]);
+
+    // Handle keyboard on more button
+    const handleMoreButtonKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            getPopoverPositionStyleRef.current();
+            handleMenuClick();
+            // Focus first item when opening
+            if (!showSubMenu) {
+                requestAnimationFrame(() => {
+                    setFocusedIndex(0);
+                });
+            }
+        } else if (e.key === 'ArrowDown' && !showSubMenu) {
+            e.preventDefault();
+            getPopoverPositionStyleRef.current();
+            handleMenuClick();
+            requestAnimationFrame(() => {
+                setFocusedIndex(0);
+            });
+        } else if (e.key === 'Escape' && showSubMenu) {
+            e.preventDefault();
+            closeSubMenu();
+        }
+    }, [handleMenuClick, showSubMenu, closeSubMenu]);
+
+    // Focus the menu item when focusedIndex changes
+    useEffect(() => {
+        if (showSubMenu && focusedIndex >= 0 && menuItemRefs.current[focusedIndex]) {
+            menuItemRefs.current[focusedIndex]?.focus();
+        }
+    }, [focusedIndex, showSubMenu]);
+
+    // Focus first item when submenu opens
+    useEffect(() => {
+        if (showSubMenu) {
+            setFocusedIndex(0);
+        } else {
+            setFocusedIndex(-1);
+        }
+    }, [showSubMenu]);
+
     /* This function returns More button component. */
     const getMoreButton = useCallback(() => {
         return (
-            <div
+            <button
+                type="button"
                 title={moreIconHoverText}
                 onClick={handleMenuClick}
+                onKeyDown={handleMoreButtonKeyDown}
                 className="cometchat-menu-list__sub-menu"
                 ref={moreButtonRef}
+                aria-label={moreIconHoverText || "More options"}
+                aria-expanded={showSubMenu}
+                aria-haspopup="menu"
+                aria-controls={showSubMenu ? "subMenuContext" : undefined}
                 onMouseEnter={()=>{
                     getPopoverPositionStyle();
                 }}
@@ -119,16 +231,21 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                       }),
                   }}
             >
-                <div
+                <span
                     className="cometchat-menu-list__sub-menu-icon"
-
+                    aria-hidden="true"
                 />
-            </div>
+            </button>
         )
-    }, [moreIconHoverText, handleMenuClick,showSubMenu,disableBackgroundInteraction])
+    }, [moreIconHoverText, handleMenuClick, handleMoreButtonKeyDown, showSubMenu, disableBackgroundInteraction])
 
     /* This function uses menu data and generates menu components conditionally. */
     const getMenu = useCallback((menu: Array<CometChatActionsIcon | CometChatActionsView | CometChatOption>, isSubMenu: boolean) => {
+        // Reset refs array when rendering submenu
+        if (isSubMenu) {
+            menuItemRefs.current = [];
+        }
+
         if (menu.length > 0) {
             return menu?.map((menuData, index: number) => {
                 // Don't apply outer menu wrapper class for:
@@ -139,6 +256,15 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                     ? ""
                     : "cometchat-menu-list__menu";
                 let menuButton, moreButton = null;
+
+                // Handler for activating menu items via keyboard
+                const handleMenuItemKeyDown = (e: React.KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.currentTarget.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                    }
+                };
+
                 if (menuData instanceof CometChatActionsView && menuData?.customView) {
                     menuButton = (
                         <div id={menuData.id} >
@@ -154,14 +280,19 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                             >
                                 <div slot="children">
                                     <div
+                                        ref={isSubMenu ? (el) => { menuItemRefs.current[index] = el; } : undefined}
                                         onClick={() => {
                                             setPositionStyleState({});
                                             setShowSubMenu(false);
                                         }}
+                                        onKeyDown={handleMenuItemKeyDown}
                                         title={menuData?.title}
                                         className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item` : `cometchat-menu-list__main-menu-item`}
+                                        role={isSubMenu ? "menuitem" : "button"}
+                                        tabIndex={isSubMenu ? (focusedIndex === index ? 0 : -1) : 0}
+                                        aria-label={menuData?.title}
                                     >
-                                        <div className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item-icon cometchat-menu-list__sub-menu-list-item-icon-${menuData.id}` : `cometchat-menu-list__main-menu-item-icon cometchat-menu-list__main-menu-item-icon-${menuData.id}`} style={menuData?.iconURL ? { WebkitMask: `url(${menuData?.iconURL}) center center no-repeat`,display:"flex" } : undefined} />
+                                        <div className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item-icon cometchat-menu-list__sub-menu-list-item-icon-${menuData.id}` : `cometchat-menu-list__main-menu-item-icon cometchat-menu-list__main-menu-item-icon-${menuData.id}`} style={menuData?.iconURL ? { WebkitMask: `url(${menuData?.iconURL}) center center no-repeat`,display:"flex" } : undefined} aria-hidden="true" />
                                         {isSubMenu ? <label className={`cometchat-menu-list__sub-menu-item-title cometchat-menu-list__sub-menu-item-title-${menuData.id}`}>{menuData?.title}</label> : ""}
                                     </div>
                                 </div>
@@ -171,10 +302,16 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                     menuButton = (
                         <div id={menuData.id} className={className}>
                             <div
+                                ref={isSubMenu ? (el) => { menuItemRefs.current[index] = el; } : undefined}
                                 className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item` : `cometchat-menu-list__main-menu-item`}
                                 title={menuData?.title}
+                                role={isSubMenu ? "menuitem" : "button"}
+                                tabIndex={isSubMenu ? (focusedIndex === index ? 0 : -1) : 0}
+                                aria-label={menuData?.title}
+                                onKeyDown={handleMenuItemKeyDown}
                                 onClick={() => {
                                     setShowSubMenu(false);
+                                    setFocusedIndex(-1);
                                     setPositionStyleState({});
                                     if(onOptionClicked){
                                         onOptionClicked?.(menuData)
@@ -186,7 +323,7 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                                     }
                                 }}
                             >
-                                <div className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item-icon cometchat-menu-list__sub-menu-list-item-icon-${menuData.id}` : `cometchat-menu-list__main-menu-item-icon cometchat-menu-list__main-menu-item-icon-${menuData.id}`} style={menuData?.iconURL ? { WebkitMask: `url(${menuData?.iconURL}) center center no-repeat` ,WebkitMaskSize:"contain",display:"flex"} : undefined} />
+                                <div className={isSubMenu ? `cometchat-menu-list__sub-menu-list-item-icon cometchat-menu-list__sub-menu-list-item-icon-${menuData.id}` : `cometchat-menu-list__main-menu-item-icon cometchat-menu-list__main-menu-item-icon-${menuData.id}`} style={menuData?.iconURL ? { WebkitMask: `url(${menuData?.iconURL}) center center no-repeat` ,WebkitMaskSize:"contain",display:"flex"} : undefined} aria-hidden="true" />
                                 {isSubMenu ? <label className={`cometchat-menu-list__sub-menu-item-title cometchat-menu-list__sub-menu-item-title-${menuData.id}`}>{menuData?.title}</label> : ""}
                             </div>
                         </div>
@@ -212,19 +349,19 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                 </div>
             )
         }
-    }, [placement, data, onOptionClicked, getMoreButton, disableBackgroundInteraction])
+    }, [placement, data, onOptionClicked, getMoreButton, disableBackgroundInteraction, focusedIndex])
         
     const getTopMostCometChatElement = (): HTMLElement | undefined => {
         if(!moreButtonRef.current) return;
-        let current = moreButtonRef.current;
+        let current: HTMLElement | null = moreButtonRef.current;
         let topMostElement: HTMLElement | null = null;
         while (current) {
             if (current.classList?.contains('cometchat')) {
                 topMostElement = current;
             }
-            current = current.parentElement as HTMLDivElement;
+            current = current.parentElement;
         }
-        return topMostElement as HTMLDivElement;
+        return topMostElement ?? undefined;
     };
 
     /* this function is used to trigger the getMenu function with main menu data. */
@@ -489,6 +626,10 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
             setPositionStyleState(positionStyle);
         }
     }, [showSubMenu, positionStyleState, calculatePopoverPosition, useParentContainer, useParentHeight, setMenuHeight, calculateMenuPosition, getAvailablePlacement]);
+
+    useEffect(() => {
+        getPopoverPositionStyleRef.current = getPopoverPositionStyle;
+    }, [getPopoverPositionStyle]);
         
     function getFullScreenOverlay() {
         return <div
@@ -549,7 +690,7 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
     return (
         <div className="cometchat">
             <div className="cometchat-menu-list">
-                <div className="cometchat-menu-list__main-menu">
+                <div className="cometchat-menu-list__main-menu" role="toolbar" aria-label="Message actions">
                     {getTopMenu()}
                 </div>
                    {disableBackgroundInteraction  && showSubMenu &&  getFullScreenOverlay()}
@@ -557,6 +698,9 @@ const CometChatContextMenu = (props: ContextMenuProps) => {
                         ref={subMenuRef}
                         className="cometchat-menu-list__sub-menu-list"
                         id="subMenuContext"
+                        role="menu"
+                        aria-label="More options menu"
+                        onKeyDown={handleSubMenuKeyDown}
                         style={{
                             ...positionStyleState,
                         visibility: showSubMenu ? "visible" : "hidden",

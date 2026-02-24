@@ -41,11 +41,14 @@ const CometChatAvatar = (props: CometChatAvatarProps) => {
                 className="cometchat-avatar"
                 onClick={isInteractive ? onClick : undefined}
                 style={isInteractive ? { cursor: "pointer" } : undefined}
+                onKeyDown={isInteractive ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } } : undefined}
+                role={isInteractive ? "button" : undefined}
+                tabIndex={isInteractive ? 0 : undefined}
             >
                 {image ?
-                    <img src={image} className="cometchat-avatar__image" />
+                    <img src={image} className="cometchat-avatar__image" alt={`${name || 'User'} avatar`} />
                     :
-                    <span className="cometchat-avatar__text">
+                    <span className="cometchat-avatar__text" aria-label={`${name || 'User'} avatar`}>
                         {name?.trim().substring(0, 1).toUpperCase()}
                     </span>
                 }

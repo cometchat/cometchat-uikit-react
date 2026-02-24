@@ -194,8 +194,8 @@ const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubbleProps> 
         )}
 
         {((data?.getType() === CometChatUIKitConstants.streamMessageTypes.run_finished || !isStreaming) && fullMessage && fullMessage.trim() !== "" && !hasError) && (
-          <div title={getLocalizedString("message_list_option_copy")} className="cometchat-stream-message-bubble__copy" style={{ cursor: 'pointer' }} onClick={handleCopy}>
-          </div>
+          <button type="button" title={getLocalizedString("message_list_option_copy")} className="cometchat-stream-message-bubble__copy" style={{ cursor: 'pointer' }} onClick={handleCopy} aria-label="Copy message">
+          </button>
         )}
       </div>
         {hasError && <CometChatErrorView message={getLocalizedString("ai_assistant_chat_no_internet")} />}

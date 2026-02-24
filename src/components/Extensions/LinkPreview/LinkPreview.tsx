@@ -88,7 +88,14 @@ const LinkPreview = (props: LinkPreviewProps) => {
         <div
           className={`cometchat-link-bubble__preview-body ${!image ? "cometchat-link-bubble__preview-body-rounded" : ""}`}
         >
-          <div className="cometchat-link-bubble__preview-body-content" onClick={handleClick}>
+          <div 
+            className="cometchat-link-bubble__preview-body-content" 
+            onClick={handleClick}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
+            role="link"
+            tabIndex={0}
+            aria-label={`Open link: ${title}`}
+          >
             <div
               className="cometchat-link-bubble__preview-body-content-title"
 

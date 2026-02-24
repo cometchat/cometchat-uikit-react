@@ -1,16 +1,16 @@
-import { FC } from 'react';
-import {getLocalizedString} from '../../../resources/CometChatLocalize/cometchat-localize';
+import { FC } from "react";
+import { getLocalizedString } from "../../../resources/CometChatLocalize/cometchat-localize";
 
 /**
  * Interface for the props used in the CometChatEditPreview component.
  */
 interface EditPreviewProps {
-    /** The title to display in the preview, defaults to "Edit Message"*/
-    previewTitle?: string;
-    /** The subtitle to display in the preview, can be left empty. */
-    previewSubtitle?: string;
-    /** Callback function that triggers when the close button is clicked. */
-    onClose?: () => void;
+  /** The title to display in the preview, defaults to "Edit Message"*/
+  previewTitle?: string;
+  /** The subtitle to display in the preview, can be left empty. */
+  previewSubtitle?: string;
+  /** Callback function that triggers when the close button is clicked. */
+  onClose?: () => void;
 }
 
 /**
@@ -21,24 +21,31 @@ interface EditPreviewProps {
  * @returns {JSX.Element} A JSX element displaying the edit preview UI.
  */
 const CometChatEditPreview: FC<EditPreviewProps> = ({
-    previewTitle = getLocalizedString("message_composer_edit_message"),
-    previewSubtitle = "",
-    onClose,
+  previewTitle = getLocalizedString("message_composer_edit_message"),
+  previewSubtitle = "",
+  onClose,
 }) => {
-    return (
-        <div className="cometchat" style={{
-            width: "100%"
-        }}>
-            <div className="cometchat-edit-preview">
-                <p className="cometchat-edit-preview__title" >{previewTitle}</p>
-                <p className="cometchat-edit-preview__subtitle">{previewSubtitle}</p>
-                <div
-                    className="cometchat-edit-preview__close"
-                    onClick={onClose}
-                />
-            </div>
-        </div>
-    );
+  return (
+    <div
+      className='cometchat'
+      style={{
+        width: "100%",
+      }}
+    >
+      <div className='cometchat-edit-preview'>
+        <p className='cometchat-edit-preview__title'>{previewTitle}</p>
+        <p className='cometchat-edit-preview__subtitle'>{previewSubtitle}</p>
+        <button
+          type='button'
+          onClick={onClose}
+          aria-label='Close edit preview'
+          className='cometchat-edit-preview__close_button'
+        >
+          <div className='cometchat-edit-preview__close' />
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export { CometChatEditPreview };

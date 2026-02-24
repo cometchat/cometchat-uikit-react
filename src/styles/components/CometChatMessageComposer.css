@@ -349,6 +349,12 @@
     line-height: 24px;
 }
 
+/* Remove any focus outline from input - let wrapper show it instead */
+.cometchat-message-composer__input:focus {
+    outline: none;
+}
+
+
 /* Disabled state for composer input (when voice recording is active) */
 .cometchat-message-composer__input-disabled {
     opacity: 0.5;

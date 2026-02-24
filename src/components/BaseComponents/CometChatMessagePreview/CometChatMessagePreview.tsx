@@ -92,29 +92,42 @@ const CometChatMessagePreview: FC<CometChatMessagePreviewProps> = ({
     return (
         <div
             key={"cometchat-message-preview"+ message?.getId()}
-            ref={elementRef}
-            className={`cometchat ${hideCloseButton ? 'bubble-view' : 'composer-view'}`}
-            style={isMessageModerated ? width < 240 ? { width: `calc(${240}px - var(--cometchat-padding-1) * 2)` } : containerStyle : containerStyle}
-        >
-            <div className="cometchat-message-preview">
-                <div className="cometchat-message-preview__title">{previewTitle}</div>
-                {!message?.getDeletedAt() ? <>
-                   {previewSubtitle}
-                    {!hideCloseButton && (
-                        <div
-                            className="cometchat-message-preview__close"
-                            onClick={handleClose}
-                        />
-                    )}
-                </> : <div className='cometchat-message-preview-deleted__message'>
-                    <div className='cometchat-message-preview-deleted__message__icon'></div>
-                    <div className='cometchat-message-preview-deleted__message__text'>
-                    {getLocalizedString("message_deleted")}
-                    </div>
-                </div>}
+      ref={elementRef}
+      className={`cometchat ${hideCloseButton ? "bubble-view" : "composer-view"}`}
+      style={
+        isMessageModerated
+          ? width < 240
+            ? { width: `calc(${240}px - var(--cometchat-padding-1) * 2)` }
+            : containerStyle
+          : containerStyle
+      }
+    >
+      <div className='cometchat-message-preview'>
+        <div className='cometchat-message-preview__title'>{previewTitle}</div>
+        {!message?.getDeletedAt() ? (
+          <>
+            {previewSubtitle}
+            {!hideCloseButton && (
+              <button
+                type='button'
+                onClick={handleClose}
+                className='cometchat-message-preview__close_button'
+                aria-label='Close message preview'
+              >
+                <div className='cometchat-message-preview__close' />
+              </button>
+            )}
+          </>
+        ) : (
+          <div className='cometchat-message-preview-deleted__message'>
+            <div className='cometchat-message-preview-deleted__message__icon'></div>
+            <div className='cometchat-message-preview-deleted__message__text'>
+              {getLocalizedString("message_deleted")}
             </div>
-        </div>
-    );
+          </div>)}
+      </div>
+    </div>
+  );
 };
 
 export { CometChatMessagePreview };

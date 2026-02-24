@@ -8,7 +8,9 @@ interface CometChatToastProps {
   /** Duration (in milliseconds) for which the toast is visible (default is 3000ms) */
   duration?: number;
   /** Optional callback function that executes when the toast closes */
-  onClose?:()=>void
+  onClose?:()=>void;
+  /** Type of toast for screen reader announcement priority */
+  type?: 'info' | 'success' | 'warning' | 'error';
 }
 /**
  * CometChatToast Component
@@ -20,10 +22,11 @@ interface CometChatToastProps {
  * @param {string} text - The message text to display in the toast
  * @param {number} duration - Duration for which the toast is visible
  * @param {function} onClose - Callback function executed when the toast closes
+ * @param {string} type - Type of toast for accessibility announcement
  * 
  * @returns {JSX.Element | null} - The JSX element for the toast message or null if no text is provided
  */
-const CometChatToast: React.FC<CometChatToastProps> = ({ text, duration = 3000,onClose }) => {
+const CometChatToast: React.FC<CometChatToastProps> = ({ text, duration = 3000, onClose, type = 'info' }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if(onClose){
@@ -36,9 +39,18 @@ const CometChatToast: React.FC<CometChatToastProps> = ({ text, duration = 3000,o
 
   if (!text) return null;
 
+  // Use role="alert" for errors/warnings, role="status" for info/success
+  const role = type === 'error' || type === 'warning' ? 'alert' : 'status';
+  const ariaLive = type === 'error' || type === 'warning' ? 'assertive' : 'polite';
+
   return (
    <div className='cometchat' style={{height:"fit-content",width:"fit-content",overflow:"hidden"}}>
-     <div className='cometchat-toast'>
+     <div
+       className='cometchat-toast'
+       role={role}
+       aria-live={ariaLive}
+       aria-atomic="true"
+     >
       {text}
     </div>
    </div>

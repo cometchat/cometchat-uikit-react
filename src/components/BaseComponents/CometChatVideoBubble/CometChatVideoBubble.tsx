@@ -89,9 +89,21 @@ const CometChatVideoBubble = (props: VideoBubbleProps) => {
     return (
         <div className="cometchat">
             <div className={`cometchat-video-bubble ${isSentByMe ? "cometchat-video-bubble-outgoing" : "cometchat-video-bubble-incoming"}`}>
-                <video controls onPlay={startVideoInFullscreen}
-                    ref={videoRef} loop={loop} muted={muted} autoPlay={autoPlay} className="cometchat-video-bubble__body" poster={posterImage}>
+                <video
+                    controls
+                    onPlay={startVideoInFullscreen}
+                    ref={videoRef}
+                    loop={loop}
+                    muted={muted}
+                    autoPlay={autoPlay}
+                    className="cometchat-video-bubble__body"
+                    poster={posterImage}
+                    aria-label="Video message"
+                    preload="metadata"
+                >
                     <source src={src} />
+                    <track kind="captions" label="Captions" default />
+                    Your browser does not support the video tag.
                 </video>
             </div >
         </div>

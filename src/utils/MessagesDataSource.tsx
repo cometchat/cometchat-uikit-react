@@ -543,9 +543,9 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       },
       options: undefined,
       footerView: (message: CometChat.BaseMessage) => {
-        return <div title={getLocalizedString("message_list_option_copy")} className="cometchat-ai-assistant-message-bubble__copy" style={{ cursor: 'pointer' }} onClick={() => this.handleCopy(message as CometChat.AIAssistantMessage)}>
+        return <button type="button" title={getLocalizedString("message_list_option_copy")} className="cometchat-ai-assistant-message-bubble__copy" style={{ cursor: 'pointer' }} onClick={() => this.handleCopy(message as CometChat.AIAssistantMessage)} aria-label="Copy message">
 
-        </div>
+        </button>
       },
 
     });

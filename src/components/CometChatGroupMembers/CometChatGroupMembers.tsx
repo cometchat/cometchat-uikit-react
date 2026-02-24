@@ -887,22 +887,25 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
   ): JSX.Element {
     try {
       const status = groupMember.getStatus()
+      const listItemProps: any = {
+        id: groupMember.getUid(),
+        title: groupMember.getName(),
+        leadingView: leadingView?.(groupMember),
+        titleView: titleView?.(groupMember),
+        avatarURL: groupMember.getAvatar(),
+        avatarName: groupMember.getName(),
+        subtitleView: subtitleView?.(groupMember),
+        trailingView: getDefaultListItemTailView(groupMember),
+        menuView: !trailingView ? getDefaultListItemMenuView(groupMember) : null,
+      };
+      if (typeof onItemClick === 'function') {
+        listItemProps.onListItemClicked = () => onItemClick(groupMember);
+      }
       return (
         <div
           className={`cometchat-group-members__list-item ${!hideUserStatus ? `cometchat-group-members__list-item-${status}` : ''}`}
         >
-          <CometChatListItem
-            id={groupMember.getUid()}
-            title={groupMember.getName()}
-            leadingView={leadingView?.(groupMember)}
-            titleView={titleView?.(groupMember)}
-            avatarURL={groupMember.getAvatar()}
-            avatarName={groupMember.getName()}
-            subtitleView={subtitleView?.(groupMember)}
-            trailingView={getDefaultListItemTailView(groupMember)}
-            menuView={!trailingView ? getDefaultListItemMenuView(groupMember) : null}
-            onListItemClicked={(e) => onItemClick?.(groupMember)}
-          />
+          <CometChatListItem {...listItemProps} />
         </div>
       );
     } catch (error) {
@@ -946,7 +949,12 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
       ) {
 
         return (
-          <div className="cometchat-group-members__backdrop">
+          <div 
+            className="cometchat-group-members__backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-label={getLocalizedString("change_scope") || "Change member scope"}
+          >
             <CometChatChangeScope
               options={groupMemberAllowedScopes}
               defaultSelection={groupMemberToChangeScopeOf.getScope()}
@@ -978,9 +986,9 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
       if (loadingView) {
         return loadingView
       }
-      return <div className="cometchat-group-members__shimmer">
+      return <div className="cometchat-group-members__shimmer" role="status" aria-label={getLocalizedString("loading") || "Loading group members"}>
         {[...Array(15)].map((_, index) => (
-          <div key={index} className="cometchat-group-members__shimmer-item">
+          <div key={index} className="cometchat-group-members__shimmer-item" aria-hidden="true">
             <div className="cometchat-group-members__shimmer-item-avatar"></div>
             <div className="cometchat-group-members__shimmer-item-title"></div>
           </div>
@@ -1011,7 +1019,7 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
       return (
         <div className="cometchat-group-members__empty-state-view">
           <div className="cometchat-group-members__empty-state-view-icon">
-            <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="" />
+            <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="No group members found" />
           </div>
           <div className="cometchat-group-members__empty-state-view-body">
             <div className="cometchat-group-members__empty-state-view-body-title">{getLocalizedString("member_empty_title")}</div>
@@ -1043,7 +1051,7 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
       return (
         <div className="cometchat-group-members__error-state-view">
           <div className="cometchat-group-members__error-state-view-icon">
-            <img src={isDarkMode ? errorIconDark : errorIcon} alt="" />
+            <img src={isDarkMode ? errorIconDark : errorIcon} alt="Error loading group members" />
           </div>
           <div className="cometchat-group-members__error-state-view-body">
             <div className="cometchat-group-members__error-state-view-body-title">{getLocalizedString("member_error_title")}</div>
@@ -1080,6 +1088,8 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
     <div className="cometchat" style={{ width: "100%", height: "100%" }}>
       <div
         className={`cometchat-group-members ${!showScrollbar ? 'cometchat-group-members-hide-scrollbar' : ''}`}
+        role="region"
+        aria-label={getLocalizedString("group_members") || "Group members"}
       >
         <CometChatList
           showScrollbar={showScrollbar}
@@ -1107,8 +1117,12 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
 
         />
         {isFetchingMore && hasMoreMembers && (
-          <div className="cometchat-group-members__loading-more">
-            <div className="cometchat-group-members__loading-more-icon" />
+          <div 
+            className="cometchat-group-members__loading-more"
+            role="status"
+            aria-label={getLocalizedString("loading") || "Loading more members"}
+          >
+            <div className="cometchat-group-members__loading-more-icon" aria-hidden="true" />
           </div>
         )}
         {getGroupMemberScopeChangeModal()}

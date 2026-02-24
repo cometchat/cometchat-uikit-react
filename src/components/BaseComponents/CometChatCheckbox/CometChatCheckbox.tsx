@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useCometChatCheckbox } from "./useCometChatCheckbox";
 interface CheckboxProps {
     /* default value of the check-box. */
@@ -8,6 +9,8 @@ interface CheckboxProps {
     disabled?: boolean;
     /* callback which is triggered on check-box value is changed. */
     onCheckBoxValueChanged: (input: { checked: boolean, labelText: string | undefined }) => void;
+    /** Optional unique id for the checkbox */
+    id?: string;
 }
 
 /* 
@@ -20,16 +23,27 @@ const CometChatCheckbox = (props: CheckboxProps) => {
         labelText = "",
         disabled = false,
         onCheckBoxValueChanged = () => { },
+        id: providedId,
     } = props;
 
+    const generatedId = useId();
+    const checkboxId = providedId || `checkbox-${generatedId}`;
     const { updateCheckbox, isChecked } = useCometChatCheckbox({ checked, onCheckBoxValueChanged });
 
     return (
         <div className="cometchat">
             <div className="cometchat-checkbox">
-                <label className="cometchat-checkbox__label">
-                    <input id="checkbox-id" type="checkbox" onChange={updateCheckbox} disabled={disabled} checked={isChecked} />
-                    <span className="cometchat-checkbox__checkmark"></span>
+                <label className="cometchat-checkbox__label" htmlFor={checkboxId}>
+                    <input
+                        id={checkboxId}
+                        type="checkbox"
+                        onChange={updateCheckbox}
+                        disabled={disabled}
+                        checked={isChecked}
+                        aria-checked={isChecked}
+                        aria-disabled={disabled}
+                    />
+                    <span className="cometchat-checkbox__checkmark" aria-hidden="true"></span>
                     {labelText}
                 </label>
             </div>

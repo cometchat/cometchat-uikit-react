@@ -37,11 +37,14 @@
 
 .cometchat-button:active {
     background: var(--cometchat-extended-primary-color-900, #5D49BE);
-    outline: none;
 }
 
 .cometchat-button:focus {
     outline: none;
+}
+
+.cometchat-button:focus-visible {
+    outline: 1px solid #000;
 }
 
 .cometchat-button__loading-view {

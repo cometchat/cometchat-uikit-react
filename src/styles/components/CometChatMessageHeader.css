@@ -1,3 +1,21 @@
+/* Wrapper for the mobile app back button to allow focus/outline and touch accessibility */
+.cometchat-message-header__back-button_mobile_app-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    /* Increase touch target size for accessibility */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+}
+
+.cometchat-message-header__back-button_mobile_app {
+    margin: 0;
+}
 /* Container for the message header, aligning items horizontally */
 
 .cometchat-message-header {
@@ -18,7 +36,7 @@
 
 .cometchat-message-header .cometchat-message-header__subtitle {
     overflow: hidden;
-    color: var(--cometchat-icon-color-secondary);
+    color: var(--secondary-color-TL);
     text-overflow: ellipsis;
     white-space: nowrap;
     font: var(--cometchat-font-caption1-regular);
@@ -32,7 +50,12 @@
 /* Subtitle styling for typing state in the message header */
 
 .cometchat-message-header .cometchat-message-header__subtitle.cometchat-message-header__subtitle-typing {
-    color: var(--cometchat-text-color-highlight);
+    color: var(--secondary-color-TL);
+}
+
+/* Subtitle styling for online state */
+.cometchat-message-header .cometchat-message-header__subtitle.cometchat-message-header__subtitle--online {
+    color: #02831F;
 }
 
 .cometchat-message-header--mobile .cometchat-message-header__subtitle,

@@ -38,8 +38,15 @@ const CometChatImageBubble = (props: ImageBubbleProps) => {
 
     const getImageBubbleView = () => {
         return (
-            <div className={`cometchat-image-bubble ${isSentByMe ? "cometchat-image-bubble-outgoing" : "cometchat-image-bubble-incoming"}`} onClick={() => onImageClicked({ src })}>
-                <img className="cometchat-image-bubble__body" src={disableLoadingState ? src : image} />
+            <div 
+                className={`cometchat-image-bubble ${isSentByMe ? "cometchat-image-bubble-outgoing" : "cometchat-image-bubble-incoming"}`} 
+                onClick={() => onImageClicked({ src })}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onImageClicked({ src }); } }}
+                role="button"
+                tabIndex={0}
+                aria-label="View image in full screen"
+            >
+                <img className="cometchat-image-bubble__body" src={disableLoadingState ? src : image} alt="Image message" />
             </div >
         )
     }

@@ -171,14 +171,46 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
    * Effect to set the message reference when it is available
    *  */
   const [isHovering, setIsHovering] = useState<boolean>(false);
+  const [hasFocusWithin, setHasFocusWithin] = useState<boolean>(false);
   const [mobileCustomView, setMobileCustomView] = useState<JSX.Element | null>(null);
+  const [bubbleAriaLabel, setBubbleAriaLabel] = useState<string>("");
+
+  useEffect(() => {
+    if (bodyViewRef.current) {
+      const textContent = bodyViewRef.current.textContent?.trim() || "";
+      setBubbleAriaLabel(textContent || "Message");
+    }
+  });
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const closeMobileOptions = useCallback(() => {
     setIsHovering(false);
     setMobileCustomView(null);
     setSheetDragOffset(0);
     sheetOffsetRef.current = 0;
   }, []);
+
+  // Handle focus events for keyboard accessibility
+  const handleFocusIn = useCallback(() => {
+    if (focusTimeoutRef.current) {
+      clearTimeout(focusTimeoutRef.current);
+      focusTimeoutRef.current = null;
+    }
+    setHasFocusWithin(true);
+  }, []);
+
+  const handleFocusOut = useCallback((e: React.FocusEvent) => {
+    // Only hide options if focus is moving outside the message bubble
+    // Use a timeout to allow focus to move to another element within the bubble
+    focusTimeoutRef.current = setTimeout(() => {
+      if (messageRef.current && !messageRef.current.contains(document.activeElement)) {
+        setHasFocusWithin(false);
+      }
+    }, 100);
+  }, []);
+
+  // Combined visibility: show options on hover OR focus-within
+  const showOptions = isHovering || hasFocusWithin;
   
   /**
    * Clean up function to clear the timeout when component unmounts
@@ -193,6 +225,9 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
       }
       if (longPressTimeout.current) {
         clearTimeout(longPressTimeout.current);
+      }
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current);
       }
       if (resizeObserver.current) {
         resizeObserver.current.disconnect();
@@ -401,9 +436,9 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
     }
     sheetOffsetRef.current = 0;
   }, [closeMobileOptions]);
-  /** Function to render the message options if they exist and the user is hovering */
+  /** Function to render the message options if they exist and the user is hovering or has focus */
   const getMobileOptionsSheet = () => {
-    if (!isHovering || !options || options.length === 0) {
+    if (!showOptions || !options || options.length === 0) {
       return null;
     }
     const sheetContent = (
@@ -495,9 +530,9 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
     if (isPanelMobile) {
       return getMobileOptionsSheet();
     }
-    const visibilityStyles = isHovering
-  ? { opacity: 1, pointerEvents: 'auto' as const }
-  : { opacity: 0, pointerEvents: 'none' as const };
+    if (!showOptions) {
+      return null;
+    }
     var optionHeight = "fit-content";
     if (bodyViewRef.current) {
       const height = bodyViewRef.current.clientHeight;
@@ -508,15 +543,14 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
       <div
         className="cometchat-message-bubble__options"
         style={{
-          transition: isHovering ? 'opacity 0.2s ease-in-out' : 'opacity 0s ease-in-out',
-          ...visibilityStyles,
-          ...(isHovering && (footerView || (!includeBottomViewHeight && bottomView) || threadView ) && style)
+          animation: 'cometchat-fade-in 0.2s ease-in-out',
+          ...((footerView || (!includeBottomViewHeight && bottomView) || threadView ) && style)
         }}
       >
         <CometChatContextMenu
           disableBackgroundInteraction={true}
           useParentContainer={true}
-          key={isHovering ? 'hovered' : 'not-hovered'}
+          key={'hovered'}
           topMenuSize={topMenuSize}
           data={options}
           onOptionClicked={onOptionClicked}
@@ -632,6 +666,8 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
     }}>
       <div className="cometchat-message-bubble__wrapper"
         ref={messageRef}
+        onFocus={!isPanelMobile ? handleFocusIn : undefined}
+        onBlur={!isPanelMobile ? handleFocusOut : undefined}
       >
         {getLeadingView()}
           <div className={`cometchat-message-bubble ${getBubbleClassName()} ${isPanelMobile ? "cometchat-message-bubble__panel-mobile" : ""}`} id={String(id)}
@@ -645,7 +681,6 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
               background: "inherit",
               position: "relative"
             }}   onMouseLeave={panelType !== "mobile" ? hideMessageOptions : undefined}>
-              {options && options.length > 0 ?  getMessageOptions() : null}
               
               {/* Swipe reply indicator */}
               {Math.abs(swipeOffset) > 0 && (
@@ -685,6 +720,8 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
                       }
                    }}
                    ref={bodyViewRef}
+                   tabIndex={0}
+                   aria-label={bubbleAriaLabel}
                   className={`cometchat-message-bubble__body ${getBubbleTypeClassName()}`}
                 >
                   {replyView ? <div className="cometchat-message-bubble__body-reply-view"> {replyView}</div> : null}
@@ -695,6 +732,7 @@ const CometChatMessageBubble = (props: MessageBubbleProps) => {
                 {footerView ? <div className="cometchat-message-bubble__body-footer-view"> {footerView}</div> : null}
                 {threadView ? <div className="cometchat-message-bubble__body-thread-view"> {threadView}</div> : null}
               </div>
+              {options && options.length > 0 ? getMessageOptions() : null}
             </div>
           </div>
         </div>

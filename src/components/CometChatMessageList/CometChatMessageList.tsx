@@ -584,6 +584,7 @@ const CometChatMessageList = (props: MessageListProps) => {
   const hasReachedBottomRef = useRef<boolean>(false);
   const hasVisibleAreaRef = useRef<boolean>(false);
   const pendingMessagesMapRef = useRef<{ [runId: string]: (CometChat.AIAssistantMessage | CometChat.AIToolArgumentMessage | CometChat.AIToolResultMessage)[] }>({});
+  const messageInfoPopupRef = useRef<HTMLDivElement>(null);
   var timeoutId: NodeJS.Timeout | null | number = null;
   const IframeContext = useCometChatFrameContext();
 
@@ -763,7 +764,7 @@ const CometChatMessageList = (props: MessageListProps) => {
     } else {
       return (
         <div className="cometchat-message-list__shimmer">
-          {getShimmer(10)}
+          {getShimmer(12)}
         </div>
       );
     }
@@ -781,7 +782,7 @@ const CometChatMessageList = (props: MessageListProps) => {
     } else {
       return (
         <div className='cometchat-message-list__error-state-view'>
-          <img className='cometchat-message-list__error-state-view-icon' src={isDarkMode ? ErrorStateIconDark : ErrorStateIcon}>
+          <img className='cometchat-message-list__error-state-view-icon' src={isDarkMode ? ErrorStateIconDark : ErrorStateIcon} alt="Error loading messages">
 
           </img>
           <div className='cometchat-message-list__error-state-view-body'>
@@ -4464,6 +4465,25 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
     setShowMessageInfoPopup(false);
   };
 
+  // Focus trap: focus first element when message info popup opens
+  useEffect(() => {
+    if (showMessageInfoPopup && messageInfoPopupRef.current) {
+      requestAnimationFrame(() => {
+        const allFocusable = messageInfoPopupRef.current?.querySelectorAll(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]'
+        ) as NodeListOf<HTMLElement>;
+        const focusableElements = Array.from(allFocusable || []).filter((el) => {
+          // Check if element is visible
+          const style = getComputedStyle(el);
+          return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+        });
+        if (focusableElements.length > 0) {
+          focusableElements[0].focus();
+        }
+      });
+    }
+  }, [showMessageInfoPopup]);
+
   /**
  * Function to get the message template based on the message type and category
  * @param {CometChat.BaseMessage} selectedMessage - The message for which the template needs to be fetched
@@ -4771,7 +4791,40 @@ const getStatusInfoView: (item: CometChat.BaseMessage) => any = useCallback(
         ? imageModerationDialogRef.current
         : null}
       {showMessageInfoPopup && activeMessageInfo !== null && (
-        <div className="cometchat-message-information__popup-wrapper">
+        <div
+          className="cometchat-message-information__popup-wrapper"
+          ref={messageInfoPopupRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Message information"
+          tabIndex={-1}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              hideMessageInformation();
+              return;
+            }
+            if (e.key === 'Tab') {
+              const allFocusable = messageInfoPopupRef.current?.querySelectorAll(
+                'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]'
+              ) as NodeListOf<HTMLElement>;
+              const focusableElements = Array.from(allFocusable || []).filter((el) => {
+                const style = getComputedStyle(el);
+                return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+              });
+              if (focusableElements.length === 0) return;
+              const firstElement = focusableElements[0];
+              const lastElement = focusableElements[focusableElements.length - 1];
+              if (e.shiftKey && document.activeElement === firstElement) {
+                e.preventDefault();
+                lastElement.focus();
+              } else if (!e.shiftKey && document.activeElement === lastElement) {
+                e.preventDefault();
+                firstElement.focus();
+              }
+            }
+          }}
+        >
           <CometChatMessageInformation
             message={activeMessageInfo}
             onClose={hideMessageInformation}

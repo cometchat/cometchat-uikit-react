@@ -247,3 +247,27 @@ text-align: left;
     background: var(--cometchat-background-color-01, #FFF);
     box-shadow: none;
 }
+
+/* Focus styles for keyboard accessibility - only show on Tab focus, not click */
+.cometchat-message-bubble__body:focus-visible {
+    outline: 2px solid var(--cometchat-primary-color, #6852D6);
+    outline-offset: 2px;
+}
+
+/* Remove outline on mouse click focus */
+.cometchat-message-bubble__body:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Fade-in animation for message options on mount */
+@keyframes cometchat-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+    .cometchat-message-bubble__body:focus-visible {
+        outline: 2px solid CanvasText;
+    }
+}

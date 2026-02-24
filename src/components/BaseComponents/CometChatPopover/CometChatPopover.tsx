@@ -99,6 +99,26 @@ const CometChatPopover = forwardRef<{
                 return () => getCurrentDocument().removeEventListener('click', handleClickOutside);
             }
         }, [closeOnOutsideClick, isOpen]);
+
+        // Handle Escape key to close popover
+        useEffect(() => {
+            if (!isOpen) return;
+
+            const handleKeyDown = (event: KeyboardEvent) => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setIsOpen(false);
+                    if (onOutsideClick) {
+                        onOutsideClick();
+                    }
+                }
+            };
+
+            getCurrentDocument().addEventListener('keydown', handleKeyDown);
+            return () => getCurrentDocument().removeEventListener('keydown', handleKeyDown);
+        }, [isOpen, onOutsideClick]);
+
         useEffect(() => {
             if (!popoverRef.current) return;
             const observer = new MutationObserver(() => {
@@ -352,6 +372,9 @@ const CometChatPopover = forwardRef<{
         function getFullScreenOverlay() {
             return <div
                 className="cometchat-popover__overlay"
+                role="presentation"
+                tabIndex={-1}
+                aria-label="Popover overlay"
                 style={{
                     position: 'fixed',
                     top: 0,

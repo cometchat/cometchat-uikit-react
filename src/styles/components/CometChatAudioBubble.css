@@ -13,20 +13,32 @@
     width: 240px;
 }
 
-/* Download icon for the tail view (right side of the audio bubble) */
+/* Download button wrapper (right side of the audio bubble) */
 .cometchat-audio-bubble__tail-view-download {
-    mask: url("../../assets/download.svg") center center no-repeat;
-    -webkit-mask: url("../../assets/download.svg") center center no-repeat;
     display: flex;
     width: 24px;
     height: 24px;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
+    border-radius: var(--cometchat-radius-1, 4px);
+}
+
+.cometchat-audio-bubble__tail-view-download:focus-visible {
+    outline: 2px solid var(--cometchat-primary-color);
+    outline-offset: 2px;
+}
+
+/* Download icon (inner span with webkit mask) */
+.cometchat-audio-bubble__tail-view-download-icon {
+    display: block;
+    width: 24px;
+    height: 24px;
+    mask: url("../../assets/download.svg") center center no-repeat;
+    -webkit-mask: url("../../assets/download.svg") center center no-repeat;
     -webkit-mask-size: contain;
     mask-size: contain;
-    cursor: pointer;
     background: var(--cometchat-static-white);
-
 }
 
 /* Waveform container inside the audio bubble body */
@@ -52,11 +64,8 @@
     transform: rotate(-90deg);
 }
 
-/* Close/stop icon inside the progress view (positioned in the center) */
+/* Close/stop button wrapper inside the progress view (positioned in the center) */
 .cometchat-audio-bubble__tail-view-download-stop {
-    mask: url("../../assets/close.svg") center center no-repeat;
-    -webkit-mask: url("../../assets/close.svg") center center no-repeat;
-    background: var(--cometchat-static-white);
     display: flex;
     width: 15px;
     height: 15px;
@@ -66,9 +75,25 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    cursor: pointer;
+    border-radius: var(--cometchat-radius-1, 4px);
+}
+
+.cometchat-audio-bubble__tail-view-download-stop:focus-visible {
+    outline: 2px solid var(--cometchat-primary-color);
+    outline-offset: 2px;
+}
+
+/* Close/stop icon (inner span with webkit mask) */
+.cometchat-audio-bubble__tail-view-download-stop-icon {
+    display: block;
+    width: 15px;
+    height: 15px;
+    mask: url("../../assets/close.svg") center center no-repeat;
+    -webkit-mask: url("../../assets/close.svg") center center no-repeat;
     -webkit-mask-size: contain;
     mask-size: contain;
-    cursor: pointer;
+    background: var(--cometchat-static-white);
 }
 .cometchat-audio-bubble>div:not([class]) {
     display: flex;
@@ -96,7 +121,7 @@
     gap: var(--cometchat-padding);
 }
 
-/* Play and pause icons for controlling the audio bubble */
+/* Play and pause button wrappers */
 .cometchat-audio-bubble__leading-view-play,
 .cometchat-audio-bubble__leading-view-pause {
     height: 24px;
@@ -104,13 +129,27 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--cometchat-primary-color);
     cursor: pointer;
+    border-radius: var(--cometchat-radius-1, 4px);
+}
 
+.cometchat-audio-bubble__leading-view-play:focus-visible,
+.cometchat-audio-bubble__leading-view-pause:focus-visible {
+    outline: 2px solid var(--cometchat-primary-color);
+    outline-offset: 2px;
+}
+
+/* Play and pause icon spans */
+.cometchat-audio-bubble__leading-view-play-icon,
+.cometchat-audio-bubble__leading-view-pause-icon {
+    display: block;
+    height: 24px;
+    width: 24px;
+    background: var(--cometchat-primary-color);
 }
 
 /* Play button icon */
-.cometchat-audio-bubble__leading-view-play {
+.cometchat-audio-bubble__leading-view-play-icon {
     mask: url("../../assets/play_arrow.svg") center center no-repeat;
     -webkit-mask: url("../../assets/play_arrow.svg") center center no-repeat;
     -webkit-mask-size: contain;
@@ -118,7 +157,7 @@
 }
 
 /* Pause button icon */
-.cometchat-audio-bubble__leading-view-pause {
+.cometchat-audio-bubble__leading-view-pause-icon {
     mask: url("../../assets/pause.svg") center center no-repeat;
     -webkit-mask: url("../../assets/pause.svg") center center no-repeat;
     -webkit-mask-size: contain;
@@ -165,8 +204,8 @@ circle.cometchat-audio-bubble__tail-view-download-progress-foreground {
     background: var(--cometchat-neutral-color-300);
 }
 
-/* Tail view download button for incoming audio bubble */
-.cometchat-audio-bubble-incoming .cometchat-audio-bubble__tail-view-download {
+/* Tail view download icon for incoming audio bubble */
+.cometchat-audio-bubble-incoming .cometchat-audio-bubble__tail-view-download-icon {
     background: var(--cometchat-primary-color);
 }
 
@@ -182,7 +221,7 @@ circle.cometchat-audio-bubble__tail-view-download-progress-foreground {
 }
 
 /* Stop download icon for incoming audio bubble */
-.cometchat-audio-bubble-incoming .cometchat-audio-bubble__tail-view-download-stop {
+.cometchat-audio-bubble-incoming .cometchat-audio-bubble__tail-view-download-stop-icon {
     background: var(--cometchat-primary-color);
 }
 

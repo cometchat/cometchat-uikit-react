@@ -41,7 +41,7 @@ const CometChatDocumentBubble = (props: DocumentBubbleProps) => {
         <div className="cometchat">
             <div className={`cometchat-document-bubble ${isSentByMe ? "cometchat-document-bubble-outgoing" : "cometchat-document-bubble-incoming"}`}>
                 <div className="cometchat-document-bubble__banner-image">
-                    <img src={bannerImage} alt="" />
+                    <img src={bannerImage} alt="Document preview" />
                 </div>
                 <div className="cometchat-document-bubble__body">
                     <div
@@ -52,23 +52,26 @@ const CometChatDocumentBubble = (props: DocumentBubbleProps) => {
                         <div
                             className="cometchat-document-bubble__body-content-name"
                         >
-                            <label title={title}>{title}</label>
+                            <span title={title}>{title}</span>
                         </div>
                         {subtitle?.trim() && subtitle.trim()?.length > 0 ?
                             <div
                                 className="cometchat-document-bubble__body-content-description" >
-                                <label title={subtitle}>{subtitle}</label>
+                                <span title={subtitle}>{subtitle}</span>
                             </div> : null}
                     </div>
 
                 </div>
 
-                <div
+                <button
+                    type="button"
                     className="cometchat-document-bubble__button"
-                    title={buttonText} onClick={() => onClicked(URL)}
+                    title={buttonText} 
+                    onClick={() => onClicked(URL)}
+                    aria-label={`Open document: ${title}`}
                 >
                     {buttonText}
-                </div>
+                </button>
             </div>
         </div>
     )

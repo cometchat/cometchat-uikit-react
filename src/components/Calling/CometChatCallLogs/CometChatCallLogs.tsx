@@ -667,7 +667,7 @@ const CometChatCallLogs = (props: CallLogsProps) => {
       return (
         <div className='cometchat-call-logs__empty-state-view'>
           <div className='cometchat-call-logs__empty-state-view-icon'>
-            <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="" />
+            <img src={isDarkMode ? emptyIconDark : emptyIcon} alt="No call history" />
           </div>
           <div className='cometchat-call-logs__empty-state-view-body'>
             <div className='cometchat-call-logs__empty-state-view-body-title'>
@@ -704,7 +704,7 @@ const CometChatCallLogs = (props: CallLogsProps) => {
       return (
         <div className='cometchat-call-logs__error-state-view'>
           <div className='cometchat-call-logs__error-state-view-icon'>
-            <img src={isDarkMode ? errorIconDark : errorIcon} alt="" />
+            <img src={isDarkMode ? errorIconDark : errorIcon} alt="Error loading call logs" />
           </div>
           <div className='cometchat-call-logs__error-state-view-body'>
             <div className='cometchat-call-logs__error-state-view-body-title'>

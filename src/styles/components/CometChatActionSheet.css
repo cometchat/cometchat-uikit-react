@@ -47,15 +47,13 @@
     padding: var(--cometchat-padding-4, 16px);
     cursor: pointer;
     width: 100%;
+    border: none;
 }
 
-.cometchat-action-sheet__item:not(:last-child) {
-    border-bottom: 1px solid #CBD6E2;
-}
-
-.cometchat-action-sheet__item:hover  {
+.cometchat-action-sheet__item:hover {
     background: var(--cometchat-white-hover);
 }
+
 .cometchat-popover .cometchat-action-sheet {
     height: inherit;
 }
