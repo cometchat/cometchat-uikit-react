@@ -2,6 +2,8 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import WaveSurfer from "./src/wavesurfer";
 import { closeCurrentMediaPlayer, currentAudioPlayer } from "../../../utils/util";
 import { useCometChatFrameContext } from "../../../context/CometChatFrameContext";
+import { resolveSecureUrl } from "../../../utils/useSecureMedia";
+
 interface AudioBubbleProps {
     /* URL of the audio to be played. */
     src: string;
@@ -23,6 +25,7 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
     const [progress, setProgress] = useState(0);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [hasError, setHasError] = useState(false);
 
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -75,7 +78,21 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
                 iframeDocument: getCurrentDocument(),
                 iframeWindow: getCurrentWindow(),
             });
-            wave.load(src);
+
+            resolveSecureUrl(src)
+                .then((resolvedSrc: string) => {
+                    if (resolvedSrc) {
+                        wave.load(resolvedSrc);
+                    } else {
+                        setHasError(true);
+                        setIsLoading(false);
+                    }
+                })
+                .catch(() => {
+                    setHasError(true);
+                    setIsLoading(false);
+                });
+
             setWaveSurfer(wave);
             // Set duration when audio is ready
             wave.on('ready', () => {
@@ -156,14 +173,17 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
         try {
             abortControllerRef.current = new AbortController();
             const { signal } = abortControllerRef.current;
-            const response:any = await fetch(src, { signal });
+
+            const downloadUrl = await resolveSecureUrl(src);
+
+            const response = await fetch(downloadUrl, { signal });
     
             if (!response.body) {
                 throw new Error('ReadableStream not supported.');
             }
     
             const reader = response.body.getReader();
-            const contentLength = +response.headers.get('Content-Length');
+            const contentLength = +(response.headers.get('Content-Length') ?? 0);
             let receivedLength = 0;
             const chunks = [];
     
@@ -173,7 +193,9 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
                 if (done) break;
                 chunks.push(value);
                 receivedLength += value.length;
-                setProgress(Math.floor((receivedLength / contentLength) * 100));
+                if (contentLength > 0) {
+                    setProgress(Math.floor((receivedLength / contentLength) * 100));
+                }
             }
     
             // Creating and downloading audio file
@@ -249,9 +271,9 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
             height: "fit-content",
             width: "fit-content"
         }}>
-            <div className={`cometchat-audio-bubble ${isSentByMe ? "cometchat-audio-bubble-outgoing" : "cometchat-audio-bubble-incoming"}`} style={isLoading ? {cursor:"not-allowed"} : {}}>
+            <div className={`cometchat-audio-bubble ${isSentByMe ? "cometchat-audio-bubble-outgoing" : "cometchat-audio-bubble-incoming"}`} style={(isLoading || hasError) ? {cursor:"not-allowed"} : {}}>
                <div>
-               <div className="cometchat-audio-bubble__leading-view" style={isLoading ? {pointerEvents:"none"} : {}}  >
+               <div className="cometchat-audio-bubble__leading-view" style={(isLoading || hasError) ? {pointerEvents:"none"} : {}}  >
                     {isPlaying ? (
                         <div className="cometchat-audio-bubble__leading-view-pause" onClick={handlePlayPause}></div>
                     ) : (
@@ -265,7 +287,7 @@ const CometChatAudioBubble = (props: AudioBubbleProps) => {
                     </div>
                 </div>
                </div>
-                <div className="cometchat-audio-bubble__tail-view" style={isLoading ? {pointerEvents:"none"} : {}} >
+                <div className="cometchat-audio-bubble__tail-view" style={(isLoading || hasError) ? {pointerEvents:"none"} : {}} >
                     {isDownloading ? getProgressBar() : (
                         <div className="cometchat-audio-bubble__tail-view-download" onClick={downloadAudio}></div>
                     )}

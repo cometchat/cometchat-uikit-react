@@ -82,7 +82,7 @@
 
 circle.cometchat-fullscreen-viewer__body-download-progress-background {
   stroke: var(--cometchat-static-white);
-  stroke-dasharray: 113 113;
+  stroke-dasharray: 251.33 251.33;
   stroke-width: 2;
   fill: none;
   opacity: .2;
@@ -90,7 +90,7 @@ circle.cometchat-fullscreen-viewer__body-download-progress-background {
 
 circle.cometchat-fullscreen-viewer__body-download-progress-foreground {
   stroke: var(--cometchat-static-white);
-  stroke-dasharray: 0 113;
+  stroke-dasharray: 0 251.33;
   stroke-width: 2;
   fill: none;
   stroke-linecap: round;

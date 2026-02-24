@@ -18,6 +18,7 @@ const CometChatAvatar = (props: CometChatAvatarProps) => {
         name = "",
     } = props;
 
+
     const splitName = name.split(" ");
 
     return (

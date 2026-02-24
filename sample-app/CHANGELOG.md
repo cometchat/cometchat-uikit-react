@@ -1,3 +1,13 @@
+## [6.2.7] - 24-02-2026
+## New
+- None
+
+## Enhancements
+- Updated the UIKit initialization to enable SecureMediaMode.HEADER_BASED for secure media handling.
+
+## Fixes
+- None
+
 ## [6.2.6] - 09-02-2026
 ## New
 - None

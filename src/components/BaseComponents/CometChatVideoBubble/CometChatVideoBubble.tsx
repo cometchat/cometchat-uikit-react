@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useCometChatVideoBubble } from "./useCometChatVideoBubble";
 import { closeCurrentMediaPlayer, currentMediaPlayer } from "../../../utils/util";
+import { useSecureMedia } from "../../../utils/useSecureMedia";
+
 interface VideoBubbleProps {
     /* URL of the video to be played. */
     src: string;
@@ -30,6 +32,7 @@ const CometChatVideoBubble = (props: VideoBubbleProps) => {
 
     const { posterImage, updateImage } = useCometChatVideoBubble({ src });
     const videoRef = useRef<HTMLVideoElement | null>(null);
+    const { resolvedUrl: videoSrc } = useSecureMedia(src);
 
     /**
      * Function to request fullscreen when video starts to play.
@@ -63,12 +66,20 @@ const CometChatVideoBubble = (props: VideoBubbleProps) => {
         }
         updateImage();
 
-      return ()=>{
-        if( videoRef.current){
-        videoRef.current.removeEventListener("fullscreenchange", handleFullscreenChange)
+        return ()=>{
+            if( videoRef.current){
+                videoRef.current.removeEventListener("fullscreenchange", handleFullscreenChange)
+            }
         }
-}
-    }, []);
+    }, [src]);
+
+    useEffect(() => {
+        if (videoRef.current && videoSrc) {
+            videoRef.current.load();
+        }
+    }, [videoSrc]);
+
+
     /**
      * Function to handle fullscreen change.
     */
@@ -90,8 +101,9 @@ const CometChatVideoBubble = (props: VideoBubbleProps) => {
         <div className="cometchat">
             <div className={`cometchat-video-bubble ${isSentByMe ? "cometchat-video-bubble-outgoing" : "cometchat-video-bubble-incoming"}`}>
                 <video controls onPlay={startVideoInFullscreen}
-                    ref={videoRef} loop={loop} muted={muted} autoPlay={autoPlay} className="cometchat-video-bubble__body" poster={posterImage}>
-                    <source src={src} />
+                    ref={videoRef} loop={loop} muted={muted} autoPlay={autoPlay} className="cometchat-video-bubble__body" poster={posterImage}
+                    >
+                    <source src={videoSrc || ""} />
                 </video>
             </div >
         </div>

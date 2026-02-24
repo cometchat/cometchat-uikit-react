@@ -23,6 +23,7 @@ if (appID && region && authKey) {
     .setRegion(region)
     .setAuthKey(authKey)
     .subscribePresenceForAllUsers()
+    .setSecureMediaMode(CometChat.SecureMediaMode.HEADER_BASED)
     .build();
 
 

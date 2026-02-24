@@ -28,18 +28,19 @@ const CometChatImageBubble = (props: ImageBubbleProps) => {
         disableLoadingState = false
     } = props;
 
-    const { image, updateImage } = useCometChatImageBubble({ src, placeholderImage });
+    const { image, updateImage, cleanup } = useCometChatImageBubble({ src, placeholderImage });
 
     useEffect(() => {
         if (!disableLoadingState) {
             updateImage();
         }
+        return cleanup;
     }, [disableLoadingState]);
 
     const getImageBubbleView = () => {
         return (
             <div className={`cometchat-image-bubble ${isSentByMe ? "cometchat-image-bubble-outgoing" : "cometchat-image-bubble-incoming"}`} onClick={() => onImageClicked({ src })}>
-                <img className="cometchat-image-bubble__body" src={disableLoadingState ? src : image} />
+                <img className="cometchat-image-bubble__body" src={disableLoadingState ? src : image} loading="lazy" alt="" />
             </div >
         )
     }

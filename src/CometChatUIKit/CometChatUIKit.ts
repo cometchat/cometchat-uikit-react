@@ -92,6 +92,7 @@ class CometChatUIKit {
         appSettingsBuilder.overrideAdminHost(uiKitSettings!.getAdminHost());
         appSettingsBuilder.overrideClientHost(uiKitSettings!.getClientHost());
         appSettingsBuilder.setStorageMode(uiKitSettings!.getStorageMode())
+        appSettingsBuilder.setSecureMediaMode(uiKitSettings!.getSecureMediaMode())
 
         const appSettings = appSettingsBuilder.build();
         if (CometChat.setSource) {
@@ -101,7 +102,7 @@ class CometChatUIKit {
         return new Promise((resolve, reject) => {
             window.CometChatUiKit = {
                 name: "@cometchat/chat-uikit-react",
-                version: "6.3.11",
+                version: "6.3.12",
             };
             CometChat.init(uiKitSettings?.appId, appSettings).then(() => {
                 CometChat.getLoggedinUser().then((user: CometChat.User | null) => {
