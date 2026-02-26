@@ -161,5 +161,3 @@ export {CometChatAIAssistantTools} from './modals/CometChatAIAssistantTools';
 export {CometChatStreamMessageBubble} from './components/BaseComponents/CometChatStreamMessageBubble/CometChatStreamMessageBubble';
 export {CometChatAIAssistantMessageBubble} from './components/BaseComponents/CometChatAIAssistantMessageBubble/CometChatAIAssistantMessageBubble';
 export {CometChatAIAssistantChatHistory} from './components/CometChatAIAssistantChatHistory/CometChatAIAssistantChatHistory'
-
-export { useSecureMedia, resolveSecureUrl, requiresSecureMediaAccess } from './utils/useSecureMedia';

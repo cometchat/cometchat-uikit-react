@@ -8,7 +8,7 @@
     "./css-variables.css": "./dist/styles/css-variables.css"
   },
   "dependencies": {
-    "@cometchat/chat-sdk-javascript": "^4.1.7",
+    "@cometchat/chat-sdk-javascript": "^4.1.6",
     "@rollup/plugin-json": "^6.1.0",
     "rxjs": "^7.8.1",
     "react-markdown": "^10.1.0",

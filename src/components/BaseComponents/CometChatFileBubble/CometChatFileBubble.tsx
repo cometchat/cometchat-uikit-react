@@ -1,7 +1,5 @@
 import { useCallback, useRef, useState } from "react";
 import filetype from '../../../assets/file_type_unsupported.png'
-import { resolveSecureUrl } from "../../../utils/useSecureMedia";
-
 interface FileBubbleProps {
     /* url of the file present in the message. */
     fileURL: string;
@@ -31,7 +29,6 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
 
     const [progress, setProgress] = useState(0);
     const [isDownloading, setIsDownloading] = useState(false);
-    const [hasError, setHasError] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
 
     /**
@@ -40,20 +37,15 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
     const downloadFile = async () => {
         const url = fileURL;
         setIsDownloading(true);
-        setHasError(false);
         try {
             abortControllerRef.current = new AbortController();
             const { signal } = abortControllerRef.current;
-
-            let downloadUrl = await resolveSecureUrl(url);
-
-            const response = await fetch(downloadUrl, { signal });
-
+            const response: any = await fetch(url, { signal });
             if (!response.body) {
                 throw new Error('ReadableStream not yet supported in this browser.');
             }
             const reader = response.body.getReader();
-            const contentLength = +(response.headers.get('Content-Length') ?? 0);
+            const contentLength = +response.headers.get('Content-Length');
             let receivedLength = 0;
             const chunks = [];
             while (true) {
@@ -63,9 +55,7 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
                 }
                 chunks.push(value);
                 receivedLength += value.length;
-                if (contentLength > 0) {
-                    setProgress(Math.floor((receivedLength / contentLength) * 100));
-                }
+                setProgress(Math.floor((receivedLength / contentLength) * 100));
             }
             setIsDownloading(false);
             const blob = new Blob(chunks);
@@ -73,19 +63,19 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
             link.href = URL.createObjectURL(blob);
             link.download = title ?? "File";
             link.click();
-            URL.revokeObjectURL(link.href);
         } catch (error: any) {
+
             if (error.name === 'AbortError') {
                 console.log('Download was aborted');
             } else {
                 console.error('Download failed:', error);
-                setHasError(true);
             }
+
+
             setIsDownloading(false);
             setProgress(0);
         }
     };
-
     /**
      * Function to stop the download
       */
@@ -142,6 +132,7 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
                </div>
 
                 <div className="cometchat-file-bubble__tail-view">
+
                     {isDownloading ? getProgressBar() : <div className="cometchat-file-bubble__tail-view-download" onClick={downloadFile} ></div>}
                 </div>
             </div >

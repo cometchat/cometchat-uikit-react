@@ -96,12 +96,6 @@ export class UIKitSettings {
   readonly storageMode: CometChat.StorageMode
 
   /**
-   * Secure media mode for accessing protected media resources. Defaults to EMBEDDED if not set.
-   * @type {CometChat.SecureMediaMode}
-   */
-  readonly secureMediaMode: CometChat.SecureMediaMode
-
-  /**
    * Private constructor to initialize the settings using the provided builder.
    * @param {UIKitSettingsBuilder} builder - The builder instance containing the settings configuration.
    */
@@ -120,7 +114,6 @@ export class UIKitSettings {
     this.callingExtension  = builder.callingExtension;
     this.roles = builder.roles;
     this.storageMode = builder.storageMode || CometChat.StorageMode.LOCAL;
-    this.secureMediaMode = builder.secureMediaMode || CometChat.SecureMediaMode.EMBEDDED;
   }
 
   /**
@@ -218,14 +211,6 @@ export class UIKitSettings {
   public getStorageMode(): CometChat.StorageMode {
     return this.storageMode;
   }
-
-  /**
-   * Retrieves the secure media mode.
-   * @returns {CometChat.SecureMediaMode} The secure media mode.
-   */
-  public getSecureMediaMode(): CometChat.SecureMediaMode {
-    return this.secureMediaMode;
-  }
 }
 
 export class UIKitSettingsBuilder {
@@ -313,12 +298,6 @@ export class UIKitSettingsBuilder {
    * @type {CometChat.StorageMode}
    */
   storageMode?: CometChat.StorageMode
-
-  /**
-   * Secure media mode for accessing protected media resources. Defaults to EMBEDDED if not set.
-   * @type {CometChat.SecureMediaMode}
-   */
-  secureMediaMode?: CometChat.SecureMediaMode
 
   /**
   * Builds and returns an instance of UIKitSettings.
@@ -456,16 +435,6 @@ export class UIKitSettingsBuilder {
   */
   public setStorageMode(storageMode: CometChat.StorageMode): UIKitSettingsBuilder {
     this.storageMode = storageMode;
-    return this;
-  }
-
-  /**
-   * Sets the secure media mode for accessing protected media resources. Defaults to EMBEDDED.
-   * @param {CometChat.SecureMediaMode} secureMediaMode - The secure media mode.
-   * @returns {UIKitSettingsBuilder} The builder instance.
-   */
-  public setSecureMediaMode(secureMediaMode: CometChat.SecureMediaMode): UIKitSettingsBuilder {
-    this.secureMediaMode = secureMediaMode;
     return this;
   }
 }

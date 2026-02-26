@@ -1,12 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { CometChatListItem } from '../CometChatListItem/CometChatListItem';
 import { CometChatLocalize } from '../../../resources/CometChatLocalize/cometchat-localize';
 import {getLocalizedString} from '../../../resources/CometChatLocalize/cometchat-localize';
 import { CalendarObject } from '../../../utils/CalendarObject';
 import { sanitizeCalendarObject } from '../../../utils/util';
-import { CometChat } from "@cometchat/chat-sdk-javascript";
-import placeholderIcon from "../../../assets/image_placeholder.png";
-import { requiresSecureMediaAccess, resolveSecureUrl } from "../../../utils/useSecureMedia";
 
 /**
  * Props for the CometChatFullScreenViewer component.
@@ -41,101 +38,71 @@ interface FullScreenViewerProps {
  */
 const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
     url = "",
-    placeholderImage = placeholderIcon,
     ccCloseClicked,
     message,
     imageSentAtDateTimeFormat
 }) => {
-    const [image, setImage] = useState<string>(placeholderImage);
+    const [image, setImage] = useState<string>();
     const [isDownloading, setIsDownloading] = useState(true);
     const [progress, setProgress] = useState(0);
-    const abortControllerRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
-        let cancelled = false;
-        setProgress(0);
+        const updateImage = () => {
+            downloadImage(url)
+                .then((response) => {
+                    const img = new Image();
+                    img.src = url;
+                    img.onload = () => {
+                     setIsDownloading(false)
+                        setImage(img.src);
+                    };
+                })
+                .catch(() => {
+                    setImage(url);
+                });
+        };
 
-        const loadImage = async () => {
-            if (!url) {
-                setImage(placeholderImage);
-                setIsDownloading(false);
-                return;
-            }
+        updateImage();
+    }, [url, URL]);
 
-            if (requiresSecureMediaAccess(url)) {
-                try {
-                    abortControllerRef.current = new AbortController();
-                    const { signal } = abortControllerRef.current;
-
-                    const signedUrl = await resolveSecureUrl(url);
-                    if (cancelled) return;
-
-                    if (!signedUrl) {
-                        setImage(placeholderImage);
-                        setIsDownloading(false);
-                        return;
-                    }
-
-                    const response = await fetch(signedUrl, { signal });
-                    if (!response.body) {
-                        if (!cancelled) {
-                            setImage(signedUrl);
-                            setIsDownloading(false);
-                        }
-                        return;
-                    }
-
-                    const reader = response.body.getReader();
-                    const contentLength = +(response.headers.get('Content-Length') ?? 0);
-                    let receivedLength = 0;
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        receivedLength += value.length;
-                        if (contentLength > 0 && !cancelled) {
-                            setProgress(Math.floor((receivedLength / contentLength) * 100));
-                        }
-                    }
-
-                    if (!cancelled) {
-                        setImage(signedUrl);
-                        setIsDownloading(false);
-                    }
-                } catch {
-                    if (!cancelled) {
-                        setImage(placeholderImage);
-                        setIsDownloading(false);
+    /**
+     * Downloads an image with retries in case of failure.
+     * @param imgUrl The URL of the image to download.
+     * @param attemptCount The current attempt count.
+     * @returns A promise that resolves when the image is downloaded.
+     */
+    const downloadImage = (imgUrl: string, attemptCount: number = 0): Promise<any> => {
+        const maxAttempts = 5;
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', imgUrl, true);
+            xhr.responseType = 'blob';
+            xhr.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percentage = (event.loaded / event.total) * 100;
+                    setProgress(percentage);
+                }
+            };
+            xhr.onload = () => {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        resolve(xhr.response);
+                    } else if (xhr.status === 403 && attemptCount < maxAttempts) {
+                        setTimeout(() => {
+                            downloadImage(imgUrl, attemptCount + 1)
+                                .then(resolve)
+                                .catch(reject);
+                        }, 800);
+                    } else {
+                        reject(xhr.statusText);
                     }
                 }
-            } else {
-                const img = new Image();
-                img.src = url;
-                img.onload = () => {
-                    if (!cancelled) {
-                        setIsDownloading(false);
-                        setImage(url);
-                    }
-                };
-                img.onerror = () => {
-                    if (!cancelled) {
-                        setIsDownloading(false);
-                        setImage(placeholderImage);
-                    }
-                };
-            }
-        };
-
-        loadImage();
-
-        return () => {
-            cancelled = true;
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-                abortControllerRef.current = null;
-            }
-        };
-    }, [url, placeholderImage]);
+            };
+            xhr.onerror = () => reject(new Error("There was a network error."));
+            xhr.ontimeout = () => reject(new Error("There was a timeout error."));
+            xhr.send();
+        });
+    };
 
     /**
      * Handles the close button click event.
@@ -146,6 +113,8 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
             ccCloseClicked();
         }
     };
+
+
 
      /**
      * Default progress bar view.
@@ -161,6 +130,7 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
                         cy="50"
                         r="40"
                         className="cometchat-fullscreen-viewer__body-download-progress-background"
+
                     ></circle>
                     <circle
                         className="cometchat-fullscreen-viewer__body-download-progress-foreground"
@@ -168,14 +138,13 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
                         cy="50"
                         r="40"
                         style={{
-                            strokeDasharray: `${(progress / 100) * 251.33} 251.33`,
+                            strokeDasharray: `${(progress / 1.13)} 113`,
                         }}
                     ></circle>
                 </svg>
             </div>
         )
-    }, [progress]);
-
+    }, [isDownloading, progress])
    /**
    * Function for timestamps associated with images in the message list.
    * @returns CalendarObject
@@ -188,7 +157,7 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
           };
         var globalCalendarFormat = sanitizeCalendarObject(CometChatLocalize.calendarObject)
         var componentCalendarFormat = sanitizeCalendarObject(imageSentAtDateTimeFormat)
-
+        
           const finalFormat = {
             ...defaultFormat,
             ...globalCalendarFormat,
@@ -196,7 +165,6 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
           };
           return finalFormat;
       }
-
     return (
         <div className="cometchat">
             <div className="cometchat-fullscreen-viewer">
@@ -210,13 +178,14 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
                                 `${CometChatLocalize.formatDate(message?.getSentAt(),getDateFormat())}`}
                         />
                     </div>
+
+
                 </div>
                 <div className="cometchat-fullscreen-viewer__body">
                  { isDownloading ?  getProgressBar(): <img
                         src={image}
                         className="cometchat-fullscreen-viewer__body-image"
                         alt={getLocalizedString("message_list_full_screen_viewer")}
-                        onError={() => setImage(placeholderImage)}
                     />}
                 </div>
 
@@ -224,6 +193,8 @@ const CometChatFullScreenViewer: React.FC<FullScreenViewerProps> = ({
                     className="cometchat-fullscreen-viewer__close-button"
                     onClick={handleCloseClick}
                 />
+
+
             </div>
         </div>
     );

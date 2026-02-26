@@ -92,7 +92,6 @@ class CometChatUIKit {
         appSettingsBuilder.overrideAdminHost(uiKitSettings!.getAdminHost());
         appSettingsBuilder.overrideClientHost(uiKitSettings!.getClientHost());
         appSettingsBuilder.setStorageMode(uiKitSettings!.getStorageMode())
-        appSettingsBuilder.setSecureMediaMode(uiKitSettings!.getSecureMediaMode())
 
         const appSettings = appSettingsBuilder.build();
         if (CometChat.setSource) {

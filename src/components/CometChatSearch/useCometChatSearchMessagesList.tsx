@@ -1,7 +1,6 @@
 import { JSX, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useCometChatErrorHandler } from "../../CometChatCustomHooks";
 import { CometChat } from "@cometchat/chat-sdk-javascript";
-import { useSecureMedia } from "../../utils/useSecureMedia";
 import { CometChatListItem } from "../BaseComponents/CometChatListItem/CometChatListItem";
 import { CometChatList } from "../BaseComponents/CometChatList/CometChatList";
 import { CometChatTextFormatter } from "../../formatters/CometChatFormatters/CometChatTextFormatter";
@@ -228,49 +227,6 @@ function LinkPreviewImage(props: {
   return (
     <div className={`${viewClass} ${viewClass}-link`}>
       <img src={url} onError={() => setFailed(true)} alt="" loading="lazy" />
-    </div>
-  );
-}
-
-function SearchImageThumbnail(props: {
-  url: string;
-  viewClass: string;
-  iconClass: string;
-}) {
-  const { url, viewClass, iconClass } = props;
-  const { resolvedUrl: imageSrc, error } = useSecureMedia(url);
-  const [imgLoadError, setImgLoadError] = useState(false);
-
-  if (error || imgLoadError || !imageSrc) {
-    return (
-      <div className={`${viewClass} ${viewClass}-image`}>
-        <div className={iconClass}></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`${viewClass} ${viewClass}-image`}>
-      <div className={iconClass}></div>
-      <img src={imageSrc} className={iconClass} onError={() => setImgLoadError(true)} alt="" />
-    </div>
-  );
-}
-
-function SearchVideoThumbnail(props: {
-  url: string;
-  viewClass: string;
-  iconClass: string;
-}) {
-  const { url, viewClass, iconClass } = props;
-  const { resolvedUrl: videoSrc } = useSecureMedia(url);
-
-  return (
-    <div className={`${viewClass} ${viewClass}-video`}>
-      <video src={videoSrc || ""} className={iconClass} preload="metadata" controls={false} onContextMenu={(e) => e.preventDefault()}>
-        <track kind="captions" />
-      </video>
-      <div className="cometchat-search__messages-video-play-button"></div>
     </div>
   );
 }
@@ -733,11 +689,25 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
       }
       // Add specific class based on message type
       switch (messageType) {
+
         case CometChatUIKitConstants.MessageTypes.image:
-          return <SearchImageThumbnail url={url} viewClass={viewClass} iconClass={iconClass} />;
+
+          return (
+            <div className={`${viewClass} ${viewClass}-image`}>
+              <div className={iconClass}></div>
+              <img src={url} className={iconClass} />
+            </div>
+          );
 
         case CometChatUIKitConstants.MessageTypes.video:
-          return <SearchVideoThumbnail url={url} viewClass={viewClass} iconClass={iconClass} />;
+          return (
+            <div className={`${viewClass} ${viewClass}-video`}>
+              <video src={url} className={iconClass} preload="metadata" controls={false} onContextMenu={(e) => e.preventDefault()}>
+                <track kind="captions" />
+              </video>
+              <div className="cometchat-search__messages-video-play-button"></div>
+            </div>
+          );
 
         default:
           break;
