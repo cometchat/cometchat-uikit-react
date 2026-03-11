@@ -4,7 +4,6 @@ import { fireClickEvent } from "../../../utils/util";
 import {getLocalizedString} from "../../../resources/CometChatLocalize/cometchat-localize";
 import { CometChatTextFormatter } from "../../../formatters/CometChatFormatters/CometChatTextFormatter";
 import { MentionsTargetElement } from "../../../Enums/Enums";
-import { CometChatUIKitUtility } from "../../../CometChatUIKit/CometChatUIKitUtility";
 
 interface TextBubbleProps {
     /* text to be displayed as a message. */
@@ -52,8 +51,7 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
      * Check if textFormatters are available
     */
     useEffect(() => {
-        const sanitizedText = CometChatUIKitUtility.sanitizeText(text);
-        setTextState(sanitizedText);
+        setTextState(text);
     }, [text, textFormatters, setTextState]);
     useEffect(() => {
         if (textRef.current) {

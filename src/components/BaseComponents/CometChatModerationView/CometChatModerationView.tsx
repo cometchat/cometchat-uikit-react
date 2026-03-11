@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getLocalizedString } from '../../../resources/CometChatLocalize/cometchat-localize';
 
-const CometChatModerationView = () => {
+const CometChatModerationView = ({ message }: { message?: string }) => {
     const elementRef = useRef<HTMLDivElement | null>(null);
     const [width, setWidth] = useState(0);
 
@@ -41,7 +41,7 @@ const CometChatModerationView = () => {
         >
             <div className="cometchat-moderation-status__icon"></div>
             <p className="cometchat-moderation-status__message">
-                {getLocalizedString("moderation_block_message")}
+                {message || getLocalizedString("moderation_block_message")}
             </p>
         </div>
     );

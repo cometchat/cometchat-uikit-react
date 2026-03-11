@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "Emoji",
     "message_composer_mention_limit_warning": "Bir kerede 10 kullanıcıya kadar etiketleyebilirsiniz.",
     "message_composer_wrong_file_type": "Farklı bir dosya türü seçtiniz. Lütfen uygun dosyayı seçin.",
+    "file_type_not_allowed": "Bu dosya türüne izin verilmiyor.",
     "message_composer_mention_all": "herkes",
     "message_composer_mention_notify_everyone_label": "Bu gruptaki herkese bildirim gönder",
     "message_header_typing": "Yazıyor...",

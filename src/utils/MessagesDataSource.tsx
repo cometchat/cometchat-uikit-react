@@ -342,6 +342,7 @@ getBubbleStatusInfoReceipt: (item: CometChat.BaseMessage, hideReceipts?: boolean
         CometChatUIKitConstants.MessageCategory.interactive
       ) {
         let state = MessageReceiptUtils.getReceiptStatus(item);
+        
         return (
           <div className={`cometchat-receipts cometchat-message-bubble__status-info-view-receipts cometchat-message-bubble__status-info-view-receipts-${this.getReceiptClass(state)} cometchat-receipts-${this.getReceiptClass(state)}`}>
             <div className="cometchat-message-list__receipt"></div>
@@ -409,6 +410,18 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     _alignment: MessageBubbleAlignment, hideReceipts?: boolean, messageSentAtDateTimeFormat?: CalendarObject, showError?: boolean
   ) => {
     if (!(_messageObject instanceof CometChat.Action) && !(_messageObject instanceof CometChat.Call) && (_messageObject.getType() != "meeting" || (_messageObject.getType() == "meeting" && _messageObject.getDeletedAt()))) {
+      const hasError = MessageReceiptUtils.getReceiptStatus(_messageObject) === Receipts.error;
+      
+      // Check if it's a permission denied error (shown in bottom view instead)
+      let isPermissionDeniedError = false;
+      if (_messageObject instanceof CometChat.MediaMessage || _messageObject instanceof CometChat.TextMessage) {
+        // Check both direct error property and metadata error (same as MessageReceiptUtils)
+        const directError = (_messageObject as any)?.error as { code?: string } | undefined;
+        const metadataError = (_messageObject.getMetadata() as { error?: { code?: string } } | undefined)?.error;
+        const errorCode = directError?.code || metadataError?.code;
+        isPermissionDeniedError = errorCode === 'ERR_PERMISSION_DENIED';
+      }
+      
       return (
         <div
           className="cometchat-message-bubble__status-info-view"
@@ -416,7 +429,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
           {!_messageObject.getDeletedAt() && _messageObject.getType() == CometChatUIKitConstants.MessageTypes.text && _messageObject.getEditedAt() ? <span className="cometchat-message-bubble__status-info-view-helper-text">  {getLocalizedString("message_list_action_edited")} </span> : null}
 
           {this.getBubbleStatusInfoDate(_messageObject, messageSentAtDateTimeFormat)}
-          {!hideReceipts && this.getBubbleStatusInfoReceipt(_messageObject, hideReceipts,showError)}
+          {!hideReceipts && !isPermissionDeniedError && this.getBubbleStatusInfoReceipt(_messageObject, hideReceipts, (showError || hasError))}
         </div>
       );
     } else {
@@ -1107,6 +1120,26 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     _alignment: MessageBubbleAlignment,
 
   ): Element | JSX.Element {
+    // When attachments are empty (e.g. ERR_PERMISSION_DENIED), fall back to file bubble with metadata
+    if (!message?.getAttachments()?.length) {
+      const metadata = message?.getMetadata() as any;
+      const metadataFile = metadata?.file as File | undefined;
+      if (metadataFile) {
+        const localUrl = URL.createObjectURL(metadataFile);
+        return ChatConfigurator.getDataSource().getAudioMessageBubble(
+          localUrl,
+          message,
+          metadataFile.name,
+          _alignment
+        );
+      }
+      return ChatConfigurator.getDataSource().getFileMessageBubble(
+        "",
+        message,
+        undefined,
+        _alignment
+      );
+    }
     return ChatConfigurator.getDataSource().getAudioMessageBubble(
       message?.getAttachments()[0]?.getUrl(),
       message,
@@ -1133,6 +1166,27 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     _alignment: MessageBubbleAlignment,
 
   ): Element | JSX.Element {
+    // When attachments are empty (e.g. ERR_PERMISSION_DENIED), fall back to file bubble with metadata
+    if (!message?.getAttachments()?.length) {
+      const metadata = message?.getMetadata() as any;
+      const metadataFile = metadata?.file as File | undefined;
+      if (metadataFile) {
+        const localUrl = URL.createObjectURL(metadataFile);
+        return ChatConfigurator.getDataSource().getImageMessageBubble(
+          localUrl,
+          PlaceholderImage,
+          message,
+          undefined,
+          _alignment
+        );
+      }
+      return ChatConfigurator.getDataSource().getFileMessageBubble(
+        "",
+        message,
+        undefined,
+        _alignment
+      );
+    }
     let imageUrl = message?.getAttachments()[0]?.getUrl() || "";
     return ChatConfigurator.getDataSource().getImageMessageBubble(
       imageUrl,
@@ -1148,6 +1202,26 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     _alignment: MessageBubbleAlignment,
 
   ): Element | JSX.Element {
+    // When attachments are empty (e.g. ERR_PERMISSION_DENIED), fall back to file bubble with metadata
+    if (!message?.getAttachments()?.length) {
+      const metadata = message?.getMetadata() as any;
+      const metadataFile = metadata?.file as File | undefined;
+      if (metadataFile) {
+        const localUrl = URL.createObjectURL(metadataFile);
+        return ChatConfigurator.getDataSource().getVideoMessageBubble(
+          localUrl,
+          message,
+          undefined, undefined,
+          _alignment
+        );
+      }
+      return ChatConfigurator.getDataSource().getFileMessageBubble(
+        "",
+        message,
+        undefined,
+        _alignment
+      );
+    }
     return ChatConfigurator.getDataSource().getVideoMessageBubble(
       message?.getAttachments()[0]?.getUrl(),
       message,
@@ -1430,10 +1504,11 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     title?: string,
     alignment?: MessageBubbleAlignment  ): Element | JSX.Element {
     let attachment = message.getAttachments()[0];
-    const metadataFile = (message.getMetadata() as any)?.file as File | undefined;
-    const name = title ?? attachment?.getName() ?? metadataFile?.name;
-    const mimeType = attachment?.getMimeType() ?? metadataFile?.type;
-    const size = this.getFileSize(attachment?.getSize() ?? metadataFile?.size);
+    const metadata = message.getMetadata() as any;
+    const metadataFile = metadata?.file as File | undefined;
+    const name = title ?? attachment?.getName() ?? metadataFile?.name ?? metadata?.fileName;
+    const mimeType = attachment?.getMimeType() ?? metadataFile?.type ?? metadata?.fileType;
+    const size = this.getFileSize(attachment?.getSize() ?? metadataFile?.size ?? metadata?.fileSize);
     const icon = this.getFileType(mimeType);
     const subtitle = `${size} ${attachment?.getExtension() ? `• ${attachment.getExtension()}` : ''}`.trim();
     return (

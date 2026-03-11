@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "इमोजी",
     "message_composer_mention_limit_warning": "आप एक बार में अधिकतम 10 उपयोगकर्ताओं का उल्लेख कर सकते हैं।",
     "message_composer_wrong_file_type": "आपने एक अलग प्रकार की फ़ाइल चुनी है। कृपया उपयुक्त फ़ाइल चुनें।",
+    "file_type_not_allowed": "इस फ़ाइल प्रकार की अनुमति नहीं है।",
     "message_composer_mention_all": "सभी",
     "message_composer_mention_notify_everyone_label": "इस समूह में सभी को सूचित करें",
     "message_header_typing": "टाइप कर रहे हैं...",

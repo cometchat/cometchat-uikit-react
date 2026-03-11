@@ -589,7 +589,8 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
       let user = loggedInUser ?? CometChatUIKitLoginListener.getLoggedInUser();
       const messageText = getFormattedMessageText(message);
       const isMyMessage = message?.getSender().getUid() == user?.getUid();
-      const senderName = isMyMessage ? getLocalizedString("search_message_subtitle_you") : message?.getSender().getName()
+      const rawSenderName = isMyMessage ? getLocalizedString("search_message_subtitle_you") : message?.getSender().getName()
+      const senderName = CometChatUIKitUtility.sanitizeText(rawSenderName);
       return (
         <>
         {getSubtitleThreadView(message)}

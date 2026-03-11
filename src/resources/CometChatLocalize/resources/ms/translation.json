@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "Emoji",
     "message_composer_mention_limit_warning": "Anda boleh menyebut sehingga 10 pengguna sekaligus.",
     "message_composer_wrong_file_type": "Anda memilih jenis fail yang berbeza. Sila pilih fail yang sesuai.",
+    "file_type_not_allowed": "Jenis fail ini tidak dibenarkan.",
     "message_composer_mention_all": "semua",
     "message_composer_mention_notify_everyone_label": "Maklumkan semua orang dalam kumpulan ini",
     "message_header_typing": "Menulis...",

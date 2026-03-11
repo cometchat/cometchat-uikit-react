@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "Emoji",
     "message_composer_mention_limit_warning": "Legfeljebb 10 felhasználót említhetsz egyszerre.",
     "message_composer_wrong_file_type": "Más típusú fájlt választottál. Kérlek, válassz megfelelő fájlt.",
+    "file_type_not_allowed": "Ez a fájltípus nem engedélyezett.",
     "message_composer_mention_all": "mindenki",
     "message_composer_mention_notify_everyone_label": "Értesítsen mindenkit ebben a csoportban",
     "message_header_typing": "Gépel...",

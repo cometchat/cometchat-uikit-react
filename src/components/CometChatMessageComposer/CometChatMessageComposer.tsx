@@ -929,7 +929,19 @@ try {
       wasEditMethodCall: boolean
     ): void => {
       try {
-        message.setMetadata({ error });
+        // Preserve existing metadata and merge error into it
+        const existingMetadata = message.getMetadata() || {};
+        message.setMetadata({ ...existingMetadata, error });
+        // For media messages, ensure file info is preserved as plain strings
+        // (the SDK may clear the File object during sendMediaMessage)
+        if (message instanceof CometChat.MediaMessage) {
+          const meta = message.getMetadata() as any;
+          if (!meta?.fileName && meta?.file?.name) {
+            meta.fileName = meta.file.name;
+            meta.fileType = meta.file.type;
+            meta.fileSize = meta.file.size;
+          }
+        }
         if (wasEditMethodCall) {
           CometChatMessageEvents.ccMessageEdited.next({
             message,
@@ -1217,7 +1229,7 @@ try {
       );
       mediaMessage.setSentAt(CometChatUIKitUtility.getUnixTimestamp());
       mediaMessage.setMuid(CometChatUIKitUtility.ID());
-      mediaMessage.setMetadata({ file: processedFile });
+      mediaMessage.setMetadata({ file: processedFile, fileName: processedFile.name, fileType: processedFile.type, fileSize: processedFile.size });
       const parentMessageId = parentMessageIdPropRef.current;
       if (parentMessageId !== null) {
         mediaMessage.setParentMessageId(parentMessageId);
@@ -1247,11 +1259,23 @@ try {
     async <T extends CometChat.MediaMessage>(
       mediaMessage: T
     ): Promise<T | undefined> => {
+      // Capture file info before SDK call — the SDK may wipe metadata on error
+      const preCallMetadata = mediaMessage.getMetadata() as Record<string, any> | undefined;
+      const savedFileInfo = preCallMetadata ? {
+        fileName: preCallMetadata.fileName,
+        fileType: preCallMetadata.fileType,
+        fileSize: preCallMetadata.fileSize,
+      } : undefined;
       try {
         const sentMediaMessage = await CometChat.sendMediaMessage(mediaMessage);
         CometChatMessageEvents.ccReplyToMessage.next({message: mediaMessage, status: MessageStatus.success})
         return sentMediaMessage as T;
       } catch (error) {
+        // Restore file info that the SDK may have cleared
+        if (savedFileInfo) {
+          const currentMeta = mediaMessage.getMetadata() as Record<string, any> || {};
+          mediaMessage.setMetadata({ ...currentMeta, ...savedFileInfo });
+        }
         handleSDKError(error, mediaMessage, false);
         errorHandler(error,"sendMediaMessage");
 
@@ -1353,13 +1377,14 @@ try {
     const file = mediaFilePickerElement.files[0];
     const acceptAttr = mediaFilePickerElement.accept;
     let expectedFileType = !acceptAttr || acceptAttr === "*/*" ? "file" : acceptAttr.split("/")[0]
-    const actualFileType = expectedFileType === "file" ? "file" : file.type.split('/')[0];
-    if (expectedFileType !== "file" && expectedFileType !== actualFileType) {
+    const isHeic = file.name.toLowerCase().endsWith(".heic") || file.name.toLowerCase().endsWith(".heif");
+    const actualFileType = isHeic ? "file" : (expectedFileType === "file" ? "file" : file.type.split('/')[0]);
+    if (expectedFileType !== "file" && expectedFileType !== actualFileType && !isHeic) {
       dispatch({ type: "setShowValidationError", showValidationError: true });
       mediaFilePickerElement.value = "";
       return;
     }
-  
+    
     const onSendButtonClick = onSendButtonClickPropRef.current;
     if (onSendButtonClick) {
       try {
@@ -1901,12 +1926,20 @@ try {
       }, 5000);
     }
 
-    let errorText = state.showMentionsCountWarning ? getLocalizedString("message_composer_mention_limit_warning") : getLocalizedString("message_composer_wrong_file_type");
+    let errorText = '';
+    if (state.showMentionsCountWarning) {
+      errorText = getLocalizedString("message_composer_mention_limit_warning");
+    } else if (state.showValidationError) {
+      errorText = getLocalizedString("message_composer_wrong_file_type");
+    }
+
+    const showError = state.showMentionsCountWarning || state.showValidationError;
+
     return (
       <div
         className='cometchat-message-composer__header'
       >
-        {state.showMentionsCountWarning || state.showValidationError ? (
+        {showError ? (
           <div className='cometchat-message-composer__header-error-state'
           >
             <div className='cometchat-message-composer__header-error-state-icon-wrapper'>
@@ -2372,35 +2405,16 @@ try {
       try {
         if (sel.current && range.current) {
           range.current.deleteContents();
-          let el = document?.createElement("div");
-          el.innerHTML = html;
-          let frag = document?.createDocumentFragment(),
-            node,
-
-            lastNode;
-          while ((node = el.firstChild)) {
-            if (node instanceof HTMLElement) {
-              if (textFormatterArray && textFormatterArray.length) {
-                for (let i = 0; i < textFormatterArray.length; i++) {
-                  node = textFormatterArray[i].registerEventListeners(
-                    node,
-                    node.classList
-                  );
-                }
-              }
-              lastNode = frag.appendChild(el.removeChild(node));
-            } else if (node instanceof Text) {
-              lastNode = frag.appendChild(el.removeChild(node));
-            }
-          }
+          const frag = sanitizeHtmlStringToFragment(html, textFormatterArray);
           range.current.insertNode(frag);
+          const contentEditable = getCurrentInput();
+          const lastNode = contentEditable?.lastChild || null;
           if (lastNode) {
             range.current = range.current.cloneRange();
             range.current.setStartAfter(lastNode);
             range.current.collapse(true);
             sel.current.removeAllRanges();
             sel.current.addRange(range.current);
-            const contentEditable = getCurrentInput();
             let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML!);
             if (contentEditable?.innerHTML?.trim() == "<br>") {
               contentEditable.innerHTML = "";

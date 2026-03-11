@@ -13,14 +13,19 @@ function useCometChatOutgoingCall(
     useEffect(
         () => {
         try {
+                let timeoutId: ReturnType<typeof setTimeout> | null = null;
+                
                 // If there's an active call, play audio after a delay
                 if (call) {
-                    setTimeout(() => {
+                    timeoutId = setTimeout(() => {
                         playAudio();
                     });
                 }
                 // Cleanup function to pause the audio when the component unmounts or dependencies change
                 return () => {
+                    if (timeoutId !== null) {
+                        clearTimeout(timeoutId);
+                    }
                     CometChatSoundManager.pause();
                 }
         } catch (error) {

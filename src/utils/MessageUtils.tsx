@@ -100,6 +100,15 @@ export class MessageUtils {
   }
 
   /**
+   * Retrieves the bottom view for permission denied messages
+   *
+   * @returns {JSX.Element} The default view for permission denied messages.
+   */
+  getPermissionDeniedMessageBottomView(): JSX.Element {
+    return <CometChatModerationView message={getLocalizedString("file_type_not_allowed")} />
+  }
+
+  /**
    * Retrieves the bubble wrapper for a message based on the provided template.
    *
    * @param {CometChat.BaseMessage} message - The message object for which to get the bubble wrapper.

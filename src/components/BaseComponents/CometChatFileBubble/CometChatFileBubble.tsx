@@ -131,10 +131,11 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
                 </div>
                </div>
 
+                {fileURL ? (
                 <div className="cometchat-file-bubble__tail-view">
-
                     {isDownloading ? getProgressBar() : <div className="cometchat-file-bubble__tail-view-download" onClick={downloadFile} ></div>}
                 </div>
+                ) : null}
             </div >
         </div>
     )

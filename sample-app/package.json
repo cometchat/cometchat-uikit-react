@@ -5,9 +5,9 @@
   "author": "CometChat",
   "private": true,
   "dependencies": {
-    "@cometchat/calls-sdk-javascript": "^4.2.2",
-    "@cometchat/chat-sdk-javascript": "^4.1.6",
-    "@cometchat/chat-uikit-react": "~6.3.11",
+    "@cometchat/calls-sdk-javascript": "^4.2.5",
+    "@cometchat/chat-sdk-javascript": "^4.1.8",
+    "@cometchat/chat-uikit-react": "~6.3.13",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-router-dom": "^6.30.3",

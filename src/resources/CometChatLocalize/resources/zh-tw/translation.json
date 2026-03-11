@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "表情符號",
     "message_composer_mention_limit_warning": "您最多可以提及 10 位使用者。",
     "message_composer_wrong_file_type": "您選擇的文件類型不正確。請選擇適當的文件。",
+    "file_type_not_allowed": "不允許此檔案類型。",
     "message_composer_mention_all": "所有人",
     "message_composer_mention_notify_everyone_label": "通知此群組中的所有人",
     "message_header_typing": "正在輸入...",

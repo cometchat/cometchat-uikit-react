@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "絵文字",
     "message_composer_mention_limit_warning": "一度に最大10人までメンションできます。",
     "message_composer_wrong_file_type": "異なる種類のファイルを選択しました。適切なファイルを選択してください。",
+    "file_type_not_allowed": "このファイル形式は許可されていません。",
     "message_composer_mention_all": "全員",
     "message_composer_mention_notify_everyone_label": "このグループの全員に通知します",
     "message_header_typing": "入力中…",

@@ -1,6 +1,5 @@
 
 import { CometChatTextFormatter } from '../formatters/CometChatFormatters/CometChatTextFormatter';
-import { CometChatUIKitUtility } from '../CometChatUIKit/CometChatUIKitUtility';
 import {getLocalizedString} from '../resources/CometChatLocalize/cometchat-localize';
 import { MessageBubbleAlignment } from '../Enums/Enums';
 import { CometChatUIKitConstants } from '../constants/CometChatUIKitConstants';
@@ -93,12 +92,7 @@ export class ConversationUtils {
     let messageObject: CometChat.BaseMessage = conversation.getLastMessage()
     switch (messageObject?.getType()) {
       case CometChatUIKitConstants.MessageTypes.text: {
-        if (this.additionalParams) {
-          const lastMessage = (messageObject as CometChat.TextMessage)?.getText() || ""
-          message = CometChatUIKitUtility.sanitizeText(lastMessage);
-        } else {
-          message = (messageObject as CometChat.TextMessage).getText() || ""
-        }
+        message = (messageObject as CometChat.TextMessage).getText() || ""
       }
         break;
       case CometChatUIKitConstants.MessageTypes.image:

@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "Emoji",
     "message_composer_mention_limit_warning": "Je kunt maximaal 10 gebruikers tegelijk vermelden.",
     "message_composer_wrong_file_type": "Je hebt een ander bestandstype geselecteerd. Kies het juiste bestand.",
+    "file_type_not_allowed": "Dit bestandstype is niet toegestaan.",
     "message_composer_mention_all": "iedereen",
     "message_composer_mention_notify_everyone_label": "Iedereen in deze groep informeren",
     "message_header_typing": "Typen...",

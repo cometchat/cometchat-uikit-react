@@ -396,13 +396,12 @@ export function useCometChatMessageComposer(args: Args) {
       const preventPaste = (e: ClipboardEvent) => {
         e.preventDefault();
         let clipboardData = e.clipboardData!.getData("text/plain");
-        const sanitizedData = CometChatUIKitUtility.sanitizeText(clipboardData);
-        if (sanitizedData) {
-          pasteHtmlAtCaret(sanitizedData);
+        if (clipboardData) {
+          pasteHtmlAtCaret(clipboardData);
           if (onTextChange) {
-            onTextChange(sanitizedData);
+            onTextChange(clipboardData);
           }
-          dispatch({ type: "setText", text: sanitizedData });
+          dispatch({ type: "setText", text: clipboardData });
         }
       }
 

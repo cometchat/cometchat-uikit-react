@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "Emoji",
     "message_composer_mention_limit_warning": "Du kannst bis zu 10 Benutzer gleichzeitig erwähnen.",
     "message_composer_wrong_file_type": "Du hast einen anderen Dateityp ausgewählt. Bitte wähle die passende Datei.",
+    "file_type_not_allowed": "Dieser Dateityp ist nicht erlaubt.",
     "message_composer_mention_all": "alle",
     "message_composer_mention_notify_everyone_label": "Alle in dieser Gruppe benachrichtigen",
     "message_header_typing": "Schreibt...",

@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "Emoji",
     "message_composer_mention_limit_warning": "Du kan nämna upp till 10 användare åt gången.",
     "message_composer_wrong_file_type": "Du valde en annan typ av fil. Vänligen välj rätt fil.",
+    "file_type_not_allowed": "Denna filtyp är inte tillåten.",
     "message_composer_mention_all": "alla",
     "message_composer_mention_notify_everyone_label": "Meddela alla i den här gruppen",
     "message_header_typing": "Skriver...",

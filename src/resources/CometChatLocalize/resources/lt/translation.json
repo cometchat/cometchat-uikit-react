@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "Emodžiai",
     "message_composer_mention_limit_warning": "Galite paminėti iki 10 vartotojų vienu metu.",
     "message_composer_wrong_file_type": "Pasirinkote kitokį failo tipą. Prašome pasirinkti tinkamą failą.",
+    "file_type_not_allowed": "Šis failo tipas neleidžiamas.",
     "message_composer_mention_all": "visi",
     "message_composer_mention_notify_everyone_label": "Pranešti visiems šioje grupėje",
     "message_header_typing": "Rašoma...",

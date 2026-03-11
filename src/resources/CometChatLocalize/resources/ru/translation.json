@@ -115,6 +115,7 @@
     "message_composer_emoji_icon_hover": "Эмодзи",
     "message_composer_mention_limit_warning": "Вы можете упомянуть до 10 пользователей одновременно.",
     "message_composer_wrong_file_type": "Вы выбрали другой тип файла. Пожалуйста, выберите подходящий файл.",
+    "file_type_not_allowed": "Этот тип файла не разрешен.",
     "message_composer_mention_all": "все",
     "message_composer_mention_notify_everyone_label": "Уведомить всех в этой группе",
     "message_header_typing": "Печатает...",
