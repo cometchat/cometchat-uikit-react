@@ -379,7 +379,6 @@ const defaultProps: MessageListProps = {
   headerView: undefined,
   footerView: undefined,
   onError: (error: CometChat.CometChatException) => {
-    console.log(error);
   },
   hideError: false,
   reactionsRequestBuilder: undefined,
@@ -846,7 +845,7 @@ const CometChatMessageList = (props: MessageListProps) => {
     else {
       const allTemplates = ChatConfigurator.getDataSource().getAllMessageTemplates({
         textFormatters,
-        hideGroupActionMessages
+        hideGroupActionMessages,
       })
       messageTemplates = allTemplates.map((template: CometChatMessageTemplate) => {
         return isAgentChat ? { ...template, replyView: null } : template;
@@ -1334,7 +1333,6 @@ const CometChatMessageList = (props: MessageListProps) => {
             .then((message) => { })
             .catch((error) => {
               updateMessage(msgObject);
-              console.log(error);
             });
         } else {
           const updatedReactions = [];
@@ -1425,15 +1423,18 @@ const CometChatMessageList = (props: MessageListProps) => {
           ) {
             text = getMentionsTextWithoutStyle(message);
           }
+          
           toastTextRef.current = getLocalizedString("message_list_message_copied");
           setShowToast(true);
+          
+          // Copy plain text only to avoid HTML tags in pasted content
           navigator?.clipboard?.writeText(text);
         }
       } catch (error: any) {
         errorHandler(error, "onCopyMessage");
       }
     },
-    [getMessageById, errorHandler, setShowToast]
+    [getMessageById, errorHandler, setShowToast, textFormatters]
   );
 
   /**

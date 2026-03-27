@@ -100,7 +100,6 @@
     background: var(--cometchat-primary-color, #6852D6);
 }
 
-
 .cometchat-document-bubble-outgoing .cometchat-document-bubble__body-icon {
     background: var(--cometchat-static-white, #FFF);
 }

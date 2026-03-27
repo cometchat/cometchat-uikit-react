@@ -60,7 +60,6 @@ const CometChatMessageInformation = (props: MessageInformationProps) => {
     messageSentAtDateTimeFormat,
     messageInfoDateTimeFormat,
     onError = (error: CometChat.CometChatException) => {
-      console.log(error);
     },
     template,
     hideReceipts,
@@ -92,7 +91,6 @@ const CometChatMessageInformation = (props: MessageInformationProps) => {
         return messageReceiptVal;
       }
     } catch (error) {
-      console.log(error);
       onErrorCallback(error, 'getMessageReceipt');
       setState(States.error);
     }

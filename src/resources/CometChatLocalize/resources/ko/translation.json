@@ -292,7 +292,7 @@
     "month_november_full": "11월",
     "month_december_full": "12월",
     "message_type_not_supported": "이 메시지 유형은 지원되지 않습니다.",
-    "message_list_message_already_translated":"번역을 위해 선택한 언어가 원본 메시지의 언어와 유사합니다.",
+    "message_list_message_already_translated": "번역을 위해 선택한 언어가 원본 메시지의 언어와 유사합니다.",
     "media_recorder_error_title": "마이크 액세스 필요",
     "media_recorder_error_subtitle": "마이크에 접근할 수 없습니다. 녹음을 시작하려면 마이크 권한을 허용해주세요.",
     "search_title": "검색",

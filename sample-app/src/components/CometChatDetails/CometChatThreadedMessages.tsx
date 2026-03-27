@@ -1,5 +1,5 @@
 import "../../styles/CometChatDetails/CometChatThreadedMessages.css";
-import { CometChatMessageComposer, CometChatMessageList, CometChatTextHighlightFormatter, CometChatThreadHeader, CometChatUIKit, CometChatUserEvents, getLocalizedString } from "@cometchat/chat-uikit-react";
+import { CometChatCompactMessageComposer, CometChatMessageList, CometChatTextHighlightFormatter, CometChatThreadHeader, CometChatUIKit, CometChatUserEvents, getLocalizedString } from "@cometchat/chat-uikit-react";
 import {CometChat} from '@cometchat/chat-sdk-javascript'
 interface ThreadProps {
     message: CometChat.BaseMessage;
@@ -51,7 +51,7 @@ export const CometChatThreadedMessages = (props: ThreadProps) => {
                         />
                     </div>
             {showComposer ?         <div className="cometchat-threaded-message-composer">
-                        <CometChatMessageComposer
+                        <CometChatCompactMessageComposer
                             parentMessageId={message.getId()}
                             user={(selectedItem as CometChat.Conversation)?.getConversationType?.() === "user" ? (selectedItem as CometChat.Conversation)?.getConversationWith() as CometChat.User : (selectedItem as CometChat.User).getUid?.() ? selectedItem as CometChat.User : undefined}
                             group={(selectedItem as CometChat.Conversation)?.getConversationType?.() === "group" ? (selectedItem as CometChat.Conversation)?.getConversationWith() as CometChat.Group : (selectedItem as CometChat.Group).getGuid?.() ? selectedItem as CometChat.Group : undefined}

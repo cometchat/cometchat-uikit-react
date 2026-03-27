@@ -42,6 +42,7 @@
 @import url('./CometChatGroups.css');
 @import url('./CometChatMessageHeader.css');
 @import url('./CometChatMessageComposer.css');
+@import url('./CometChatCompactMessageComposer.css');
 @import url('./CometChatMessageList.css');
 @import url('./CometChatOutgoingCall.css');
 @import url('./CometChatActionBubble.css');
@@ -64,6 +65,10 @@
 @import url('./CometChatMessagePreview.css');
 @import url('./CometChatFlagMessageDialog.css');
 @import url('./CometChatUserMemberWrapper.css');
+@import url('./CometChatFormattingToolbar.css');
+@import url('./CometChatLinkDialog.css');
+@import url('./CometChatLinkPopover.css');
+@import url('./CometChatMarkdownFormatter.css');
 /* @import url('./CometChatToolCallResultBubble.css');
 @import url('./CometChatToolCallArgumentBubble.css'); */
 .cometchat * {
@@ -73,7 +78,7 @@
 
 .cometchat-mentions > span{
     color: var(--cometchat-text-color-highlight);
-font:var(--cometchat-font-body-regular);
+    font: var(--cometchat-font-body-regular);
 }
 .cometchat-mentions{
     display: inline-block;
@@ -101,19 +106,15 @@ font:var(--cometchat-font-body-regular);
 }
 .cometchat-mentions-outgoing.cometchat-mentions-you > span{
     color: var(--cometchat-warning-color);
-
 }
 .cometchat-mentions-outgoing.cometchat-mentions-other > span{
     color: var(--cometchat-static-white);
-
 }
 .cometchat-mentions-incoming.cometchat-mentions-you > span{
     color: var(--cometchat-warning-color);
-
 }
 .cometchat-mentions-incoming.cometchat-mentions-other > span{
     color: var(--cometchat-text-color-highlight);
-
 }
 .cometchat-text-bubble-incoming .cometchat-url{
     color: var(--cometchat-info-color);

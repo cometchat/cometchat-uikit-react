@@ -16,12 +16,33 @@
     word-break: break-word;
     text-align: left;
     white-space: pre-line;
-    overflow: auto;
+    overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    overflow: hidden;
     padding-top:var(--cometchat-padding-1);
+}
 
+/* When text contains block-level elements like lists or blockquotes,
+   switch from -webkit-box to block display so list markers render properly.
+   Use max-height for truncation since -webkit-line-clamp doesn't work with display: block */
+.cometchat-text-bubble__body-text:has(ol),
+.cometchat-text-bubble__body-text:has(ul),
+.cometchat-text-bubble__body-text:has(blockquote),
+.cometchat-text-bubble__body-text:has(pre) {
+    display: block;
+    overflow: hidden;
+    white-space: normal;
+    /* 4 lines * line-height (~22px for body-regular) = ~88px */
+    max-height: 88px;
+}
+
+/* When expanded, remove max-height restriction for block-level content */
+.cometchat-text-bubble__body-text.cometchat-text-bubble__body-text--expanded:has(ol),
+.cometchat-text-bubble__body-text.cometchat-text-bubble__body-text--expanded:has(ul),
+.cometchat-text-bubble__body-text.cometchat-text-bubble__body-text--expanded:has(blockquote),
+.cometchat-text-bubble__body-text.cometchat-text-bubble__body-text--expanded:has(pre) {
+    max-height: none;
+    overflow: visible;
 }
 
 /* Incoming text bubble specific styles */
@@ -94,4 +115,247 @@
     .cometchat-text-bubble {
         max-width: 280px;
     }
+}
+
+/* Rich Text Formatting Styles */
+
+/* Bold */
+.cometchat-text-bubble__body-text b,
+.cometchat-text-bubble__body-text strong {
+    font-weight: var(--cometchat-font-weight-bold, 700);
+}
+
+/* Italic */
+.cometchat-text-bubble__body-text i,
+.cometchat-text-bubble__body-text em {
+    font-style: italic;
+}
+
+/* Strikethrough */
+.cometchat-text-bubble__body-text s,
+.cometchat-text-bubble__body-text strike,
+.cometchat-text-bubble__body-text del {
+    text-decoration: line-through;
+}
+
+/* Underline */
+.cometchat-text-bubble__body-text u {
+    text-decoration: underline;
+}
+
+/* Inline code */
+.cometchat-text-bubble__body-text code {
+    font-family: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important;
+    font-size: 14px;
+    font-weight: 400;
+    font-style: normal;
+    background: var(--cometchat-background-color-03);
+    color: var(--cometchat-text-color-highlight);
+    padding: 0 var(--cometchat-padding);
+    border-radius: var(--cometchat-radius);
+    border: 1px solid var(--cometchat-border-color-default);
+    white-space: pre-wrap;
+    word-break: break-word;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Code color for incoming messages */
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text code {
+    color: var(--cometchat-text-color-highlight);
+    border-radius: var(--cometchat-radius);
+    border: 1px solid var(--cometchat-border-color-dark);
+    background: var(--cometchat-background-color-03);
+    font-family: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important;
+    font-size: 14px;
+    font-weight: 400;
+    font-style: normal;
+    padding: 0 var(--cometchat-padding);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Code color for outgoing messages */
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text code {
+    color: var(--cometchat-static-white);
+    background: rgba(255, 255, 255, 0.20);
+    border: 1px solid rgba(245, 245, 245, 0.10);
+    border-radius: var(--cometchat-radius);
+    padding: 0 var(--cometchat-padding);
+    font-family: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important;
+    font-size: 14px;
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* Code block */
+.cometchat-text-bubble__body-text pre {
+    display: block;
+    font-family: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important;
+    font-size: 14px;
+    font-weight: 400;
+    font-style: normal;
+    background: var(--cometchat-background-color-02);
+    border: 1px solid var(--cometchat-border-color-light);
+    border-radius: var(--cometchat-radius-2, 8px);
+    padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-3, 12px);
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-x: auto;
+}
+
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text pre {
+    background: rgba(255, 255, 255, 0.10);
+    border: none;
+    border-radius: var(--cometchat-radius-2, 8px);
+    color: var(--cometchat-static-white);
+}
+
+.cometchat-text-bubble__body-text pre code,
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text pre code,
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    display: inline;
+    font-family: inherit !important;
+}
+
+/* Blockquote */
+.cometchat-text-bubble__body-text blockquote {
+    display: block;
+    border-left: 3px solid var(--cometchat-border-color-default);
+    padding: var(--cometchat-padding-2);
+    border-radius: var(--cometchat-radius-1);
+    margin: 0;
+    font-style: normal;
+    min-width: 100px;
+}
+
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text blockquote {
+    color: var(--cometchat-text-color-secondary);
+    background: var(--cometchat-neutral-color-400);
+    border-left-color: var(--cometchat-primary-color);
+}
+
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text blockquote {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.10);
+    border-left-color: var(--cometchat-static-white);
+}
+
+/* Links */
+.cometchat-text-bubble__body-text a {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text a {
+    color: var(--cometchat-primary-color, #3399ff);
+}
+
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text a {
+    color: var(--cometchat-static-white);
+}
+
+.cometchat-text-bubble__body-text a:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
+/* List items */
+.cometchat-text-bubble__body-text li {
+    display: list-item;
+    margin: 0;
+    padding: 0;
+    white-space: normal;
+}
+
+.cometchat-text-bubble__body-text ol,
+.cometchat-text-bubble__body-text ul {
+    margin: 0;
+    padding: 0;
+    padding-left: var(--cometchat-padding-3, 12px);
+    white-space: normal;
+}
+
+/* Nested list styling progression */
+.cometchat-text-bubble__body-text ol { list-style-type: decimal; }
+.cometchat-text-bubble__body-text ol ol { list-style-type: lower-alpha; }
+.cometchat-text-bubble__body-text ol ol ol { list-style-type: lower-roman; }
+.cometchat-text-bubble__body-text ul { list-style-type: disc; }
+.cometchat-text-bubble__body-text ul ul { list-style-type: circle; }
+.cometchat-text-bubble__body-text ul ul ul { list-style-type: square; }
+.cometchat-text-bubble__body-text li > ol,
+.cometchat-text-bubble__body-text li > ul {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+
+/* Mention styles in text bubbles */
+
+/* Base mention styling - incoming bubbles */
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text .cometchat-mentions {
+    border-radius: var(--cometchat-radius, 2px);
+    background: rgba(104, 82, 214, 0.20);
+    padding: 0px var(--cometchat-padding, 2px);
+}
+
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text .cometchat-mentions > span {
+    color: var(--cometchat-text-color-highlight, #6852D6);
+    font: var(--cometchat-font-body-regular);
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+}
+
+/* "You" mention styling - incoming bubbles */
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text .cometchat-mentions-you {
+    border-radius: var(--cometchat-radius, 2px);
+    background: rgba(255, 171, 0, 0.20);
+    padding: 0px var(--cometchat-padding, 2px);
+}
+
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text .cometchat-mentions-you > span {
+    color: var(--cometchat-warning-color, #FFAB00);
+    font: var(--cometchat-font-body-regular);
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+}
+
+/* Base mention styling - outgoing bubbles */
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text .cometchat-mentions {
+    border-radius: var(--cometchat-radius, 2px);
+    background: rgba(255, 255, 255, 0.20);
+    padding: 0px var(--cometchat-padding, 2px);
+}
+
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text .cometchat-mentions > span {
+    color: var(--cometchat-static-white);
+    font: var(--cometchat-font-body-regular);
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+}
+
+/* "You" mention styling - outgoing bubbles */
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text .cometchat-mentions-you {
+    border-radius: var(--cometchat-radius, 2px);
+    background: rgba(255, 255, 255, 0.20);
+    padding: 0px var(--cometchat-padding, 2px);
+}
+
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text .cometchat-mentions-you > span {
+    color: var(--cometchat-static-white);
+    font: var(--cometchat-font-body-regular);
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
 }

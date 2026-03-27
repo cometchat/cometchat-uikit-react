@@ -53,6 +53,7 @@ export { CometChatGroups } from './components/CometChatGroups/CometChatGroups';
 
 export { CometChatMessageBubble } from './components/BaseComponents/CometChatMessageBubble/CometChatMessageBubble';
 export { CometChatMessageComposer } from './components/CometChatMessageComposer/CometChatMessageComposer';
+export { CometChatCompactMessageComposer } from './components/CometChatCompactMessageComposer/CometChatCompactMessageComposer';
 export { CometChatMessageHeader } from './components/CometChatMessageHeader/CometChatMessageHeader';
 export { CometChatMessageList } from './components/CometChatMessageList/CometChatMessageList';
 

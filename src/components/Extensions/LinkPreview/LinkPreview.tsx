@@ -72,7 +72,6 @@ const LinkPreview = (props: LinkPreviewProps) => {
     }
   };
 
-
   return (
     <div className="cometchat">
       <div

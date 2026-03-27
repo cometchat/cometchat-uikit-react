@@ -128,6 +128,23 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
                   cls.startsWith("mentions-")
                 );
                 if (mentionClass) {
+                  // Check if a code block with stored mentions was added in this mutation batch.
+                  // If so, the mention was moved into a code block, not truly deleted — skip removal.
+                  let movedToCodeBlock = false;
+                  for (const m of mutations) {
+                    for (const addedNode of Array.from(m.addedNodes)) {
+                      if (addedNode.nodeType === Node.ELEMENT_NODE) {
+                        const addedEl = addedNode as HTMLElement;
+                        if (addedEl.tagName === 'PRE' && addedEl.hasAttribute('data-mentions')) {
+                          movedToCodeBlock = true;
+                          break;
+                        }
+                      }
+                    }
+                    if (movedToCodeBlock) break;
+                  }
+                  if (movedToCodeBlock) return;
+
                   let otherMentions = targetNode.querySelectorAll(
                     `.${mentionClass}`
                   );
@@ -408,73 +425,90 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
    * @returns {string} - The modified input text.
    */
   protected addMentionsSpan(inputText: string) {
-    const mentionedEntities: (CometChat.User | CometChat.GroupMember | string)[] = [...this.cometChatUserGroupMembers, ...this.mentionedChannels];
-    if (mentionedEntities) {
-      this.warningDisplayed = false;
-      for (let i = 0; i < mentionedEntities.length; i++) {
-        const mentionedEntity = mentionedEntities[i];
-        const isChannel = typeof mentionedEntity === 'string';
-        const entityId = isChannel ? mentionedEntity : mentionedEntity.getUid();
-        const entityName = isChannel
-          ? getLocalizedString(`message_composer_mention_${mentionedEntity}`) || mentionedEntity
-          : mentionedEntity.getName();
-        const regex = new RegExp(`<${isChannel ? '@all' : '@uid'}:${entityId}>`, "g");
+      const mentionedEntities: (CometChat.User | CometChat.GroupMember | string)[] = [...this.cometChatUserGroupMembers, ...this.mentionedChannels];
+      if (mentionedEntities) {
+        this.warningDisplayed = false;
 
-        const span = document.createElement("span");
-        for (let i = 0; i < this.classes.length; i++) {
-          span.classList.add(this.classes[i]);
-        }
-        span.classList.add("mentions-" + entityId);
-        span.setAttribute("contentEditable", "false");
+        // Split HTML into code segments and non-code segments
+        const codeSegmentRegex = /(<pre><code>[\s\S]*?<\/code><\/pre>|<code>[\s\S]*?<\/code>)/g;
 
-        if (!isChannel)
-          this.mentionsCssClassMapping!["mentions-" + entityId] = mentionedEntity;
-        
-        span.classList.add("cometchat-mentions");
+        for (let i = 0; i < mentionedEntities.length; i++) {
+          const mentionedEntity = mentionedEntities[i];
+          const isChannel = typeof mentionedEntity === 'string';
+          const entityId = isChannel ? mentionedEntity : mentionedEntity.getUid();
+          const entityName = isChannel
+            ? getLocalizedString(`message_composer_mention_${mentionedEntity}`) || mentionedEntity
+            : mentionedEntity.getName();
+          const regex = new RegExp(`<${isChannel ? '@all' : '@uid'}:${entityId}>`, "g");
 
-        if (isChannel || mentionedEntity.getUid() === this.loggedInUser!.getUid()) {
-          span.classList.add("cometchat-mentions-you");
-        }
-        else{
-          span.classList.add("cometchat-mentions-other");
-        }
-        
-        if (this.messageBubbleAlignment === MessageBubbleAlignment.left) {
-          span.classList.add("cometchat-mentions-incoming");
-        } else if (this.messageBubbleAlignment === MessageBubbleAlignment.right) {
-          span.classList.add("cometchat-mentions-outgoing");
-        }
+          const span = document.createElement("span");
+          for (let i = 0; i < this.classes.length; i++) {
+            span.classList.add(this.classes[i]);
+          }
+          span.classList.add("mentions-" + entityId);
+          span.setAttribute("contentEditable", "false");
 
-        const textSpan = document.createElement("span");
+          if (!isChannel)
+            this.mentionsCssClassMapping!["mentions-" + entityId] = mentionedEntity;
 
-        textSpan.textContent = this.trackCharacter + entityName;
-        textSpan.classList.add("cometchat-text");
-        span.appendChild(textSpan);
+          span.classList.add("cometchat-mentions");
 
-        let count = 0;
-        inputText = inputText.replace(regex, (match) => {
-          count++;
-          return span.outerHTML;
-        });
-        if (count) {
-          this.mentionsMap!["mentions-" + entityId] = `<${isChannel ? '@all' : '@uid'}:${entityId}>`;
-          this.mentionsCount = Object.keys(this.mentionsMap!).length;
-          if (
-            this.mentionsCount >=
-            CometChatUtilityConstants.MentionsTextFormatter.MENTIONS_LIMIT &&
-            !this.warningDisplayed
-          ) {
-            CometChatUIEvents.ccShowMentionsCountWarning.next({
-              showWarning: true,
-              id: this.getId(),
+          if (isChannel || mentionedEntity.getUid() === this.loggedInUser!.getUid()) {
+            span.classList.add("cometchat-mentions-you");
+          }
+          else{
+            span.classList.add("cometchat-mentions-other");
+          }
+
+          if (this.messageBubbleAlignment === MessageBubbleAlignment.left) {
+            span.classList.add("cometchat-mentions-incoming");
+          } else if (this.messageBubbleAlignment === MessageBubbleAlignment.right) {
+            span.classList.add("cometchat-mentions-outgoing");
+          }
+
+          const textSpan = document.createElement("span");
+
+          textSpan.textContent = this.trackCharacter + entityName;
+          textSpan.classList.add("cometchat-text");
+          span.appendChild(textSpan);
+
+          // Split by code segments, apply styled replacement only to non-code parts
+          const plainMentionText = this.trackCharacter + entityName;
+          const segments = inputText.split(codeSegmentRegex);
+          let count = 0;
+
+          inputText = segments.map((segment) => {
+            if (segment.startsWith('<code>') || segment.startsWith('<pre><code>')) {
+              // Inside code: replace mention token with plain @name text
+              return segment.replace(regex, plainMentionText);
+            }
+            // Outside code: apply styled mention span
+            return segment.replace(regex, (match) => {
+              count++;
+              return span.outerHTML;
             });
-            this.warningDisplayed = true;
+          }).join('');
+
+          if (count) {
+            this.mentionsMap!["mentions-" + entityId] = `<${isChannel ? '@all' : '@uid'}:${entityId}>`;
+            this.mentionsCount = Object.keys(this.mentionsMap!).length;
+            if (
+              this.mentionsCount >=
+              CometChatUtilityConstants.MentionsTextFormatter.MENTIONS_LIMIT &&
+              !this.warningDisplayed
+            ) {
+              CometChatUIEvents.ccShowMentionsCountWarning.next({
+                showWarning: true,
+                id: this.getId(),
+              });
+              this.warningDisplayed = true;
+            }
           }
         }
       }
+      return inputText;
     }
-    return inputText;
-  }
+
 
   /**
    * Registers event listeners for click, mouseover, mouseout on the element

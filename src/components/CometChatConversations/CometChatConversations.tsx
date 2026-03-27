@@ -1376,7 +1376,7 @@ export function CometChatConversations(props: ConversationsProps) {
             state.loggedInUser!,
             {
               mentionsTargetElement: MentionsTargetElement.conversation,
-              textFormattersList: textFormatters
+              textFormattersList: textFormatters,
             }
           );
         if (

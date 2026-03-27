@@ -70,13 +70,11 @@ export class UsersManager {
             listenerId,
             new CometChat.ConnectionListener({
                 onConnected: () => {
-                    console.log("ConnectionListener =>connected");
                     if (callback) {
                         callback()
                     }
                 },
                 onDisconnected: () => {
-                    console.log("ConnectionListener => On Disconnected");
                 }
             })
         );

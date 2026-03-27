@@ -1,0 +1,141 @@
+/**
+ * CometChat Markdown Formatter Styles
+ * 
+ * Styles for rendering markdown in message bubbles.
+ * Uses native HTML tags for better compatibility.
+ */
+
+/* Text bubble formatting styles */
+.cometchat-text-bubble__body-text b,
+.cometchat-text-bubble__body-text strong {
+  font-weight: var(--cometchat-font-weight-bold, 700);
+}
+
+.cometchat-text-bubble__body-text i,
+.cometchat-text-bubble__body-text em {
+  font-style: italic;
+}
+
+.cometchat-text-bubble__body-text s,
+.cometchat-text-bubble__body-text strike,
+.cometchat-text-bubble__body-text del {
+  text-decoration: line-through;
+}
+
+.cometchat-text-bubble__body-text u {
+  text-decoration: underline;
+}
+
+/* Inline code */
+.cometchat-text-bubble__body-text code {
+  font-family: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  font-size: 14px;
+  background: var(--cometchat-background-color-03);
+  color: var(--cometchat-text-color-highlight);
+  padding: 0 var(--cometchat-padding);
+  border-radius: var(--cometchat-radius);
+  border: 1px solid var(--cometchat-border-color-default);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Inline code for incoming messages */
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text code {
+  color: var(--cometchat-text-color-highlight);
+  background: var(--cometchat-background-color-03);
+  border: 1px solid var(--cometchat-border-color-dark);
+}
+
+/* Inline code for outgoing messages */
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text code {
+  color: var(--cometchat-static-white);
+  background: rgba(255, 255, 255, 0.20);
+  border: 1px solid rgba(245, 245, 245, 0.10);
+}
+
+/* Code block */
+.cometchat-text-bubble__body-text pre {
+  display: block;
+  font-family: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  font-size: 14px;
+  background: var(--cometchat-background-color-02);
+  color: var(--cometchat-text-color-primary);
+  border: 1px solid var(--cometchat-border-color-light);
+  padding: var(--cometchat-padding-2) var(--cometchat-padding-3);
+  border-radius: var(--cometchat-radius-2);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+.cometchat-text-bubble__body-text pre code,
+.cometchat-text-bubble-incoming .cometchat-text-bubble__body-text pre code,
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  display: inline;
+  font-family: inherit;
+}
+
+/* Blockquote */
+.cometchat-text-bubble__body-text blockquote {
+  display: block;
+  border-left: 3px solid var(--cometchat-primary-color, #3399ff);
+  padding: var(--cometchat-padding-2);
+  border-radius: var(--cometchat-radius-1);
+  margin: var(--cometchat-margin, 4px) 0;
+  color: var(--cometchat-text-color-secondary, #727272);
+  min-width: 100px;
+}
+
+/* Links */
+.cometchat-text-bubble__body-text a {
+  color: var(--cometchat-primary-color, #3399ff);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Outgoing message links should be white */
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text a {
+  color: var(--cometchat-static-white) !important;
+}
+
+/* Links inside code/code blocks for outgoing messages */
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text code a,
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text pre a,
+.cometchat-text-bubble-outgoing .cometchat-text-bubble__body-text pre code a {
+  color: var(--cometchat-static-white) !important;
+}
+
+.cometchat-text-bubble__body-text a:hover {
+  text-decoration: none;
+}
+
+/* List items */
+.cometchat-text-bubble__body-text li {
+  display: list-item;
+  margin-left: var(--cometchat-margin-4, 16px);
+}
+
+.cometchat-text-bubble__body-text ol,
+.cometchat-text-bubble__body-text ul {
+  margin: var(--cometchat-margin, 4px) 0;
+  padding-left: var(--cometchat-padding-3, 12px);
+}
+
+/* Nested list styling progression */
+.cometchat-text-bubble__body-text ol { list-style-type: decimal; }
+.cometchat-text-bubble__body-text ol ol { list-style-type: lower-alpha; }
+.cometchat-text-bubble__body-text ol ol ol { list-style-type: lower-roman; }
+.cometchat-text-bubble__body-text ul { list-style-type: disc; }
+.cometchat-text-bubble__body-text ul ul { list-style-type: circle; }
+.cometchat-text-bubble__body-text ul ul ul { list-style-type: square; }
+.cometchat-text-bubble__body-text li > ol,
+.cometchat-text-bubble__body-text li > ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}

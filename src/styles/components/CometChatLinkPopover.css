@@ -1,0 +1,128 @@
+/* CometChatLinkPopover - Link popover shown on click */
+
+.cometchat-link-popover {
+  position: absolute;
+  z-index: 1000;
+  transform: translateY(-100%);
+}
+
+.cometchat-link-popover__content {
+  position: relative;
+  background: var(--cometchat-background-color-01, #fff);
+  border-radius: var(--cometchat-radius-4, 16px);
+  padding: var(--cometchat-padding-6, 24px);
+  width: 320px;
+  max-width: 90vw;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-3, 12px);
+  border: 1px solid var(--cometchat-border-color-light);
+  box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+}
+
+.cometchat-link-popover__close {
+  position: absolute;
+  top: var(--cometchat-spacing-4, 16px);
+  right: var(--cometchat-spacing-4, 16px);
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--cometchat-icon-color-secondary, #727272);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cometchat-radius-1, 4px);
+  padding: 0;
+  transition: background-color 0.2s ease;
+}
+
+.cometchat-link-popover__close:hover {
+  background: var(--cometchat-background-color-02, #f5f5f5);
+  color: var(--cometchat-icon-color-primary, #141414);
+}
+
+.cometchat-link-popover__text {
+  font: var(--cometchat-font-heading4-bold);
+  color: var(--cometchat-text-color-primary, #141414);
+  padding-right: var(--cometchat-padding-7, 28px);
+  word-break: break-word;
+  text-align: left;
+}
+
+.cometchat-link-popover__url {
+  font: var(--cometchat-font-body-regular);
+  color: var(--cometchat-primary-color, #6852d6);
+  text-decoration: none;
+  display: block;
+  word-break: break-all;
+  text-align: left;
+}
+
+.cometchat-link-popover__url:hover {
+  text-decoration: underline;
+}
+
+.cometchat-link-popover__actions {
+  display: flex;
+  gap: var(--cometchat-spacing-3, 12px);
+}
+
+/* Button wrappers — shared */
+.cometchat-link-popover__button-edit,
+.cometchat-link-popover__button-remove {
+  flex: 1;
+  display: flex;
+  height: 40px;
+}
+
+.cometchat-link-popover__button-edit > .cometchat,
+.cometchat-link-popover__button-remove > .cometchat {
+  width: 100%;
+  height: 100%;
+}
+
+/* Shared button styles */
+.cometchat-link-popover__button-edit .cometchat-button,
+.cometchat-link-popover__button-remove .cometchat-button {
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  border-radius: var(--cometchat-radius-2, 8px);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  height: 100%;
+  width: 100%;
+}
+
+/* Shared button text */
+.cometchat-link-popover__button-edit .cometchat-button .cometchat-button__text,
+.cometchat-link-popover__button-remove .cometchat-button .cometchat-button__text {
+  font: var(--cometchat-font-button-medium);
+}
+
+/* Edit button — specific */
+.cometchat-link-popover__button-edit .cometchat-button {
+  background: var(--cometchat-background-color-01, #fff);
+  border: 1px solid var(--cometchat-border-color-default, #e8e8e8);
+}
+
+.cometchat-link-popover__button-edit .cometchat-button:hover {
+  background: var(--cometchat-background-color-02, #f5f5f5);
+}
+
+.cometchat-link-popover__button-edit .cometchat-button .cometchat-button__text {
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+/* Remove button — specific */
+.cometchat-link-popover__button-remove .cometchat-button {
+  background: var(--cometchat-error-color, #f44336);
+  border: none;
+}
+
+.cometchat-link-popover__button-remove .cometchat-button .cometchat-button__text {
+  color: var(--cometchat-static-white, #fff);
+}

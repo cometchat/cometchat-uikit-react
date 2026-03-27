@@ -125,6 +125,16 @@
     color: var(--cometchat-static-white);
   }
 
+  .cometchat-message-bubble-outgoing .cometchat-message-preview__subtitle-text a {
+    color: var(--cometchat-static-white) !important;
+    text-decoration: underline;
+  }
+
+  .cometchat-message-bubble-outgoing .cometchat-message-preview__subtitle-text .cometchat-url {
+    color: var(--cometchat-static-white) !important;
+    text-decoration: underline;
+  }
+
   .bubble-view{
     border-radius: 4px;
   }

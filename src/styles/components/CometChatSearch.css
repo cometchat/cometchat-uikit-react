@@ -322,6 +322,17 @@
   width: 100%;
 }
 
+/* Inline code styling in search conversation subtitle */
+.cometchat-search__conversations-subtitle-text code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  font-size: 0.9em;
+  background: var(--cometchat-background-color-03);
+  color: var(--cometchat-text-color-secondary);
+  padding: 0 var(--cometchat-padding-1, 2px);
+  border-radius: var(--cometchat-radius-1, 4px);
+  border: 1px solid var(--cometchat-border-color-light);
+}
+
 .cometchat-search__conversations-subtitle-text-sender {
   overflow: hidden;
   color: var(--cometchat-text-color-secondary, #727272);

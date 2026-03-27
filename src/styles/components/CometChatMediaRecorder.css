@@ -287,3 +287,75 @@
     transform: rotate(180deg);
     mask-size: contain;
 }
+
+/* Permission denied dialog (centered modal) */
+.cometchat-media-recorder__permission-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.cometchat-media-recorder__permission-dialog {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--cometchat-spacing-3, 12px);
+    padding: var(--cometchat-padding-6, 24px);
+    width: 320px;
+    border-radius: var(--cometchat-radius-4, 16px);
+    background: var(--cometchat-background-color-01, #FFF);
+    box-shadow: 0px 20px 24px -4px rgba(16, 24, 40, 0.10), 0px 8px 8px -4px rgba(16, 24, 40, 0.04);
+}
+
+.cometchat-media-recorder__permission-dialog-icon-wrapper {
+    display: flex;
+    width: 64px;
+    height: 64px;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--cometchat-radius-max, 1000px);
+    background: var(--cometchat-background-color-03, #F5F5F5);
+}
+
+.cometchat-media-recorder__permission-dialog-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background: var(--cometchat-error-color, #F44649);
+    -webkit-mask: url("../../assets/mic_off.svg") center center no-repeat;
+    mask: url("../../assets/mic_off.svg") center center no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+.cometchat-media-recorder__permission-dialog-title {
+    color: var(--cometchat-text-color-primary, #141414);
+    text-align: center;
+    font: var(--cometchat-font-heading4-bold, 700 16px Roboto);
+}
+
+.cometchat-media-recorder__permission-dialog-subtitle {
+    color: var(--cometchat-text-color-secondary, #727272);
+    text-align: center;
+    font: var(--cometchat-font-body-regular, 400 14px Roboto);
+}
+
+.cometchat-media-recorder__permission-dialog-button {
+    width: 100%;
+    padding: var(--cometchat-padding-3, 12px) var(--cometchat-padding-4, 16px);
+    border-radius: var(--cometchat-radius-3, 12px);
+    border: 1px solid var(--cometchat-border-color-default, #E8E8E8);
+    background: var(--cometchat-background-color-01, #FFF);
+    color: var(--cometchat-text-color-primary, #141414);
+    font: var(--cometchat-font-button-bold, 700 14px Roboto);
+    cursor: pointer;
+    margin-top: var(--cometchat-margin-1, 4px);
+}
+
+.cometchat-media-recorder__permission-dialog-button:hover {
+    background: var(--cometchat-background-color-02, #FAFAFA);
+}

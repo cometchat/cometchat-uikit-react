@@ -7,6 +7,8 @@ import { ConversationUtils, additionalParams } from "./ConversationUtils";
 import { CometChatMentionsFormatter } from "../formatters/CometChatFormatters/CometChatMentionsFormatter/CometChatMentionsFormatter";
 import { CometChatUrlsFormatter } from "../formatters/CometChatFormatters/CometChatUrlsFormatter/CometChatUrlsFormatter";
 import { CometChatTextFormatter } from "../formatters/CometChatFormatters/CometChatTextFormatter";
+import { CometChatRichTextFormatter } from "../formatters/CometChatFormatters/CometChatRichTextFormatter";
+import { CometChatMarkdownFormatter } from "../formatters/CometChatFormatters/CometChatMarkdownFormatter/CometChatMarkdownFormatter";
 import { CometChatActionsIcon, CometChatActionsView, CometChatMessageComposerAction, CometChatMessageTemplate } from "../modals";
 import { CometChatLocalize, getLocalizedString } from "../resources/CometChatLocalize/cometchat-localize";
 import { CometChatUIKitConstants } from "../constants/CometChatUIKitConstants";
@@ -1640,7 +1642,10 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
         formatters &&
           formatters.length
           ? [...formatters]
-          : [this.getMentionsTextFormatter({ disableMentions: additionalConfigurations.disableMentions })],
+          : [
+              new CometChatMarkdownFormatter(),
+              this.getMentionsTextFormatter({ disableMentions: additionalConfigurations.disableMentions })
+            ],
     };
     let message = ConversationUtils.getLastConversationMessage(
       conversation,
@@ -1704,6 +1709,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
         messageObject &&
         messageObject instanceof CometChat.TextMessage
       ) {
+        // Always use all formatters (rich text is always enabled)
         for (let i = 0; i < textFormatters.length; i++) {
           let temp_message = textFormatters[i].getFormattedText(message, { mentionsTargetElement: MentionsTargetElement.conversation });
           if (typeof (temp_message) == "string") {
@@ -1770,7 +1776,8 @@ getMessagePreviewSubtitle(
 
     const createTextWrapper = (text: string) => {
       const finalTextFormatters = textFormatters || ChatConfigurator.getDataSource().getAllTextFormatters({});
-      let formattedText = CometChatUIKitUtility.sanitizeText(text);
+      const markdownText = CometChatUIKitUtility.convertFormattingHtmlToMarkdown(text);
+      let formattedText = CometChatUIKitUtility.sanitizeText(markdownText);
       finalTextFormatters.forEach((formatter)=>{
         formatter.setMessage(message);
         formatter.setMessageBubbleAlignment(_alignment!);
@@ -1935,6 +1942,15 @@ getMessagePreviewTitle(message: CometChat.BaseMessage, _alignment?: MessageBubbl
 
   getAllTextFormatters(formatterParams: additionalParams): CometChatTextFormatter[] {
     let formatters = [];
+    
+    // Rich text formatter passes HTML through for rendering
+    const richTextFormatter = new CometChatRichTextFormatter();
+    formatters.push(richTextFormatter);
+    
+    // Markdown formatter converts markdown to HTML for display in bubbles
+    const markdownFormatter = new CometChatMarkdownFormatter();
+    formatters.push(markdownFormatter);
+    
     const mentionsFormatter = formatterParams.disableMentions ? null : ChatConfigurator.getDataSource().getMentionsTextFormatter(
       formatterParams
     );

@@ -10,7 +10,6 @@ import { ConversationsManager } from "../CometChatConversations/controller";
 export class SearchConversationsManager {
 
     private static errorHandler: (error: unknown, source?: string) => void = (error: unknown, source?: string) => {
-        console.log(error)
     };
 
     /**

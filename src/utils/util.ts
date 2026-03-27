@@ -85,7 +85,7 @@ export function getThemeMode(){
  * @returns 
  */
 export async function processFileForAudio(file: File): Promise<File> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
   
       reader.onload = async () => {
@@ -105,16 +105,19 @@ export async function processFileForAudio(file: File): Promise<File> {
             });
   
             resolve(wavFile);
+          } else {
+            resolve(file);
           }
         } catch (error) {
-          reject(new Error(`Error converting file: ${error}`));
+          console.warn("Audio conversion failed, using original file:", error);
+          resolve(file);
         }
       };
   
-      reader.onerror = () =>
-        reject(
-          new Error(`Converting the file named "${file.name}" to binary failed`)
-        );
+      reader.onerror = () => {
+        console.warn(`Converting the file named "${file.name}" to binary failed, using original file`);
+        resolve(file);
+      };
   
       reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer
     });
@@ -217,9 +220,12 @@ export function formatDateFromTimestamp(timestamp:number) {
 }
 
 export const decodeHTML = (input: string): string =>  {
-  const txt = document.createElement("textarea");
-  txt.innerHTML = input;
-  return txt.value;
+  // Decode HTML entities while preserving HTML tags
+  // Use a temporary div to parse and re-serialize the HTML
+  // This decodes entities like &amp; to & while keeping tags intact
+  const div = document.createElement("div");
+  div.innerHTML = input;
+  return div.innerHTML;
 }
 
 const getAttr = (tag: string, name: string): string | null => {
@@ -235,8 +241,52 @@ const getDataAttrs = (tag: string): Array<[string, string]> => {
   return out;
 };
 
-// span tags, any other tag, and raw text
-const TOKENS = /<\/?span\b[^>]*>|<[^>]+>|[^<]+/gi;
+// Allowed formatting tags that should be rendered as DOM elements, not text
+const ALLOWED_TAGS = new Set([
+  "span", "b", "strong", "i", "em", "u", "s", "strike", "del",
+  "br", "ol", "ul", "li", "a", "p", "div", "blockquote", "pre", "code",
+  "sub", "sup", "h1", "h2", "h3", "h4", "h5", "h6"
+]);
+
+// Void (self-closing) tags that should not be pushed onto the stack
+const VOID_TAGS = new Set(["br"]);
+
+// Dangerous tags that must never be rendered
+const BLOCKED_TAGS = new Set([
+  "script", "iframe", "object", "embed", "form", "input", "textarea",
+  "select", "button", "style", "link", "meta"
+]);
+
+// Tokenizer: captures any HTML tag or text between tags
+const TOKENS = /<\/?[a-z][a-z0-9]*\b[^>]*\/?>|[^<]+/gi;
+
+// Extract tag name from an opening or closing tag string
+const getTagName = (tok: string): string => {
+  const m = tok.match(/^<\/?([a-z][a-z0-9]*)/i);
+  return m ? m[1].toLowerCase() : "";
+};
+
+// Copy safe attributes (style, class, contenteditable, data-*) from tag string to element
+const copyAttrs = (tok: string, el: HTMLElement) => {
+  const style = getAttr(tok, "style");
+  if (style) el.setAttribute("style", style);
+
+  const cls = getAttr(tok, "class");
+  if (cls) el.className = cls;
+
+  const ce = getAttr(tok, "contenteditable");
+  if (ce !== null) el.setAttribute("contenteditable", ce);
+
+  // For <a> tags, preserve href
+  if (el.tagName.toLowerCase() === "a") {
+    const href = getAttr(tok, "href");
+    if (href) el.setAttribute("href", href);
+    el.setAttribute("target", "_blank");
+    el.setAttribute("rel", "noopener noreferrer");
+  }
+
+  for (const [k, v] of getDataAttrs(tok)) el.setAttribute(k, v);
+};
 
 export const sanitizeHtmlStringToFragment = (html: string, textFormatterArray?: CometChatTextFormatter[]): DocumentFragment => {
   const frag = document.createDocumentFragment();
@@ -250,44 +300,57 @@ export const sanitizeHtmlStringToFragment = (html: string, textFormatterArray?: 
   while ((m = TOKENS.exec(html))) {
     const tok = m[0];
 
-    // opening <span ...>
-    if (/^<span\b/i.test(tok)) {
-      const cls = (getAttr(tok, "class") || "").trim();
-      if (cls) {
-        const el = document.createElement("span");
-        el.className = cls;
-
-        const ce = getAttr(tok, "contenteditable");
-        if (ce !== null) el.setAttribute("contenteditable", ce);
-        for (const [k, v] of getDataAttrs(tok)) el.setAttribute(k, v);
-
-        append(el);
-        stack.push(el);
-      } else {
-        // span with NO class → literal
-        append(document.createTextNode(tok));
-      }
-      continue;
-    }
-
-    // closing </span>
-    if (/^<\/span\b/i.test(tok)) {
-      if (stack.length) {
-        stack.pop();
-      } else {
-        // stray close → literal
-        append(document.createTextNode(tok));
-      }
-      continue;
-    }
-
-    // any other tag → literal
-    if (tok.startsWith("<")) {
+    if (!tok.startsWith("<")) {
+      // plain text
       append(document.createTextNode(tok));
       continue;
     }
 
-    // plain text
+    const tagName = getTagName(tok);
+    const isClosing = tok.startsWith("</");
+
+    // Blocked tags → drop entirely
+    if (BLOCKED_TAGS.has(tagName)) {
+      continue;
+    }
+
+    // Closing tag
+    if (isClosing) {
+      if (ALLOWED_TAGS.has(tagName) && stack.length) {
+        // Pop matching tag from stack
+        for (let i = stack.length - 1; i >= 0; i--) {
+          if (stack[i].tagName.toLowerCase() === tagName) {
+            stack.splice(i);
+            break;
+          }
+        }
+      }
+      continue;
+    }
+
+    // Opening tag
+    if (ALLOWED_TAGS.has(tagName)) {
+      // Special case: <span> without class → literal text (preserves original behavior)
+      if (tagName === "span") {
+        const cls = (getAttr(tok, "class") || "").trim();
+        if (!cls) {
+          append(document.createTextNode(tok));
+          continue;
+        }
+      }
+
+      const el = document.createElement(tagName);
+      copyAttrs(tok, el);
+      append(el);
+
+      // Only push non-void tags onto the stack
+      if (!VOID_TAGS.has(tagName)) {
+        stack.push(el);
+      }
+      continue;
+    }
+
+    // Unknown/unrecognized tag → literal text
     append(document.createTextNode(tok));
   }
 

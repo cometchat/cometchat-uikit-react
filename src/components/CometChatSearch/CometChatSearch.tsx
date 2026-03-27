@@ -445,7 +445,7 @@ export function CometChatSearch(props: SearchProps) {
     uid,
     guid,
     conversationOptions,
-    onError
+    onError,
   } = props;
 
 
@@ -600,7 +600,7 @@ export function CometChatSearch(props: SearchProps) {
     options: conversationOptions,
     hideReceipts,
     loggedInUser,
-    textFormatters
+    textFormatters,
   });
 
   const { renderMessagesList } = useCometChatSearchMessagesList({
@@ -622,7 +622,7 @@ export function CometChatSearch(props: SearchProps) {
     hideError: false,
     onError,
     uid,
-    guid
+    guid,
   });
   const shouldRenderConversations = useCallback(() => {
     // If searchIn is empty, search in both conversations and messages

@@ -45,6 +45,10 @@ import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
 import { useCometChatFrameContext } from "../../context/CometChatFrameContext";
 import { CometChatMessagePreview } from "../BaseComponents/CometChatMessagePreview/CometChatMessagePreview";
+import { CometChatFormattingToolbar } from "../CometChatFormattingToolbar/CometChatFormattingToolbar";
+import { CometChatLinkDialog } from "../CometChatLinkDialog/CometChatLinkDialog";
+import { CometChatLinkPopover } from "../CometChatLinkPopover/CometChatLinkPopover";
+import { useRichTextComposer } from "../useRichTextComposer/useRichTextComposer";
 
 export type ContentToDisplay =
   | "attachments"
@@ -268,6 +272,7 @@ interface MessageComposerProps {
    * 
    */
   mentionsGroupMembersRequestBuilder?: CometChat.GroupMembersRequestBuilder;
+
 }
 
 /**
@@ -441,8 +446,13 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
     disableMentionAll = false,
     mentionAllLabel = "all",
     mentionsUsersRequestBuilder,
-    mentionsGroupMembersRequestBuilder
+    mentionsGroupMembersRequestBuilder,
   } = props;
+
+  // Rich text is always disabled for CometChatMessageComposer
+  const enableRichTextEditor = false;
+  const showToolbarOnSelection = false;
+  const hideRichTextFormattingOptions = false;
   
   /**
    * Initialize state with the reducer, passing initial values for the text input and editor state.
@@ -462,6 +472,7 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
  * Refs for handling various elements and their functionalities.
  */
   const textInputRef = useRef<HTMLDivElement | null>(null);
+  const wasInsideInlineCodeRef = useRef<boolean>(false);
   const mediaFilePickerRef = useRef<HTMLInputElement | null>(null);
   const uniqueIdRef = useRef<string | null>("");
   const aiBtnRef = React.createRef<{
@@ -585,7 +596,7 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
   const disableSoundForMessagePropRef = useRefSync(disableSoundForMessage);
   const customSoundForMessagePropRef = useRefSync(customSoundForMessage);
   const IframeContext = useCometChatFrameContext();
-  
+
   const getCurrentWindow = () => {
     return IframeContext?.iframeWindow || window;
   }
@@ -593,6 +604,44 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
   const getCurrentDocument = () => {
     return IframeContext?.iframeDocument || document;
   }
+
+  // --- Rich text formatting (shared hook) ---
+  const {
+    isFixedToolbarVisible,
+    isFloatingToolbarVisible,
+    setIsFloatingToolbarVisible,
+    floatingToolbarPosition,
+    activeFormats,
+    setActiveFormats,
+    showLinkInput,
+    showLinkPopover,
+    linkPopoverData,
+    isLinkEditMode,
+    linkEditData,
+    linkDialogSelectedText,
+    richTextFormatter,
+    handleLinkClick,
+    handleLinkSubmit,
+    handleLinkCancel,
+    handleInputClick,
+    handleLinkPopoverEdit,
+    handleLinkPopoverRemove,
+    handleLinkPopoverClose,
+    handleFormatApplied,
+    handleFormattingKeyDown,
+    saveMarkdownUndoState,
+    handleMarkdownUndo,
+  } = useRichTextComposer({
+    enableRichTextEditor,
+    hideRichTextFormattingOptions,
+    showToolbarOnSelection,
+    getCurrentDocument,
+    getCurrentWindow,
+    getCurrentInput,
+    composerContainerClass: 'cometchat-message-composer',
+    errorHandler,
+    setTextFormatters,
+  });
 
     /**
    * Manages playing audio
@@ -679,6 +728,24 @@ try {
       setShowListForMentions(false);
     }
   }, [mentionsSearchTerm, disableMentions, userMemberListType, mentionAllLabel])
+
+  // Track whether caret is inside inline code for preservation on type-over
+  useEffect(() => {
+    if (!enableRichTextEditor || !richTextFormatter) return;
+
+    const handleSelectionChangeForInlineCode = () => {
+      const inputElement = getCurrentInput() as HTMLElement;
+      if (inputElement) {
+        wasInsideInlineCodeRef.current = !!richTextFormatter.isInsideCodeInline(inputElement);
+      }
+    };
+
+    const doc = getCurrentDocument();
+    doc?.addEventListener('selectionchange', handleSelectionChangeForInlineCode);
+    return () => {
+      doc?.removeEventListener('selectionchange', handleSelectionChangeForInlineCode);
+    };
+  }, [enableRichTextEditor, richTextFormatter]);
 
   /**
  * Callback to search mentions based on the search term input by the user.
@@ -1161,7 +1228,7 @@ try {
       if (textFormatterArray && textFormatterArray.length) {
         for (let i = 0; i < textFormatterArray.length; i++) {
           text =
-            textFormatterArray[i].getOriginalText(textToDispatch);
+            textFormatterArray[i].getOriginalText(text);
         }
       }
       if (
@@ -1179,6 +1246,8 @@ try {
       }
       dispatch({ type: "setText", text: "" });
       emptyInputField()
+      setActiveFormats([]);
+      richTextFormatter?.clearPendingFormats();
       let onSendButtonClick:
         | ((message: CometChat.BaseMessage, previewMessageMode?: PreviewMessageMode) => void)
         | undefined;
@@ -1205,7 +1274,8 @@ try {
       getTextMessage,
       onSendButtonClickPropRef,
       userPropRef,
-      textFormatterArray    ]
+      textFormatterArray,
+      setActiveFormats    ]
   );
 
   /**
@@ -1556,6 +1626,25 @@ try {
  */
   function onTextInputChange(e: any, text?: string) {
 try {
+  // Clear pre-armed pending formats now that the user has typed
+  if (richTextFormatter && e) {
+    richTextFormatter.clearPendingFormats();
+  }
+  // Preserve inline code formatting when typing over selected code text
+  if (richTextFormatter && e) {
+    const element = getCurrentInput() as HTMLElement;
+    if (element) {
+      richTextFormatter.handleInlineCodePreservation(element, wasInsideInlineCodeRef.current);
+      wasInsideInlineCodeRef.current = false;
+
+      // Detect and apply markdown shortcuts (**bold**, _italic_, ~~strikethrough~~)
+      if (richTextFormatter.handleMarkdownShortcuts(element, saveMarkdownUndoState)) {
+        // Shortcut was applied — update active formats and re-read text
+        const formats = richTextFormatter.getActiveFormats(element);
+        setActiveFormats(formats);
+      }
+    }
+  }
   const newText = text ?? e.target.innerText;
   if (typeof newText === "string") {
     handleTyping();
@@ -1595,11 +1684,16 @@ try {
   const onSendclick = useCallback(() => {
   try {
     var contenteditable = getCurrentInput();
-    if (contenteditable?.textContent?.trim()) {
-      let textToDispatch = contenteditable?.innerHTML?.trim() === "<br>" ? undefined : decodeHTML(contenteditable?.innerHTML.replace(/(<br>\s*)+$/, ''));
+    if (contenteditable?.textContent?.trim() || contenteditable?.querySelector('u')?.textContent) {
+      let rawHtml = contenteditable?.innerHTML?.trim() === "<br>" ? undefined : contenteditable?.innerHTML.replace(/(<br>\s*)+$/, '');
       if (contenteditable?.innerHTML?.trim() == "<br>") {
         contenteditable.innerHTML = "";
       }
+      if (rawHtml && richTextFormatter) {
+        rawHtml = richTextFormatter.trimRichTextWhitespace(rawHtml);
+      }
+      let textToDispatch = rawHtml ? decodeHTML(rawHtml) : undefined;
+      // Convert HTML from contenteditable to markdown via formatters before sending
       if (textFormatterArray && textFormatterArray.length) {
         for (let i = 0; i < textFormatterArray.length; i++) {
           textToDispatch =
@@ -1614,7 +1708,7 @@ try {
   } catch (error) {
     errorHandler(error,"onSendclick")
   }
-  }, [state.text, handleSendButtonClick])
+  }, [state.text, handleSendButtonClick, enableRichTextEditor, hideRichTextFormattingOptions, richTextFormatter])
 
   /**
  * Function to handle emoji click events.
@@ -1750,15 +1844,19 @@ try {
   
       return (
         <div className="cometchat-message-composer__default-buttons">
-          {hideVoiceRecordingButton ? null : getVoiceRecordingView()}
-          {hideEmojiKeyboardButton || isMobileDevice() ? null : getEmojiKeyboardView()}
           {hideStickersButton ? null : stickerButton}
+          {hideEmojiKeyboardButton || isMobileDevice() ? null : getEmojiKeyboardView()}
         </div>
       );
     } catch (error) {
       errorHandler(error, "getDefaultButtons");
     }
   }
+
+  /**
+   * Handles the link button click from the formatting toolbar.
+   * Shows the link input dialog.
+   */
   /**
  * Handles the secondary button click event.
  * - This function toggles the visibility of the attachment options based on the current content display state.
@@ -2125,10 +2223,45 @@ try {
       return null;
     }
     const messageToBeEdited = state.textMessageToEdit;
+    // Strip HTML tags for the preview subtitle so raw markup isn't displayed
+    let subtitleText = checkForMentions(messageToBeEdited);
+
+    // Strip markdown delimiters before HTML tag removal.
+    // Order: code blocks → inline code → links → bold → underline → italic → strikethrough → blockquotes
+    subtitleText = subtitleText.replace(/\u200B/g, '');
+    subtitleText = subtitleText.replace(/```([\s\S]*?)```/g, '$1');
+    subtitleText = subtitleText.replace(/`([\s\S]+?)`/g, '$1');
+    // Links FIRST: [text](url) → text  (exposes inner formatting markers like *~_text_~*)
+    subtitleText = subtitleText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+    const lines = subtitleText.split('\n');
+    const processedLines = lines.map((line: string) => {
+      let r = line;
+      // Bold: *content* → content (preserve `* item` list markers)
+      if (/^\*\s/.test(r)) {
+        r = r.replace(/^(\*\s)(.*)$/, (_: string, prefix: string, rest: string) => {
+          return prefix + rest.replace(/\*([^*]+)\*/g, '$1');
+        });
+      } else {
+        r = r.replace(/\*([^*]+)\*/g, '$1');
+      }
+      // Underline: __content__ or ++content++ → content (MUST be before italic)
+      r = r.replace(/__([^_]+)__/g, '$1');
+      r = r.replace(/\+\+([^+]+)\+\+/g, '$1');
+      // Italic: _content_ → content
+      r = r.replace(/_([^_]+)_/g, '$1');
+      // Strikethrough: ~content~ → content
+      r = r.replace(/~([^~]+)~/g, '$1');
+      // Blockquotes: > text → text
+      r = r.replace(/^(?:&gt;|>)\s?/, '');
+      return r;
+    });
+    subtitleText = processedLines.join('\n');
+
+    const plainSubtitle = subtitleText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
     return (
       <CometChatEditPreview
         onClose={onEditPreviewClose}
-        previewSubtitle={checkForMentions(messageToBeEdited)}
+        previewSubtitle={plainSubtitle}
       />
     );
   }
@@ -2211,6 +2344,17 @@ try {
   const onKeyDown = useCallback(
     (event: any) => {
       var contenteditable = getCurrentInput();
+
+      // Track inline code state before key modifies the DOM
+      if (contenteditable && richTextFormatter) {
+        wasInsideInlineCodeRef.current = !!richTextFormatter.isInsideCodeInline(contenteditable as HTMLElement);
+      }
+      
+      // Handle rich text formatting keyboard shortcuts via shared hook
+      if (contenteditable && handleFormattingKeyDown(event, contenteditable as Element)) {
+        return;
+      }
+      
       if (event.keyCode === 13 && !event.shiftKey) {
         if(enterKeyBehavior == EnterKeyBehavior.NewLine){
           return;
@@ -2219,11 +2363,16 @@ try {
         if(enterKeyBehavior == EnterKeyBehavior.None){
           return;
         }
-        if (contenteditable?.textContent?.trim()) {
-          let textToDispatch = contenteditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contenteditable?.innerHTML.replace(/(<br>\s*)+$/, ''));
+        if (contenteditable?.textContent?.trim() || contenteditable?.querySelector('u')?.textContent) {
+          let rawHtml = contenteditable?.innerHTML?.trim() == "<br>" ? undefined : contenteditable?.innerHTML.replace(/(<br>\s*)+$/, '');
           if (contenteditable?.innerHTML?.trim() == "<br>") {
             contenteditable.innerHTML = "";
           }
+          if (rawHtml && richTextFormatter) {
+            rawHtml = richTextFormatter.trimRichTextWhitespace(rawHtml);
+          }
+          let textToDispatch = rawHtml ? decodeHTML(rawHtml) : undefined;
+          // Convert HTML from contenteditable to markdown via formatters before sending
           if (textFormatterArray && textFormatterArray.length) {
             for (let i = 0; i < textFormatterArray.length; i++) {
               textToDispatch =
@@ -2246,7 +2395,7 @@ try {
           textFormatterArray[i].onKeyDown(event);
         }
       }
-    }, [textFormatterArray, user, group, state.textMessageToEdit]
+    }, [textFormatterArray, user, group, state.textMessageToEdit, handleFormattingKeyDown]
   )
 
   /**
@@ -2273,13 +2422,20 @@ try {
       
       const element = getCurrentInput() as HTMLElement;
       
-      if (event.keyCode === 8) {
-        if (element.innerHTML === '<br>') {
+      if (event.keyCode === 8 || event.keyCode === 46) {
+        const visibleText = (element.textContent || '').replace(/\u200B/g, '').trim();
+        if (!visibleText) {
           emptyInputField();
+          setActiveFormats([]);
+          richTextFormatter?.clearPendingFormats();
+        } else if (richTextFormatter) {
+          const formats = richTextFormatter.getActiveFormats(element);
+          setActiveFormats(formats);
         }
       }
       
       if (textFormatterArray && textFormatterArray.length) {
+        
         for (let i = 0; i < textFormatterArray.length; i++) {
           if (element) {
             textFormatterArray[i].setInputElementReference(element);
@@ -2289,6 +2445,7 @@ try {
             currentSelectionForRegexRange.current!
           );
           
+          
           // Add try-catch and prevent event propagation
           try {
             textFormatterArray[i].onKeyUp(event);
@@ -2297,7 +2454,7 @@ try {
           }
         }
       }
-    }, [textFormatterArray, user, group]
+    }, [textFormatterArray, user, group, setActiveFormats, richTextFormatter]
   );
   /**
   * Checks if the provided selection is a descendant of the 
@@ -2333,8 +2490,12 @@ try {
   const emptyInputField = () => {
 try {
   let contentEditable: any = getCurrentInput();
-  contentEditable.textContent = "";
+  contentEditable.innerHTML = "";
   contentEditable?.focus();
+  // Clear rich text formatting modes when input is emptied
+  if (richTextFormatter) {
+    richTextFormatter.clearFormattingModes();
+  }
 } catch (error) {
   errorHandler(error,"emptyInputField")
 }
@@ -2375,9 +2536,15 @@ try {
  * Checks the availability of the 'plaintext-only' content 
  * editable option in the browser. Returns 'plaintext-only' if 
  * supported and not disabled; otherwise, returns false.
+ * When rich text editor is enabled, returns true to allow HTML formatting.
  */
   const checkPlainTextAvailability = (disabled?: boolean): any => {
     try {
+      // When rich text editor is enabled, use regular contentEditable to preserve HTML formatting
+      if (enableRichTextEditor) {
+        return true;
+      }
+      
       const temp = getCurrentDocument()?.createElement('div');
       // Type cast to 'any' to bypass the type check
       temp.contentEditable = 'plaintext-only';
@@ -2501,16 +2668,21 @@ try {
   function getTextInput(): JSX.Element {
     return (
       <>
-        <div
-          onKeyUp={onKeyUp}
-          onKeyDown={onKeyDown}
-          contentEditable={checkPlainTextAvailability(false)}
-          onMouseDown={handleMouseDown}
-          onInput={onTextInputChange}
-          className={`cometchat-message-composer__input ${parentMessageIdPropRef.current ? "cometchat-message-composer__input-thread" : ""} ${isMobileDevice() ? "cometchat-message-composer__input-mobile" : ""} ${createUniqueUUID}`}
-          data-placeholder={placeholderText}
-          ref={textInputRef}
-        ></div>
+        {/* Fixed Formatting Toolbar - shown when toggle is active */}
+        {getFixedFormattingToolbar()}
+        <div className="cometchat-message-composer__input-wrapper">
+          <div
+            onKeyUp={onKeyUp}
+            onKeyDown={onKeyDown}
+            contentEditable={checkPlainTextAvailability(false)}
+            onMouseDown={handleMouseDown}
+            onInput={onTextInputChange}
+            onClick={handleInputClick}
+            className={`cometchat-message-composer__input ${parentMessageIdPropRef.current ? "cometchat-message-composer__input-thread" : ""} ${isMobileDevice() ? "cometchat-message-composer__input-mobile" : ""} ${activeFormats.includes('codeBlock') ? "cometchat-message-composer__input--code-block" : ""} ${createUniqueUUID}`}
+            data-placeholder={placeholderText}
+            ref={textInputRef}
+          ></div>
+        </div>
         <div
         className="cometchat-message-composer__buttons"
           style={{
@@ -2531,6 +2703,57 @@ try {
 
     );
   }
+
+  /**
+   * Creates the fixed formatting toolbar that appears when the toggle button is clicked.
+   * Only shown when enableRichTextEditor is true and hideRichTextFormattingOptions is false.
+   */
+  function getFixedFormattingToolbar(): JSX.Element | null {
+    // Don't show if rich text editor is disabled, formatting options are hidden, or toolbar is not visible
+    if (!enableRichTextEditor || hideRichTextFormattingOptions || !isFixedToolbarVisible || !richTextFormatter) {
+      return null;
+    }
+
+    return (
+      <div className="cometchat-message-composer__formatting-toolbar">
+        <CometChatFormattingToolbar
+          textInputRef={textInputRef as React.RefObject<HTMLDivElement>}
+          richTextFormatter={richTextFormatter}
+          isFloating={false}
+          activeFormats={activeFormats}
+          onLinkClick={handleLinkClick}
+          onFormatApplied={handleFormatApplied}
+        />
+      </div>
+    );
+  }
+
+  /**
+   * Creates the floating formatting toolbar that appears when text is selected.
+   * Only shown when showToolbarOnSelection is true and not on mobile devices.
+   */
+  function getFloatingFormattingToolbar(): JSX.Element | null {
+    // Don't show if rich text editor is disabled,
+    // showToolbarOnSelection is false, on mobile, fixed toolbar is visible, or toolbar is not visible
+    if (!enableRichTextEditor || !showToolbarOnSelection || 
+        isMobileDevice() || isFixedToolbarVisible || !isFloatingToolbarVisible || !floatingToolbarPosition || !richTextFormatter) {
+      return null;
+    }
+
+    return (
+      <CometChatFormattingToolbar
+        textInputRef={textInputRef as React.RefObject<HTMLDivElement>}
+        richTextFormatter={richTextFormatter}
+        isFloating={true}
+        position={floatingToolbarPosition}
+        activeFormats={activeFormats}
+        onVisibilityChange={(visible) => setIsFloatingToolbarVisible(visible)}
+        onLinkClick={handleLinkClick}
+        onFormatApplied={handleFormatApplied}
+      />
+    );
+  }
+
   /**
    * Returns a modal for creating a poll if the state indicates that 
    * the poll creation view should be shown. Returns null if the view 
@@ -2590,8 +2813,22 @@ try {
   // Main rendering of the message composer component
   return (
     <>
+      {/* Link Dialog */}
+      {showLinkInput && (
+        <CometChatLinkDialog
+          onSubmit={handleLinkSubmit}
+          onCancel={handleLinkCancel}
+          showTextInput={true}
+          focusLinkField={isLinkEditMode || !!linkDialogSelectedText}
+          isEditMode={isLinkEditMode}
+          initialUrl={linkEditData?.url || ''}
+          initialText={isLinkEditMode ? (linkEditData?.text || '') : linkDialogSelectedText}
+        />
+      )}
       {getCreatePollModal()}
       <div className="cometchat" style={{height:"fit-content", width: "100%", position: "relative" }}>
+        {/* Floating Formatting Toolbar - shown when text is selected */}
+        {getFloatingFormattingToolbar()}
         {showListForMentions && (!disableMentionAll || !disableMentions) && (
           <div
             className='cometchat-mention-list'
@@ -2619,6 +2856,17 @@ try {
           {getMediaFilePicker()}
           { state.showValidationError  || state.showMentionsCountWarning || headerView ||  getTextMessageEditPreview() || getReplyMessagePreview() ? getHeaderView() : null}
           {getTextInput()}
+          {/* Link Popover - positioned relative to composer */}
+          {showLinkPopover && linkPopoverData && (
+            <CometChatLinkPopover
+              linkText={linkPopoverData.linkText}
+              linkUrl={linkPopoverData.linkUrl}
+              position={linkPopoverData.position}
+              onEdit={handleLinkPopoverEdit}
+              onRemove={handleLinkPopoverRemove}
+              onClose={handleLinkPopoverClose}
+            />
+          )}
         </div>
       </div></>
   );

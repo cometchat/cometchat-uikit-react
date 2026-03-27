@@ -67,7 +67,7 @@
   font-style: normal;
 }
 
-.cometchat-link-bubble-incoming .cometchat-link-bubble__preview-body-content-title {
+.cometchat-link-bubble-incoming .cometchat-link-bubble__preview-body-content-description {
   color: var(--cometchat-neutral-color-900, #141414);
 }
 

@@ -476,20 +476,7 @@ export abstract class DataSourceDecorator implements DataSource {
     );
   }
   getAllTextFormatters(formatterParams: additionalParams): CometChatTextFormatter[] {
-    let formatters = [];
-    const mentionsFormatter = formatterParams.disableMentions ? null : (this.dataSource ?? new MessagesDataSource()).getMentionsTextFormatter(
-      formatterParams
-    );
-    const urlTextFormatter = (this.dataSource ?? new MessagesDataSource()).getUrlTextFormatter(
-      formatterParams
-    );
-    if (mentionsFormatter) {
-      formatters.push(mentionsFormatter);
-    }
-    if (urlTextFormatter) {
-      formatters.push(urlTextFormatter);
-    }
-    return formatters;
+    return (this.dataSource ?? new MessagesDataSource()).getAllTextFormatters(formatterParams);
   }
 
   getMentionsTextFormatter(params: Object = {}): CometChatMentionsFormatter {

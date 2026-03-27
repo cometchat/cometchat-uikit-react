@@ -5,6 +5,7 @@ import { MessageBubbleAlignment } from '../Enums/Enums';
 import { CometChatUIKitConstants } from '../constants/CometChatUIKitConstants';
 import {  CometChatOption } from '../modals';
 import { CometChatMentionsFormatter } from '../formatters/CometChatFormatters/CometChatMentionsFormatter/CometChatMentionsFormatter';
+import { CometChatUIKitUtility } from '../CometChatUIKit/CometChatUIKitUtility';
 
 export interface additionalParams {
   disableMentions?: boolean;
@@ -92,7 +93,13 @@ export class ConversationUtils {
     let messageObject: CometChat.BaseMessage = conversation.getLastMessage()
     switch (messageObject?.getType()) {
       case CometChatUIKitConstants.MessageTypes.text: {
-        message = (messageObject as CometChat.TextMessage).getText() || ""
+        if (this.additionalParams) {
+          const lastMessage = (messageObject as CometChat.TextMessage)?.getText() || ""
+          const markdownMessage = CometChatUIKitUtility.convertFormattingHtmlToMarkdown(lastMessage);
+          message = CometChatUIKitUtility.sanitizeText(markdownMessage);
+        } else {
+          message = (messageObject as CometChat.TextMessage).getText() || ""
+        }
       }
         break;
       case CometChatUIKitConstants.MessageTypes.image:

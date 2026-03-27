@@ -66,7 +66,6 @@ const CometChatFileBubble = (props: FileBubbleProps) => {
         } catch (error: any) {
 
             if (error.name === 'AbortError') {
-                console.log('Download was aborted');
             } else {
                 console.error('Download failed:', error);
             }

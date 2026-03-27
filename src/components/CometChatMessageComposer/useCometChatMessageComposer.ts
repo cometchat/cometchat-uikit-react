@@ -8,7 +8,9 @@ import {
 } from "@cometchat/chat-sdk-javascript";
 import React, { useCallback, useEffect, useRef } from "react";
 import { CometChatMentionsFormatter } from "../../formatters/CometChatFormatters/CometChatMentionsFormatter/CometChatMentionsFormatter";
+import { CometChatUrlsFormatter } from "../../formatters/CometChatFormatters/CometChatUrlsFormatter/CometChatUrlsFormatter";
 import { CometChatTextFormatter } from "../../formatters/CometChatFormatters/CometChatTextFormatter";
+import { ChatConfigurator } from "../../utils/ChatConfigurator";
 import { MentionsTargetElement, MessageStatus, UserMemberListType } from "../../Enums/Enums";
 import { CometChatMessageEvents, IMessages } from "../../events/CometChatMessageEvents";
 import { CometChatUIEvents, IMentionsCountWarning, IModal } from "../../events/CometChatUIEvents";
@@ -163,8 +165,28 @@ export function useCometChatMessageComposer(args: Args) {
                   });
                   emptyInputField()
                   if (renderSanitizedHtml) {
-                    const sel = getCurrentWindow()?.getSelection();
-                    setSelection(sel);
+                    // Ensure a valid selection/range exists inside the empty
+                    // contentEditable so renderSanitizedHtml takes the primary
+                    // path (sanitizeHtmlStringToFragment) instead of the plain-
+                    // text fallback.  After emptyInputField() the browser may
+                    // not have established a range inside the element yet, which
+                    // would cause setSelection's isDescendant guard to fail.
+                    const inputEl = getCurrentInput() as HTMLElement;
+                    if (inputEl) {
+                      inputEl.focus();
+                      const win = getCurrentWindow();
+                      const browserSel = win?.getSelection();
+                      if (browserSel) {
+                        const newRange = getCurrentDocument()?.createRange();
+                        if (newRange) {
+                          newRange.selectNodeContents(inputEl);
+                          newRange.collapse(true);
+                          browserSel.removeAllRanges();
+                          browserSel.addRange(newRange);
+                        }
+                        setSelection(browserSel);
+                      }
+                    }
                     let finalText: string | void = object.message.getText();
                     if (textFormatterArray && textFormatterArray.length) {
                       for (let i = 0; i < textFormatterArray.length; i++) {
@@ -396,8 +418,9 @@ export function useCometChatMessageComposer(args: Args) {
       const preventPaste = (e: ClipboardEvent) => {
         e.preventDefault();
         let clipboardData = e.clipboardData!.getData("text/plain");
-        if (clipboardData) {
-          pasteHtmlAtCaret(clipboardData);
+        const sanitizedData = CometChatUIKitUtility.sanitizeText(clipboardData);
+        if (sanitizedData) {
+          pasteHtmlAtCaret(sanitizedData);
           if (onTextChange) {
             onTextChange(clipboardData);
           }
@@ -430,12 +453,17 @@ export function useCometChatMessageComposer(args: Args) {
             }
             setTextFormatters(prevFormatters => {
               const newFormatter = mentionsTextFormatterInstanceRef.current;
-              if (!prevFormatters.includes(newFormatter)) {
-                return [...prevFormatters, newFormatter];
+              const hasUrlFormatter = prevFormatters.some(f => f instanceof CometChatUrlsFormatter);
+              let updated = prevFormatters;
+              if (!updated.includes(newFormatter)) {
+                updated = [...updated, newFormatter];
               }
-              return prevFormatters;
+              if (!hasUrlFormatter) {
+                const urlFormatter = ChatConfigurator.getDataSource().getUrlTextFormatter({});
+                updated = [...updated, urlFormatter];
+              }
+              return updated === prevFormatters ? prevFormatters : updated;
             });
-            
           
         } else {
           mentionsTextFormatterInstanceRef.current.setLoggedInUser(
@@ -450,10 +478,16 @@ export function useCometChatMessageComposer(args: Args) {
           }
           setTextFormatters(prevFormatters => {
             const newFormatter = mentionsTextFormatterInstanceRef.current;
-            if (!prevFormatters.includes(newFormatter)) {
-              return [newFormatter];
+            const hasUrlFormatter = prevFormatters.some(f => f instanceof CometChatUrlsFormatter);
+            let updated = prevFormatters;
+            if (!updated.includes(newFormatter)) {
+              updated = [...updated, newFormatter];
             }
-            return prevFormatters;
+            if (!hasUrlFormatter) {
+              const urlFormatter = ChatConfigurator.getDataSource().getUrlTextFormatter({});
+              updated = [...updated, urlFormatter];
+            }
+            return updated === prevFormatters ? prevFormatters : updated;
           });
         }
    

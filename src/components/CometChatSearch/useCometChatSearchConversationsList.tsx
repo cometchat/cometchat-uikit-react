@@ -803,7 +803,7 @@ export function useCometChatSearchConversationsList(props: UseCometChatSearchCon
     activeFilters = [],
     useScrollPagination = false,
     hideError = false,
-    loggedInUser
+    loggedInUser,
   } = props;
 
   // Initialize state
@@ -1611,7 +1611,7 @@ export function useCometChatSearchConversationsList(props: UseCometChatSearchCon
           currentLoggedInUser,
           {
             mentionsTargetElement: MentionsTargetElement.conversation,
-            textFormattersList: textFormatters
+            textFormattersList: textFormatters,
           }
         );
 

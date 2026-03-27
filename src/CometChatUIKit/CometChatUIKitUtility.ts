@@ -201,6 +201,165 @@ export class CometChatUIKitUtility {
   };
 
   /**
+   * Convert known rich-text HTML formatting tags to markdown.
+   * This handles messages that arrive with raw HTML (from other platforms or older clients)
+   * so they can be processed by the markdown formatter on the bubble side.
+   * Also handles HTML-entity-escaped tags (e.g., &lt;i&gt;text&lt;/i&gt;).
+   * Only converts recognized formatting tags; unknown/dangerous HTML is left for sanitizeText.
+   */
+  static convertFormattingHtmlToMarkdown(text: string): string {
+    if (!text || typeof text !== 'string') return text;
+
+    // First, decode HTML entities for formatting tags so they can be detected
+    // Convert &lt;i&gt; back to <i> etc., but only for known formatting tags
+    let decoded = text;
+    const entityPattern = /&lt;(\/?)(b|strong|i|em|u|s|strike|del|code|pre|blockquote|a|ol|ul|li)((?:\s[^&]*)?)&gt;/gi;
+    if (entityPattern.test(text)) {
+      decoded = text.replace(/&lt;(\/?)(b|strong|i|em|u|s|strike|del|code|pre|blockquote|a|ol|ul|li)((?:\s[^&]*)?)&gt;/gi,
+        '<$1$2$3>');
+    }
+
+    // Quick check: does the text contain any HTML formatting tags?
+    const formattingTagPattern = /<\/?(b|strong|i|em|u|s|strike|del|code|pre|blockquote|a|ol|ul|li|p|div)[\s>]/i;
+    if (!formattingTagPattern.test(decoded)) return text;
+
+    // Preserve mention tokens (<@uid:...> and <@all:...>) before DOM parsing
+    // The browser's HTML parser would strip/mangle these pseudo-tags
+    const mentionPlaceholders: string[] = [];
+    decoded = decoded.replace(/<@(uid|all):[^>]+>/g, (match) => {
+      const idx = mentionPlaceholders.length;
+      mentionPlaceholders.push(match);
+      return `\u200B__MENTION_${idx}__\u200B`;
+    });
+
+    // Use a temporary DOM element to parse and convert
+    const container = document.createElement('div');
+    container.innerHTML = decoded;
+
+    const processNode = (node: Node, depth: number = 0): string => {
+      let result = '';
+      for (let i = 0; i < node.childNodes.length; i++) {
+        const child = node.childNodes[i];
+        if (child.nodeType === Node.TEXT_NODE) {
+          result += child.textContent || '';
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          const el = child as HTMLElement;
+          const tag = el.tagName.toUpperCase();
+          const inner = processNode(el, depth);
+
+          switch (tag) {
+            case 'B': case 'STRONG':
+              result += `**${inner}**`; break;
+            case 'I': case 'EM':
+              result += `_${inner}_`; break;
+            case 'U':
+              result += `<u>${inner}</u>`; break;
+            case 'S': case 'STRIKE': case 'DEL':
+              result += `~~${inner}~~`; break;
+            case 'PRE': {
+              const codeContent = el.querySelector('code')?.textContent || inner;
+              result += `\`\`\`${codeContent}\`\`\``; break;
+            }
+            case 'CODE':
+              if (el.parentElement?.tagName === 'PRE') { result += inner; }
+              else { result += `\`${inner}\``; }
+              break;
+            case 'BLOCKQUOTE': {
+              const bqLines = inner.split('\n');
+              while (bqLines.length > 0 && bqLines[bqLines.length - 1].trim() === '') {
+                bqLines.pop();
+              }
+              result += bqLines.map((l: string) => `> ${l}`).join('\n'); break;
+            }
+            case 'A': {
+              const href = el.getAttribute('href') || '';
+              result += `[${inner || href}](${href})`; break;
+            }
+            case 'OL': {
+              let idx = 1;
+              const indent = '    '.repeat(depth);
+              for (let j = 0; j < el.children.length; j++) {
+                if (el.children[j].tagName === 'LI') {
+                  const li = el.children[j];
+                  let textContent = '';
+                  let nestedListContent = '';
+                  for (let k = 0; k < li.childNodes.length; k++) {
+                    const liChild = li.childNodes[k];
+                    if (liChild.nodeType === Node.ELEMENT_NODE) {
+                      const liChildTag = (liChild as HTMLElement).tagName.toUpperCase();
+                      if (liChildTag === 'OL' || liChildTag === 'UL') {
+                        nestedListContent += processNode(liChild, depth + 1);
+                      } else {
+                        textContent += processNode(liChild, depth);
+                      }
+                    } else {
+                      textContent += liChild.textContent || '';
+                    }
+                  }
+                  const trimmed = textContent.replace(/\n/g, '').trim();
+                  if (trimmed) {
+                    result += `${indent}${idx}. ${textContent}\n`; idx++;
+                  }
+                  if (nestedListContent) {
+                    result += nestedListContent;
+                  }
+                }
+              }
+              break;
+            }
+            case 'UL': {
+              const indent = '    '.repeat(depth);
+              for (let j = 0; j < el.children.length; j++) {
+                if (el.children[j].tagName === 'LI') {
+                  const li = el.children[j];
+                  let textContent = '';
+                  let nestedListContent = '';
+                  for (let k = 0; k < li.childNodes.length; k++) {
+                    const liChild = li.childNodes[k];
+                    if (liChild.nodeType === Node.ELEMENT_NODE) {
+                      const liChildTag = (liChild as HTMLElement).tagName.toUpperCase();
+                      if (liChildTag === 'OL' || liChildTag === 'UL') {
+                        nestedListContent += processNode(liChild, depth + 1);
+                      } else {
+                        textContent += processNode(liChild, depth);
+                      }
+                    } else {
+                      textContent += liChild.textContent || '';
+                    }
+                  }
+                  const trimmed = textContent.replace(/\n/g, '').trim();
+                  if (trimmed) {
+                    result += `${indent}• ${textContent}\n`;
+                  }
+                  if (nestedListContent) {
+                    result += nestedListContent;
+                  }
+                }
+              }
+              break;
+            }
+            case 'LI': result += inner; break;
+            case 'BR': result += '\n'; break;
+            case 'DIV': case 'P': result += inner + '\n'; break;
+            case 'SPAN': result += inner; break;
+            default: result += inner; break;
+          }
+        }
+      }
+      return result;
+    };
+
+    let result = processNode(container).trim();
+
+    // Restore mention tokens that were preserved before DOM parsing
+    result = result.replace(/\u200B__MENTION_(\d+)__\u200B/g, (_, idx) => {
+      return mentionPlaceholders[parseInt(idx, 10)];
+    });
+
+    return result;
+  }
+
+  /**
    * Process and sanitize text to escape dangerous HTML while preserving mention formatting
    * @param text The text string that may contain HTML and mentions
    * @returns Sanitized string with dangerous HTML escaped but mentions preserved
@@ -210,6 +369,11 @@ export class CometChatUIKitUtility {
 
     return text.replace(/<[^>]*>/g, (match) => {
       const inner = match.slice(1,-1).trim();
+
+      // Preserve <u> and </u> tags — they are our underline markdown syntax
+      if (/^\/?u$/i.test(inner)) {
+        return match;
+      }
 
       // Proper HTML tags: optional / then letter
       if (/^\/?[a-zA-Z]/.test(inner)) {
@@ -224,6 +388,52 @@ export class CometChatUIKitUtility {
       // Empty tags, fragments, or any invalid HTML → escape so they render literally
       return match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     });
+  }
+
+  /**
+   * Strips markdown formatting syntax from text, leaving only the plain text content.
+   * Preserves mention tokens (<@uid:...> and <@all:...>) and line breaks.
+   */
+  static stripMarkdownFormatting(text: string): string {
+    if (!text || typeof text !== 'string') return text;
+
+    let result = text;
+
+    // Preserve mention tokens before stripping
+    const mentionPlaceholders: string[] = [];
+    result = result.replace(/<@(uid|all):[^>]+>/g, (match) => {
+      const idx = mentionPlaceholders.length;
+      mentionPlaceholders.push(match);
+      return `\u200B__MENTION_${idx}__\u200B`;
+    });
+
+    // Strip code blocks: ```content```
+    result = result.replace(/```([\s\S]*?)```/g, '$1');
+    // Strip inline code: `content`
+    result = result.replace(/`([^`]+)`/g, '$1');
+    // Strip bold: **content** (supports multiline)
+    result = result.replace(/\*\*([\s\S]+?)\*\*/g, '$1');
+    // Strip italic: _content_ (supports multiline)
+    result = result.replace(/(?<!\w)_([\s\S]+?)_(?!\w)/g, '$1');
+    // Strip strikethrough: ~~content~~ (supports multiline)
+    result = result.replace(/~~([\s\S]+?)~~/g, '$1');
+    // Strip blockquote markers: > text
+    result = result.replace(/^>\s?/gm, '');
+    // Strip ordered list markers: 1. text
+    result = result.replace(/^\s*\d+\.\s/gm, '');
+    // Strip unordered list markers: • text
+    result = result.replace(/^\s*•\s/gm, '');
+    // Strip underline HTML tags: <u>content</u>
+    result = result.replace(/<\/?u>/gi, '');
+    // Strip markdown links: [text](url) → text
+    result = result.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
+
+    // Restore mention tokens
+    result = result.replace(/\u200B__MENTION_(\d+)__\u200B/g, (_, idx) => {
+      return mentionPlaceholders[parseInt(idx, 10)];
+    });
+
+    return result;
   }
 
   static convertBlobToWav = async (audioBlob: { arrayBuffer: () => any }) => {

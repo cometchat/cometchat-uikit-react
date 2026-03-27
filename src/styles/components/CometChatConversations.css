@@ -116,8 +116,38 @@ box-sizing: border-box;
   text-overflow: ellipsis;
   white-space: nowrap;
   font: var(--cometchat-font-body-regular);
-  font-style: normal;
   width: 100%; 
+}
+
+/* Inline code styling in conversation subtitle */
+.cometchat-conversations__subtitle-text code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  font-size: 0.9em;
+  background: var(--cometchat-background-color-03);
+  color: var(--cometchat-text-color-secondary);
+  padding: 0 var(--cometchat-padding-1, 2px);
+  border-radius: var(--cometchat-radius-1, 4px);
+  border: 1px solid var(--cometchat-border-color-light);
+}
+
+/* Rich text formatting tags in conversation subtitle */
+/* !important needed because the parent uses the `font` shorthand which resets font-weight/style on all descendants */
+.cometchat-conversations__subtitle-text b,
+.cometchat-conversations__subtitle-text strong {
+  font-weight: 700 !important;
+}
+
+.cometchat-conversations__subtitle-text i,
+.cometchat-conversations__subtitle-text em {
+  font-style: italic !important;
+}
+
+.cometchat-conversations__subtitle-text u {
+  text-decoration: underline !important;
+}
+
+.cometchat-conversations__subtitle-text s {
+  text-decoration: line-through !important;
 }
 
 .cometchat-conversations__subtitle-icon {
@@ -449,10 +479,16 @@ background: var(--cometchat-icon-color-secondary, #A1A1A1);
 .cometchat-conversations__subtitle-text .cometchat-mentions > span{ 
   color: var(--cometchat-text-color-highlight,#6852D6);
   font: var(--cometchat-font-body-regular);
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
 }
 .cometchat-conversations__subtitle-text .cometchat-mentions-you > span{ 
   color: var(--cometchat-warning-color,#FFAB00);
   font: var(--cometchat-font-body-regular);
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
 }
 
 .cometchat-conversations__subtitle-typing {

@@ -257,10 +257,8 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
     uid,
     guid,
     hideError = false,
-    loggedInUser
+    loggedInUser,
   } = props;
-
-  // Initialize state
   const [messageState, dispatch] = useReducer(stateReducer, {
     messageList: [],
     fetchState: States.loading,
@@ -407,7 +405,6 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
         return null;
       }
     } catch (error: any) {
-      console.log("error in getting link preview details", error);
     }
   }
 
@@ -499,8 +496,14 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
   const getFormattedMessageText = useCallback((message: CometChat.TextMessage): string => {
     try {
       let text = (message as CometChat.TextMessage).getText();
-      let finalText = CometChatUIKitUtility.sanitizeText(text);
+
+      let finalText: string;
+      const markdownText = CometChatUIKitUtility.convertFormattingHtmlToMarkdown(text);
+      finalText = CometChatUIKitUtility.sanitizeText(markdownText);
+
       let formatters = textFormatters ?? ChatConfigurator.getDataSource().getAllTextFormatters({ mentionsTargetElement: MentionsTargetElement.conversation });
+
+
 
       if (message) {
         let mentionsTextFormatter!: CometChatMentionsFormatter;
@@ -565,7 +568,7 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
       errorHandler(error, "getFormattedMessageText");
       return message?.getText() || "";
     }
-  },[textFormatters, errorHandler,searchKeyword]);
+  },[textFormatters, errorHandler, searchKeyword]);
 
   function getSubtitleThreadView(message: CometChat.BaseMessage): JSX.Element | null {
     try {

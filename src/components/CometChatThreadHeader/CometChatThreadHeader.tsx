@@ -102,7 +102,6 @@ const CometChatThreadHeader = (props: CometChatThreadHeaderProps) => {
         messageBubbleView,
         onClose,
         onError = (error: CometChat.CometChatException) => {
-            console.log(error);
         },
         hideDate = false,
         hideReplyCount = false,

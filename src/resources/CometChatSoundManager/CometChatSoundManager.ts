@@ -107,7 +107,6 @@ export class CometChatSoundManager {
                 CometChatSoundManager.audio.play();
 
         } catch (error: unknown) {
-            console.log(error)
         }
     };
 
@@ -143,7 +142,6 @@ export class CometChatSoundManager {
                 CometChatSoundManager.audio.play();
 
         } catch (error: unknown) {
-            console.log(error)
         }
     };
 
