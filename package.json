@@ -1,6 +1,6 @@
 {
   "name": "@cometchat/chat-uikit-react",
-  "version": "5.0.18",
+  "version": "5.0.19",
   "description": "Ready-to-use Chat UI Components for React(Javascript/Web)",
   "author": "CometChat",
   "exports": {
@@ -8,7 +8,7 @@
     "./css-variables.css": "./dist/styles/css-variables.css"
   },
   "dependencies": {
-    "@cometchat/chat-sdk-javascript": "^4.1.3",
+    "@cometchat/chat-sdk-javascript": "^4.1.9",
     "@rollup/plugin-json": "^6.1.0",
     "rxjs": "^7.8.1"
   },  

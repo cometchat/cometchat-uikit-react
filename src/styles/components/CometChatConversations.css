@@ -219,6 +219,13 @@
   mask-size: contain;
 }
 
+.cometchat-conversations__subtitle-icon-unsupported {
+  -webkit-mask: url("../../assets/file_unsupported.svg") center center no-repeat;
+  mask: url("../../assets/file_unsupported.svg") center center no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
 .cometchat-conversations__subtitle-icon-thread {
   -webkit-mask: url("../../assets/conversations_thread.svg") center center no-repeat;
   mask: url("../../assets/conversations_thread.svg") center center no-repeat;

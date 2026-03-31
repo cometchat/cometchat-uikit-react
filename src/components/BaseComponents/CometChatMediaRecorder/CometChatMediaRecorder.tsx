@@ -233,6 +233,15 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         currentMediaPlayer.mediaRecorder = null;
         createMedia.current = false;
         userCancelledRecording.current = true;
+        const recorder = mediaRecorder as MediaRecorder;
+        if (recorder && recorder.state !== 'inactive') {
+            try {
+                recorder.stop();
+            } catch (error) {
+                console.error('Error stopping recorder during close:', error);
+            }
+        }
+        stopTimer();
         onCloseRecording?.();
         reset();
     };
@@ -254,6 +263,7 @@ const CometChatMediaRecorder: React.FC<MediaRecorderProps> = ({
         clearStream();
         audioChunks.current = [];
         blobRef.current = undefined;
+        hasInitializedRef.current = false;
     };
 
     const clearStream = () => {

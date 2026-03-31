@@ -237,6 +237,20 @@ interface MessageComposerProps {
   * @defaultValue `false`
   */
   showScrollbar?: boolean;
+
+  /**
+   * Custom request builder for mentions user list.
+   * @defaultValue `undefined` - Uses default internal request builder.
+   * 
+   */
+  mentionsUsersRequestBuilder?: CometChat.UsersRequestBuilder;
+
+  /**
+   * Custom request builder for mentions group members list.
+   * @defaultValue `undefined` - Uses default internal request builder
+   * 
+   */
+  mentionsGroupMembersRequestBuilder?: CometChat.GroupMembersRequestBuilder;
 }
 
 /**
@@ -391,7 +405,9 @@ export function CometChatMessageComposer(props: MessageComposerProps) {
     enterKeyBehavior = EnterKeyBehavior.SendMessage,
     disableSoundForMessage = false,
     customSoundForMessage,
-    showScrollbar = false
+    showScrollbar = false,
+    mentionsUsersRequestBuilder,
+    mentionsGroupMembersRequestBuilder
   } = props;
   
   /**
@@ -2359,7 +2375,9 @@ try {
     propsText: props.initialComposerText,
     getCurrentInput,
     isPartOfCurrentChatForUIEvent,
-    textMessageToEdit:state.textMessageToEdit
+    textMessageToEdit:state.textMessageToEdit,
+    mentionsUsersRequestBuilder,
+    mentionsGroupMembersRequestBuilder
   });
   // Main rendering of the message composer component
   return (

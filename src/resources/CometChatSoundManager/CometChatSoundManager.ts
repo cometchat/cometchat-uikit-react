@@ -27,7 +27,7 @@ export class CometChatSoundManager {
      * CometChatSoundManager.onIncomingMessage("MP3_FILE_ASSET_PATH");
      */
     static onIncomingMessage = (customSound: string | null = null): void => {
-        CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cometchat.io/uikits/static/audio/incomingmessage.wav');
+        CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cc-cluster-2.io/uikits/static/audio/incomingmessage.wav');
         CometChatSoundManager.audio.currentTime = 0;
         if (this.hasInteracted())
             CometChatSoundManager.audio.play();
@@ -48,7 +48,7 @@ export class CometChatSoundManager {
      * CometChatSoundManager.onIncomingOtherMessage("MP3_FILE_ASSET_PATH");
      */
     static onIncomingOtherMessage = (customSound: string | null = null) => {
-        CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cometchat.io/uikits/static/audio/incomingothermessage.wav');
+        CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cc-cluster-2.io/uikits/static/audio/incomingothermessage.wav');
         CometChatSoundManager.audio.currentTime = 0;
         if (this.hasInteracted())
             CometChatSoundManager.audio.play();
@@ -68,7 +68,7 @@ export class CometChatSoundManager {
      * CometChatSoundManager.onOutgoingMessage("MP3_FILE_ASSET_PATH");
      */
     static onOutgoingMessage = (customSound: string | null = null) => {
-        CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cometchat.io/uikits/static/audio/outgoingmessage.wav');
+        CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cc-cluster-2.io/uikits/static/audio/outgoingmessage.wav');
         CometChatSoundManager.audio.currentTime = 0;
         if (this.hasInteracted())
             CometChatSoundManager.audio.play();
@@ -89,7 +89,7 @@ export class CometChatSoundManager {
      */
     static onIncomingCall = (customSound: string | null = null) => {
         try {
-            CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cometchat.io/uikits/static/audio/incomingcall.wav');
+            CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cc-cluster-2.io/uikits/static/audio/incomingcall.wav');
             CometChatSoundManager.audio.currentTime = 0;
             if (typeof CometChatSoundManager.audio.loop == "boolean") {
                 CometChatSoundManager.audio.loop = true;
@@ -125,7 +125,7 @@ export class CometChatSoundManager {
      */
     static onOutgoingCall = (customSound: string | null = null) => {
         try {
-            CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cometchat.io/uikits/static/audio/outgoingcall.wav');
+            CometChatSoundManager.audio = new Audio(customSound || 'https://assets.cc-cluster-2.io/uikits/static/audio/outgoingcall.wav');
             CometChatSoundManager.audio.currentTime = 0;
             if (typeof CometChatSoundManager.audio.loop == "boolean") {
                 CometChatSoundManager.audio.loop = true;

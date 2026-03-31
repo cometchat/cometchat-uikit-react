@@ -58,7 +58,8 @@ type Args = {
   getCurrentInput: Function
   isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean | undefined;
   textMessageToEdit:CometChat.TextMessage | null;
-
+  mentionsUsersRequestBuilder? : CometChat.UsersRequestBuilder ,
+  mentionsGroupMembersRequestBuilder? : CometChat.GroupMembersRequestBuilder
 };
 
 export function useCometChatMessageComposer(args: Args) {
@@ -94,7 +95,9 @@ export function useCometChatMessageComposer(args: Args) {
     setUserMemberListType,
     getComposerId,
     isPartOfCurrentChatForUIEvent,
-    parentMessageIdPropRef, getCurrentInput, textMessageToEdit } = args;
+    parentMessageIdPropRef, getCurrentInput, textMessageToEdit,
+    mentionsUsersRequestBuilder,
+    mentionsGroupMembersRequestBuilder } = args;
   const isPreviewVisible = useRef<boolean>(false);
   const autoFocusCompleted = useRef<boolean>(false);
 
@@ -484,7 +487,7 @@ export function useCometChatMessageComposer(args: Args) {
 
           setUserMemberListType(listType);
 
-          const requestBuilder = new CometChat.GroupMembersRequestBuilder(
+          const requestBuilder = mentionsGroupMembersRequestBuilder || new CometChat.GroupMembersRequestBuilder(
             group.getGuid()
           ).setLimit(15);
           setGroupMembersRequestBuilder(requestBuilder);
@@ -495,7 +498,7 @@ export function useCometChatMessageComposer(args: Args) {
 
           setUserMemberListType(listType);
 
-          const requestBuilder = new CometChat.UsersRequestBuilder().setLimit(15);
+          const requestBuilder = mentionsUsersRequestBuilder || new CometChat.UsersRequestBuilder().setLimit(15);
 
           setUsersRequestBuilder(requestBuilder);
         }
@@ -503,5 +506,5 @@ export function useCometChatMessageComposer(args: Args) {
     } catch (error) {
       errorHandler(error, "useEffect")
     }
-  }, [user, group, disableMentions]);
+  }, [user, group, disableMentions, mentionsUsersRequestBuilder, mentionsGroupMembersRequestBuilder]);
 }

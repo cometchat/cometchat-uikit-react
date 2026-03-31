@@ -160,9 +160,12 @@ export class ConversationUtils {
    * @returns {string} - The custom message type as a string.
    */
   static getLastMessageCustom(conversation: CometChat.Conversation) {
-    let msgObject: CometChat.CustomMessage = conversation.getLastMessage()
-    return msgObject.getType()
+    let msgObject: CometChat.CustomMessage = conversation.getLastMessage();
+    let text = msgObject.getConversationText();
 
+    if (text) return text;
+
+    return msgObject.getType();
   }
 
   /**
