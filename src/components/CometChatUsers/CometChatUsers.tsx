@@ -311,7 +311,16 @@ function stateReducer(state: State, action: Action): State {
         newState = {
           ...state,
           userList: userList.map((user, i) => {
-            return i === targetIdx ? targetUser : user;
+            if (i === targetIdx) {
+              if (!targetUser.getHasBlockedMe() && user.getHasBlockedMe()) {
+                targetUser.setHasBlockedMe(true);
+              }
+              if (!targetUser.getBlockedByMe() && user.getBlockedByMe()) {
+                targetUser.setBlockedByMe(true);
+              }
+              return targetUser;
+            }
+            return user;
           }),
         };
       }

@@ -879,9 +879,10 @@ export function CometChatGroupMembers(props: GroupMembersProps) {
   ): JSX.Element {
     try {
       const status = groupMember.getStatus()
+      const hasBlockedMe = groupMember.getHasBlockedMe()
       return (
         <div
-          className={`cometchat-group-members__list-item ${!hideUserStatus ? `cometchat-group-members__list-item-${status}` : ''}`}
+          className={`cometchat-group-members__list-item ${!hideUserStatus && !hasBlockedMe ? `cometchat-group-members__list-item-${status}` : ''}`}
         >
           <CometChatListItem
             id={groupMember.getUid()}

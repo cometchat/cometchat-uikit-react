@@ -440,6 +440,13 @@ function stateReducer(state: State, action: Action): State {
         const newConversationList = conversationList.map((conv, i) => {
           if (i === targetIdx) {
             const newConv = CometChatUIKitUtility.clone(conv);
+            const existingUser = conv.getConversationWith() as CometChat.User;
+            if (!user.getHasBlockedMe() && existingUser.getHasBlockedMe()) {
+              user.setHasBlockedMe(true);
+            }
+            if (!user.getBlockedByMe() && existingUser.getBlockedByMe()) {
+              user.setBlockedByMe(true);
+            }
             newConv.setConversationWith(user);
             return newConv;
           }

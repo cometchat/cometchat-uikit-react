@@ -2423,6 +2423,7 @@ const CometChatMessageList = (props: MessageListProps) => {
                 isFirstReloadRef.current = false;
                 MessageListManager.attachConnectionListener(() => {
                   isConnectionReestablishedRef.current = true;
+                  messageListManagerRef.current.next = null;
                   fetchActionMessages().then(() => {
                     if (currentShouldScrollToMessage && hasTargetMessageId) {
                       let unreadMessageCount = 0;
