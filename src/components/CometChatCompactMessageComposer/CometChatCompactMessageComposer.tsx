@@ -3797,10 +3797,14 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
             {/* Right section - Action buttons */}
             <div className="cometchat-compact-message-composer__right cometchat-compact-message-composer__buttons">
               {hideEmojiKeyboardButton || isMobileDevice() || state.contentToDisplay === "voiceRecording" ? null : getEmojiKeyboardView()}
-              {hideStickersButton || state.contentToDisplay === "voiceRecording" ? null : ChatConfigurator.getDataSource().getStickerButton(
-                getComposerId(),
-                user,
-                group
+              {hideStickersButton ? null : (
+                <div style={{ display: state.contentToDisplay === "voiceRecording" ? "none" : undefined }}>
+                  {ChatConfigurator.getDataSource().getStickerButton(
+                    getComposerId(),
+                    user,
+                    group
+                  )}
+                </div>
               )}
               {hideVoiceRecordingButton || state.contentToDisplay === "voiceRecording" ? null : getVoiceRecordingView()}
               {getAuxiliaryView()}

@@ -1846,6 +1846,7 @@ try {
         <div className="cometchat-message-composer__default-buttons">
           {hideStickersButton ? null : stickerButton}
           {hideEmojiKeyboardButton || isMobileDevice() ? null : getEmojiKeyboardView()}
+          {hideVoiceRecordingButton ? null : getVoiceRecordingView()}
         </div>
       );
     } catch (error) {
