@@ -247,21 +247,61 @@ export class CometChatUIKitUtility {
           const tag = el.tagName.toUpperCase();
           const inner = processNode(el, depth);
 
+          // Helper: wrap inline markers per-line to avoid markers spanning
+          // across block boundaries (e.g. <b>text<div>text</div></b>)
+          const wrapPerLine = (content: string, open: string, close?: string): string => {
+            const cl = close ?? open;
+            if (!content.includes('\n')) return `${open}${content}${cl}`;
+            return content.split('\n').map(l => l.trim() === '' ? l : `${open}${l}${cl}`).join('\n');
+          };
+
           switch (tag) {
             case 'B': case 'STRONG':
-              result += `**${inner}**`; break;
+              if (el.querySelector('pre')) { result += inner; }
+              else { result += wrapPerLine(inner, '**'); }
+              break;
             case 'I': case 'EM':
-              result += `_${inner}_`; break;
+              if (el.querySelector('pre')) { result += inner; }
+              else { result += wrapPerLine(inner, '_'); }
+              break;
             case 'U':
-              result += `<u>${inner}</u>`; break;
+              if (el.querySelector('pre')) { result += inner; }
+              else { result += wrapPerLine(inner, '<u>', '</u>'); }
+              break;
             case 'S': case 'STRIKE': case 'DEL':
-              result += `~~${inner}~~`; break;
+              if (el.querySelector('pre')) { result += inner; }
+              else { result += wrapPerLine(inner, '~~'); }
+              break;
             case 'PRE': {
-              const codeContent = el.querySelector('code')?.textContent || inner;
-              result += `\`\`\`${codeContent}\`\`\``; break;
+              const codeEl = el.querySelector('code') || el;
+              const extractCode = (node: Node): string => {
+                let out = '';
+                for (let ci = 0; ci < node.childNodes.length; ci++) {
+                  const ch = node.childNodes[ci];
+                  if (ch.nodeType === Node.TEXT_NODE) {
+                    out += ch.textContent || '';
+                  } else if (ch.nodeType === Node.ELEMENT_NODE) {
+                    const chEl = ch as HTMLElement;
+                    const chTag = chEl.tagName.toUpperCase();
+                    if (chTag === 'BR') {
+                      out += '\n';
+                    } else if (chTag === 'DIV' || chTag === 'P') {
+                      if (out.length > 0 && !out.endsWith('\n')) out += '\n';
+                      out += extractCode(chEl);
+                    } else {
+                      out += extractCode(chEl);
+                    }
+                  }
+                }
+                return out;
+              };
+              result += `\`\`\`${extractCode(codeEl)}\`\`\``; break;
             }
             case 'CODE':
               if (el.parentElement?.tagName === 'PRE') { result += inner; }
+              else if (inner.includes('\n')) {
+                result += inner.split('\n').map((l: string) => l.trim() ? `\`${l}\`` : '').join('\n');
+              }
               else { result += `\`${inner}\``; }
               break;
             case 'BLOCKQUOTE': {
@@ -276,7 +316,10 @@ export class CometChatUIKitUtility {
               result += `[${inner || href}](${href})`; break;
             }
             case 'OL': {
-              let idx = 1;
+              // Respect the start attribute to maintain numbering continuity
+              const startAttr = el.getAttribute('start');
+              let idx = startAttr ? parseInt(startAttr, 10) : 1;
+              if (isNaN(idx)) idx = 1;
               const indent = '    '.repeat(depth);
               for (let j = 0; j < el.children.length; j++) {
                 if (el.children[j].tagName === 'LI') {
@@ -375,14 +418,14 @@ export class CometChatUIKitUtility {
         return match;
       }
 
-      // Proper HTML tags: optional / then letter
-      if (/^\/?[a-zA-Z]/.test(inner)) {
-        return match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      }
-
       // Pseudo-tags like <@uid:...> without closing tag => leave as-is
       if (/^@/.test(inner)) {
         return match;
+      }
+
+      // Proper HTML tags: optional / then letter — escape to prevent rendering
+      if (/^\/?[a-zA-Z]/.test(inner)) {
+        return match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
 
       // Empty tags, fragments, or any invalid HTML → escape so they render literally

@@ -29,6 +29,7 @@ import { CometChatUIKitLoginListener } from "../../CometChatUIKit/CometChatUIKit
 import { CometChatUIKitUtility } from "../../CometChatUIKit/CometChatUIKitUtility";
 import { CometChatTextFormatter } from "../../formatters/CometChatFormatters/CometChatTextFormatter";
 import { CometChatMentionsFormatter } from "../../formatters/CometChatFormatters/CometChatMentionsFormatter/CometChatMentionsFormatter";
+import { CometChatUrlsFormatter } from "../../formatters/CometChatFormatters/CometChatUrlsFormatter/CometChatUrlsFormatter";
 import { CometChatMarkdownFormatter } from "../../formatters/CometChatFormatters/CometChatMarkdownFormatter/CometChatMarkdownFormatter";
 import { CometChatActionsView, CometChatMessageComposerAction } from "../../modals";
 import { CometChatUIKitConstants } from "../../constants/CometChatUIKitConstants";
@@ -374,6 +375,229 @@ function stateReducer(state: State, action: Action) {
 }
 
 /**
+ * Wraps URLs in an HTML string with <a> anchor elements.
+ * Walks text nodes in the parsed HTML and replaces URL matches with styled anchors.
+ * Skips text already inside <a>, <code>, or <pre> elements.
+ */
+function wrapUrlsInHtml(html: string): string {
+  // Match URLs: requires either domain.tld format OR host:port format
+  const urlRegex = /((https?:\/\/)([\w\-\.]+\.[\w\-\.]+|[\w\-]+:\d+)(\/[\S]*)?)/gi;
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+
+  const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT);
+  const textNodes: Text[] = [];
+  let node: Text | null;
+  while ((node = walker.nextNode() as Text | null)) {
+    // Skip text inside <a>, <code>, or <pre>
+    let skip = false;
+    let parent: Node | null = node.parentNode;
+    while (parent && parent !== tempDiv) {
+      if (parent.nodeType === Node.ELEMENT_NODE) {
+        const tag = (parent as Element).tagName.toLowerCase();
+        if (tag === 'a' || tag === 'code' || tag === 'pre') {
+          skip = true;
+          break;
+        }
+      }
+      parent = parent.parentNode;
+    }
+    if (!skip) textNodes.push(node);
+  }
+
+  for (const textNode of textNodes) {
+    const text = textNode.textContent || '';
+    urlRegex.lastIndex = 0;
+    if (!urlRegex.test(text)) continue;
+
+    const frag = document.createDocumentFragment();
+    let lastIdx = 0;
+    urlRegex.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = urlRegex.exec(text)) !== null) {
+      const url = match[1];
+      if (match.index > lastIdx) {
+        frag.appendChild(document.createTextNode(text.substring(lastIdx, match.index)));
+      }
+      const anchor = document.createElement('a');
+      let href = url;
+      if (/^www\./i.test(url)) {
+        href = 'https://' + url;
+      }
+      anchor.href = href;
+      anchor.textContent = url;
+      anchor.setAttribute('contentEditable', 'false');
+      anchor.style.color = 'var(--cometchat-link-button)';
+      anchor.style.cursor = 'pointer';
+      frag.appendChild(anchor);
+      lastIdx = match.index + match[0].length;
+    }
+    if (lastIdx < text.length) {
+      frag.appendChild(document.createTextNode(text.substring(lastIdx)));
+    }
+    textNode.parentNode?.replaceChild(frag, textNode);
+  }
+
+  return tempDiv.innerHTML;
+}
+
+/**
+ * Processes pasted HTML in chunks to avoid blocking the main thread on large pastes.
+ * Applies the same sanitization logic as the synchronous cleaner but yields via
+ * setTimeout(0) between chunks of CHUNK_SIZE nodes, then calls pasteHtmlAtCaret
+ * and dispatches an input event once all nodes have been processed.
+ */
+function processChunkedPaste(
+  tempDiv: HTMLElement,
+  inputEl: HTMLElement,
+  pasteHtmlAtCaret: (html: string) => void
+): void {
+  const CHUNK_SIZE = 500;
+  const doc = tempDiv.ownerDocument;
+
+  const allowedTags = new Set([
+    'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
+    'ol', 'ul', 'li', 'a', 'blockquote', 'pre', 'code',
+    'br', 'span', 'p', 'div', 'sub', 'sup'
+  ]);
+
+  const stack: Node[] = [tempDiv];
+
+  /**
+   * Convert style-based formatting to semantic HTML tags before stripping styles.
+   * Many apps (Slack, Google Docs, etc.) use inline styles instead of <b>/<i> tags.
+   */
+  function convertStylesToTags(element: HTMLElement): void {
+    const style = element.style;
+    const tag = element.tagName.toLowerCase();
+    const parent = element.parentNode;
+    if (!parent) return;
+
+    // font-weight: bold/700+ → <b>
+    const fw = style.fontWeight;
+    if (fw === 'bold' || fw === 'bolder' || (parseInt(fw) >= 700)) {
+      const b = doc.createElement('b');
+      while (element.firstChild) b.appendChild(element.firstChild);
+      parent.replaceChild(b, element);
+      // Copy remaining children processing to the new <b> element
+      // Re-check the <b> for other styles (italic etc.)
+      convertStylesToTags(b);
+      return;
+    }
+
+    // font-style: italic → <i>
+    if (style.fontStyle === 'italic') {
+      const i = doc.createElement('i');
+      while (element.firstChild) i.appendChild(element.firstChild);
+      parent.replaceChild(i, element);
+      convertStylesToTags(i);
+      return;
+    }
+
+    // text-decoration containing underline → <u>
+    const td = style.textDecoration || style.textDecorationLine || '';
+    if (td.includes('underline')) {
+      const u = doc.createElement('u');
+      while (element.firstChild) u.appendChild(element.firstChild);
+      parent.replaceChild(u, element);
+      convertStylesToTags(u);
+      return;
+    }
+
+    // text-decoration containing line-through → <s>
+    if (td.includes('line-through')) {
+      const s = doc.createElement('s');
+      while (element.firstChild) s.appendChild(element.firstChild);
+      parent.replaceChild(s, element);
+      convertStylesToTags(s);
+      return;
+    }
+  }
+
+  // Pre-pass: convert style-based formatting to semantic tags
+  const allElements = Array.from(tempDiv.querySelectorAll('*')) as HTMLElement[];
+  for (const el of allElements) {
+    if (el.style && el.style.length > 0) {
+      convertStylesToTags(el);
+    }
+  }
+
+  function processChunk() {
+    let processed = 0;
+    while (stack.length > 0 && processed < CHUNK_SIZE) {
+      const parent = stack.pop()!;
+      const children = Array.from(parent.childNodes);
+      for (const child of children) {
+        if (child instanceof HTMLElement) {
+          processed++;
+
+          const tag = child.tagName.toLowerCase();
+
+          // Remove non-allowed tags but keep their children
+          if (!allowedTags.has(tag)) {
+            while (child.firstChild) {
+              parent.insertBefore(child.firstChild, child);
+            }
+            parent.removeChild(child);
+            continue;
+          }
+
+          // Strip style attribute
+          child.removeAttribute('style');
+
+          // Strip class except on mention spans
+          if (tag === 'span') {
+            const hasMentionData = child.hasAttribute('data-cometchat-mention') ||
+              child.className.includes('cometchat-mentions');
+            if (!hasMentionData) {
+              child.removeAttribute('class');
+            }
+          } else {
+            child.removeAttribute('class');
+          }
+
+          // Strip id attribute
+          child.removeAttribute('id');
+
+          // Push children onto stack for further cleaning
+          stack.push(child);
+        }
+      }
+    }
+
+    if (stack.length > 0) {
+      setTimeout(processChunk, 0);
+    } else {
+      // All nodes cleaned — unwrap top-level <p>/<div> wrappers
+      const topChildren = Array.from(tempDiv.childNodes);
+      let isFirstBlock = true;
+      for (const child of topChildren) {
+        if (child instanceof HTMLElement) {
+          const tag = child.tagName.toLowerCase();
+          if (tag === 'p' || tag === 'div') {
+            if (!isFirstBlock) {
+              tempDiv.insertBefore(doc.createElement('br'), child);
+            }
+            isFirstBlock = false;
+            while (child.firstChild) {
+              tempDiv.insertBefore(child.firstChild, child);
+            }
+            tempDiv.removeChild(child);
+          }
+        }
+      }
+
+      pasteHtmlAtCaret(tempDiv.innerHTML);
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      // Scroll to bottom so the caret remains visible after pasting long content
+      inputEl.scrollTop = inputEl.scrollHeight;
+    }
+  }
+
+  processChunk();
+}
+
+/**
  * CometChatCompactMessageComposer - A single-line horizontal layout variant of the message composer.
  * All UI elements (attachment button, text input, emoji button, voice recording button, stickers button, 
  * and send button) are arranged horizontally in one line.
@@ -440,6 +664,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
    */
   const textInputRef = useRef<HTMLDivElement | null>(null);
   const wasInsideInlineCodeRef = useRef<boolean>(false);
+  const onTextInputChangeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mediaFilePickerRef = useRef<HTMLInputElement | null>(null);
   const uniqueIdRef = useRef<string | null>("");
   const aiBtnRef = useRef<{
@@ -466,10 +691,34 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
   const userPropRef = useRefSync(user);
   const groupPropRef = useRefSync(group);
   const parentMessageIdPropRef = useRefSync(parentMessageId);
-  const messageToReplyRef = useRefSync<CometChat.BaseMessage | null>(null);
+  const messageToReplyRef = useRefSync(state.messageToReply);
   const onSendButtonClickPropRef = useRefSync(onSendButtonClick);
   const [smartRepliesView, setSmartRepliesView] = React.useState<React.ReactNode | null>(null);
   const [textFormatterArray, setTextFormatters] = useState(textFormatters);
+
+  // Enable real-time URL detection only for the compact composer
+  useEffect(() => {
+    if (textFormatterArray) {
+      for (const formatter of textFormatterArray) {
+        if (formatter instanceof CometChatUrlsFormatter) {
+          (formatter as CometChatUrlsFormatter).setEnableRealtimeDetection(true);
+        }
+      }
+    }
+  }, [textFormatterArray]);
+
+  // Ensure contentEditable div is truly empty on initial render so the
+  // CSS :empty:before placeholder pseudo-selector activates.
+  // Browsers may insert default <br> nodes into empty contentEditable elements.
+  useEffect(() => {
+    const el = textInputRef.current;
+    if (el && el.textContent?.trim() === '' && el.childNodes.length > 0) {
+      while (el.firstChild) {
+        el.removeChild(el.firstChild);
+      }
+    }
+  }, []);
+
   const [mentionsSearchTerm, setMentionsSearchTerm] = useState("");
   const mentionsSearchTermTemp = React.useRef<string>("");
   const lastEmptySearchTerm = React.useRef("");
@@ -1126,10 +1375,20 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
     try {
       let contentEditable: any = getCurrentInput();
       contentEditable.innerHTML = "";
+      // Strip any residual child nodes (e.g., browser-inserted <br>)
+      // so the CSS :empty:before pseudo-selector activates for placeholder
+      while (contentEditable.firstChild) {
+        contentEditable.removeChild(contentEditable.firstChild);
+      }
       if (richTextFormatter) {
         richTextFormatter.clearFormattingModes();
+        richTextFormatter.resetFontContext(contentEditable);
       }
       contentEditable?.focus();
+      // Browser may re-insert <br> after focus(); clean up again
+      while (contentEditable.firstChild) {
+        contentEditable.removeChild(contentEditable.firstChild);
+      }
     } catch (error) {
       errorHandler(error, "emptyInputField");
     }
@@ -1326,31 +1585,65 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
    */
   function onTextInputChange(e: any, text?: string) {
     try {
-      // Clear pre-armed pending formats now that the user has typed
-      if (richTextFormatter && e) {
-        richTextFormatter.clearPendingFormats();
-      }
-      // Preserve inline code formatting when typing over selected code text
-      if (richTextFormatter && e) {
-        const element = getCurrentInput() as HTMLElement;
-        if (element) {
-          richTextFormatter.handleInlineCodePreservation(element, wasInsideInlineCodeRef.current);
-          wasInsideInlineCodeRef.current = false;
-
-          // Detect and apply markdown shortcuts (**bold**, _italic_, ~~strikethrough~~)
-          if (richTextFormatter.handleMarkdownShortcuts(element, saveMarkdownUndoState)) {
-            const formats = richTextFormatter.getActiveFormats(element);
-            setActiveFormats(formats);
-          }
-        }
-      }
-      const newText = text ?? e.target.innerText;
+      const newText = text ?? e?.target?.innerText;
       if (typeof newText === "string") {
+        // --- Immediate path: runs synchronously on every event ---
         handleTyping();
         dispatch({ type: "setText", text: newText });
         mySetAddToMsgInputText("");
         if (onTextChange !== undefined) onTextChange(newText);
       }
+
+      // --- Deferred path: debounced 150ms to avoid blocking on long content ---
+      if (onTextInputChangeDebounceRef.current) {
+        clearTimeout(onTextInputChangeDebounceRef.current);
+      }
+      onTextInputChangeDebounceRef.current = setTimeout(() => {
+        onTextInputChangeDebounceRef.current = null;
+        try {
+          if (richTextFormatter && e) {
+            // Clear pre-armed pending formats now that the user has typed
+            richTextFormatter.clearPendingFormats();
+
+            const element = getCurrentInput() as HTMLElement;
+            if (element) {
+              // If the input is effectively empty after deletion, clear everything
+              // (mirrors the onKeyDown empty check but runs after DOM mutation)
+              // But preserve empty block-level formatting elements (lists, blockquotes, code blocks)
+              // so that clicking a toolbar button doesn't immediately get wiped out.
+              const visibleText = (element.textContent || '').replace(/\u200B/g, '').trim();
+              const hasBlockFormatting = element.querySelector('ol, ul, blockquote, pre');
+              if (!visibleText && !hasBlockFormatting) {
+                emptyInputField();
+                setActiveFormats([]);
+                richTextFormatter.clearPendingFormats();
+                return;
+              }
+
+              // Preserve inline code formatting when typing over selected code text
+              richTextFormatter.handleInlineCodePreservation(element, wasInsideInlineCodeRef.current);
+              wasInsideInlineCodeRef.current = false;
+
+              const textContent = element.textContent || '';
+
+              // Skip markdown shortcuts for very long content (>5000 chars) to stay responsive
+              if (textContent.length <= 5000) {
+                if (richTextFormatter.handleMarkdownShortcuts(element, saveMarkdownUndoState)) {
+                  const formats = richTextFormatter.getActiveFormats(element);
+                  setActiveFormats(formats);
+                  return;
+                }
+              }
+
+              // Update active formats for toolbar state
+              const formats = richTextFormatter.getActiveFormats(element);
+              setActiveFormats(formats);
+            }
+          }
+        } catch (deferredError) {
+          errorHandler(deferredError, "onTextInputChange (deferred)");
+        }
+      }, 150);
     } catch (error) {
       errorHandler(error, "onTextInputChange");
     }
@@ -1405,8 +1698,8 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
               span.remove();
             }
           });
-          let rawHtml = contenteditable?.innerHTML?.trim() == "<br>" ? undefined : contenteditable?.innerHTML.replace(/(<br>\s*)+$/, '');
-          if (contenteditable?.innerHTML?.trim() == "<br>") {
+          let rawHtml = contenteditable?.innerHTML?.trim() === "<br>" ? undefined : contenteditable?.innerHTML.replace(/(<br>\s*)+$/, '');
+          if (contenteditable?.innerHTML?.trim() === "<br>") {
             contenteditable.innerHTML = "";
           }
           if (rawHtml && richTextFormatter) {
@@ -1516,90 +1809,274 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
       }
     };
 
+    // Sync the browser's current selection into sel.current / range.current so
+    // pasteHtmlAtCaret can insert at the correct caret position.
+    // Must be called before any pasteHtmlAtCaret invocation inside handlePaste.
+    const syncSelectionRefs = () => {
+      const win = getCurrentWindow();
+      const s = win?.getSelection();
+      if (s && s.rangeCount > 0) {
+        const r = s.getRangeAt(0);
+        if (inputEl.contains(r.startContainer)) {
+          sel.current = s;
+          range.current = r;
+        }
+      }
+    };
+
+    /**
+     * Insert HTML at a saved range, then move the cursor after the inserted content.
+     * This is a self-contained insertion that does NOT rely on sel.current / range.current
+     * being valid at the time of the call (important for async processChunkedPaste).
+     */
+    const insertHtmlAtRange = (html: string, savedRange: Range) => {
+      try {
+        savedRange.deleteContents();
+        const el = doc.createElement('div');
+        el.innerHTML = html;
+        const frag = doc.createDocumentFragment();
+        let lastNode: Node | null = null;
+        while (el.firstChild) {
+          const node = el.firstChild;
+          lastNode = frag.appendChild(el.removeChild(node));
+        }
+
+        const sc = savedRange.startContainer;
+        const so = savedRange.startOffset;
+        if (sc === inputEl || (sc instanceof HTMLElement && sc.getAttribute('contenteditable') === 'true')) {
+          const childAtOffset = sc.childNodes[so];
+          if (childAtOffset instanceof HTMLElement && (childAtOffset.tagName === 'OL' || childAtOffset.tagName === 'UL')) {
+            let targetLi = childAtOffset.querySelector('li');
+            if (!targetLi) {
+              targetLi = doc.createElement('li');
+              targetLi.style.display = 'list-item';
+              childAtOffset.prepend(targetLi);
+            }
+            if (targetLi.childNodes.length === 1 && targetLi.firstChild instanceof HTMLBRElement) {
+              targetLi.removeChild(targetLi.firstChild);
+            }
+            const firstExisting = targetLi.firstChild;
+            targetLi.insertBefore(frag, firstExisting);
+            lastNode = targetLi.lastChild;
+
+            if (lastNode) {
+              const newRange = doc.createRange();
+              newRange.setStartAfter(lastNode);
+              newRange.collapse(true);
+              const win = getCurrentWindow();
+              const selObj = win?.getSelection();
+              if (selObj) {
+                selObj.removeAllRanges();
+                selObj.addRange(newRange);
+                sel.current = selObj;
+                range.current = newRange;
+              }
+            }
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+            inputEl.scrollTop = inputEl.scrollHeight;
+            return;
+          }
+        }
+
+        savedRange.insertNode(frag);
+
+        const fixOrphansInList = (list: Element) => {
+          const children = Array.from(list.childNodes);
+          let prevLi: HTMLLIElement | null = null;
+          let beforeFirstLi: Node[] = [];
+          let seenLi = false;
+
+          for (const child of children) {
+            const isLi = child instanceof HTMLElement && child.tagName === 'LI';
+            if (isLi) {
+              prevLi = child as HTMLLIElement;
+              seenLi = true;
+            } else {
+              if (!seenLi) {
+                beforeFirstLi.push(child);
+              } else if (prevLi) {
+                prevLi.appendChild(child);
+              }
+            }
+          }
+
+          if (beforeFirstLi.length > 0) {
+            let targetLi = list.querySelector('li');
+            if (!targetLi) {
+              targetLi = doc.createElement('li');
+              targetLi.style.display = 'list-item';
+              list.prepend(targetLi);
+            }
+            if (targetLi.childNodes.length === 1 && targetLi.firstChild instanceof HTMLBRElement) {
+              targetLi.removeChild(targetLi.firstChild);
+            }
+            const firstExisting = targetLi.firstChild;
+            for (const orphan of beforeFirstLi) {
+              targetLi.insertBefore(orphan, firstExisting);
+            }
+            lastNode = targetLi.lastChild;
+          }
+        };
+
+        const listParent = savedRange.startContainer instanceof HTMLElement
+          ? (savedRange.startContainer.closest?.('ol, ul') || (savedRange.startContainer.tagName === 'OL' || savedRange.startContainer.tagName === 'UL' ? savedRange.startContainer : null))
+          : savedRange.startContainer.parentElement?.closest?.('ol, ul') ?? null;
+        if (!listParent) {
+          inputEl.querySelectorAll('ol, ul').forEach((list) => fixOrphansInList(list));
+        } else {
+          fixOrphansInList(listParent);
+        }
+
+        if (lastNode) {
+          const newRange = doc.createRange();
+          newRange.setStartAfter(lastNode);
+          newRange.collapse(true);
+          const win = getCurrentWindow();
+          const selObj = win?.getSelection();
+          if (selObj) {
+            selObj.removeAllRanges();
+            selObj.addRange(newRange);
+            sel.current = selObj;
+            range.current = newRange;
+          }
+        }
+        // Trigger input event so React state updates
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+        // Scroll to bottom so the caret remains visible after pasting long content
+        inputEl.scrollTop = inputEl.scrollHeight;
+      } catch (e) {
+        // Fallback to pasteHtmlAtCaret if direct insertion fails
+        syncSelectionRefs();
+        pasteHtmlAtCaret(html);
+      }
+    };
+
     const handlePaste = (event: ClipboardEvent) => {
       const clipboardText = event.clipboardData?.getData('text/plain')?.trim();
       if (!clipboardText) return;
 
       // Only intercept if clipboard contains a URL
       const urlPattern = /^(https?:\/\/)/i;
-      if (!urlPattern.test(clipboardText)) {
+      const isUrl = urlPattern.test(clipboardText);
+      if (!isUrl) {
+        // Capture the current range NOW (synchronously, before any async work)
+        const win = getCurrentWindow();
+        const currentSel = win?.getSelection();
+        const savedRange = (currentSel && currentSel.rangeCount > 0 && inputEl.contains(currentSel.getRangeAt(0).startContainer))
+          ? currentSel.getRangeAt(0).cloneRange()
+          : null;
+
         // Handle HTML paste for formatted content
         const clipboardHtml = event.clipboardData?.getData('text/html');
         if (clipboardHtml) {
+          // Check if the HTML actually contains real formatting tags.
+          const formattingTagPattern = /<\s*\/?\s*(b|strong|i|em|u|s|strike|del|ol|ul|li|a|blockquote|pre|code|h[1-6]|table|tr|td|th|sub|sup)\b/i;
+          const hasRealFormatting = formattingTagPattern.test(clipboardHtml);
+
+          if (!hasRealFormatting && enableRichTextEditor) {
+            // HTML is just wrapper tags around plain text — use markdown conversion
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            if (savedRange) { sel.current = currentSel!; range.current = savedRange; }
+
+            const mdFormatter = new CometChatMarkdownFormatter();
+            const normalizedText = clipboardText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            const convertedHtml = mdFormatter.getFormattedText(normalizedText);
+
+            if (convertedHtml !== normalizedText) {
+              const tempDiv = doc.createElement('div');
+              tempDiv.innerHTML = convertedHtml;
+              if (savedRange) {
+                const insertFn = (html: string) => insertHtmlAtRange(wrapUrlsInHtml(html), savedRange.cloneRange());
+                processChunkedPaste(tempDiv, inputEl, insertFn);
+              } else {
+                syncSelectionRefs();
+                processChunkedPaste(tempDiv, inputEl, (html: string) => pasteHtmlAtCaret(wrapUrlsInHtml(html)));
+              }
+            } else {
+              const safeHtml = wrapUrlsInHtml(normalizedText
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br>'));
+              if (savedRange) {
+                insertHtmlAtRange(safeHtml, savedRange);
+              } else {
+                syncSelectionRefs();
+                pasteHtmlAtCaret(safeHtml);
+              }
+            }
+            return;
+          }
+
           event.preventDefault();
           event.stopImmediatePropagation();
 
-          // Strip styles/classes from clipboard HTML to keep only formatting structure
-          const tempDiv = doc.createElement('div');
-          tempDiv.innerHTML = clipboardHtml;
+          // Sync sel/range refs for pasteHtmlAtCaret fallback
+          if (savedRange) { sel.current = currentSel!; range.current = savedRange; }
 
-          // Allowed formatting tags — everything else gets unwrapped to its text content
-          const allowedTags = new Set([
-            'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
-            'ol', 'ul', 'li', 'a', 'blockquote', 'pre', 'code',
-            'br', 'span', 'p', 'div', 'sub', 'sup'
-          ]);
+          // Windows clipboard HTML contains a large metadata preamble (SourceURL,
+          // StartFragment/EndFragment markers, Office namespace declarations, etc.).
+          // Strip it to get only the actual content fragment.
+          let htmlToProcess = clipboardHtml;
 
-          // Walk all elements and strip style/class attributes, keep only formatting
-          const cleanNode = (parent: Node) => {
-            const children = Array.from(parent.childNodes);
-            for (const child of children) {
-              if (child instanceof HTMLElement) {
-                const tag = child.tagName.toLowerCase();
-
-                // Remove blocked/non-formatting tags but keep their text
-                if (!allowedTags.has(tag)) {
-                  while (child.firstChild) {
-                    parent.insertBefore(child.firstChild, child);
-                  }
-                  parent.removeChild(child);
-                  continue;
-                }
-
-                // Strip style attribute from all elements
-                child.removeAttribute('style');
-
-                // Strip class attribute except on spans with mention-related data attributes
-                if (tag === 'span') {
-                  const hasMentionData = child.hasAttribute('data-cometchat-mention') ||
-                    child.className.includes('cometchat-mentions');
-                  if (!hasMentionData) {
-                    child.removeAttribute('class');
-                  }
-                } else {
-                  child.removeAttribute('class');
-                }
-
-                // Strip id attribute
-                child.removeAttribute('id');
-
-                // Recurse into children
-                cleanNode(child);
-              }
-            }
-          };
-
-          cleanNode(tempDiv);
-
-          // Unwrap top-level <p> and <div> wrappers that create extra newlines
-          // These come from the browser wrapping clipboard content in block elements
-          const topChildren = Array.from(tempDiv.childNodes);
-          for (const child of topChildren) {
-            if (child instanceof HTMLElement) {
-              const tag = child.tagName.toLowerCase();
-              if (tag === 'p' || tag === 'div') {
-                while (child.firstChild) {
-                  tempDiv.insertBefore(child.firstChild, child);
-                }
-                tempDiv.removeChild(child);
-              }
-            }
+          // Extract just the fragment between StartFragment/EndFragment markers if present
+          const fragmentStart = htmlToProcess.indexOf('<!--StartFragment-->');
+          const fragmentEnd = htmlToProcess.indexOf('<!--EndFragment-->');
+          if (fragmentStart !== -1 && fragmentEnd !== -1) {
+            htmlToProcess = htmlToProcess.substring(
+              fragmentStart + '<!--StartFragment-->'.length,
+              fragmentEnd
+            );
           }
 
-          const cleanedHtml = tempDiv.innerHTML;
+          // Strip styles/classes from clipboard HTML to keep only formatting structure
+          const tempDiv = doc.createElement('div');
+          // Normalize Windows CRLF and standalone CR to LF before sanitization
+          tempDiv.innerHTML = htmlToProcess.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-          pasteHtmlAtCaret(cleanedHtml);
-          inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          if (savedRange) {
+            const insertFn = (html: string) => insertHtmlAtRange(wrapUrlsInHtml(html), savedRange.cloneRange());
+            processChunkedPaste(tempDiv, inputEl, insertFn);
+          } else {
+            processChunkedPaste(tempDiv, inputEl, (html: string) => pasteHtmlAtCaret(wrapUrlsInHtml(html)));
+          }
+          return;
+        }
+
+        // No HTML in clipboard — plain text paste. Convert markdown syntax to HTML
+        if (enableRichTextEditor && clipboardText) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          const mdFormatter = new CometChatMarkdownFormatter();
+          const normalizedText = clipboardText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+          const convertedHtml = mdFormatter.getFormattedText(normalizedText);
+
+          if (convertedHtml !== normalizedText) {
+            const tempDiv = doc.createElement('div');
+            tempDiv.innerHTML = convertedHtml;
+            if (savedRange) {
+              const insertFn = (html: string) => insertHtmlAtRange(wrapUrlsInHtml(html), savedRange.cloneRange());
+              processChunkedPaste(tempDiv, inputEl, insertFn);
+            } else {
+              syncSelectionRefs();
+              processChunkedPaste(tempDiv, inputEl, (html: string) => pasteHtmlAtCaret(wrapUrlsInHtml(html)));
+            }
+          } else {
+            const safeHtml = wrapUrlsInHtml(normalizedText
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/\n/g, '<br>'));
+            if (savedRange) {
+              insertHtmlAtRange(safeHtml, savedRange);
+            } else {
+              syncSelectionRefs();
+              pasteHtmlAtCaret(safeHtml);
+            }
+          }
         }
         return;
       }
@@ -1607,6 +2084,17 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
       // Use the CLONED snapshot — immune to browser selection collapse
       const snapshot = pasteSelectionRange.current;
       if (!snapshot || snapshot.collapsed) {
+        // No selection — if it's a URL, paste it as a clickable link
+        if (isUrl && clipboardText) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          const wrappedHtml = wrapUrlsInHtml(clipboardText
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;'));
+          syncSelectionRefs();
+          pasteHtmlAtCaret(wrappedHtml);
+        }
         return;
       }
       if (!inputEl.contains(snapshot.startContainer)) {
@@ -1639,6 +2127,9 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
       if (existingLink) {
         // Fix for link paste replacement bug: update href directly
         existingLink.href = clipboardText;
+        existingLink.setAttribute('contentEditable', 'false');
+        existingLink.style.color = 'var(--cometchat-link-button)';
+        existingLink.style.cursor = 'pointer';
         
         // Move cursor after the link
         const newRange = doc.createRange();
@@ -1659,6 +2150,9 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
         anchor.target = '_blank';
         anchor.rel = 'noopener noreferrer';
         anchor.textContent = selectedText;
+        anchor.setAttribute('contentEditable', 'false');
+        anchor.style.color = 'var(--cometchat-link-button)';
+        anchor.style.cursor = 'pointer';
         snapshot.deleteContents();
         snapshot.insertNode(anchor);
 
@@ -1688,6 +2182,27 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
   }, [enableRichTextEditor, richTextFormatter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
+   * Prevent the browser from auto-converting "1. " into an ordered list
+   * inside contenteditable. Intercepts the beforeinput event and cancels
+   * insertOrderedList / insertUnorderedList input types.
+   */
+  useEffect(() => {
+    const inputEl = textInputRef.current as HTMLElement | null;
+    if (!inputEl) return;
+
+    const blockAutoList = (e: InputEvent) => {
+      if (e.inputType === 'insertOrderedList' || e.inputType === 'insertUnorderedList') {
+        e.preventDefault();
+      }
+    };
+
+    inputEl.addEventListener('beforeinput', blockAutoList as EventListener);
+    return () => {
+      inputEl.removeEventListener('beforeinput', blockAutoList as EventListener);
+    };
+  }, []);
+
+  /**
    * Callback to handle the send button click event
    */
   const onSendclick = useCallback(() => {
@@ -1700,10 +2215,14 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
             span.remove();
           }
         });
-        let textToDispatch = contenteditable?.innerHTML?.trim() === "<br>" ? undefined : decodeHTML(contenteditable?.innerHTML.replace(/(<br>\s*)+$/, ''));
-        if (contenteditable?.innerHTML?.trim() == "<br>") {
+        let rawHtml = contenteditable?.innerHTML?.trim() === "<br>" ? undefined : contenteditable?.innerHTML.replace(/(<br>\s*)+$/, '');
+        if (contenteditable?.innerHTML?.trim() === "<br>") {
           contenteditable.innerHTML = "";
         }
+        if (rawHtml && richTextFormatter) {
+          rawHtml = richTextFormatter.trimRichTextWhitespace(rawHtml);
+        }
+        let textToDispatch = rawHtml ? decodeHTML(rawHtml) : undefined;
         if (textFormatterArray && textFormatterArray.length) {
           for (let i = 0; i < textFormatterArray.length; i++) {
             textToDispatch =
@@ -1747,16 +2266,100 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
               lastNode = frag.appendChild(el.removeChild(node));
             }
           }
+          const sc = range.current.startContainer;
+          const so = range.current.startOffset;
+          const ceInput = getCurrentInput() as HTMLElement;
+          if (ceInput && (sc === ceInput || (sc instanceof HTMLElement && sc.getAttribute('contenteditable') === 'true'))) {
+            const childAtOffset = sc.childNodes[so];
+            if (childAtOffset instanceof HTMLElement && (childAtOffset.tagName === 'OL' || childAtOffset.tagName === 'UL')) {
+              let targetLi = childAtOffset.querySelector('li');
+              if (!targetLi) {
+                targetLi = document.createElement('li');
+                targetLi.style.display = 'list-item';
+                childAtOffset.prepend(targetLi);
+              }
+              if (targetLi.childNodes.length === 1 && targetLi.firstChild instanceof HTMLBRElement) {
+                targetLi.removeChild(targetLi.firstChild);
+              }
+              const firstExisting = targetLi.firstChild;
+              targetLi.insertBefore(frag, firstExisting);
+              lastNode = targetLi.lastChild;
+
+              if (lastNode) {
+                range.current = range.current.cloneRange();
+                range.current.setStartAfter(lastNode);
+                range.current.collapse(true);
+                sel.current.removeAllRanges();
+                sel.current.addRange(range.current);
+                let textToDispatch = ceInput.innerHTML?.trim() === "<br>" ? undefined : decodeHTML(ceInput.innerHTML!);
+                if (ceInput.innerHTML?.trim() === "<br>") {
+                  ceInput.innerHTML = "";
+                }
+                if (textFormatterArray && textFormatterArray.length) {
+                  for (let i = 0; i < textFormatterArray.length; i++) {
+                    textToDispatch = textFormatterArray[i].getOriginalText(textToDispatch);
+                  }
+                }
+                mySetAddToMsgInputText(textToDispatch!);
+              }
+              if (ceInput) {
+                ceInput.scrollTop = ceInput.scrollHeight;
+              }
+              return;
+            }
+          }
+
           range.current.insertNode(frag);
+
+          const contentEditable = getCurrentInput() as HTMLElement;
+          if (contentEditable) {
+            contentEditable.querySelectorAll('ol, ul').forEach((list) => {
+              const children = Array.from(list.childNodes);
+              let lastLi: HTMLLIElement | null = null;
+              let beforeFirstLi: Node[] = [];
+              let seenLi = false;
+
+              for (const child of children) {
+                const isLi = child instanceof HTMLElement && child.tagName === 'LI';
+                if (isLi) {
+                  lastLi = child as HTMLLIElement;
+                  seenLi = true;
+                } else {
+                  if (!seenLi) {
+                    beforeFirstLi.push(child);
+                  } else if (lastLi) {
+                    lastLi.appendChild(child);
+                  }
+                }
+              }
+
+              if (beforeFirstLi.length > 0) {
+                let targetLi = list.querySelector('li');
+                if (!targetLi) {
+                  targetLi = document.createElement('li');
+                  targetLi.style.display = 'list-item';
+                  list.prepend(targetLi);
+                }
+                if (targetLi.childNodes.length === 1 && targetLi.firstChild instanceof HTMLBRElement) {
+                  targetLi.removeChild(targetLi.firstChild);
+                }
+                const firstExisting = targetLi.firstChild;
+                for (const orphan of beforeFirstLi) {
+                  targetLi.insertBefore(orphan, firstExisting);
+                }
+                lastNode = targetLi.lastChild;
+              }
+            });
+          }
+
           if (lastNode) {
             range.current = range.current.cloneRange();
             range.current.setStartAfter(lastNode);
             range.current.collapse(true);
             sel.current.removeAllRanges();
             sel.current.addRange(range.current);
-            const contentEditable = getCurrentInput();
-            let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML!);
-            if (contentEditable?.innerHTML?.trim() == "<br>") {
+            let textToDispatch = contentEditable?.innerHTML?.trim() === "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML!);
+            if (contentEditable?.innerHTML?.trim() === "<br>") {
               contentEditable.innerHTML = "";
             }
             if (textFormatterArray && textFormatterArray.length) {
@@ -1766,6 +2369,10 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
               }
             }
             mySetAddToMsgInputText(textToDispatch!);
+          }
+          // Scroll to bottom so the caret remains visible after pasting long content
+          if (contentEditable) {
+            contentEditable.scrollTop = contentEditable.scrollHeight;
           }
         } else if (sel.current && sel.current.type != "Control") {
           (sel as any).current.createRange().pasteHTML(html);
@@ -1973,8 +2580,8 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
           }
         }
 
-        let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML);
-        if (contentEditable?.innerHTML?.trim() == "<br>") {
+        let textToDispatch = contentEditable?.innerHTML?.trim() === "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML);
+        if (contentEditable?.innerHTML?.trim() === "<br>") {
           contentEditable.innerHTML = "";
         }
         if (textToDispatch) {
@@ -2306,7 +2913,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
    * @returns Should the attachment button be hidden
    */
   function shouldShowAttachmentButton() {
-    return hideAttachmentButton || (ChatConfigurator.getDataSource().getAttachmentOptions(
+    return hideAttachmentButton || state.contentToDisplay === "voiceRecording" || (ChatConfigurator.getDataSource().getAttachmentOptions(
       getComposerId(),
       { hideAudioAttachmentOption, hideCollaborativeDocumentOption, hideCollaborativeWhiteboardOption, hideFileAttachmentOption, hideImageAttachmentOption, hideVideoAttachmentOption, hidePollsOption }
     ).length === 0) || (attachmentOptions && attachmentOptions?.length == 0);
@@ -3379,18 +3986,27 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
       return null;
     }
     const messageToBeEdited = state.textMessageToEdit;
-    // Strip HTML tags for the preview subtitle so raw markup isn't displayed
-    let subtitleText = checkForMentions(messageToBeEdited);
+    // Keep checkForMentions to set up mentionsTextFormatterInstanceRef for the input field
+    checkForMentions(messageToBeEdited);
 
-    // Strip markdown delimiters using the battle-tested stripMarkdownForConversation method
-    const markdownFormatter = new CometChatMarkdownFormatter();
-    subtitleText = markdownFormatter.stripMarkdownForConversation(subtitleText);
+    // Use the same formatting pipeline as createTextWrapper in MessagesDataSource.getMessagePreviewSubtitle
+    const messageText = messageToBeEdited.getText();
+    const finalTextFormatters = ChatConfigurator.getDataSource().getAllTextFormatters({});
+    const markdownText = CometChatUIKitUtility.convertFormattingHtmlToMarkdown(messageText);
+    let formattedText: string | void = CometChatUIKitUtility.sanitizeText(markdownText);
+    finalTextFormatters.forEach((formatter) => {
+      formatter.setMessage(messageToBeEdited);
+    });
+    for (let i = 0; i < finalTextFormatters.length; i++) {
+      formattedText = finalTextFormatters[i].getFormattedText(formattedText as string, {
+        mentionsTargetElement: MentionsTargetElement.textbubble,
+      });
+    }
 
-    const plainSubtitle = subtitleText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
     return (
       <CometChatEditPreview
         onClose={onEditPreviewClose}
-        previewSubtitle={plainSubtitle}
+        previewSubtitle={(formattedText as string) || ""}
       />
     );
   }
@@ -3403,14 +4019,13 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
     if (state.messageToReply === null) {
       return null;
     }
-    messageToReplyRef.current = state.messageToReply;
     return (
       <CometChatMessagePreview
         onClose={onReplyPreviewClose}
-        message={messageToReplyRef.current}
+        message={state.messageToReply}
         hideCloseButton={false}
-        previewTitle={ChatConfigurator.getDataSource().getMessagePreviewTitle(messageToReplyRef.current)}
-        previewSubtitle={ChatConfigurator.getDataSource().getMessagePreviewSubtitle(messageToReplyRef.current)}
+        previewTitle={ChatConfigurator.getDataSource().getMessagePreviewTitle(state.messageToReply)}
+        previewSubtitle={ChatConfigurator.getDataSource().getMessagePreviewSubtitle(state.messageToReply)}
       />
     );
   }
@@ -3612,11 +4227,11 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
             sel.current.addRange(range.current);
           }
 
-          if (contentEditable?.innerHTML?.trim() == "<br>") {
+          if (contentEditable?.innerHTML?.trim() === "<br>") {
             contentEditable.innerHTML = "";
           }
           let textToDispatch =
-            contentEditable?.innerHTML?.trim() == "<br>"
+            contentEditable?.innerHTML?.trim() === "<br>"
               ? undefined
               : decodeHTML(contentEditable?.innerHTML!);
 
@@ -3802,7 +4417,9 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
                   {ChatConfigurator.getDataSource().getStickerButton(
                     getComposerId(),
                     user,
-                    group
+                    group,
+                    messageToReplyRef.current,
+                    closeReplyPreview
                   )}
                 </div>
               )}

@@ -219,15 +219,15 @@ export class StickersExtensionDecorator extends DataSourceDecorator {
 
       customMessage.setMuid(CometChatUIKitUtility.ID());
 
-      CometChatMessageEvents.ccMessageSent.next({
-        message: customMessage,
-        status: MessageStatus.inprogress,
-      });
-
       if(messageToReply){
         customMessage.setQuotedMessage(messageToReply);
         customMessage.setQuotedMessageId(messageToReply.getId());
       }
+
+      CometChatMessageEvents.ccMessageSent.next({
+        message: customMessage,
+        status: MessageStatus.inprogress,
+      });
       CometChat.sendCustomMessage(customMessage).then(
         (message) => {
           CometChatMessageEvents.ccMessageSent.next({

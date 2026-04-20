@@ -58,7 +58,43 @@
     text-align: left;
     color: var(--cometchat-text-color-secondary);
     font: var(--cometchat-font-caption1-regular);
-    word-break: break-word;
-    width: 100%;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    max-width: calc(100% - var(--cometchat-spacing-10, 40px));
+}
+
+/*
+   Flatten all block-level children to inline so the subtitle stays on a single line.
+   Use CSS counters to preserve ordered list numbering when <li> is forced inline.
+*/
+.cometchat-edit-preview__subtitle * {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+    list-style: none;
+}
+
+/* Reset counter on ordered lists */
+.cometchat-edit-preview__subtitle ol {
+    counter-reset: edit-preview-list;
+}
+
+/* Add numbering back via counter for ordered list items */
+.cometchat-edit-preview__subtitle ol > li::before {
+    counter-increment: edit-preview-list;
+    content: counter(edit-preview-list) ". ";
+}
+
+/* Add bullet for unordered list items */
+.cometchat-edit-preview__subtitle ul > li::before {
+    content: "• ";
+}
+
+/* Add separator between adjacent list items */
+.cometchat-edit-preview__subtitle li + li::before {
+    /* For ol, counter still increments; for ul, bullet is re-added.
+       We just need spacing — handled by the counter/bullet content itself. */
 }

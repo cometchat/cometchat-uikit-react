@@ -66,7 +66,13 @@ export function isSafari():boolean {
  */
 export function isURL(text: string): boolean {
     const urlPattern = /^(https?:\/\/|www\.)[^\s]+$/i; // Regex to match http, https, www URLs
-    return urlPattern.test(text);
+    if (urlPattern.test(text)) return true;
+    // Also detect markdown-style links [text](url) or embedded URLs anywhere in the text
+    const markdownLinkPattern = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/i;
+    if (markdownLinkPattern.test(text)) return true;
+    // Also detect URLs embedded anywhere in the text (not just the entire text)
+    const embeddedUrlPattern = /(https?:\/\/|www\.)[\w\-\.]+\.[\w\-\.]+/i;
+    return embeddedUrlPattern.test(text);
 }
 
 
@@ -285,6 +291,12 @@ const copyAttrs = (tok: string, el: HTMLElement) => {
     el.setAttribute("rel", "noopener noreferrer");
   }
 
+  // For <ol> tags, preserve start attribute for numbering continuity
+  if (el.tagName.toLowerCase() === "ol") {
+    const start = getAttr(tok, "start");
+    if (start) el.setAttribute("start", start);
+  }
+
   for (const [k, v] of getDataAttrs(tok)) el.setAttribute(k, v);
 };
 
@@ -296,13 +308,22 @@ export const sanitizeHtmlStringToFragment = (html: string, textFormatterArray?: 
     (stack[stack.length - 1] ?? frag).appendChild(n);
   };
 
+  // Decode HTML entities (e.g. &lt; → <, &gt; → >, &amp; → &) in plain text segments.
+  // sanitizeText escapes dangerous HTML tags to entities, but when we create text nodes
+  // those entities must be decoded back to their original characters for correct display.
+  const decodeEntities = (text: string): string => {
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = text;
+    return textarea.value;
+  };
+
   let m: RegExpExecArray | null;
   while ((m = TOKENS.exec(html))) {
     const tok = m[0];
 
     if (!tok.startsWith("<")) {
-      // plain text
-      append(document.createTextNode(tok));
+      // plain text — decode HTML entities so escaped characters render correctly
+      append(document.createTextNode(decodeEntities(tok)));
       continue;
     }
 

@@ -340,13 +340,33 @@
     font: var(--cometchat-font-caption1-regular);
 }
 
-/* Edit preview subtitle */
+/* Edit preview subtitle - single line truncation */
 .cometchat-compact-message-composer .cometchat-edit-preview__subtitle {
-    height: fit-content;
-    max-height: 60px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Flatten block-level children inside edit preview subtitle to enforce single line */
+.cometchat-compact-message-composer .cometchat-edit-preview__subtitle * {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+    list-style: none;
+}
+
+.cometchat-compact-message-composer .cometchat-edit-preview__subtitle ol {
+    counter-reset: edit-preview-list;
+}
+
+.cometchat-compact-message-composer .cometchat-edit-preview__subtitle ol > li::before {
+    counter-increment: edit-preview-list;
+    content: counter(edit-preview-list) ". ";
+}
+
+.cometchat-compact-message-composer .cometchat-edit-preview__subtitle ul > li::before {
+    content: "• ";
 }
 
 /* Mentions list - positioned above composer */
@@ -825,16 +845,22 @@
 }
 
 /* List styling - remove default margin and padding */
-.cometchat-compact-message-composer__input ol,
 .cometchat-compact-message-composer__input ul,
-.cometchat-compact-message-composer__center ol,
 .cometchat-compact-message-composer__center ul,
-.cometchat .cometchat-compact-message-composer__input ol,
 .cometchat .cometchat-compact-message-composer__input ul {
     margin: 0 !important;
     padding: 0 !important;
-    padding-left: var(--cometchat-padding-3, 12px) !important;
-    list-style-position: outside !important;
+    padding-left: var(--cometchat-padding-2, 8px) !important;
+    list-style-position: inside !important;
+}
+
+.cometchat-compact-message-composer__input ol,
+.cometchat-compact-message-composer__center ol,
+.cometchat .cometchat-compact-message-composer__input ol {
+    margin: 0 !important;
+    padding: 0 !important;
+    padding-left: var(--cometchat-padding-2, 8px) !important;
+    list-style-position: inside !important;
 }
 
 .cometchat-compact-message-composer__input ol,
@@ -897,6 +923,7 @@
 }
 
 /* Inline code styling */
+/* Use font-size + line-height instead of font shorthand so bold/italic inherit from parent elements */
 .cometchat-compact-message-composer__input code,
 .cometchat-compact-message-composer__center code,
 .cometchat .cometchat-compact-message-composer__input code {
@@ -905,7 +932,8 @@
     padding: var(--cometchat-padding) var(--cometchat-padding-1);
     border-radius: var(--cometchat-radius-1, 4px);
     border: 1px solid var(--cometchat-border-color-default, #E8E8E8);
-    font: var(--cometchat-font-caption1-regular);
+    font-size: 12px;
+    line-height: 14.4px;
     font-family: var(--cometchat-font-family);
     display: inline-flex;
     justify-content: center;
@@ -914,6 +942,7 @@
 }
 
 /* Inline code with explicit class - monospace font via CSS variables */
+/* Use font-size + line-height instead of font shorthand so bold/italic inherit from parent elements */
 .cometchat-compact-message-composer__input code.cometchat-rich-text-code-inline,
 .cometchat-compact-message-composer__center code.cometchat-rich-text-code-inline,
 .cometchat .cometchat-compact-message-composer__input code.cometchat-rich-text-code-inline {
@@ -922,7 +951,8 @@
     padding: var(--cometchat-padding) var(--cometchat-padding-1);
     border-radius: var(--cometchat-radius-1, 4px);
     border: 1px solid var(--cometchat-border-color-default, #E8E8E8);
-    font: var(--cometchat-font-caption1-regular);
+    font-size: 12px;
+    line-height: 14.4px;
     font-family: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
     display: inline;
 }

@@ -25,6 +25,7 @@ import { MessageBubbleAlignment, MessageListAlignment, MessageStatus, PanelAlign
 import { CometChatUIKitConstants } from "../../constants/CometChatUIKitConstants";
 import { CometChatLocalize, getLocalizedString } from "../../resources/CometChatLocalize/cometchat-localize";
 import { CometChatTextFormatter } from "../../formatters/CometChatFormatters/CometChatTextFormatter";
+import { CometChatMarkdownFormatter } from "../../formatters/CometChatFormatters/CometChatMarkdownFormatter/CometChatMarkdownFormatter";
 import { CometChatReactions } from "../Reactions/CometChatReactions/CometChatReactions";
 import { CometChatDate } from "../BaseComponents/CometChatDate/CometChatDate";
 import { CometChatEmojiKeyboard } from "../BaseComponents/CometChatEmojiKeyboard/CometChatEmojiKeyboard";
@@ -1424,11 +1425,30 @@ const CometChatMessageList = (props: MessageListProps) => {
             text = getMentionsTextWithoutStyle(message);
           }
           
+          // Convert markdown to HTML so pasting into the composer renders formatting
+          const markdownFormatter = new CometChatMarkdownFormatter();
+          const html = markdownFormatter.getFormattedText(text);
+          const plainText = CometChatUIKitUtility.stripMarkdownFormatting(text);
+          
           toastTextRef.current = getLocalizedString("message_list_message_copied");
           setShowToast(true);
           
-          // Copy plain text only to avoid HTML tags in pasted content
-          navigator?.clipboard?.writeText(text);
+          // Write both HTML and plain text to clipboard
+          // Composer paste handler picks up HTML for rich formatting;
+          // external apps get clean plain text
+          try {
+            const htmlBlob = new Blob([html], { type: 'text/html' });
+            const textBlob = new Blob([plainText], { type: 'text/plain' });
+            navigator?.clipboard?.write([
+              new ClipboardItem({
+                'text/html': htmlBlob,
+                'text/plain': textBlob,
+              })
+            ]);
+          } catch {
+            // Fallback for browsers that don't support clipboard.write
+            navigator?.clipboard?.writeText(plainText);
+          }
         }
       } catch (error: any) {
         errorHandler(error, "onCopyMessage");
@@ -2754,6 +2774,9 @@ const CometChatMessageList = (props: MessageListProps) => {
   const fetchActionMessages: () => Promise<boolean | CometChat.CometChatException> = useCallback(() => {
     return new Promise((resolve, reject) => {
       try {
+        if (!messageIdRef.current.nextMessageId) {
+          return resolve(true);
+        }
         let requestBuilder = new CometChat.MessagesRequestBuilder()
           .setType(CometChatUIKitConstants.MessageCategory.message)
           .setCategory(CometChatUIKitConstants.MessageCategory.action)

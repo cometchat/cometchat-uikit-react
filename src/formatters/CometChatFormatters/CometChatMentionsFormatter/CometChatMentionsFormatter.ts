@@ -399,7 +399,8 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
       }
     } else {
     }
-    return this.addMentionsSpan(inputText);
+    const mentionResult = this.addMentionsSpan(inputText, params.mentionsTargetElement);
+    return mentionResult;
   }
 
   getFormattedTextForEntity(entity: CometChat.User | CometChat.GroupMember | string) {
@@ -424,7 +425,7 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
    * @param {string} inputText - The input text where the span needs to be added.
    * @returns {string} - The modified input text.
    */
-  protected addMentionsSpan(inputText: string) {
+  protected addMentionsSpan(inputText: string, mentionsTargetElement: MentionsTargetElement = MentionsTargetElement.textinput) {
       const mentionedEntities: (CometChat.User | CometChat.GroupMember | string)[] = [...this.cometChatUserGroupMembers, ...this.mentionedChannels];
       if (mentionedEntities) {
         this.warningDisplayed = false;
@@ -586,6 +587,23 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
     if (!inputText) {
       return "";
     }
+
+   inputText = inputText.replace(
+      /(<(?:code|pre)[^>]*>)([\s\S]*?)(<\/(?:code|pre)>)/gi,
+      (_match, openTag, content, closeTag) => {
+        // Strip all cometchat-mentions spans inside code/pre to their text content
+        const stripped = content.replace(
+          /<span[^>]*class="[^"]*cometchat-mentions[^"]*"[^>]*>.*?<\/span><\/span>/g,
+          (spanMatch: string) => {
+            // Extract the inner text from the span
+            const textMatch = spanMatch.match(/>([^<]*)<\/span><\/span>/);
+            return textMatch ? textMatch[1] : '';
+          }
+        );
+        return openTag + stripped + closeTag;
+      }
+    );
+
     Object.keys(this.mentionsMap!).forEach((spanId) => {
       const valueToReplace = this.mentionsMap![spanId];
       const spanRegex = new RegExp(
@@ -602,6 +620,25 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
    *
    * @param {KeyboardEvent} event - The keydown event
    */
+  /**
+   * Checks if the caret is currently inside a code element (<code> or <pre>).
+   * When inside code, mentions should not be triggered since the text is plain code.
+   */
+  private isCaretInsideCode(): boolean {
+    if (!this.currentRange) return false;
+    let node: Node | null = this.currentRange.startContainer;
+    while (node && node !== this.inputElementReference) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const tagName = (node as HTMLElement).tagName;
+        if (tagName === "CODE" || tagName === "PRE") {
+          return true;
+        }
+      }
+      node = node.parentNode;
+    }
+    return false;
+  }
+
   onKeyDown(event: KeyboardEvent) {
     setTimeout(
       (event) => {
@@ -610,6 +647,15 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
         }
         if (event.key === "Escape") {
           this.mentionsCount = 0;
+          this.stopTracking();
+          if (this.keyDownCallBack) {
+            this.keyDownCallBack("");
+          }
+          return;
+        }
+
+        // Don't trigger mentions inside code elements
+        if (this.isCaretInsideCode()) {
           this.stopTracking();
           if (this.keyDownCallBack) {
             this.keyDownCallBack("");
@@ -701,6 +747,16 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
       }
       return;
     }
+
+    // Don't trigger mentions inside code elements
+    if (this.isCaretInsideCode()) {
+      this.stopTracking();
+      if (this.keyDownCallBack) {
+        this.keyDownCallBack("");
+      }
+      return;
+    }
+
     let precedingText: string | null = "";
     precedingText = this.validateText(
       this.getPrecedingText(this.currentCaretPosition, this.currentRange)
@@ -841,7 +897,7 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
               "mentions-" + (isEntityChannel ? entity! : entity.getUid())
             );
             span.classList.add("cometchat-mentions");
-            span.setAttribute("contentEditable", "false");
+            span.setAttribute("contentEditable", "true");
             if (isEntityChannel || this.cometChatUserGroupMembers[i].getUid() === this.loggedInUser!.getUid()) {
               span.classList.add("cometchat-mentions-you");
             }

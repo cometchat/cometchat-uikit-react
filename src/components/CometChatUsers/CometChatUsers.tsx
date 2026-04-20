@@ -590,7 +590,6 @@ export function CometChatUsers(props: UsersProps) {
           updateSelectedUsers([...selectedUsers, user.getUid()], [user]);
         }
       }
-      onItemClick?.(user);
     } else {
       // Non-multiple selection mode - original behavior with enhanced state management
       onItemClick?.(user);

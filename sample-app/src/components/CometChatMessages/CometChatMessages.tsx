@@ -88,7 +88,8 @@ export const CometChatMessages = (props: MessagesViewProps) => {
                 />
                 
             </div> : <div className="message-composer-blocked">
-                {getLocalizedString("cannot_send_to_blocked_user")} 
+                <div className="message-composer-blocked__text">
+                    {getLocalizedString("cannot_send_to_blocked_user")}{" "}
                     <a onClick={() => {
                         if (user) {
                             CometChat.unblockUsers([user?.getUid()]).then(() => {
@@ -99,6 +100,7 @@ export const CometChatMessages = (props: MessagesViewProps) => {
                     }}>
                         {getLocalizedString("click_to_unblock")}
                     </a>
+                </div>
             </div>}
         </div>
     )

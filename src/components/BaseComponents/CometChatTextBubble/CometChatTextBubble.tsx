@@ -95,9 +95,9 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
         <div className="cometchat">
             <div className={`cometchat-text-bubble  ${isSentByMe ? "cometchat-text-bubble-outgoing" : "cometchat-text-bubble-incoming"}`}>
                 <div className="cometchat-text-bubble__body">
-                    <div ref={textRef} className={`cometchat-text-bubble__body-text ${isSingleEmoji(text)} ${isExpanded ? 'cometchat-text-bubble__body-text--expanded' : ''}`} style={{
-                        WebkitLineClamp: isExpanded ? 'unset' : 4,
-                    }}></div>
+                    <div ref={textRef} className={`cometchat-text-bubble__body-text ${isSingleEmoji(text)} ${isExpanded ? 'cometchat-text-bubble__body-text--expanded' : ''}`} style={
+                        isExpanded ? undefined : { WebkitLineClamp: 4 }
+                    }></div>
                     {isTruncated && !isExpanded && (
                         <span className="cometchat-text-bubble__read-more" onClick={() => {
                                 setIsExpanded(true)

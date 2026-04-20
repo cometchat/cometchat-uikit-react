@@ -151,6 +151,34 @@
     white-space: nowrap;
     width: 100%;
   }
+
+  /*
+     Flatten all block-level children to inline so the subtitle stays on a single line.
+     Use CSS counters to preserve ordered list numbering when <li> is forced inline.
+  */
+  .cometchat-message-preview__subtitle-text * {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+    list-style: none;
+  }
+
+  /* Reset counter on ordered lists */
+  .cometchat-message-preview__subtitle-text ol {
+    counter-reset: preview-list;
+  }
+
+  /* Add numbering back via counter for ordered list items */
+  .cometchat-message-preview__subtitle-text ol > li::before {
+    counter-increment: preview-list;
+    content: counter(preview-list) ". ";
+  }
+
+  /* Add bullet for unordered list items */
+  .cometchat-message-preview__subtitle-text ul > li::before {
+    content: "• ";
+  }
   
   .cometchat-message-preview__subtitle-icon {
     display: flex;

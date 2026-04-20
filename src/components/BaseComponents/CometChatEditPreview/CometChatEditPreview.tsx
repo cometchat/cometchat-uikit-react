@@ -31,7 +31,7 @@ const CometChatEditPreview: FC<EditPreviewProps> = ({
         }}>
             <div className="cometchat-edit-preview">
                 <p className="cometchat-edit-preview__title" >{previewTitle}</p>
-                <p className="cometchat-edit-preview__subtitle">{previewSubtitle}</p>
+                <div className="cometchat-edit-preview__subtitle" dangerouslySetInnerHTML={{ __html: previewSubtitle }} />
                 <div
                     className="cometchat-edit-preview__close"
                     onClick={onClose}

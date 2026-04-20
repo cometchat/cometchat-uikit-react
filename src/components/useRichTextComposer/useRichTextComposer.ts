@@ -556,7 +556,7 @@ export function useRichTextComposer(config: RichTextComposerConfig) {
       return true;
     }
 
-    // Shift+Enter for list / code block behavior
+    // Shift+Enter for list / code block / inline code behavior
     // List takes precedence over code block when both are active
     if (event.keyCode === 13 && event.shiftKey) {
       const listHandled = richTextFormatter.handleListEnter(contenteditable as HTMLElement);
@@ -566,6 +566,11 @@ export function useRichTextComposer(config: RichTextComposerConfig) {
       }
       const codeBlockHandled = richTextFormatter.handleCodeBlockEnter(contenteditable as HTMLElement);
       if (codeBlockHandled) {
+        event.preventDefault();
+        return true;
+      }
+      const inlineCodeHandled = richTextFormatter.handleInlineCodeEnter(contenteditable as HTMLElement);
+      if (inlineCodeHandled) {
         event.preventDefault();
         return true;
       }
@@ -605,6 +610,100 @@ export function useRichTextComposer(config: RichTextComposerConfig) {
         setActiveFormats(formats);
         return true;
       }
+
+      // Backspace adjacent to contentEditable="false" anchor: unwrap to editable text (Slack behavior)
+      const doc = contenteditable.ownerDocument || document;
+      const sel = doc.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (range.collapsed) {
+          const container = range.startContainer;
+          const offset = range.startOffset;
+
+          let anchorToUnwrap: HTMLAnchorElement | null = null;
+
+          // Case 1: Caret is in a text node at offset 0, and the previous sibling is an <a>
+          if (container.nodeType === Node.TEXT_NODE && offset === 0) {
+            const prev = container.previousSibling;
+            if (prev && prev.nodeType === Node.ELEMENT_NODE && (prev as Element).tagName === 'A') {
+              anchorToUnwrap = prev as HTMLAnchorElement;
+            }
+          }
+          // Case 2: Caret is in an element node, and the child before offset is an <a>
+          else if (container.nodeType === Node.ELEMENT_NODE && offset > 0) {
+            const prev = container.childNodes[offset - 1];
+            if (prev && prev.nodeType === Node.ELEMENT_NODE && (prev as Element).tagName === 'A') {
+              anchorToUnwrap = prev as HTMLAnchorElement;
+            }
+          }
+
+          if (anchorToUnwrap) {
+            event.preventDefault();
+            const textContent = anchorToUnwrap.textContent || '';
+            const textNode = doc.createTextNode(textContent);
+            anchorToUnwrap.parentNode?.replaceChild(textNode, anchorToUnwrap);
+            // Also remove the empty text node the caret was in (if it's empty)
+            if (container.nodeType === Node.TEXT_NODE && !(container.textContent || '').replace(/\u200B/g, '')) {
+              container.parentNode?.removeChild(container);
+            }
+            // Place caret at end of the unwrapped text
+            const newRange = doc.createRange();
+            newRange.setStart(textNode, textContent.length);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            const formats = richTextFormatter.getActiveFormats(contenteditable as HTMLElement);
+            setActiveFormats(formats);
+            return true;
+          }
+        }
+      }
+    }
+
+    // Delete key adjacent to contentEditable="false" anchor: unwrap to editable text (Slack behavior)
+    if (event.key === 'Delete') {
+      const doc = contenteditable.ownerDocument || document;
+      const sel = doc.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (range.collapsed) {
+          const container = range.startContainer;
+          const offset = range.startOffset;
+
+          let anchorToUnwrap: HTMLAnchorElement | null = null;
+
+          // Case 1: Caret is in a text node at end, and the next sibling is an <a>
+          if (container.nodeType === Node.TEXT_NODE && offset === (container.textContent || '').length) {
+            const next = container.nextSibling;
+            if (next && next.nodeType === Node.ELEMENT_NODE && (next as Element).tagName === 'A') {
+              anchorToUnwrap = next as HTMLAnchorElement;
+            }
+          }
+          // Case 2: Caret is in an element node, and the child at offset is an <a>
+          else if (container.nodeType === Node.ELEMENT_NODE && offset < container.childNodes.length) {
+            const next = container.childNodes[offset];
+            if (next && next.nodeType === Node.ELEMENT_NODE && (next as Element).tagName === 'A') {
+              anchorToUnwrap = next as HTMLAnchorElement;
+            }
+          }
+
+          if (anchorToUnwrap) {
+            event.preventDefault();
+            const textContent = anchorToUnwrap.textContent || '';
+            const textNode = doc.createTextNode(textContent);
+            anchorToUnwrap.parentNode?.replaceChild(textNode, anchorToUnwrap);
+            // Place caret at start of the unwrapped text
+            const newRange = doc.createRange();
+            newRange.setStart(textNode, 0);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            const formats = richTextFormatter.getActiveFormats(contenteditable as HTMLElement);
+            setActiveFormats(formats);
+            return true;
+          }
+        }
+      }
     }
 
     // Space key: auto-list trigger (e.g., "1. " → ordered list, "- " or "* " → unordered list)
@@ -634,6 +733,8 @@ export function useRichTextComposer(config: RichTextComposerConfig) {
     if (!enableRichTextEditor || !showToolbarOnSelection || isMobileDevice()) {
       return;
     }
+
+    let floatingSelectionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
     const handleSelectionChange = () => {
       try {
@@ -699,12 +800,24 @@ export function useRichTextComposer(config: RichTextComposerConfig) {
           left = viewportWidth - (toolbarWidth / 2) - 10;
         }
 
+        // Position and show/hide are synchronous (cheap DOM reads)
         setFloatingToolbarPosition({ top, left });
         setIsFloatingToolbarVisible(true);
 
+        // Defer the expensive getActiveFormats DOM walk by 100ms
         if (richTextFormatter) {
-          const formats = richTextFormatter.getActiveFormats(inputElement as HTMLElement);
-          setActiveFormats(formats);
+          if (floatingSelectionDebounceTimer !== null) {
+            clearTimeout(floatingSelectionDebounceTimer);
+          }
+          floatingSelectionDebounceTimer = setTimeout(() => {
+            floatingSelectionDebounceTimer = null;
+            try {
+              const formats = richTextFormatter.getActiveFormats(inputElement as HTMLElement);
+              setActiveFormats(formats);
+            } catch (innerError) {
+              errorHandler(innerError, "handleSelectionChange (deferred)");
+            }
+          }, 100);
         }
       } catch (error) {
         errorHandler(error, "handleSelectionChange");
@@ -733,6 +846,9 @@ export function useRichTextComposer(config: RichTextComposerConfig) {
     return () => {
       doc?.removeEventListener('selectionchange', handleSelectionChange);
       doc?.removeEventListener('mousedown', handleClickOutside);
+      if (floatingSelectionDebounceTimer !== null) {
+        clearTimeout(floatingSelectionDebounceTimer);
+      }
     };
   }, [enableRichTextEditor, showToolbarOnSelection, richTextFormatter, isFixedToolbarVisible]);
 
@@ -742,15 +858,14 @@ export function useRichTextComposer(config: RichTextComposerConfig) {
       return;
     }
 
+    let selectionChangeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
     const handleSelectionChangeForFormats = () => {
       try {
         const inputElement = getCurrentInput();
         if (!inputElement) return;
 
-        // Only update active formats when the selection is inside the composer input.
-        // Without this guard, selecting text in message bubbles (or any other
-        // element on the page) would cause the toolbar buttons to reflect
-        // formatting from outside the composer.
+        // Synchronous validity check: hide toolbar immediately when focus leaves composer
         const win = getCurrentWindow();
         const sel = win?.getSelection();
         if (sel && sel.rangeCount > 0) {
@@ -762,8 +877,19 @@ export function useRichTextComposer(config: RichTextComposerConfig) {
           }
         }
 
-        const formats = richTextFormatter.getActiveFormats(inputElement as HTMLElement);
-        setActiveFormats(formats);
+        // Defer the expensive DOM walk (getActiveFormats) by 100ms
+        if (selectionChangeDebounceTimer !== null) {
+          clearTimeout(selectionChangeDebounceTimer);
+        }
+        selectionChangeDebounceTimer = setTimeout(() => {
+          selectionChangeDebounceTimer = null;
+          try {
+            const formats = richTextFormatter.getActiveFormats(inputElement as HTMLElement);
+            setActiveFormats(formats);
+          } catch (innerError) {
+            errorHandler(innerError, "handleSelectionChangeForFormats (deferred)");
+          }
+        }, 100);
       } catch (error) {
         errorHandler(error, "handleSelectionChangeForFormats");
       }
@@ -773,6 +899,9 @@ export function useRichTextComposer(config: RichTextComposerConfig) {
     doc?.addEventListener('selectionchange', handleSelectionChangeForFormats);
     return () => {
       doc?.removeEventListener('selectionchange', handleSelectionChangeForFormats);
+      if (selectionChangeDebounceTimer !== null) {
+        clearTimeout(selectionChangeDebounceTimer);
+      }
     };
   }, [enableRichTextEditor, richTextFormatter, isFixedToolbarVisible]);
 

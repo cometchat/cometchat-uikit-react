@@ -184,10 +184,7 @@ export function CometChatFormattingToolbar(props: FormattingToolbarProps): JSX.E
 
     // Notify parent to update active formats
     if (onFormatApplied) {
-      // Use setTimeout to allow DOM to update first
-      setTimeout(() => {
-        onFormatApplied();
-      }, 0);
+      onFormatApplied();
     }
   }, [textInputRef, richTextFormatter, onLinkClick, onFormatApplied]);
 
@@ -262,6 +259,13 @@ export function CometChatFormattingToolbar(props: FormattingToolbarProps): JSX.E
     if (activeFormats.includes('codeBlock')) {
       const disabledInCodeBlock: FormatType[] = ['bold', 'italic', 'underline', 'strikethrough', 'link', 'codeInline'];
       if (disabledInCodeBlock.includes(format)) {
+        return true;
+      }
+    }
+    // Disable inline formats when inside a link
+    if (activeFormats.includes('link')) {
+      const disabledInLink: FormatType[] = ['bold', 'italic', 'underline', 'strikethrough'];
+      if (disabledInLink.includes(format)) {
         return true;
       }
     }

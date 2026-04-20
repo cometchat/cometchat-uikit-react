@@ -48,6 +48,31 @@ function processNode(node: Node, depth: number = 0): string {
 }
 
 /**
+ * Wrap inline markdown markers around content, applying them per-line.
+ * When the browser nests block elements (like <div>) inside inline formatting
+ * tags (like <b>), the inner content contains newlines. Wrapping the entire
+ * content in markers (e.g. **text\ntext**) produces invalid markdown that
+ * won't render correctly. Instead, we close and reopen markers at each line
+ * boundary so each line is independently valid.
+ *
+ * Example: wrapInlineMarker("hello\nworld", "**") → "**hello**\n**world**"
+ */
+function wrapInlineMarker(content: string, openMarker: string, closeMarker?: string): string {
+  const close = closeMarker ?? openMarker;
+  if (!content.includes('\n')) {
+    return `${openMarker}${content}${close}`;
+  }
+  const lines = content.split('\n');
+  return lines
+    .map((line) => {
+      // Preserve empty lines (from trailing <div> newlines) without wrapping
+      if (line.trim() === '') return line;
+      return `${openMarker}${line}${close}`;
+    })
+    .join('\n');
+}
+
+/**
  * Process a single child node
  */
 function processChildNode(node: Node, depth: number = 0): string {
@@ -67,44 +92,55 @@ function processChildNode(node: Node, depth: number = 0): string {
       // Bold
       case "B":
       case "STRONG":
-        return `**${innerContent}**`;
+        // Don't wrap code blocks in inline formatting
+        if (element.querySelector("pre")) return innerContent;
+        return wrapInlineMarker(innerContent, '**');
 
       // Italic
       case "I":
       case "EM":
-        return `_${innerContent}_`;
+        if (element.querySelector("pre")) return innerContent;
+        return wrapInlineMarker(innerContent, '_');
 
       // Underline - use <u> HTML tag syntax
       case "U":
-        return `<u>${innerContent}</u>`;
+        if (element.querySelector("pre")) return innerContent;
+        return wrapInlineMarker(innerContent, '<u>', '</u>');
 
       // Strikethrough
       case "S":
       case "STRIKE":
       case "DEL":
-        return `~~${innerContent}~~`;
+        if (element.querySelector("pre")) return innerContent;
+        return wrapInlineMarker(innerContent, '~~');
 
       // Code block
       case "PRE": {
-        const codeEl = element.querySelector("code");
-        const sourceEl = codeEl || element;
-        // Process children to preserve mention spans as raw HTML
-        let codeContent = '';
-        for (let i = 0; i < sourceEl.childNodes.length; i++) {
-          const child = sourceEl.childNodes[i];
-          if (child.nodeType === Node.TEXT_NODE) {
-            codeContent += child.textContent || '';
-          } else if (child.nodeType === Node.ELEMENT_NODE) {
-            const childEl = child as HTMLElement;
-            // Preserve mention spans as raw HTML so the mentions formatter can find them
-            if (childEl.classList.contains('cometchat-mentions')) {
-              codeContent += childEl.outerHTML;
-            } else {
-              codeContent += childEl.textContent || '';
+        const sourceEl = element.querySelector("code") || element;
+        const extractCodeContent = (node: Node): string => {
+          let out = '';
+          for (let i = 0; i < node.childNodes.length; i++) {
+            const child = node.childNodes[i];
+            if (child.nodeType === Node.TEXT_NODE) {
+              out += child.textContent || '';
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+              const childEl = child as HTMLElement;
+              const childTag = childEl.tagName.toUpperCase();
+              if (childEl.classList.contains('cometchat-mentions')) {
+                out += childEl.outerHTML;
+              } else if (childTag === 'BR') {
+                out += '\n';
+              } else if (childTag === 'DIV' || childTag === 'P') {
+                if (out.length > 0 && !out.endsWith('\n')) out += '\n';
+                out += extractCodeContent(childEl);
+              } else {
+                out += extractCodeContent(childEl);
+              }
             }
           }
-        }
-        return `\`\`\`${emojiToShortcode(codeContent)}\`\`\``;
+          return out;
+        };
+        return `\`\`\`${emojiToShortcode(extractCodeContent(sourceEl))}\`\`\``;
       }
 
       // Inline code (only if not inside pre)
@@ -113,8 +149,59 @@ function processChildNode(node: Node, depth: number = 0): string {
         if (element.parentElement?.tagName === "PRE") {
           return innerContent;
         }
-        // Use textContent to flatten all children (including mention spans) to plain text
-        return `\`${emojiToShortcode(element.textContent || '')}\``;
+        // Recursively process child nodes to preserve formatting markers
+        // inside inline code while flattening mentions to plain text.
+        const processCodeChildren = (node: Node): string => {
+          let out = '';
+          for (let i = 0; i < node.childNodes.length; i++) {
+            const child = node.childNodes[i];
+            if (child.nodeType === Node.TEXT_NODE) {
+              out += child.textContent || '';
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+              const childEl = child as HTMLElement;
+              const tag = childEl.tagName.toUpperCase();
+              const inner = processCodeChildren(childEl);
+              switch (tag) {
+                case 'B':
+                case 'STRONG':
+                  out += `**${inner}**`;
+                  break;
+                case 'I':
+                case 'EM':
+                  out += `_${inner}_`;
+                  break;
+                case 'U':
+                  out += `<u>${inner}</u>`;
+                  break;
+                case 'S':
+                case 'STRIKE':
+                case 'DEL':
+                  out += `~~${inner}~~`;
+                  break;
+                case 'BR':
+                  out += '\n';
+                  break;
+                case 'DIV':
+                case 'P':
+                  if (out.length > 0 && !out.endsWith('\n')) out += '\n';
+                  out += inner;
+                  break;
+                default:
+                  // Mention spans and other elements → plain text
+                  out += childEl.textContent || '';
+                  break;
+              }
+            }
+          }
+          return out;
+        };
+        const codeText = emojiToShortcode(processCodeChildren(element).replace(/\u200B/g, ''));
+        if (!codeText.trim()) return '';
+        if (codeText.includes('\n')) {
+          const result = codeText.split('\n').map(line => line.trim() ? `\`${line}\`` : '').join('\n');
+          return result;
+        }
+        return `\`${codeText}\``;
       }
 
       // Blockquote
@@ -136,7 +223,11 @@ function processChildNode(node: Node, depth: number = 0): string {
 
       // Ordered list
       case "OL": {
-        let index = 1;
+        // Respect the start attribute to maintain numbering continuity
+        // when ordered lists are split by unordered lists
+        const startAttr = element.getAttribute("start");
+        let index = startAttr ? parseInt(startAttr, 10) : 1;
+        if (isNaN(index)) index = 1;
         let listResult = "";
         const indent = "    ".repeat(depth);
         let trailingContent = "";
@@ -254,7 +345,8 @@ function processChildNode(node: Node, depth: number = 0): string {
         
         // Check for rich text formatting classes
         if (className.includes("cometchat-rich-text-code-inline")) {
-          return `\`${innerContent}\``;
+          const cleaned = innerContent.replace(/\u200B/g, '').trim();
+          return cleaned ? `\`${innerContent}\`` : '';
         }
         if (className.includes("cometchat-rich-text-code-block")) {
           return `\`\`\`${innerContent}\`\`\``;
@@ -351,8 +443,10 @@ export function removeEscapeBackslashes(text: string): string {
  */
 export function cleanMarkdown(markdown: string): string {
   return markdown
-    .replace(/\n{3,}/g, "\n\n") // Max 2 consecutive newlines
-    .replace(/^\s+|\s+$/g, ""); // Trim
+    .replace(/```[\s\u200B\u200C\u200D\uFEFF]*```/g, "")
+    .replace(/(?<!`)`(?!`)[^\S\n]*[\u200B\u200C\u200D\uFEFF]*[^\S\n]*`(?!`)/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/^\s+|\s+$/g, "");
 }
 
 /**

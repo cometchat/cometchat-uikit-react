@@ -47,6 +47,7 @@ export function createRichTextFormatter(
    * into `getActiveFormats` results.
    */
   const pendingFormats = new Set<FormatType>();
+  const justDeactivated = new Set<FormatType>();
 
   /** Inline formats that can be pre-armed */
   const INLINE_PENDING_FORMATS: FormatType[] = ['bold', 'italic', 'underline', 'strikethrough'];
@@ -70,19 +71,31 @@ export function createRichTextFormatter(
    * formats via execCommand so the browser will apply ALL of them when the
    * user starts typing.
    */
-  const trackPendingFormat = (format: FormatType, containerElement: HTMLElement): void => {
+  const trackPendingFormat = (format: FormatType, containerElement: HTMLElement, wasActiveBeforeToggle: boolean): void => {
     if (!INLINE_PENDING_FORMATS.includes(format)) return;
     const sel = getSelection();
     const collapsed = !sel || sel.isCollapsed;
     const empty = (containerElement.textContent || '').replace(/\u200B/g, '').trim() === '';
     if (collapsed || empty) {
-      // Toggle: if the browser says it's now active, add; otherwise remove
       const cmd = COMMAND_MAP[format];
-      const isActive = cmd ? queryCommandState(cmd) : false;
-      if (cmd && isActive) {
-        pendingFormats.add(format);
-      } else {
+      const wasPending = pendingFormats.has(format);
+      const isDeactivating = wasPending || wasActiveBeforeToggle;
+
+      if (isDeactivating) {
+        // User is deactivating — remove from pendingFormats
         pendingFormats.delete(format);
+        // Mark as just deactivated so getActiveFormats can suppress
+        // stale queryCommandState results for a tick
+        justDeactivated.add(format);
+        if (cmd && queryCommandState(cmd)) {
+          execCommand(cmd);
+        }
+      } else {
+        // User is activating — add to pending
+        justDeactivated.delete(format);
+        if (cmd) {
+          pendingFormats.add(format);
+        }
       }
 
       // Re-arm all other pending formats that the browser may have lost
@@ -110,6 +123,7 @@ export function createRichTextFormatter(
    */
   const clearPendingFormats = (): void => {
     pendingFormats.clear();
+    justDeactivated.clear();
   };
 
   /**
@@ -248,9 +262,9 @@ export function createRichTextFormatter(
   const getActiveFormats = (containerElement: HTMLElement): FormatType[] => {
     const activeFormats: FormatType[] = [];
     
-    if (queryCommandState('bold')) activeFormats.push('bold');
-    if (queryCommandState('italic')) activeFormats.push('italic');
-    if (queryCommandState('strikeThrough')) activeFormats.push('strikethrough');
+    if (queryCommandState('bold') && !justDeactivated.has('bold')) activeFormats.push('bold');
+    if (queryCommandState('italic') && !justDeactivated.has('italic')) activeFormats.push('italic');
+    if (queryCommandState('strikeThrough') && !justDeactivated.has('strikethrough')) activeFormats.push('strikethrough');
     if (queryCommandState('insertOrderedList')) activeFormats.push('orderedList');
     if (queryCommandState('insertUnorderedList')) activeFormats.push('unorderedList');
     
@@ -314,21 +328,44 @@ export function createRichTextFormatter(
       // Browsers report queryCommandState('underline') as true inside <a> tags
       // because of the link's inherent text-decoration. We suppress the
       // underline active state entirely when inside a link.
-      if (queryCommandState('underline') && !isInsideLink) {
+      if (queryCommandState('underline') && !isInsideLink && !justDeactivated.has('underline')) {
         activeFormats.push('underline');
       }
     } else {
       // Fallback when no selection available
-      if (queryCommandState('underline')) activeFormats.push('underline');
+      if (queryCommandState('underline') && !justDeactivated.has('underline')) activeFormats.push('underline');
+    }
+
+    // When inside a link, suppress all inline format states so the toolbar
+    // accurately reflects that no inline formatting is active (Req 5.1–5.3).
+    // Bold, italic, strikethrough may have been pushed above via
+    // queryCommandState; underline is already suppressed earlier.
+    if (isInsideLink) {
+      const suppressedInLink: FormatType[] = ['bold', 'italic', 'strikethrough'];
+      for (let i = activeFormats.length - 1; i >= 0; i--) {
+        if (suppressedInLink.includes(activeFormats[i])) {
+          activeFormats.splice(i, 1);
+        }
+      }
     }
 
     // Merge pending (pre-armed) inline formats that queryCommandState may
     // have failed to report after focus/selection changes.
-    // Skip 'underline' when inside a link to avoid false positives.
+    // Skip all inline formats when inside a link to avoid false positives.
+    const inlineFormats: FormatType[] = ['bold', 'italic', 'underline', 'strikethrough'];
     Array.from(pendingFormats).forEach((fmt) => {
-      if (fmt === 'underline' && isInsideLink) return;
+      if (isInsideLink && inlineFormats.includes(fmt)) return;
       if (!activeFormats.includes(fmt)) {
         activeFormats.push(fmt);
+      }
+    });
+
+    // Clean up justDeactivated: once queryCommandState agrees the format
+    // is off, remove it so future getActiveFormats calls work normally.
+    Array.from(justDeactivated).forEach((fmt) => {
+      const cmd = COMMAND_MAP[fmt];
+      if (cmd && !queryCommandState(cmd)) {
+        justDeactivated.delete(fmt);
       }
     });
     
@@ -340,8 +377,9 @@ export function createRichTextFormatter(
    */
   const toggleBold = (containerElement: HTMLElement): void => {
     if (!isSelectionInsideContainer(containerElement)) return;
+    const wasActive = queryCommandState('bold') || pendingFormats.has('bold');
     execCommand('bold');
-    trackPendingFormat('bold', containerElement);
+    trackPendingFormat('bold', containerElement, wasActive);
   };
 
   /**
@@ -349,8 +387,9 @@ export function createRichTextFormatter(
    */
   const toggleItalic = (containerElement: HTMLElement): void => {
     if (!isSelectionInsideContainer(containerElement)) return;
+    const wasActive = queryCommandState('italic') || pendingFormats.has('italic');
     execCommand('italic');
-    trackPendingFormat('italic', containerElement);
+    trackPendingFormat('italic', containerElement, wasActive);
   };
 
   /**
@@ -358,8 +397,9 @@ export function createRichTextFormatter(
    */
   const toggleUnderline = (containerElement: HTMLElement): void => {
     if (!isSelectionInsideContainer(containerElement)) return;
+    const wasActive = queryCommandState('underline') || pendingFormats.has('underline');
     execCommand('underline');
-    trackPendingFormat('underline', containerElement);
+    trackPendingFormat('underline', containerElement, wasActive);
   };
 
   /**
@@ -367,8 +407,9 @@ export function createRichTextFormatter(
    */
   const toggleStrikethrough = (containerElement: HTMLElement): void => {
     if (!isSelectionInsideContainer(containerElement)) return;
+    const wasActive = queryCommandState('strikeThrough') || pendingFormats.has('strikethrough');
     execCommand('strikeThrough');
-    trackPendingFormat('strikethrough', containerElement);
+    trackPendingFormat('strikethrough', containerElement, wasActive);
   };
 
   /**
@@ -416,6 +457,7 @@ export function createRichTextFormatter(
         if (displayText && existingLink.textContent !== displayText) {
           existingLink.textContent = displayText;
         }
+        existingLink.setAttribute('contentEditable', 'false');
         return;
       }
       
@@ -425,10 +467,16 @@ export function createRichTextFormatter(
         const anchor = doc.createElement('a');
         anchor.href = url;
         anchor.textContent = displayText;
+        anchor.setAttribute('contentEditable', 'false');
+        anchor.style.color = 'var(--cometchat-link-button)';
+        anchor.style.cursor = 'pointer';
         range.deleteContents();
         range.insertNode(anchor);
-        // Move cursor after the anchor
-        range.setStartAfter(anchor);
+        // Insert ZWS after anchor so cursor has an editable landing spot
+        const zwsNode = doc.createTextNode('\u200B');
+        anchor.parentNode?.insertBefore(zwsNode, anchor.nextSibling);
+        // Move cursor into the ZWS text node
+        range.setStart(zwsNode, 1);
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
@@ -438,15 +486,39 @@ export function createRichTextFormatter(
       // No displayText: wrap the selected content as-is using execCommand
       const success = execCommand('createLink', url);
       
+      if (success) {
+        // Set contentEditable="false" on the anchor created by execCommand
+        const createdLink = findParentLink(range.startContainer, containerElement);
+        if (createdLink) {
+          createdLink.setAttribute('contentEditable', 'false');
+          createdLink.style.color = 'var(--cometchat-link-button)';
+          createdLink.style.cursor = 'pointer';
+          // Insert ZWS after anchor so cursor has an editable landing spot
+          const zwsNode = doc.createTextNode('\u200B');
+          createdLink.parentNode?.insertBefore(zwsNode, createdLink.nextSibling);
+          // Move cursor into the ZWS text node
+          range.setStart(zwsNode, 1);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+
       if (!success || !findParentLink(range.startContainer, containerElement)) {
         // Fallback: manually wrap selection in an anchor
         const anchor = doc.createElement('a');
         anchor.href = url;
+        anchor.setAttribute('contentEditable', 'false');
+        anchor.style.color = 'var(--cometchat-link-button)';
+        anchor.style.cursor = 'pointer';
         const contents = range.extractContents();
         anchor.appendChild(contents);
         range.insertNode(anchor);
-        // Move cursor after the anchor
-        range.setStartAfter(anchor);
+        // Insert ZWS after anchor so cursor has an editable landing spot
+        const zwsFallback = doc.createTextNode('\u200B');
+        anchor.parentNode?.insertBefore(zwsFallback, anchor.nextSibling);
+        // Move cursor into the ZWS text node
+        range.setStart(zwsFallback, 1);
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
@@ -457,9 +529,15 @@ export function createRichTextFormatter(
       const anchor = doc.createElement('a');
       anchor.href = url;
       anchor.textContent = text;
+      anchor.setAttribute('contentEditable', 'false');
+      anchor.style.color = 'var(--cometchat-link-button)';
+      anchor.style.cursor = 'pointer';
       range.insertNode(anchor);
-      // Move cursor after the anchor
-      range.setStartAfter(anchor);
+      // Insert ZWS after anchor so cursor has an editable landing spot
+      const zwsNode = doc.createTextNode('\u200B');
+      anchor.parentNode?.insertBefore(zwsNode, anchor.nextSibling);
+      // Move cursor into the ZWS text node
+      range.setStart(zwsNode, 1);
       range.collapse(true);
       sel.removeAllRanges();
       sel.addRange(range);
@@ -499,6 +577,7 @@ export function createRichTextFormatter(
       if (displayText !== undefined && displayText !== linkElement.textContent) {
         linkElement.textContent = displayText;
       }
+      linkElement.setAttribute('contentEditable', 'false');
     } else {
       // No existing link found, insert a new one
       insertLink(url, displayText, containerElement);
@@ -507,10 +586,27 @@ export function createRichTextFormatter(
 
   /**
    * Remove link formatting
+   * Uses manual DOM unwrap instead of execCommand('unlink') because
+   * execCommand does not work on contentEditable="false" elements.
    */
   const removeLink = (containerElement: HTMLElement): void => {
     containerElement.focus();
-    execCommand('unlink');
+    const sel = getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+
+    const linkElement = findParentLink(sel.getRangeAt(0).startContainer, containerElement);
+    if (!linkElement || !linkElement.parentNode) return;
+
+    const doc = getDocument();
+    const textNode = doc.createTextNode(linkElement.textContent || '');
+    linkElement.parentNode.replaceChild(textNode, linkElement);
+
+    // Position cursor at the end of the new text node
+    const range = doc.createRange();
+    range.setStart(textNode, textNode.length);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
   };
 
   /**
@@ -597,14 +693,16 @@ export function createRichTextFormatter(
           if (runningCount > 0) {
             ol.start = runningCount + 1;
           } else {
-            ol.removeAttribute('start');
+            // First OL (or OL after a UL/non-list) — force start at 1
+            // to override any value execCommand may have set
+            ol.start = 1;
           }
           runningCount += ol.querySelectorAll(':scope > li').length;
           // Recurse into nested lists inside each <li>
           ol.querySelectorAll(':scope > li').forEach((li) => fixLevel(li));
         } else if (child.tagName === 'UL') {
-          runningCount += child.querySelectorAll(':scope > li').length;
-          // Recurse into nested lists inside each <li>
+          // UL does not contribute to OL numbering but preserves the counter
+          // so the next OL continues from where the previous OL left off (Slack-style)
           child.querySelectorAll(':scope > li').forEach((li) => fixLevel(li));
         } else {
           // Non-list element resets the running count
@@ -628,21 +726,35 @@ export function createRichTextFormatter(
     const doc = getDocument();
     const sel = getSelection();
 
-    const textContent = (codeBlockElement.textContent || '').replace(/\u200B/g, '');
+    const rawText = (codeBlockElement.textContent || '').replace(/\u200B/g, '');
+    // Split on newlines so each line becomes its own <li>
+    const lines = rawText.split('\n').filter(line => line.length > 0);
     const list = doc.createElement(listTag);
-    const li = doc.createElement('li');
-    const textNode = doc.createTextNode(textContent || '\u200B');
-    li.appendChild(textNode);
-    list.appendChild(li);
+
+    let lastTextNode: Text | null = null;
+    if (lines.length === 0) {
+      const li = doc.createElement('li');
+      lastTextNode = doc.createTextNode('\u200B');
+      li.appendChild(lastTextNode);
+      list.appendChild(li);
+    } else {
+      for (const line of lines) {
+        const li = doc.createElement('li');
+        const textNode = doc.createTextNode(line);
+        li.appendChild(textNode);
+        list.appendChild(li);
+        lastTextNode = textNode;
+      }
+    }
 
     const parent = codeBlockElement.parentNode;
     if (parent) {
       parent.replaceChild(list, codeBlockElement);
 
-      // Position cursor at end of the list item text
-      if (sel) {
+      // Position cursor at end of the last list item
+      if (sel && lastTextNode) {
         const range = doc.createRange();
-        range.setStart(textNode, textNode.textContent!.length);
+        range.setStart(lastTextNode, lastTextNode.textContent!.length);
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
@@ -652,6 +764,201 @@ export function createRichTextFormatter(
       resetFontContext(containerElement);
       fixOrderedListContinuation(containerElement);
       applyListInlineStyles(containerElement);
+    }
+  };
+
+  /**
+   * Replace a list (ol or ul) with a code block (&lt;pre&gt;&lt;code&gt;).
+   * Extracts text from &lt;li&gt; elements (joined with newlines), preserves mention data,
+   * and positions cursor inside the new code block.
+   */
+  const replaceListWithCodeBlock = (
+    listElement: HTMLElement,
+    containerElement: HTMLElement
+  ): void => {
+    const doc = getDocument();
+    const sel = getSelection();
+
+    // Extract mention data before converting to text
+    const mentionData = extractMentionData(listElement);
+
+    // Flatten list content to text + mentions, preserving newlines between li items
+    const flatContent = flattenToTextAndMentions(listElement);
+    // Convert unicode emoji to shortcodes inside the code block content
+    transformTextNodes(flatContent, emojiToShortcode);
+
+    const pre = doc.createElement('pre');
+    pre.className = 'cometchat-rich-text-code-block';
+    const code = doc.createElement('code');
+
+    if (flatContent.childNodes.length > 0) {
+      code.appendChild(flatContent);
+    } else {
+      code.appendChild(doc.createTextNode('\u200B'));
+    }
+    pre.appendChild(code);
+
+    if (mentionData.length > 0) {
+      pre.setAttribute('data-mentions', JSON.stringify(mentionData));
+    }
+
+    const parent = listElement.parentNode;
+    if (parent) {
+      parent.replaceChild(pre, listElement);
+
+      // Position cursor at end of code block content
+      if (sel && code.lastChild) {
+        const range = doc.createRange();
+        const lastNode = code.lastChild;
+        if (lastNode.nodeType === Node.TEXT_NODE) {
+          range.setStart(lastNode, (lastNode.textContent || '').length);
+        } else {
+          range.setStartAfter(lastNode);
+        }
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      resetFontContext(containerElement);
+    }
+  };
+
+  /**
+   * Wrap a list (ol or ul) inside a blockquote.
+   * The list is preserved as-is inside the new blockquote element.
+   */
+  const wrapListInBlockquote = (
+    listElement: HTMLElement,
+    containerElement: HTMLElement
+  ): void => {
+    const doc = getDocument();
+    const sel = getSelection();
+
+    const blockquote = doc.createElement('blockquote');
+    const parent = listElement.parentNode;
+    if (parent) {
+      parent.insertBefore(blockquote, listElement);
+      blockquote.appendChild(listElement);
+
+      // Position cursor at end of last list item
+      const lastLi = listElement.querySelector('li:last-child');
+      if (sel && lastLi) {
+        const range = doc.createRange();
+        range.selectNodeContents(lastLi);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+  };
+
+  /**
+   * Replace a blockquote with a list (ol or ul).
+   * Extracts text from blockquote, creates a list with a single li,
+   * and applies list continuation and inline styles.
+   */
+  const replaceBlockquoteWithList = (
+    blockquoteElement: HTMLElement,
+    listTag: 'ol' | 'ul',
+    containerElement: HTMLElement
+  ): void => {
+    const doc = getDocument();
+    const sel = getSelection();
+
+    const rawText = (blockquoteElement.textContent || '').replace(/\u200B/g, '');
+    // Split on newlines so each line becomes its own <li>
+    const lines = rawText.split('\n').filter(line => line.length > 0);
+    const list = doc.createElement(listTag);
+
+    let lastTextNode: Text | null = null;
+    if (lines.length === 0) {
+      const li = doc.createElement('li');
+      lastTextNode = doc.createTextNode('\u200B');
+      li.appendChild(lastTextNode);
+      list.appendChild(li);
+    } else {
+      for (const line of lines) {
+        const li = doc.createElement('li');
+        const textNode = doc.createTextNode(line);
+        li.appendChild(textNode);
+        list.appendChild(li);
+        lastTextNode = textNode;
+      }
+    }
+
+    const parent = blockquoteElement.parentNode;
+    if (parent) {
+      parent.replaceChild(list, blockquoteElement);
+
+      // Position cursor at end of the last list item
+      if (sel && lastTextNode) {
+        const range = doc.createRange();
+        range.setStart(lastTextNode, lastTextNode.textContent!.length);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      fixOrderedListContinuation(containerElement);
+      applyListInlineStyles(containerElement);
+    }
+  };
+
+  /**
+   * Replace a blockquote with a code block.
+   * Extracts text from blockquote, preserves mention data,
+   * and positions cursor inside the new code block.
+   */
+  const replaceBlockquoteWithCodeBlock = (
+    blockquoteElement: HTMLElement,
+    containerElement: HTMLElement
+  ): void => {
+    const doc = getDocument();
+    const sel = getSelection();
+
+    // Extract mention data before converting to text
+    const mentionData = extractMentionData(blockquoteElement);
+
+    // Flatten blockquote content to text + mentions
+    const flatContent = flattenToTextAndMentions(blockquoteElement);
+    // Convert unicode emoji to shortcodes inside the code block content
+    transformTextNodes(flatContent, emojiToShortcode);
+
+    const pre = doc.createElement('pre');
+    pre.className = 'cometchat-rich-text-code-block';
+    const code = doc.createElement('code');
+
+    if (flatContent.childNodes.length > 0) {
+      code.appendChild(flatContent);
+    } else {
+      code.appendChild(doc.createTextNode('\u200B'));
+    }
+    pre.appendChild(code);
+
+    if (mentionData.length > 0) {
+      pre.setAttribute('data-mentions', JSON.stringify(mentionData));
+    }
+
+    const parent = blockquoteElement.parentNode;
+    if (parent) {
+      parent.replaceChild(pre, blockquoteElement);
+
+      // Position cursor at end of code block content
+      if (sel && code.lastChild) {
+        const range = doc.createRange();
+        const lastNode = code.lastChild;
+        if (lastNode.nodeType === Node.TEXT_NODE) {
+          range.setStart(lastNode, (lastNode.textContent || '').length);
+        } else {
+          range.setStartAfter(lastNode);
+        }
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      resetFontContext(containerElement);
     }
   };
 
@@ -835,6 +1142,24 @@ export function createRichTextFormatter(
         return;
       }
 
+      // If inside a blockquote, apply the list inside the blockquote (don't replace it)
+      const blockquoteElement = isInsideBlockquote(containerElement);
+      if (blockquoteElement) {
+        // If already inside a list within the blockquote, just toggle it off
+        const existingList = isInsideAnyList(containerElement);
+        if (existingList && existingList.tagName === 'OL') {
+          execCommand('insertOrderedList');
+          fixOrderedListContinuation(containerElement);
+          applyListInlineStyles(containerElement);
+          return;
+        }
+        // Otherwise apply ordered list inside the blockquote
+        execCommand('insertOrderedList');
+        fixOrderedListContinuation(containerElement);
+        applyListInlineStyles(containerElement);
+        return;
+      }
+
       const insideList = isInsideAnyList(containerElement);
 
       // When mentions are on the current line and we're not already in a list,
@@ -861,6 +1186,24 @@ export function createRichTextFormatter(
       const codeBlockElement = isInsideCodeBlock(containerElement);
       if (codeBlockElement) {
         replaceCodeBlockWithList(codeBlockElement, 'ul', containerElement);
+        return;
+      }
+
+      // If inside a blockquote, apply the list inside the blockquote (don't replace it)
+      const blockquoteElement = isInsideBlockquote(containerElement);
+      if (blockquoteElement) {
+        // If already inside a list within the blockquote, just toggle it off
+        const existingList = isInsideAnyList(containerElement);
+        if (existingList && existingList.tagName === 'UL') {
+          execCommand('insertUnorderedList');
+          fixOrderedListContinuation(containerElement);
+          applyListInlineStyles(containerElement);
+          return;
+        }
+        // Otherwise apply unordered list inside the blockquote
+        execCommand('insertUnorderedList');
+        fixOrderedListContinuation(containerElement);
+        applyListInlineStyles(containerElement);
         return;
       }
 
@@ -1503,6 +1846,84 @@ export function createRichTextFormatter(
   };
 
   /**
+   * Handle Shift+Enter inside inline code.
+   * Splits the inline code at the cursor: text before stays in the original <code>,
+   * a <br> is inserted, and text after goes into a new <code> on the next line.
+   * Returns true if handled, false otherwise.
+   */
+  const handleInlineCodeEnter = (containerElement: HTMLElement): boolean => {
+    const codeElement = isInsideCodeInline(containerElement);
+    if (!codeElement) return false;
+
+    const doc = getDocument();
+    const sel = getSelection();
+    if (!sel || sel.rangeCount === 0) return false;
+
+    const range = sel.getRangeAt(0);
+
+    // Get text before and after cursor
+    const fullText = codeElement.textContent || '';
+    let cursorOffset = 0;
+    if (range.startContainer.nodeType === Node.TEXT_NODE) {
+      // Walk text nodes to compute absolute offset within the code element
+      const walker = doc.createTreeWalker(codeElement, NodeFilter.SHOW_TEXT, null);
+      let currentNode: Node | null = walker.nextNode();
+      while (currentNode) {
+        if (currentNode === range.startContainer) {
+          cursorOffset += range.startOffset;
+          break;
+        }
+        cursorOffset += (currentNode.textContent || '').length;
+        currentNode = walker.nextNode();
+      }
+    } else {
+      cursorOffset = fullText.length;
+    }
+
+    const textBefore = fullText.slice(0, cursorOffset);
+    const textAfter = fullText.slice(cursorOffset).replace(/^\u200B/, '');
+
+    // Update the current code element with text before cursor
+    codeElement.textContent = textBefore || '\u200B';
+
+    // Insert a <br> after the current code element
+    const br = doc.createElement('br');
+    const parent = codeElement.parentNode;
+    if (!parent) return false;
+
+    const nextSibling = codeElement.nextSibling;
+    parent.insertBefore(br, nextSibling);
+
+    // Create a new <code> element for text after cursor on the new line
+    if (textAfter) {
+      const newCode = doc.createElement('code');
+      newCode.textContent = textAfter;
+      parent.insertBefore(newCode, br.nextSibling);
+      // Place cursor at start of new code element
+      const newRange = doc.createRange();
+      if (newCode.firstChild) {
+        newRange.setStart(newCode.firstChild, 0);
+      } else {
+        newRange.setStart(newCode, 0);
+      }
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+    } else {
+      // No text after — place cursor after the <br> on the new line
+      const textNode = doc.createTextNode('\u200B');
+      parent.insertBefore(textNode, br.nextSibling);
+      const newRange = doc.createRange();
+      newRange.setStart(textNode, 0);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+    }
+
+    return true;
+  };
+
+  /**
    * Handle Backspace inside a code block.
    * If the code block is empty (only ZWS / whitespace), remove the <pre> entirely
    * and place the cursor in a clean text node. Also handles select-all + backspace
@@ -1568,8 +1989,29 @@ export function createRichTextFormatter(
       }
 
       if (inBlockquote) {
-        // Remove blockquote by formatting as paragraph
-        execCommand('formatBlock', 'p');
+        // Find the blockquote element
+        let blockquoteEl: HTMLElement | null = null;
+        let n: Node | null = range.startContainer;
+        while (n && n !== containerElement) {
+          if (n.nodeType === Node.ELEMENT_NODE && (n as HTMLElement).tagName === 'BLOCKQUOTE') {
+            blockquoteEl = n as HTMLElement;
+            break;
+          }
+          n = n.parentNode;
+        }
+
+        if (blockquoteEl) {
+          const parent = blockquoteEl.parentNode;
+          if (parent) {
+            // Move all children of blockquote out before it, then remove blockquote
+            while (blockquoteEl.firstChild) {
+              parent.insertBefore(blockquoteEl.firstChild, blockquoteEl);
+            }
+            parent.removeChild(blockquoteEl);
+          }
+        } else {
+          execCommand('formatBlock', 'p');
+        }
         return;
       }
 
@@ -1596,6 +2038,13 @@ export function createRichTextFormatter(
           // Reset font context to clear monospace styling from the code block
           resetFontContext(containerElement);
         }
+        return;
+      }
+
+      // If inside a list, wrap the list in a blockquote
+      const listElement = isInsideAnyList(containerElement);
+      if (listElement) {
+        wrapListInBlockquote(listElement, containerElement);
         return;
       }
 
@@ -1745,6 +2194,75 @@ export function createRichTextFormatter(
   };
 
   /**
+   * Selectively flatten a DocumentFragment or Node for inline code wrapping.
+   * Preserves formatting elements (B, I, U, S, STRONG, EM, DEL) as-is.
+   * Replaces mention spans (span.cometchat-mentions) with plain text.
+   * Keeps text nodes unchanged. Recurses into nested elements.
+   */
+  const flattenMentionsPreserveFormatting = (source: DocumentFragment | Node, doc: Document): DocumentFragment => {
+    const result = doc.createDocumentFragment();
+    const formattingTags = new Set(['B', 'I', 'U', 'S', 'STRONG', 'EM', 'DEL']);
+
+    const processNode = (node: Node): void => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        result.appendChild(doc.createTextNode(node.textContent || ''));
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+      const el = node as HTMLElement;
+
+      // Mention spans → flatten to plain text
+      if (el.tagName === 'SPAN' && el.classList.contains('cometchat-mentions')) {
+        const text = (el.textContent || '').replace(/\u200B/g, '');
+        if (text) result.appendChild(doc.createTextNode(text));
+        return;
+      }
+
+      // Formatting elements → clone wrapper, recurse children
+      if (formattingTags.has(el.tagName)) {
+        const clone = doc.createElement(el.tagName);
+        const inner = flattenMentionsPreserveFormatting(el, doc);
+        clone.appendChild(inner);
+        result.appendChild(clone);
+        return;
+      }
+
+      // BR elements → preserve as line breaks
+      if (el.tagName === 'BR') {
+        result.appendChild(doc.createElement('br'));
+        return;
+      }
+
+      // Block elements (DIV, P) → convert to line break + recurse children
+      if (el.tagName === 'DIV' || el.tagName === 'P') {
+        // Add a <br> before the block content if there's already content
+        if (result.childNodes.length > 0) {
+          const lastChild = result.lastChild;
+          const isLastBr = lastChild && lastChild.nodeType === Node.ELEMENT_NODE && (lastChild as HTMLElement).tagName === 'BR';
+          if (!isLastBr) {
+            result.appendChild(doc.createElement('br'));
+          }
+        }
+        for (let i = 0; i < node.childNodes.length; i++) {
+          processNode(node.childNodes[i]);
+        }
+        return;
+      }
+
+      // Other elements → recurse into children (don't keep the wrapper)
+      for (let i = 0; i < node.childNodes.length; i++) {
+        processNode(node.childNodes[i]);
+      }
+    };
+
+    for (let i = 0; i < source.childNodes.length; i++) {
+      processNode(source.childNodes[i]);
+    }
+    return result;
+  };
+
+  /**
    * Toggle inline code - wraps selection in <code> tag
    */
   const toggleCodeInline = (containerElement: HTMLElement): void => {
@@ -1771,6 +2289,47 @@ export function createRichTextFormatter(
       }
 
       if (codeElement) {
+        // Check if the selection spans multiple <li> elements that each have inline code.
+        // If so, unwrap all of them instead of just the first one.
+        const multiLiCodes = (() => {
+          let ancestor: Node | null = range.commonAncestorContainer;
+          if (ancestor.nodeType === Node.TEXT_NODE) ancestor = ancestor.parentNode;
+          const listEl = (ancestor as HTMLElement)?.closest?.('ol, ul')
+            ?? ((ancestor as HTMLElement)?.tagName === 'OL' || (ancestor as HTMLElement)?.tagName === 'UL' ? ancestor as HTMLElement : null)
+            ?? (ancestor as HTMLElement)?.querySelector?.('ol, ul');
+          if (!listEl) return null;
+          const codes: HTMLElement[] = [];
+          listEl.querySelectorAll('li').forEach((li) => {
+            if (sel!.containsNode(li, true)) {
+              const code = li.querySelector('code:not(pre code)');
+              if (code) codes.push(code as HTMLElement);
+            }
+          });
+          return codes.length > 1 ? codes : null;
+        })();
+
+        if (multiLiCodes) {
+          // Unwrap all code elements across the selected list items
+          for (const code of multiLiCodes) {
+            const parent = code.parentNode;
+            if (parent) {
+              code.querySelectorAll('span.cometchat-mentions > span').forEach((span) => {
+                (span as HTMLElement).style.removeProperty('font');
+                (span as HTMLElement).style.removeProperty('font-family');
+              });
+              const restoredNodes: Node[] = [];
+              while (code.firstChild) {
+                const child = code.firstChild;
+                parent.insertBefore(child, code);
+                restoredNodes.push(child);
+              }
+              parent.removeChild(code);
+              for (const n of restoredNodes) {
+                transformTextNodes(n, shortcodeToEmoji);
+              }
+            }
+          }
+        } else {
         // Remove code formatting - unwrap the code element
         const parent = codeElement.parentNode;
         if (parent) {
@@ -1792,30 +2351,111 @@ export function createRichTextFormatter(
             transformTextNodes(n, shortcodeToEmoji);
           }
         }
+        }
       } else if (hasSelection()) {
-        // Wrap selection in code tag
+        // Check if the selection spans multiple <li> elements inside a list.
+        // If so, wrap each <li>'s content individually instead of merging them.
+        const listItems = (() => {
+          const items: HTMLLIElement[] = [];
+          // Walk up from the common ancestor to find the enclosing list
+          let ancestor: Node | null = range.commonAncestorContainer;
+          if (ancestor.nodeType === Node.TEXT_NODE) ancestor = ancestor.parentNode;
+          // The common ancestor could be the OL/UL itself, a higher container, or the contentEditable div
+          const listEl = (ancestor as HTMLElement)?.closest?.('ol, ul')
+            ?? ((ancestor as HTMLElement)?.tagName === 'OL' || (ancestor as HTMLElement)?.tagName === 'UL' ? ancestor as HTMLElement : null)
+            ?? (ancestor as HTMLElement)?.querySelector?.('ol, ul');
+          if (listEl) {
+            const allLis = listEl.querySelectorAll('li');
+            allLis.forEach((li) => {
+              if (sel!.containsNode(li, true)) {
+                items.push(li);
+              }
+            });
+          }
+          return items;
+        })();
+
+        if (listItems.length > 1) {
+          // Wrap each <li>'s content in its own <code> tag to preserve list structure
+          let lastCode: HTMLElement | null = null;
+          for (const li of listItems) {
+            // Skip if already wrapped in inline code
+            if (li.querySelector('code:not(pre code)')) continue;
+            const code = doc.createElement('code');
+            code.className = 'cometchat-rich-text-code-inline';
+            // Move all children of the <li> into the <code> element
+            while (li.firstChild) {
+              code.appendChild(li.firstChild);
+            }
+            // Selectively flatten mentions inside the code, preserve formatting
+            const flattened = flattenMentionsPreserveFormatting(code, doc);
+            const newCode = doc.createElement('code');
+            newCode.className = 'cometchat-rich-text-code-inline';
+            transformTextNodes(flattened, emojiToShortcode);
+            newCode.appendChild(flattened);
+            li.appendChild(newCode);
+            lastCode = newCode;
+          }
+
+          // Clean up empty mention spans
+          containerElement.querySelectorAll('span.cometchat-mentions').forEach((span) => {
+            const text = (span.textContent || '').replace(/\u200B/g, '');
+            if (!text) {
+              span.remove();
+            }
+          });
+
+          // Place cursor after the last code element
+          if (lastCode) {
+            const zwsAfter = doc.createTextNode('\u200B');
+            if (lastCode.nextSibling) {
+              lastCode.parentNode!.insertBefore(zwsAfter, lastCode.nextSibling);
+            } else {
+              lastCode.parentNode!.appendChild(zwsAfter);
+            }
+            const newRange = doc.createRange();
+            newRange.setStart(zwsAfter, 1);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          }
+        } else {
+        // Wrap selection in code tag — flatten to plain text so mention spans
+        // are not preserved inside inline code (they would render as duplicates).
         const code = doc.createElement('code');
         code.className = 'cometchat-rich-text-code-inline';
 
-        try {
-          range.surroundContents(code);
-        } catch (e) {
-          // surroundContents fails if selection spans multiple elements
-          // Fall back to extracting and wrapping
-          const contents = range.extractContents();
-          code.appendChild(contents);
-          range.insertNode(code);
+        const contents = range.extractContents();
+        // Selectively flatten: preserve formatting tags, flatten mentions to plain text
+        const flattened = flattenMentionsPreserveFormatting(contents, doc);
+        // Convert emoji to shortcodes in the flattened fragment's text nodes
+        transformTextNodes(flattened, emojiToShortcode);
+        code.appendChild(flattened);
+        range.insertNode(code);
+
+        containerElement.querySelectorAll('span.cometchat-mentions').forEach((span) => {
+          const text = (span.textContent || '').replace(/\u200B/g, '');
+          if (!text) {
+            span.remove();
+          }
+        });
+
+        // Insert a zero-width space after the code element so the cursor
+        // can exit the inline code when pressing the right arrow key.
+        const zwsAfterCode = doc.createTextNode('\u200B');
+        if (code.nextSibling) {
+          code.parentNode!.insertBefore(zwsAfterCode, code.nextSibling);
+        } else {
+          code.parentNode!.appendChild(zwsAfterCode);
         }
 
-        // Convert unicode emoji to shortcodes inside the newly wrapped code element
-        transformTextNodes(code, emojiToShortcode);
-
-        // Move cursor after the code element
+        // Move cursor after the code element (into the zero-width space)
         const newRange = doc.createRange();
-        newRange.setStartAfter(code);
+        newRange.setStart(zwsAfterCode, 1);
         newRange.collapse(true);
         sel.removeAllRanges();
         sel.addRange(newRange);
+        }
       } else {
         // No selection - check if mentions exist and wrap current line content
         const hasMentions = containerElement.querySelector('span.cometchat-mentions') !== null;
@@ -1855,7 +2495,40 @@ export function createRichTextFormatter(
           // Use zero-width space to make the element visible and editable
           code.appendChild(doc.createTextNode('\u200B'));
 
-          range.insertNode(code);
+          // When inside a list item, ensure the <code> is inserted inside the <li>
+          // rather than at the container/ol level (which would place it above the list).
+          const closestLi = (() => {
+            let n: Node | null = range.startContainer;
+            while (n && n !== containerElement) {
+              if (n.nodeType === Node.ELEMENT_NODE && (n as HTMLElement).tagName === 'LI') {
+                return n as HTMLLIElement;
+              }
+              n = n.parentNode;
+            }
+            // Range may be at container/ol level; find the <li> from the <ol>/<ul>
+            const startNode = range.startContainer;
+            if (startNode === containerElement || (startNode.nodeType === Node.ELEMENT_NODE && ((startNode as HTMLElement).tagName === 'OL' || (startNode as HTMLElement).tagName === 'UL'))) {
+              const list = startNode === containerElement
+                ? containerElement.querySelector('ol, ul')
+                : startNode as HTMLElement;
+              if (list) {
+                const li = list.querySelector('li');
+                if (li) return li;
+              }
+            }
+            return null;
+          })();
+
+          if (closestLi) {
+            // Remove placeholder <br> if the <li> is empty
+            const br = closestLi.querySelector('br');
+            if (br && (closestLi.textContent || '').replace(/\u200B/g, '').trim() === '') {
+              br.remove();
+            }
+            closestLi.appendChild(code);
+          } else {
+            range.insertNode(code);
+          }
 
           // Move cursor inside the code element (after the zero-width space)
           const newRange = doc.createRange();
@@ -1929,6 +2602,7 @@ export function createRichTextFormatter(
   const flattenToTextAndMentions = (source: Node): DocumentFragment => {
     const d = getDocument();
     const fragment = d.createDocumentFragment();
+    const BLOCK_TAGS = new Set(['LI', 'P', 'DIV', 'BLOCKQUOTE', 'PRE']);
     const walk = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = (node.textContent || '').replace(/\u200B/g, '');
@@ -1947,6 +2621,10 @@ export function createRichTextFormatter(
         // For all other elements, recurse into children
         for (let i = 0; i < node.childNodes.length; i++) {
           walk(node.childNodes[i]);
+        }
+        // Add newline after block-level elements when they have a next sibling
+        if (BLOCK_TAGS.has(el.tagName) && el.nextSibling) {
+          fragment.appendChild(d.createTextNode('\n'));
         }
       }
     };
@@ -2131,6 +2809,21 @@ export function createRichTextFormatter(
         resetFontContext(containerElement);
       }
     } else {
+      // Check if inside a blockquote first — if the blockquote contains a list,
+      // replace the whole blockquote (not just the inner list) with a code block.
+      const blockquoteElement = isInsideBlockquote(containerElement);
+      if (blockquoteElement) {
+        replaceBlockquoteWithCodeBlock(blockquoteElement, containerElement);
+        return;
+      }
+
+      // Check if inside a list - replace the list with a code block
+      const listElement = isInsideAnyList(containerElement);
+      if (listElement) {
+        replaceListWithCodeBlock(listElement, containerElement);
+        return;
+      }
+
       // Create code block - wrap current line content instead of inserting at cursor
       const pre = doc.createElement('pre');
       pre.className = 'cometchat-rich-text-code-block';
@@ -2307,6 +3000,30 @@ export function createRichTextFormatter(
       
       // Move cursor inside the code element at the end
       const newRange = doc.createRange();
+
+      // Clean up empty inline formatting wrappers left around the <pre> element.
+      // When the user applies inline formatting first, then selects all and toggles
+      // code block, range.extractContents() may leave empty <b>, <i>, <u>, <s> etc.
+      // wrappers around the newly inserted <pre>.
+      const inlineFormattingTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'DEL', 'SPAN']);
+      let current: HTMLElement | null = pre.parentElement;
+      while (current && current !== containerElement) {
+        const parent = current.parentElement;
+        if (
+          current.nodeType === Node.ELEMENT_NODE &&
+          inlineFormattingTags.has(current.tagName) &&
+          current.childNodes.length === 1 &&
+          current.firstChild === pre
+        ) {
+          // Unwrap: replace the wrapper with the <pre> element
+          if (parent) {
+            parent.replaceChild(pre, current);
+          }
+        } else {
+          break;
+        }
+        current = pre.parentElement;
+      }
       if (code.lastChild) {
         const lastNode = code.lastChild;
         if (lastNode.nodeType === Node.TEXT_NODE) {
@@ -2350,7 +3067,16 @@ export function createRichTextFormatter(
     // Guard: only apply formatting if the selection is inside the composer.
     // This prevents toolbar clicks from modifying message bubbles or other
     // elements when the user has selected text outside the composer.
-    if (!isSelectionInsideContainer(containerElement)) return;
+    if (!isSelectionInsideContainer(containerElement)) {
+      return;
+    }
+
+    // Guard: don't apply inline formatting inside links (links are atomic like mentions)
+    const inlineFormats: FormatType[] = ['bold', 'italic', 'underline', 'strikethrough'];
+    const inLink = isInsideLink(containerElement);
+    if (inlineFormats.includes(formatType) && inLink) {
+      return;
+    }
 
     switch (formatType) {
       case 'bold':
@@ -2453,11 +3179,12 @@ export function createRichTextFormatter(
     // When inside a code block, suppress rich text formatting shortcuts
     // (bold, italic, underline, strikethrough, link, inline code)
     const inCodeBlock = !!isInsideCodeBlock(containerElement);
+    const inLink = isInsideLink(containerElement);
 
     // Ctrl/Cmd + B = Bold
     if (key === 'b') {
       event.preventDefault();
-      if (inCodeBlock) return true;
+      if (inCodeBlock || inLink) return true;
       toggleBold(containerElement);
       return true;
     }
@@ -2465,7 +3192,7 @@ export function createRichTextFormatter(
     // Ctrl/Cmd + I = Italic
     if (key === 'i') {
       event.preventDefault();
-      if (inCodeBlock) return true;
+      if (inCodeBlock || inLink) return true;
       toggleItalic(containerElement);
       return true;
     }
@@ -2473,7 +3200,7 @@ export function createRichTextFormatter(
     // Ctrl/Cmd + U = Underline
     if (key === 'u') {
       event.preventDefault();
-      if (inCodeBlock) return true;
+      if (inCodeBlock || inLink) return true;
       toggleUnderline(containerElement);
       return true;
     }
@@ -2481,7 +3208,7 @@ export function createRichTextFormatter(
     // Ctrl/Cmd + Shift + X = Strikethrough
     if ((key === 'x' || key === 'X') && event.shiftKey) {
       event.preventDefault();
-      if (inCodeBlock) return true;
+      if (inCodeBlock || inLink) return true;
       toggleStrikethrough(containerElement);
       return true;
     }
@@ -2489,7 +3216,7 @@ export function createRichTextFormatter(
     // Ctrl/Cmd + Shift + S = Strikethrough (alternative)
     if ((key === 's' || key === 'S') && event.shiftKey) {
       event.preventDefault();
-      if (inCodeBlock) return true;
+      if (inCodeBlock || inLink) return true;
       toggleStrikethrough(containerElement);
       return true;
     }
@@ -3357,11 +4084,28 @@ export function createRichTextFormatter(
 
     // 6. Append the extracted content into the wrapper (preserving inner elements)
     if (formatType !== 'codeBlock') {
-      formattedElement.appendChild(contentFragment);
+      // For inline code, selectively flatten: preserve formatting tags, flatten mentions
+      if (formatType === 'codeInline') {
+        const flattened = flattenMentionsPreserveFormatting(contentFragment, doc);
+        transformTextNodes(flattened, emojiToShortcode);
+        formattedElement.appendChild(flattened);
+      } else {
+        formattedElement.appendChild(contentFragment);
+      }
     }
 
     // 7. Insert the formatted element at the extraction point
     contentRange.insertNode(formattedElement);
+
+    // Clean up empty mention span shells after codeInline extraction
+    if (formatType === 'codeInline') {
+      containerElement.querySelectorAll('span.cometchat-mentions').forEach((span) => {
+        const text = (span.textContent || '').replace(/\u200B/g, '');
+        if (!text) {
+          span.remove();
+        }
+      });
+    }
 
     // Position cursor after the formatted element
     positionCursorAfterFormat(containerElement, formattedElement);
@@ -3504,6 +4248,7 @@ export function createRichTextFormatter(
     handleListEnter,
     handleListTab,
     handleCodeBlockEnter,
+    handleInlineCodeEnter,
     handleCodeBlockBackspace,
     handleAutoListTrigger,
     applyListInlineStyles,

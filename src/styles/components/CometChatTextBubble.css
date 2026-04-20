@@ -22,6 +22,16 @@
     padding-top:var(--cometchat-padding-1);
 }
 
+/* When expanded, switch from -webkit-box to block display so that
+   white-space: pre-line is respected and newlines render correctly.
+   -webkit-box with line-clamp unset still collapses whitespace. */
+.cometchat-text-bubble__body-text.cometchat-text-bubble__body-text--expanded {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+    white-space: pre-line;
+}
+
 /* When text contains block-level elements like lists or blockquotes,
    switch from -webkit-box to block display so list markers render properly.
    Use max-height for truncation since -webkit-line-clamp doesn't work with display: block */
@@ -235,6 +245,7 @@
     margin: 0;
     font-style: normal;
     min-width: 100px;
+    white-space: pre-line;
 }
 
 .cometchat-text-bubble-incoming .cometchat-text-bubble__body-text blockquote {
@@ -276,11 +287,19 @@
     white-space: normal;
 }
 
-.cometchat-text-bubble__body-text ol,
 .cometchat-text-bubble__body-text ul {
     margin: 0;
     padding: 0;
-    padding-left: var(--cometchat-padding-3, 12px);
+    padding-left: var(--cometchat-padding-2, 8px);
+    list-style-position: inside;
+    white-space: normal;
+}
+
+.cometchat-text-bubble__body-text ol {
+    margin: 0;
+    padding: 0;
+    padding-left: var(--cometchat-padding-2, 8px);
+    list-style-position: inside;
     white-space: normal;
 }
 

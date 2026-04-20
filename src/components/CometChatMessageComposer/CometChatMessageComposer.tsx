@@ -2576,6 +2576,7 @@ try {
           const frag = sanitizeHtmlStringToFragment(html, textFormatterArray);
           range.current.insertNode(frag);
           const contentEditable = getCurrentInput();
+
           const lastNode = contentEditable?.lastChild || null;
           if (lastNode) {
             range.current = range.current.cloneRange();
