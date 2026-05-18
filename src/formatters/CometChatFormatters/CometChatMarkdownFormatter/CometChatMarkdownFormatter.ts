@@ -57,6 +57,10 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
       // backticks are preserved inside blockquote lines without being split out.
       result = this.formatOutsideCodeBlocks(result, (s) => this.formatBlockquotes(s));
 
+      // Process combined bold+italic FIRST (***text*** or **_text_** patterns)
+      // before individual formatting, so nested markers are handled correctly.
+      result = this.formatOutsideCodeBlocks(result, (s) => this.formatBoldItalic(s));
+
       // Process inline formatting BEFORE inline code conversion so that
       // formatting markers spanning across backtick segments are matched
       // before <code> tags fragment them. Use formatOutsideCodeBlocks since
@@ -211,6 +215,62 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
       const closeTags = _match.match(/(<\/(?:b|i|u|s|strong|em|del)>)+$/i)?.[0] || '';
       return `<code>${openTags}${content}${closeTags}</code>`;
     });
+  }
+
+  /**
+   * Format combined bold+italic patterns.
+   * Must run BEFORE individual formatBold/formatItalic to correctly handle:
+   *
+   * 1. ***text*** → <b><i>text</i></b>  (triple asterisks)
+   * 2. **_text_** → <b><i>text</i></b>  (bold wrapping italic markers)
+   * 3. **normal_italic_** → <b>normal<i>italic</i></b>  (partial italic inside bold)
+   * 4. **_italic_normal** → <b><i>italic</i>normal</b>  (partial italic inside bold)
+   * 5. **text1_italic_text2** → <b>text1<i>italic</i>text2</b>  (italic in middle of bold)
+   * 6. _**text**_ → <i><b>text</b></i>  (italic wrapping bold markers)
+   *
+   * Without this, formatBold converts **_text_** to <b>_text_</b>, and then
+   * formatItalic's lookbehind (?<=[\s>]) fails because _ is preceded by a
+   * word character (not whitespace or >), leaving raw _text_ in the bubble.
+   */
+  private formatBoldItalic(text: string): string {
+    // Pattern 1: ***text*** → <b><i>text</i></b>
+    let result = text.replace(
+      /\*\*\*([^*\n]+)\*\*\*/g,
+      '<b><i>$1</i></b>'
+    );
+
+    // Pattern 2: _**text**_ → <i><b>text</b></i>
+    // Must run before pattern 3 to avoid partial matching.
+    // Use the same boundary constraints as formatItalic to avoid URL false positives.
+    result = result.replace(
+      /(?:^|(?<=[\s>]))_(\*\*[^*\n]+\*\*)_(?=[\s<]|$)/gm,
+      (_match, innerContent: string) => {
+        const converted = innerContent.replace(
+          /\*\*([^*\n]+)\*\*/g,
+          '<b>$1</b>'
+        );
+        return `<i>${converted}</i>`;
+      }
+    );
+
+    // Pattern 3: **..._italic_...** → convert bold first, then handle inner italic
+    // Match **content** where content contains at least one _italic_ segment.
+    // We process the bold wrapper and then convert italic markers inside it.
+    result = result.replace(
+      /\*\*([^*\n]*_[^*\n]*)\*\*/g,
+      (_match, innerContent: string) => {
+        // Convert _italic_ segments within the bold content.
+        // Inside bold context, we can be more permissive with the italic regex
+        // since URL-like underscores (this_is_a_path) are unlikely inside **...**
+        const converted = innerContent.replace(
+          /_([^_\n]+)_/g,
+          '<i>$1</i>'
+        );
+        return `<b>${converted}</b>`;
+      }
+    );
+
+    return result;
   }
 
   /**

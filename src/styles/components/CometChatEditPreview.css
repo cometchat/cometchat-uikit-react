@@ -93,6 +93,12 @@
     content: "• ";
 }
 
+/* Link styling in edit preview */
+.cometchat-edit-preview__subtitle a {
+    color: var(--cometchat-link-button);
+    text-decoration: underline;
+}
+
 /* Add separator between adjacent list items */
 .cometchat-edit-preview__subtitle li + li::before {
     /* For ol, counter still increments; for ul, bullet is re-added.

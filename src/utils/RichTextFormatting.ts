@@ -206,6 +206,19 @@ export function createRichTextFormatter(
   };
 
   /**
+   * Detect Safari browser. Safari's execCommand('insertOrderedList'/'insertUnorderedList')
+   * is unreliable, so we use manual DOM manipulation (wrapLineInList) instead.
+   */
+  const isSafariBrowser = (): boolean => {
+    try {
+      const ua = getWindow().navigator.userAgent;
+      return /^((?!chrome|android).)*safari/i.test(ua);
+    } catch {
+      return false;
+    }
+  };
+
+  /**
    * Execute a formatting command using document.execCommand
    * This is the most reliable way to apply formatting in contenteditable
    */
@@ -372,12 +385,90 @@ export function createRichTextFormatter(
     return activeFormats;
   };
 
+  const FORMAT_TAG_MAP: Record<string, string> = {
+    bold: 'B',
+    italic: 'I',
+    underline: 'U',
+    strikethrough: 'S',
+  };
+
+  /**
+   * Safari-specific: Insert a formatting element with a ZWS and place the
+   * cursor inside it so typed text inherits the formatting from the DOM parent.
+   */
+  const safariInsertFormattingElement = (
+    format: FormatType,
+    containerElement: HTMLElement,
+    wasActive: boolean
+  ): boolean => {
+    if (!isSafariBrowser()) return false;
+
+    const sel = getSelection();
+    if (!sel || sel.rangeCount === 0) return false;
+
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return false;
+
+    const doc = getDocument();
+    const tagName = FORMAT_TAG_MAP[format];
+    if (!tagName) return false;
+
+    if (wasActive) {
+      let node: Node | null = range.startContainer;
+      let formatEl: HTMLElement | null = null;
+      while (node && node !== containerElement) {
+        if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).tagName === tagName) {
+          formatEl = node as HTMLElement;
+          break;
+        }
+        node = node.parentNode;
+      }
+      if (formatEl) {
+        const newRange = doc.createRange();
+        newRange.setStartAfter(formatEl);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        const content = (formatEl.textContent || '').replace(/\u200B/g, '');
+        if (!content) {
+          formatEl.parentNode?.removeChild(formatEl);
+        }
+      }
+      pendingFormats.delete(format);
+      justDeactivated.add(format);
+    } else {
+      const el = doc.createElement(tagName);
+      const zwsNode = doc.createTextNode('\u200B');
+      el.appendChild(zwsNode);
+
+      range.insertNode(el);
+
+      const newRange = doc.createRange();
+      newRange.setStart(zwsNode, 1);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+
+      pendingFormats.add(format);
+      justDeactivated.delete(format);
+    }
+
+    return true;
+  };
+
   /**
    * Toggle bold formatting
    */
   const toggleBold = (containerElement: HTMLElement): void => {
     if (!isSelectionInsideContainer(containerElement)) return;
     const wasActive = queryCommandState('bold') || pendingFormats.has('bold');
+    const sel = getSelection();
+    const isCollapsed = !sel || sel.isCollapsed;
+
+    if (isCollapsed && safariInsertFormattingElement('bold', containerElement, wasActive)) {
+      return;
+    }
+
     execCommand('bold');
     trackPendingFormat('bold', containerElement, wasActive);
   };
@@ -388,6 +479,13 @@ export function createRichTextFormatter(
   const toggleItalic = (containerElement: HTMLElement): void => {
     if (!isSelectionInsideContainer(containerElement)) return;
     const wasActive = queryCommandState('italic') || pendingFormats.has('italic');
+    const sel = getSelection();
+    const isCollapsed = !sel || sel.isCollapsed;
+
+    if (isCollapsed && safariInsertFormattingElement('italic', containerElement, wasActive)) {
+      return;
+    }
+
     execCommand('italic');
     trackPendingFormat('italic', containerElement, wasActive);
   };
@@ -398,6 +496,13 @@ export function createRichTextFormatter(
   const toggleUnderline = (containerElement: HTMLElement): void => {
     if (!isSelectionInsideContainer(containerElement)) return;
     const wasActive = queryCommandState('underline') || pendingFormats.has('underline');
+    const sel = getSelection();
+    const isCollapsed = !sel || sel.isCollapsed;
+
+    if (isCollapsed && safariInsertFormattingElement('underline', containerElement, wasActive)) {
+      return;
+    }
+
     execCommand('underline');
     trackPendingFormat('underline', containerElement, wasActive);
   };
@@ -408,6 +513,13 @@ export function createRichTextFormatter(
   const toggleStrikethrough = (containerElement: HTMLElement): void => {
     if (!isSelectionInsideContainer(containerElement)) return;
     const wasActive = queryCommandState('strikeThrough') || pendingFormats.has('strikethrough');
+    const sel = getSelection();
+    const isCollapsed = !sel || sel.isCollapsed;
+
+    if (isCollapsed && safariInsertFormattingElement('strikethrough', containerElement, wasActive)) {
+      return;
+    }
+
     execCommand('strikeThrough');
     trackPendingFormat('strikethrough', containerElement, wasActive);
   };
@@ -1057,6 +1169,23 @@ export function createRichTextFormatter(
       } else if (containerElement.childNodes.length > 0) {
         anchor = containerElement.childNodes[containerElement.childNodes.length - 1];
       } else {
+        // Empty container — create an empty list with a placeholder <li>
+        const list = doc.createElement(listTag);
+        const li = doc.createElement('li');
+        li.style.display = 'list-item';
+        // Use a ZWS text node instead of <br> so the cursor anchors after the list marker
+        const cursorAnchor = doc.createTextNode('\u200B');
+        li.appendChild(cursorAnchor);
+        list.appendChild(li);
+        containerElement.appendChild(list);
+
+        // Place cursor after the ZWS (visually after the bullet/number marker)
+        const newRange = doc.createRange();
+        newRange.setStart(cursorAnchor, 1);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        containerElement.focus();
         return;
       }
     }
@@ -1130,6 +1259,51 @@ export function createRichTextFormatter(
   };
 
   /**
+   * Manually unwrap a list element, moving its <li> children's content
+   * back into the container as direct children separated by <br>.
+   * Used on Safari where execCommand('insertOrderedList'/'insertUnorderedList')
+   * is unreliable for toggling lists off.
+   */
+  const unwrapList = (listElement: HTMLElement, containerElement: HTMLElement): void => {
+    const doc = getDocument();
+    const sel = getSelection();
+    const parent = listElement.parentNode;
+    if (!parent) return;
+
+    const items = Array.from(listElement.querySelectorAll(':scope > li'));
+    let lastInserted: Node | null = null;
+
+    for (let i = 0; i < items.length; i++) {
+      // Insert a <br> separator between items (not before the first)
+      if (i > 0) {
+        const br = doc.createElement('br');
+        parent.insertBefore(br, listElement);
+      }
+      // Move all children of the <li> out before the list
+      while (items[i].firstChild) {
+        lastInserted = items[i].firstChild!;
+        parent.insertBefore(lastInserted, listElement);
+      }
+    }
+
+    // Remove the now-empty list element
+    parent.removeChild(listElement);
+
+    // Place cursor at end of last inserted content
+    if (lastInserted && sel) {
+      const newRange = doc.createRange();
+      if (lastInserted.nodeType === Node.TEXT_NODE) {
+        newRange.setStart(lastInserted, (lastInserted.textContent || '').length);
+      } else {
+        newRange.setStartAfter(lastInserted);
+      }
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+    }
+  };
+
+  /**
    * Toggle ordered list
    */
   const toggleOrderedList = (containerElement: HTMLElement): void => {
@@ -1162,18 +1336,91 @@ export function createRichTextFormatter(
 
       const insideList = isInsideAnyList(containerElement);
 
-      // When mentions are on the current line and we're not already in a list,
-      // manually wrap the line to avoid execCommand splitting mention spans
-      // into separate list items.
-      const currentLineMentions = !insideList && !hasSelection() && hasMentionsOnCurrentLine(containerElement);
-      if (currentLineMentions) {
+      let containedListOl: HTMLElement | null = insideList;
+      if (!containedListOl && isSafariBrowser()) {
+        const firstOl = containerElement.querySelector('ol');
+        const firstUl = containerElement.querySelector('ul');
+        containedListOl = firstOl || firstUl;
+      }
+
+      const currentLineMentions = !containedListOl && !hasSelection() && hasMentionsOnCurrentLine(containerElement);
+      const useSafariPath = !containedListOl && isSafariBrowser();
+      if (currentLineMentions || useSafariPath) {
+        if (useSafariPath) {
+          containerElement.focus();
+          const currentSel = getSelection();
+          if (!currentSel || currentSel.rangeCount === 0 || !isSelectionInsideContainer(containerElement)) {
+            const doc = getDocument();
+            const newRange = doc.createRange();
+            if (containerElement.childNodes.length === 0) {
+              // Empty container — create a text node to anchor the cursor
+              const textNode = doc.createTextNode('\u200B');
+              containerElement.appendChild(textNode);
+              newRange.setStart(textNode, 0);
+            } else {
+              newRange.selectNodeContents(containerElement);
+              newRange.collapse(false);
+            }
+            const selObj = getWindow().getSelection();
+            if (selObj) {
+              selObj.removeAllRanges();
+              selObj.addRange(newRange);
+            }
+          }
+        }
         wrapLineInList('ol', containerElement);
+      } else if (containedListOl && containedListOl.tagName === 'OL' && isSafariBrowser()) {
+        // Safari: manually unwrap the list since execCommand is unreliable
+        unwrapList(containedListOl, containerElement);
+      } else if (containedListOl && containedListOl.tagName === 'UL' && isSafariBrowser()) {
+        const doc = getDocument();
+        const ol = doc.createElement('ol');
+        while (containedListOl.firstChild) {
+          ol.appendChild(containedListOl.firstChild);
+        }
+        containedListOl.parentNode?.replaceChild(ol, containedListOl);
+        const lastLi = ol.lastElementChild;
+        if (lastLi) {
+          const sel = getSelection();
+          if (sel) {
+            const range = doc.createRange();
+            range.selectNodeContents(lastLi);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
       } else {
         execCommand('insertOrderedList');
       }
 
       fixOrderedListContinuation(containerElement);
       applyListInlineStyles(containerElement);
+
+      // After list toggle, place cursor at end of the current <li> content.
+      // execCommand('insertOrderedList') wraps text in <ol><li> which may
+      // replace the original text node, causing the cursor to jump to the start.
+      {
+        try {
+          const currentSel = getSelection();
+          if (currentSel && currentSel.rangeCount > 0) {
+            const currentRange = currentSel.getRangeAt(0);
+            let li: Node | null = currentRange.startContainer;
+            while (li && li !== containerElement && !(li instanceof HTMLElement && li.tagName === 'LI')) {
+              li = li.parentNode;
+            }
+            if (li && li instanceof HTMLElement && li.tagName === 'LI') {
+              const restoreRange = getDocument().createRange();
+              restoreRange.selectNodeContents(li);
+              restoreRange.collapse(false); // collapse to end
+              currentSel.removeAllRanges();
+              currentSel.addRange(restoreRange);
+            }
+          }
+        } catch (_) {
+          // Let browser default stand
+        }
+      }
     };
 
   /**
@@ -1209,18 +1456,94 @@ export function createRichTextFormatter(
 
       const insideList = isInsideAnyList(containerElement);
 
+      let containedList: HTMLElement | null = insideList;
+      if (!containedList && isSafariBrowser()) {
+        const firstOl = containerElement.querySelector('ol');
+        const firstUl = containerElement.querySelector('ul');
+        containedList = firstOl || firstUl;
+      }
+
       // When mentions are on the current line and we're not already in a list,
       // manually wrap the line to avoid execCommand splitting mention spans
       // into separate list items.
-      const currentLineMentions = !insideList && !hasSelection() && hasMentionsOnCurrentLine(containerElement);
-      if (currentLineMentions) {
+      // Also use manual wrapping on Safari where execCommand('insertUnorderedList')
+      // is unreliable and may silently fail.
+      const currentLineMentions = !containedList && !hasSelection() && hasMentionsOnCurrentLine(containerElement);
+      const useSafariPathUl = !containedList && isSafariBrowser();
+      if (currentLineMentions || useSafariPathUl) {
+        // On Safari, wrapLineInList may fail if selection is not properly set.
+        if (useSafariPathUl) {
+          containerElement.focus();
+          const currentSel = getSelection();
+          if (!currentSel || currentSel.rangeCount === 0 || !isSelectionInsideContainer(containerElement)) {
+            const doc = getDocument();
+            const newRange = doc.createRange();
+            if (containerElement.childNodes.length === 0) {
+              const textNode = doc.createTextNode('\u200B');
+              containerElement.appendChild(textNode);
+              newRange.setStart(textNode, 0);
+            } else {
+              newRange.selectNodeContents(containerElement);
+              newRange.collapse(false);
+            }
+            const selObj = getWindow().getSelection();
+            if (selObj) {
+              selObj.removeAllRanges();
+              selObj.addRange(newRange);
+            }
+          }
+        }
         wrapLineInList('ul', containerElement);
+      } else if (containedList && containedList.tagName === 'UL' && isSafariBrowser()) {
+        // Safari: manually unwrap the list since execCommand is unreliable
+        unwrapList(containedList, containerElement);
+      } else if (containedList && containedList.tagName === 'OL' && isSafariBrowser()) {
+        const doc = getDocument();
+        const ul = doc.createElement('ul');
+        while (containedList.firstChild) {
+          ul.appendChild(containedList.firstChild);
+        }
+        containedList.parentNode?.replaceChild(ul, containedList);
+        const lastLi = ul.lastElementChild;
+        if (lastLi) {
+          const sel = getSelection();
+          if (sel) {
+            const range = doc.createRange();
+            range.selectNodeContents(lastLi);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
       } else {
         execCommand('insertUnorderedList');
       }
 
       fixOrderedListContinuation(containerElement);
       applyListInlineStyles(containerElement);
+
+      // After list toggle, place cursor at end of the current <li> content.
+      {
+        try {
+          const currentSel = getSelection();
+          if (currentSel && currentSel.rangeCount > 0) {
+            const currentRange = currentSel.getRangeAt(0);
+            let li: Node | null = currentRange.startContainer;
+            while (li && li !== containerElement && !(li instanceof HTMLElement && li.tagName === 'LI')) {
+              li = li.parentNode;
+            }
+            if (li && li instanceof HTMLElement && li.tagName === 'LI') {
+              const restoreRange = getDocument().createRange();
+              restoreRange.selectNodeContents(li);
+              restoreRange.collapse(false);
+              currentSel.removeAllRanges();
+              currentSel.addRange(restoreRange);
+            }
+          }
+        } catch (_) {
+          // Let browser default stand
+        }
+      }
     };
 
   /**
@@ -1584,8 +1907,61 @@ export function createRichTextFormatter(
       }
       return true;
     } else {
-      // Create a new list item - use execCommand for consistency
-      execCommand('insertParagraph');
+      // Create a new list item
+      if (isSafariBrowser()) {
+        const doc = getDocument();
+        const sel = getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+
+          const afterRange = doc.createRange();
+          afterRange.setStart(range.endContainer, range.endOffset);
+          afterRange.setEndAfter(listItem.lastChild || listItem);
+          const afterFragment = afterRange.extractContents();
+
+          const newLi = doc.createElement('li');
+          newLi.style.display = 'list-item';
+
+          const hasContent = afterFragment.textContent && afterFragment.textContent.replace(/\u200B/g, '').length > 0;
+          if (hasContent) {
+            newLi.appendChild(afterFragment);
+          } else {
+            const zwsNode = doc.createTextNode('\u200B');
+            newLi.appendChild(zwsNode);
+          }
+
+          const parentList = listItem.parentNode;
+          if (parentList) {
+            if (listItem.nextSibling) {
+              parentList.insertBefore(newLi, listItem.nextSibling);
+            } else {
+              parentList.appendChild(newLi);
+            }
+          }
+
+          if (!listItem.textContent || listItem.textContent.replace(/\u200B/g, '').trim() === '') {
+            if (!listItem.firstChild) {
+              listItem.appendChild(doc.createTextNode('\u200B'));
+            }
+          }
+
+          const cursorTarget = newLi.firstChild;
+          if (cursorTarget) {
+            const newRange = doc.createRange();
+            if (cursorTarget.nodeType === Node.TEXT_NODE) {
+              const isZws = cursorTarget.textContent === '\u200B';
+              newRange.setStart(cursorTarget, isZws ? 1 : 0);
+            } else {
+              newRange.setStart(cursorTarget, 0);
+            }
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          }
+        }
+      } else {
+        execCommand('insertParagraph');
+      }
       fixOrderedListContinuation(containerElement);
       applyListInlineStyles(containerElement);
       return true;
@@ -1910,11 +2286,16 @@ export function createRichTextFormatter(
       sel.removeAllRanges();
       sel.addRange(newRange);
     } else {
-      // No text after — place cursor after the <br> on the new line
-      const textNode = doc.createTextNode('\u200B');
-      parent.insertBefore(textNode, br.nextSibling);
+      // No text after — create a new empty <code> element on the new line
+      // so the user continues typing in inline code format
+      const newCode = doc.createElement('code');
+      newCode.className = 'cometchat-rich-text-code-inline';
+      const zwsNode = doc.createTextNode('\u200B');
+      newCode.appendChild(zwsNode);
+      parent.insertBefore(newCode, br.nextSibling);
+      // Place cursor inside the new code element
       const newRange = doc.createRange();
-      newRange.setStart(textNode, 0);
+      newRange.setStart(zwsNode, 1);
       newRange.collapse(true);
       sel.removeAllRanges();
       sel.addRange(newRange);
@@ -3526,7 +3907,8 @@ export function createRichTextFormatter(
       // Preserve content if there's a <u> element with non-empty text (underlined whitespace is meaningful)
       const hasUnderlineContent = tempDiv.querySelector('u') !== null
         && tempDiv.querySelector('u')!.textContent !== '';
-      if (!tempDiv.textContent?.trim() && !tempDiv.querySelector('img, video, audio') && !hasUnderlineContent) {
+      const visibleText = (tempDiv.textContent || '').replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim();
+      if (!visibleText && !tempDiv.querySelector('img, video, audio') && !hasUnderlineContent) {
         return '';
       }
 

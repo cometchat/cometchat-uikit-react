@@ -1417,13 +1417,8 @@ const CometChatMessageList = (props: MessageListProps) => {
       try {
         let message: CometChat.TextMessage = getMessageById(id) as CometChat.TextMessage;
         if (message) {
-          let text = message.getText();
-          if (
-            message.getMentionedUsers() &&
-            message.getMentionedUsers().length
-          ) {
-            text = getMentionsTextWithoutStyle(message);
-          }
+          // Always convert mention tokens to display names.
+          let text = getMentionsTextWithoutStyle(message);
           
           // Convert markdown to HTML so pasting into the composer renders formatting
           const markdownFormatter = new CometChatMarkdownFormatter();

@@ -445,6 +445,8 @@ export function cleanMarkdown(markdown: string): string {
   return markdown
     .replace(/```[\s\u200B\u200C\u200D\uFEFF]*```/g, "")
     .replace(/(?<!`)`(?!`)[^\S\n]*[\u200B\u200C\u200D\uFEFF]*[^\S\n]*`(?!`)/g, "")
+    // Remove blockquote lines that contain only the > marker with no actual content
+    .replace(/^>[\s\u200B\u200C\u200D\uFEFF]*$/gm, "")
     .replace(/\n{3,}/g, "\n\n")
     .replace(/^\s+|\s+$/g, "");
 }

@@ -56,7 +56,7 @@
 
 .cometchat-link-popover__url {
   font: var(--cometchat-font-body-regular);
-  color: var(--cometchat-primary-color, #6852d6);
+  color: var(--cometchat-link-button, #0B7BEA);
   text-decoration: none;
   display: block;
   word-break: break-all;

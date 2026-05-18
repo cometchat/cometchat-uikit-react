@@ -143,6 +143,32 @@ export function CometChatFormattingToolbar(props: FormattingToolbarProps): JSX.E
     if (savedSelectionRef.current) {
       richTextFormatter.restoreSelection(savedSelectionRef.current);
       savedSelectionRef.current = null;
+    } else {
+      const win = IframeContext?.iframeWindow || window;
+      const doc = IframeContext?.iframeDocument || document;
+      const sel = win.getSelection();
+      const needsCaretPlacement = !sel || sel.rangeCount === 0 || (() => {
+        const range = sel.getRangeAt(0);
+        let node: Node | null = range.startContainer;
+        while (node) {
+          if (node === containerElement) return false;
+          node = node.parentNode;
+        }
+        return true;
+      })();
+
+      if (needsCaretPlacement) {
+        if (containerElement.childNodes.length === 0 ||
+            (containerElement.textContent || '').length === 0) {
+          const zwsNode = doc.createTextNode('\u200B');
+          containerElement.appendChild(zwsNode);
+        }
+        const range = doc.createRange();
+        range.selectNodeContents(containerElement);
+        range.collapse(false);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
     }
 
     switch (format) {
@@ -186,7 +212,7 @@ export function CometChatFormattingToolbar(props: FormattingToolbarProps): JSX.E
     if (onFormatApplied) {
       onFormatApplied();
     }
-  }, [textInputRef, richTextFormatter, onLinkClick, onFormatApplied]);
+  }, [textInputRef, richTextFormatter, onLinkClick, onFormatApplied, IframeContext, isRangeInsideContainer]);
 
   /**
    * Validate URL format

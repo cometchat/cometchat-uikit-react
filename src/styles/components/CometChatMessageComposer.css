@@ -469,7 +469,7 @@ height: 58px;
 
 /* Link styling in input */
 .cometchat-message-composer__input a {
-    color: var(--cometchat-primary-color);
+    color: var(--cometchat-link-button);
     text-decoration: underline;
     cursor: pointer;
 }
@@ -539,28 +539,24 @@ height: 58px;
 }
 
 /* Inline code styling */
-/* Use font-size + line-height instead of font shorthand so bold/italic inherit from parent elements */
 .cometchat-message-composer__input code {
     background: var(--cometchat-background-color-03, #F5F5F5);
     color: var(--cometchat-text-color-highlight, #6852D6);
     padding: var(--cometchat-padding-1, 2px) var(--cometchat-padding-1, 4px);
     border-radius: var(--cometchat-radius-1, 4px);
     border: 1px solid var(--cometchat-border-color-default, #E8E8E8);
-    font-size: 12px;
-    line-height: 14.4px;
+    font: var(--cometchat-font-caption1-regular);
     font-family: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 }
 
 /* Inline code with explicit class - monospace font via CSS variables */
-/* Use font-size + line-height instead of font shorthand so bold/italic inherit from parent elements */
 .cometchat-message-composer__input code.cometchat-rich-text-code-inline {
     background: var(--cometchat-background-color-03, #F5F5F5);
     color: var(--cometchat-text-color-highlight, #6852D6);
     padding: var(--cometchat-padding-1, 2px) var(--cometchat-padding-1, 4px);
     border-radius: var(--cometchat-radius-1, 4px);
     border: 1px solid var(--cometchat-border-color-default, #E8E8E8);
-    font-size: 12px;
-    line-height: 14.4px;
+    font: var(--cometchat-font-caption1-regular);
     font-family: 'Roboto Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
     display: inline;
 }

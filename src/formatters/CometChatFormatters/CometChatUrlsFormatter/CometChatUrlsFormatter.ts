@@ -376,8 +376,15 @@ export class CometChatUrlsFormatter extends CometChatTextFormatter {
     if (!inputText) return "";
     if (!inputText.includes("cometchat-url") && !inputText.includes("<a")) return inputText;
 
+    const mentionPlaceholders: string[] = [];
+    let safeInput = inputText.replace(/<@(?:uid|all):[^>]+>/g, (match) => {
+      const idx = mentionPlaceholders.length;
+      mentionPlaceholders.push(match);
+      return `\u200B__MENTION_${idx}__\u200B`;
+    });
+
     const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = inputText;
+    tempDiv.innerHTML = safeInput;
 
     // Handle legacy URL spans
     const urlSpans = tempDiv.querySelectorAll("span.cometchat-url");
@@ -395,6 +402,13 @@ export class CometChatUrlsFormatter extends CometChatTextFormatter {
       anchor.parentNode?.replaceChild(document.createTextNode(anchor.textContent || ""), anchor);
     }
 
-    return tempDiv.innerHTML;
+    let result = tempDiv.innerHTML;
+
+    // Restore mention tokens
+    result = result.replace(/\u200B__MENTION_(\d+)__\u200B/g, (_, idx) => {
+      return mentionPlaceholders[parseInt(idx, 10)];
+    });
+
+    return result;
   }
 }

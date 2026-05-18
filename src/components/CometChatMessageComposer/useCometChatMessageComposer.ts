@@ -165,28 +165,51 @@ export function useCometChatMessageComposer(args: Args) {
                   });
                   emptyInputField()
                   if (renderSanitizedHtml) {
-                    // Ensure a valid selection/range exists inside the empty
-                    // contentEditable so renderSanitizedHtml takes the primary
-                    // path (sanitizeHtmlStringToFragment) instead of the plain-
-                    // text fallback.  After emptyInputField() the browser may
-                    // not have established a range inside the element yet, which
-                    // would cause setSelection's isDescendant guard to fail.
+                    // Check if the contentEditable is in plaintext-only mode.
+                    // If so, insert raw markdown text directly — HTML formatting
+                    // would be stripped by the browser in plaintext-only mode,
+                    // losing blockquote (>) and other markdown syntax.
                     const inputEl = getCurrentInput() as HTMLElement;
-                    if (inputEl) {
-                      inputEl.focus();
-                      const win = getCurrentWindow();
-                      const browserSel = win?.getSelection();
-                      if (browserSel) {
-                        const newRange = getCurrentDocument()?.createRange();
-                        if (newRange) {
-                          newRange.selectNodeContents(inputEl);
-                          newRange.collapse(true);
-                          browserSel.removeAllRanges();
-                          browserSel.addRange(newRange);
+                    const isPlainTextOnly = inputEl?.contentEditable === 'plaintext-only';
+
+                    if (isPlainTextOnly) {
+                      // Plain text mode: insert raw text directly
+                      if (inputEl) {
+                        inputEl.textContent = object.message.getText();
+                        // Position cursor at end
+                        const win = getCurrentWindow();
+                        const browserSel = win?.getSelection();
+                        if (browserSel) {
+                          const newRange = getCurrentDocument()?.createRange();
+                          if (newRange) {
+                            newRange.selectNodeContents(inputEl);
+                            newRange.collapse(false);
+                            browserSel.removeAllRanges();
+                            browserSel.addRange(newRange);
+                          }
                         }
-                        setSelection(browserSel);
                       }
-                    }
+                    } else {
+                      // Rich text mode: convert markdown to HTML and insert
+                      // Ensure a valid selection/range exists inside the empty
+                      // contentEditable so renderSanitizedHtml takes the primary
+                      // path (sanitizeHtmlStringToFragment) instead of the plain-
+                      // text fallback.
+                      if (inputEl) {
+                        inputEl.focus();
+                        const win = getCurrentWindow();
+                        const browserSel = win?.getSelection();
+                        if (browserSel) {
+                          const newRange = getCurrentDocument()?.createRange();
+                          if (newRange) {
+                            newRange.selectNodeContents(inputEl);
+                            newRange.collapse(true);
+                            browserSel.removeAllRanges();
+                            browserSel.addRange(newRange);
+                          }
+                          setSelection(browserSel);
+                        }
+                      }
                     let finalText: string | void = object.message.getText();
                     if (textFormatterArray && textFormatterArray.length) {
                       for (let i = 0; i < textFormatterArray.length; i++) {
@@ -222,6 +245,7 @@ export function useCometChatMessageComposer(args: Args) {
                       }
                     }
                     renderSanitizedHtml(finalText as string)
+                    } // end else (rich text mode)
                   }
                 }
                 if ((object.status === MessageStatus.success &&

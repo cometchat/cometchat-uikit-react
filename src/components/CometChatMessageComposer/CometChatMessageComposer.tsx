@@ -704,7 +704,7 @@ const isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean
   useEffect(()=>{
 try {
   var activePopoverSub = CometChatUIEvents.ccActivePopover.subscribe((id:string)=>{
-    if( state.contentToDisplay != id){
+    if(id !== uniqueIdRef.current){
       dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });
       aiBtnRef.current?.closePopover();
       attachmentsBtnRef.current?.closePopover();
@@ -1610,7 +1610,7 @@ try {
         const x: never = state.contentToDisplay;
       }
     }
-    setActivePopover(state.contentToDisplay)
+    setActivePopover("voiceRecording")
 
    } catch (error) {
     errorHandler(error,"onVoiceRecordingBtnClick")
@@ -1953,7 +1953,7 @@ try {
     mySetAddToMsgInputText("");
   }
  function setActivePopover(id:string){
-  CometChatUIEvents.ccActivePopover.next(id);
+  CometChatUIEvents.ccActivePopover.next(uniqueIdRef.current || id);
 
   }
   /**

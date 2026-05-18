@@ -135,6 +135,17 @@
     text-decoration: underline;
   }
 
+  /* Link styling in composer reply preview */
+  .composer-view .cometchat-message-preview__subtitle-text a {
+    color: var(--cometchat-link-button);
+    text-decoration: underline;
+  }
+
+  .composer-view .cometchat-message-preview__subtitle-text .cometchat-url {
+    color: var(--cometchat-link-button);
+    text-decoration: underline;
+  }
+
   .bubble-view{
     border-radius: 4px;
   }

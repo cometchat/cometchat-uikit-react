@@ -545,13 +545,19 @@ function processChunkedPaste(
           // Strip style attribute
           child.removeAttribute('style');
 
-          // Strip class except on mention spans
+          // Flatten mention spans to plain text so pasted mentions
+          // appear as display names (e.g. "@all") instead of live mention elements.
+          // This prevents raw tokens like <@all:all> from appearing when the
+          // composer later processes the HTML through text formatters.
           if (tag === 'span') {
-            const hasMentionData = child.hasAttribute('data-cometchat-mention') ||
+            const isMentionSpan = child.hasAttribute('data-cometchat-mention') ||
               child.className.includes('cometchat-mentions');
-            if (!hasMentionData) {
-              child.removeAttribute('class');
+            if (isMentionSpan) {
+              const plainText = doc.createTextNode(child.textContent || '');
+              parent.replaceChild(plainText, child);
+              continue;
             }
+            child.removeAttribute('class');
           } else {
             child.removeAttribute('class');
           }
@@ -1409,6 +1415,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
         }
         if (
           (text = text.trim()).length === 0 ||
+          text.replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim().length === 0 ||
           (state.textMessageToEdit !== null &&
             state.textMessageToEdit.getText() === text)
         ) {
@@ -1588,6 +1595,56 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
       const newText = text ?? e?.target?.innerText;
       if (typeof newText === "string") {
         // --- Immediate path: runs synchronously on every event ---
+
+        const _inputEl = getCurrentInput() as HTMLElement;
+        if (_inputEl) {
+          const _codeEl = _inputEl.querySelector('pre.cometchat-rich-text-code-block code');
+          if (_codeEl && _codeEl.textContent) {
+            const _text = _codeEl.textContent;
+            const _visibleText = _text.replace(/\u200B/g, '');
+            if (_visibleText.length > 0 && _text !== _visibleText) {
+              const _doc = getCurrentDocument()!;
+              const _sel = _doc.getSelection();
+              let _cursorOffset = 0;
+              if (_sel && _sel.rangeCount > 0) {
+                const _range = _sel.getRangeAt(0);
+                const _walker = _doc.createTreeWalker(_codeEl, NodeFilter.SHOW_TEXT);
+                let _node: Node | null = _walker.nextNode();
+                while (_node) {
+                  if (_node === _range.startContainer) {
+                    const _beforeCursor = (_node.textContent || '').substring(0, _range.startOffset);
+                    _cursorOffset += _beforeCursor.replace(/\u200B/g, '').length;
+                    break;
+                  }
+                  _cursorOffset += (_node.textContent || '').replace(/\u200B/g, '').length;
+                  _node = _walker.nextNode();
+                }
+              }
+              _codeEl.textContent = _visibleText;
+              if (_sel && _codeEl.firstChild) {
+                const _newRange = _doc.createRange();
+                const _offset = Math.min(_cursorOffset, _visibleText.length);
+                _newRange.setStart(_codeEl.firstChild, _offset);
+                _newRange.collapse(true);
+                _sel.removeAllRanges();
+                _sel.addRange(_newRange);
+              }
+            }
+          }
+
+          const _sel2 = getCurrentDocument()?.getSelection();
+          if (_sel2 && _sel2.rangeCount > 0) {
+            const _range2 = _sel2.getRangeAt(0);
+            const _node2 = _range2.startContainer;
+            const _offset2 = _range2.startOffset;
+            const _newRange2 = getCurrentDocument()!.createRange();
+            _newRange2.setStart(_node2, _offset2);
+            _newRange2.collapse(true);
+            _sel2.removeAllRanges();
+            _sel2.addRange(_newRange2);
+          }
+        }
+
         handleTyping();
         dispatch({ type: "setText", text: newText });
         mySetAddToMsgInputText("");
@@ -1602,8 +1659,10 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
         onTextInputChangeDebounceRef.current = null;
         try {
           if (richTextFormatter && e) {
-            // Clear pre-armed pending formats now that the user has typed
-            richTextFormatter.clearPendingFormats();
+            const inputType = (e as InputEvent)?.inputType || (e?.nativeEvent as InputEvent)?.inputType || '';
+            if (!inputType.startsWith('format')) {
+              richTextFormatter.clearPendingFormats();
+            }
 
             const element = getCurrentInput() as HTMLElement;
             if (element) {
@@ -1638,6 +1697,10 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
               // Update active formats for toolbar state
               const formats = richTextFormatter.getActiveFormats(element);
               setActiveFormats(formats);
+
+              if (element.querySelector('ol')) {
+                richTextFormatter.fixOrderedListContinuation(element);
+              }
             }
           }
         } catch (deferredError) {
@@ -1691,7 +1754,9 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
         if (enterKeyBehavior == EnterKeyBehavior.None) {
           return;
         }
-        if (contenteditable?.textContent?.trim() || contenteditable?.querySelector('u')?.textContent) {
+        // Strip zero-width spaces alongside normal whitespace when checking for content
+        const visibleTextOnEnter = (contenteditable?.textContent || '').replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim();
+        if (visibleTextOnEnter || contenteditable?.querySelector('u')?.textContent) {
           // Strip any leftover font-reset spans before extracting HTML
           contenteditable?.querySelectorAll('span').forEach((span: HTMLSpanElement) => {
             if (span.style.fontFamily && span.style.fontSize === '1em' && span.textContent === '\u200B') {
@@ -1712,7 +1777,9 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
                 textFormatterArray[i].getOriginalText(textToDispatch);
             }
           }
-          onTextInputEnter(textToDispatch!);
+          if (textToDispatch) {
+            onTextInputEnter(textToDispatch);
+          }
         }
         return;
       }
@@ -1967,8 +2034,92 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
           : null;
 
         // Handle HTML paste for formatted content
-        const clipboardHtml = event.clipboardData?.getData('text/html');
+        let clipboardHtml = event.clipboardData?.getData('text/html');
         if (clipboardHtml) {
+          // When pasting inside a list item, merge pasted list items into the
+          // existing list instead of nesting sub-lists (a. b. c. instead of 1. 2. 3.)
+          let insideList = false;
+          if (savedRange) {
+            let node: Node | null = savedRange.startContainer;
+            while (node && node !== inputEl) {
+              if (node instanceof HTMLElement && (node.tagName === 'LI' || node.tagName === 'OL' || node.tagName === 'UL')) {
+                insideList = true;
+                break;
+              }
+              node = node.parentNode;
+            }
+            if (insideList) {
+              // Check if clipboard HTML contains list elements to merge
+              const tmpClipDiv = doc.createElement('div');
+              tmpClipDiv.innerHTML = clipboardHtml;
+              const clipList = tmpClipDiv.querySelector('ol, ul');
+              if (clipList) {
+                // Find the current <li> and parent <ol>/<ul>
+                let currentLi: HTMLElement | null = null;
+                let parentList: HTMLElement | null = null;
+                let nd: Node | null = savedRange.startContainer;
+                while (nd && nd !== inputEl) {
+                  if (nd instanceof HTMLElement && nd.tagName === 'LI' && !currentLi) currentLi = nd;
+                  if (nd instanceof HTMLElement && (nd.tagName === 'OL' || nd.tagName === 'UL') && !parentList) parentList = nd;
+                  nd = nd.parentNode;
+                }
+
+                if (currentLi && parentList) {
+                  event.preventDefault();
+                  event.stopImmediatePropagation();
+
+                  if (currentLi.childNodes.length === 1 && currentLi.firstChild instanceof HTMLBRElement) {
+                    currentLi.removeChild(currentLi.firstChild);
+                  }
+
+                  const pastedItems = Array.from(clipList.querySelectorAll('li'));
+                  let lastInsertedLi: HTMLElement = currentLi;
+
+                  if (pastedItems.length > 0) {
+                    const firstContent = pastedItems[0].innerHTML;
+                    if (!currentLi.textContent?.replace(/\u200B/g, '').trim()) {
+                      currentLi.innerHTML = firstContent;
+                    } else {
+                      currentLi.innerHTML += firstContent;
+                    }
+                    lastInsertedLi = currentLi;
+
+                    let insertAfter: HTMLElement = currentLi;
+                    for (let idx = 1; idx < pastedItems.length; idx++) {
+                      const newLi = doc.createElement('li');
+                      newLi.style.display = 'list-item';
+                      newLi.innerHTML = pastedItems[idx].innerHTML;
+                      insertAfter.after(newLi);
+                      insertAfter = newLi;
+                      lastInsertedLi = newLi;
+                    }
+                  }
+
+                  const newRange = doc.createRange();
+                  newRange.selectNodeContents(lastInsertedLi);
+                  newRange.collapse(false);
+                  const winObj = getCurrentWindow();
+                  const selObj = winObj?.getSelection();
+                  if (selObj) {
+                    selObj.removeAllRanges();
+                    selObj.addRange(newRange);
+                    sel.current = selObj;
+                    range.current = newRange;
+                  }
+
+                  inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                  inputEl.scrollTop = inputEl.scrollHeight;
+                  return;
+                }
+              }
+
+              // Fallback: strip list tags if merge wasn't possible
+              clipboardHtml = clipboardHtml
+                .replace(/<\/li>\s*<li[^>]*>/gi, '<br>')
+                .replace(/<\/?(?:ol|ul|li)[^>]*>/gi, '');
+            }
+          }
+
           // Check if the HTML actually contains real formatting tags.
           const formattingTagPattern = /<\s*\/?\s*(b|strong|i|em|u|s|strike|del|ol|ul|li|a|blockquote|pre|code|h[1-6]|table|tr|td|th|sub|sup)\b/i;
           const hasRealFormatting = formattingTagPattern.test(clipboardHtml);
@@ -1982,7 +2133,87 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
 
             const mdFormatter = new CometChatMarkdownFormatter();
             const normalizedText = clipboardText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-            const convertedHtml = mdFormatter.getFormattedText(normalizedText);
+            let convertedHtml = mdFormatter.getFormattedText(normalizedText);
+
+            if (insideList && convertedHtml !== normalizedText) {
+              const tmpContainer = doc.createElement('div');
+              tmpContainer.innerHTML = convertedHtml;
+              const pastedList = tmpContainer.querySelector('ol, ul');
+              if (pastedList) {
+                // Find the current <li> and parent <ol>/<ul> from the saved range
+                let currentLi: HTMLElement | null = null;
+                let parentList: HTMLElement | null = null;
+                let n: Node | null = savedRange ? savedRange.startContainer : null;
+                while (n && n !== inputEl) {
+                  if (n instanceof HTMLElement && n.tagName === 'LI' && !currentLi) {
+                    currentLi = n;
+                  }
+                  if (n instanceof HTMLElement && (n.tagName === 'OL' || n.tagName === 'UL') && !parentList) {
+                    parentList = n;
+                  }
+                  n = n.parentNode;
+                }
+
+                if (currentLi && parentList) {
+                  event.preventDefault();
+                  event.stopImmediatePropagation();
+
+                  // Remove the empty <br> placeholder from the current <li> if present
+                  if (currentLi.childNodes.length === 1 && currentLi.firstChild instanceof HTMLBRElement) {
+                    currentLi.removeChild(currentLi.firstChild);
+                  }
+
+                  const pastedItems = Array.from(pastedList.querySelectorAll('li'));
+                  let lastInsertedLi: HTMLElement = currentLi;
+
+                  if (pastedItems.length > 0) {
+                    // Put the first item's content into the current <li>
+                    const firstItemContent = pastedItems[0].innerHTML;
+                    if (!currentLi.textContent?.replace(/\u200B/g, '').trim()) {
+                      // Current <li> is empty — replace its content
+                      currentLi.innerHTML = firstItemContent;
+                    } else {
+                      // Current <li> has content — append to it
+                      currentLi.innerHTML += firstItemContent;
+                    }
+                    lastInsertedLi = currentLi;
+
+                    // Insert remaining items as new <li> elements after the current one
+                    let insertAfter: HTMLElement = currentLi;
+                    for (let idx = 1; idx < pastedItems.length; idx++) {
+                      const newLi = doc.createElement('li');
+                      newLi.style.display = 'list-item';
+                      newLi.innerHTML = pastedItems[idx].innerHTML;
+                      insertAfter.after(newLi);
+                      insertAfter = newLi;
+                      lastInsertedLi = newLi;
+                    }
+                  }
+
+                  // Position cursor at end of last inserted <li>
+                  const newRange = doc.createRange();
+                  newRange.selectNodeContents(lastInsertedLi);
+                  newRange.collapse(false);
+                  const winObj = getCurrentWindow();
+                  const selObj = winObj?.getSelection();
+                  if (selObj) {
+                    selObj.removeAllRanges();
+                    selObj.addRange(newRange);
+                    sel.current = selObj;
+                    range.current = newRange;
+                  }
+
+                  inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                  inputEl.scrollTop = inputEl.scrollHeight;
+                  return;
+                }
+              }
+
+              // Fallback: strip list tags if we couldn't merge into existing list
+              convertedHtml = convertedHtml
+                .replace(/<\/li>\s*<li[^>]*>/gi, '<br>')
+                .replace(/<\/?(?:ol|ul|li)[^>]*>/gi, '');
+            }
 
             if (convertedHtml !== normalizedText) {
               const tempDiv = doc.createElement('div');
@@ -2208,7 +2439,8 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
   const onSendclick = useCallback(() => {
     try {
       var contenteditable = getCurrentInput();
-      if (contenteditable?.textContent?.trim() || contenteditable?.querySelector('u')?.textContent) {
+      const visibleText = (contenteditable?.textContent || '').replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim();
+      if (visibleText || contenteditable?.querySelector('u')?.textContent) {
         // Strip any leftover font-reset spans before extracting HTML
         contenteditable?.querySelectorAll('span').forEach((span: HTMLSpanElement) => {
           if (span.style.fontFamily && span.style.fontSize === '1em' && span.textContent === '\u200B') {
@@ -2678,7 +2910,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
    * Sets the active popover for UI events
    */
   function setActivePopover(id: string) {
-    CometChatUIEvents.ccActivePopover.next(id);
+    CometChatUIEvents.ccActivePopover.next(uniqueIdRef.current || id);
   }
 
   /**
@@ -2793,6 +3025,10 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
       else if (state.contentToDisplay === "emojiKeyboard") emojiBtnRef.current?.closePopover();
       else if (state.contentToDisplay === "ai") aiBtnRef.current?.closePopover();
 
+      // Broadcast to other composer instances so they close their active content
+      // (e.g., thread composer stops recording when main composer starts)
+      setActivePopover("voiceRecording");
+
       // Permission state is 'prompt' — request mic access first.
       // Only enter recording mode after the user grants permission.
       // This prevents the recording bar from appearing while the browser popup is open.
@@ -2902,8 +3138,9 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
    */
   function shouldShowSendButton(): boolean {
     let text = getCurrentInput()?.textContent;
+    const visibleText = (text || '').replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim();
     return (
-      (!text || (text && text.trim() === "")) ||
+      (!visibleText) ||
       (state.textMessageToEdit !== null &&
         state.textMessageToEdit.getText() === state.text)
     );
@@ -4164,7 +4401,10 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
   useEffect(() => {
     try {
       var activePopoverSub = CometChatUIEvents.ccActivePopover.subscribe((id: string) => {
-        if (state.contentToDisplay != id) {
+        // Close our content if another composer instance activated a popover.
+        // Use our unique ID to distinguish: if the broadcast ID matches our own,
+        // it's our own activation — ignore it. Otherwise, close everything.
+        if (id !== uniqueIdRef.current) {
           dispatch({ type: "setContentToDisplay", contentToDisplay: "none" });
           aiBtnRef.current?.closePopover();
           attachmentsBtnRef.current?.closePopover();
