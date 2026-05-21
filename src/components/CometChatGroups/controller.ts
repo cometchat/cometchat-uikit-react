@@ -2,6 +2,7 @@ import { CometChat } from "@cometchat/chat-sdk-javascript";
 import React from "react";
 import { Action } from "./CometChatGroups";
 import { CometChatUIKitLoginListener } from "../../CometChatUIKit/CometChatUIKitLoginListener";
+import { CometChatUIKitConstants } from "../../constants/CometChatUIKitConstants";
 
 type Args = {
     searchText: string,
@@ -85,10 +86,16 @@ export class GroupsManager {
             },
             onGroupMemberLeft: async (message: CometChat.Action, leavingUser: CometChat.User, groupLeft: CometChat.Group) => {
                 const newCount = groupLeft.getMembersCount();
-                const loggedInUser = await GroupsManager.getLoggedInUser();
+                const loggedInUser = CometChatUIKitLoginListener.getLoggedInUser();
 
                 if (leavingUser.getUid() === loggedInUser?.getUid()) {
                     groupLeft.setHasJoined(false);
+                    if (groupLeft.getType() === CometChatUIKitConstants.GroupTypes.private) {
+                        dispatch({ type: "removeGroup", guid: groupLeft.getGuid() });
+                    } else {
+                        dispatch({ type: "updateGroupForSDKEvents", group: groupLeft, hasJoined: false, newCount });
+                    }
+                    return;
                 }
                 dispatch({ type: "updateGroupForSDKEvents", group: groupLeft, hasJoined: false, newCount });
             },

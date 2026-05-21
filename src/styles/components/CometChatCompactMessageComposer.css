@@ -405,6 +405,11 @@
     display: none;
 }
 
+.cometchat-compact-message-composer__mentions-list .cometchat-list .cometchat-list__body {
+    max-height: 336px;
+    overflow-y: scroll;
+}
+
 .cometchat-compact-message-composer__mentions-list .cometchat-list__item-wrapper {
     cursor: pointer;
 }

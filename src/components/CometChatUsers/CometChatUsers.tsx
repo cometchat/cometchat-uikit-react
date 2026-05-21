@@ -1077,7 +1077,7 @@ export function CometChatUsers(props: UsersProps) {
     errorHandler,
   });
   return (
-    <div className="cometchat" style={{ width: "100%", height: "100%" }}>
+    <div className="cometchat" style={{ width: "100%", height: "100%", overflow: "hidden" }}>
       <div
         ref={usersWrapperRef}
         className={`cometchat-users ${!showScrollbar ? "cometchat-users-hide-scrollbar" : ""}`}

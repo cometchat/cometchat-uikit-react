@@ -9,6 +9,7 @@ import {
 import React, { useCallback, useEffect, useRef } from "react";
 import { CometChatMentionsFormatter } from "../../formatters/CometChatFormatters/CometChatMentionsFormatter/CometChatMentionsFormatter";
 import { CometChatUrlsFormatter } from "../../formatters/CometChatFormatters/CometChatUrlsFormatter/CometChatUrlsFormatter";
+import { CometChatMarkdownFormatter } from "../../formatters/CometChatFormatters/CometChatMarkdownFormatter/CometChatMarkdownFormatter";
 import { CometChatTextFormatter } from "../../formatters/CometChatFormatters/CometChatTextFormatter";
 import { ChatConfigurator } from "../../utils/ChatConfigurator";
 import { MentionsTargetElement, MessageStatus, UserMemberListType } from "../../Enums/Enums";
@@ -159,9 +160,18 @@ export function useCometChatMessageComposer(args: Args) {
                     type: "setTextMessageToEdit",
                     textMessageToEdit: object.message,
                   });
+                  // Decode HTML entities from the SDK text (e.g. &gt; → >)
+                  // before storing in state — the SDK may return HTML-encoded text.
+                  const rawDataText = object.message.getData().text;
+                  const decoderDiv = getCurrentDocument()?.createElement('textarea');
+                  let decodedText = rawDataText;
+                  if (decoderDiv) {
+                    decoderDiv.innerHTML = rawDataText;
+                    decodedText = decoderDiv.value;
+                  }
                   dispatch({
                     type: "setText",
-                    text: object.message.getData().text,
+                    text: decodedText,
                   });
                   emptyInputField()
                   if (renderSanitizedHtml) {
@@ -173,9 +183,41 @@ export function useCometChatMessageComposer(args: Args) {
                     const isPlainTextOnly = inputEl?.contentEditable === 'plaintext-only';
 
                     if (isPlainTextOnly) {
-                      // Plain text mode: insert raw text directly
+                      // Plain text mode: process mentions through formatters
+                      // then insert via innerHTML so mention spans render correctly.
+                      // Note: plaintext-only restricts user input but programmatic
+                      // innerHTML still works for displaying formatted mention spans.
                       if (inputEl) {
-                        inputEl.textContent = object.message.getText();
+                        let finalText: string | void = object.message.getText();
+                        if (textFormatterArray && textFormatterArray.length) {
+                          for (let i = 0; i < textFormatterArray.length; i++) {
+                            if (textFormatterArray[i] instanceof CometChatMentionsFormatter) {
+                              (textFormatterArray[i] as CometChatMentionsFormatter).setCometChatUserGroupMembers(object.message.getMentionedUsers());
+                              if (!object.message.getDeletedAt()) {
+                                const channelRegex = /<@all:(.*?)>/g;
+                                const text = object.message.getText();
+                                const matches = Array.from(
+                                  text.matchAll(channelRegex)
+                                );
+                                const mentionedChannels = matches.map((m) => m[1]);
+                                (textFormatterArray[i] as CometChatMentionsFormatter).setCometChatMentionedChannels(mentionedChannels);
+                              }
+                            }
+                            if (inputEl) {
+                              textFormatterArray[i].setInputElementReference(inputEl);
+                            }
+                            textFormatterArray[i].setCaretPositionAndRange(
+                              currentSelectionForRegex.current,
+                              currentSelectionForRegexRange.current
+                            );
+                            finalText = textFormatterArray[i].getFormattedText(
+                              finalText!,
+                              { mentionsTargetElement: MentionsTargetElement.textinput }
+                            );
+                          }
+                        }
+                        // Use innerHTML to preserve mention spans in the contentEditable
+                        inputEl.innerHTML = finalText as string;
                         // Position cursor at end
                         const win = getCurrentWindow();
                         const browserSel = win?.getSelection();
@@ -211,6 +253,14 @@ export function useCometChatMessageComposer(args: Args) {
                         }
                       }
                     let finalText: string | void = object.message.getText();
+                    // Apply markdown formatting first (converts **bold** → <b>, _italic_ → <i>, etc.)
+                    // The textFormatterArray may not include the markdown formatter,
+                    // so we apply it explicitly to ensure markdown syntax renders as HTML in the editor.
+                    const hasMarkdownFormatter = textFormatterArray?.some(f => f instanceof CometChatMarkdownFormatter);
+                    if (!hasMarkdownFormatter) {
+                      const mdFormatter = new CometChatMarkdownFormatter();
+                      finalText = mdFormatter.getFormattedText(finalText!, { mentionsTargetElement: MentionsTargetElement.textinput });
+                    }
                     if (textFormatterArray && textFormatterArray.length) {
                       for (let i = 0; i < textFormatterArray.length; i++) {
                         if (textFormatterArray[i] instanceof CometChatMentionsFormatter) {

@@ -255,6 +255,11 @@
     max-height: 336px;
 }
 
+.cometchat-mention-list .cometchat-list .cometchat-list__body {
+    max-height: 336px;
+    overflow-y: scroll;
+}
+
 .cometchat-mention-list .cometchat-list .cometchat-list__header-title{
     display: none;
 }
