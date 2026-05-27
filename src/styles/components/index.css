@@ -69,6 +69,7 @@
 @import url('./CometChatLinkDialog.css');
 @import url('./CometChatLinkPopover.css');
 @import url('./CometChatMarkdownFormatter.css');
+@import url('./CometChatNotificationFeed.css');
 /* @import url('./CometChatToolCallResultBubble.css');
 @import url('./CometChatToolCallArgumentBubble.css'); */
 .cometchat * {

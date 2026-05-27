@@ -162,3 +162,8 @@ export {CometChatAIAssistantTools} from './modals/CometChatAIAssistantTools';
 export {CometChatStreamMessageBubble} from './components/BaseComponents/CometChatStreamMessageBubble/CometChatStreamMessageBubble';
 export {CometChatAIAssistantMessageBubble} from './components/BaseComponents/CometChatAIAssistantMessageBubble/CometChatAIAssistantMessageBubble';
 export {CometChatAIAssistantChatHistory} from './components/CometChatAIAssistantChatHistory/CometChatAIAssistantChatHistory'
+
+// Notification Feed
+export { CometChatNotificationFeed } from './components/CometChatNotificationFeed';
+export { CometChatNotificationBadge } from './components/CometChatNotificationBadge';
+export { useNotificationUnreadCount } from './components/CometChatNotificationFeed/useNotificationUnreadCount';
