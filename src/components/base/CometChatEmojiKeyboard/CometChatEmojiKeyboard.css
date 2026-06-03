@@ -1,0 +1,223 @@
+/* Block */
+.cometchat-emoji-keyboard {
+  display: flex;
+  flex-direction: column;
+  width: var(--cometchat-emoji-keyboard-width, 320px);
+  height: var(--cometchat-emoji-keyboard-height, 380px);
+  background: var(
+    --cometchat-emoji-keyboard-background,
+    var(--cometchat-background-color-01, #fff)
+  );
+  border-radius: var(--cometchat-emoji-keyboard-border-radius, var(--cometchat-radius-3, 12px));
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  box-shadow: var(
+    --cometchat-emoji-keyboard-box-shadow,
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03)
+  );
+  overflow: hidden;
+}
+
+/* Search bar wrapper */
+.cometchat-emoji-keyboard__search {
+  padding: var(--cometchat-emoji-keyboard-search-padding, var(--cometchat-padding-3, 12px));
+  border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  z-index: 1;
+  position: relative;
+  background: var(
+    --cometchat-emoji-keyboard-search-background,
+    var(--cometchat-background-color-01, #fff)
+  );
+}
+
+.cometchat-emoji-keyboard__search .cometchat-search-bar {
+  height: 36px;
+}
+
+.cometchat-emoji-keyboard__search .cometchat-search-bar input,
+.cometchat-emoji-keyboard__search .cometchat-search-bar input::placeholder {
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+}
+
+/* Category tabs */
+.cometchat-emoji-keyboard__tabs {
+  display: flex;
+  gap: var(--cometchat-emoji-keyboard-tabs-gap, var(--cometchat-spacing-1, 4px));
+  padding: var(--cometchat-emoji-keyboard-tabs-padding, var(--cometchat-padding-2, 8px));
+  border-bottom: 1px solid var(--cometchat-border-color-default, #e8e8e8);
+  background: var(
+    --cometchat-emoji-keyboard-tabs-background,
+    var(--cometchat-background-color-01, #fff)
+  );
+  z-index: 2;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+.cometchat-emoji-keyboard__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.cometchat-emoji-keyboard__tab {
+  flex-shrink: 0;
+  width: var(--cometchat-emoji-keyboard-tab-size, 40px);
+  height: var(--cometchat-emoji-keyboard-tab-size, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  border-radius: var(--cometchat-emoji-keyboard-tab-border-radius, var(--cometchat-radius-2, 8px));
+}
+
+.cometchat-emoji-keyboard__tab:hover {
+  background-color: var(
+    --cometchat-emoji-keyboard-tab-background-hover,
+    var(--cometchat-background-color-03, #f5f5f5)
+  );
+}
+
+.cometchat-emoji-keyboard__tab--active,
+.cometchat-emoji-keyboard__tab--active:hover {
+  background: var(
+    --cometchat-emoji-keyboard-tab-background-active,
+    var(--cometchat-extended-primary-color-100, #edeafa)
+  );
+}
+
+.cometchat-emoji-keyboard__tab:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+.cometchat-emoji-keyboard__tab-icon {
+  width: var(--cometchat-emoji-keyboard-tab-icon-size, 24px);
+  height: var(--cometchat-emoji-keyboard-tab-icon-size, 24px);
+  display: block;
+  object-fit: contain;
+}
+
+.cometchat-emoji-keyboard__tab--active .cometchat-emoji-keyboard__tab-icon {
+  /* Recolor from #A1A1A1 to highlight purple (#6852D6) via CSS filter */
+  filter: brightness(0) saturate(100%) invert(33%) sepia(60%) saturate(2218%) hue-rotate(235deg)
+    brightness(88%) contrast(91%);
+}
+
+.cometchat-emoji-keyboard__tab-emoji {
+  font-size: 18px;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Emoji list container */
+.cometchat-emoji-keyboard__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(
+    --cometchat-emoji-keyboard-list-padding,
+    0 var(--cometchat-padding-3, 12px) var(--cometchat-padding-3, 12px)
+  );
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-padding-2, 8px);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.cometchat-emoji-keyboard__list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Category section */
+.cometchat-emoji-keyboard__category-section {
+  margin-bottom: var(--cometchat-emoji-keyboard-category-margin, 0);
+}
+
+.cometchat-emoji-keyboard__category-title {
+  color: var(
+    --cometchat-emoji-keyboard-category-title-color,
+    var(--cometchat-text-color-tertiary, #a1a1a1)
+  );
+  font: var(
+    --cometchat-emoji-keyboard-category-title-font,
+    var(--cometchat-font-body-regular, 400 14px Roboto)
+  );
+  line-height: 120%;
+  text-align: left;
+  padding: var(--cometchat-padding-1, 4px) 0;
+}
+
+/* Emoji grid */
+.cometchat-emoji-keyboard__emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--cometchat-emoji-keyboard-emoji-grid-gap, var(--cometchat-spacing-1, 4px));
+}
+
+/* Emoji item */
+.cometchat-emoji-keyboard__emoji-item {
+  width: var(--cometchat-emoji-keyboard-emoji-item-size, 32px);
+  height: var(--cometchat-emoji-keyboard-emoji-item-size, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--cometchat-emoji-keyboard-emoji-item-font-size, 24px);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  border-radius: var(
+    --cometchat-emoji-keyboard-emoji-item-border-radius,
+    var(--cometchat-radius-2, 8px)
+  );
+  user-select: none;
+}
+
+.cometchat-emoji-keyboard__emoji-item:hover {
+  background-color: var(
+    --cometchat-emoji-keyboard-emoji-item-background-hover,
+    var(--cometchat-background-color-03, #f5f5f5)
+  );
+}
+
+.cometchat-emoji-keyboard__emoji-item:active {
+  background-color: var(
+    --cometchat-emoji-keyboard-emoji-item-background-active,
+    var(--cometchat-background-color-04, #e8e8e8)
+  );
+}
+
+.cometchat-emoji-keyboard__emoji-item:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+/* Empty state */
+.cometchat-emoji-keyboard__empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--cometchat-text-color-tertiary, #a1a1a1);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  padding: var(--cometchat-padding-5, 20px);
+  text-align: center;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-emoji-keyboard__tab,
+  .cometchat-emoji-keyboard__emoji-item {
+    transition: none;
+  }
+}

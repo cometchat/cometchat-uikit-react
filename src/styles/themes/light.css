@@ -1,0 +1,232 @@
+@layer cometchat {
+  :root,
+  [data-theme='light'] {
+    /* Spacing */
+    --cometchat-spacing: 2px;
+    --cometchat-spacing-1: 4px;
+    --cometchat-spacing-2: 8px;
+    --cometchat-spacing-3: 12px;
+    --cometchat-spacing-4: 16px;
+    --cometchat-spacing-5: 20px;
+    --cometchat-spacing-6: 24px;
+    --cometchat-spacing-7: 28px;
+    --cometchat-spacing-8: 32px;
+    --cometchat-spacing-9: 36px;
+    --cometchat-spacing-10: 40px;
+    --cometchat-spacing-11: 44px;
+    --cometchat-spacing-12: 48px;
+    --cometchat-spacing-13: 52px;
+    --cometchat-spacing-14: 56px;
+    --cometchat-spacing-15: 60px;
+    --cometchat-spacing-16: 64px;
+    --cometchat-spacing-17: 68px;
+    --cometchat-spacing-18: 72px;
+    --cometchat-spacing-19: 76px;
+    --cometchat-spacing-20: 80px;
+    --cometchat-spacing-max: 1000px;
+
+    /* Padding */
+    --cometchat-padding: var(--cometchat-spacing);
+    --cometchat-padding-1: var(--cometchat-spacing-1);
+    --cometchat-padding-2: var(--cometchat-spacing-2);
+    --cometchat-padding-3: var(--cometchat-spacing-3);
+    --cometchat-padding-4: var(--cometchat-spacing-4);
+    --cometchat-padding-5: var(--cometchat-spacing-5);
+    --cometchat-padding-6: var(--cometchat-spacing-6);
+    --cometchat-padding-7: var(--cometchat-spacing-7);
+    --cometchat-padding-8: var(--cometchat-spacing-8);
+    --cometchat-padding-9: var(--cometchat-spacing-9);
+    --cometchat-padding-10: var(--cometchat-spacing-10);
+
+    /* Margin */
+    --cometchat-margin: var(--cometchat-spacing);
+    --cometchat-margin-1: var(--cometchat-spacing-1);
+    --cometchat-margin-2: var(--cometchat-spacing-2);
+    --cometchat-margin-3: var(--cometchat-spacing-3);
+    --cometchat-margin-4: var(--cometchat-spacing-4);
+    --cometchat-margin-5: var(--cometchat-spacing-5);
+    --cometchat-margin-6: var(--cometchat-spacing-6);
+    --cometchat-margin-7: var(--cometchat-spacing-7);
+    --cometchat-margin-8: var(--cometchat-spacing-8);
+    --cometchat-margin-9: var(--cometchat-spacing-9);
+    --cometchat-margin-10: var(--cometchat-spacing-10);
+    --cometchat-margin-11: var(--cometchat-spacing-11);
+    --cometchat-margin-12: var(--cometchat-spacing-12);
+    --cometchat-margin-13: var(--cometchat-spacing-13);
+    --cometchat-margin-14: var(--cometchat-spacing-14);
+    --cometchat-margin-15: var(--cometchat-spacing-15);
+    --cometchat-margin-16: var(--cometchat-spacing-16);
+    --cometchat-margin-17: var(--cometchat-spacing-17);
+    --cometchat-margin-18: var(--cometchat-spacing-18);
+    --cometchat-margin-19: var(--cometchat-spacing-19);
+    --cometchat-margin-20: var(--cometchat-spacing-20);
+
+    /* Border Radius */
+    --cometchat-radius: var(--cometchat-spacing);
+    --cometchat-radius-1: var(--cometchat-spacing-1);
+    --cometchat-radius-2: var(--cometchat-spacing-2);
+    --cometchat-radius-3: var(--cometchat-spacing-3);
+    --cometchat-radius-4: var(--cometchat-spacing-4);
+    --cometchat-radius-5: var(--cometchat-spacing-5);
+    --cometchat-radius-6: var(--cometchat-spacing-6);
+    --cometchat-radius-max: var(--cometchat-spacing-max);
+
+    /* Font */
+    --cometchat-font-family: 'Roboto', 'Inter', sans-serif;
+    --cometchat-font-title-bold: 700 32px/38.4px var(--cometchat-font-family);
+    --cometchat-font-title-medium: 500 32px/38.4px var(--cometchat-font-family);
+    --cometchat-font-title-regular: 400 32px/38.4px var(--cometchat-font-family);
+    --cometchat-font-heading1-bold: 700 24px/28.8px var(--cometchat-font-family);
+    --cometchat-font-heading1-medium: 500 24px/28.8px var(--cometchat-font-family);
+    --cometchat-font-heading1-regular: 400 24px/28.8px var(--cometchat-font-family);
+    --cometchat-font-heading2-bold: 700 20px/24px var(--cometchat-font-family);
+    --cometchat-font-heading2-medium: 500 20px/24px var(--cometchat-font-family);
+    --cometchat-font-heading2-regular: 400 20px/24px var(--cometchat-font-family);
+    --cometchat-font-heading3-bold: 700 18px/21.6px var(--cometchat-font-family);
+    --cometchat-font-heading3-medium: 500 18px/21.6px var(--cometchat-font-family);
+    --cometchat-font-heading3-regular: 400 18px/21.6px var(--cometchat-font-family);
+    --cometchat-font-heading4-bold: 700 16px/19.2px var(--cometchat-font-family);
+    --cometchat-font-heading4-medium: 500 16px/19.2px var(--cometchat-font-family);
+    --cometchat-font-heading4-regular: 400 16px/19.2px var(--cometchat-font-family);
+    --cometchat-font-body-bold: 700 14px/16.8px var(--cometchat-font-family);
+    --cometchat-font-body-medium: 500 14px/16.8px var(--cometchat-font-family);
+    --cometchat-font-body-regular: 400 14px/16.8px var(--cometchat-font-family);
+    --cometchat-font-caption1-bold: 700 12px/14.4px var(--cometchat-font-family);
+    --cometchat-font-caption1-medium: 500 12px/14.4px var(--cometchat-font-family);
+    --cometchat-font-caption1-regular: 400 12px/14.4px var(--cometchat-font-family);
+    --cometchat-font-caption2-bold: 700 10px/12px var(--cometchat-font-family);
+    --cometchat-font-caption2-medium: 500 10px/12px var(--cometchat-font-family);
+    --cometchat-font-caption2-regular: 400 10px/12px var(--cometchat-font-family);
+    --cometchat-font-button-bold: 700 14px/16.8px var(--cometchat-font-family);
+    --cometchat-font-button-medium: 500 14px/16.8px var(--cometchat-font-family);
+    --cometchat-font-button-regular: 400 14px/16.8px var(--cometchat-font-family);
+    --cometchat-font-link: 400 14px/19.6px var(--cometchat-font-family);
+
+    /* Primary & Extended Colors */
+    --cometchat-primary-color: #6852d6;
+    --cometchat-extended-primary-color-50: #f9f8fd;
+    --cometchat-extended-primary-color-100: #edeafa;
+    --cometchat-extended-primary-color-200: #dcd7f6;
+    --cometchat-extended-primary-color-300: #ccc4f1;
+    --cometchat-extended-primary-color-400: #bbb1ed;
+    --cometchat-extended-primary-color-500: #aa9ee8;
+    --cometchat-extended-primary-color-600: #9a8be4;
+    --cometchat-extended-primary-color-700: #8978df;
+    --cometchat-extended-primary-color-800: #7965db;
+    --cometchat-extended-primary-color-900: #5d49be;
+
+    /* Neutral Colors */
+    --cometchat-neutral-color-50: #ffffff;
+    --cometchat-neutral-color-100: #fafafa;
+    --cometchat-neutral-color-200: #f5f5f5;
+    --cometchat-neutral-color-300: #e8e8e8;
+    --cometchat-neutral-color-400: #dcdcdc;
+    --cometchat-neutral-color-500: #a1a1a1;
+    --cometchat-neutral-color-600: #727272;
+    --cometchat-neutral-color-700: #5b5b5b;
+    --cometchat-neutral-color-800: #434343;
+    --cometchat-neutral-color-900: #141414;
+
+    /* Alert Colors */
+    --cometchat-info-color: #0b7bea;
+    --cometchat-warning-color: #ffab00;
+    --cometchat-success-color: #09c26f;
+    --cometchat-error-color: #f44649;
+    --cometchat-error-color-100: #fef3f2;
+    --cometchat-error-color-90: #fde9e7;
+
+    /* Static Colors */
+    --cometchat-static-black: #141414;
+    --cometchat-static-white: #ffffff;
+
+    /* Background Colors */
+    --cometchat-background-color-01: var(--cometchat-neutral-color-50);
+    --cometchat-background-color-02: var(--cometchat-neutral-color-100);
+    --cometchat-background-color-03: var(--cometchat-neutral-color-200);
+    --cometchat-background-color-04: var(--cometchat-neutral-color-300);
+
+    /* Border Colors */
+    --cometchat-border-color-light: var(--cometchat-neutral-color-200);
+    --cometchat-border-color-default: var(--cometchat-neutral-color-300);
+    --cometchat-border-color-dark: var(--cometchat-neutral-color-400);
+    --cometchat-border-color-highlight: var(--cometchat-primary-color);
+
+    /* Text Colors */
+    --cometchat-text-color-primary: var(--cometchat-neutral-color-900);
+    --cometchat-text-color-secondary: var(--cometchat-neutral-color-600);
+    --cometchat-text-color-tertiary: var(--cometchat-neutral-color-500);
+    --cometchat-text-color-disabled: var(--cometchat-neutral-color-400);
+    --cometchat-text-color-white: var(--cometchat-neutral-color-50);
+    --cometchat-text-color-highlight: var(--cometchat-primary-color);
+
+    /* Icon Colors */
+    --cometchat-icon-color-primary: var(--cometchat-neutral-color-900);
+    --cometchat-icon-color-secondary: var(--cometchat-neutral-color-500);
+    --cometchat-icon-color-tertiary: var(--cometchat-neutral-color-400);
+    --cometchat-icon-color-white: var(--cometchat-neutral-color-50);
+    --cometchat-icon-color-highlight: var(--cometchat-primary-color);
+
+    --cometchat-message-list-bg: var(--cometchat-background-color-03);
+
+    /* Shimmer */
+    --cometchat-shimmer-background-color: var(--cometchat-neutral-color-200);
+    --cometchat-shimmer-gradient-color: linear-gradient(90deg, #e0e0e0 0%, #eee 100%);
+    --cometchat-text-shimmer-gradient-color: linear-gradient(
+      270deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.7) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+
+    /* Buttons */
+    --cometchat-primary-button-background: var(--cometchat-primary-color);
+    --cometchat-primary-button-text: var(--cometchat-static-white);
+    --cometchat-primary-button-icon: var(--cometchat-static-white);
+    --cometchat-secondary-button-background: var(--cometchat-neutral-color-900);
+    --cometchat-secondary-button-icon: var(--cometchat-neutral-color-900);
+    --cometchat-secondary-button-text: var(--cometchat-neutral-color-900);
+    --cometchat-link-button: var(--cometchat-info-color);
+    --cometchat-fab-button-background: var(--cometchat-primary-color);
+    --cometchat-fab-button-icon: var(--cometchat-static-white);
+    --cometchat-white-hover: var(--cometchat-neutral-color-100);
+    --cometchat-white-pressed: var(--cometchat-neutral-color-300);
+
+    /* Focus Ring */
+    --cometchat-focus-ring-width: 2px;
+    --cometchat-focus-ring-style: solid;
+    --cometchat-focus-ring-color: var(--cometchat-primary-color);
+    --cometchat-focus-ring-color-inverse: var(--cometchat-static-white);
+    --cometchat-focus-ring-offset: 2px;
+
+    /* Overlay Backgrounds (semi-transparent scrims used on top of media) */
+    --cometchat-overlay-background-light: rgba(0, 0, 0, 0.4);
+    --cometchat-overlay-background-heavy: rgba(0, 0, 0, 0.6);
+
+    /* Text Shadow */
+    --cometchat-text-shadow-strong: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    /* Image Bubble */
+    --cometchat-image-bubble-container-max-width: 350px;
+    --cometchat-image-bubble-container-border-radius: var(--cometchat-radius-2);
+    --cometchat-image-bubble-single-max-height: 350px;
+    --cometchat-image-bubble-grid-gap-mobile: var(--cometchat-spacing);
+    --cometchat-image-bubble-overflow-overlay-background: var(--cometchat-overlay-background-light);
+    --cometchat-image-bubble-overflow-overlay-background-hover: var(
+      --cometchat-overlay-background-heavy
+    );
+
+    /* Video Bubble */
+    --cometchat-video-bubble-max-width: 250px;
+    --cometchat-video-bubble-max-height: 350px;
+    --cometchat-video-bubble-single-max-height: 350px;
+    --cometchat-video-bubble-single-min-width: 200px;
+    --cometchat-video-bubble-single-min-height: 112px;
+    --cometchat-video-bubble-play-overlay-size: 48px;
+
+    --cometchat-audio-bubble-min-width: 240px;
+    --cometchat-audio-bubble-max-width: 240px;
+
+    --cometchat-file-bubble-min-width: 240px;
+    --cometchat-file-bubble-max-width: 240px;
+  }
+}

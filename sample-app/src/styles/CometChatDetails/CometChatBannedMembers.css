@@ -1,0 +1,69 @@
+.cometchat-banned-members {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cometchat-banned-members__loading,
+.cometchat-banned-members__empty {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+}
+
+.cometchat-banned-members__empty-icon {
+  -webkit-mask: url("../../assets/user_empty.svg") center center no-repeat;
+  -webkit-mask-size: contain;
+  mask: url("../../assets/user_empty.svg") center center no-repeat;
+  mask-size: contain;
+  background: var(--cometchat-icon-color-secondary, #A1A1A1);
+  height: 60px;
+  width: 60px;
+}
+
+.cometchat-banned-members__empty-text {
+  color: var(--cometchat-text-color-secondary, #727272);
+  text-align: center;
+  font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+}
+
+.cometchat-banned-members__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+}
+
+.cometchat-banned-members__item-avatar {
+  flex-shrink: 0;
+}
+
+.cometchat-banned-members__item-name {
+  flex: 1;
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-body-medium, 500 14px sans-serif);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cometchat-banned-members__item-unban {
+  padding: 4px 12px;
+  border: 1px solid var(--cometchat-error-color, #F44649);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cometchat-error-color, #F44649);
+  font: var(--cometchat-font-caption1-medium, 500 12px sans-serif);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cometchat-banned-members__item-unban:hover {
+  background: rgba(244, 70, 73, 0.1);
+}

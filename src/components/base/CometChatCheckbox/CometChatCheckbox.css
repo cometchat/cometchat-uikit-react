@@ -1,0 +1,102 @@
+/* Block */
+.cometchat-checkbox {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+/* Label — wraps input + checkmark + text */
+.cometchat-checkbox__label {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-radius-2, 8px);
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  cursor: pointer;
+}
+
+/* Native input — visually hidden but accessible */
+.cometchat-checkbox__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Custom checkmark box */
+.cometchat-checkbox__checkmark {
+  display: inline-block;
+  position: relative;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: var(--cometchat-radius-1, 4px);
+  border: 1.5px solid var(--cometchat-border-color-default, #e8e8e8);
+  box-sizing: border-box;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+/* Hover state */
+.cometchat-checkbox__label:hover .cometchat-checkbox__checkmark {
+  border-color: var(--cometchat-border-color-dark, #dcdcdc);
+}
+
+/* Focus-visible on checkmark when input is keyboard-focused */
+.cometchat-checkbox__input:focus-visible + .cometchat-checkbox__checkmark {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}
+
+/* Checked state */
+.cometchat-checkbox__input:checked + .cometchat-checkbox__checkmark {
+  border-color: var(--cometchat-primary-color, #6852d6);
+  background-color: var(--cometchat-primary-color, #6852d6);
+}
+
+/* Tick icon (shown only when checked) */
+.cometchat-checkbox__checkmark::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  background: var(--cometchat-static-white, #fff);
+  mask: url('../../../assets/checkbox_tick.svg') center center no-repeat;
+  -webkit-mask: url('../../../assets/checkbox_tick.svg') center center no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+
+.cometchat-checkbox__input:checked + .cometchat-checkbox__checkmark::after {
+  display: block;
+}
+
+/* Label text */
+.cometchat-checkbox__text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Disabled modifier */
+.cometchat-checkbox--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.cometchat-checkbox--disabled .cometchat-checkbox__label {
+  cursor: not-allowed;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-checkbox__checkmark {
+    transition: none;
+  }
+}

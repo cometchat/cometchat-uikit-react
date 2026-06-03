@@ -1,0 +1,117 @@
+/* Block — inline dialog for link add/edit */
+.cometchat-link-dialog {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 360px;
+  max-width: 400px;
+  padding: var(--cometchat-padding-5, 20px);
+  flex-direction: column;
+  gap: var(--cometchat-spacing-4, 16px);
+  border-radius: var(--cometchat-radius-3, 12px);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
+  box-shadow:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  overflow: hidden;
+}
+
+/* Title */
+.cometchat-link-dialog__title {
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-heading3-medium, 500 18px Roboto);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Inputs container */
+.cometchat-link-dialog__inputs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-3, 12px);
+}
+
+/* Input group (label + input) */
+.cometchat-link-dialog__input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-1, 4px);
+}
+
+/* Label */
+.cometchat-link-dialog__label {
+  color: var(--cometchat-text-color-secondary, #8a8a8a);
+  font: var(--cometchat-font-caption1-medium, 500 12px Roboto);
+}
+
+/* Input field */
+.cometchat-link-dialog__input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-3, 12px);
+  border-radius: var(--cometchat-radius-2, 8px);
+  border: 1px solid var(--cometchat-border-color-default, #d1d1d1);
+  background: var(--cometchat-background-color-01, #fff);
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.cometchat-link-dialog__input::placeholder {
+  color: var(--cometchat-text-color-tertiary, #b8b8b8);
+}
+
+.cometchat-link-dialog__input:focus {
+  border-color: var(--cometchat-primary-color, #6852d6);
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: -1px;
+}
+
+/* Input error state */
+.cometchat-link-dialog__input[aria-invalid='true'] {
+  border-color: var(--cometchat-error-color, #f44649);
+}
+
+.cometchat-link-dialog__input[aria-invalid='true']:focus {
+  outline-color: var(--cometchat-error-color, #f44649);
+}
+
+/* Error message */
+.cometchat-link-dialog__error {
+  color: var(--cometchat-error-color, #f44649);
+  font: var(--cometchat-font-caption1-regular, 400 12px Roboto);
+  padding: var(--cometchat-padding-1, 4px) 0;
+}
+
+/* Button group */
+.cometchat-link-dialog__button-group {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-2, 8px);
+  width: 100%;
+}
+
+/* Button wrappers — equal width */
+.cometchat-link-dialog__button-group-cancel,
+.cometchat-link-dialog__button-group-save {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  height: 36px;
+}
+
+/* Make CometChatButton fill the wrapper */
+.cometchat-link-dialog__button-group-cancel > button,
+.cometchat-link-dialog__button-group-save > button {
+  width: 100%;
+  height: 100%;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-link-dialog__input {
+    transition: none;
+  }
+}

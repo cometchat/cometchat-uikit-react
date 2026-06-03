@@ -1,683 +1,770 @@
-import { Action } from "./CometChatMessageComposer";
-import {
-  CometChat,
-  Group,
-  GroupMembersRequestBuilder,
-  User,
-  UsersRequestBuilder,
-} from "@cometchat/chat-sdk-javascript";
-import React, { useCallback, useEffect, useRef } from "react";
-import { CometChatMentionsFormatter } from "../../formatters/CometChatFormatters/CometChatMentionsFormatter/CometChatMentionsFormatter";
-import { CometChatUrlsFormatter } from "../../formatters/CometChatFormatters/CometChatUrlsFormatter/CometChatUrlsFormatter";
-import { CometChatMarkdownFormatter } from "../../formatters/CometChatFormatters/CometChatMarkdownFormatter/CometChatMarkdownFormatter";
-import { CometChatTextFormatter } from "../../formatters/CometChatFormatters/CometChatTextFormatter";
-import { ChatConfigurator } from "../../utils/ChatConfigurator";
-import { MentionsTargetElement, MessageStatus, UserMemberListType } from "../../Enums/Enums";
-import { CometChatMessageEvents, IMessages } from "../../events/CometChatMessageEvents";
-import { CometChatUIEvents, IMentionsCountWarning, IModal } from "../../events/CometChatUIEvents";
-import { isMobileDevice } from "../../utils/util";
-import { CometChatUIKitUtility } from "../../CometChatUIKit/CometChatUIKitUtility";
+import { useCallback, useEffect, useId, useReducer, useRef } from 'react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
+import * as ComposerManager from './CometChatMessageComposerManager';
+import { composerReducer, initialComposerState } from './CometChatMessageComposer.reducer';
+import type { CometChatComposerContentToDisplay } from './CometChatMessageComposer.types';
+import { usePublishEvent } from '../../context/CometChatEventsContext';
+import { useCometChatEvents } from '../../hooks/useCometChatEvents';
+import type { CometChatEvent } from '../../context/CometChatEvents.types';
+import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
 
-type Args = {
-  dispatch: React.Dispatch<Action>;
-  mySetAddToMsgInputText: (text: string) => void;
-  errorHandler: (error: unknown, source?: string) => void;
-  pasteHtmlAtCaret: (text: string) => void;
-  renderSanitizedHtml: (text: string) => void;
-  textFormatters: Array<CometChatTextFormatter>;
-  textFormatterArray: Array<CometChatTextFormatter>;
-  mentionsTextFormatterInstanceRef: React.MutableRefObject<CometChatMentionsFormatter>;
-  setTextFormatters: React.Dispatch<
-    React.SetStateAction<CometChatTextFormatter[]>
-  >;
-  CometChatUIKitLoginListener: any;
-  group: CometChat.Group | undefined;
-  user: CometChat.User | undefined;
-  userPropRef: React.MutableRefObject<User | undefined>;
-  groupPropRef: React.MutableRefObject<Group | undefined>;
-  setShowListForMentions: Function;
-  searchMentions: Function;
-  mentionsFormatterInstanceId: string;
-  setUsersRequestBuilder: React.Dispatch<
-    React.SetStateAction<UsersRequestBuilder | undefined>
-  >;
-  setGroupMembersRequestBuilder: React.Dispatch<
-    React.SetStateAction<GroupMembersRequestBuilder | undefined>
-  >;
-  setUserMemberListType: React.Dispatch<
-    React.SetStateAction<UserMemberListType | undefined>
-  >;
-  textInputRef: React.MutableRefObject<any>;
-  createPollViewRef: React.MutableRefObject<any>;
-  setSelection: Function;
-  getComposerId: Function;
-  parentMessageIdPropRef: any;
-  emptyInputField: Function;
-  propsText: string | undefined;
-  currentSelectionForRegex: React.MutableRefObject<any>;
-  currentSelectionForRegexRange: React.MutableRefObject<any>
-  text: string;
-  getCurrentInput: Function
-  isPartOfCurrentChatForUIEvent: (message: CometChat.BaseMessage) => boolean | undefined;
-  textMessageToEdit:CometChat.TextMessage | null;
-  getCurrentWindow: () => Window;
-  getCurrentDocument: () => Document;
-  onTextChange:((text: string) => void) | undefined;
-  messageToReplyRef: React.MutableRefObject<CometChat.BaseMessage | null>;
-  mentionsUsersRequestBuilder?: CometChat.UsersRequestBuilder;
-  mentionsGroupMembersRequestBuilder?: CometChat.GroupMembersRequestBuilder;
+const TYPING_TIMEOUT_MS = 500;
 
-};
+export interface CometChatUseCometChatMessageComposerOptions {
+  user?: CometChat.User;
+  group?: CometChat.Group;
+  parentMessageId?: number;
+  initialText?: string;
+  /** Controlled text value. When provided, the hook syncs its text state to this value. */
+  text?: string;
+  messageToEdit?: CometChat.TextMessage | null;
+  messageToReply?: CometChat.BaseMessage | null;
+  disableTypingEvents?: boolean;
+  disableSoundForMessage?: boolean;
+  customSoundForMessage?: string;
+  onSendButtonClick?: (message: CometChat.BaseMessage, mode?: 'send' | 'edit') => void;
+  /**
+   * Override the internal SDK sendTextMessage call.
+   * When provided, this function is called INSTEAD of CometChat.sendMessage().
+   * Use this to implement optimistic updates (e.g., via MessageList.sendTextMessage).
+   * The function receives the text and returns a muid string.
+   */
+  sendTextMessageOverride?: (text: string) => string;
+  onError?: ((error: CometChat.CometChatException) => void) | null;
+  onClosePreview?: () => void;
+  onTextChange?: (text: string) => void;
+  /** Called when a file attachment is added. */
+  onAttachmentAdded?: (file: File) => void;
+  /** Called when a file attachment is removed. */
+  onAttachmentRemoved?: (file: File) => void;
+  /** Called when a mention is selected from the suggestions list. */
+  onMentionSelected?: (user: CometChat.User | CometChat.GroupMember) => void;
+  /** Get the list of mentioned users in the current message (from mentions hook). */
+  getMentionedUsers?: () => { uid: string; name: string }[];
+  /** Clear the mentioned users list after send (from mentions hook). */
+  clearMentionedUsers?: () => void;
+}
 
-export function useCometChatMessageComposer(args: Args) {
+/**
+ * useCometChatMessageComposer — data hook for the message composer.
+ *
+ * Manages text state, send/edit operations, typing indicators,
+ * and SDK listener lifecycle. Does not render any UI.
+ */
+export function useCometChatMessageComposer(options: CometChatUseCometChatMessageComposerOptions) {
   const {
-    dispatch,
-    mySetAddToMsgInputText,
-    errorHandler,
-    pasteHtmlAtCaret,
-    renderSanitizedHtml,
-    propsText,
-    text,
-    textFormatterArray,
-    currentSelectionForRegex,
-    currentSelectionForRegexRange,
-    mentionsTextFormatterInstanceRef,
-    setTextFormatters,
-    textFormatters,
-    emptyInputField,
-    createPollViewRef,
-    CometChatUIKitLoginListener,
-    group,
     user,
-    userPropRef,
-    textInputRef,
-    groupPropRef,
-    setShowListForMentions,
-    setSelection,
-    searchMentions,
-    mentionsFormatterInstanceId,
-    setUsersRequestBuilder,
-    setGroupMembersRequestBuilder,
-    setUserMemberListType,
-    getComposerId,
-    isPartOfCurrentChatForUIEvent,
-    parentMessageIdPropRef, getCurrentInput,textMessageToEdit,getCurrentWindow,getCurrentDocument,onTextChange,messageToReplyRef,mentionsUsersRequestBuilder,mentionsGroupMembersRequestBuilder } = args;
-  const isPreviewVisible = useRef<boolean>(false);
-  const autoFocusCompleted = useRef<boolean>(false);
+    group,
+    parentMessageId,
+    initialText,
+    text: controlledText,
+    messageToEdit,
+    messageToReply,
+    disableTypingEvents,
+    onSendButtonClick,
+    sendTextMessageOverride,
+    onError,
+    onClosePreview,
+    onTextChange,
+    onAttachmentAdded,
+    onAttachmentRemoved,
+    onMentionSelected,
+    getMentionedUsers,
+    clearMentionedUsers,
+  } = options;
 
+  const [state, dispatch] = useReducer(composerReducer, {
+    ...initialComposerState,
+    text: initialText ?? '',
+  });
 
+  const instanceId = useId();
+  const publish = usePublishEvent();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLDivElement>(null);
 
-  function handleMessageDeleted(message: CometChat.BaseMessage) {
-    let user = CometChatUIKitLoginListener.getLoggedInUser();
-    if (textMessageToEdit && textMessageToEdit.getId() == message.getId() && message.getSender().getUid() == user?.getUid()) {
-      dispatch({ type: "setTextMessageToEdit", textMessageToEdit: null });
-      dispatch({ type: "setText", text: "" });
-      emptyInputField()
-      mySetAddToMsgInputText("");
+  const receiverId = user?.getUid() ?? group?.getGuid() ?? '';
+  const receiverType = user ? CometChat.RECEIVER_TYPE.USER : CometChat.RECEIVER_TYPE.GROUP;
+
+  // --- Reset composer when conversation changes ---
+  const prevReceiverIdRef = useRef(receiverId);
+  useEffect(() => {
+    if (prevReceiverIdRef.current !== receiverId) {
+      prevReceiverIdRef.current = receiverId;
+      dispatch({ type: 'RESET' });
+      clearMentionedUsers?.();
     }
-  }
+  }, [receiverId, clearMentionedUsers]);
+
+  // --- Sync edit/reply from props ---
+  useEffect(() => {
+    if (messageToEdit !== undefined) {
+      dispatch({ type: 'SET_EDIT_MESSAGE', message: messageToEdit ?? null });
+      if (messageToEdit) {
+        publish({
+          type: 'ui:compose/edit',
+          message: messageToEdit,
+          status: CometChatMessageStatus.inprogress,
+          parentMessageId: parentMessageId ?? null,
+        });
+      }
+    }
+  }, [messageToEdit]); // eslint-disable-line react-hooks/exhaustive-deps -- publish and parentMessageId are stable
 
   useEffect(() => {
-    const ccMessageDeleted = CometChatMessageEvents.ccMessageDeleted.subscribe((message: CometChat.BaseMessage) => {
-      handleMessageDeleted(message)
-    })
-    const onMessageDeleted = CometChatMessageEvents.onMessageDeleted.subscribe((deletedMessage: CometChat.BaseMessage) => {
-      handleMessageDeleted(deletedMessage);
-    });
+    if (messageToReply !== undefined) {
+      dispatch({ type: 'SET_REPLY_MESSAGE', message: messageToReply ?? null });
+    }
+  }, [messageToReply]);
+
+  // Sync controlled text prop
+  useEffect(() => {
+    if (controlledText !== undefined) {
+      dispatch({ type: 'SET_TEXT', text: controlledText });
+    }
+  }, [controlledText]);
+
+  const handleError = useCallback(
+    (error: unknown) => {
+      onError?.(error as CometChat.CometChatException);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      dispatch({ type: 'SET_ERROR', error: message });
+    },
+    [onError]
+  );
+
+  // Safe wrapper for CometChat.isInitialized() — guards against SDK throwing
+  // when called in environments where the SDK is not set up (e.g., Storybook).
+  const isSdkInitialized = useCallback((): boolean => {
+    try {
+      return CometChat.isInitialized();
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const setText = useCallback(
+    (text: string) => {
+      dispatch({ type: 'SET_TEXT', text });
+      onTextChange?.(text);
+    },
+    [onTextChange]
+  );
+
+  const startTyping = useCallback(() => {
+    if (disableTypingEvents || !receiverId) return;
+    if (!isSdkInitialized()) return;
+    // Check logged-in user synchronously via getLoggedinUser promise
+    CometChat.getLoggedinUser()
+      .then(u => {
+        if (u) ComposerManager.startTypingIndicator(receiverId, receiverType);
+      })
+      .catch(() => {
+        /* ignore — SDK may not be ready */
+      });
+  }, [disableTypingEvents, isSdkInitialized, receiverId, receiverType]);
+
+  const endTyping = useCallback(() => {
+    if (disableTypingEvents || !receiverId) return;
+    if (!isSdkInitialized()) return;
+    CometChat.getLoggedinUser()
+      .then(u => {
+        if (u) ComposerManager.endTypingIndicator(receiverId, receiverType);
+      })
+      .catch(() => {
+        /* ignore — SDK may not be ready */
+      });
+  }, [disableTypingEvents, isSdkInitialized, receiverId, receiverType]);
+
+  useEffect(() => {
+    if (state.text.trim().length > 0) {
+      startTyping();
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      typingTimeoutRef.current = setTimeout(() => {
+        endTyping();
+      }, TYPING_TIMEOUT_MS);
+    } else {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+      endTyping();
+    }
     return () => {
-      ccMessageDeleted?.unsubscribe();
-      onMessageDeleted?.unsubscribe();
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
-  }, [user, group, textMessageToEdit])
+  }, [state.text, startTyping, endTyping]);
 
-  /**
-    * Subscribes to message edited UI event and handles cases 
-    * when a text message is being edited, updating the input field accordingly.
-    */
-  useEffect(
-    /**
-     * Subscribes to message edited Message UI event
-     */
-    () => {
+  const sendMessage = useCallback(
+    async (textOverride?: string, richTextHtml?: string) => {
+      // The markdown is what gets stored in message.setText() — the bubble's
+      // formatter pipeline converts it back to HTML on render.
+      let textToSend = textOverride ?? state.text;
+      if (richTextHtml) {
+        const { CometChatRichTextFormatter } =
+          await import('../../formatters/CometChatRichTextFormatter');
+        const formatter = new CometChatRichTextFormatter();
+        textToSend = formatter.format(richTextHtml);
+      }
+      const trimmedText = textToSend.trim();
+      if (!trimmedText) return;
+
+      // Standalone mode: no user/group or SDK not initialized.
+      // Still clear text and call onSendButtonClick if provided.
+      if (!receiverId || !isSdkInitialized()) {
+        if (onSendButtonClick) {
+          onSendButtonClick(null as unknown as CometChat.BaseMessage, 'send');
+        }
+        dispatch({ type: 'SET_TEXT', text: '' });
+        dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
+        return;
+      }
+
+      dispatch({ type: 'SET_SEND_STATE', sendState: 'sending' });
+      endTyping();
+
+      // Declared outside try so it's accessible in catch for error attachment
+      let textMessage: CometChat.TextMessage | null = null;
+
       try {
-        const subMessageEdited = CometChatMessageEvents.ccMessageEdited.subscribe(
-          (object: IMessages) => {
-            let parentId = object?.message?.getParentMessageId()
-            if ((parentMessageIdPropRef.current && parentId
-              && parentId === parentMessageIdPropRef.current)
-              || (!parentMessageIdPropRef.current && !parentId)) {
-              if (isPartOfCurrentChatForUIEvent(object.message)) {
-                if (
-                  object.status === MessageStatus.inprogress &&
-                  object.message instanceof CometChat.TextMessage
-                ) {
-                  isPreviewVisible.current = true;
-                  dispatch({
-                    type: "setMessageToReply",
-                    messageToReply: null,
-                  });
-                  dispatch({
-                    type: "setTextMessageToEdit",
-                    textMessageToEdit: object.message,
-                  });
-                  // Decode HTML entities from the SDK text (e.g. &gt; → >)
-                  // before storing in state — the SDK may return HTML-encoded text.
-                  const rawDataText = object.message.getData().text;
-                  const decoderDiv = getCurrentDocument()?.createElement('textarea');
-                  let decodedText = rawDataText;
-                  if (decoderDiv) {
-                    decoderDiv.innerHTML = rawDataText;
-                    decodedText = decoderDiv.value;
-                  }
-                  dispatch({
-                    type: "setText",
-                    text: decodedText,
-                  });
-                  emptyInputField()
-                  if (renderSanitizedHtml) {
-                    // Check if the contentEditable is in plaintext-only mode.
-                    // If so, insert raw markdown text directly — HTML formatting
-                    // would be stripped by the browser in plaintext-only mode,
-                    // losing blockquote (>) and other markdown syntax.
-                    const inputEl = getCurrentInput() as HTMLElement;
-                    const isPlainTextOnly = inputEl?.contentEditable === 'plaintext-only';
+        // If an override is provided, use it for optimistic updates (e.g., MessageList.sendTextMessage)
+        // The override handles the SDK call internally and returns immediately with a muid.
+        if (sendTextMessageOverride) {
+          sendTextMessageOverride(trimmedText);
+          dispatch({ type: 'SET_TEXT', text: '' });
+          dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
+          dispatch({ type: 'SET_REPLY_MESSAGE', message: null });
+          return;
+        }
 
-                    if (isPlainTextOnly) {
-                      // Plain text mode: process mentions through formatters
-                      // then insert via innerHTML so mention spans render correctly.
-                      // Note: plaintext-only restricts user input but programmatic
-                      // innerHTML still works for displaying formatted mention spans.
-                      if (inputEl) {
-                        let finalText: string | void = object.message.getText();
-                        if (textFormatterArray && textFormatterArray.length) {
-                          for (let i = 0; i < textFormatterArray.length; i++) {
-                            if (textFormatterArray[i] instanceof CometChatMentionsFormatter) {
-                              (textFormatterArray[i] as CometChatMentionsFormatter).setCometChatUserGroupMembers(object.message.getMentionedUsers());
-                              if (!object.message.getDeletedAt()) {
-                                const channelRegex = /<@all:(.*?)>/g;
-                                const text = object.message.getText();
-                                const matches = Array.from(
-                                  text.matchAll(channelRegex)
-                                );
-                                const mentionedChannels = matches.map((m) => m[1]);
-                                (textFormatterArray[i] as CometChatMentionsFormatter).setCometChatMentionedChannels(mentionedChannels);
-                              }
-                            }
-                            if (inputEl) {
-                              textFormatterArray[i].setInputElementReference(inputEl);
-                            }
-                            textFormatterArray[i].setCaretPositionAndRange(
-                              currentSelectionForRegex.current,
-                              currentSelectionForRegexRange.current
-                            );
-                            finalText = textFormatterArray[i].getFormattedText(
-                              finalText!,
-                              { mentionsTargetElement: MentionsTargetElement.textinput }
-                            );
-                          }
-                        }
-                        // Use innerHTML to preserve mention spans in the contentEditable
-                        inputEl.innerHTML = finalText as string;
-                        // Position cursor at end
-                        const win = getCurrentWindow();
-                        const browserSel = win?.getSelection();
-                        if (browserSel) {
-                          const newRange = getCurrentDocument()?.createRange();
-                          if (newRange) {
-                            newRange.selectNodeContents(inputEl);
-                            newRange.collapse(false);
-                            browserSel.removeAllRanges();
-                            browserSel.addRange(newRange);
-                          }
-                        }
-                      }
-                    } else {
-                      // Rich text mode: convert markdown to HTML and insert
-                      // Ensure a valid selection/range exists inside the empty
-                      // contentEditable so renderSanitizedHtml takes the primary
-                      // path (sanitizeHtmlStringToFragment) instead of the plain-
-                      // text fallback.
-                      if (inputEl) {
-                        inputEl.focus();
-                        const win = getCurrentWindow();
-                        const browserSel = win?.getSelection();
-                        if (browserSel) {
-                          const newRange = getCurrentDocument()?.createRange();
-                          if (newRange) {
-                            newRange.selectNodeContents(inputEl);
-                            newRange.collapse(true);
-                            browserSel.removeAllRanges();
-                            browserSel.addRange(newRange);
-                          }
-                          setSelection(browserSel);
-                        }
-                      }
-                    let finalText: string | void = object.message.getText();
-                    // Apply markdown formatting first (converts **bold** → <b>, _italic_ → <i>, etc.)
-                    // The textFormatterArray may not include the markdown formatter,
-                    // so we apply it explicitly to ensure markdown syntax renders as HTML in the editor.
-                    const hasMarkdownFormatter = textFormatterArray?.some(f => f instanceof CometChatMarkdownFormatter);
-                    if (!hasMarkdownFormatter) {
-                      const mdFormatter = new CometChatMarkdownFormatter();
-                      finalText = mdFormatter.getFormattedText(finalText!, { mentionsTargetElement: MentionsTargetElement.textinput });
-                    }
-                    if (textFormatterArray && textFormatterArray.length) {
-                      for (let i = 0; i < textFormatterArray.length; i++) {
-                        if (textFormatterArray[i] instanceof CometChatMentionsFormatter) {
-                          (textFormatterArray[i] as CometChatMentionsFormatter).setCometChatUserGroupMembers(object.message.getMentionedUsers())
-                          if (!object.message.getDeletedAt()) {
-                            const channelRegex = /<@all:(.*?)>/g;
-                            const text = object.message.getText();
-                            const matches = Array.from(
-                              text.matchAll(channelRegex)
-                            );
-                            const mentionedChannels = matches.map((m) => m[1]);
-                            
-                            (textFormatterArray[i] as CometChatMentionsFormatter).setCometChatMentionedChannels(mentionedChannels);
-                          }
-                        }
+        // Build the full message object — same one used for both optimistic display AND SDK call.
+        textMessage = new CometChat.TextMessage(receiverId, trimmedText, receiverType);
+        const muid = `_${Math.random().toString(36).slice(2, 11)}`;
+        textMessage.setMuid(muid);
+        textMessage.setSentAt(Math.floor(Date.now() / 1000));
+        if (parentMessageId) {
+          textMessage.setParentMessageId(parentMessageId);
+        }
+        // Set sender from logged-in user cache
+        try {
+          const loggedInUser = await CometChat.getLoggedinUser();
+          if (loggedInUser) textMessage.setSender(loggedInUser);
+        } catch {
+          /* non-fatal */
+        }
 
-                        const element = getCurrentInput() as HTMLElement;
+        // Set quoted message (reply-to) — capture before clearing state
+        const replyMessage = state.messageToReply;
+        if (replyMessage) {
+          (
+            textMessage as unknown as { setQuotedMessage: (msg: CometChat.BaseMessage) => void }
+          ).setQuotedMessage(replyMessage);
+          (
+            textMessage as unknown as { setQuotedMessageId: (id: number) => void }
+          ).setQuotedMessageId(replyMessage.getId());
+        }
 
-                        if (element) {
-                          textFormatterArray[i].setInputElementReference(element);
-                        }
-
-                        textFormatterArray[i].setCaretPositionAndRange(
-                          currentSelectionForRegex.current,
-                          currentSelectionForRegexRange.current
-                        );
-                        finalText = textFormatterArray[i].getFormattedText(
-                          finalText!,
-                          { mentionsTargetElement: MentionsTargetElement.textinput }
-
-                        );
-                      }
-                    }
-                    renderSanitizedHtml(finalText as string)
-                    } // end else (rich text mode)
-                  }
-                }
-                if ((object.status === MessageStatus.success &&
-                  object.message instanceof CometChat.TextMessage) || object.status === MessageStatus.cancelled) {
-                  dispatch({
-                    type: "setTextMessageToEdit",
-                    textMessageToEdit: null,
-                  });
-                  emptyInputField();
-                  isPreviewVisible.current = false;
-                }
-                else {
-                  isPreviewVisible.current = true;
-                }
-              }
-            }
+        if (getMentionedUsers) {
+          const mentioned = getMentionedUsers();
+          if (mentioned.length > 0) {
+            const userObjects = mentioned.map(
+              u => new CometChat.User({ uid: u.uid, name: u.name })
+            );
+            textMessage.setMentionedUsers(userObjects);
           }
-        );
-        const subComposeMessage = CometChatUIEvents.ccComposeMessage.subscribe(
-          (text: string) => {
-            dispatch({ type: "setText", text: "" });
-            emptyInputField()
-            pasteHtmlAtCaret(text);
-            if (onTextChange) {
-              onTextChange(text); // Call the onTextChange callback if provided
-            }
-            dispatch({ type: "setText", text: text });
-          }
-        );
-        mentionsTextFormatterInstanceRef.current.setId(
-          mentionsFormatterInstanceId
-        );
+        }
 
-        const ccShowMentionsCountWarning =
-          CometChatUIEvents.ccShowMentionsCountWarning.subscribe(
-            (data: IMentionsCountWarning) => {
-              if (data.id === mentionsFormatterInstanceId) {
-                if (data.showWarning) {
-                  dispatch({
-                    type: "setShowMentionsCountWarning",
-                    showMentionsCountWarning: true,
-                  });
-                  return;
-                }
-                dispatch({
-                  type: "setShowMentionsCountWarning",
-                  showMentionsCountWarning: false,
-                });
-              }
-            })
-        return () => {
-          subMessageEdited.unsubscribe();
-          subComposeMessage.unsubscribe();
-          ccShowMentionsCountWarning.unsubscribe();
-        };
+        dispatch({ type: 'SET_TEXT', text: '' });
+        dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
+        dispatch({ type: 'SET_REPLY_MESSAGE', message: null });
+
+        // Publish inprogress so the message list can show it immediately
+        publish({
+          type: 'ui:message/sent',
+          message: textMessage,
+          status: CometChatMessageStatus.inprogress,
+        });
+
+        // Send the SAME message to the SDK (muid is preserved on the response)
+        const confirmedMessage = await (CometChat.sendMessage(
+          textMessage
+        ) as Promise<CometChat.TextMessage>);
+
+        if (onSendButtonClick) {
+          onSendButtonClick(confirmedMessage, 'send');
+        }
+
+        publish({
+          type: 'ui:message/sent',
+          message: confirmedMessage,
+          status: CometChatMessageStatus.success,
+        });
+        if (replyMessage) {
+          publish({
+            type: 'ui:compose/reply',
+            message: confirmedMessage,
+            status: CometChatMessageStatus.success,
+            parentMessageId: parentMessageId ?? null,
+          });
+        }
+        clearMentionedUsers?.();
       } catch (error) {
-        errorHandler(error, "useEffect")
+        // Attach error to the message (v6 pattern) so the bubble shows moderation footer
+        try {
+          const existingMetadata = textMessage.getMetadata() as Record<string, unknown>;
+          textMessage.setMetadata({ ...existingMetadata, error });
+        } catch {
+          /* non-fatal */
+        }
+        Object.defineProperty(textMessage, '_ccError', {
+          value: error,
+          writable: true,
+          configurable: true,
+        });
+
+        publish({
+          type: 'ui:message/sent',
+          message: textMessage ?? new CometChat.TextMessage(receiverId, trimmedText, receiverType),
+          status: CometChatMessageStatus.error,
+        });
+        dispatch({ type: 'SET_SEND_STATE', sendState: 'error' });
+        handleError(error);
       }
     },
     [
-      mySetAddToMsgInputText,
-      dispatch,
-      textInputRef,
-      mentionsFormatterInstanceId,
-      text,
-      textFormatterArray
+      state.text,
+      state.messageToReply,
+      receiverId,
+      receiverType,
+      parentMessageId,
+      sendTextMessageOverride,
+      onSendButtonClick,
+      endTyping,
+      handleError,
+      isSdkInitialized,
+      publish,
+      getMentionedUsers,
+      clearMentionedUsers,
     ]
   );
 
-  useEffect(() => {
-    const subMessageToReply = CometChatMessageEvents.ccReplyToMessage.subscribe(
-      (object: IMessages) => {
-        let parentId = object?.message?.getParentMessageId();
-        if ((parentMessageIdPropRef.current && parentId
-          && parentId === parentMessageIdPropRef.current)
-          || (!parentMessageIdPropRef.current && !parentId)) {
-            if (
-              object.status === MessageStatus.inprogress &&
-              object.message
-            ) {
-              dispatch({
-                type: "setTextMessageToEdit",
-                textMessageToEdit: null,
-              });
-              dispatch({
-                type: "setMessageToReply",
-                messageToReply: object.message,
-              });
-              if (pasteHtmlAtCaret) {
-                const sel = getCurrentWindow()?.getSelection();
-                setSelection(sel);
-                pasteHtmlAtCaret('')
-              }
-            }
-            if ((object.status === MessageStatus.success &&
-              object.message) || object.status === MessageStatus.cancelled) {
-              dispatch({
-                type: "setMessageToReply",
-                messageToReply: null,
-              });
-              messageToReplyRef.current = null;
-              isPreviewVisible.current = false;
-            }
-            else {
-              isPreviewVisible.current = true;
-            }
-          }
-        }
-    );
-    return () => {
-      subMessageToReply.unsubscribe();
-    }
-  },[])
-  /**
-  * Update text input when the conversation changes, preserving initial text from props
-  */
+  // --- Send media message ---
+  const sendMediaMessage = useCallback(
+    async (file: File, fileType: string) => {
+      if (!receiverId) return;
+      if (!isSdkInitialized()) return;
 
-  useEffect(() => {
-    try {
-      // Maintain the initial text passed from props when the conversation changes
-      if (propsText && (user?.getUid() || group?.getGuid())) {
-        dispatch({ type: "setAddToMsgInputText", addToMsgInputText: propsText });
-      }
-    } catch (error) {
-      errorHandler(error, "setAddToMsgInputText")
-    }
-  }, [user, group, propsText, dispatch]);
-
-
-  useEffect(
-    /**
-     * Subscribes to showModal & hideModal UI event to show & hide the Polls UI.
-     */
-    () => {
-      try {
-        const subShowModal = CometChatUIEvents.ccShowModal.subscribe(
-          (data: IModal) => {
-            const { composerId } = data;
-            const parentMessageId = parentMessageIdPropRef?.current;
-            const userId = userPropRef.current?.getUid();
-            const groupId = groupPropRef.current?.getGuid();
-
-            if (
-              composerId
-            ) {
-              if (
-                (composerId.parentMessageId && parentMessageId && composerId.parentMessageId === parentMessageId) ||
-                (!parentMessageId && (composerId.user === userId || composerId.group === groupId)) ||
-                (!composerId.parentMessageId && !composerId.user && !composerId.group)
-              ) {
-                dispatch({ type: "setShowPoll", showPoll: true });
-                createPollViewRef.current = data.child;
-              }
-
-            }
-            else {
-              dispatch({ type: "setShowPoll", showPoll: true });
-              createPollViewRef.current = data.child;
-            }
-
-
-          }
-        );
-
-        const subHideModal = CometChatUIEvents.ccHideModal.subscribe(() => {
-          dispatch({ type: "setShowPoll", showPoll: false });
-          createPollViewRef.current = null;
-        });
-        return () => {
-          subShowModal.unsubscribe();
-          subHideModal.unsubscribe();
-        };
-      } catch (error) {
-        errorHandler(error, "ccShowModal")
-      }
-    },
-    [createPollViewRef, dispatch]
-  );
-  /**
-   * Setup listeners to handle selection changes and paste prevention.
-   * Custom paste handling ensures text formatting integrity.
-   */
-  useEffect(() => {
-    function triggerSelection(): void {
-      try {
-        let sel = getCurrentWindow()?.getSelection();
-        setSelection(sel);
-      } catch (error) {
-        errorHandler(error, "triggerSelection")
-      }
-    }
-    try {
-      const contentEditable = getCurrentInput();
-      const preventPaste = (e: ClipboardEvent) => {
-        e.preventDefault();
-        let clipboardData = e.clipboardData!.getData("text/plain");
-        const sanitizedData = CometChatUIKitUtility.sanitizeText(clipboardData);
-        if (sanitizedData) {
-          pasteHtmlAtCaret(sanitizedData);
-          if (onTextChange) {
-            onTextChange(clipboardData);
-          }
-          dispatch({ type: "setText", text: clipboardData });
-        }
-      }
-
-      contentEditable.addEventListener("paste", preventPaste);
-      getCurrentDocument()?.addEventListener("selectionchange", triggerSelection);
-      if (!isMobileDevice() && !autoFocusCompleted.current) {
-        contentEditable?.focus();
-        autoFocusCompleted.current = true;
-      }
-        if (textFormatterArray.length ) {
-          let mentionsFormatter = textFormatterArray.find(
-            formatter => formatter instanceof CometChatMentionsFormatter
-          ) as CometChatMentionsFormatter | undefined;
-          if (mentionsFormatter) {
-            mentionsTextFormatterInstanceRef.current = mentionsFormatter
-          }
-            mentionsTextFormatterInstanceRef.current.setLoggedInUser(
-              CometChatUIKitLoginListener.getLoggedInUser()
-            );
-
-            if (
-              mentionsTextFormatterInstanceRef.current.getKeyDownCallBack() === undefined
-            ) {
-              mentionsTextFormatterInstanceRef.current.setKeyDownCallBack(searchMentions);
-              mentionsTextFormatterInstanceRef.current.setKeyUpCallBack(searchMentions);
-            }
-            setTextFormatters(prevFormatters => {
-              const newFormatter = mentionsTextFormatterInstanceRef.current;
-              const hasUrlFormatter = prevFormatters.some(f => f instanceof CometChatUrlsFormatter);
-              let updated = prevFormatters;
-              if (!updated.includes(newFormatter)) {
-                updated = [...updated, newFormatter];
-              }
-              if (!hasUrlFormatter) {
-                const urlFormatter = ChatConfigurator.getDataSource().getUrlTextFormatter({});
-                updated = [...updated, urlFormatter];
-              }
-              return updated === prevFormatters ? prevFormatters : updated;
+      // --- File type validation ---
+      // If the user selected a specific media type (image, video, audio),
+      // validate that the file matches. "file" type accepts anything.
+      if (fileType !== 'file') {
+        const isHeic =
+          file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+        if (!isHeic) {
+          const actualFileType = file.type.split('/')[0]; // e.g., "image", "video", "audio"
+          if (actualFileType !== fileType) {
+            dispatch({
+              type: 'SET_VALIDATION_ERROR',
+              show: true,
+              text: 'message_composer_wrong_file_type',
             });
-          
-        } else {
-          mentionsTextFormatterInstanceRef.current.setLoggedInUser(
-            CometChatUIKitLoginListener.getLoggedInUser()
-          );
-
-          if (
-            mentionsTextFormatterInstanceRef.current.getKeyDownCallBack() === undefined
-          ) {
-            mentionsTextFormatterInstanceRef.current.setKeyDownCallBack(searchMentions);
-            mentionsTextFormatterInstanceRef.current.setKeyUpCallBack(searchMentions);
+            return;
           }
-          setTextFormatters(prevFormatters => {
-            const newFormatter = mentionsTextFormatterInstanceRef.current;
-            const hasUrlFormatter = prevFormatters.some(f => f instanceof CometChatUrlsFormatter);
-            let updated = prevFormatters;
-            if (!updated.includes(newFormatter)) {
-              updated = [...updated, newFormatter];
-            }
-            if (!hasUrlFormatter) {
-              const urlFormatter = ChatConfigurator.getDataSource().getUrlTextFormatter({});
-              updated = [...updated, urlFormatter];
-            }
-            return updated === prevFormatters ? prevFormatters : updated;
+        }
+      }
+
+      dispatch({ type: 'SET_SEND_STATE', sendState: 'sending' });
+      onAttachmentAdded?.(file);
+
+      // Declared outside try so it's accessible in catch for error attachment
+      let mediaMessage: CometChat.MediaMessage | null = null;
+
+      try {
+        // Build the full message object — same one for both optimistic display AND SDK call
+        mediaMessage = new CometChat.MediaMessage(receiverId, file, fileType, receiverType);
+        const muid = `_${Math.random().toString(36).slice(2, 11)}`;
+        mediaMessage.setMuid(muid);
+        mediaMessage.setSentAt(Math.floor(Date.now() / 1000));
+        if (parentMessageId) {
+          mediaMessage.setParentMessageId(parentMessageId);
+        }
+        mediaMessage.setMetadata({
+          file,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+        });
+        // Set sender
+        try {
+          const loggedInUser = await CometChat.getLoggedinUser();
+          if (loggedInUser) mediaMessage.setSender(loggedInUser);
+        } catch {
+          /* non-fatal */
+        }
+
+        // Set quoted message (reply-to)
+        const replyMessage = state.messageToReply;
+        if (replyMessage) {
+          (
+            mediaMessage as unknown as { setQuotedMessage: (msg: CometChat.BaseMessage) => void }
+          ).setQuotedMessage(replyMessage);
+          (
+            mediaMessage as unknown as { setQuotedMessageId: (id: number) => void }
+          ).setQuotedMessageId(replyMessage.getId());
+        }
+
+        // Clear composer immediately
+        dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
+        dispatch({ type: 'SET_REPLY_MESSAGE', message: null });
+
+        // Publish inprogress
+        publish({
+          type: 'ui:message/sent',
+          message: mediaMessage,
+          status: CometChatMessageStatus.inprogress,
+        });
+
+        // Send the SAME message to the SDK
+        const confirmedMessage = await (CometChat.sendMediaMessage(
+          mediaMessage
+        ) as Promise<CometChat.MediaMessage>);
+
+        if (onSendButtonClick) {
+          onSendButtonClick(confirmedMessage, 'send');
+        }
+
+        publish({
+          type: 'ui:message/sent',
+          message: confirmedMessage,
+          status: CometChatMessageStatus.success,
+        });
+        if (replyMessage) {
+          publish({
+            type: 'ui:compose/reply',
+            message: confirmedMessage,
+            status: CometChatMessageStatus.success,
+            parentMessageId: parentMessageId ?? null,
           });
         }
-   
-      if(getCurrentWindow()?.getSelection()){
-        setSelection(getCurrentWindow()?.getSelection());
-      }
-      return () => {
-        contentEditable.removeEventListener("paste", preventPaste);
-        getCurrentDocument()?.removeEventListener("selectionchange", triggerSelection);
-      };
-    } catch (error) {
-      errorHandler(error, "preventPaste")
-    }
-  }, [setTextFormatters,textFormatters]);
+      } catch (error) {
+        // Attach error directly to the message (v6 pattern: message.setMetadata({ ...meta, error }))
+        try {
+          const existingMetadata = mediaMessage.getMetadata() as Record<string, unknown>;
+          mediaMessage.setMetadata({ ...existingMetadata, error });
+        } catch {
+          /* non-fatal */
+        }
+        Object.defineProperty(mediaMessage, '_ccError', {
+          value: error,
+          writable: true,
+          configurable: true,
+        });
 
-  /**
-   * Handle user or group changes and reset the composer input accordingly.
-   */
+        publish({
+          type: 'ui:message/sent',
+          message:
+            mediaMessage ?? new CometChat.MediaMessage(receiverId, file, fileType, receiverType),
+          status: CometChatMessageStatus.error,
+        });
+        onAttachmentRemoved?.(file);
+        dispatch({ type: 'SET_SEND_STATE', sendState: 'error' });
+        handleError(error);
+      }
+    },
+    [
+      state.messageToReply,
+      receiverId,
+      receiverType,
+      parentMessageId,
+      onSendButtonClick,
+      onAttachmentAdded,
+      onAttachmentRemoved,
+      handleError,
+      isSdkInitialized,
+      publish,
+    ]
+  );
+
+  const editMessage = useCallback(
+    async (richTextHtml?: string) => {
+      if (!state.textMessageToEdit) return;
+      if (!isSdkInitialized()) return;
+
+      let textToSend = state.text;
+      if (richTextHtml) {
+        const { CometChatRichTextFormatter } =
+          await import('../../formatters/CometChatRichTextFormatter');
+        const formatter = new CometChatRichTextFormatter();
+        textToSend = formatter.format(richTextHtml);
+      }
+      const trimmedText = textToSend.trim();
+      if (!trimmedText) return;
+
+      const messageToEdit = state.textMessageToEdit;
+
+      // Capture mentioned users BEFORE clearing
+      const mentionedUsersForSend = getMentionedUsers ? getMentionedUsers() : [];
+
+      if (mentionedUsersForSend.length > 0) {
+        const userObjects = mentionedUsersForSend.map(
+          u => new CometChat.User({ uid: u.uid, name: u.name })
+        );
+        messageToEdit.setMentionedUsers(userObjects);
+      }
+
+      dispatch({ type: 'SET_TEXT', text: '' });
+      dispatch({ type: 'SET_EDIT_MESSAGE', message: null });
+      dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
+      clearMentionedUsers?.();
+
+      try {
+        const message = await ComposerManager.editTextMessage(
+          messageToEdit.getId(),
+          trimmedText,
+          mentionedUsersForSend
+        );
+
+        if (onSendButtonClick) {
+          onSendButtonClick(message, 'edit');
+        }
+
+        publish({
+          type: 'ui:compose/edit',
+          message,
+          status: CometChatMessageStatus.success,
+          parentMessageId: parentMessageId ?? null,
+        });
+      } catch (error) {
+        publish({
+          type: 'ui:compose/edit',
+          message: messageToEdit,
+          status: CometChatMessageStatus.error,
+          parentMessageId: parentMessageId ?? null,
+        });
+        handleError(error);
+      }
+    },
+    [
+      state.textMessageToEdit,
+      state.text,
+      onSendButtonClick,
+      handleError,
+      isSdkInitialized,
+      publish,
+      parentMessageId,
+      getMentionedUsers,
+      clearMentionedUsers,
+    ]
+  );
+
+  const insertEmoji = useCallback(
+    (emoji: string) => {
+      setText(state.text + emoji);
+      dispatch({ type: 'SET_CONTENT_TO_DISPLAY', content: 'none' });
+    },
+    [state.text, setText]
+  );
+
+  const setContentToDisplay = useCallback((content: CometChatComposerContentToDisplay) => {
+    dispatch({ type: 'SET_CONTENT_TO_DISPLAY', content });
+  }, []);
+
+  const closePreview = useCallback(() => {
+    const editingMessage = state.textMessageToEdit;
+    const replyingMessage = state.messageToReply;
+    dispatch({ type: 'SET_EDIT_MESSAGE', message: null });
+    dispatch({ type: 'SET_REPLY_MESSAGE', message: null });
+    if (editingMessage) {
+      publish({
+        type: 'ui:compose/edit',
+        message: editingMessage,
+        status: CometChatMessageStatus.cancelled,
+        parentMessageId: parentMessageId ?? null,
+      });
+    }
+    if (replyingMessage) {
+      publish({
+        type: 'ui:compose/reply',
+        message: replyingMessage,
+        status: CometChatMessageStatus.cancelled,
+        parentMessageId: parentMessageId ?? null,
+      });
+    }
+    onClosePreview?.();
+  }, [state.textMessageToEdit, state.messageToReply, parentMessageId, publish, onClosePreview]);
+
+  const setRecording = useCallback(
+    (isRecording: boolean) => {
+      dispatch({ type: 'SET_RECORDING', isRecording });
+      // Broadcast recording start so other composer instances stop their recording
+      if (isRecording) {
+        publish({
+          type: 'ui:compose/recording-started',
+          composerInstanceId: instanceId,
+        });
+      }
+    },
+    [publish, instanceId]
+  );
+
+  const setDragging = useCallback((isDragging: boolean) => {
+    dispatch({ type: 'SET_DRAGGING', isDragging });
+  }, []);
+
+  const dismissValidationError = useCallback(() => {
+    dispatch({ type: 'SET_VALIDATION_ERROR', show: false, text: null });
+  }, []);
+
+  const setEditDirty = useCallback((isDirty: boolean) => {
+    dispatch({ type: 'SET_EDIT_DIRTY', isDirty });
+  }, []);
+
+  // --- Derived state ---
+  // canSend when text has content OR recording is active.
+  // Disabled while a send is in progress.
+  // Note: state.text uses ' ' as a sentinel for structural content (lists, blockquotes)
+  // that has no visible text yet — still counts as having content.
+  // In edit mode, the text must differ from the original message text OR formatting must have changed.
+  const isInEditMode = state.textMessageToEdit !== null;
+  const canSend =
+    (state.text.length > 0 || state.isRecording) &&
+    state.sendState !== 'sending' &&
+    (!isInEditMode ||
+      state.text !== (state.textMessageToEdit?.getText() ?? '') ||
+      state.isEditDirty);
+  const isInReplyMode = state.messageToReply !== null;
+  const showVoiceButton = state.text.length === 0;
+
+  // --- SDK listeners ---
   useEffect(() => {
-    try {
-      const shouldClearText =
-        (userPropRef.current &&
-          user &&
-          userPropRef.current.getUid() !== user.getUid()) ||
-        (groupPropRef.current &&
-          group &&
-          groupPropRef?.current.getGuid() !== group.getGuid());
+    if (!isSdkInitialized()) return;
 
-      if (shouldClearText) {
-        dispatch({ type: "setText", text: "" });
-        mySetAddToMsgInputText("");
-      }
+    const listenerId = `CometChatMessageComposer_msg_${instanceId}`;
+    const cleanup = ComposerManager.attachMessageListener(listenerId, {
+      onMessageEdited: () => {
+        // If the message being edited was updated externally, close edit mode
+      },
+      onMessageDeleted: msg => {
+        // If the message being edited/replied to was deleted, close preview
+        if (state.textMessageToEdit?.getId() === msg.getId()) {
+          dispatch({ type: 'SET_EDIT_MESSAGE', message: null });
+        }
+        if (state.messageToReply?.getId() === msg.getId()) {
+          dispatch({ type: 'SET_REPLY_MESSAGE', message: null });
+        }
+      },
+    });
+    return cleanup;
+  }, [instanceId, state.textMessageToEdit, state.messageToReply, isSdkInitialized]);
 
-      if (userPropRef.current) {
-        setShowListForMentions(
-          user && userPropRef.current.getUid() !== user.getUid()
-        );
+  useEffect(() => {
+    if (!isSdkInitialized()) return;
+
+    const listenerId = `CometChatMessageComposer_conn_${instanceId}`;
+    const cleanup = ComposerManager.attachConnectionListener(listenerId, () => {
+      // Connection restored — clear any error state
+      dispatch({ type: 'SET_ERROR', error: null });
+    });
+    return cleanup;
+  }, [instanceId, isSdkInitialized]);
+
+  // --- Subscribe to compose commands (from message list / context menu) ---
+  // Thread-scoping: a thread composer (parentMessageId set) only reacts to events
+  // that carry a matching parentMessageId. The main composer ignores thread events.
+  useCometChatEvents(
+    (event: CometChatEvent) => {
+      switch (event.type) {
+        case 'ui:compose/edit': {
+          if (event.status !== CometChatMessageStatus.inprogress) break;
+          // Thread-scoping: match parentMessageId (same logic as reply)
+          const editEventParentId = event.parentMessageId;
+          if (parentMessageId) {
+            // Thread composer: only accept events for this thread
+            if (!editEventParentId || editEventParentId !== parentMessageId) break;
+          } else {
+            // Main composer: ignore events from threads
+            if (editEventParentId) break;
+          }
+          const msg = event.message;
+          if (msg.getType() === CometChat.MESSAGE_TYPE.TEXT) {
+            dispatch({ type: 'SET_EDIT_MESSAGE', message: msg as CometChat.TextMessage });
+          }
+          break;
+        }
+
+        case 'ui:compose/reply': {
+          if (event.status !== CometChatMessageStatus.inprogress) break;
+          // Thread-scoping: match parentMessageId
+          const eventParentId = event.parentMessageId;
+          if (parentMessageId) {
+            if (!eventParentId || eventParentId !== parentMessageId) break;
+          } else {
+            if (eventParentId) break;
+          }
+          dispatch({ type: 'SET_REPLY_MESSAGE', message: event.message });
+          break;
+        }
+
+        case 'ui:compose/text': {
+          setText(event.text);
+          // Focus the input with cursor at the end of the text
+          requestAnimationFrame(() => {
+            const el = inputRef.current;
+            if (el) {
+              el.focus();
+              // Move cursor to end of contentEditable
+              const range = document.createRange();
+              const sel = window.getSelection();
+              range.selectNodeContents(el);
+              range.collapse(false); // collapse to end
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+            }
+          });
+          break;
+        }
+
+        case 'ui:compose/recording-started': {
+          // Another composer instance started recording — stop our own recording
+          if (event.composerInstanceId !== instanceId && state.isRecording) {
+            dispatch({ type: 'SET_RECORDING', isRecording: false });
+            dispatch({ type: 'SET_CONTENT_TO_DISPLAY', content: 'none' });
+          }
+          break;
+        }
+
+        default:
+          break;
       }
-      if (groupPropRef.current) {
-        setShowListForMentions(
-          group && groupPropRef?.current.getGuid() !== group.getGuid()
-        );
-      }
-      for (let i = 0; i < textFormatterArray.length; i++) {
-        textFormatterArray[i].setComposerConfig(user, group, getComposerId());
-      }
-    } catch (error) {
-      errorHandler(error, "useEffect")
-    }
-  }, [
-    user,
-    group,
-    userPropRef,
-    groupPropRef,
+    },
+    [parentMessageId, setText, instanceId, state.isRecording]
+  );
+
+  return {
+    state,
     dispatch,
-    textInputRef,
-    mySetAddToMsgInputText,
-  ]);
-
-  /** 
-  * Reset the message composer when a new user or group is selected.
-  */
-  useEffect(() => {
-    try {
-      if (textInputRef.current) {
-        dispatch({ type: "setTextMessageToEdit", textMessageToEdit: null });
-        dispatch({ type: "setText", text: "" });
-        if (!isMobileDevice()) {
-          emptyInputField();
-        }
-        else {
-          let contentEditable: any = getCurrentInput();
-          contentEditable.textContent = "";
-        }
-        mySetAddToMsgInputText("");
-        isPreviewVisible.current = false;
-      }
-    }
-    catch (error) {
-      errorHandler(error, "useEffect");
-    }
-  }, [user, group, parentMessageIdPropRef
-  ]);
-
-  /**
-    * Update text when the message composer detects pasted HTML content.
-    * Handles mentions or user-group requests for the message being composed.
-    */
-  useEffect(() => {
-    try {
-      if (pasteHtmlAtCaret && propsText) {
-        pasteHtmlAtCaret(propsText)
-      }
-        if (group) {
-          const listType = UserMemberListType.groupmembers;
-
-          setUserMemberListType(listType);
-
-          // Use custom request builder if provided, otherwise create default one
-          const requestBuilder = mentionsGroupMembersRequestBuilder || 
-            new CometChat.GroupMembersRequestBuilder(group.getGuid()).setLimit(15);
-          setGroupMembersRequestBuilder(requestBuilder);
-        }
-
-        if (user) {
-          const listType = UserMemberListType.users;
-
-          setUserMemberListType(listType);
-
-          // Use custom request builder if provided, otherwise create default one
-          const requestBuilder = mentionsUsersRequestBuilder || 
-            new CometChat.UsersRequestBuilder().setLimit(15);
-          setUsersRequestBuilder(requestBuilder);
-        }
-    } catch (error) {
-      errorHandler(error, "useEffect")
-    }
-  }, [user, group, mentionsUsersRequestBuilder, mentionsGroupMembersRequestBuilder]);
+    canSend,
+    isInEditMode,
+    isInReplyMode,
+    showVoiceButton,
+    setText,
+    sendMessage,
+    sendMediaMessage,
+    editMessage,
+    insertEmoji,
+    setContentToDisplay,
+    closePreview,
+    setRecording,
+    setDragging,
+    dismissValidationError,
+    setEditDirty,
+    startTyping,
+    endTyping,
+    inputRef,
+    onMentionSelected,
+  };
 }

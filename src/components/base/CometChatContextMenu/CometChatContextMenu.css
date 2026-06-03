@@ -1,0 +1,209 @@
+/* Root container */
+.cometchat-context-menu {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--cometchat-padding-2, 8px);
+  background: transparent;
+}
+
+/* Top menu row — visible icon buttons */
+.cometchat-context-menu__top-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Top menu item — icon-only circular button */
+.cometchat-context-menu__top-menu-item {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-background-color-01, #fff);
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  color: var(--cometchat-icon-color-secondary, #a1a1a1);
+  cursor: pointer;
+}
+
+.cometchat-context-menu__top-menu-item:hover:not(:disabled) {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
+}
+
+.cometchat-context-menu__top-menu-item:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+.cometchat-context-menu__top-menu-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Top menu item icon — 16px */
+.cometchat-context-menu__top-menu-item-icon {
+  display: flex;
+  width: 16px;
+  height: 16px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  filter: brightness(0) saturate(100%) invert(65%) sepia(0%) saturate(0%) hue-rotate(0deg)
+    brightness(95%) contrast(90%);
+}
+
+/* Trigger — "more" circular button */
+.cometchat-context-menu__trigger {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-background-color-01, #fff);
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  color: var(--cometchat-icon-color-secondary, #a1a1a1);
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.cometchat-context-menu__trigger:hover {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
+}
+
+.cometchat-context-menu__trigger:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+/* Trigger icon — 16px */
+.cometchat-context-menu__trigger-icon {
+  display: flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  filter: brightness(0) saturate(100%) invert(65%) sepia(0%) saturate(0%) hue-rotate(0deg)
+    brightness(95%) contrast(90%);
+}
+
+/* Trigger wrapper — positions the dropdown relative to the trigger button */
+.cometchat-context-menu__trigger-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Dropdown container — uses position: fixed to escape overflow: hidden ancestors */
+.cometchat-context-menu__dropdown {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 160px;
+  width: max-content;
+  max-width: 280px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--cometchat-radius-2, 8px);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
+  box-shadow:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+}
+
+/* Hidden state — keeps element in DOM to prevent layout shifts */
+.cometchat-context-menu__dropdown--hidden {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cometchat-context-menu__dropdown {
+    animation: contextMenuFadeIn 150ms ease-out;
+  }
+}
+
+@keyframes contextMenuFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Placement is computed via JS inline styles — see CometChatContextMenuDropdown.tsx */
+
+/* Dropdown item */
+.cometchat-context-menu__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  width: 100%;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-3, 12px);
+  border: none;
+  background: var(--cometchat-background-color-01, #fff);
+  cursor: pointer;
+  text-align: start;
+  font: inherit;
+  color: inherit;
+  box-sizing: border-box;
+}
+
+.cometchat-context-menu__dropdown-item:hover:not(:disabled) {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
+}
+
+.cometchat-context-menu__dropdown-item:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: -2px;
+}
+
+.cometchat-context-menu__dropdown-item:disabled,
+.cometchat-context-menu__dropdown-item--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Dropdown item icon — 20px */
+.cometchat-context-menu__dropdown-item-icon {
+  display: flex;
+  width: 20px;
+  height: 20px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--cometchat-icon-color-secondary, #a1a1a1);
+  filter: brightness(0) saturate(100%) invert(65%) sepia(0%) saturate(0%) hue-rotate(0deg)
+    brightness(95%) contrast(90%);
+}
+
+/* Dropdown item title */
+.cometchat-context-menu__dropdown-item-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  line-height: 120%;
+  text-align: start;
+}
+
+/* Overlay — blocks background scroll and interaction when dropdown is open */
+.cometchat-context-menu__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: transparent;
+}

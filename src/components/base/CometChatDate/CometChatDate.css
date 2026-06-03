@@ -1,0 +1,66 @@
+/* CometChatDate — CSS Module (BEM) */
+
+/* Block */
+.cometchat-date {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  text-align: center;
+  font-style: normal;
+  padding: var(--cometchat-date-padding, 3px 10px);
+}
+
+/* Variant: caption (default — inline dates like conversation trailing) */
+.cometchat-date[data-variant='caption'] {
+  font: var(--cometchat-date-font, var(--cometchat-font-caption1-regular, 400 12px Roboto));
+  color: var(--cometchat-date-color, var(--cometchat-neutral-color-600, #727272));
+}
+
+/* Variant: caption2 (smaller — used in message bubble timestamps) */
+.cometchat-date[data-variant='caption2'] {
+  font: var(--cometchat-font-caption2-regular, 400 10px Roboto);
+  color: var(--cometchat-date-color, var(--cometchat-neutral-color-600, #727272));
+}
+
+/* Variant: body (larger contexts) */
+.cometchat-date[data-variant='body'] {
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  color: var(--cometchat-date-color, var(--cometchat-neutral-color-600, #727272));
+}
+
+/* Variant: label (date separators in message list) */
+.cometchat-date[data-variant='label'] {
+  font: var(--cometchat-font-caption1-medium, 500 12px Roboto);
+  color: var(--cometchat-date-color, var(--cometchat-neutral-color-600, #727272));
+}
+
+/* Variant: separator (floating/inline date chip in message list) */
+.cometchat-date[data-variant='separator'] {
+  font: var(
+    --cometchat-date-separator-font,
+    var(--cometchat-font-caption1-medium, 500 12px Roboto)
+  );
+  color: var(
+    --cometchat-date-separator-color,
+    var(--cometchat-text-color-secondary, rgba(20, 20, 20, 0.58))
+  );
+  justify-content: center;
+  align-items: center;
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-2, 8px);
+  border-radius: var(--cometchat-radius-1, 4px);
+  border: 1px solid var(--cometchat-border-color-dark, #dcdcdc);
+  background: var(--cometchat-background-color-01, #f5f5f5);
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+}
+
+/* Text element */
+.cometchat-date__text {
+  display: inline;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-date {
+    transition: none;
+  }
+}

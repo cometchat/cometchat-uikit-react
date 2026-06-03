@@ -1,316 +1,139 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import outgoingCallSuccess from "../../assets/outgoingCallSuccess.svg";
-import callRejectedIcon from "../../assets/callRejectedIcon.svg";
-import incomingCallIcon from "../../assets/incomingCallIcon.svg";
-import incomingCallSuccessIcon from "../../assets/incomingCallSuccess.svg";
-import missedCallIcon from "../../assets/missedCallIcon.svg";
-import "../../styles/CometChatCallLog/CometChatCallLogHistory.css";
-import { CalendarObject, CometChatDate, CometChatList, CometChatListItem, CometChatLocalize, CometChatUIKit, CometChatUIKitCalls, CometChatUIKitConstants, States, convertMinutesToHoursMinutesSeconds, getLocalizedString } from "@cometchat/chat-uikit-react";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { CometChatUIKitCalls, verifyCallUser, useLocale } from '@cometchat/chat-uikit-react';
+import '../../styles/CometChatCallLog/CometChatCallLogHistory.css';
 
-export const CometChatCallDetailsHistory = (props: { call: any }) => {
-    const { call } = props;
-    const [callList, setCallList] = useState<any[]>([]);
-    const [callListState, setCallListState] = useState(States.loading);
-    const requestBuilder = useRef<any>(null);
-    const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(null);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const CometChatCallLogHistory = ({ call }: { call: any }) => {
+  const { getLocalizedString } = useLocale();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [callList, setCallList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const requestBuilder = useRef<any>(null);
 
-    useEffect(
-        () => {
-            CometChatUIKit.getLoggedinUser().then(
-                (user) => {
-                    setLoggedInUser(user);
-                }
-            );
-        },
-        [setLoggedInUser]
-    );
+  useEffect(() => {
+    CometChat.getLoggedinUser().then((user) => setLoggedInUser(user));
+  }, []);
 
-    useEffect(() => {
-        if (loggedInUser) {
-            requestBuilder.current = setRequestBuilder();
-            getCallList?.();
-        }
-    }, [loggedInUser]);
+  useEffect(() => {
+    if (!loggedInUser || !CometChatUIKitCalls) return;
 
-    const setRequestBuilder = useCallback((): any => {
-        try {
-            let builder;
-            let callUserId;
-            if (call.getInitiator().getUid() === loggedInUser!.getUid()) {
-                callUserId = call.getReceiver().getUid();
-            } else {
-                callUserId = call.getInitiator().getUid();
-            }
-            const authToken = loggedInUser!.getAuthToken() || "";
-            builder = new CometChatUIKitCalls.CallLogRequestBuilder()
-                .setLimit(30)
-                .setCallCategory("call")
-                .setAuthToken(authToken);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const callUser = verifyCallUser(call, loggedInUser);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const callUserId: string = (callUser?.uid ?? callUser?.getUid?.()) as string;
+    const authToken = loggedInUser.getAuthToken();
 
-            if (callUserId) {
-                builder = builder.setUid(callUserId);
-            }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    let builder = new CometChatUIKitCalls.CallLogRequestBuilder()
+      .setLimit(30)
+      .setCallCategory('call')
+      .setAuthToken(authToken);
 
-            return builder.build();
-        } catch (e) {
-            console.log(e);
-        }
-    }, [loggedInUser]);
+    if (callUserId) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      builder = builder.setUid(callUserId);
+    }
 
-    const getLoadingView = () => {
-          return (
-            <div className='cometchat-call-log-history__shimmer'>
-              {[...Array(10)].map((_, index) => (
-                <div key={index} className='cometchat-call-log-history__shimmer-item'>
-                  <div className='cometchat-call-log-history__shimmer-item-avatar'></div>
-                  <div className='cometchat-call-log-history__shimmer-item-body'>
-                    <div className='cometchat-call-log-history__shimmer-item-body-title-wrapper'>
-                      <div className='cometchat-call-log-history__shimmer-item-body-title'></div>
-                      <div className='cometchat-call-log-history__shimmer-item-body-subtitle'></div>
-                    </div>
-    
-                    <div className='cometchat-call-log-history__shimmer-item-body-tail'></div>
-                  </div>
-                </div>
-              ))}
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    requestBuilder.current = builder.build();
+    void fetchCallList();
+  }, [loggedInUser]);
+
+  const fetchCallList = useCallback(async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const calls = await requestBuilder.current?.fetchNext();
+      if (calls && calls.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        setCallList((prev) => [...prev, ...calls]);
+      }
+      setLoading(false);
+    } catch {
+      setLoading(false);
+    }
+  }, []);
+
+  const isSentByMe = (item: any): boolean => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const initiatorUid: string = (item?.getInitiator?.()?.getUid?.() as string) ?? '';
+    return !initiatorUid || initiatorUid === loggedInUser?.getUid();
+  };
+
+  const getCallStatus = (item: any): string => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const status: string = (item?.getStatus?.() as string) ?? '';
+    const sentByMe = isSentByMe(item);
+    const missedStatuses = ['unanswered', 'cancelled', 'busy', 'rejected'];
+    if (!sentByMe && missedStatuses.includes(status)) return getLocalizedString('sample_missed_call');
+    if (sentByMe) return getLocalizedString('sample_outgoing_call');
+    return getLocalizedString('sample_incoming_call');
+  };
+
+  const formatDate = (item: any): string => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const timestamp: number = (item?.getInitiatedAt?.() as number) ?? 0;
+    if (!timestamp) return '';
+    const date = new Date(timestamp * 1000);
+    const day = String(date.getDate());
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()] ?? '';
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    if (hours === 0) hours = 12;
+    return `${day} ${month}, ${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+  };
+
+  const getDuration = (item: any): string => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const minutes: number = (item?.getTotalDurationInMinutes?.() as number) ?? 0;
+    if (!minutes) return '00:00';
+    const hrs = Math.floor(minutes / 60);
+    const mins = Math.floor(minutes % 60);
+    const secs = Math.floor((minutes - Math.floor(minutes)) * 60);
+    const parts: string[] = [];
+    if (hrs > 0) parts.push(`${String(hrs)}h`);
+    if (mins > 0) parts.push(`${String(mins)}m`);
+    parts.push(`${String(secs)}s`);
+    return parts.join(' ');
+  };
+
+  if (loading) {
+    return (
+      <div className="cometchat-call-log-history__shimmer">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="cometchat-call-log-history__shimmer-item">
+            <div className="cometchat-call-log-history__shimmer-item-avatar" />
+            <div className="cometchat-call-log-history__shimmer-item-body">
+              <div className="cometchat-call-log-history__shimmer-item-body-title" />
+              <div className="cometchat-call-log-history__shimmer-item-body-subtitle" />
             </div>
-          );
-      };
-    
-
-    const fetchNextCallList = useCallback(async (): Promise<any[]> => {
-        try {
-            const calls = await requestBuilder?.current?.fetchNext();
-            return calls;
-        } catch (e) {
-            throw new Error("Error while fetching call list");
-        }
-    }, [requestBuilder]);
-
-    const getCallList = useCallback(async () => {
-        try {
-            const calls = await fetchNextCallList();
-            if (calls && calls.length > 0) {
-                setCallList((prevCallList) => {
-                    return [...prevCallList, ...calls]
-                })
-                setCallListState(States.loaded);
-            } else if (callList.length === 0) {
-                setCallListState(States.empty);
-            }
-        } catch (e) {
-            if (callList.length === 0) {
-                setCallListState(States.error);
-            }
-        }
-    }, [fetchNextCallList, setCallList, setCallListState, callList])
-    
-   function getDateFormat():CalendarObject{
-    const defaultFormat = {
-      yesterday: `DD MMM, hh:mm A`,
-      otherDays: `DD MMM, hh:mm A`,
-      today: `DD MMM, hh:mm A`
-    };
-
-    const finalFormat = {
-      ...defaultFormat,
-      ...CometChatLocalize.calendarObject    };
-
-    return finalFormat;
+          </div>
+        ))}
+      </div>
+    );
   }
 
-    const getListItemSubtitleView = useCallback((item: any): JSX.Element => {
-        return (
-            <div className="cometchat-call-log-history__subtitle">
-                <CometChatDate
-                   calendarObject={getDateFormat()}
-                    timestamp={item?.getInitiatedAt()}
-                ></CometChatDate>
-            </div>
-        );
-    }, [])
+  if (callList.length === 0) {
+    return <div className="cometchat-call-log-history__empty">{getLocalizedString('sample_no_call_history')}</div>;
+  }
 
-    const getCallDuration = useCallback((item: any) => {
-        try {
-            if (item?.getTotalDurationInMinutes()) {
-                return convertMinutesToHoursMinutesSeconds(item?.getTotalDurationInMinutes());
-            } else {
-                return false;
-            }
-        } catch (e) {
-            return false;
-        }
-    }, []);
-
-    const getListItemTailView = useCallback((item: any): JSX.Element => {
-        return (
-            <div className={getCallDuration(item) ? "cometchat-call-log-history__trailing-view" : "cometchat-call-log-history__trailing-view-disabled"}>
-                {getCallDuration(item) ? getCallDuration(item) : '00:00'}
-            </div>
-        );
-    }, [getCallDuration]);
-
-    const getCallStatus = (call: CometChat.Call, loggedInUser: CometChat.User): string => {
-        const isSentByMe = (call: any, loggedInUser: CometChat.User) => {
-            const senderUid: string = call.initiator?.getUid();
-            return !senderUid || senderUid === loggedInUser?.getUid();
-        }
-        const callStatus: string = call.getStatus();
-        const isSentByMeFlag: boolean = isSentByMe(call, loggedInUser!);
-        switch (callStatus) {
-            case CometChatUIKitConstants.calls.initiated: {
-                if (isSentByMeFlag) {
-                    return getLocalizedString("calls_outgoing_call");
-                } else {
-                    return getLocalizedString('calls_incoming_call');
-                }
-            }
-            case CometChatUIKitConstants.calls.cancelled: {
-                if (isSentByMeFlag) {
-                    return getLocalizedString("calls_outgoing_call");
-                } else {
-                    return getLocalizedString("calls_missed_call");
-                }
-            }
-            case CometChatUIKitConstants.calls.rejected: {
-                if (isSentByMeFlag) {
-                    return getLocalizedString("calls_outgoing_call");
-                } else {
-                    return getLocalizedString("calls_missed_call");
-                }
-            }
-            case CometChatUIKitConstants.calls.busy: {
-                if (isSentByMeFlag) {
-                    return getLocalizedString("calls_outgoing_call");
-                } else {
-                    return getLocalizedString("calls_missed_call");
-                }
-            }
-            case CometChatUIKitConstants.calls.ended: {
-                if (isSentByMeFlag) {
-                    return getLocalizedString("calls_outgoing_call");
-                } else {
-                    return getLocalizedString('calls_incoming_call');
-                }
-            }
-            case CometChatUIKitConstants.calls.ongoing: {
-                if (isSentByMeFlag) {
-                    return getLocalizedString("calls_outgoing_call");
-                } else {
-                    return getLocalizedString('calls_incoming_call');
-                }
-            }
-            case CometChatUIKitConstants.calls.unanswered: {
-                if (isSentByMeFlag) {
-                    return getLocalizedString("calls_outgoing_call");
-                } else {
-                    return getLocalizedString("calls_missed_call");
-                }
-            }
-            default: {
-                if (isSentByMeFlag) {
-                    return getLocalizedString("calls_outgoing_call");
-                } else {
-                    return getLocalizedString('calls_incoming_call');
-                }
-            }
-        }
-    }
-
-    function getAvatarUrlForCall(call: CometChat.Call) {
-        const isSentByMe = (call: any, loggedInUser: CometChat.User) => {
-            const senderUid: string = call.initiator?.getUid();
-            return !senderUid || senderUid === loggedInUser?.getUid();
-        }
-        const isSentByMeFlag: boolean = isSentByMe(call, loggedInUser!);
-        const callStatus = getCallStatus(call, loggedInUser!);
-        switch (callStatus) {
-            case getLocalizedString("calls_outgoing_call"): {
-                if (isSentByMeFlag) {
-                    return outgoingCallSuccess;
-                } else {
-                    return incomingCallSuccessIcon;
-                }
-            }
-            case getLocalizedString("calls_incoming_call"):
-                if (isSentByMeFlag) {
-                    return outgoingCallSuccess;
-                } else {
-                    return incomingCallSuccessIcon;
-                }
-            case getLocalizedString("calls_cancelled_call"):
-                if (isSentByMeFlag) {
-                    return outgoingCallSuccess;
-                } else {
-                    return missedCallIcon;
-                }
-            case getLocalizedString("calls_rejected_call"):
-                if (isSentByMeFlag) {
-                    return outgoingCallSuccess;
-                } else {
-                    return missedCallIcon;
-                }
-            case getLocalizedString("calls_busy_call"):
-                if (isSentByMeFlag) {
-                    return outgoingCallSuccess;
-                } else {
-                    return missedCallIcon;
-                }
-            case getLocalizedString("calls_ended_call"):
-                if (isSentByMeFlag) {
-                    return outgoingCallSuccess;
-                } else {
-                    return incomingCallSuccessIcon;
-                }
-            case getLocalizedString("calls_answered_call"):
-                if (isSentByMeFlag) {
-                    return outgoingCallSuccess;
-                } else {
-                    return incomingCallSuccessIcon;
-                }
-            case getLocalizedString("calls_unanswered_call"):
-                if (isSentByMeFlag) {
-                    return outgoingCallSuccess;
-                } else {
-                    return missedCallIcon;
-                }
-            case getLocalizedString("calls_missed_call"):
-                if (isSentByMeFlag) {
-                    return outgoingCallSuccess;
-                } else {
-                    return missedCallIcon;
-                }
-            default:
-                return "";
-        }
-    }
-
-    const getListItem = useMemo(() => {
-        return function (item: any, index: number): any {
-            return (
-                <>
-                    <CometChatListItem
-                        title={getCallStatus(item, loggedInUser!)}
-                        avatarURL={getAvatarUrlForCall(item)}
-                        subtitleView={getListItemSubtitleView(item)}
-                        trailingView={getListItemTailView(item)}
-                    />
-                </>
-            )
-        };
-    }, [getAvatarUrlForCall, getListItemSubtitleView, getListItemTailView, loggedInUser]);
-
-    return (
-        <div className="cometchat-call-log-history">
-            {callListState === States.loading ? getLoadingView() : <CometChatList
-                hideSearch={true}
-                list={callList}
-                onScrolledToBottom={getCallList}
-                listItemKey="getSessionID"
-                itemView={getListItem}
-                state={callListState}
-                showSectionHeader={false}
-            />}
+  return (
+    <div className="cometchat-call-log-history">
+      {callList.map((item, index) => (
+        <div key={index} className="cometchat-call-log-history__item">
+          <div className={`cometchat-call-log-history__icon ${getCallStatus(item) === getLocalizedString('sample_missed_call') ? 'cometchat-call-log-history__icon--missed' : getCallStatus(item) === getLocalizedString('sample_outgoing_call') ? 'cometchat-call-log-history__icon--outgoing' : 'cometchat-call-log-history__icon--incoming'}`} />
+          <div className="cometchat-call-log-history__text">
+            <div className="cometchat-call-log-history__title">{getCallStatus(item)}</div>
+            <div className="cometchat-call-log-history__subtitle">{formatDate(item)}</div>
+          </div>
+          <div className="cometchat-call-log-history__duration">{getDuration(item)}</div>
         </div>
-    )
-}
+      ))}
+    </div>
+  );
+};

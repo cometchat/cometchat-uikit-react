@@ -1,0 +1,253 @@
+/* ============================================
+   Block: cometchat-file-bubble
+   ============================================ */
+
+.cometchat-file-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-2, 8px);
+  min-width: var(--cometchat-file-bubble-min-width, 240px);
+  max-width: var(--cometchat-file-bubble-max-width, 240px);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   Modifiers: Alignment Variants
+   ============================================ */
+
+/* --- Sender (outgoing) --- */
+
+.cometchat-file-bubble--sender {
+  align-items: flex-end;
+}
+
+.cometchat-file-bubble--sender .cometchat-file-bubble__container {
+  background: var(--cometchat-file-bubble-background, var(--cometchat-primary-color, #6852d6));
+}
+
+.cometchat-file-bubble--sender .cometchat-file-bubble__filename {
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-file-bubble--sender .cometchat-file-bubble__filesize {
+  color: var(--cometchat-static-white, #fff);
+  opacity: 0.7;
+}
+
+.cometchat-file-bubble--sender .cometchat-file-bubble__download {
+  --cometchat-download-button-icon-color: var(--cometchat-static-white, #fff);
+  --cometchat-download-button-progress-bg: rgba(255, 255, 255, 0.3);
+  --cometchat-download-button-progress-fg: var(--cometchat-static-white, #fff);
+  --cometchat-download-button-cancel-color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-file-bubble--sender .cometchat-file-bubble__download:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--cometchat-static-white, #fff);
+}
+
+.cometchat-file-bubble--sender .cometchat-file-bubble__toggle-control {
+  color: var(--cometchat-static-white, #fff);
+  opacity: 0.8;
+}
+
+.cometchat-file-bubble--sender .cometchat-file-bubble__toggle-control:hover {
+  opacity: 1;
+}
+
+/* --- Receiver (incoming) --- */
+
+.cometchat-file-bubble--receiver {
+  align-items: flex-start;
+}
+
+.cometchat-file-bubble--receiver .cometchat-file-bubble__container {
+  background: var(--cometchat-file-bubble-background, var(--cometchat-neutral-color-300, #e8e8e8));
+}
+
+.cometchat-file-bubble--receiver .cometchat-file-bubble__filename {
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+.cometchat-file-bubble--receiver .cometchat-file-bubble__filesize {
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+.cometchat-file-bubble--receiver .cometchat-file-bubble__download {
+  --cometchat-download-button-icon-color: var(--cometchat-primary-color, #6852d6);
+  --cometchat-download-button-progress-bg: var(--cometchat-neutral-color-400, #ccc);
+  --cometchat-download-button-progress-fg: var(--cometchat-primary-color, #6852d6);
+  --cometchat-download-button-cancel-color: var(--cometchat-text-color-primary, #141414);
+}
+
+.cometchat-file-bubble--receiver .cometchat-file-bubble__download:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-file-bubble--receiver .cometchat-file-bubble__toggle-control {
+  color: var(--cometchat-primary-color, #6852d6);
+}
+
+/* ============================================
+   Element: Container
+   ============================================ */
+
+.cometchat-file-bubble__container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--cometchat-padding-2, 8px);
+  padding-bottom: var(--cometchat-padding-1, 4px);
+  border-radius: var(--cometchat-radius-2, 8px);
+  gap: var(--cometchat-spacing-2, 8px);
+  box-sizing: border-box;
+}
+
+/* ============================================
+   Element: File Item
+   ============================================ */
+
+.cometchat-file-bubble__file-item {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-3, 12px);
+  width: 100%;
+}
+
+/* ============================================
+   Element: File Icon
+   ============================================ */
+
+.cometchat-file-bubble__icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+/* ============================================
+   Element: Metadata
+   ============================================ */
+
+.cometchat-file-bubble__metadata {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-1, 4px);
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============================================
+   Element: Filename
+   ============================================ */
+
+.cometchat-file-bubble__filename {
+  font: var(--cometchat-font-body-medium, 500 14px/20px sans-serif);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================
+   Element: File Size
+   ============================================ */
+
+.cometchat-file-bubble__filesize {
+  font: var(--cometchat-font-caption1-regular, 400 12px/16px sans-serif);
+}
+
+/* ============================================
+   Element: Download Button
+   ============================================ */
+
+.cometchat-file-bubble__download {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Override the download button component's default icon color based on variant */
+  --cometchat-download-button-icon-color: inherit;
+  --cometchat-download-button-progress-bg: var(--cometchat-neutral-color-500, #999);
+  --cometchat-download-button-progress-fg: inherit;
+  --cometchat-download-button-cancel-color: inherit;
+}
+
+.cometchat-file-bubble__download:focus {
+  outline: none;
+}
+
+/* ============================================
+   Element: Download Icon (mask-image)
+   ============================================ */
+
+.cometchat-file-bubble__download-icon {
+  width: 24px;
+  height: 24px;
+  mask-image: url('../../../assets/download.svg');
+  -webkit-mask-image: url('../../../assets/download.svg');
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+}
+
+/* ============================================
+   Element: Toggle Control (Show more +N / Show less)
+   Right-aligned, no border by default, border only on focus.
+   ============================================ */
+
+.cometchat-file-bubble__toggle-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-1, 4px);
+  align-self: flex-end;
+  padding: var(--cometchat-padding-1, 4px) 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--cometchat-radius-1, 4px);
+  font: var(--cometchat-font-caption1-medium, 500 12px/16px sans-serif);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.cometchat-file-bubble__toggle-control:hover {
+  text-decoration: underline;
+}
+
+.cometchat-file-bubble__toggle-control:focus {
+  outline: none;
+}
+
+.cometchat-file-bubble__toggle-control:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* +N count badge inside the toggle */
+.cometchat-file-bubble__toggle-count {
+  font: var(--cometchat-font-caption1-bold, bold 12px/16px sans-serif);
+}
+
+/* ============================================
+   Element: Caption
+   ============================================ */
+
+.cometchat-file-bubble__caption {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  --cometchat-text-bubble-padding: 4px 4px 6px 4px;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 480px) {
+  .cometchat-file-bubble__file-item {
+    gap: var(--cometchat-spacing-2, 8px);
+  }
+}

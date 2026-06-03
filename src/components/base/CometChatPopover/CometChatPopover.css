@@ -1,0 +1,149 @@
+/* Block — inline wrapper for trigger + content */
+.cometchat-popover {
+  position: relative;
+  display: inline-block;
+}
+
+/* Trigger wrapper */
+.cometchat-popover__trigger {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.cometchat-popover__trigger:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+  border-radius: var(--cometchat-radius-1, 4px);
+}
+
+/* Remove default outline — :focus-visible above handles it */
+.cometchat-popover__trigger:focus {
+  outline: none;
+}
+
+/* Content — fixed positioned floating panel */
+.cometchat-popover__content {
+  position: fixed;
+  z-index: var(--cometchat-popover-content-z-index, 1000);
+  background-color: var(--cometchat-popover-content-background, transparent);
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(
+    --cometchat-font-body-regular,
+    400 14px var(--cometchat-font-family, 'Inter', sans-serif)
+  );
+  border: none;
+  border-radius: var(--cometchat-popover-content-border-radius, 0);
+  padding: var(--cometchat-popover-content-padding, 0);
+  max-width: var(--cometchat-popover-content-max-width, 300px);
+  box-shadow: var(--cometchat-popover-content-box-shadow, none);
+  word-wrap: break-word;
+
+  /* Start hidden until position is calculated */
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Positioned — show after position is calculated */
+.cometchat-popover__content--positioned {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cometchat-popover__content--positioned {
+    animation: cometchatPopoverFadeIn var(--cometchat-popover-animation-duration, 0.15s) ease-out;
+  }
+}
+
+@keyframes cometchatPopoverFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Nested popover z-index — higher than parent */
+.cometchat-popover__content .cometchat-popover__content {
+  z-index: var(--cometchat-popover-nested-z-index, 1001);
+}
+
+/* Placement modifiers (available for consumer styling hooks) */
+.cometchat-popover__content--top {
+  /* top placement */
+}
+
+.cometchat-popover__content--bottom {
+  /* bottom placement */
+}
+
+.cometchat-popover__content--left {
+  /* left placement */
+}
+
+.cometchat-popover__content--right {
+  /* right placement */
+}
+
+/* Focus styles for content (when trapFocus is enabled) */
+.cometchat-popover__content:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: -2px;
+}
+
+/* ---- Arrow ---- */
+
+.cometchat-popover__arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+/* Arrow for top placement — points downward, sits at bottom of content */
+.cometchat-popover__arrow--top {
+  bottom: calc(-1 * var(--cometchat-popover-arrow-size, 8px));
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: var(--cometchat-popover-arrow-size, 8px) var(--cometchat-popover-arrow-size, 8px) 0
+    var(--cometchat-popover-arrow-size, 8px);
+  border-color: var(--cometchat-popover-arrow-color, var(--cometchat-background-color-01, #fff))
+    transparent transparent transparent;
+}
+
+/* Arrow for bottom placement — points upward, sits at top of content */
+.cometchat-popover__arrow--bottom {
+  top: calc(-1 * var(--cometchat-popover-arrow-size, 8px));
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 var(--cometchat-popover-arrow-size, 8px) var(--cometchat-popover-arrow-size, 8px)
+    var(--cometchat-popover-arrow-size, 8px);
+  border-color: transparent transparent
+    var(--cometchat-popover-arrow-color, var(--cometchat-background-color-01, #fff)) transparent;
+}
+
+/* Arrow for left placement — points rightward, sits at right of content */
+.cometchat-popover__arrow--left {
+  right: calc(-1 * var(--cometchat-popover-arrow-size, 8px));
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: var(--cometchat-popover-arrow-size, 8px) 0 var(--cometchat-popover-arrow-size, 8px)
+    var(--cometchat-popover-arrow-size, 8px);
+  border-color: transparent transparent transparent
+    var(--cometchat-popover-arrow-color, var(--cometchat-background-color-01, #fff));
+}
+
+/* Arrow for right placement — points leftward, sits at left of content */
+.cometchat-popover__arrow--right {
+  left: calc(-1 * var(--cometchat-popover-arrow-size, 8px));
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: var(--cometchat-popover-arrow-size, 8px) var(--cometchat-popover-arrow-size, 8px)
+    var(--cometchat-popover-arrow-size, 8px) 0;
+  border-color: transparent
+    var(--cometchat-popover-arrow-color, var(--cometchat-background-color-01, #fff)) transparent
+    transparent;
+}

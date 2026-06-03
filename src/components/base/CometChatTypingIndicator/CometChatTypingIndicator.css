@@ -1,0 +1,77 @@
+/* Block */
+.cometchat-typing-indicator {
+  display: flex;
+  align-items: center;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  background: var(--cometchat-background-color-01, #fff);
+}
+
+/* Content — flex wrapper for text + dots */
+.cometchat-typing-indicator__content {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-1, 4px);
+}
+
+/* Text */
+.cometchat-typing-indicator__text {
+  font: var(--cometchat-font-caption1-regular, 400 12px Roboto);
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+/* User name — slightly bolder */
+.cometchat-typing-indicator__name {
+  font: var(--cometchat-font-caption1-medium, 500 12px Roboto);
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+/* Dots container */
+.cometchat-typing-indicator__dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: var(--cometchat-spacing-1, 4px);
+}
+
+/* Individual dot */
+.cometchat-typing-indicator__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background-color: var(--cometchat-text-color-secondary, #727272);
+  animation: cometchat-typing-indicator-bounce 1.4s infinite ease-in-out both;
+}
+
+.cometchat-typing-indicator__dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.cometchat-typing-indicator__dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.cometchat-typing-indicator__dot:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes cometchat-typing-indicator-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-typing-indicator__dot {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+  }
+}

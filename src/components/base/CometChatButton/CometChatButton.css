@@ -1,0 +1,154 @@
+/* Block */
+.cometchat-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cometchat-padding-1, 4px);
+  border: none;
+  border-radius: var(--cometchat-radius-2, 8px);
+  cursor: pointer;
+  font: inherit;
+  line-height: 120%;
+  box-sizing: border-box;
+  position: relative;
+  transition: background 150ms ease;
+}
+
+.cometchat-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}
+
+/* ── Variant: primary ── */
+.cometchat-button--primary {
+  background: var(--cometchat-primary-button-background, #6852d6);
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-button--primary:hover:not(:disabled) {
+  background: var(--cometchat-extended-primary-color-800, #7a6bd6);
+}
+
+.cometchat-button--primary:active:not(:disabled) {
+  background: var(--cometchat-extended-primary-color-900, #5d49be);
+}
+
+/* ── Variant: secondary ── */
+.cometchat-button--secondary {
+  background: transparent;
+  color: var(--cometchat-text-color-primary, #141414);
+  border: 1px solid var(--cometchat-border-color-default, #e8e8e8);
+}
+
+.cometchat-button--secondary:hover:not(:disabled) {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
+}
+
+.cometchat-button--secondary:active:not(:disabled) {
+  background: var(--cometchat-white-pressed, rgba(0, 0, 0, 0.08));
+}
+
+/* ── Variant: ghost ── */
+.cometchat-button--ghost {
+  background: transparent;
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+.cometchat-button--ghost:hover:not(:disabled) {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
+}
+
+.cometchat-button--ghost:active:not(:disabled) {
+  background: var(--cometchat-white-pressed, rgba(0, 0, 0, 0.08));
+}
+
+/* ── Size: sm ── */
+.cometchat-button--sm {
+  height: 32px;
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-3, 12px);
+  font: var(--cometchat-font-body-medium, 500 14px Roboto);
+}
+
+/* ── Size: md ── */
+.cometchat-button--md {
+  height: 40px;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-5, 20px);
+  font: var(--cometchat-font-button-medium, 500 14px Roboto);
+}
+
+/* ── Size: lg ── */
+.cometchat-button--lg {
+  height: 48px;
+  padding: var(--cometchat-padding-3, 12px) var(--cometchat-padding-6, 24px);
+  font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+}
+
+/* ── State: disabled ── */
+.cometchat-button--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── State: loading ── */
+.cometchat-button--loading {
+  cursor: wait;
+}
+
+/* ── Elements ── */
+.cometchat-button__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cometchat-button__icon--sm {
+  width: 16px;
+  height: 16px;
+}
+
+.cometchat-button__icon--md {
+  width: 20px;
+  height: 20px;
+}
+
+.cometchat-button__icon--lg {
+  width: 24px;
+  height: 24px;
+}
+
+.cometchat-button__text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spinner */
+.cometchat-button__spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--cometchat-radius-max, 9999px);
+  animation: cometchat-button-spin 0.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-button__spinner {
+    animation-duration: 1.5s;
+  }
+}
+
+@keyframes cometchat-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hidden content during loading — keeps layout stable */
+.cometchat-button__content--hidden {
+  visibility: hidden;
+  position: absolute;
+  pointer-events: none;
+}

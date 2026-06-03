@@ -1,0 +1,115 @@
+/* ============================================
+   Block: cometchat-download-button
+   A reusable download button with progress ring.
+   ============================================ */
+
+.cometchat-download-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   Element: Download Icon Button (idle state)
+   ============================================ */
+
+.cometchat-download-button__icon {
+  width: 24px;
+  height: 24px;
+  border: none;
+  cursor: pointer;
+  background-color: var(
+    --cometchat-download-button-icon-color,
+    var(--cometchat-static-white, #fff)
+  );
+  mask-image: url('../../../assets/download.svg');
+  -webkit-mask-image: url('../../../assets/download.svg');
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  transition: transform 0.1s ease;
+}
+
+.cometchat-download-button__icon:focus {
+  outline: none;
+}
+
+.cometchat-download-button__icon:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Element: Progress Ring (downloading state)
+   ============================================ */
+
+.cometchat-download-button__progress {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.cometchat-download-button__progress svg {
+  transform: rotate(-90deg);
+}
+
+.cometchat-download-button__progress-bg {
+  fill: none;
+  stroke: var(--cometchat-download-button-progress-bg, var(--cometchat-neutral-color-500, #999));
+  stroke-width: 2;
+}
+
+.cometchat-download-button__progress-fg {
+  fill: none;
+  stroke: var(--cometchat-download-button-progress-fg, var(--cometchat-static-white, #fff));
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.1s ease;
+}
+
+/* ============================================
+   Element: Cancel Button (inside progress ring)
+   ============================================ */
+
+.cometchat-download-button__cancel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border: none;
+  background-color: var(
+    --cometchat-download-button-cancel-color,
+    var(--cometchat-static-white, #fff)
+  );
+  mask-image: url('../../../assets/close.svg');
+  -webkit-mask-image: url('../../../assets/close.svg');
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  cursor: pointer;
+}
+
+/* ============================================
+   Reduced Motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-download-button__icon {
+    transition: none;
+  }
+
+  .cometchat-download-button__progress-fg {
+    transition: none;
+  }
+}

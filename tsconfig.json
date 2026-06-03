@@ -1,28 +1,34 @@
 {
     "compilerOptions": {
-        "esModuleInterop": true,
         "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": false,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "esModuleInterop": true,
         "skipLibCheck": true,
         "jsx": "react-jsx",
-        "target": "es2020",
-        "module": "es2020",
-        "lib": ["es2022", "DOM", "DOM.Iterable"],
+        "target": "ES2020",
+        "module": "ESNext",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "declaration": true,
-        "declarationDir": "types",
+        "declarationMap": true,
         "sourceMap": true,
         "outDir": "dist",
-        "resolveJsonModule": true, 
-        "moduleResolution": "node",
-        "emitDeclarationOnly": true,
+        "resolveJsonModule": true,
+        "moduleResolution": "bundler",
         "allowSyntheticDefaultImports": true,
-        "forceConsistentCasingInFileNames": true,
-        "useDefineForClassFields": false
+        "forceConsistentCasingInFileNames": true
     },
     "exclude": [
         "dist",
         "node_modules",
         "src/**/*.test.tsx",
-        "src/**/*.stories.tsx",
+        "src/**/*.test.ts",
+        "src/**/*.spec.tsx",
+        "src/**/*.spec.ts",
+        "sample-app-old/",
         "sample-app/"
     ]
 }

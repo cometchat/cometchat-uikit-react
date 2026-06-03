@@ -1,0 +1,290 @@
+/* CometChatAIAssistantBubble — BEM CSS module
+ * Renders completed AI assistant messages with markdown formatting.
+ * Mirrors Angular cometchat-ai-assistant-message-bubble.component.css
+ */
+
+:host {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 120px;
+  display: block;
+}
+
+/* Block */
+.cometchat-ai-assistant-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-2, 8px);
+  background-color: transparent;
+  border-radius: var(--cometchat-radius-3, 12px);
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-align: left;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Placeholder shimmer — shown while deferred content loads */
+.cometchat-ai-assistant-bubble__placeholder {
+  min-height: 40px;
+  background-color: var(--cometchat-background-color-02, #f5f5f5);
+  border-radius: var(--cometchat-radius-2, 8px);
+  animation: cometchat-ai-bubble-shimmer 1.5s infinite;
+}
+
+@keyframes cometchat-ai-bubble-shimmer {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Markdown content area */
+.cometchat-ai-assistant-bubble__content {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--cometchat-font-size-sm, 14px);
+  line-height: 1.6;
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+/* All children get overflow control to prevent going off-screen */
+.cometchat-ai-assistant-bubble__content * {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+  line-height: 1.75;
+  margin: 0;
+  margin-bottom: var(--cometchat-margin-2, 8px);
+}
+
+/* Font styling for non-code elements */
+.cometchat-ai-assistant-bubble__content *:not(pre *) {
+  color: var(--cometchat-text-color-primary, #141414);
+  font-size: 14px;
+  font-family: var(--cometchat-font-family);
+}
+
+/* Markdown elements */
+.cometchat-ai-assistant-bubble__content p {
+  margin: 0;
+  margin-bottom: var(--cometchat-margin-2, 8px);
+  text-align: left;
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+.cometchat-ai-assistant-bubble__content p:last-child {
+  margin-bottom: 0;
+}
+
+.cometchat-ai-assistant-bubble__content h1,
+.cometchat-ai-assistant-bubble__content h2,
+.cometchat-ai-assistant-bubble__content h3,
+.cometchat-ai-assistant-bubble__content h4,
+.cometchat-ai-assistant-bubble__content h5,
+.cometchat-ai-assistant-bubble__content h6 {
+  font-size: initial;
+  font-weight: var(--cometchat-font-weight-semibold, 600);
+  padding: var(--cometchat-padding-2, 8px) 0;
+  margin: 0;
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+.cometchat-ai-assistant-bubble__content > h1:first-child,
+.cometchat-ai-assistant-bubble__content > h2:first-child,
+.cometchat-ai-assistant-bubble__content > h3:first-child,
+.cometchat-ai-assistant-bubble__content > h4:first-child,
+.cometchat-ai-assistant-bubble__content > h5:first-child,
+.cometchat-ai-assistant-bubble__content > h6:first-child {
+  padding-top: 0;
+}
+
+.cometchat-ai-assistant-bubble__content ul,
+.cometchat-ai-assistant-bubble__content ol {
+  padding-left: var(--cometchat-padding-5, 20px) !important;
+  text-align: left !important;
+  margin: 0;
+}
+
+.cometchat-ai-assistant-bubble__content li {
+  overflow: visible !important;
+  padding: 0;
+  text-align: left !important;
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+.cometchat-ai-assistant-bubble__content ul,
+.cometchat-ai-assistant-bubble__content ol,
+.cometchat-ai-assistant-bubble__content hr {
+  margin: 0;
+}
+
+.cometchat-ai-assistant-bubble__content code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  background-color: rgba(0, 0, 0, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+.cometchat-ai-assistant-bubble__content pre {
+  max-height: 300px;
+  overflow: auto;
+  border: 1px solid var(--cometchat-border-color-default, #d9d9d9);
+  width: 100%;
+  border-radius: var(--cometchat-radius-2, 8px);
+  padding: var(--cometchat-spacing-3, 12px);
+  margin: var(--cometchat-spacing-2, 8px) 0;
+}
+
+.cometchat-ai-assistant-bubble__content pre code {
+  background: none;
+  padding: 0;
+  color: var(--cometchat-text-color-primary, #141414);
+  font-size: 14px;
+}
+
+.cometchat-ai-assistant-bubble__content pre::-webkit-scrollbar {
+  width: 0px;
+  height: 8px;
+  background: transparent;
+}
+
+.cometchat-ai-assistant-bubble__content pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cometchat-ai-assistant-bubble__content pre::-webkit-scrollbar-thumb {
+  background: var(--cometchat-icon-color-secondary);
+  border-radius: 4px;
+}
+
+.cometchat-ai-assistant-bubble__content a {
+  text-decoration: underline;
+  color: var(--cometchat-text-color-highlight, #3399ff);
+}
+
+.cometchat-ai-assistant-bubble__content blockquote {
+  border-left: 3px solid var(--cometchat-border-color-default, #d9d9d9);
+  padding-left: var(--cometchat-spacing-3, 12px);
+  margin: var(--cometchat-spacing-2, 8px) 0;
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+.cometchat-ai-assistant-bubble__content img {
+  max-height: 300px;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: var(--cometchat-radius-2, 8px);
+  margin-top: var(--cometchat-margin-2, 8px);
+  cursor: pointer;
+  display: block;
+}
+
+.cometchat-ai-assistant-bubble__content table {
+  width: fit-content;
+  max-width: 100%;
+  table-layout: auto;
+  display: block;
+  overflow-x: auto;
+  border-radius: var(--cometchat-radius-2, 8px);
+  margin: var(--cometchat-margin-2, 8px) 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: scroll;
+}
+
+.cometchat-ai-assistant-bubble__content th,
+.cometchat-ai-assistant-bubble__content td {
+  padding: var(--cometchat-padding-2, 8px);
+  border: 1px solid var(--cometchat-border-color-dark, #d9d9d9);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.cometchat-ai-assistant-bubble__content th {
+  background: var(--cometchat-background-color-04, #f5f5f5);
+  text-align: center !important;
+}
+
+.cometchat-ai-assistant-bubble__content td {
+  text-align: left !important;
+}
+
+/* Round only outer cells */
+.cometchat-ai-assistant-bubble__content tr:first-child th:first-child {
+  border-top-left-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-ai-assistant-bubble__content tr:first-child th:last-child {
+  border-top-right-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-ai-assistant-bubble__content tr:last-child td:first-child {
+  border-bottom-left-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-ai-assistant-bubble__content tr:last-child td:last-child {
+  border-bottom-right-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-ai-assistant-bubble__content table::-webkit-scrollbar {
+  width: 0px;
+  height: 8px;
+  background: transparent;
+}
+
+.cometchat-ai-assistant-bubble__content table::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cometchat-ai-assistant-bubble__content table::-webkit-scrollbar-thumb {
+  background: var(--cometchat-icon-color-secondary);
+  border-radius: var(--cometchat-radius-2, 8px);
+}
+
+/* Focus visible */
+.cometchat-ai-assistant-bubble:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6851d6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.cometchat-ai-assistant-bubble__copy {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  margin-top: var(--cometchat-spacing-1, 4px);
+  width: fit-content;
+}
+
+.cometchat-ai-assistant-bubble__copy:hover img {
+  opacity: 1 !important;
+}
+
+.cometchat-ai-assistant-bubble__copy:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6851d6);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-ai-assistant-bubble__placeholder {
+    animation: none;
+  }
+}

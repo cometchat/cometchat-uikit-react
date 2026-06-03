@@ -1,262 +1,101 @@
-.join-group-password__wrapper {
-    height: 100%;
-    width: 100%;
-    position: fixed;
-    z-index: 10;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #141414;
-    background: rgba(0, 0, 0, 0.5);
-    top: 0;
-    left: 0;
+/* Shared header for all tabs (Chats, Users, Groups) */
+.cometchat-selector-header {
+  display: flex;
+  width: 100%;
+  min-height: 64px;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cometchat-padding-3, 12px);
+  align-self: stretch;
+  border-bottom: 1px solid var(--cometchat-border-color-light, #F5F5F5);
+  background: var(--cometchat-background-color-01, #FFF);
+  box-sizing: border-box;
 }
 
-.join-group-password {
-    display: flex;
-    width: 400px;
-    padding: var(--cometchat-padding-5, 20px) var(--cometchat-padding-10, 40px) var(--cometchat-padding-10, 40px) var(--cometchat-padding-10, 40px);
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--cometchat-padding-10, 40px);
-    border-radius: var(--cometchat-radius-5, 20px);
-    border: 1px solid var(--cometchat-border-color-dark, #DCDCDC);
-    background: var(--cometchat-background-color-01, #FFF);
-    box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+.cometchat-selector-header__title {
+  overflow: hidden;
+  color: var(--cometchat-text-color-primary, #141414);
+  text-overflow: ellipsis;
+  font: var(--cometchat-font-heading1-bold, 700 24px/32px sans-serif);
 }
 
-.join-group-password__header {
-    color: var(--cometchat-text-color-primary, #141414);
-    text-align: center;
-    display: flex;
-    width: 100%;
-    font: var(--cometchat-font-heading1-bold, 700 24px Roboto);
+.cometchat-selector-header__menu {
+  display: flex;
+  align-items: center;
 }
 
-.join-group-password__header-title {
-    width: 100%;
+/* --- Context menu dropdown overrides (match v6 styling) --- */
+
+/* Widen the dropdown to 212px (v6 width) */
+.cometchat-selector-header__menu [class*="cometchat-context-menu__dropdown"] {
+  width: 212px;
 }
 
-.join-group-password__header-close {
-    -webkit-mask: url("../../assets/close.svg") center center no-repeat;
-    background: var(--cometchat-icon-color-primary, #141414);
-    -webkit-mask-size: contain;
-    cursor: pointer;
-    width: 24px;
-    height: 24px;
-    position: relative;
+/* Make the three-dot trigger icon 24px and use primary color */
+.cometchat-selector-header__menu [class*="cometchat-context-menu__trigger"] {
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  box-shadow: none;
 }
 
-.join-group-password__header-close:hover {
-    background: var(--cometchat-icon-color-highlight);
+.cometchat-selector-header__menu [class*="cometchat-context-menu__trigger-icon"] svg {
+  width: 24px;
+  height: 24px;
+  color: var(--cometchat-icon-color-primary, #141414);
 }
 
-.join-group-password__content {
-    display: flex;
-    min-width: 240px;
-    max-width: 1440px;
-    padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: var(--cometchat-padding-3, 12px);
-    align-self: stretch;
-    border-radius: var(--cometchat-radius-2, 8px);
-    background: var(--cometchat-background-color-01, #FFF);
+/* Ensure dropdown items show text left-aligned */
+.cometchat-selector-header__menu [class*="cometchat-context-menu__dropdown-item"] {
+  text-align: left;
 }
 
-.join-group-password__content-avatar .cometchat-avatar {
-    width: 60px;
-    height: 60px;
+/* --- Per-item styling via className prop --- */
+
+/* Logged-in user item: separator + non-clickable */
+.cometchat-selector-header__menu-item--user {
+  border-bottom: 2px solid var(--cometchat-border-color-default, #E8E8E8);
+  cursor: default !important;
 }
 
-.join-group-password__content-avatar .cometchat-avatar__text {
-    font: var(--cometchat-font-heading1-bold, 700 24px Roboto);
+/* Logout item: red text */
+.cometchat-selector-header__menu-item--logout [class*="cometchat-context-menu__dropdown-item-title"] {
+  color: var(--cometchat-error-color, #F44649);
 }
 
-.join-group-password__content-text {
-    display: flex;
-    padding: 0px;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--cometchat-padding-1, 4px);
-    align-self: stretch;
+/* --- Create Group button in Groups tab header --- */
+.cometchat-selector-header__create-group-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  border-radius: var(--cometchat-radius-2, 8px);
+  cursor: pointer;
 }
 
-.join-group-password__content-text-title {
-    overflow: hidden;
-    color: var(--cometchat-text-color-primary, #141414);
-    text-align: center;
-    text-overflow: ellipsis;
-    font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+.cometchat-selector-header__create-group-button:hover {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
 }
 
-.join-group-password__content-text-subtitle {
-    overflow: hidden;
-    color: var(--cometchat-text-color-secondary, #727272);
-    text-align: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font: var(--cometchat-font-body-regular, 400 14px Roboto);
+.cometchat-selector-header__create-group-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852D6);
+  outline-offset: 2px;
 }
 
-.join-group-password__input {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--cometchat-padding-1, 4px);
-    align-self: stretch;
+.cometchat-selector-header__create-group-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  mask: url("../../assets/create-group.svg") center center / contain no-repeat;
+  -webkit-mask: url("../../assets/create-group.svg") center center / contain no-repeat;
+  background: var(--cometchat-icon-color-primary, #141414);
 }
 
-.join-group-password__input-label {
-    color: var(--cometchat-text-color-primary, #141414);
-    font: var(--cometchat-font-caption1-medium, 500 12px Roboto);
-}
-
-.join-group-password__input input {
-    display: flex;
-    height: 36px;
-    padding: var(--cometchat-padding-2, 8px);
-    color: var(--cometchat-text-color-primary, #141414);
-    align-items: center;
-    gap: var(--cometchat-padding-1, 4px);
-    align-self: stretch;
-    border-radius: var(--cometchat-radius-2, 8px);
-    border: 1px solid var(--cometchat-border-color-light, #F5F5F5);
-    background: var(--cometchat-background-color-02, #FAFAFA);
-}
-
-.join-group-password__input input:focus-visible {
-    outline: none;
-}
-
-.join-group-password__input input::placeholder {
-    color: var(--cometchat-text-color-tertiary, #A1A1A1);
-    font: var(--cometchat-font-body-regular, 400 14px Roboto);
-}
-
-.join-group-password__button,
-.join-group-password__button .cometchat-button {
-    width: 100%;
-}
-
-.join-group-password__input-wrong {
-    color: var(--cometchat-error-color, #F44649);
-    font: var(--cometchat-font-caption1-regular, 400 12px Roboto);
-}
-
-.selector-wrapper .cometchat-conversations .cometchat-list__header-menu .cometchat-button__icon {
-    background: var(--cometchat-icon-color-primary);
-}
-
-.cometchat-conversations .cometchat-list__header-menu .cometchat-button__icon:hover {
-    background: var(--cometchat-icon-color-highlight);
-}
-
-.cometchat-list__header-search-bar {
-    border-right: none;
-}
-
-.cometchat .cometchat-menu-list__sub-menu-list-item {
-    text-align: left;
-}
-
-.cometchat .cometchat-conversations-header .cometchat-menu-list__sub-menu-list {
-    width: 212px;
-}
-
-#logged-in-user {
-    border-bottom: 2px solid var(--cometchat-border-color-default, #E8E8E8);
-}
-
-#logged-in-user .cometchat-menu-list__sub-menu-item-title,
-#logged-in-user .cometchat-menu-list__sub-menu-list-item {
-    cursor: default;
-}
-
-
-.cometchat-menu-list__sub-menu-list-item-icon-log-out {
-    background-color: var(--cometchat-error-color, #F44649);
-}
-
-.cometchat-menu-list__sub-menu-item-title-log-out {
-    color: var(--cometchat-error-color, #F44649)
-}
-
-.chat-menu .cometchat .cometchat-menu-list__sub-menu-item-title {
-    cursor: pointer;
-}
-
-.chat-menu .cometchat .cometchat-menu-list__sub-menu {
-    box-shadow: none;
-}
-
-.chat-menu .cometchat .cometchat-menu-list__sub-menu-icon {
-    background-color: var(--cometchat-icon-color-primary, #141414);
-    width: 24px;
-    height: 24px;
-}
-
-.cometchat-conversations .cometchat-list__header {
-    min-height: 64px;
-}
-
-.cometchat-groups .cometchat-list__header {
-    height: 131px;
-}
-
-.cometchat-conversations-header {
-    display: flex;
-    width: 100%;
-    padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--cometchat-padding-3, 12px);
-    flex: 1 0 0;
-    align-self: stretch;
-    border-bottom: 1px solid var(--cometchat-border-color-light, #F5F5F5);
-    background: var(--cometchat-background-color-01, #FFF);
-}
-
-.cometchat-groups-header {
-    display: flex;
-    width: 100%;
-    padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--cometchat-padding-3, 12px);
-    flex: 1 0 0;
-    align-self: stretch;
-    background: var(--cometchat-background-color-01, #FFF);
-}
-
-.cometchat-conversations-header__title,
-.cometchat-groups-header__title {
-    overflow: hidden;
-    color: var(--cometchat-text-color-primary, #141414);
-    text-overflow: ellipsis;
-    font: var(--cometchat-font-heading1-bold, 700 24px Roboto);
-}
-
-.cometchat-groups-header .cometchat-button .cometchat-button__icon {
-    background: var(--cometchat-icon-color-primary, #141414);
-}
-
-.cometchat-groups-header .cometchat-button .cometchat-button__icon:hover {
-    background: var(--cometchat-icon-color-highlight, #6852D6);
-}
-
-@media (max-width: 768px) {
-    .join-group-password {
-        display: flex;
-        width: 320px;
-        padding: var(--cometchat-padding-5, 20px) var(--cometchat-padding-5, 20px) var(--cometchat-padding-10, 40px) var(--cometchat-padding-5, 20px);
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--cometchat-padding-5, 20px);
-        border-radius: var(--cometchat-radius-5, 20px);
-        border: 1px solid var(--cometchat-border-color-dark, #DCDCDC);
-        background: var(--cometchat-background-color-01, #FFF);
-        box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
-    }
+.cometchat-selector-header__create-group-button:hover .cometchat-selector-header__create-group-icon {
+  background: var(--cometchat-icon-color-highlight, #6852D6);
 }

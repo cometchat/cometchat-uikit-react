@@ -1,0 +1,157 @@
+/* Block */
+.cometchat-change-scope {
+  display: flex;
+  width: 400px;
+  padding: var(--cometchat-padding-6, 24px) var(--cometchat-padding-6, 24px)
+    var(--cometchat-padding-3, 12px) var(--cometchat-padding-6, 24px);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cometchat-padding-3, 12px);
+  border-radius: var(--cometchat-radius-5, 20px);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
+  box-shadow:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  box-sizing: border-box;
+}
+
+/* Header */
+.cometchat-change-scope__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  align-self: stretch;
+}
+
+.cometchat-change-scope__icon-container {
+  display: flex;
+  width: 80px;
+  height: 80px;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-background-color-02, #fafafa);
+}
+
+.cometchat-change-scope__icon {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.cometchat-change-scope__title {
+  align-self: stretch;
+  color: var(--cometchat-text-color-primary, #141414);
+  text-align: center;
+  font: var(--cometchat-font-heading2-medium, 500 20px Roboto);
+  line-height: 120%;
+  margin: 0;
+}
+
+.cometchat-change-scope__description {
+  align-self: stretch;
+  color: var(--cometchat-text-color-secondary, #727272);
+  text-align: center;
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  line-height: 120%;
+  margin: 0;
+}
+
+/* Scope list (radio group) */
+.cometchat-change-scope__list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--cometchat-padding-2, 8px);
+  align-self: stretch;
+  border-radius: var(--cometchat-radius-2, 8px);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
+  height: fit-content;
+  overflow: auto;
+}
+
+/* Scope option (list item) */
+.cometchat-change-scope__list-item {
+  display: flex;
+  min-width: 240px;
+  max-width: 1440px;
+  height: 48px;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  align-items: center;
+  gap: var(--cometchat-padding-3, 12px);
+  flex: 1 0 0;
+  align-self: stretch;
+  background: var(--cometchat-background-color-01, #fff);
+  cursor: pointer;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.cometchat-change-scope__list-item:hover {
+  background: var(--cometchat-white-hover, #fafafa);
+}
+
+.cometchat-change-scope__list-item-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  overflow: hidden;
+  color: var(--cometchat-text-color-primary, #141414);
+  text-overflow: ellipsis;
+  font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+  flex: 1 0 0;
+  text-align: left;
+}
+
+/* Button container */
+.cometchat-change-scope__button-container {
+  display: flex;
+  padding: var(--cometchat-padding-3, 12px) 0;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  align-self: stretch;
+}
+
+.cometchat-change-scope__cancel-button {
+  flex: 1;
+  height: 40px;
+  line-height: 120%;
+}
+
+.cometchat-change-scope__submit-button {
+  flex: 1;
+  height: 40px;
+  line-height: 120%;
+}
+
+/* Error view */
+.cometchat-change-scope__error-view {
+  color: var(--cometchat-error-color, #f44649);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  font-style: normal;
+  display: flex;
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-2, 8px);
+  justify-content: center;
+  align-items: center;
+  gap: var(--cometchat-padding-1, 4px);
+  align-self: stretch;
+  border-radius: var(--cometchat-radius-2, 8px);
+  background: rgba(244, 70, 73, 0.1);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-change-scope,
+  .cometchat-change-scope * {
+    animation-duration: 0s;
+    transition-duration: 0s;
+  }
+}

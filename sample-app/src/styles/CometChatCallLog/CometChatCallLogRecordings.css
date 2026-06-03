@@ -1,47 +1,41 @@
 .cometchat-call-log-recordings {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-.cometchat-call-log-recordings__download {
-    -webkit-mask: url("../../assets/downloadRecording.svg") center center no-repeat;
-    background: var(--cometchat-icon-color-highlight);
-    -webkit-mask-size: contain;
-    height: 16px;
-    width: 16px;
-    cursor: pointer;
-}
-
-.cometchat-call-log-recordings__subtitle .cometchat-date {
-    padding: 0px;
-    overflow: hidden;
-    color: var(--cometchat-text-color-secondary, #727272);
-    text-overflow: ellipsis;
-    font: var(--cometchat-font-body-regular);
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .cometchat-call-log-recordings__empty-state {
-    display: flex;
-    height: 100%;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: var(--cometchat-padding-2, 8px);
-    flex-shrink: 0;
-    align-self: stretch;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  align-self: stretch;
 }
 
 .cometchat-call-log-recordings__empty-state-icon {
-    -webkit-mask: url("../../assets/callRecordingEmpty.svg") center center no-repeat;
-    background: var(--cometchat-icon-color-tertiary);
-    -webkit-mask-size: contain;
-    height: 60px;
-    width: 60px;
+  -webkit-mask: url('../../assets/callRecordingEmpty.svg') center center no-repeat;
+  mask: url('../../assets/callRecordingEmpty.svg') center center no-repeat;
+  background: var(--cometchat-icon-color-tertiary, #a1a1a1);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  height: 60px;
+  width: 60px;
 }
 
 .cometchat-call-log-recordings__empty-state-text {
-    color: var(--cometchat-text-color-primary, #141414);
-    text-align: center;
-    font: var(--cometchat-font-heading4-medium);
+  color: var(--cometchat-text-color-primary, #141414);
+  text-align: center;
+  font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+}
+
+.cometchat-call-log-recordings__item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+}
+
+.cometchat-call-log-recordings__item-title {
+  font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+  color: var(--cometchat-text-color-primary, #141414);
 }

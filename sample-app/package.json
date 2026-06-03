@@ -1,94 +1,27 @@
 {
   "name": "sample-app",
-  "version": "6.2.6",
-  "description": "React App made using CometChat React v6 UI Kit.",
-  "author": "CometChat",
+  "version": "7.0.0-beta.1",
   "private": true,
-  "dependencies": {
-    "@cometchat/calls-sdk-javascript": "^4.2.5",
-    "@cometchat/chat-sdk-javascript": "^4.1.9",
-    "@cometchat/chat-uikit-react": "^6.4.5",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-router-dom": "^6.30.3",
-    "react-scripts": "5.0.1",
-    "web-vitals": "2.1.4"
-  },
+  "type": "module",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@cometchat/chat-uikit-react" : "7.0.0-beta.1",
+    "@cometchat/chat-sdk-javascript": "^4.1.10",
+    "@cometchat/calls-sdk-javascript": "^5.0.0",
+    "dompurify": "3.3.1"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "5.17.0",
-    "@testing-library/react": "13.4.0",
-    "@testing-library/user-event": "13.5.0",
-    "@types/jest": "27.5.2",
-    "@types/node": "16.18.38",
-    "@types/react": "18.2.15",
-    "@types/react-dom": "18.2.7",
-    "@typescript-eslint/eslint-plugin": "^8.15.0",
-    "@typescript-eslint/parser": "^8.15.0",
-    "eslint": "^8.0.0",
-    "typescript": "4.9.5"
-  },
-  "overrides": {
-    "rimraf": "^4.0.0",
-    "glob": "^9.0.0",
-    "resolve-url-loader": {
-      "postcss": "8.4.49"
-    },
-    "svgo": {
-      "nth-check": "2.1.1"
-    },
-    "@svgr/webpack": {
-      "nth-check": "2.1.1"
-    },
-    "cross-spawn": "7.0.6"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "homepage": "https://www.cometchat.com",
-  "repository": "https://github.com/cometchat/cometchat-uikit-react/tree/v6",
-  "main": "src/index.tsx",
-  "keywords": [
-    "CometChat",
-    "messaging",
-    "message",
-    "uikit",
-    "React",
-    "chat-uikit",
-    "uikit-react",
-    "react-uikit",
-    "chat-uikit-react",
-    "text",
-    "image",
-    "voice",
-    "audio",
-    "chat",
-    "video",
-    "ui components",
-    "webRTC"
-  ],
-  "license": "SEE LICENSE IN LICENSE.md",
-  "bugs": {
-    "url": "https://help.cometchat.com/hc/en-us"
+    "@types/node": "^25.5.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.4.1",
+    "typescript": "~5.7.0",
+    "vite": "^6.3.1"
   }
 }

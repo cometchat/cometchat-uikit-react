@@ -1,439 +1,363 @@
-import { CallingExtension } from "../components/Calling/CallingExtension";
-import { ChatConfigurator } from "../utils/ChatConfigurator";
-import { CollaborativeDocumentExtension } from "../components/Extensions/CollaborativeDocument/CollaborativeDocumentExtension";
-import { CollaborativeWhiteboardExtension } from "../components/Extensions/CollaborativeWhiteboard/CollaborativeWhiteboardExtension";
-import { CometChat } from "@cometchat/chat-sdk-javascript";
-import { ExtensionsDataSource } from "../components/Extensions/ExtensionsDataSource";
+import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { UIKitSettings } from './UIKitSettings';
+import { CometChatPluginRegistry } from '../plugins/CometChatPluginRegistry';
+import { defaultPlugins } from '../plugins/core';
+import { CometChatUIKitCalls, loadCallsSDK } from './CometChatCalls';
+import { CometChatLocalize } from '../resources/CometChatLocalize/CometChatLocalize';
 
-import { LinkPreviewExtension } from "../components/Extensions/LinkPreview/LinkPreviewExtension";
-import { MessageTranslationExtension } from "../components/Extensions/MessageTranslation/MessageTranslationExtension";
-import { PollsExtension } from "../components/Extensions/Polls/PollsExtension";
-
-import { StickersExtension } from "../components/Extensions/Stickers/StickersExtension";
-import { ThumbnailGenerationExtension } from "../components/Extensions/ThumbnailGeneration/ThumbnailGenerationExtension";
-import { CometChatLocalize } from "../resources/CometChatLocalize/cometchat-localize";
-import { UIKitSettings } from "./UIKitSettings";
-import { CometChatSoundManager } from "../resources/CometChatSoundManager/CometChatSoundManager";
-import { CometChatUIKitLoginListener } from "./CometChatUIKitLoginListener";
-import { CometChatUIKitUtility } from "./CometChatUIKitUtility";
-import { DataSource } from "../utils/DataSource";
-import { CometChatUIKitCalls } from "./CometChatCalls";
-import { ChatSdkEventInitializer } from "../utils/ChatSdkEventInitializer";
-import { CometChatMessageEvents } from "../events/CometChatMessageEvents";
-import { MessageStatus } from "../Enums/Enums";
-
-interface CometChatUiKit {
-    name: string;
-    version: string;
-}
-declare global {
-    interface Window {
-        CometChatUiKit: CometChatUiKit;
-    }
-}
 /**
- * `CometChatUIKit` is a class that provides an interface for initializing and interacting with the CometChat UI Kit.
- * It handles various aspects of the UI Kit, including configuration, messaging, and extension management.
- * It is used in Calling, Conversations, Groups and Users components.
- * @class
+ * CometChatUIKit — static facade for initializing and interacting with the UIKit.
+ *
+ * Provides a single entry point for:
+ * - SDK initialization (with UIKit-specific configuration)
+ * - User login/logout with session resumption
+ * - Plugin registry management
+ * - Calling SDK initialization
+ * - Convenience send methods (for non-React usage)
+ *
+ * Usage:
+ * ```typescript
+ * import { CometChatUIKit, UIKitSettingsBuilder } from '@cometchat/chat-uikit-react';
+ *
+ * const settings = new UIKitSettingsBuilder()
+ *   .setAppId('APP_ID')
+ *   .setRegion('us')
+ *   .setAuthKey('AUTH_KEY')
+ *   .subscribePresenceForAllUsers()
+ *   .setCallingEnabled(true)
+ *   .build();
+ *
+ * await CometChatUIKit.init(settings);
+ * const user = await CometChatUIKit.login('superhero1');
+ * ```
  */
-class CometChatUIKit {
-    /**
-     * `CometChatUIKit` is a class that provides an interface for initializing and interacting with the CometChat UI Kit.
-     * It handles various aspects of the UI Kit, including configuration, messaging, and extension management.
-     *
-     * @class
-     */
-    static uiKitSettings: UIKitSettings | null;
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+export class CometChatUIKit {
+  // --- Static state ---
+  private static _settings: UIKitSettings | null = null;
+  private static _loggedInUser: CometChat.User | null = null;
+  private static _pluginRegistry: CometChatPluginRegistry | null = null;
+  private static _initialized = false;
+  private static _callingReady = false;
+  private static _loginListenerId: string | null = null;
+  private static _conversationUpdateSettings: CometChat.ConversationUpdateSettings | null = null;
 
-    /**
-     * The sound manager for handling sound-related functionalities in the UI Kit.
-     * @type {typeof CometChatSoundManager}
-     */
-    static SoundManager: typeof CometChatSoundManager = CometChatSoundManager;
+  // --- Getters ---
 
-    /**
-    * The localizer for internationalization.
-    * @type {typeof CometChatLocalize}
-    */
-    static Localize: typeof CometChatLocalize = CometChatLocalize;
-
-    /**
-    * Settings related to conversation updates.
-    * @type {CometChat.ConversationUpdateSettings}
-    */
-    static conversationUpdateSettings: CometChat.ConversationUpdateSettings;
-
-    /**
-    * Variable for storing theme mode of the UIKit.
-    */
-
-    static themeMode: "light" | "dark" = "light";
-
-    /**
-     * Initializes the CometChat UI Kit with the provided settings.
-     * @param {UIKitSettings | null} uiKitSettings - The settings for initializing the UI Kit.
-     * @returns {Promise<Object> | undefined} - A promise that resolves with an object if initialization is successful, otherwise `undefined`.
-     */
-    static init(uiKitSettings: UIKitSettings | null): Promise<Object> | undefined {
-
-        CometChatUIKit.uiKitSettings = uiKitSettings
-        if (!CometChatUIKit.checkAuthSettings()) return undefined;
-        const appSettingsBuilder = new CometChat.AppSettingsBuilder();
-        if (uiKitSettings!.getRoles()) {
-            appSettingsBuilder.subscribePresenceForRoles(uiKitSettings!.getRoles());
-        } else if (uiKitSettings!.getSubscriptionType() === "ALL_USERS") {
-            appSettingsBuilder.subscribePresenceForAllUsers();
-        } else if (uiKitSettings!.getSubscriptionType() === "FRIENDS") {
-            appSettingsBuilder.subscribePresenceForFriends();
-        }
-        appSettingsBuilder.autoEstablishSocketConnection(uiKitSettings!.isAutoEstablishSocketConnection());
-        appSettingsBuilder.setRegion(uiKitSettings!.getRegion());
-        appSettingsBuilder.overrideAdminHost(uiKitSettings!.getAdminHost());
-        appSettingsBuilder.overrideClientHost(uiKitSettings!.getClientHost());
-        appSettingsBuilder.setStorageMode(uiKitSettings!.getStorageMode())
-
-        const appSettings = appSettingsBuilder.build();
-        if (CometChat.setSource) {
-            CometChat.setSource("uikit-v6", "web", "reactjs");
-        }
-        CometChatLocalize.setCurrentLanguage(CometChatLocalize.getBrowserLanguage());
-        return new Promise((resolve, reject) => {
-            window.CometChatUiKit = {
-                name: "@cometchat/chat-uikit-react",
-                version: "6.5.0",
-            };
-            CometChat.init(uiKitSettings?.appId, appSettings).then(() => {
-                CometChat.getLoggedinUser().then((user: CometChat.User | null) => {
-                    if (user) {
-                        CometChatUIKitLoginListener.setLoggedInUser(user);
-                        ChatConfigurator.init();
-                        this.initiateAfterLogin()
-                    }
-                    return resolve(user!)
-                }).catch((error: CometChat.CometChatException) => {
-                    console.log(error)
-                    return reject(error)
-                })
-            })
-                .catch((error: CometChat.CometChatException) => {
-                    return reject(error)
-                })
-        });
-    }
-
-    /**
-    * Default extensions included in the UI Kit.
-    * @type {ExtensionsDataSource[]}
-    */
-    static defaultExtensions: ExtensionsDataSource[] = [
-        new StickersExtension(),
-        new CollaborativeWhiteboardExtension(),
-        new CollaborativeDocumentExtension(),
-        new MessageTranslationExtension(),
-        new ThumbnailGenerationExtension(),
-        new LinkPreviewExtension(),
-        new PollsExtension()
-    ]
-        /**
-    * Default callingExtension included in the UI Kit.
-    * @type {CallingExtension}
-    */
-        static defaultCallingExtension: CallingExtension = new CallingExtension()
-
-
-    /**
-     * Checking if the SDK is initialized.
-     */
-    static isInitialized(){
-  try {
-    return CometChat.isInitialized();
-  } catch (error) {
-    console.log(error)
+  /** Returns the UIKit settings used during initialization. */
+  static getSettings(): UIKitSettings | null {
+    return CometChatUIKit._settings;
   }
+
+  /** Returns the currently logged-in user (synchronous). */
+  static getLoggedInUser(): CometChat.User | null {
+    return CometChatUIKit._loggedInUser;
+  }
+
+  /** Returns the plugin registry instance. */
+  static getPluginRegistry(): CometChatPluginRegistry | null {
+    return CometChatUIKit._pluginRegistry;
+  }
+
+  /** Returns whether the SDK has been initialized. */
+  static isInitialized(): boolean {
+    return CometChatUIKit._initialized;
+  }
+
+  /** Returns whether the Calls SDK is ready. */
+  static isCallingReady(): boolean {
+    return CometChatUIKit._callingReady;
+  }
+
+  /** Returns the conversation update settings fetched from the dashboard. */
+  static getConversationUpdateSettings(): CometChat.ConversationUpdateSettings | null {
+    return CometChatUIKit._conversationUpdateSettings;
+  }
+
+  // --- Initialization ---
+
+  /**
+   * Initialize the CometChat SDK and UIKit.
+   *
+   * This:
+   * 1. Validates settings
+   * 2. Builds AppSettings from UIKitSettings
+   * 3. Calls CometChat.init()
+   * 4. Sets source metadata for analytics
+   * 5. Sets up plugin registry
+   * 6. Resumes existing session (if any)
+   * 7. Initializes Calls SDK (if enabled)
+   */
+  static async init(settings: UIKitSettings): Promise<CometChat.User | null> {
+    CometChatUIKit._settings = settings;
+
+    // Build SDK AppSettings from UIKitSettings
+    const appSettingsBuilder = new CometChat.AppSettingsBuilder();
+
+    if (settings.getRoles().length > 0) {
+      appSettingsBuilder.subscribePresenceForRoles(settings.getRoles());
+    } else if (settings.getSubscriptionType() === 'ALL_USERS') {
+      appSettingsBuilder.subscribePresenceForAllUsers();
+    } else if (settings.getSubscriptionType() === 'FRIENDS') {
+      appSettingsBuilder.subscribePresenceForFriends();
     }
-    /**
-     * Enables calling functionality in the UI Kit.
-     */
-    static enableCalling() {
-        try {
-            if (CometChatUIKitCalls) {
-                const callAppSetting = new CometChatUIKitCalls.CallAppSettingsBuilder()
-                    .setAppId(CometChatUIKit.uiKitSettings?.appId)
-                    .setRegion(CometChatUIKit.uiKitSettings?.region)
-                    .build();
-                CometChatUIKitCalls.init(callAppSetting).then(
-                    () => {
-                        if(this.uiKitSettings?.getCallsExtension()){
-                            this.uiKitSettings?.getCallsExtension().enable();
-                        }
-                        else{
-                           this.defaultCallingExtension.enable();
 
-                        }
-                    },
-                    (error: ErrorEvent) => {
-                        console.log('CometChatCalls initialization failed with error:', error);
-                    },
-                );
-            }
+    appSettingsBuilder.autoEstablishSocketConnection(settings.isAutoEstablishSocketConnection());
+    appSettingsBuilder.setRegion(settings.getRegion());
 
-        } catch (e) {
-            console.log(e);
+    const adminHost = settings.getAdminHost();
+    if (adminHost) {
+      appSettingsBuilder.overrideAdminHost(adminHost);
+    }
+    const clientHost = settings.getClientHost();
+    if (clientHost) {
+      appSettingsBuilder.overrideClientHost(clientHost);
+    }
+    appSettingsBuilder.setStorageMode(settings.getStorageMode());
+
+    const appSettings = appSettingsBuilder.build();
+
+    // Set source for analytics
+    if (typeof CometChat.setSource === 'function') {
+      CometChat.setSource('uikit-v7', 'web', 'reactjs');
+    }
+
+    // Set window metadata for debugging/support
+    if (typeof window !== 'undefined') {
+      (window as unknown as Record<string, unknown>).CometChatUiKit = {
+        name: '@cometchat/chat-uikit-react',
+        version: '7.0.0-beta.1',
+      };
+    }
+
+    // Initialize SDK
+    await CometChat.init(settings.getAppId(), appSettings);
+    CometChatUIKit._initialized = true;
+
+    // Set up plugin registry
+    const userPlugins = settings.getPlugins();
+    const allPlugins = userPlugins ? [...defaultPlugins, ...userPlugins] : defaultPlugins;
+    CometChatUIKit._pluginRegistry = new CometChatPluginRegistry(allPlugins);
+
+    // Initialize locale
+    const localize = new CometChatLocalize();
+    localize.init();
+    CometChatLocalize.setSharedInstance(localize);
+
+    // Check for existing session
+    try {
+      const existingUser = await CometChat.getLoggedinUser();
+      if (existingUser) {
+        CometChatUIKit._loggedInUser = existingUser;
+        await CometChatUIKit._postLogin();
+      }
+    } catch {
+      // No existing session — that's fine
+    }
+
+    return CometChatUIKit._loggedInUser;
+  }
+
+  // --- Login ---
+
+  /**
+   * Log in a user by UID.
+   * Requires authKey to be set in UIKitSettings.
+   */
+  static async login(uid: string): Promise<CometChat.User> {
+    CometChatUIKit._checkInitialized();
+
+    const authKey = CometChatUIKit._settings?.getAuthKey();
+    if (!authKey) {
+      throw new Error('CometChatUIKit.login: authKey is required in UIKitSettings for UID login');
+    }
+
+    // Check if already logged in
+    const existing = await CometChat.getLoggedinUser();
+    if (existing) {
+      CometChatUIKit._loggedInUser = existing;
+      await CometChatUIKit._postLogin();
+      return existing;
+    }
+
+    const user = await CometChat.login(uid, authKey);
+    CometChatUIKit._loggedInUser = user;
+    await CometChatUIKit._postLogin();
+    return user;
+  }
+
+  /**
+   * Log in a user with an auth token.
+   */
+  static async loginWithAuthToken(authToken: string): Promise<CometChat.User> {
+    CometChatUIKit._checkInitialized();
+
+    const user = await CometChat.login(authToken);
+    CometChatUIKit._loggedInUser = user;
+    await CometChatUIKit._postLogin();
+    return user;
+  }
+
+  // --- Logout ---
+
+  /**
+   * Log out the current user.
+   */
+  static async logout(): Promise<void> {
+    await CometChat.logout();
+    CometChatUIKit._loggedInUser = null;
+    CometChatUIKit._callingReady = false;
+    // Remove login listener
+    if (CometChatUIKit._loginListenerId) {
+      CometChat.removeLoginListener(CometChatUIKit._loginListenerId);
+      CometChatUIKit._loginListenerId = null;
+    }
+  }
+
+  // --- User management ---
+
+  /**
+   * Create a new user.
+   * Requires authKey in UIKitSettings.
+   */
+  static async createUser(user: CometChat.User): Promise<CometChat.User> {
+    CometChatUIKit._checkInitialized();
+    const authKey = CometChatUIKit._settings?.getAuthKey();
+    if (!authKey) {
+      throw new Error('CometChatUIKit.createUser: authKey is required');
+    }
+    return CometChat.createUser(user, authKey);
+  }
+
+  /**
+   * Update an existing user.
+   * Requires authKey in UIKitSettings.
+   */
+  static async updateUser(user: CometChat.User): Promise<CometChat.User> {
+    CometChatUIKit._checkInitialized();
+    const authKey = CometChatUIKit._settings?.getAuthKey();
+    if (!authKey) {
+      throw new Error('CometChatUIKit.updateUser: authKey is required');
+    }
+    return CometChat.updateUser(user, authKey);
+  }
+
+  // --- Send methods (convenience for non-React usage) ---
+
+  /**
+   * Send a text message.
+   * Sets muid and sentAt if not already set.
+   */
+  static async sendTextMessage(message: CometChat.TextMessage): Promise<CometChat.BaseMessage> {
+    CometChatUIKit._prepareMessage(message);
+    return CometChat.sendMessage(message);
+  }
+
+  /**
+   * Send a media message.
+   * Sets muid and sentAt if not already set.
+   */
+  static async sendMediaMessage(message: CometChat.MediaMessage): Promise<CometChat.BaseMessage> {
+    CometChatUIKit._prepareMessage(message);
+    return CometChat.sendMediaMessage(message);
+  }
+
+  /**
+   * Send a custom message.
+   * Sets muid and sentAt if not already set.
+   */
+  static async sendCustomMessage(message: CometChat.CustomMessage): Promise<CometChat.BaseMessage> {
+    CometChatUIKit._prepareMessage(message);
+    return CometChat.sendCustomMessage(message);
+  }
+
+  // --- Private helpers ---
+
+  /** Post-login initialization: calls SDK, conversation settings, login listener. */
+  private static async _postLogin(): Promise<void> {
+    // Fetch conversation update settings from dashboard
+    try {
+      CometChatUIKit._conversationUpdateSettings = await CometChat.getConversationUpdateSettings();
+    } catch {
+      // Non-fatal — use defaults
+    }
+
+    // Attach login listener to keep _loggedInUser in sync
+    CometChatUIKit._attachLoginListener();
+
+    // Initialize Calls SDK if enabled
+    if (CometChatUIKit._settings?.isCallingEnabled()) {
+      await CometChatUIKit._initCalling();
+    }
+  }
+
+  /** Attach SDK login listener to track login/logout from other tabs or direct SDK calls. */
+  private static _attachLoginListener(): void {
+    if (CometChatUIKit._loginListenerId) {
+      CometChat.removeLoginListener(CometChatUIKit._loginListenerId);
+    }
+
+    CometChatUIKit._loginListenerId = `CometChatUIKit_login_${String(Date.now())}`;
+    CometChat.addLoginListener(
+      CometChatUIKit._loginListenerId,
+      new CometChat.LoginListener({
+        loginSuccess: (user: CometChat.User) => {
+          CometChatUIKit._loggedInUser = user;
+        },
+        logoutSuccess: () => {
+          CometChatUIKit._loggedInUser = null;
+          CometChatUIKit._callingReady = false;
+        },
+      })
+    );
+  }
+
+  /** Initialize the Calls SDK. */
+  private static async _initCalling(): Promise<void> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const callsSDK = CometChatUIKitCalls ?? (await loadCallsSDK());
+
+      if (!callsSDK) return;
+
+      const settings = CometChatUIKit._settings;
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+
+      const callAppSetting = settings?.getCallAppSettings() ?? {
+        appId: settings?.getAppId(),
+        region: settings?.getRegion(),
+      };
+
+      await callsSDK.init(callAppSetting);
+
+      const loggedInUser = CometChatUIKit._loggedInUser;
+      if (loggedInUser) {
+        const authToken = loggedInUser.getAuthToken();
+        if (authToken) {
+          await callsSDK.loginWithAuthToken(authToken);
         }
+      }
+
+      CometChatUIKit._callingReady = true;
+    } catch (error) {
+      console.error('CometChatUIKit: Calls SDK initialization failed:', error);
     }
+  }
 
-    /**
-     * Performs post-login initialization tasks.
-     * @private
-     */
-    private static initiateAfterLogin() {
-
-        if (CometChatUIKit.uiKitSettings != null) {
-            CometChat.getConversationUpdateSettings().then((res: CometChat.ConversationUpdateSettings) => {
-                this.conversationUpdateSettings = res;
-            })
-            let extensionList: ExtensionsDataSource[] = this.uiKitSettings?.extensions || this.defaultExtensions;
-            ChatSdkEventInitializer.attachListeners();
-            CometChatUIKitLoginListener.attachListener();
-
-            if (extensionList.length > 0) {
-                extensionList.forEach((extension: ExtensionsDataSource) => {
-                    extension?.enable();
-                });
-            }
-            this.enableCalling();
-        }
+  /** Prepare a message for sending (set muid, sentAt). */
+  private static _prepareMessage(message: CometChat.BaseMessage): void {
+    if (!message.getMuid()) {
+      message.setMuid(`_${Math.random().toString(36).slice(2, 12)}`);
     }
-
-    /**
-     * Logs in a user with the specified UID.
-     * @param {string} uid - The UID of the user to log in.
-     * @returns {Promise<CometChat.User>} - A promise that resolves with the logged-in user.
-     */
-    static login(uid: string): Promise<CometChat.User> {
-
-        return new Promise((resolve, reject) => {
-
-            if (!CometChatUIKit.checkAuthSettings()) return reject("uiKitSettings not available");
-            CometChatUIKit.getLoggedinUser()?.then((user) => {
-                if (user) {
-                    CometChatUIKitLoginListener.setLoggedInUser(user);
-                    this.initiateAfterLogin();
-                    return resolve(user);
-                } else {
-                    CometChat.login(uid, CometChatUIKit.uiKitSettings!.authKey!).then((user: CometChat.User) => {
-                        CometChatUIKitLoginListener.setLoggedInUser(user);
-                        ChatConfigurator.init();
-                        CometChatUIKitLoginListener.setLoggedInUser(user);
-                        this.initiateAfterLogin();
-                        return resolve(user);
-                    }).catch((error: CometChat.CometChatException) => {
-                        return reject(error);
-                    })
-                }
-            });
-        });
+    if (!message.getSentAt()) {
+      message.setSentAt(Math.floor(Date.now() / 1000));
     }
+  }
 
-    /**
-    * Logs in a user with the specified authentication token.
-    * @param {string} authToken - The authentication token for the user.
-    * @returns {Promise<CometChat.User>} - A promise that resolves with the logged-in user.
-    */
-    static loginWithAuthToken(authToken: string): Promise<CometChat.User> {
-
-        return new Promise((resolve, reject) => {
-
-            if (!CometChatUIKit.checkAuthSettings()) return reject("uiKitSettings not available");
-            CometChat.login(authToken).then((user: CometChat.User) => {
-                CometChatUIKitLoginListener.setLoggedInUser(user);
-                ChatConfigurator.init();
-                this.initiateAfterLogin();
-                return resolve(user);
-            }).catch((error: CometChat.CometChatException) => {
-                return reject(error);
-            })
-        });
+  /** Throw if not initialized. */
+  private static _checkInitialized(): void {
+    if (!CometChatUIKit._initialized) {
+      throw new Error('CometChatUIKit: Not initialized. Call CometChatUIKit.init() first.');
     }
-
-    /**
-    * Retrieves the currently logged-in user.
-    * @returns {Promise<CometChat.User | null>} - A promise that resolves with the logged-in user or `null` if no user is logged in.
-    */
-    static getLoggedinUser(): Promise<CometChat.User | null> {
-        return new Promise((resolve, reject) => {
-            if (!CometChatUIKit.checkAuthSettings()) return reject("uiKitSettings not available");
-
-            CometChat.getLoggedinUser().then((user: CometChat.User | null) => {
-                if (user) {
-                    CometChatUIKitLoginListener.setLoggedInUser(user);
-                }
-                return resolve(user);
-            }).catch((error: CometChat.CometChatException) => {
-                return reject(error);
-            })
-        })
-    }
-
-    /**
-    * Creates a new user with the specified details.
-    * @param {CometChat.User} user - The user details to create.
-    * @returns {Promise<CometChat.User>} - A promise that resolves with the created user.
-    */
-    static createUser(user: CometChat.User): Promise<CometChat.User> {
-
-        return new Promise((resolve, reject) => {
-            if (!CometChatUIKit.checkAuthSettings()) return reject("uiKitSettings not available");
-            CometChat.createUser(user, CometChatUIKit.uiKitSettings!.authKey!).then((user: CometChat.User) => {
-                return resolve(user);
-            }).catch((error: CometChat.CometChatException) => {
-                return reject(error);
-            })
-        });
-    }
-
-    /**
-    * Updates the details of an existing user.
-    * @param {CometChat.User} user - The user details to update.
-    * @returns {Promise<CometChat.User>} - A promise that resolves with the updated user.
-    */
-    static updateUser(user: CometChat.User): Promise<CometChat.User> {
-
-        return new Promise((resolve, reject) => {
-            if (!CometChatUIKit.checkAuthSettings()) return reject("uiKitSettings not available");
-            CometChat.updateUser(user, CometChatUIKit.uiKitSettings!.authKey!).then((user: CometChat.User) => {
-                return resolve(user);
-            }).catch((error: CometChat.CometChatException) => {
-                return reject(error);
-            })
-        });
-    }
-
-    /**
-     * Logs out the current user.
-     * @returns {Promise<Object>} - A promise that resolves with a message object upon successful logout.
-     */
-    static logout(): Promise<Object> {
-
-        return new Promise((resolve, reject) => {
-
-            if (!CometChatUIKit.checkAuthSettings()) {
-                const error = {
-                    code: "ERROR_UIKIT_NOT_INITIALISED",
-                    message: "UIKItSettings not available"
-                }
-                return reject(error);
-            }
-            CometChat.logout().then((message: object) => {
-                CometChatUIKitLoginListener.removeLoggedInUser();
-                return resolve(message);
-            }).catch((error: CometChat.CometChatException) => {
-                return reject(error);
-            })
-        });
-    }
-
-    /**
-     * Checks if the UI Kit settings are properly configured.
-     * @returns {boolean} - `true` if UI Kit settings are available and valid, otherwise `false`.
-     */
-    static checkAuthSettings(): boolean {
-        if (CometChatUIKit.uiKitSettings == null) {
-            return false;
-        }
-
-        if (CometChatUIKit.uiKitSettings!.appId == null) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-    * Sends a custom message and returns a promise with the result.
-    * @param {CometChat.CustomMessage} message - The custom message to be sent.
-    * @returns {Promise<CometChat.BaseMessage>} - A promise that resolves with the sent message.
-    */
-    static sendCustomMessage(message: CometChat.CustomMessage) {
-
-        return new Promise((resolve, reject) => {
-            message.setSentAt(CometChatUIKitUtility.getUnixTimestamp());
-            if (!message?.getMuid()) {
-                message.setMuid(CometChatUIKitUtility.ID());
-            }
-            CometChatMessageEvents.ccMessageSent.next({ message: message, status: MessageStatus.inprogress });
-
-            CometChat.sendCustomMessage(message).then((message: CometChat.BaseMessage) => {
-                CometChatMessageEvents.ccMessageSent.next({ message: message, status: MessageStatus.success });
-                return resolve(message);
-            }).catch((error: CometChat.CometChatException) => {
-                message.setMetadata({ error })
-                CometChatMessageEvents.ccMessageSent.next({ message: message, status: MessageStatus.error });
-                return reject(error);
-            })
-        });
-    }
-
-    /**
-    * Sends a text message and returns a promise with the result.
-    * @param {CometChat.TextMessage} message - The text message to be sent.
-    * @returns {Promise<CometChat.BaseMessage>} - A promise that resolves with the sent message.
-    */
-    static sendTextMessage(message: CometChat.TextMessage): Promise<CometChat.BaseMessage> {
-
-        return new Promise((resolve, reject) => {
-            message.setSentAt(CometChatUIKitUtility.getUnixTimestamp());
-            if (!message?.getMuid()) {
-                message.setMuid(CometChatUIKitUtility.ID());
-            }
-            CometChatMessageEvents.ccMessageSent.next({ message: message, status: MessageStatus.inprogress });
-
-            CometChat.sendMessage(message).then((message: CometChat.BaseMessage) => {
-                CometChatMessageEvents.ccMessageSent.next({ message: message, status: MessageStatus.success });
-                return resolve(message);
-            }).catch((error: CometChat.CometChatException) => {
-                message.setMetadata({ error })
-                CometChatMessageEvents.ccMessageSent.next({ message: message, status: MessageStatus.error });
-                return reject(error);
-            })
-        });
-    }
-
-    /**
-     * Sends a media message and returns a promise with the result.
-     * @param {CometChat.MediaMessage} message - The media message to be sent.
-     * @returns {Promise<CometChat.BaseMessage>} - A promise that resolves with the sent message.
-     */
-    static sendMediaMessage(message: CometChat.MediaMessage): Promise<CometChat.BaseMessage> {
-        message.setSentAt(CometChatUIKitUtility.getUnixTimestamp());
-        if (!message?.getMuid()) {
-            message.setMuid(CometChatUIKitUtility.ID());
-        }
-        return new Promise((resolve, reject) => {
-            CometChatMessageEvents.ccMessageSent.next({ message: message, status: MessageStatus.inprogress });
-
-            CometChat.sendMediaMessage(message).then((message: CometChat.BaseMessage) => {
-                CometChatMessageEvents.ccMessageSent.next({ message: message, status: MessageStatus.success });
-                return resolve(message);
-            }).catch((error: CometChat.CometChatException) => {
-                message.setMetadata({ error })
-                CometChatMessageEvents.ccMessageSent.next({ message: message, status: MessageStatus.error });
-                return reject(error);
-            })
-        })
-
-    }
-
-
-    /**
-     * Retrieves the data source for chat configuration.
-     * @returns {DataSource} - The chat data source.
-     */
-    static getDataSource(): DataSource {
-        return ChatConfigurator.getDataSource();
-    }
-
+  }
 }
-
-export { CometChatUIKit };

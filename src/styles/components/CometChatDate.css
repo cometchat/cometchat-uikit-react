@@ -1,9 +1,0 @@
-.cometchat-date {
-    display: inline;
-    font: var(--cometchat-font-caption2-regular);
-    color: var(--cometchat-neutral-color-600);
-    background: transparent;
-    text-align: center;
-    font-style: normal;
-    padding: 3px 10px;
-}

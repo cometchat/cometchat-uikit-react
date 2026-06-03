@@ -1,0 +1,111 @@
+/* Block */
+.cometchat-search-bar {
+  display: flex;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-3, 12px);
+  align-items: center;
+  align-self: stretch;
+  gap: var(--cometchat-padding-1, 4px);
+  border-radius: var(--cometchat-radius-max, 1000px);
+  border: 1px solid var(--cometchat-border-color-light, #e0e0e0);
+  background: var(--cometchat-background-color-03, #f5f5f5);
+  flex: 1 0 0;
+  box-sizing: border-box;
+  min-height: 42px;
+}
+
+/* Modifier: disabled */
+.cometchat-search-bar--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Element: search icon (CSS mask) */
+.cometchat-search-bar__icon {
+  -webkit-mask: url('../../../assets/search.svg') center center no-repeat;
+  mask: url('../../../assets/search.svg') center center no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  display: flex;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  justify-content: center;
+  align-items: center;
+  background: var(--cometchat-icon-color-secondary, #999);
+}
+
+/* Element: input */
+.cometchat-search-bar__input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-heading4-regular, 400 14px/20px sans-serif);
+  font-style: normal;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.cometchat-search-bar__input:focus-visible {
+  outline: none;
+}
+
+.cometchat-search-bar__input::placeholder {
+  color: var(--cometchat-text-color-tertiary, #aaa);
+  font: var(--cometchat-font-heading4-regular, 400 14px/20px sans-serif);
+  font-style: normal;
+}
+
+.cometchat-search-bar__input:disabled {
+  cursor: not-allowed;
+}
+
+/* Element: clear button */
+.cometchat-search-bar__clear-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--cometchat-radius-max, 1000px);
+}
+
+.cometchat-search-bar__clear-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+.cometchat-search-bar__clear-button:disabled {
+  cursor: not-allowed;
+}
+
+/* Element: clear button icon (CSS mask) */
+.cometchat-search-bar__clear-button-icon {
+  -webkit-mask: url('../../../assets/close.svg') center center no-repeat;
+  mask: url('../../../assets/close.svg') center center no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  display: block;
+  width: 16px;
+  height: 16px;
+  background: var(--cometchat-icon-color-secondary, #999);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-search-bar,
+  .cometchat-search-bar__input,
+  .cometchat-search-bar__clear-button {
+    transition: none;
+  }
+}

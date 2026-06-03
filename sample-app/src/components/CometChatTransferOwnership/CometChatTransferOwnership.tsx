@@ -1,288 +1,140 @@
-import { useCallback, useRef, useState } from "react";
-import { CometChat } from "@cometchat/chat-sdk-javascript";
-import { useCometChatTransferOwnership } from "./useCometChatTransferOwnership";
-import SearchIcon from "../../assets/search.svg";
-import SpinnerIcon from "../../assets/spinnerIcon.svg";
+import { useState, useRef, useCallback } from 'react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
+import {
+  CometChatGroupMembers,
+  CometChatRadioButton,
+  usePublishEvent,
+  useLocale,
+} from '@cometchat/chat-uikit-react';
 import '../../styles/CometChatTransferOwnership/CometChatTransferOwnership.css';
-import { CometChatButton, CometChatGroupEvents, CometChatGroupMembers, CometChatOption, CometChatRadioButton, CometChatUIKitConstants, CometChatUIKitUtility, SelectionMode, TitleAlignment, getLocalizedString, useCometChatErrorHandler, useRefSync } from "@cometchat/chat-uikit-react";
 
-interface ITransferOwnershipProps {
-    /**
-     * Group to transfer ownership of
-     */
-    group: CometChat.Group,
-    /**
-     * Alignment of the `title` text
-     *
-     * @defaultValue `TitleAlignment.center`
-     */
-    titleAlignment?: TitleAlignment,
-    /**
-     * Image URL for the search icon to use in the search bar
-     *
-     * @defaultValue `../../assets/search.svg`
-     */
-    searchIconURL?: string,
-    /**
-     * Hide the search bar
-     *
-     * @defaulValue `false`
-     */
-    hideSearch?: boolean,
-    /**
-     * Request builder to fetch group members
-     *
-     * @remarks
-     * If the search input is not empty and the `searchRequestBuilder` prop is not provided,
-     * the search keyword of this request builder is set to the text in the search input
-     *
-     * @defaultValue Default request builder having the limit set to 30
-     */
-    groupMembersRequestBuilder?: CometChat.GroupMembersRequestBuilder,
-    /**
-     * Request builder with search parameters to fetch group members
-     *
-     * @remarks
-     * If the search input is not empty,
-     * the search keyword of this request builder is set to the text in the search input
-     */
-    searchRequestBuilder?: CometChat.GroupMembersRequestBuilder,
-    /**
-     * Image URL for the default loading view
-     *
-     * @defaultValue `../../assets/spinner.svg`
-     */
-    loadingIconURL?: string,
-    /**
-     * Custom view for the loading state of the component
-     */
-    loadingStateView?: JSX.Element,
-    /**
-     * Custom view for the empty state of the component
-     */
-    emptyStateView?: JSX.Element,
-    /**
-     * Custom view for the error state of the component
-     */
-    errorStateView?: JSX.Element,
-    /**
-     * Function to call whenever the component encounters an error
-     */
-    onError?: ((error: CometChat.CometChatException) => void) | null,
-    /**
-     * Hide the separator at the bottom of the default list item view
-     *
-     * @defaultValue `false`
-     */
-    hideSeparator?: boolean,
-    /**
-     * Hide user presence
-     *
-     * @remarks
-     * If set to true, the status indicator of the default list item view is not displayed
-     *
-     * @defaultValue `false`
-     */
-    disableUsersPresence?: boolean,
-    /**
-     * Image URL for the close button
-     *
-     * @defaultValue `../../assets/close2x.svg`
-     */
-    closeButtonIconURL?: string,
-    /**
-     * Function to call when the close button is clicked
-     */
-    onClose?: () => void,
-    /**
-     * Custom list item view to be rendered for each group member in the fetched list
-     */
-    listItemView?: (groupMember: CometChat.GroupMember) => JSX.Element,
-    /**
-     * Custom subtitle view to be rendered for each group member in the fetched list
-     *
-     * @remarks
-     * This prop is used if `listItemView` prop is not provided
-     */
-    subtitleView?: (groupMember: CometChat.GroupMember) => JSX.Element,
-    // Later
-    transferButtonText?: string,
-    // Later
-    onTransferOwnership?: (groupMember: CometChat.GroupMember) => void,
-    /**
-     * Text to display for the cancel button
-     */
-    cancelButtonText?: string,
-    /**
-     * List of actions available on mouse over on the default list item component
-     */
-    options?: (group: CometChat.Group, groupMember: CometChat.GroupMember) => CometChatOption[],
-};
+interface CometChatTransferOwnershipProps {
+  /** Group to transfer ownership of. */
+  group: CometChat.Group;
+  /** Called when the panel should close. */
+  onClose: () => void;
+  /** Called after ownership is successfully transferred. */
+  onTransferred?: (group: CometChat.Group, newOwner: CometChat.User) => void;
+}
 
 /**
- * Renders transfer ownership view related to a group of a CometChat App
+ * CometChatTransferOwnership — panel for transferring group ownership to another member.
+ *
+ * Displays the group member list with radio buttons + scope labels (excluding the owner).
+ * On confirm, calls CometChat.transferGroupOwnership and publishes ui:group/ownership-changed.
  */
-export function CometChatTransferOwnership(props: ITransferOwnershipProps) {
-    const {
+export const CometChatTransferOwnership = ({
+  group,
+  onClose,
+  onTransferred,
+}: CometChatTransferOwnershipProps) => {
+  const publish = usePublishEvent();
+  const { getLocalizedString } = useLocale();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(true);
+  const selectedMemberRef = useRef<CometChat.GroupMember | null>(null);
+
+  const handleSelect = useCallback((member: CometChat.GroupMember) => {
+    selectedMemberRef.current = member;
+    if (isDisabled) setIsDisabled(false);
+  }, [isDisabled]);
+
+  const handleTransfer = useCallback(async () => {
+    const member = selectedMemberRef.current;
+    if (!member) return;
+
+    setIsLoading(true);
+    setIsError(false);
+
+    try {
+      await CometChat.transferGroupOwnership(group.getGuid(), member.getUid());
+
+      // Update local group reference
+      group.setOwner(member.getUid());
+
+      publish({
+        type: 'ui:group/ownership-changed',
         group,
-        hideSearch = false,
-        groupMembersRequestBuilder,
-        searchRequestBuilder,
-        loadingIconURL = SpinnerIcon,
-        loadingStateView,
-        emptyStateView,
-        errorStateView,
-        onError,
-        onClose,
-        listItemView,
-        subtitleView,
-        transferButtonText = getLocalizedString("transfer"),
-        onTransferOwnership,
-        cancelButtonText = getLocalizedString("cancel"),
-        options,
-    } = props;
+        newOwner: member as unknown as CometChat.User,
+      });
 
-    const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(null);
-    const [isDisabled, setIsDisabled] = useState<boolean>(true);
-    const selectedMemberRef = useRef<CometChat.GroupMember | null>(null);
-    const errorHandler = useCometChatErrorHandler(onError);
-    const onTransferOwnershipPropRef = useRefSync(onTransferOwnership);
-    const groupPropRef = useRefSync(group);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isError, setIsError] = useState(false);
-    /**
-     * Changes `selectedMemberRef` reference
-     */
-    function onSelect(groupMember: CometChat.GroupMember): void {
-        if (isDisabled) {
-            setIsDisabled(false);
-        }
-        selectedMemberRef.current = groupMember;
+      onTransferred?.(group, member as unknown as CometChat.User);
+      onClose();
+    } catch (error) {
+      console.error('[CometChatTransferOwnership] transfer error:', error);
+      setIsError(true);
+      setIsLoading(false);
     }
+  }, [group, publish, onClose, onTransferred]);
 
-    /**
-     * Creates tail view
-     */
-    function tailView(groupMember: CometChat.GroupMember): JSX.Element {
-        const scope = group.getOwner() === groupMember.getUid() ? CometChatUIKitConstants.groupMemberScope.owner : groupMember.getScope();
-        if (group.getOwner() === groupMember.getUid()) {
-            return <></>;
-        } else {
-            return (
-                <div>
-                    <CometChatRadioButton
-                        name={"transfer-ownership"}
-                        id={groupMember.getUid()}
-                        labelText={getLocalizedString(`member_scope_${scope.toLowerCase()}`)}
-                        onRadioButtonChanged={() => onSelect(groupMember)}
-                    />
-                </div>
-            );
-        }
+  const getScopeLabel = (member: CometChat.GroupMember): string => {
+    const scope = member.getScope();
+    switch (scope) {
+      case 'admin':
+        return getLocalizedString('group_members_admin') || 'Admin';
+      case 'moderator':
+        return getLocalizedString('group_members_moderator') || 'Moderator';
+      default:
+        return getLocalizedString('member_scope_participant') || 'Participant';
     }
+  };
 
-    /**
-     * Provides a default behavior to the `onTransferOwnership` prop
-     */
-    const onTransferOwnershipWrapper = useCallback(async (): Promise<void> => {
-        const selectedMember = selectedMemberRef.current;
-        if (!selectedMember) {
-            return;
-        }
-        setIsError(false);
-        setIsLoading(true);
-        try {
-            const currentGroup = groupPropRef.current;
-            await CometChat.transferGroupOwnership(currentGroup.getGuid(), selectedMember.getUid());
-            setIsLoading(false);
-            if (loggedInUser) {
-                const groupClone = CometChatUIKitUtility.clone(currentGroup);
-                groupClone.setOwner(selectedMember.getUid());
-                CometChatGroupEvents.ccOwnershipChanged.next({
-                    group: groupClone,
-                    newOwner: CometChatUIKitUtility.clone(selectedMember)
-                });
-                if (onClose) {
-                    onClose()
-                }
-            }
-            selectedMemberRef.current = null;
-        }
-        catch (error) {
-            setIsLoading(false);
-            setIsError(true);
-            errorHandler(error);
-        }
-    }, [errorHandler, loggedInUser, groupPropRef, onTransferOwnershipPropRef]);
-
-    /**
-     * Creates confirm button view
-     */
-    function getConfirmButtonView(): JSX.Element {
-        return (
-            <div className={`cometchat-transfer-ownership__transfer-button ${isDisabled ? "cometchat-transfer-ownership__transfer-button-disabled" : ""}`}>
-                <CometChatButton
-                    text={transferButtonText}
-                    disabled={isDisabled}
-                    isLoading={isLoading}
-                    onClick={onTransferOwnershipWrapper}
-                />
-            </div>
-
-        );
+  // Custom trailing view: scope label + uncontrolled radio for non-owners, empty for owner
+  const trailingView = (member: CometChat.GroupMember) => {
+    // Owner row: no radio, no label
+    if (group.getOwner() === member.getUid()) {
+      return <></>;
     }
-
-    /**
-     * Creates cancel button view
-     */
-    function getCancelButtonView(): JSX.Element {
-        return (
-            <div className="cometchat-transfer-ownership__cancel-button">
-                <CometChatButton
-                    text={cancelButtonText}
-                    onClick={onClose}
-                />
-            </div>
-        );
-    }
-
-    useCometChatTransferOwnership({
-        errorHandler,
-        setLoggedInUser
-    });
 
     return (
-        <div
-            className="cometchat-transfer-ownership"
-        >
-            <CometChatGroupMembers
-                hideError={undefined}
-                onItemClick={undefined}
-                options={options}
-                group={group}
-                hideSearch={hideSearch}
-                groupMemberRequestBuilder={groupMembersRequestBuilder}
-                searchRequestBuilder={searchRequestBuilder}
-                loadingView={loadingStateView}
-                emptyView={emptyStateView}
-                errorView={errorStateView}
-                onError={errorHandler}
-                selectionMode={SelectionMode.none}
-                itemView={listItemView}
-                subtitleView={subtitleView}
-                trailingView={tailView}
-            />
-         
-            <div className="cometchat-transfer-ownership__buttons-wrapper">
-            {isError ?   <div className="cometchat-transfer-ownership_error-view">
-                    {getLocalizedString("error")}
-                </div> : null}
-               <div className="cometchat-transfer-ownership__buttons">
-               {getCancelButtonView()}
-               {getConfirmButtonView()}
-               </div>
-
-            </div>
-        </div>
+      <div className="cometchat-transfer-ownership__trailing">
+        <CometChatRadioButton
+          id={`transfer-ownership-${member.getUid()}`}
+          name="transfer-ownership"
+          value={member.getUid()}
+          label={getScopeLabel(member)}
+          onChange={() => handleSelect(member)}
+          ariaLabel={`Select ${member.getName()} as new owner`}
+        />
+      </div>
     );
-}
+  };
+
+  return (
+    <div className="cometchat-transfer-ownership">
+      <CometChatGroupMembers
+        group={group}
+        selectionMode="none"
+        trailingView={trailingView}
+      />
+
+      <div className="cometchat-transfer-ownership__buttons-wrapper">
+        {isError && (
+          <div className="cometchat-transfer-ownership__error-view">
+            {getLocalizedString('transfer_failed') || 'Transfer failed. Please try again.'}
+          </div>
+        )}
+        <div className="cometchat-transfer-ownership__buttons">
+          <button
+            type="button"
+            className="cometchat-transfer-ownership__cancel-button"
+            onClick={onClose}
+          >
+            {getLocalizedString('cancel') || 'Cancel'}
+          </button>
+          <button
+            type="button"
+            className={`cometchat-transfer-ownership__transfer-button ${isDisabled ? 'cometchat-transfer-ownership__transfer-button--disabled' : ''}`}
+            disabled={isDisabled || isLoading}
+            onClick={() => void handleTransfer()}
+          >
+            {isLoading
+              ? (getLocalizedString('transferring') || 'Transferring...')
+              : (getLocalizedString('transfer') || 'Transfer')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

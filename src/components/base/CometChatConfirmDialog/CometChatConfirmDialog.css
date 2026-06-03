@@ -1,0 +1,234 @@
+/* Backdrop overlay */
+.cometchat-confirm-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+/* Dialog container */
+.cometchat-confirm-dialog {
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  max-width: 400px;
+  padding: var(--cometchat-padding-6, 24px) var(--cometchat-padding-6, 24px)
+    var(--cometchat-padding-3, 12px) var(--cometchat-padding-6, 24px);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cometchat-spacing-3, 12px);
+  border-radius: var(--cometchat-radius-4, 16px);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
+  box-shadow:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  overflow: hidden;
+}
+
+/* No visible outline on the dialog container itself */
+.cometchat-confirm-dialog:focus,
+.cometchat-confirm-dialog:focus-visible {
+  outline: none;
+}
+
+/* Icon wrapper */
+.cometchat-confirm-dialog__icon {
+  display: flex;
+  width: 80px;
+  height: 80px;
+  padding: var(--cometchat-padding-4, 16px);
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-background-color-02, #f5f5f5);
+  flex-shrink: 0;
+}
+
+/* Default icon (img element) */
+.cometchat-confirm-dialog__icon-default {
+  height: 48px;
+  width: 48px;
+  display: block;
+  object-fit: contain;
+}
+
+/* Variant modifiers for icon — tint the img via CSS filter */
+.cometchat-confirm-dialog__icon--danger .cometchat-confirm-dialog__icon-default {
+  filter: brightness(0) saturate(100%) invert(38%) sepia(82%) saturate(2000%) hue-rotate(335deg)
+    brightness(95%) contrast(97%);
+}
+
+.cometchat-confirm-dialog__icon--warning .cometchat-confirm-dialog__icon-default {
+  filter: brightness(0) saturate(100%) invert(65%) sepia(63%) saturate(500%) hue-rotate(5deg)
+    brightness(100%) contrast(95%);
+}
+
+.cometchat-confirm-dialog__icon--info .cometchat-confirm-dialog__icon-default {
+  filter: brightness(0) saturate(100%) invert(45%) sepia(80%) saturate(1500%) hue-rotate(190deg)
+    brightness(100%) contrast(95%);
+}
+
+/* Content area */
+.cometchat-confirm-dialog__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing, 4px);
+}
+
+/* Title */
+.cometchat-confirm-dialog__content-title {
+  color: var(--cometchat-text-color-primary, #141414);
+  text-align: center;
+  font: var(--cometchat-font-heading2-medium, 500 20px Roboto);
+  font-style: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Message */
+.cometchat-confirm-dialog__content-message {
+  width: 100%;
+  color: var(--cometchat-text-color-secondary, #8a8a8a);
+  text-align: center;
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  font-style: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Actions button group */
+.cometchat-confirm-dialog__actions {
+  display: flex;
+  padding: var(--cometchat-padding-3, 12px) 0;
+  align-items: center;
+  gap: var(--cometchat-spacing-2, 8px);
+  align-self: stretch;
+  width: 100%;
+}
+
+/* Cancel button wrapper */
+.cometchat-confirm-dialog__actions-cancel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-confirm-dialog__actions-cancel button {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--cometchat-border-color-dark, #d1d1d1);
+  background: var(--cometchat-background-color-01, #fff) !important;
+  color: var(--cometchat-text-color-primary, #141414);
+  border-radius: var(--cometchat-radius-2, 8px);
+  font: var(--cometchat-font-button-medium, 500 14px Roboto);
+  cursor: pointer;
+}
+
+.cometchat-confirm-dialog__actions-cancel button:hover,
+.cometchat-confirm-dialog__actions-cancel button:hover:not(:disabled),
+.cometchat-confirm-dialog__actions-cancel button:active {
+  background: var(--cometchat-background-color-01, #fff) !important;
+}
+
+/* Confirm button wrapper */
+.cometchat-confirm-dialog__actions-confirm {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-confirm-dialog__actions-confirm button {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  border-radius: var(--cometchat-radius-2, 8px);
+  font: var(--cometchat-font-button-medium, 500 14px Roboto);
+  cursor: pointer;
+}
+
+/* Danger variant confirm button */
+.cometchat-confirm-dialog__actions-confirm--danger button {
+  background: var(--cometchat-error-color, #f44649) !important;
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-confirm-dialog__actions-confirm--danger button:hover,
+.cometchat-confirm-dialog__actions-confirm--danger button:hover:not(:disabled) {
+  background: var(--cometchat-error-color, #f44649) !important;
+}
+
+/* Warning variant confirm button */
+.cometchat-confirm-dialog__actions-confirm--warning button {
+  background: var(--cometchat-warning-color, #f5a623) !important;
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-confirm-dialog__actions-confirm--warning button:hover,
+.cometchat-confirm-dialog__actions-confirm--warning button:hover:not(:disabled) {
+  background: var(--cometchat-warning-color, #f5a623) !important;
+}
+
+/* Info variant confirm button */
+.cometchat-confirm-dialog__actions-confirm--info button {
+  background: var(--cometchat-primary-color, #3399ff) !important;
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-confirm-dialog__actions-confirm--info button:hover,
+.cometchat-confirm-dialog__actions-confirm--info button:hover:not(:disabled) {
+  background: var(--cometchat-primary-color, #3399ff) !important;
+}
+
+/* Loading modifier */
+.cometchat-confirm-dialog__actions-confirm--loading button {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Error banner */
+.cometchat-confirm-dialog__error {
+  border-radius: var(--cometchat-radius-4, 12px) var(--cometchat-radius-4, 12px) 0 0;
+  background:
+    linear-gradient(0deg, rgba(244, 70, 73, 0.1) 0%, rgba(244, 70, 73, 0.1) 100%),
+    var(--cometchat-background-color-01, #fff);
+  overflow: hidden;
+  color: var(--cometchat-error-color, #f44649);
+  text-overflow: ellipsis;
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  font-style: normal;
+  display: flex;
+  width: 100%;
+  padding: var(--cometchat-padding-2, 8px);
+  align-items: flex-start;
+  height: 48px;
+  justify-content: center;
+}
+
+/* Focus styles for interactive elements */
+.cometchat-confirm-dialog__actions-cancel button:focus-visible,
+.cometchat-confirm-dialog__actions-confirm button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-confirm-dialog__backdrop,
+  .cometchat-confirm-dialog {
+    animation: none;
+    transition: none;
+  }
+}

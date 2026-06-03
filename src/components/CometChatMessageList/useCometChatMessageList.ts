@@ -1,146 +1,370 @@
-import { MutableRefObject, createRef, useEffect } from "react";
-import { CometChat } from "@cometchat/chat-sdk-javascript";
-import { MessageListManager } from "./CometChatMessageListController";
-import { CometChatUIKitLoginListener } from "../../CometChatUIKit/CometChatUIKitLoginListener";
+import { useMemo, useReducer, useRef } from 'react';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import type { CometChatMessageListManager } from './CometChatMessageListManager';
+import { messageListReducer, initialMessageListState } from './CometChatMessageList.reducer';
+import type {
+  CometChatUseMessageListOptions,
+  CometChatUseMessageListReturn,
+  CometChatMessageListState,
+} from './CometChatMessageList.types';
+import { usePluginRegistry } from '../../hooks/usePluginRegistry';
+import { useMessageListInit } from './useMessageListInit';
+import { useMessageListEvents } from './useMessageListEvents';
+import { useMessageListActions } from './useMessageListActions';
+import { useMessageListScroll } from './useMessageListScroll';
+import type { MessageListRefs } from './messageListRefs';
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+
 /**
- * This Hooks function is a custom React hook designed to manage  functionalities of CometChatMessageList component. It fetches the logged-in user, handles event subscriptions and tracks message IDs for new message retrieval. It plays a key role in maintaining real-time functionality and user interactions in the chat interface.
- **/
-function useCometChatMessageList(
-	loggedInUserRef: MutableRefObject<CometChat.User | null>,
-	messageListManagerRef: MutableRefObject<any>,
-	fetchPreviousMessages: () => void,
-	updateMessage: (key: string, mesage: CometChat.BaseMessage, group?: CometChat.Group) => void,
-	messagesRequestBuilder: CometChat.MessagesRequestBuilder | undefined,
-	user: CometChat.User | undefined,
-	group: CometChat.Group | undefined,
-	messageIdRef: MutableRefObject<any>,
-	totalMessagesCountRef: MutableRefObject<any>,
-	messageList: CometChat.BaseMessage[],
-	errorHandler: (error: unknown,source?:string) => void,
-	setMessageList: (messages: CometChat.BaseMessage[]) => void,
-	setScrollListToBottom: (scrollToBottom: boolean) => void,
-	smartReplyViewRef: MutableRefObject<any>,
-	isOnBottomRef: MutableRefObject<boolean>,
-	isFirstReloadRef: MutableRefObject<boolean>,
-	subscribeToUIEvents: Function,
-	showSmartRepliesRef: MutableRefObject<any>,
-	addMessage:(message: CometChat.BaseMessage) => void,
-	canFetchPreviousRef: MutableRefObject<boolean>,
-	setDateHeader?: Function,
-	parentMessageId?: number,
-	hideGroupActionMessages?: boolean,
-	showSmartReplies?:boolean,
-	goToMessageId?:string,
-	isAgentChat?:boolean,
-	messageRepliedTo?: string,
-	loadLastAgentConversation?: boolean
+ * useCometChatMessageList — orchestration hook for the message list data layer.
+ *
+ * Creates a CometChatMessageListManager for SDK calls, uses useReducer for state,
+ * subscribes to SDK events via useCometChatEvents, and exposes a clean API.
+ *
+ *
+ * The hook is split into sub-hooks for maintainability:
+ * - useMessageListInit      — initialization effect
+ * - useMessageListEvents    — real-time SDK event handling
+ * - useMessageListActions   — send, edit, delete, mark as unread
+ * - useMessageListScroll    — pagination, scroll state, goToMessage, scrollToBottom
+ */
+export function useCometChatMessageList(
+  options: CometChatUseMessageListOptions
+): CometChatUseMessageListReturn {
+  const {
+    user,
+    group,
+    loggedInUser,
+    messagesRequestBuilder,
+    parentMessageId,
+    startFromUnreadMessages = false,
+    goToMessageId,
+    messageTypes: messageTypesProp,
+    messageCategories: messageCategoriesProp,
+    disableSoundForMessages = false,
+    customSoundForMessages,
+    scrollToBottomOnNewMessages = false,
+    hideReceipts = false,
+    isAgentChat = false,
+    onError,
+    onActiveChatChanged,
+    onMessageDeleted,
+    onConversationMarkedAsRead,
+    onConversationUpdated,
+  } = options;
 
-): void {
-		/**
-	 * useEffect hook to update the smart replies view when the prop changes
-	 * **/
-	useEffect(()=>{
-		showSmartRepliesRef.current = showSmartReplies!
-	  },[showSmartReplies])
+  // --- Plugin registry for default types/categories ---
+  const pluginRegistry = usePluginRegistry();
+  const messageTypes = messageTypesProp ?? pluginRegistry.getAllMessageTypes();
+  const messageCategories = messageCategoriesProp ?? pluginRegistry.getAllMessageCategories();
 
-	/**
-	 * useEffect hook to fetch the logged-in user when we first launch the user/group chat and set isFirstReloadRef to true. This state variable is used to add a connection listener when the chat is launched for the first time.
-	 * **/
-	useEffect(() => {
-		CometChat.getLoggedinUser()
-			.then(
-				(userObject: CometChat.User | null) => {
-					isFirstReloadRef.current = true;
-					if (userObject) {
-						loggedInUserRef.current = userObject;
-					}
-				}, (error: CometChat.CometChatException) => {
-					errorHandler(error,"getLoggedinUser");
-				}
-			);
-	}, [user, group,errorHandler,messageRepliedTo]);
-	/**
-	* useEffect hook to subscribe to SDK and UI events when the component launches for the first time, or when changing from one chat to another.
-	**/
+  // --- Reducer ---
+  const [state, dispatch] = useReducer(messageListReducer, initialMessageListState);
 
-	useEffect(() => {
-		try {
-			if (setDateHeader) {
-				setDateHeader(null)
-			}
-			if (CometChatUIKitLoginListener.getLoggedInUser() && (user || group)) {
-			messageIdRef.current = { prevMessageId: 0, nextMessageId: 0 };
-            totalMessagesCountRef.current = 0;
-            canFetchPreviousRef.current = true; 
-				messageListManagerRef.current = {
-					previous: new MessageListManager(
-						errorHandler,
-						messagesRequestBuilder,
-						user,
-						group,
-						undefined,
-						undefined,
-						hideGroupActionMessages
-					)
-				}
-				if(!parentMessageId || (parentMessageId && isAgentChat)){
-					MessageListManager.attachListeners(isAgentChat || false,updateMessage,addMessage,user);
-				}
-				setMessageList([]);
-				if(isFirstReloadRef.current && (goToMessageId || messageRepliedTo)){
-				setScrollListToBottom(false);
-				isOnBottomRef.current = false;
-				}
-				else{
-				setScrollListToBottom(true);
-				isOnBottomRef.current = true;
-				}
-				if (
-          !isAgentChat ||
-          (isAgentChat && parentMessageId)
-        ) {
-          fetchPreviousMessages();
-        }
-				smartReplyViewRef.current = null;
-			}
-			return () => {
-				MessageListManager?.removeListeners?.();
-	
-			}
-		} catch (error) {
-			errorHandler(error,"useEffect")
-		}
-	}, [user, group, isAgentChat, parentMessageId, loadLastAgentConversation, messageRepliedTo]);
+  // --- Refs ---
+  const generationRef = useRef(0);
+  const managerRef = useRef<CometChatMessageListManager | null>(null);
+  const isFetchingPrevRef = useRef(false);
+  const isFetchingNextRef = useRef(false);
+  const lastUnreadMarkedIdRef = useRef('');
+  const groupRef = useRef<CometChat.Group | undefined>(group);
 
+  // stateRef tracks current state so the useCometChatEvents handler can read it
+  // without re-subscribing on every state change.
+  const stateRef = useRef<CometChatMessageListState>(state);
+  stateRef.current = state;
 
-	useEffect(() => {
-		try {
-			let unsubscribeEvents: (() => void) | undefined;
-			unsubscribeEvents = subscribeToUIEvents();
+  // Keep callback refs stable so the event handler doesn't re-subscribe
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
 
-			return () => {
-				unsubscribeEvents?.();
-			}
-		} catch (error) {
-			errorHandler(error,"useEffect")
-		}
-	}, [errorHandler, subscribeToUIEvents]);
+  /**
+   * Core initialization logic. Extracted so it can be called from both
+   * the initialization effect and the connection/connected handler.
+   */
+  const initializeRef = useRef<(() => void) | null>(null);
 
-	/**
-	 * useEffect hook to store the first and last message ID in the messageList array. These are used to fetch new messages after a particular message when the connection gets reestablished after being interrupted.
-	**/
-	useEffect(() => {
-		try {
-			totalMessagesCountRef.current = messageList.length;
-		if (messageList?.length > 0) {
-			messageIdRef.current.prevMessageId = messageList[0].getId();
-			messageIdRef.current.nextMessageId = messageList[messageList.length - 1].getId();
-		}
-		} catch (error) {
-			errorHandler(error,"useEffect")
-		}
-	}, [messageList]);
+  // --- Shared refs object (memoized so sub-hook useCallback deps stay stable) ---
+  // Each individual ref is already stable (from useRef), but the container object
+  // must also be stable to avoid re-creating useCallbacks on every render.
+  const refs: MessageListRefs = useMemo(
+    () => ({
+      generationRef,
+      managerRef,
+      isFetchingPrevRef,
+      isFetchingNextRef,
+      lastUnreadMarkedIdRef,
+      groupRef,
+      stateRef,
+      optionsRef,
+      initializeRef,
+      pendingMessagesMap: {},
+    }),
+    []
+  );
 
+  // ---------------------------------------------------------------------------
+  // Sub-hooks
+  // ---------------------------------------------------------------------------
+
+  // --- Initialization ---
+  useMessageListInit(
+    {
+      user,
+      group,
+      loggedInUser,
+      messagesRequestBuilder,
+      parentMessageId,
+      startFromUnreadMessages,
+      goToMessageId,
+      messageTypes,
+      messageCategories,
+      onError,
+      isAgentChat,
+      loadLastAgentConversation: options.loadLastAgentConversation ?? false,
+      onActiveChatChanged,
+    },
+    refs,
+    dispatch
+  );
+
+  // --- Real-time event handling ---
+  useMessageListEvents(
+    {
+      user,
+      group,
+      loggedInUser,
+      messagesRequestBuilder,
+      parentMessageId,
+      messageTypes,
+      messageCategories,
+      disableSoundForMessages,
+      customSoundForMessages,
+      scrollToBottomOnNewMessages,
+      hideReceipts,
+    },
+    refs,
+    dispatch
+  );
+
+  // --- Message actions (delete, mark as unread, react) ---
+  const { deleteMessage, markMessageAsUnread, reactToMessage } = useMessageListActions(
+    {
+      onError,
+      onMessageDeleted,
+      onConversationUpdated,
+    },
+    refs,
+    dispatch
+  );
+
+  // --- Scroll-dependent behavior (pagination, goToMessage, scrollToBottom) ---
+  const {
+    fetchPrevious,
+    fetchNext,
+    setAtBottom,
+    clearNewMessageCount,
+    markConversationAsReadIfUnread,
+    scrollToMessage,
+    goToMessage,
+    scrollToBottom,
+  } = useMessageListScroll(
+    {
+      user,
+      group,
+      messagesRequestBuilder,
+      parentMessageId,
+      messageTypes,
+      messageCategories,
+      onError,
+      onConversationMarkedAsRead,
+    },
+    refs,
+    dispatch
+  );
+
+  // ---------------------------------------------------------------------------
+  // Computed values
+  // ---------------------------------------------------------------------------
+
+  // `state.messages` is the single source of truth (pending + confirmed +
+  // edited + moderated + failed all coexist in one list)
+  const allMessages = state.messages;
+
+  const isLoading = state.fetchState === 'loading';
+  const isEmpty = state.fetchState === 'empty';
+  const isError = state.fetchState === 'error';
+
+  // ---------------------------------------------------------------------------
+  // Visual / option / date-format bag
+  // ---------------------------------------------------------------------------
+  // Grouped into a single object so the View / BubbleRenderer / DateSeparator
+  const {
+    hideStickyDate = false,
+    hideAvatar = false,
+    hideGroupActionMessages = false,
+    quickOptionsCount = 2,
+    hideReplyOption = false,
+    hideReplyInThreadOption: hideReplyInThreadOptionProp = false,
+    hideEditMessageOption = false,
+    hideDeleteMessageOption = false,
+    hideCopyMessageOption = false,
+    hideReactionOption = false,
+    hideMessageInfoOption = false,
+    hideFlagMessageOption = false,
+    hideMessagePrivatelyOption = false,
+    hideTranslateMessageOption = false,
+    showMarkAsUnreadOption: showMarkAsUnreadOptionProp = false,
+    separatorDateTimeFormat,
+    stickyDateTimeFormat,
+    messageSentAtDateTimeFormat,
+    messageInfoDateTimeFormat,
+    reactionsRequestBuilder,
+    onReactionClick,
+    onReactionListItemClick,
+    messageAlignment = 1,
+    showScrollbar = false,
+    hideDateSeparator = false,
+    onThreadRepliesClick,
+    onAvatarClick,
+    onEditMessage,
+    onReplyMessage,
+    hideFlagRemarkField = false,
+    disableTruncation = false,
+    hideModerationView = false,
+    bubbleView,
+    showSmartReplies = false,
+    smartRepliesKeywords = ['what', 'when', 'why', 'who', 'where', 'how', '?'],
+    smartRepliesDelayDuration = 10000,
+    showConversationStarters = false,
+    loadLastAgentConversation = false,
+  } = options;
+
+  const hideReplyInThreadOption = parentMessageId ? true : hideReplyInThreadOptionProp;
+  const showMarkAsUnreadOption = parentMessageId ? false : showMarkAsUnreadOptionProp;
+
+  const optionsBag = useMemo(
+    () => ({
+      hideStickyDate,
+      hideAvatar,
+      hideGroupActionMessages,
+      quickOptionsCount,
+      hideReplyOption,
+      hideReplyInThreadOption,
+      hideEditMessageOption,
+      hideDeleteMessageOption,
+      hideCopyMessageOption,
+      hideReactionOption,
+      hideMessageInfoOption,
+      hideFlagMessageOption,
+      hideMessagePrivatelyOption,
+      hideTranslateMessageOption,
+      showMarkAsUnreadOption,
+      separatorDateTimeFormat,
+      stickyDateTimeFormat,
+      messageSentAtDateTimeFormat,
+      messageInfoDateTimeFormat,
+      reactionsRequestBuilder,
+      onReactionClick,
+      onReactionListItemClick,
+      messageAlignment,
+      showScrollbar,
+      hideDateSeparator,
+      onThreadRepliesClick,
+      onAvatarClick,
+      onEditMessage,
+      onReplyMessage,
+      hideFlagRemarkField,
+      disableTruncation,
+      hideModerationView,
+      isAgentChat,
+      bubbleView,
+      showSmartReplies,
+      smartRepliesKeywords,
+      smartRepliesDelayDuration,
+      showConversationStarters,
+      loadLastAgentConversation,
+    }),
+    [
+      hideStickyDate,
+      hideAvatar,
+      hideGroupActionMessages,
+      quickOptionsCount,
+      hideReplyOption,
+      hideReplyInThreadOption,
+      hideEditMessageOption,
+      hideDeleteMessageOption,
+      hideCopyMessageOption,
+      hideReactionOption,
+      hideMessageInfoOption,
+      hideFlagMessageOption,
+      hideMessagePrivatelyOption,
+      hideTranslateMessageOption,
+      showMarkAsUnreadOption,
+      separatorDateTimeFormat,
+      stickyDateTimeFormat,
+      messageSentAtDateTimeFormat,
+      messageInfoDateTimeFormat,
+      reactionsRequestBuilder,
+      onReactionClick,
+      onReactionListItemClick,
+      messageAlignment,
+      showScrollbar,
+      hideDateSeparator,
+      onThreadRepliesClick,
+      onAvatarClick,
+      onEditMessage,
+      onReplyMessage,
+      hideFlagRemarkField,
+      disableTruncation,
+      hideModerationView,
+      isAgentChat,
+      bubbleView,
+      showSmartReplies,
+      smartRepliesKeywords,
+      smartRepliesDelayDuration,
+      showConversationStarters,
+      loadLastAgentConversation,
+    ]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Return
+  // ---------------------------------------------------------------------------
+
+  return {
+    state,
+    allMessages,
+    loggedInUser,
+    user,
+    group,
+    isLoading,
+    isEmpty,
+    isError,
+    fetchPrevious,
+    fetchNext,
+    deleteMessage,
+    scrollToMessage,
+    goToMessage,
+    setAtBottom,
+    clearNewMessageCount,
+    markConversationAsReadIfUnread,
+    markMessageAsUnread,
+    reactToMessage,
+    scrollToBottom,
+    hasMore: state.hasMore,
+    hasMoreNewer: state.hasMoreNewer,
+    hasReachedLatest: state.hasReachedLatest,
+    isFetchingMore: state.isFetchingMore,
+    newMessageCount: state.newMessageCount,
+    unreadCount: state.unreadCount,
+    isConversationRead: state.isConversationRead,
+    lastReadMessageId: state.lastReadMessageId,
+    error: state.error,
+    isAtBottom: state.isAtBottom,
+    options: optionsBag,
+  };
 }
-
-export { useCometChatMessageList };

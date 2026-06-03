@@ -1,341 +1,632 @@
-import { MessageStatus } from '../../Enums/Enums';
-import React, { JSX, useEffect, useRef } from "react";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-conversion */
+import { useCallback, useEffect, useId, useReducer, useRef, useState } from 'react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { CometChatConversationsManager } from './CometChatConversationsManager';
+import { conversationsReducer, initialConversationsState } from './CometChatConversations.reducer';
+import { CometChatSoundManager } from '../../resources/CometChatSoundManager/CometChatSoundManager';
+import type {
+  CometChatUseCometChatConversationsOptions,
+  CometChatUseCometChatConversationsReturn,
+} from './CometChatConversations.types';
+import { CometChatLogger } from '../../utils/CometChatLogger';
+import { useCometChatConversationsEvents } from './useCometChatConversationsEvents';
+import { usePublishEvent } from '../../hooks/usePublishEvent';
 
-import { Action } from "./CometChatConversations";
-import { CometChat, Conversation } from "@cometchat/chat-sdk-javascript";
-import { ConversationsManager } from "./controller";
-import { CometChatUIKitUtility } from '../../CometChatUIKit/CometChatUIKitUtility';
-import { CometChatUIKitLoginListener } from '../../CometChatUIKit/CometChatUIKitLoginListener';
-import { CometChatConversationEvents } from '../../events/CometChatConversationEvents';
-import { CometChatGroupEvents } from '../../events/CometChatGroupEvents';
-import { CometChatUserEvents } from '../../events/CometChatUserEvents';
-import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
-import { CometChatCallEvents } from '../../events/CometChatCallEvents';
-import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
-
-type Args = {
-  conversationsRequestBuilder: CometChat.ConversationsRequestBuilder | null,
-  conversationsManagerRef: React.MutableRefObject<ConversationsManager | null>,
-  fetchNextAndAppendConversations: (fetchId: string) => Promise<void>,
-  fetchNextIdRef: React.MutableRefObject<string>,
-  dispatch: React.Dispatch<Action>,
-  errorHandler: (error: unknown,source?:string) => void,
-  refreshSingleConversation: (message: CometChat.BaseMessage, remove?: boolean) => Promise<void>,
-  onMessageReceived: (message: CometChat.BaseMessage) => Promise<void>,
-  setReceipts: (messageReceipt: CometChat.MessageReceipt, updateReadAt: boolean) => void,
-  setTypingIndicator: (typingIndicator: CometChat.TypingIndicator, typingStarted: boolean) => void,
-  loggedInUser: CometChat.User | null,
-  activeConversation: Conversation | null,
-  setActiveConversationState: React.Dispatch<React.SetStateAction<Conversation | null>>,
-  hideUserStatus?:boolean,
-  hideConversation: (
-    conversationsRequest: CometChat.ConversationsRequest | null,
-    message: CometChat.BaseMessage
-  ) => boolean;
-};
-
-export function useCometChatConversations(args: Args) {
+/**
+ * useCometChatConversations — orchestration hook for the conversations list data layer.
+ *
+ * Creates the Manager, attaches SDK listeners, dispatches reducer actions,
+ * and exposes a clean API to the Provider.
+ */
+export function useCometChatConversations(
+  options: CometChatUseCometChatConversationsOptions = {}
+): CometChatUseCometChatConversationsReturn {
   const {
     conversationsRequestBuilder,
-    conversationsManagerRef,
-    fetchNextAndAppendConversations,
-    fetchNextIdRef,
-    dispatch,
-    errorHandler,
-    refreshSingleConversation,
-    onMessageReceived,
-    setReceipts,
-    setTypingIndicator,
-    loggedInUser,
+    searchRequestBuilder,
+    searchKeyword = '',
+    hideUserStatus = false,
+    disableSoundForMessages = false,
+    customSoundForMessages,
+    selectionMode = 'none',
     activeConversation,
-    setActiveConversationState,
-    hideUserStatus,
-    hideConversation
-  } = args;
+    onError,
+    onEmpty,
+    onSelect,
+    onItemClick,
+  } = options;
 
-  const isFirstRenderRef = useRef<boolean>(true);
+  const [state, dispatch] = useReducer(conversationsReducer, initialConversationsState);
+  const managerRef = useRef<CometChatConversationsManager | null>(null);
+  const fetchIdRef = useRef<string>('');
+  const instanceId = useId();
+  const anchorIndexRef = useRef<number | null>(null);
+  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
+  const [conversationToBeDeleted, setConversationToBeDeleted] =
+    useState<CometChat.Conversation | null>(null);
+  const publish = usePublishEvent();
 
-  useEffect(
-    /**
-     * Creates a new request builder -> empties the `conversationList` state -> initiates a new fetch
-     */
-    () => {
-      if(!isFirstRenderRef.current) return;
-      try {
-        dispatch({ type: "setIsFirstReload", isFirstReload: true });
-      conversationsManagerRef.current = new ConversationsManager({ conversationsRequestBuilder,errorHandler });
-      dispatch({ type: "setConversationList", conversationList: [] });
-      fetchNextAndAppendConversations(fetchNextIdRef.current = "initialFetchNext_" + String(Date.now()));
-      isFirstRenderRef.current = false;
-
-      } catch (error) {
-        errorHandler(error,"useEffect")
-      }
-
-    }, [conversationsRequestBuilder, fetchNextAndAppendConversations, dispatch, conversationsManagerRef, fetchNextIdRef]);
-
-  useEffect(
-    /**
-     * Sets `loggedInUserRef` to the currently logged-in user
-     */
-    () => {
-      (async () => {
-        try {
-          dispatch({ type: "setLoggedInUser", loggedInUser: CometChatUIKitLoginListener.getLoggedInUser() });
+  // --- Get logged-in user ---
+  useEffect(() => {
+    CometChat.getLoggedinUser()
+      .then(user => {
+        if (user) {
+          setLoggedInUserId(user.getUid());
         }
-        catch (error) {
-          errorHandler(error,"setLoggedInUser");
-        }
-      })();
-    }, [errorHandler, dispatch]);
-
-
-
-  useEffect(
-    /**
-     * Attaches an SDK user listener
-     *
-     * @returns - Function to remove the added SDK user listener
-     */
-    () => {
-    
- if(!hideUserStatus){
-  return ConversationsManager.attachUserListener((user: CometChat.User) => dispatch({ type: "updateConversationWithUser", user }));
- }
-      
-    }, [dispatch]);
-
-  useEffect(
-    /**
-     * Attaches an SDK group listener
-     *
-     * @returns - Function to remove the added SDK group listener
-     */
-    () => {
-      return ConversationsManager.attachGroupListener(refreshSingleConversation, loggedInUser);
-    }, [refreshSingleConversation, loggedInUser]);
-
-  useEffect(
-    /**
-     * Attaches an SDK message received listener
-     *
-     * @returns - Function to remove the added SDK message received listener
-     */
-    () => {
-      return ConversationsManager.attachMessageReceivedListener(onMessageReceived);
-    }, [onMessageReceived]);
-
-  useEffect(
-    /**
-     * Attaches an SDK message modified listener
-     *
-     * @returns - Function to remove the added SDK message modified listener
-     */
-    () => {
-      return ConversationsManager.attachMessageModifiedListener((message: CometChat.BaseMessage) => {
-        dispatch({ type: "updateConversationLastMessage", message });
       })
-    }, [dispatch]);
+      .catch(() => {
+        // Silently fail — receipts just won't show
+      });
+  }, []);
 
-  useEffect(
-    /**
-     * Attaches an SDK message receipt listener
-     *
-     * @returns - Function to remove the added SDK message receipt listener
-     */
-    () => {
-      return ConversationsManager.attachMessageReceiptListener(setReceipts);
-    }, [setReceipts]);
+  // --- Error handler ---
+  const handleError = useCallback(
+    (error: unknown) => {
+      if (onError) onError(error as CometChat.CometChatException);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      dispatch({ type: 'FETCH_ERROR', error: message });
+    },
+    [onError]
+  );
 
-  useEffect(
-    /**
-     * Attaches an SDK message typing listener
-     *
-     * @returns - Function to remove the added SDK message typing listener
-     */
-    () => {
-      return ConversationsManager.attachMessageTypingListener(setTypingIndicator);
-    }, [ setTypingIndicator]);
+  // --- Build request builder with search ---
+  const buildRequestBuilder = useCallback(
+    (search: string): CometChat.ConversationsRequestBuilder => {
+      let builder: CometChat.ConversationsRequestBuilder;
 
-  useEffect(
-    /**
-     * Attaches an SDK call listener
-     *
-     * @returns - Function to remove the added SDK call listener
-     */
-    () => {
-      return ConversationsManager.attachCallListener(refreshSingleConversation);
-    }, [refreshSingleConversation]);
-
-
-  useEffect(() => {
-  try {
-      /**
-     * Subscribes to Conversations UI events
-     */
-      const ccConversationDeleted =
-      CometChatConversationEvents.ccConversationDeleted.subscribe(
-        (conversation: CometChat.Conversation) => {
-          if (conversation) {
-            dispatch({ type: "removeConversation", conversation });
-            dispatch({ type: "setConversationToBeDeleted", conversation: null });
-          }
-        }
-      );
-
-      const ccUpdateConversation =
-      CometChatConversationEvents.ccUpdateConversation.subscribe(
-        (conversation: CometChat.Conversation) => {
-          if (conversation) {
-            dispatch({ type: "updateConversation", conversation: conversation });
-          }
-        }
-      );
-
-      const conversationReadSub = 
-      CometChatConversationEvents.ccMarkConversationAsRead.subscribe(
-        (conversation: CometChat.Conversation) => {
-          dispatch({ type: "resetUnreadCount", conversation });
-        }
-      );
-
-    return () => {
-      ccConversationDeleted.unsubscribe();
-      ccUpdateConversation.unsubscribe();
-      conversationReadSub.unsubscribe();
-    }
-  } catch (error) {
-    errorHandler(error,"ccConversationDeleted")
-  }
-  }, [dispatch])
-
-  const handleGroupCreated = async (group: CometChat.Group) => {
-    try {
-        const conversation = await CometChat.getConversation(
-            group.getGuid(),
-            CometChatUIKitConstants.MessageReceiverType.group
-        );
-        if (conversation) {
-            dispatch({
-              type: "addConversationOfTheGroupAtTheTop",
-              conversation: conversation 
-            });
-          }
-    } catch (error) {
-        console.error("Failed to fetch conversation:", error);
-    }
-};
-
-  useEffect(
-    /**
-     * Subscribes to User, Group, Message & Call UI events
-     */
-    () => {
-      try {
-        let builder = conversationsRequestBuilder;
-        var builtBuilder:CometChat.ConversationsRequest;
-        if(builder){
-          builtBuilder = builder.build();
-        }
-
-      const groupCreatedSub = CometChatGroupEvents.ccGroupCreated.subscribe(group => {
-          handleGroupCreated(group);
-      });
-      const groupMemberScopeChangedSub = CometChatGroupEvents.ccGroupMemberScopeChanged.subscribe(item => {
-        dispatch({ type: "updateConversationLastMessageAndPlaceAtTheTop", message: item.message });
-      });
-      const groupMemberAddedSub = CometChatGroupEvents.ccGroupMemberAdded.subscribe(item => {
-        const message = item.messages[item.messages.length - 1];
-        if (message) {
-          dispatch({ type: "updateConversationLastMessageAndGroupAndPlaceAtTheTop", group: item.userAddedIn, message });
-        }
-      });
-      const groupMemberKickedSub = CometChatGroupEvents.ccGroupMemberKicked.subscribe(item => {
-        dispatch({ type: "updateConversationLastMessageAndGroupAndPlaceAtTheTop", group: item.kickedFrom, message: item.message });
-      });
-      const groupMemberBannedSub = CometChatGroupEvents.ccGroupMemberBanned.subscribe(item => {
-        dispatch({ type: "updateConversationLastMessageAndGroupAndPlaceAtTheTop", group: item.kickedFrom, message: item.message });
-      });
-      const groupDeletedSub = CometChatGroupEvents.ccGroupDeleted.subscribe(group => {
-        dispatch({ type: "removeConversationOfTheGroup", group });
-      });
-      const groupLeftSub = CometChatGroupEvents.ccGroupLeft.subscribe(item => {
-        if (!ConversationsManager.shouldLastMessageAndUnreadCountBeUpdated(item.message)) {
-          return;
-        }
-        dispatch({ type: "removeConversationOfTheGroup", group: item.leftGroup });
-      });
-      const userBlockedSub = CometChatUserEvents.ccUserBlocked.subscribe(user => {
-        if (builtBuilder && !builtBuilder?.isIncludeBlockedUsers()) {
-          dispatch({ type: "removeConversationOfTheUser", user });
-        } else {
-          dispatch({ type: "updateConversationWithUser", user });
-        }
-      });
-      const userUnBlockedSub = CometChatUserEvents.ccUserUnblocked.subscribe(user => {
-        if (builtBuilder && builtBuilder.isIncludeBlockedUsers()) {
-          dispatch({ type: "updateConversationWithUser", user });
-        }
-      });
-      const messageEditedSub = CometChatMessageEvents.ccMessageEdited.subscribe(item => {
-        if (item.status === MessageStatus.success) {
-          dispatch({ type: "updateConversationLastMessage", message: item.message });
-        }
-      });
-      const messageSentSub = CometChatMessageEvents.ccMessageSent.subscribe(item => {
-        if (item.status === MessageStatus.success) {
-          if (hideConversation(builtBuilder, item.message)) {
-            return;
-          }
-          CometChat.CometChatHelper.getConversationFromMessage(item.message).then(conversation => {
-            setActiveConversationState(conversation);
-            dispatch({ type: "updateConversationLastMessageResetUnreadCountAndPlaceAtTheTop", message: item.message, conversation: conversation });
-          });
-        }
-      });
-      const messageDeletedSub = CometChatMessageEvents.ccMessageDeleted.subscribe(message => {
-        dispatch({ type: "updateConversationLastMessage", message: CometChatUIKitUtility.clone(message) }); // Cloning message since I don't know if the developer is passing a cloned copy
-      });
-      const messageReadSub = CometChatMessageEvents.ccMessageRead.subscribe(message => {
-        dispatch({ type: "resetUnreadCountAndSetReadAtIfLastMessage", message });
-      });
-      const callAcceptedSub = CometChatCallEvents.ccCallAccepted.subscribe(message => {
-        dispatch({ type: "updateConversationLastMessageAndPlaceAtTheTop", message });
-      });
-      const outgoingCallSub = CometChatCallEvents.ccOutgoingCall.subscribe(message => {
-        dispatch({ type: "updateConversationLastMessageAndPlaceAtTheTop", message });
-      });
-      const callRejectedSub = CometChatCallEvents.ccCallRejected.subscribe(message => {
-        dispatch({ type: "updateConversationLastMessageAndPlaceAtTheTop", message });
-      });
-      const callEndedSub = CometChatCallEvents.ccCallEnded.subscribe(message => {
-        dispatch({ type: "updateConversationLastMessageAndPlaceAtTheTop", message });
-      });
-      return () => {
-        groupCreatedSub.unsubscribe();
-        groupMemberScopeChangedSub.unsubscribe();
-        groupMemberAddedSub.unsubscribe();
-        groupMemberKickedSub.unsubscribe();
-        groupMemberBannedSub.unsubscribe();
-        groupDeletedSub.unsubscribe();
-        groupLeftSub.unsubscribe();
-        userBlockedSub.unsubscribe();
-        userUnBlockedSub.unsubscribe();
-        messageEditedSub.unsubscribe();
-        messageSentSub.unsubscribe();
-        messageDeletedSub.unsubscribe();
-        messageReadSub.unsubscribe();
-        callAcceptedSub.unsubscribe();
-        outgoingCallSub.unsubscribe();
-        callRejectedSub.unsubscribe();
-        callEndedSub.unsubscribe();
-      };
-      } catch (error) {
-        errorHandler(error,"useEffect")
+      if (search && searchRequestBuilder) {
+        builder = searchRequestBuilder;
+      } else if (conversationsRequestBuilder) {
+        builder = conversationsRequestBuilder;
+      } else {
+        builder = new CometChat.ConversationsRequestBuilder().setLimit(30);
       }
-    }, [dispatch]);
 
+      return builder;
+    },
+    [conversationsRequestBuilder, searchRequestBuilder]
+  );
+
+  // --- Fetch next page ---
+  const fetchNext = useCallback(async () => {
+    if (!managerRef.current || !state.hasMore || state.fetchState === 'loading') return;
+
+    const currentFetchId = `fetch_${String(Date.now())}`;
+    fetchIdRef.current = currentFetchId;
+    dispatch({ type: 'FETCH_START' });
+
+    try {
+      const conversations = await managerRef.current.fetchNext();
+      // Guard against stale fetches
+      if (fetchIdRef.current !== currentFetchId) return;
+
+      const hasMore = conversations.length > 0;
+      dispatch({ type: 'FETCH_SUCCESS', conversations, hasMore });
+
+      // Emit onEmpty if first fetch returned no results
+      if (!hasMore && state.conversations.length === 0) {
+        onEmpty?.();
+      }
+    } catch (error: unknown) {
+      if (fetchIdRef.current !== currentFetchId) return;
+      handleError(error);
+    }
+  }, [state.hasMore, state.fetchState, state.conversations.length, handleError, onEmpty]);
+
+  // --- Initialize Manager + first fetch ---
+  const initializeAndFetch = useCallback(
+    (search: string) => {
+      const builder = buildRequestBuilder(search);
+      managerRef.current = new CometChatConversationsManager(builder);
+      dispatch({ type: 'RESET' });
+      // Trigger fetch after reset
+      const currentFetchId = `fetch_${String(Date.now())}`;
+      fetchIdRef.current = currentFetchId;
+      dispatch({ type: 'FETCH_START' });
+
+      managerRef.current
+        .fetchNext()
+        .then(conversations => {
+          if (fetchIdRef.current !== currentFetchId) return;
+          const hasMore = conversations.length > 0;
+          dispatch({ type: 'FETCH_SUCCESS', conversations, hasMore });
+          if (!hasMore) onEmpty?.();
+        })
+        .catch((error: unknown) => {
+          if (fetchIdRef.current !== currentFetchId) return;
+          handleError(error);
+        });
+    },
+    [buildRequestBuilder, handleError, onEmpty]
+  );
+
+  // --- Initial fetch on mount and when builders change ---
   useEffect(() => {
-    setActiveConversationState(activeConversation);
+    initializeAndFetch(searchKeyword);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationsRequestBuilder, searchRequestBuilder, searchKeyword]);
+
+  // --- Set search text (triggers re-fetch) ---
+  const setSearchText = useCallback(
+    (text: string) => {
+      dispatch({ type: 'SET_SEARCH_TEXT', searchText: text });
+      initializeAndFetch(text);
+    },
+    [initializeAndFetch]
+  );
+
+  // --- Ref to hold current conversations for use in event handlers without re-attaching listeners ---
+  const conversationsRef = useRef(state.conversations);
+  conversationsRef.current = state.conversations;
+
+  // --- Message listener (real-time updates) ---
+  useEffect(() => {
+    const listenerId = `CometChatConversations_msg_${instanceId}`;
+
+    /**
+     * Determines whether a message should be hidden from this conversation list
+     * based on the request builder's agentic filters (onlyAgentic / hideAgentic).
+     */
+    const shouldHideMessage = (message: CometChat.BaseMessage): boolean => {
+      const builder = conversationsRequestBuilder;
+      if (!builder) return false;
+
+      const builtRequest = builder.build();
+      const isOnlyAgentic = builtRequest.getOnlyAgentic?.() || false;
+      const isHideAgentic = builtRequest.getHideAgentic?.() || false;
+
+      if (!isOnlyAgentic && !isHideAgentic) return false;
+
+      const messageReceiverType = message.getReceiverType();
+
+      if (messageReceiverType === 'group') {
+        // Group messages are never agentic — hide them from onlyAgentic lists
+        if (isOnlyAgentic) return true;
+      } else {
+        const messageReceiver = message.getReceiver() as CometChat.User;
+        const messageSender = message.getSender();
+        const senderRole = messageSender?.getRole?.() ?? '';
+        const receiverRole = messageReceiver?.getRole?.() ?? '';
+        const isAgenticConversation = senderRole === '@agentic' || receiverRole === '@agentic';
+
+        if (isOnlyAgentic && !isAgenticConversation) return true;
+        if (isHideAgentic && isAgenticConversation) return true;
+      }
+
+      return false;
+    };
+
+    const handleNewMessage = (message: CometChat.BaseMessage) => {
+      if (shouldHideMessage(message)) return;
+
+      // Check if this message should update the conversation (respects dashboard settings)
+      if (!CometChatConversationsManager.shouldLastMessageAndUnreadCountBeUpdated(message)) {
+        return;
+      }
+
+      // Mark as delivered for messages from other users (v6 parity)
+      const senderUid = message.getSender?.()?.getUid?.();
+      if (
+        senderUid &&
+        loggedInUserId &&
+        senderUid !== loggedInUserId &&
+        !message.getDeliveredAt()
+      ) {
+        CometChat.markAsDelivered(message).catch(() => {
+          /* non-fatal */
+        });
+      }
+
+      CometChat.CometChatHelper.getConversationFromMessage(message)
+        .then((conversation: CometChat.Conversation) => {
+          // Increment unread count if message is from someone else
+          const senderUid = message.getSender?.()?.getUid?.();
+          if (senderUid && loggedInUserId && senderUid !== loggedInUserId && !message.getReadAt()) {
+            const convId = conversation.getConversationId();
+            const existingConv = conversationsRef.current.find(
+              c => c.getConversationId() === convId
+            );
+            const baseCount = existingConv
+              ? (existingConv.getUnreadMessageCount() ?? 0)
+              : (conversation.getUnreadMessageCount() ?? 0);
+            conversation.setUnreadMessageCount(baseCount + 1);
+
+            if (!disableSoundForMessages) {
+              CometChatSoundManager.play('incomingMessage', customSoundForMessages);
+            }
+          }
+          dispatch({ type: 'MOVE_TO_TOP', conversation });
+        })
+        .catch(() => {
+          CometChatLogger.warn('CometChatConversations', 'Failed to get conversation from message');
+        });
+    };
+
+    const handleReceiptUpdate = (receipt: CometChat.MessageReceipt, isRead: boolean) => {
+      const messageId = receipt.getMessageId?.();
+      if (!messageId) return;
+
+      // Use ref to get the latest conversations without re-attaching the listener
+      const currentConversations = conversationsRef.current;
+
+      const targetIdx = currentConversations.findIndex(c => {
+        const lastMsg = c.getLastMessage();
+        return lastMsg && String(lastMsg.getId()) === String(messageId);
+      });
+
+      if (targetIdx === -1) return;
+
+      const targetConv = currentConversations[targetIdx]!;
+      const lastMsg = targetConv.getLastMessage();
+      if (!lastMsg) return;
+
+      // Update the receipt status on the message object
+      if (isRead) {
+        lastMsg.setReadAt(receipt.getReadAt());
+        targetConv.setUnreadMessageCount(0);
+      } else {
+        lastMsg.setDeliveredAt(receipt.getDeliveredAt());
+      }
+
+      // Dispatch to force re-render with new array reference
+      dispatch({ type: 'UPDATE_CONVERSATION', conversation: targetConv });
+    };
+
+    const cleanup = CometChatConversationsManager.attachMessageListener(listenerId, {
+      onTextMessageReceived: handleNewMessage,
+      onMediaMessageReceived: handleNewMessage,
+      onCustomMessageReceived: handleNewMessage,
+      onMessageEdited: (message: CometChat.BaseMessage) => {
+        CometChat.CometChatHelper.getConversationFromMessage(message)
+          .then((conversation: CometChat.Conversation) => {
+            dispatch({ type: 'UPDATE_CONVERSATION', conversation });
+          })
+          .catch(() => {
+            /* skip */
+          });
+      },
+      onMessageDeleted: (message: CometChat.BaseMessage) => {
+        CometChat.CometChatHelper.getConversationFromMessage(message)
+          .then((conversation: CometChat.Conversation) => {
+            dispatch({ type: 'UPDATE_CONVERSATION', conversation });
+          })
+          .catch(() => {
+            /* skip */
+          });
+      },
+      onMessagesDelivered: (receipt: CometChat.MessageReceipt) => {
+        handleReceiptUpdate(receipt, false);
+      },
+      onMessagesRead: (receipt: CometChat.MessageReceipt) => {
+        handleReceiptUpdate(receipt, true);
+      },
+      onMessagesDeliveredToAll: (receipt: CometChat.MessageReceipt) => {
+        handleReceiptUpdate(receipt, false);
+      },
+      onMessagesReadByAll: (receipt: CometChat.MessageReceipt) => {
+        handleReceiptUpdate(receipt, true);
+      },
+    });
+
+    return cleanup;
+  }, [
+    instanceId,
+    loggedInUserId,
+    disableSoundForMessages,
+    customSoundForMessages,
+    conversationsRequestBuilder,
+  ]);
+
+  // --- User status listener ---
+  useEffect(() => {
+    if (hideUserStatus) return;
+
+    const listenerId = `CometChatConversations_user_${instanceId}`;
+    const cleanup = CometChatConversationsManager.attachUserStatusListener(listenerId, {
+      onUserOnline: (user: CometChat.User) => {
+        const uid = user.getUid();
+        const conv = conversationsRef.current.find(c => {
+          const convWith = c.getConversationWith();
+          return convWith && 'getUid' in convWith && convWith.getUid() === uid;
+        });
+        if (conv) {
+          const convUser = conv.getConversationWith() as CometChat.User;
+          convUser.setStatus('online');
+          dispatch({ type: 'UPDATE_CONVERSATION', conversation: conv });
+        }
+      },
+      onUserOffline: (user: CometChat.User) => {
+        const uid = user.getUid();
+        const conv = conversationsRef.current.find(c => {
+          const convWith = c.getConversationWith();
+          return convWith && 'getUid' in convWith && convWith.getUid() === uid;
+        });
+        if (conv) {
+          const convUser = conv.getConversationWith() as CometChat.User;
+          convUser.setStatus('offline');
+          dispatch({ type: 'UPDATE_CONVERSATION', conversation: conv });
+        }
+      },
+    });
+
+    return cleanup;
+  }, [instanceId, hideUserStatus]);
+
+  // --- Group listener ---
+  useEffect(() => {
+    const listenerId = `CometChatConversations_group_${instanceId}`;
+    const cleanup = CometChatConversationsManager.attachGroupListener(listenerId, {
+      onGroupMemberJoined: (message, joinedUser, joinedGroup) => {
+        // If logged-in user joined (or created) a group, add the conversation to the top
+        if (loggedInUserId && joinedUser.getUid() === loggedInUserId) {
+          CometChat.getConversation(joinedGroup.getGuid(), 'group')
+            .then((conversation: CometChat.Conversation) => {
+              dispatch({ type: 'ADD_CONVERSATION', conversation });
+            })
+            .catch(() => {
+              /* skip */
+            });
+        } else {
+          // Another user joined — update the conversation's last message (action message)
+          CometChat.CometChatHelper.getConversationFromMessage(message)
+            .then((conversation: CometChat.Conversation) => {
+              dispatch({ type: 'MOVE_TO_TOP', conversation });
+            })
+            .catch(() => {
+              /* skip */
+            });
+        }
+      },
+      onGroupMemberLeft: (message, leavingUser, group) => {
+        if (loggedInUserId && leavingUser.getUid() === loggedInUserId) {
+          const convId = `group_${group.getGuid()}`;
+          dispatch({ type: 'REMOVE_CONVERSATION', conversationId: convId });
+        } else {
+          // Another user left — update the conversation's last message
+          CometChat.CometChatHelper.getConversationFromMessage(message)
+            .then((conversation: CometChat.Conversation) => {
+              dispatch({ type: 'MOVE_TO_TOP', conversation });
+            })
+            .catch(() => {
+              /* skip */
+            });
+        }
+      },
+      onGroupMemberKicked: (message, kickedUser, _kickedBy, kickedFrom) => {
+        if (loggedInUserId && kickedUser.getUid() === loggedInUserId) {
+          const convId = `group_${kickedFrom.getGuid()}`;
+          dispatch({ type: 'REMOVE_CONVERSATION', conversationId: convId });
+        } else {
+          // Another user was kicked — update the conversation's last message
+          CometChat.CometChatHelper.getConversationFromMessage(message)
+            .then((conversation: CometChat.Conversation) => {
+              dispatch({ type: 'MOVE_TO_TOP', conversation });
+            })
+            .catch(() => {
+              /* skip */
+            });
+        }
+      },
+      onGroupMemberBanned: (message, bannedUser, _bannedBy, bannedFrom) => {
+        if (loggedInUserId && bannedUser.getUid() === loggedInUserId) {
+          const convId = `group_${bannedFrom.getGuid()}`;
+          dispatch({ type: 'REMOVE_CONVERSATION', conversationId: convId });
+        } else {
+          // Another user was banned — update the conversation's last message
+          CometChat.CometChatHelper.getConversationFromMessage(message)
+            .then((conversation: CometChat.Conversation) => {
+              dispatch({ type: 'MOVE_TO_TOP', conversation });
+            })
+            .catch(() => {
+              /* skip */
+            });
+        }
+      },
+      onMemberAddedToGroup: (message, _addedBy, addedUser, addedTo) => {
+        // If the logged-in user was added to a group, add the conversation to the top
+        if (loggedInUserId && addedUser.getUid() === loggedInUserId) {
+          CometChat.getConversation(addedTo.getGuid(), 'group')
+            .then((conversation: CometChat.Conversation) => {
+              dispatch({ type: 'ADD_CONVERSATION', conversation });
+            })
+            .catch(() => {
+              /* skip */
+            });
+        } else {
+          // Another user was added — update the conversation's last message (action message)
+          CometChat.CometChatHelper.getConversationFromMessage(message)
+            .then((conversation: CometChat.Conversation) => {
+              dispatch({ type: 'MOVE_TO_TOP', conversation });
+            })
+            .catch(() => {
+              /* skip */
+            });
+        }
+      },
+    });
+
+    return cleanup;
+  }, [instanceId, loggedInUserId]);
+
+  // --- Connection recovery ---
+  useEffect(() => {
+    const listenerId = `CometChatConversations_conn_${instanceId}`;
+    const cleanup = CometChatConversationsManager.attachConnectionListener(listenerId, {
+      onConnected: () => {
+        CometChatLogger.info(
+          'CometChatConversations',
+          'Connection recovered, re-fetching conversations'
+        );
+        initializeAndFetch(state.searchText);
+      },
+    });
+
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instanceId, initializeAndFetch]);
+
+  // --- Active conversation sync ---
+  useEffect(() => {
+    const convId = activeConversation?.getConversationId() ?? null;
+    dispatch({ type: 'SET_ACTIVE_CONVERSATION', conversationId: convId });
   }, [activeConversation]);
+
+  // --- UI Events subscription (cross-component communication) ---
+  useCometChatConversationsEvents({
+    dispatch,
+    conversationsRef,
+    loggedInUserId,
+  });
+
+  // --- Selection actions ---
+  const selectConversation = useCallback(
+    (conversation: CometChat.Conversation) => {
+      dispatch({ type: 'SELECT_CONVERSATION', conversation });
+      onSelect?.(conversation, true);
+    },
+    [onSelect]
+  );
+
+  const deselectConversation = useCallback(
+    (conversationId: string) => {
+      const conversation = state.selectedConversationsMap.get(conversationId);
+      dispatch({ type: 'DESELECT_CONVERSATION', conversationId });
+      if (conversation) onSelect?.(conversation, false);
+    },
+    [onSelect, state.selectedConversationsMap]
+  );
+
+  const selectRange = useCallback(
+    (conversations: CometChat.Conversation[]) => {
+      dispatch({ type: 'SELECT_RANGE', conversations });
+      conversations.forEach(c => {
+        if (!state.selectedConversationIds.includes(c.getConversationId())) {
+          onSelect?.(c, true);
+        }
+      });
+    },
+    [onSelect, state.selectedConversationIds]
+  );
+
+  const deselectRange = useCallback(
+    (conversationIds: string[]) => {
+      conversationIds.forEach(id => {
+        const conversation = state.selectedConversationsMap.get(id);
+        if (conversation) onSelect?.(conversation, false);
+      });
+      dispatch({ type: 'DESELECT_RANGE', conversationIds });
+    },
+    [onSelect, state.selectedConversationsMap]
+  );
+
+  const clearSelection = useCallback(() => {
+    dispatch({ type: 'CLEAR_SELECTION' });
+  }, []);
+
+  const setActiveConversation = useCallback((conversationId: string | null) => {
+    dispatch({ type: 'SET_ACTIVE_CONVERSATION', conversationId });
+  }, []);
+
+  // --- Delete conversation ---
+  const deleteConversation = useCallback(
+    async (conversationId: string) => {
+      const conversation = state.conversations.find(c => c.getConversationId() === conversationId);
+      if (!conversation) return;
+
+      const conversationWith = conversation.getConversationWith();
+      const conversationType = conversation.getConversationType();
+
+      let conversationWithId: string;
+      if (conversationType === 'user') {
+        conversationWithId = (conversationWith as CometChat.User).getUid();
+      } else {
+        conversationWithId = (conversationWith as CometChat.Group).getGuid();
+      }
+
+      try {
+        await CometChatConversationsManager.deleteConversation(
+          conversationWithId,
+          conversationType
+        );
+        dispatch({ type: 'REMOVE_CONVERSATION', conversationId });
+        publish({ type: 'ui:conversation/deleted', conversation });
+      } catch (error: unknown) {
+        handleError(error);
+      }
+    },
+    [state.conversations, publish, handleError]
+  );
+
+  // --- Handle item click with selection logic ---
+  const handleItemClick = useCallback(
+    (conversation: CometChat.Conversation, event?: { shiftKey?: boolean }) => {
+      const convId = conversation.getConversationId();
+      const clickedIndex = state.conversations.findIndex(c => c.getConversationId() === convId);
+      const isShiftClick = event?.shiftKey === true;
+
+      if (selectionMode === 'multiple') {
+        if (isShiftClick && anchorIndexRef.current !== null) {
+          // Shift-click range selection
+          const anchorIndex = anchorIndexRef.current;
+          const startIndex = Math.min(anchorIndex, clickedIndex);
+          const endIndex = Math.max(anchorIndex, clickedIndex);
+          const conversationsInRange = state.conversations.slice(startIndex, endIndex + 1);
+          selectRange(conversationsInRange);
+        } else {
+          // Regular click: toggle individual, set as anchor
+          anchorIndexRef.current = clickedIndex;
+
+          if (state.selectedConversationIds.includes(convId)) {
+            deselectConversation(convId);
+          } else {
+            selectConversation(conversation);
+          }
+        }
+      } else if (selectionMode === 'single') {
+        // Single selection: clear previous, select new
+        if (!state.selectedConversationIds.includes(convId)) {
+          dispatch({ type: 'CLEAR_SELECTION' });
+          selectConversation(conversation);
+        }
+      }
+
+      onItemClick?.(conversation);
+    },
+    [
+      state.conversations,
+      state.selectedConversationIds,
+      selectionMode,
+      selectConversation,
+      deselectConversation,
+      selectRange,
+      onItemClick,
+    ]
+  );
+
+  return {
+    // State
+    conversations: state.conversations,
+    fetchState: state.fetchState,
+    hasMore: state.hasMore,
+    error: state.error,
+    selectedConversationIds: state.selectedConversationIds,
+    selectedConversationsMap: state.selectedConversationsMap,
+    activeConversationId: state.activeConversationId,
+    searchText: state.searchText,
+    typingIndicatorMap: state.typingIndicatorMap,
+    loggedInUserId,
+    // Actions
+    fetchNext,
+    setSearchText,
+    selectConversation,
+    deselectConversation,
+    selectRange,
+    deselectRange,
+    clearSelection,
+    setActiveConversation,
+    handleItemClick,
+    deleteConversation,
+    setConversationToBeDeleted,
+    conversationToBeDeleted,
+  };
 }

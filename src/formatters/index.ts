@@ -1,6 +1,6 @@
-export {CometChatTextFormatter} from './CometChatFormatters/CometChatTextFormatter'
-export {CometChatUrlsFormatter} from './CometChatFormatters/CometChatUrlsFormatter/CometChatUrlsFormatter'
-export {CometChatMentionsFormatter} from './CometChatFormatters/CometChatMentionsFormatter/CometChatMentionsFormatter'
-export {CometChatTextHighlightFormatter} from './CometChatFormatters/CometChatTextHighlightFormatter/CometChatTextHighlightFormatter'
-export {CometChatRichTextFormatter} from './CometChatFormatters/CometChatRichTextFormatter'
-export {CometChatMarkdownFormatter} from './CometChatFormatters/CometChatMarkdownFormatter/CometChatMarkdownFormatter'
+export { CometChatTextFormatter } from './CometChatTextFormatter';
+export { CometChatMentionsFormatter } from './CometChatMentionsFormatter';
+export type { CometChatMentionData } from './CometChatMentionsFormatter';
+export { CometChatUrlFormatter } from './CometChatUrlFormatter';
+export { CometChatMarkdownFormatter } from './CometChatMarkdownFormatter';
+export { CometChatRichTextFormatter } from './CometChatRichTextFormatter';

@@ -1,108 +1,35 @@
-import { useCallback, useMemo } from "react";
-import "../../styles/CometChatCallLog/CometChatCallLogRecordings.css";
-import { CalendarObject, CometChatDate, CometChatList, CometChatListItem, CometChatLocalize, getLocalizedString, States } from "@cometchat/chat-uikit-react";
+import { useLocale } from '@cometchat/chat-uikit-react';
+import '../../styles/CometChatCallLog/CometChatCallLogRecordings.css';
 
-export const CometChatCallDetailsRecording = (props: { call: any }) => {
-    const { call } = props;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const CometChatCallLogRecordings = ({ call }: { call: any }) => {
+  const { getLocalizedString } = useLocale();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+  const recordings = call?.getRecordings?.() ?? null;
 
-    const handleDownloadClick = useCallback((item: any) => {
-        fetch(item?.getRecordingURL())
-            .then((response) => {
-                return response.blob();
-            })
-            .then((blob) => {
-                const blobURL = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = blobURL;
-                a.download = "recording.mp4";
-                document.body.appendChild(a);
-                a.click();
-            })
-            .catch((error: any) => console.error(error));
-    }, [])
-
-    const getRecordings = useCallback(() => {
-        try {
-            return call?.getRecordings();
-        } catch (e) {
-            console.log(e);
-        }
-    }, [call])
-
-    const getRecordingStartTime = (item: any) => {
-        try {
-            return item?.getStartTime();
-        } catch (e) {
-            console.log(e);
-        }
-    }
-    function getDateFormat():CalendarObject{
-        const defaultFormat = {
-          yesterday: `DD MMM, hh:mm A`,
-          otherDays: `DD MMM, hh:mm A`,
-          today: `DD MMM, hh:mm A`
-        };
-    
-        const finalFormat = {
-          ...defaultFormat,
-          ...CometChatLocalize.calendarObject    };
-    
-        return finalFormat;
-      }
-    const getListItemSubtitleView = useCallback((item: any): JSX.Element => {
-        return (
-            <div className="cometchat-call-log-recordings__subtitle">
-                <CometChatDate
-                    calendarObject={getDateFormat()}
-                    timestamp={getRecordingStartTime(item)}
-                ></CometChatDate>
-            </div>
-        );
-    }, [])
-
-    const getListItemTailView = useCallback((item: any): JSX.Element => {
-        return (
-            <div
-                className="cometchat-call-log-recordings__download"
-                onClick={() => handleDownloadClick(item)}
-            />
-        );
-    }, [])
-
-    const getListItem = useMemo(() => {
-        return function (item: any, index: number): any {
-            return (
-                <>
-                    <CometChatListItem
-                        avatarURL=""
-                        title={item?.getRid()}
-                        subtitleView={getListItemSubtitleView(item)}
-                        trailingView={getListItemTailView(item)}
-                    />
-                </>
-            )
-        }
-    }, [getListItemSubtitleView, getListItemTailView]);
-
+  if (!recordings || recordings.length === 0) {
     return (
-        <div className="cometchat-call-log-recordings">
-            {!getRecordings() ?
-                <div className="cometchat-call-log-recordings__empty-state">
-                    <div className="cometchat-call-log-recordings__empty-state-icon"/>
-                    <div className="cometchat-call-log-recordings__empty-state-text">
-                        {getLocalizedString("no_recording_available")}
-                    </div>
-                </div>
-                :
-                <CometChatList
-                    hideSearch={true}
-                    list={getRecordings()}
-                    itemView={getListItem}
-                    listItemKey="getRid"
-                    state={States.loaded}
-                    showSectionHeader={false}
-                />
-            }
+      <div className="cometchat-call-log-recordings__empty-state">
+        <div className="cometchat-call-log-recordings__empty-state-icon" />
+        <div className="cometchat-call-log-recordings__empty-state-text">
+          {getLocalizedString('sample_no_recording_available')}
         </div>
-    )
-}
+      </div>
+    );
+  }
+
+  return (
+    <div className="cometchat-call-log-recordings">
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      {recordings.map((item: any, index: number) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        const rid: string = (item?.getRid?.() as string) ?? `Recording ${String(index + 1)}`;
+        return (
+          <div key={index} className="cometchat-call-log-recordings__item">
+            <div className="cometchat-call-log-recordings__item-title">{rid}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};

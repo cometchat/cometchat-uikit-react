@@ -1,0 +1,80 @@
+/* CometChatErrorBoundary — CSS Module (BEM) */
+
+/* Block — transparent wrapper, no visual footprint when children render normally */
+.cometchat-error-boundary {
+  display: contents;
+}
+
+/* Fallback container */
+.cometchat-error-boundary__fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cometchat-error-boundary-fallback-padding, var(--cometchat-padding-5, 20px));
+  gap: var(--cometchat-error-boundary-fallback-gap, var(--cometchat-spacing-3, 12px));
+  background: var(
+    --cometchat-error-boundary-fallback-background,
+    var(--cometchat-background-color-01, #fff)
+  );
+}
+
+/* Error message text */
+.cometchat-error-boundary__message {
+  font: var(
+    --cometchat-error-boundary-message-font,
+    var(--cometchat-font-body-regular, 400 14px Roboto)
+  );
+  color: var(
+    --cometchat-error-boundary-message-color,
+    var(--cometchat-text-color-secondary, #727272)
+  );
+  text-align: center;
+  margin: 0;
+}
+
+/* Retry button */
+.cometchat-error-boundary__retry {
+  font: var(
+    --cometchat-error-boundary-retry-font,
+    var(--cometchat-font-button-medium, 500 14px Roboto)
+  );
+  color: var(
+    --cometchat-error-boundary-retry-color,
+    var(--cometchat-primary-button-text-color, #fff)
+  );
+  background: var(
+    --cometchat-error-boundary-retry-background,
+    var(--cometchat-primary-button-background-color, #6852d6)
+  );
+  border: var(--cometchat-error-boundary-retry-border, none);
+  border-radius: var(
+    --cometchat-error-boundary-retry-border-radius,
+    var(--cometchat-radius-2, 8px)
+  );
+  padding: var(
+    --cometchat-error-boundary-retry-padding,
+    var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px)
+  );
+  cursor: pointer;
+}
+
+.cometchat-error-boundary__retry:hover {
+  background: var(
+    --cometchat-error-boundary-retry-background-hover,
+    var(--cometchat-primary-button-background-color-hover, #5a46c0)
+  );
+}
+
+.cometchat-error-boundary__retry:focus-visible {
+  outline: 2px solid
+    var(--cometchat-error-boundary-retry-outline-color, var(--cometchat-primary-color, #6852d6));
+  outline-offset: 2px;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-error-boundary__retry {
+    transition: none;
+  }
+}

@@ -1,0 +1,93 @@
+.cometchat-thread-panel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  position: relative;
+  background: var(--cometchat-background-color-01, #FFF);
+}
+
+/* Wrapper: normal side panel (30% width) */
+.cometchat-thread-panel-wrapper {
+  display: flex;
+  width: 30%;
+  max-width: 420px;
+  height: 100vh;
+  flex-shrink: 0;
+  border-left: 1px solid var(--cometchat-border-color-light, #F5F5F5);
+}
+
+/* Wrapper: full-view when opened from search (expands to fill available space) */
+.cometchat-thread-panel-wrapper--threaded {
+  width: auto;
+  flex-grow: 1;
+  max-width: 100%;
+  border-left: none;
+}
+
+.cometchat-thread-panel__header {
+  flex-shrink: 0;
+}
+
+.cometchat-thread-panel__messages {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  /* Override message list background to white in thread context */
+  --cometchat-message-list-bg: var(--cometchat-background-color-01, #FFF);
+}
+
+/* .cometchat-thread-panel__messages [class*="cometchat-message-list__empty-state"]{
+  background: var(--cometchat-background-color-01, #FFF);
+}
+
+.cometchat-thread-panel__messages .cometchat-thread-panel__message-list > [class*="cometchat-message-list__shimmer"]{
+  background: var(--cometchat-background-color-01, #FFF);
+}
+
+.cometchat-thread-panel__message-list {
+  background: var(--cometchat-background-color-01, #FFF);
+} */
+
+.cometchat-thread-panel__composer-wrapper {
+  flex-shrink: 0;
+}
+
+.cometchat-thread-panel__composer {
+  margin: 8px;
+  width: calc(100% - 16px);
+  border-radius: var(--cometchat-radius-2, 8px);
+  border: 1px solid var(--cometchat-border-color-default, #e8e8e8);
+  overflow: visible;
+}
+
+.cometchat-thread-panel__blocked {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cometchat-padding-4, 16px);
+  border-top: 1px solid var(--cometchat-border-color-light, #F5F5F5);
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  text-align: center;
+}
+
+.cometchat-thread-panel__blocked-link {
+  color: var(--cometchat-primary-color, #6852d6);
+  cursor: pointer;
+  font: var(--cometchat-font-body-medium, 500 14px Roboto);
+}
+
+.cometchat-thread-panel__blocked-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .cometchat-thread-panel {
+    min-width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: 4;
+  }
+}

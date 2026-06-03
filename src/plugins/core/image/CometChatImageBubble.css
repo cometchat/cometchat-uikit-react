@@ -1,0 +1,307 @@
+/* ============================================
+   Block: cometchat-image-bubble
+   ============================================ */
+
+.cometchat-image-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-1, 2px);
+  width: 100%;
+  max-width: var(--cometchat-image-bubble-container-max-width, 350px);
+  max-height: var(--cometchat-image-bubble-single-max-height, 350px);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   Modifiers: Alignment Variants
+   ============================================ */
+
+.cometchat-image-bubble--incoming {
+  align-items: flex-start;
+}
+
+.cometchat-image-bubble--outgoing {
+  align-items: flex-end;
+}
+
+/* ============================================
+   Element: Container
+   
+   The container drives the width of the entire bubble.
+   For single images it sizes to the image (up to max-width).
+   For grids it always fills max-width so tiles are large.
+   ============================================ */
+
+.cometchat-image-bubble__container {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(
+    --cometchat-image-bubble-container-border-radius,
+    var(--cometchat-radius-2, 8px)
+  );
+  overflow: hidden;
+  /* width: 100%; */
+}
+
+/* ============================================
+   Single image — intrinsic sizing
+   
+   The image renders at its natural aspect ratio,
+   capped at a max size. Tiny images get a minimum
+   so the bubble doesn't collapse.
+   ============================================ */
+
+.cometchat-image-bubble--single .cometchat-image-bubble__image-wrapper {
+  aspect-ratio: auto;
+  height: 100%;
+  border-radius: var(--cometchat-radius-2, 8px);
+}
+
+/* Single image: let the image dictate size via object-fit contain for small,
+   cover for normal. We use cover universally — small images get upscaled
+   within the min-width/min-height box. */
+.cometchat-image-bubble--single .cometchat-image-bubble__image {
+  object-fit: cover;
+}
+
+/* ============================================
+   Element: Grid (shared)
+   ============================================ */
+
+.cometchat-image-bubble__grid {
+  display: grid;
+  gap: var(--cometchat-spacing-1, 2px);
+  width: 100%;
+}
+
+/* ============================================
+   2-image grid: side by side
+   ============================================ */
+
+.cometchat-image-bubble__grid--two-col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ============================================
+   3-image grid: 1 on top (full width), 2 below (half each)
+   ============================================ */
+
+.cometchat-image-bubble__grid--three {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto auto;
+}
+
+.cometchat-image-bubble__grid--three > :first-child {
+  grid-column: 1 / -1;
+  aspect-ratio: 2 / 1;
+}
+
+/* ============================================
+   2×2 grid for 4 images
+   ============================================ */
+
+.cometchat-image-bubble__grid--2x2 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* ============================================
+   Overflow grid for >4 images (3 + overflow tile)
+   ============================================ */
+
+.cometchat-image-bubble__grid--overflow {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* ============================================
+   Element: Image Wrapper
+   
+   In grid layouts, each tile is a square (aspect-ratio 1/1).
+   In single layout, aspect-ratio is auto (see above).
+   ============================================ */
+
+.cometchat-image-bubble__image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--cometchat-radius-2, 8px);
+  cursor: pointer;
+  background: var(--cometchat-background-color-02, #f5f5f5);
+  transition: opacity 0.2s ease;
+}
+
+.cometchat-image-bubble__image-wrapper:hover {
+  opacity: 0.9;
+}
+
+.cometchat-image-bubble__image-wrapper:focus {
+  outline: none;
+}
+
+.cometchat-image-bubble__image-wrapper:focus-visible {
+  outline: var(--cometchat-focus-ring-width, 2px) var(--cometchat-focus-ring-style, solid)
+    var(--cometchat-focus-ring-color, var(--cometchat-primary-color, #3399ff));
+  outline-offset: var(--cometchat-focus-ring-offset, 2px);
+}
+
+.cometchat-image-bubble__image-wrapper:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 var(--cometchat-focus-ring-width, 2px)
+    var(--cometchat-focus-ring-color-inverse, var(--cometchat-static-white, #fff));
+  pointer-events: none;
+}
+
+/* ============================================
+   Element: Image
+   ============================================ */
+
+.cometchat-image-bubble__image {
+  width: 100%;
+  height: 100%;
+  max-height: var(--cometchat-image-bubble-single-max-height, 350px);
+  object-fit: cover;
+  display: block;
+}
+
+/* ============================================
+   Element: Placeholder (optimistic/loading state)
+   ============================================ */
+
+.cometchat-image-bubble__placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cometchat-background-color-02, #f5f5f5);
+  border-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-image-bubble__placeholder::after {
+  content: '';
+  width: 48px;
+  height: 48px;
+  background: var(--cometchat-neutral-color-400, #c4c4c4);
+  -webkit-mask: url('../../../assets/photo.svg') center center / contain no-repeat;
+  mask: url('../../../assets/photo.svg') center center / contain no-repeat;
+}
+
+/* ============================================
+   Element: Overflow Tile
+   ============================================ */
+
+.cometchat-image-bubble__overflow-tile {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--cometchat-radius-2, 8px);
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 0.2s ease;
+}
+
+.cometchat-image-bubble__overflow-tile:hover {
+  opacity: 0.9;
+}
+
+.cometchat-image-bubble__overflow-tile:focus {
+  outline: none;
+}
+
+.cometchat-image-bubble__overflow-tile:focus-visible {
+  outline: var(--cometchat-focus-ring-width, 2px) var(--cometchat-focus-ring-style, solid)
+    var(--cometchat-focus-ring-color, var(--cometchat-primary-color, #3399ff));
+  outline-offset: var(--cometchat-focus-ring-offset, 2px);
+}
+
+.cometchat-image-bubble__overflow-tile:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 var(--cometchat-focus-ring-width, 2px)
+    var(--cometchat-focus-ring-color-inverse, var(--cometchat-static-white, #fff));
+  pointer-events: none;
+}
+
+/* ============================================
+   Element: Overflow Overlay
+   ============================================ */
+
+.cometchat-image-bubble__overflow-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(
+    --cometchat-image-bubble-overflow-overlay-background,
+    var(--cometchat-overlay-background-light, rgba(0, 0, 0, 0.4))
+  );
+  backdrop-filter: blur(2px);
+  transition: background-color 0.2s ease;
+}
+
+.cometchat-image-bubble__overflow-tile:hover .cometchat-image-bubble__overflow-overlay {
+  background: var(
+    --cometchat-image-bubble-overflow-overlay-background-hover,
+    var(--cometchat-overlay-background-light, rgba(0, 0, 0, 0.5))
+  );
+}
+
+/* ============================================
+   Element: Overflow Text
+   ============================================ */
+
+.cometchat-image-bubble__overflow-text {
+  font: var(--cometchat-font-heading1-bold, bold 24px/32px sans-serif);
+  color: var(--cometchat-static-white, #fff);
+  text-shadow: var(--cometchat-text-shadow-strong, 0 1px 3px rgba(0, 0, 0, 0.3));
+}
+
+/* ============================================
+   Element: Caption
+   ============================================ */
+
+.cometchat-image-bubble__caption {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* Override text bubble padding so caption sits flush with image edges */
+  --cometchat-text-bubble-padding: 4px 4px 6px 4px;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 768px) {
+  .cometchat-image-bubble__overflow-text {
+    font: var(--cometchat-font-heading2-bold, bold 20px/28px sans-serif);
+  }
+}
+
+@media (max-width: 480px) {
+  .cometchat-image-bubble__grid {
+    gap: var(--cometchat-image-bubble-grid-gap-mobile, var(--cometchat-spacing, 2px));
+  }
+
+  .cometchat-image-bubble__overflow-text {
+    font: var(--cometchat-font-heading3-bold, bold 16px/24px sans-serif);
+  }
+}

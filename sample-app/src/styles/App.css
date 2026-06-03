@@ -1,169 +1,145 @@
-@import url('@cometchat/chat-uikit-react/css-variables.css');
-
-
 .App {
-    text-align: center;
-    width: 100vw;
-    height: 100vh;
-    background-color: #282c34;
+  text-align: center;
+  width: 100vw;
+  height: 100vh;
 }
 
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+body {
+  margin: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+.cometchat-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+  color: var(--cometchat-text-color-secondary, #666);
 }
 
-.App-header {
-    height: 100px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+.cometchat-loading__spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--cometchat-border-color-light, #e0e0e0);
+  border-top-color: var(--cometchat-primary-color, #3399ff);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .cometchat-root {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    overflow: hidden;
-    position: relative;
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.cometchat-root * {
+  box-sizing: border-box;
 }
 
 .conversations-wrapper {
-    display: flex;
-    width: 30%;
-    max-width: 420px;
-    height: 100vh;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0px;
-    flex: 3;
-    background: var(--cometchat-background-color-01, #FFF);
+  display: flex;
+  width: 30%;
+  max-width: 420px;
+  height: 100vh;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0px;
+  flex: 3;
+  background: var(--cometchat-background-color-01, #fff);
+  position: relative;
+  z-index: 2;
+  border-right: 1px solid var(--cometchat-border-color-light, #f5f5f5);
 }
 
 .selector-wrapper {
-    display: flex;
-    flex: 1;
-    width: 100%;
-    overflow: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0px;
-    background: var(--cometchat-background-color-01, #FFF);
-}
-
-.selector-wrapper .cometchat-list__body {
-    flex: 1;
-    border-right: 1px solid var(--cometchat-border-color-light);
+  display: flex;
+  flex: 1;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0px;
+  background: var(--cometchat-background-color-01, #fff);
+  min-height: 0;
 }
 
 .selector-wrapper::-webkit-scrollbar,
 .selector-wrapper::-webkit-scrollbar-thumb {
-    display: none;
+  display: none;
+}
+
+/* Global search overlay — covers the selector area */
+.selector-wrapper-search {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1001;
+  background: var(--cometchat-background-color-01, #fff);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.selector-wrapper .cometchat-list__body {
+  flex: 1;
 }
 
 .conversations-wrapper .selector-wrapper .cometchat-list {
-    position: relative;
+  position: relative;
 }
 
-.conversations-wrapper .selector-wrapper .cometchat-list .cometchat-list__header .cometchat-button {
-    height: fit-content;
-    width: fit-content;
-    padding: 0;
-    background: transparent;
+/* Consistent header height/padding across all tabs (Chats, Users, Groups) */
+.selector-wrapper .cometchat-list__header {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  border-bottom: 1px solid var(--cometchat-border-color-light, #F5F5F5);
 }
 
-.conversations-wrapper .selector-wrapper .cometchat-list .cometchat-list__header-menu {
-    top: 20px;
-}
-
-.selector-wrapper .cometchat-list .cometchat-list__header .cometchat-button .cometchat-button__icon {
-    height: 24px;
-    width: 24px;
-}
-
-.cometchat-incoming-call {
-    top: 17px;
-    left: 30px;
-}
-
-.selector-wrapper .cc-conversations {
-    border: none !important;
+.selector-wrapper .cometchat-list__header-title {
+  overflow: hidden;
+  color: var(--cometchat-text-color-primary, #141414);
+  text-overflow: ellipsis;
+  font: var(--cometchat-font-heading1-bold, 700 24px Roboto);
 }
 
 .messages-wrapper {
-    width: 40%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 5;
-    background: var(--cometchat-background-color-03, #F5F5F5);
-    overflow: hidden;
+  width: 40%;
+  height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  flex: 5;
+  background: var(--cometchat-background-color-03, #f5f5f5);
+  overflow: hidden;
 }
 
-.conversations-wrapper .cometchat-list__header-title {
-    border-right: none;
-}
-
-
-.side-component-content__action-item-disabled {
-    cursor: default;
-    pointer-events: none;
-}
-
-.side-component-content__action-item-disabled .side-component-content__action-item-icon {
-    background: var(--cometchat-text-color-disabled, #DCDCDC);
-}
-
-.side-component-content__action-item-disabled .side-component-content__action-item-text {
-    color: var(--cometchat-text-color-disabled, #DCDCDC);
-}
 @media (max-width: 768px) {
-    .conversations-wrapper {
-        width: 100vw;
-        max-width: 100%;
-        min-width: 100%;
-        z-index: 1;
-    }
-    .cometchat-root{
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin-bottom: 0;
-        overflow: hidden;
-      }
-}
-body{
-    margin: 0;
+  .conversations-wrapper {
+    width: 100vw;
+    max-width: 100%;
+    min-width: 100%;
+    z-index: 1;
   }
-  
-.App {
-    box-sizing: border-box;
-    margin: 0;
-}
-.App > *{
-    box-sizing: border-box;
-    margin: 0;
-}
-.cometchat-root * {
-    box-sizing: border-box;
+
+  .cometchat-root {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+  }
 }

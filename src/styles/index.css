@@ -1,0 +1,99 @@
+@import url('./fonts.css');
+@import url('./themes/light.css');
+@import url('./themes/dark.css');
+
+@layer cometchat {
+  #root > .cometchat {
+    height: 100vh;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  /* ==================== Mention Styles (Global) ==================== */
+  /* These are global because mention spans are inserted as raw DOM inside contenteditable */
+
+  .cometchat-mention {
+    display: inline;
+    font-weight: inherit;
+    cursor: default;
+    user-select: all;
+    border-radius: 4px;
+    padding: 0 2px;
+    white-space: nowrap;
+  }
+
+  /* Base mention class for formatted mentions in subtitles and bubbles */
+  .cometchat-mentions {
+    display: inline;
+    border-radius: var(--cometchat-radius-1, 2px);
+    padding: 0px 2px;
+  }
+
+  /* Other user mentions — purple text with subtle purple background */
+  .cometchat-mentions-other,
+  .cometchat-mention:not(.cometchat-mention--self) {
+    color: var(--cometchat-text-color-highlight, #6852d6);
+    background: rgba(104, 82, 214, 0.2);
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+  }
+
+  .cometchat-mentions-other > span,
+  .cometchat-mention:not(.cometchat-mention--self) > span {
+    color: var(--cometchat-text-color-highlight, #6852d6);
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+  }
+
+  /* Self / @all mentions — yellow/orange text with subtle yellow background */
+  .cometchat-mentions-you,
+  .cometchat-mention--self {
+    color: var(--cometchat-warning-color, #ffab00);
+    background: rgba(255, 171, 0, 0.2);
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+  }
+
+  .cometchat-mentions-you > span,
+  .cometchat-mention--self > span {
+    color: var(--cometchat-warning-color, #ffab00);
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+  }
+
+  /* Mentions inside code/pre — strip mention styling, show as plain monospace text */
+  code .cometchat-mention,
+  code .cometchat-mentions,
+  code .cometchat-mentions-other,
+  code .cometchat-mentions-you,
+  code .cometchat-mention--self,
+  pre .cometchat-mention,
+  pre .cometchat-mentions,
+  pre .cometchat-mentions-other,
+  pre .cometchat-mentions-you,
+  pre .cometchat-mention--self {
+    color: inherit;
+    background: transparent;
+    font-weight: inherit;
+    font-style: inherit;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  code .cometchat-mention > span,
+  code .cometchat-mentions-other > span,
+  code .cometchat-mentions-you > span,
+  pre .cometchat-mention > span,
+  pre .cometchat-mentions-other > span,
+  pre .cometchat-mentions-you > span {
+    color: inherit;
+    font-weight: inherit;
+    font-style: inherit;
+  }
+}

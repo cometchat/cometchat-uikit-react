@@ -7,3 +7,32 @@ webpack.config.js
 sample-app
 package-lock.json
 .DS_Store
+
+# Sourcemaps — not needed in the npm package (~6 MB savings)
+dist/**/*.map
+
+# Build tooling
+tsup.config.ts
+tsconfig.json
+tsconfig.build.json
+tsconfig.eslint.json
+eslint.config.mjs
+.prettierrc
+.husky
+
+# Test & dev files
+e2e/
+playwright.config.ts
+playwright-report/
+vitest.config.ts
+vitest.setup.ts
+__tests__/
+**/*.spec.*
+**/*.test.*
+**/*.stories.*
+.storybook/
+screenshots/
+perf-baseline/
+perf-cometchat/
+scripts/
+docs/

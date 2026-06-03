@@ -1,0 +1,91 @@
+/* CometChatAvatar — CSS Module (BEM) */
+
+/* Block */
+.cometchat-avatar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-extended-primary-color-500, #aa9ee8);
+}
+
+/* Size modifiers */
+.cometchat-avatar[data-size='small'] {
+  width: 32px;
+  height: 32px;
+}
+
+.cometchat-avatar[data-size='medium'] {
+  width: 40px;
+  height: 40px;
+}
+
+.cometchat-avatar[data-size='large'] {
+  width: 48px;
+  height: 48px;
+}
+
+/* Image element */
+.cometchat-avatar__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  overflow: hidden;
+}
+
+/* Initials text */
+.cometchat-avatar__initials {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--cometchat-static-white, #fff);
+  text-align: center;
+  user-select: none;
+}
+
+.cometchat-avatar[data-size='small'] .cometchat-avatar__initials {
+  font: var(--cometchat-font-body-bold, 700 12px Roboto);
+}
+
+.cometchat-avatar[data-size='medium'] .cometchat-avatar__initials {
+  font: var(--cometchat-font-heading4-bold, 700 14px Roboto);
+}
+
+.cometchat-avatar[data-size='large'] .cometchat-avatar__initials {
+  font: var(--cometchat-font-heading3-bold, 700 20px Roboto);
+}
+
+/* Status indicator */
+.cometchat-avatar__status-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  border: 2px solid var(--cometchat-background-color-01, #fff);
+}
+
+.cometchat-avatar[data-size='small'] .cometchat-avatar__status-indicator {
+  width: 8px;
+  height: 8px;
+}
+
+.cometchat-avatar[data-size='medium'] .cometchat-avatar__status-indicator {
+  width: 10px;
+  height: 10px;
+}
+
+.cometchat-avatar[data-size='large'] .cometchat-avatar__status-indicator {
+  width: 12px;
+  height: 12px;
+}
+
+.cometchat-avatar__status-indicator[data-status='online'] {
+  background: var(--cometchat-success-color, #09c26f);
+}
+
+.cometchat-avatar__status-indicator[data-status='offline'] {
+  display: none;
+}

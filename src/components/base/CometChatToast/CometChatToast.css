@@ -1,0 +1,124 @@
+/* Block — bottom-center toast */
+.cometchat-toast {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cometchat-spacing-2, 8px);
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-3, 12px);
+  border-radius: var(--cometchat-radius-1, 4px);
+  background: var(--cometchat-static-black, #000);
+  color: var(--cometchat-static-white, #fff);
+  font: var(--cometchat-font-caption1-regular, 400 12px Roboto);
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: 560px;
+  min-height: 32px;
+  box-sizing: border-box;
+  box-shadow: var(--cometchat-shadow-2, 0 2px 8px rgba(0, 0, 0, 0.15));
+  animation: cometchat-toast-slide-up 0.3s ease-out;
+}
+
+@keyframes cometchat-toast-slide-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Content wrapper */
+.cometchat-toast__content {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-2, 8px);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Text */
+.cometchat-toast__text {
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Close button */
+.cometchat-toast__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  border-radius: var(--cometchat-radius-1, 4px);
+  transition: background-color 0.2s ease;
+}
+
+.cometchat-toast__close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cometchat-toast__close:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.cometchat-toast__close:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* Close icon — CSS mask */
+.cometchat-toast__close-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: currentColor;
+  mask: url('../../../assets/close.svg') center center no-repeat;
+  -webkit-mask: url('../../../assets/close.svg') center center no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+}
+
+/* Responsive — small screens */
+@media (max-width: 640px) {
+  .cometchat-toast {
+    min-width: 200px;
+    max-width: calc(100vw - 32px);
+    left: 16px;
+    right: 16px;
+    transform: none;
+  }
+
+  @keyframes cometchat-toast-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-toast {
+    animation: none;
+  }
+
+  .cometchat-toast__close {
+    transition: none;
+  }
+}

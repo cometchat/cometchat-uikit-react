@@ -1,62 +1,98 @@
 {
   "name": "@cometchat/chat-uikit-react",
-  "version": "6.5.0",
-  "description": "Ready-to-use Chat UI Components for React(Javascript/Web)",
+  "version": "7.0.0-beta.1",
+  "description": "Ready-to-use Chat UI Components for React",
   "author": "CometChat",
+  "type": "module",
   "exports": {
-    ".": "./dist/index.js",
-    "./css-variables.css": "./dist/styles/css-variables.css"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./styles": "./dist/index.css"
   },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "npx eslint --fix",
+      "npx prettier --write"
+    ],
+    "src/**/*.css": [
+      "npx prettier --write"
+    ]
+  },
+  "sideEffects": [
+    "*.css"
+  ],
   "dependencies": {
-    "@cometchat/cards-react": "~1.0.0",
-    "@cometchat/chat-sdk-javascript": "^4.1.10",
-    "@rollup/plugin-json": "^6.1.0",
-    "rxjs": "^7.8.1",
-    "react-markdown": "^10.1.0",
-    "@types/react-syntax-highlighter": "^15.5.13",
-    "react-syntax-highlighter": "^16.1.0",
-    "remark-gfm": "^4.0.1"
+    "dompurify": "3.3.1"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rollup -c --bundleConfigAsCjs"
+    "build": "tsup",
+    "lint": "eslint src/",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:component": "playwright test --project=chromium --grep",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@babel/cli": "^7.17.0",
-    "@babel/core": "^7.17.0",
-    "@babel/plugin-transform-runtime": "^7.17.0",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/preset-react": "^7.16.7",
-    "@rollup/plugin-commonjs": "^25.0.5",
-    "@rollup/plugin-image": "^3.0.2",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.1",
-    "@rollup/plugin-url": "^8.0.1",
-    "@types/react": "^18.2.7",
-    "@types/react-dom": "^18.2.4",
-    "babel-loader": "^8.2.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "rollup": "^3.23.0",
-    "rollup-plugin-copy": "^3.4.0",
-    "rollup-plugin-dts": "^6.1.1",
-    "rollup-plugin-postcss": "^4.0.2",
-    "rollup-plugin-sourcemaps": "^0.6.3",
-    "tslib": "^2.5.2",
-    "typescript": "^5.0.4",
-    "webpack": "^5.68.0",
-    "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^5.2.3"
+    "@cometchat/calls-sdk-javascript": "^5.0.0",
+    "@cometchat/chat-sdk-javascript": "^4.1.9",
+    "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.59.1",
+    "@storybook/addon-a11y": "^10.3.5",
+    "@storybook/addon-docs": "^10.4.1",
+    "@storybook/react": "^10.3.5",
+    "@storybook/react-vite": "^10.3.5",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest-axe": "^3.5.9",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.4.1",
+    "@vitest/coverage-v8": "^3.1.1",
+    "eslint": "^9.0.0",
+    "eslint-plugin-import": "^2.0.0",
+    "eslint-plugin-jsx-a11y": "^6.0.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "fast-check": "^4.6.0",
+    "husky": "^9.0.0",
+    "jest-axe": "^10.0.0",
+    "jsdom": "^26.1.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "storybook": "^10.3.5",
+    "tsup": "^8.0.0",
+    "typescript": "~5.7.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.1.1"
   },
   "peerDependencies": {
-    "@types/react": ">=18.0.0 <20.0.0",
-    "@types/react-dom": ">=18.0.0 <20.0.0",
-    "rxjs": "^7.8.1"
+    "@cometchat/chat-sdk-javascript": "^4.1.9",
+    "react": ">=18.0.0 <21.0.0",
+    "react-dom": ">=18.0.0 <21.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@cometchat/calls-sdk-javascript": {
+      "optional": true
+    }
   },
   "homepage": "https://www.cometchat.com",
-  "repository": "https://github.com/cometchat/cometchat-uikit-react/tree/v6",
-  "main": "dist/index.js",
+  "repository": "https://github.com/cometchat/cometchat-uikit-react/tree/v7",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [
     "CometChat",

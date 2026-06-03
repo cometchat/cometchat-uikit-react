@@ -1,33 +1,69 @@
 .cometchat-call-log-participants {
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-y: auto;
+  flex: 1;
 }
 
-.cometchat-call-log-participants .cometchat-date {
-    padding: 0px;
-    overflow: hidden;
-    color: var(--cometchat-text-color-secondary, #727272);
-    text-overflow: ellipsis;
-    font: var(--cometchat-font-body-regular);
+.cometchat-call-log-participants__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
 }
 
-.cometchat-call-log-participants__trailing-view {
-    overflow: hidden;
-    color: var(--cometchat-text-color-primary, #141414);
-    text-align: right;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font: var(--cometchat-font-body-medium);
+.cometchat-call-log-participants__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--cometchat-extended-primary-color-500, #aa9ee8);
+  flex-shrink: 0;
 }
 
-.cometchat-call-log-participants__trailing-view-disabled {
-    overflow: hidden;
-    color: var(--cometchat-text-color-tertiary, #A1A1A1);
-    text-align: right;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font: var(--cometchat-font-body-medium);
+.cometchat-call-log-participants__avatar-initials {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--cometchat-extended-primary-color-500, #aa9ee8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cometchat-static-white, #fff);
+  font: var(--cometchat-font-heading4-bold, 700 14px Roboto);
+  flex-shrink: 0;
 }
 
-.cometchat-call-log-participants .cometchat-list-item__trailing-view {
-    width: fit-content;
+.cometchat-call-log-participants__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cometchat-call-log-participants__name {
+  font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+  color: var(--cometchat-text-color-primary, #141414);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cometchat-call-log-participants__duration {
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+.cometchat-call-log-participants__duration--disabled {
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  color: var(--cometchat-text-color-tertiary, #a1a1a1);
+}
+
+.cometchat-call-log-participants__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
 }

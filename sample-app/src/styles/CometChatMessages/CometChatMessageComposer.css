@@ -1,0 +1,63 @@
+.cometchat-message-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
+}
+
+.cometchat-message-composer__input {
+  flex: 1;
+  min-height: 40px;
+  max-height: 120px;
+  padding: 10px 16px;
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  border-radius: 20px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  line-height: 1.4;
+  background: var(--cometchat-background-color-02, #fafafa);
+  color: var(--cometchat-text-color-primary, #141414);
+  transition: border-color 0.2s;
+}
+
+.cometchat-message-composer__input:focus {
+  border-color: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-message-composer__input::placeholder {
+  color: var(--cometchat-text-color-tertiary, #a1a1a1);
+}
+
+.cometchat-message-composer__send-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--cometchat-primary-button-background, #6852d6);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+.cometchat-message-composer__send-btn:hover {
+  opacity: 0.85;
+}
+
+.cometchat-message-composer__send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cometchat-message-composer__send-icon {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
+}

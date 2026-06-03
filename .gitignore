@@ -1,3 +1,14 @@
 node_modules
 dist/
+coverage/
+.storybook-static/
+storybook-static/
+test-results/
+playwright-report/
+blob-report/
+*.tsbuildinfo
 .DS_Store
+.vscode/
+Thumbs.db
+*.log
+*.swp

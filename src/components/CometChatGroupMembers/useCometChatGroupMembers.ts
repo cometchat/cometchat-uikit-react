@@ -1,212 +1,473 @@
-import React, { JSX, useEffect, useRef } from "react";
+import { useCallback, useEffect, useId, useReducer, useRef, useState } from 'react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { CometChatGroupMembersManager } from './CometChatGroupMembersManager';
+import { groupMembersReducer, initialGroupMembersState } from './CometChatGroupMembers.reducer';
+import type {
+  CometChatUseCometChatGroupMembersOptions,
+  CometChatUseCometChatGroupMembersReturn,
+} from './CometChatGroupMembers.types';
+import { CometChatLogger } from '../../utils/CometChatLogger';
+import { useCometChatGroupMembersEvents } from './useCometChatGroupMembersEvents';
+import { usePublishEvent } from '../../hooks/usePublishEvent';
+import { clone, createActionMessage } from '../../utils/CometChatUIKitUtility';
+import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
 
-import { Action } from "./CometChatGroupMembers";
-import { GroupMembersManager } from "./controller";
-import { CometChatUIKitLoginListener } from "../../CometChatUIKit/CometChatUIKitLoginListener";
-import { CometChatGroupEvents } from "../../events/CometChatGroupEvents";
-
-type Args = {
-  groupMemberRequestBuilder: CometChat.GroupMembersRequestBuilder | null;
-  searchRequestBuilder: CometChat.GroupMembersRequestBuilder | null;
-  searchText: string;
-  groupMembersManagerRef: React.MutableRefObject<GroupMembersManager | null>;
-  groupGuid: string;
-  fetchNextAndAppendGroupMembers: (id: string) => void;
-  fetchNextIdRef: React.MutableRefObject<string>;
-  dispatch: React.Dispatch<Action>;
-  loggedInUserRef: React.MutableRefObject<CometChat.User | null>;
-  errorHandler: (error: unknown, source?: string | undefined) => void;
-  updateGroupMemberScope: (newScope: string) => Promise<void>;
-  searchKeyword: string;
-  disableLoadingState: boolean;
-  groupMembersSearchText: React.MutableRefObject<string>;
-  hideUserStatus?: boolean;
-};
-
-export function Hooks(args: Args) {
+/**
+ * useCometChatGroupMembers — orchestration hook for the group members list data layer.
+ *
+ * Creates the Manager, attaches SDK listeners, dispatches reducer actions,
+ * and exposes a clean API to the Provider.
+ */
+export function useCometChatGroupMembers(
+  options: CometChatUseCometChatGroupMembersOptions
+): CometChatUseCometChatGroupMembersReturn {
   const {
+    group,
     groupMemberRequestBuilder,
     searchRequestBuilder,
-    searchText,
-    groupMembersManagerRef,
-    groupGuid,
-    fetchNextAndAppendGroupMembers,
-    fetchNextIdRef,
-    dispatch,
-    loggedInUserRef,
-    errorHandler,
-    updateGroupMemberScope,
-    searchKeyword,
-    disableLoadingState,
-    groupMembersSearchText,
-    hideUserStatus
-  } = args;
+    searchKeyword = '',
+    hideUserStatus = false,
+    selectionMode = 'none',
+    onError,
+    onEmpty,
+    onSelect,
+    onItemClick,
+  } = options;
 
+  const [state, dispatch] = useReducer(groupMembersReducer, initialGroupMembersState);
+  const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(null);
+  const [loggedInUserScope, setLoggedInUserScope] = useState<string | null>(null);
+  const [memberToChangeScope, setMemberToChangeScope] = useState<CometChat.GroupMember | null>(
+    null
+  );
+  const managerRef = useRef<CometChatGroupMembersManager | null>(null);
+  const fetchIdRef = useRef<string>('');
+  const instanceId = useId();
+
+  const guid = group.getGuid();
+  const publish = usePublishEvent();
+
+  // --- Get logged-in user on mount ---
   useEffect(() => {
+    Promise.resolve()
+      .then(() => CometChat.getLoggedinUser())
+      .then(user => {
+        if (user) {
+          setLoggedInUser(user);
+          // Determine logged-in user's scope in this group
+          const ownerUid = group.getOwner();
+          if (ownerUid === user.getUid()) {
+            setLoggedInUserScope('owner');
+          } else {
+            // Scope will be determined from the member list once fetched
+            setLoggedInUserScope(null);
+          }
+        }
+      })
+      .catch(() => {
+        // Silently handle - user not logged in or SDK not initialized
+      });
+  }, [group]);
+
+  // --- Error handler ---
+  const handleError = useCallback(
+    (error: unknown) => {
+      if (onError) onError(error as CometChat.CometChatException);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      dispatch({ type: 'FETCH_ERROR', error: message });
+    },
+    [onError]
+  );
+
+  // --- Build request builder with search ---
+  const buildRequestBuilder = useCallback(
+    (search: string): CometChat.GroupMembersRequestBuilder => {
+      let builder: CometChat.GroupMembersRequestBuilder;
+
+      if (search && searchRequestBuilder) {
+        builder = searchRequestBuilder;
+        builder.setSearchKeyword(search);
+      } else if (search && groupMemberRequestBuilder) {
+        builder = groupMemberRequestBuilder;
+        builder.setSearchKeyword(search);
+      } else if (groupMemberRequestBuilder) {
+        builder = groupMemberRequestBuilder;
+        if (!search) builder.setSearchKeyword('');
+      } else {
+        builder = new CometChat.GroupMembersRequestBuilder(guid).setLimit(30);
+        if (search) builder.setSearchKeyword(search);
+      }
+
+      return builder;
+    },
+    [guid, groupMemberRequestBuilder, searchRequestBuilder]
+  );
+
+  // --- Fetch next page ---
+  const fetchNext = useCallback(async () => {
+    if (!managerRef.current || !state.hasMore || state.fetchState === 'loading') return;
+
+    const currentFetchId = `fetch_${String(Date.now())}`;
+    fetchIdRef.current = currentFetchId;
+    dispatch({ type: 'FETCH_START' });
+
     try {
-      if (groupMemberRequestBuilder?.searchKeyword) {
-        groupMembersSearchText.current = groupMemberRequestBuilder?.searchKeyword;
-      } else if (searchRequestBuilder?.searchKeyword) {
-        groupMembersSearchText.current = searchRequestBuilder?.searchKeyword;
+      const members = await managerRef.current.fetchNext();
+      // Guard against stale fetches
+      if (fetchIdRef.current !== currentFetchId) return;
+
+      const hasMore = members.length > 0;
+      dispatch({ type: 'FETCH_SUCCESS', members, hasMore });
+
+      // Determine logged-in user's scope from the member list
+      if (loggedInUser && loggedInUserScope === null) {
+        const me = members.find(m => m.getUid() === loggedInUser.getUid());
+        if (me) {
+          setLoggedInUserScope(me.getScope());
+        }
       }
-      return () => {
-        /* 
-           When the prop (groupMemberRequestBuilder) gets updated (setSearchKeyword), reference in parent component gets updated too. 
-           This was causing an issue in mentions since the previous search keyword remained in the request builder reference in 
-           composer.
-        */
-        groupMemberRequestBuilder?.setSearchKeyword("")
+
+      // Emit onEmpty if first fetch returned no results
+      if (!hasMore && state.members.length === 0) {
+        onEmpty?.();
       }
-    } catch (error) {
-      errorHandler(error, 'useEffect');
+    } catch (error: unknown) {
+      if (fetchIdRef.current !== currentFetchId) return;
+      handleError(error);
     }
+  }, [
+    state.hasMore,
+    state.fetchState,
+    state.members.length,
+    handleError,
+    onEmpty,
+    loggedInUser,
+    loggedInUserScope,
+  ]);
+
+  // --- Initialize Manager + first fetch ---
+  const initializeAndFetch = useCallback(
+    (search: string) => {
+      const builder = buildRequestBuilder(search);
+      managerRef.current = new CometChatGroupMembersManager(guid, builder);
+      dispatch({ type: 'RESET' });
+      // Trigger fetch after reset
+      const currentFetchId = `fetch_${String(Date.now())}`;
+      fetchIdRef.current = currentFetchId;
+      dispatch({ type: 'FETCH_START' });
+
+      managerRef.current
+        .fetchNext()
+        .then(members => {
+          if (fetchIdRef.current !== currentFetchId) return;
+          const hasMore = members.length > 0;
+          dispatch({ type: 'FETCH_SUCCESS', members, hasMore });
+
+          // Determine logged-in user's scope from the member list
+          if (loggedInUser) {
+            const me = members.find(m => m.getUid() === loggedInUser.getUid());
+            if (me) {
+              setLoggedInUserScope(me.getScope());
+            }
+          }
+
+          if (!hasMore) onEmpty?.();
+        })
+        .catch((error: unknown) => {
+          if (fetchIdRef.current !== currentFetchId) return;
+          handleError(error);
+        });
+    },
+    [guid, buildRequestBuilder, handleError, onEmpty, loggedInUser]
+  );
+
+  // --- Initial fetch on mount and when builders/group change ---
+  useEffect(() => {
+    initializeAndFetch(searchKeyword);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guid, groupMemberRequestBuilder, searchRequestBuilder, searchKeyword]);
+
+  // --- Set search text (triggers re-fetch) ---
+  const setSearchText = useCallback(
+    (text: string) => {
+      dispatch({ type: 'SET_SEARCH_TEXT', searchText: text });
+      initializeAndFetch(text);
+    },
+    [initializeAndFetch]
+  );
+
+  // --- Group member listener ---
+  useEffect(() => {
+    const listenerId = `CometChatGroupMembers_group_${instanceId}`;
+    const cleanup = CometChatGroupMembersManager.attachGroupListener(listenerId, {
+      onGroupMemberJoined: (_message, joinedUser, joinedGroup) => {
+        if (joinedGroup.getGuid() !== guid) return;
+        // Create a GroupMember from the User
+        const member = new CometChat.GroupMember(
+          joinedUser.getUid(),
+          CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT as unknown as CometChat.GroupMemberScope
+        );
+        member.setName(joinedUser.getName());
+        member.setAvatar(joinedUser.getAvatar());
+        member.setStatus(joinedUser.getStatus());
+        dispatch({ type: 'ADD_MEMBER', member });
+      },
+      onGroupMemberLeft: (_message, leavingUser, leftGroup) => {
+        if (leftGroup.getGuid() !== guid) return;
+        dispatch({ type: 'REMOVE_MEMBER', uid: leavingUser.getUid() });
+      },
+      onGroupMemberBanned: (_message, bannedUser, _bannedBy, bannedFrom) => {
+        if (bannedFrom.getGuid() !== guid) return;
+        dispatch({ type: 'REMOVE_MEMBER', uid: bannedUser.getUid() });
+      },
+      onGroupMemberKicked: (_message, kickedUser, _kickedBy, kickedFrom) => {
+        if (kickedFrom.getGuid() !== guid) return;
+        dispatch({ type: 'REMOVE_MEMBER', uid: kickedUser.getUid() });
+      },
+      onGroupMemberScopeChanged: (_message, changedUser, newScope, _oldScope, changedGroup) => {
+        if (changedGroup.getGuid() !== guid) return;
+        dispatch({ type: 'UPDATE_MEMBER_SCOPE', uid: changedUser.getUid(), scope: newScope });
+      },
+    });
+
+    return cleanup;
+  }, [instanceId, guid]);
+
+  // --- User status listener ---
+  useEffect(() => {
+    if (hideUserStatus) return;
+
+    const listenerId = `CometChatGroupMembers_user_${instanceId}`;
+    const cleanup = CometChatGroupMembersManager.attachUserListener(listenerId, {
+      onUserOnline: user => {
+        dispatch({ type: 'UPDATE_MEMBER_STATUS', uid: user.getUid(), status: 'online' });
+      },
+      onUserOffline: user => {
+        dispatch({ type: 'UPDATE_MEMBER_STATUS', uid: user.getUid(), status: 'offline' });
+      },
+    });
+
+    return cleanup;
+  }, [instanceId, hideUserStatus]);
+
+  // --- Connection recovery ---
+  useEffect(() => {
+    const listenerId = `CometChatGroupMembers_conn_${instanceId}`;
+    const cleanup = CometChatGroupMembersManager.attachConnectionListener(listenerId, {
+      onConnected: () => {
+        CometChatLogger.info('CometChatGroupMembers', 'Connection recovered, re-fetching members');
+        initializeAndFetch(state.searchText);
+      },
+    });
+
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instanceId, initializeAndFetch]);
+
+  // --- UI Events subscription (cross-component communication) ---
+  useCometChatGroupMembersEvents({ dispatch, guid });
+
+  // --- Selection actions ---
+  const selectMember = useCallback(
+    (member: CometChat.GroupMember) => {
+      dispatch({ type: 'SELECT_MEMBER', member });
+      onSelect?.(member, true);
+    },
+    [onSelect]
+  );
+
+  const deselectMember = useCallback(
+    (uid: string) => {
+      const member = state.selectedMembersMap.get(uid);
+      dispatch({ type: 'DESELECT_MEMBER', uid });
+      if (member) onSelect?.(member, false);
+    },
+    [onSelect, state.selectedMembersMap]
+  );
+
+  const clearSelection = useCallback(() => {
+    dispatch({ type: 'CLEAR_SELECTION' });
   }, []);
 
-  useEffect(
-    /**
-     * Sets `loggedInUserRef` to the currently logged-in user
-     */
-    () => {
-      (async () => {
-        try {
-          loggedInUserRef.current = CometChatUIKitLoginListener.getLoggedInUser();
-        } catch (error) {
-          errorHandler(error, 'useEffect');
+  const setActiveMember = useCallback((uid: string | null) => {
+    dispatch({ type: 'SET_ACTIVE_MEMBER', uid });
+  }, []);
+
+  // --- Handle item click with selection logic ---
+  const handleItemClick = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (member: CometChat.GroupMember, _event?: { shiftKey?: boolean }) => {
+      const uid = member.getUid();
+
+      if (selectionMode === 'multiple') {
+        if (state.selectedMemberIds.includes(uid)) {
+          deselectMember(uid);
+        } else {
+          selectMember(member);
         }
-      })();
+      } else if (selectionMode === 'single') {
+        if (!state.selectedMemberIds.includes(uid)) {
+          dispatch({ type: 'CLEAR_SELECTION' });
+          selectMember(member);
+        }
+      }
+
+      onItemClick?.(member);
     },
-    [errorHandler, loggedInUserRef]
+    [state.selectedMemberIds, selectionMode, selectMember, deselectMember, onItemClick]
   );
 
-  useEffect(
-    /**
-     * Creates a new request builder -> empties the `groupMemberList` state -> initiates a new fetch
-     */
-    () => {
+  // --- Mutation actions ---
+  const kickMember = useCallback(
+    async (uid: string): Promise<boolean> => {
       try {
-        groupMembersManagerRef.current = new GroupMembersManager({
-          searchText,
-          groupMemberRequestBuilder,
-          searchRequestBuilder,
-          groupGuid,
-          groupMembersSearchText
+        if (!loggedInUser) return false;
+        const kickedMember = state.members.find(m => m.getUid() === uid);
+        if (!kickedMember) return false;
 
+        const result = await CometChatGroupMembersManager.kickMember(guid, uid);
+        dispatch({ type: 'REMOVE_MEMBER', uid });
+
+        const groupClone = clone(group);
+        groupClone.setMembersCount(groupClone.getMembersCount() - 1);
+
+        publish({
+          type: 'ui:group/member-kicked',
+          message: createActionMessage(
+            kickedMember,
+            CometChatUIKitConstants.groupMemberAction.KICKED,
+            groupClone,
+            loggedInUser
+          ),
+          user: clone(kickedMember) as unknown as CometChat.User,
+          group: groupClone,
         });
-        if (!disableLoadingState) {
-          dispatch({ type: "setGroupMemberList", groupMemberList: [] });
-        }
-        fetchNextAndAppendGroupMembers(
-          (fetchNextIdRef.current = "initialFetchNext_" + String(Date.now()))
-        );
+
+        return result;
       } catch (error) {
-        errorHandler(error, 'useEffect');
+        handleError(error);
+        return false;
       }
     },
-    [
-      groupMemberRequestBuilder,
-      searchRequestBuilder,
-      searchText,
-      groupGuid,
-      fetchNextAndAppendGroupMembers,
-      dispatch,
-      fetchNextIdRef,
-      groupMembersManagerRef,
-    ]
+    [guid, handleError, state.members, loggedInUser, group, publish]
   );
 
-
-  useEffect(
-    /**
-     * Attaches an SDK user listener
-     *
-     * @returns - Function to remove the added SDK user listener
-     */
-    () => {
+  const banMember = useCallback(
+    async (uid: string): Promise<boolean> => {
       try {
-        if (!hideUserStatus) {
-          return GroupMembersManager.attachUserListener((user: CometChat.User) =>
-            dispatch({ type: "updateGroupMemberStatusIfPresent", user })
-          );
-        }
+        if (!loggedInUser) return false;
+        const bannedMember = state.members.find(m => m.getUid() === uid);
+        if (!bannedMember) return false;
+
+        const result = await CometChatGroupMembersManager.banMember(guid, uid);
+        dispatch({ type: 'REMOVE_MEMBER', uid });
+
+        const groupClone = clone(group);
+        groupClone.setMembersCount(groupClone.getMembersCount() - 1);
+
+        publish({
+          type: 'ui:group/member-banned',
+          message: createActionMessage(
+            bannedMember,
+            CometChatUIKitConstants.groupMemberAction.BANNED,
+            groupClone,
+            loggedInUser
+          ),
+          user: clone(bannedMember) as unknown as CometChat.User,
+          group: groupClone,
+        });
+
+        return result;
       } catch (error) {
-        errorHandler(error, 'useEffect');
+        handleError(error);
+        return false;
       }
     },
-    [dispatch, hideUserStatus]
+    [guid, handleError, state.members, loggedInUser, group, publish]
   );
 
-  useEffect(
-    /**
-     * Attaches an SDK group listener
-     *
-     * @returns - Function to remove the added SDK group listener
-     */
-    () => {
-      return GroupMembersManager.attachGroupListener(groupGuid, dispatch);
-    },
-    [groupGuid, dispatch]
-  );
-
-  useEffect(
-    /**
-     * Subscribes to Group UI events
-     */
-    () => {
+  const unbanMember = useCallback(
+    async (uid: string): Promise<boolean> => {
       try {
-        const groupMemberKickedSub =
-          CometChatGroupEvents.ccGroupMemberKicked.subscribe((item) => {
-            const { kickedUser } = item;
-            dispatch({
-              type: "removeGroupMemberIfPresent",
-              groupMemberUid: kickedUser.getUid(),
-            });
-          });
-        const groupMemberBannedSub =
-          CometChatGroupEvents.ccGroupMemberBanned.subscribe((item) => {
-            const { kickedUser } = item;
-            dispatch({
-              type: "removeGroupMemberIfPresent",
-              groupMemberUid: kickedUser.getUid(),
-            });
-          });
-        const groupMemberChangeScopeSub =
-          CometChatGroupEvents.ccGroupMemberScopeChanged.subscribe((item) => {
-            const { updatedUser, scopeChangedTo } = item;
-            dispatch({
-              type: "updateGroupMemberScopeIfPresent",
-              groupMemberUid: updatedUser.getUid(),
-              newScope: scopeChangedTo,
-            });
-          });
-        const groupMemberAddedSub =
-          CometChatGroupEvents.ccGroupMemberAdded.subscribe((item) => {
-            const { usersAdded, userAddedIn } = item;
-            let groupMembersManager: GroupMembersManager | null = groupMembersManagerRef.current;
-            dispatch({
-              type: "appendGroupMembers",
-              groupMembersManager,
-              groupMembers: usersAdded.map((user) =>
-                GroupMembersManager.createParticipantGroupMember(
-                  user,
-                  userAddedIn
-                )
-              ),
-            });
-          });
-        return () => {
-          groupMemberKickedSub.unsubscribe();
-          groupMemberBannedSub.unsubscribe();
-          groupMemberChangeScopeSub.unsubscribe();
-          groupMemberAddedSub.unsubscribe();
-        };
+        if (!loggedInUser) return false;
+        const result = await CometChatGroupMembersManager.unbanMember(guid, uid);
+
+        const unbannedUser = new CometChat.User(uid);
+        publish({
+          type: 'ui:group/member-unbanned',
+          user: unbannedUser,
+          group: clone(group),
+        });
+
+        return result;
       } catch (error) {
-        errorHandler(error, 'useEffect');
+        handleError(error);
+        return false;
       }
     },
-    [dispatch]
+    [guid, handleError, loggedInUser, group, publish]
   );
 
-  useEffect(() => {
-    dispatch({ type: "setSearchText", searchText: searchKeyword });
-  }, [searchKeyword, dispatch]);
+  const changeScope = useCallback(
+    async (uid: string, scope: string): Promise<boolean> => {
+      try {
+        if (!loggedInUser) return false;
+        const changedMember = state.members.find(m => m.getUid() === uid);
+        if (!changedMember) return false;
+
+        const result = await CometChatGroupMembersManager.changeScope(guid, uid, scope);
+        dispatch({ type: 'UPDATE_MEMBER_SCOPE', uid, scope });
+
+        const updatedMember = clone(changedMember);
+        updatedMember.setScope(scope as CometChat.GroupMemberScope);
+
+        publish({
+          type: 'ui:group/member-scope-changed',
+          message: createActionMessage(
+            updatedMember,
+            CometChatUIKitConstants.groupMemberAction.SCOPE_CHANGE,
+            group,
+            loggedInUser
+          ),
+          user: clone(updatedMember) as unknown as CometChat.User,
+          group: clone(group),
+          newScope: scope,
+        });
+
+        return result;
+      } catch (error) {
+        handleError(error);
+        return false;
+      }
+    },
+    [guid, handleError, state.members, loggedInUser, group, publish]
+  );
+
+  return {
+    // State
+    members: state.members,
+    fetchState: state.fetchState,
+    hasMore: state.hasMore,
+    error: state.error,
+    selectedMemberIds: state.selectedMemberIds,
+    selectedMembersMap: state.selectedMembersMap,
+    activeMemberId: state.activeMemberId,
+    searchText: state.searchText,
+    loggedInUser,
+    loggedInUserScope,
+    // Actions
+    fetchNext,
+    setSearchText,
+    selectMember,
+    deselectMember,
+    clearSelection,
+    setActiveMember,
+    handleItemClick,
+    kickMember,
+    banMember,
+    unbanMember,
+    changeScope,
+    setMemberToChangeScope,
+    memberToChangeScope,
+  };
 }

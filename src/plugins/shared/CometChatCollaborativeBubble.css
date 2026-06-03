@@ -1,0 +1,198 @@
+/* Block */
+.cometchat-collaborative-bubble {
+  display: flex;
+  width: 240px;
+  flex-direction: column;
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-1, 4px) 0px
+    var(--cometchat-padding-1, 4px);
+  gap: 0px;
+  border-radius: var(--cometchat-radius-3, 12px);
+  max-width: 240px;
+}
+
+/* ── Variants ── */
+
+.cometchat-collaborative-bubble--incoming {
+  background: var(
+    --cometchat-collaborative-bubble-background,
+    var(--cometchat-neutral-color-300, #e8e8e8)
+  );
+}
+
+.cometchat-collaborative-bubble--outgoing {
+  background: var(
+    --cometchat-collaborative-bubble-background,
+    var(--cometchat-primary-color, #6852d6)
+  );
+}
+
+/* ── Banner Image ── */
+
+.cometchat-collaborative-bubble__banner-image {
+  border-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-collaborative-bubble__banner-image img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--cometchat-radius-2, 8px);
+  display: block;
+}
+
+/* ── Body ── */
+
+.cometchat-collaborative-bubble__body {
+  display: flex;
+  padding: var(--cometchat-padding-2, 8px) 0px;
+  align-items: center;
+  gap: var(--cometchat-padding-1, 4px);
+  align-self: stretch;
+  border-radius: var(--cometchat-radius-3, 12px);
+}
+
+/* ── Body Icon ── */
+
+.cometchat-collaborative-bubble__body-icon {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100%;
+  mask-size: 100%;
+}
+
+.cometchat-collaborative-bubble--incoming .cometchat-collaborative-bubble__body-icon {
+  background: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-collaborative-bubble--outgoing .cometchat-collaborative-bubble__body-icon {
+  background: var(--cometchat-static-white, #fff);
+}
+
+/* Icon variant: document */
+.cometchat-collaborative-bubble--document .cometchat-collaborative-bubble__body-icon {
+  -webkit-mask-image: url('../../assets/collaborative_document_fill.svg');
+  mask-image: url('../../assets/collaborative_document_fill.svg');
+  -webkit-mask-position: center center;
+  mask-position: center center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* Icon variant: whiteboard */
+.cometchat-collaborative-bubble--whiteboard .cometchat-collaborative-bubble__body-icon {
+  -webkit-mask-image: url('../../assets/collaborative_whiteboard_fill.svg');
+  mask-image: url('../../assets/collaborative_whiteboard_fill.svg');
+  -webkit-mask-position: center center;
+  mask-position: center center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* ── Body Content ── */
+
+.cometchat-collaborative-bubble__body-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-padding, 2px);
+}
+
+/* Title */
+.cometchat-collaborative-bubble__body-content-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: var(--cometchat-font-body-medium);
+  font-style: normal;
+  line-height: 120%;
+  text-align: left;
+}
+
+.cometchat-collaborative-bubble--incoming .cometchat-collaborative-bubble__body-content-name label {
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+.cometchat-collaborative-bubble--outgoing .cometchat-collaborative-bubble__body-content-name label {
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-collaborative-bubble__body-content-name label {
+  cursor: default;
+  font: inherit;
+}
+
+/* Description */
+.cometchat-collaborative-bubble__body-content-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: var(--cometchat-font-caption2-regular);
+  font-style: normal;
+  line-height: 120%;
+}
+
+.cometchat-collaborative-bubble--incoming
+  .cometchat-collaborative-bubble__body-content-description
+  label {
+  color: var(--cometchat-neutral-color-600, #727272);
+}
+
+.cometchat-collaborative-bubble--outgoing
+  .cometchat-collaborative-bubble__body-content-description
+  label {
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-collaborative-bubble__body-content-description label {
+  cursor: default;
+  font: inherit;
+}
+
+/* ── Action Button ── */
+
+.cometchat-collaborative-bubble__button {
+  display: flex;
+  height: 40px;
+  padding: var(--cometchat-padding-5, 20px);
+  justify-content: center;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  align-self: stretch;
+  font: var(--cometchat-font-button-medium);
+  font-style: normal;
+  line-height: 120%;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.cometchat-collaborative-bubble--incoming .cometchat-collaborative-bubble__button {
+  color: var(--cometchat-primary-button-background, #6852d6);
+  border-top: 1px solid var(--cometchat-border-color-dark, #dcdcdc);
+}
+
+.cometchat-collaborative-bubble--outgoing .cometchat-collaborative-bubble__button {
+  border-top: 1px solid var(--cometchat-extended-primary-color-800, #7965db);
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-collaborative-bubble__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.cometchat-collaborative-bubble__button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: -2px;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 480px) {
+  .cometchat-collaborative-bubble {
+    width: 200px;
+    max-width: 200px;
+  }
+}

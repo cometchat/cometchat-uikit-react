@@ -1,0 +1,153 @@
+/* Block — root container */
+.cometchat-conversation-starter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cometchat-padding-2, 8px);
+  width: 100%;
+  padding: var(--cometchat-padding-3, 12px);
+  box-sizing: border-box;
+}
+
+/* Item — pill-shaped suggestion container */
+.cometchat-conversation-starter__item {
+  display: inline-flex;
+  border-radius: var(--cometchat-radius-max, 9999px);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
+  transition: background 150ms ease;
+}
+
+.cometchat-conversation-starter__item:hover {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
+}
+
+/* Item — disabled modifier */
+.cometchat-conversation-starter__item--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Item button — transparent button inside each pill */
+.cometchat-conversation-starter__item-button {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  border: none;
+  border-radius: var(--cometchat-radius-max, 9999px);
+  background: transparent;
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.cometchat-conversation-starter__item-button:disabled {
+  cursor: not-allowed;
+}
+
+.cometchat-conversation-starter__item-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+/* Shimmer — loading state */
+.cometchat-conversation-starter__shimmer-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cometchat-padding-2, 8px);
+  width: 100%;
+}
+
+.cometchat-conversation-starter__shimmer-item {
+  height: 36px;
+  border-radius: var(--cometchat-radius-max, 9999px);
+  background-color: var(--cometchat-shimmer-background-color, #e0e0e0);
+  background-image: var(
+    --cometchat-shimmer-gradient-color,
+    linear-gradient(90deg, #e0e0e0 0%, #eee 100%)
+  );
+  background-size: 200% 100%;
+  animation: cometchat-conversation-starter-shimmer 1.5s ease-in-out infinite;
+}
+
+.cometchat-conversation-starter__shimmer-item:nth-child(1) {
+  width: 140px;
+}
+
+.cometchat-conversation-starter__shimmer-item:nth-child(2) {
+  width: 180px;
+}
+
+.cometchat-conversation-starter__shimmer-item:nth-child(3) {
+  width: 120px;
+}
+
+/* Fallback widths for count > 3 */
+.cometchat-conversation-starter__shimmer-item:nth-child(n + 4) {
+  width: 150px;
+}
+
+@keyframes cometchat-conversation-starter-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-conversation-starter__shimmer-item {
+    animation: none;
+  }
+}
+
+/* Error view */
+.cometchat-conversation-starter__error-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  padding: var(--cometchat-padding-3, 12px);
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  text-align: center;
+}
+
+/* Retry button in error view */
+.cometchat-conversation-starter__error-retry {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-3, 12px);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  border-radius: var(--cometchat-radius-max, 9999px);
+  background: transparent;
+  color: var(--cometchat-primary-color, #3399ff);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  cursor: pointer;
+}
+
+.cometchat-conversation-starter__error-retry:hover {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
+}
+
+.cometchat-conversation-starter__error-retry:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+/* Empty view */
+.cometchat-conversation-starter__empty-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cometchat-padding-3, 12px);
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  text-align: center;
+}

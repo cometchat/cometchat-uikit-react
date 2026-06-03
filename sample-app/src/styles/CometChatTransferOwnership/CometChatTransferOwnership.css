@@ -1,121 +1,134 @@
 .cometchat-transfer-ownership {
-    display: flex;
-    width: 420px;
-    height: 600px;
-    flex-direction: column;
-    align-items: flex-start;
-    flex-shrink: 0;
-    background: var(--cometchat-background-color-01);
-    border-radius: var(--cometchat-radius-5, 20px);
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-shrink: 0;
+  background: var(--cometchat-background-color-01);
+  border-radius: var(--cometchat-radius-5, 20px);
+  overflow: hidden;
 }
 
-.cometchat-transfer-ownership-dialog__backdrop .cometchat-confirm-dialog .cometchat-confirm-dialog__button-group-submit .cometchat-button {
-    background: var(--cometchat-primary-color);
+/* Hide hover background on items — no click action on items themselves */
+.cometchat-transfer-ownership .cometchat-group-members__item:hover {
+  background: inherit;
+  cursor: default;
 }
 
-.cometchat-transfer-ownership-dialog__backdrop .cometchat-confirm-dialog__icon-wrapper {
-    display: none;
+/* Hide the role badge that normally shows (Owner/Admin/Moderator) — we use our own label */
+.cometchat-transfer-ownership .cometchat-group-members__item-role-badge {
+  display: none;
 }
 
-.cometchat-transfer-ownership-dialog__backdrop .cometchat-confirm-dialog__button-group-submit {
-    background: var(--cometchat-primary-button-background);
+/* Hide the "Members" header title */
+.cometchat-transfer-ownership .cometchat-group-members__header-title {
+  display: none;
 }
 
-.cometchat-transfer-ownership>.cometchat {
-    overflow: hidden;
-    border-radius: inherit;
+/* Radio button label shows scope text in row-reverse (label then radio) */
+.cometchat-transfer-ownership__trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
 }
 
-.cometchat-transfer-ownership__buttons-wrapper .cometchat-button {
-    width: 100%;
-    font: var(--cometchat-font-button-medium);
+.cometchat-transfer-ownership__trailing .cometchat-radio-button__label {
+  flex-direction: row-reverse;
 }
 
-.cometchat-transfer-ownership__transfer-button{
-    width: 48%;
-}
-.cometchat-transfer-ownership__cancel-button{
-    width: 49%;
+/* Scope label text in greyish color like v6 */
+.cometchat-transfer-ownership__trailing .cometchat-radio-button__text {
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular);
 }
 
-.cometchat-transfer-ownership__buttons-wrapper>.cometchat {
-    width: fit-content;
-}
+/* --- Buttons section --- */
 
 .cometchat-transfer-ownership__buttons-wrapper {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.cometchat-transfer-ownership__cancel-button .cometchat-button {
-    background: var(--cometchat-background-color-01, #FFF);
-    border: 1px solid var(--cometchat-border-color-dark);
-}
-
-.cometchat-transfer-ownership__cancel-button .cometchat-button .cometchat-button__text {
-    color: var(--cometchat-neutral-color-900);
-}
-
-.cometchat-transfer-ownership .cometchat-list__header-title {
-    justify-content: center;
-}
-
-.cometchat-transfer-ownership .cometchat-group-members .cometchat-list-item:hover {
-    background: inherit;
-    cursor: default;
-}
-
-.cometchat-transfer-ownership__transfer-button-disabled .cometchat-button {
-    background: var(--cometchat-background-color-04, #E8E8E8);
-    color: var(--cometchat-static-white, #FFF);
-    pointer-events: none;
-}
-
-.cometchat-transfer-ownership .cometchat-list-item__trailing-view .cometchat-radiobutton__label {
-    flex-direction: row-reverse;
-}
-
-.cometchat-transfer-ownership .cometchat-list-item .cometchat-list-item__body {
-    align-items: center;
-}
-
-.cometchat-transfer-ownership .cometchat-list-item .cometchat-list-item__body-subtitle {
-    display: none;
-}
-
-.cometchat-transfer-ownership_error-view {
-    margin-top: 4px;
-    color: var(--cometchat-error-color, #F44649);
-    font: var(--cometchat-font-body-regular);
-    font-style: normal;
-    display: flex;
-    padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-2, 8px);
-    justify-content: center;
-    align-items: center;
-    gap: var(--cometchat-padding-1, 4px);
-    align-self: stretch;
-    border-radius: var(--cometchat-radius-2, 8px);
-    background: rgba(244, 70, 73, 0.10);
-
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .cometchat-transfer-ownership__buttons {
-    display: flex;
-    justify-content: center;
-    padding: var(--cometchat-padding-5, 20px) var(--cometchat-padding-4, 16px);
-    align-items: center;
-    gap: var(--cometchat-padding-2, 8px);
+  display: flex;
+  justify-content: center;
+  padding: var(--cometchat-padding-5, 20px) var(--cometchat-padding-4, 16px);
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+}
+
+.cometchat-transfer-ownership__cancel-button {
+  flex: 1;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  font: var(--cometchat-font-button-medium);
+  background: var(--cometchat-background-color-01, #fff);
+  border: 1px solid var(--cometchat-border-color-dark, #ccc);
+  border-radius: var(--cometchat-radius-2, 8px);
+  color: var(--cometchat-text-color-primary, #141414);
+  cursor: pointer;
+}
+
+.cometchat-transfer-ownership__cancel-button:hover {
+  background: var(--cometchat-background-color-02, #f5f5f5);
+}
+
+.cometchat-transfer-ownership__transfer-button {
+  flex: 1;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  font: var(--cometchat-font-button-medium);
+  background: var(--cometchat-primary-color, #6852d6);
+  border: none;
+  border-radius: var(--cometchat-radius-2, 8px);
+  color: var(--cometchat-static-white, #fff);
+  cursor: pointer;
+}
+
+.cometchat-transfer-ownership__transfer-button:hover {
+  opacity: 0.9;
+}
+
+.cometchat-transfer-ownership__transfer-button--disabled {
+  background: var(--cometchat-background-color-04, #e8e8e8);
+  color: var(--cometchat-text-color-tertiary, #999);
+  pointer-events: none;
+}
+
+.cometchat-transfer-ownership__error-view {
+  margin-bottom: var(--cometchat-padding-2, 8px);
+  color: var(--cometchat-error-color, #f44649);
+  font: var(--cometchat-font-body-regular);
+  display: flex;
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-2, 8px);
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--cometchat-radius-2, 8px);
+  background: rgba(244, 70, 73, 0.1);
+}
+
+.cometchat-transfer-ownership__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.cometchat-transfer-ownership__backdrop > .cometchat-transfer-ownership {
+  width: 420px;
+  height: 600px;
 }
 
 @media (max-width: 768px) {
-    .cometchat-transfer-ownership {
-        height: 100vh;
-        width: 100vw;
-        border-radius: 0px;
-    }
-
-    .cometchat-transfer-ownership .cometchat-list__header-title {
-        justify-content: flex-start;
-    }
+  .cometchat-transfer-ownership__backdrop > .cometchat-transfer-ownership {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
 }

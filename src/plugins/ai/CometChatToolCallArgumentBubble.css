@@ -1,0 +1,62 @@
+/* CometChatToolCallArgumentBubble — BEM CSS module */
+
+.cometchat-toolcall-argument-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-2, 8px);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.cometchat-toolcall-argument-bubble__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-1, 4px);
+  padding: var(--cometchat-spacing-2, 8px) var(--cometchat-spacing-3, 12px);
+  background-color: var(--cometchat-background-color-02, #f5f5f5);
+  border-radius: var(--cometchat-radius-2, 8px);
+  border: 1px solid var(--cometchat-border-color-light, #e8e8e8);
+}
+
+.cometchat-toolcall-argument-bubble__name {
+  font: var(--cometchat-font-body-bold, 600 14px Roboto);
+  color: var(--cometchat-text-color-primary, #141414);
+}
+
+.cometchat-toolcall-argument-bubble__execution-text {
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  color: var(--cometchat-text-color-secondary, #727272);
+  font-size: var(--cometchat-font-size-xs, 12px);
+}
+
+.cometchat-toolcall-argument-bubble__label {
+  font: var(--cometchat-font-caption1-regular, 400 12px Roboto);
+  color: var(--cometchat-text-color-secondary, #727272);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: var(--cometchat-spacing-1, 4px);
+}
+
+.cometchat-toolcall-argument-bubble__code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  background-color: var(--cometchat-background-color-04, #1a1a1a);
+  color: #e0e0e0;
+  padding: var(--cometchat-spacing-2, 8px);
+  border-radius: var(--cometchat-radius-1, 4px);
+  overflow-x: auto;
+  max-height: 200px;
+  white-space: pre;
+  margin: 0;
+}
+
+.cometchat-toolcall-argument-bubble__code::-webkit-scrollbar {
+  width: 0;
+  height: 6px;
+}
+
+.cometchat-toolcall-argument-bubble__code::-webkit-scrollbar-thumb {
+  background: var(--cometchat-icon-color-secondary, #727272);
+  border-radius: 3px;
+}

@@ -1,0 +1,103 @@
+/* Block */
+.cometchat-radio-button {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+/* Label — wraps input + custom circle + text */
+.cometchat-radio-button__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-2, 8px);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+/* Native input — visually hidden but accessible */
+.cometchat-radio-button__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Custom radio circle */
+.cometchat-radio-button__custom {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 2px solid var(--cometchat-border-color-default, #e8e8e8);
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background-color: var(--cometchat-background-color-01, #fff);
+  box-sizing: border-box;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+/* Inner filled circle for checked state */
+.cometchat-radio-button__custom::after {
+  content: '';
+  position: absolute;
+  display: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background-color: var(--cometchat-primary-color, #6852d6);
+}
+
+/* Checked state — border */
+.cometchat-radio-button__input:checked + .cometchat-radio-button__custom {
+  border-color: var(--cometchat-primary-color, #6852d6);
+}
+
+/* Checked state — inner circle */
+.cometchat-radio-button__input:checked + .cometchat-radio-button__custom::after {
+  display: block;
+}
+
+/* Hover state */
+.cometchat-radio-button__label:hover .cometchat-radio-button__custom {
+  border-color: var(--cometchat-primary-color, #6852d6);
+}
+
+/* Focus-visible on custom circle when input is keyboard-focused */
+.cometchat-radio-button__input:focus-visible + .cometchat-radio-button__custom {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}
+
+/* Label text */
+.cometchat-radio-button__text {
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  color: var(--cometchat-text-color-primary, #141414);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+}
+
+/* Disabled modifier */
+.cometchat-radio-button--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.cometchat-radio-button--disabled .cometchat-radio-button__label {
+  cursor: not-allowed;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-radio-button__custom {
+    transition: none;
+  }
+}

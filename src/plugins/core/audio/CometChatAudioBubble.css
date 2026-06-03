@@ -1,0 +1,379 @@
+.cometchat-audio-bubble {
+  display: flex;
+  flex-direction: column;
+  min-width: var(--cometchat-audio-bubble-min-width, 240px);
+  max-width: var(--cometchat-audio-bubble-max-width, 240px);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* --- Sender (outgoing) --- */
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__container {
+  background: var(--cometchat-audio-bubble-background, var(--cometchat-primary-color, #6852d6));
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__time {
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__play-button,
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__pause-button {
+  background-color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__play-button::before {
+  border-left-color: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__pause-button::before,
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__pause-button::after {
+  background-color: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__download-button {
+  background-color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__toggle-control {
+  color: var(--cometchat-static-white, #fff);
+  opacity: 0.8;
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__error-message {
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__progress-bg {
+  stroke: var(--cometchat-neutral-color-500, #999);
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__progress-fg {
+  stroke: var(--cometchat-static-white, #fff);
+}
+
+/* --- Receiver (incoming) --- */
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__container {
+  background: var(--cometchat-audio-bubble-background, var(--cometchat-neutral-color-300, #e8e8e8));
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__time {
+  color: var(--cometchat-neutral-color-600, #727272);
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__play-button,
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__pause-button {
+  background-color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__play-button::before {
+  border-left-color: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__pause-button::before,
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__pause-button::after {
+  background-color: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__download-button {
+  background-color: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__toggle-control {
+  color: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__error-message {
+  color: var(--cometchat-neutral-color-600, #727272);
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__progress-bg {
+  stroke: var(--cometchat-neutral-color-400, #ccc);
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__progress-fg {
+  stroke: var(--cometchat-primary-color, #6852d6);
+}
+
+/* --- Container --- */
+
+.cometchat-audio-bubble__container {
+  display: flex;
+  flex-direction: column;
+  padding: var(--cometchat-padding-3, 12px);
+  gap: var(--cometchat-spacing-3, 12px);
+  border-radius: var(--cometchat-radius-3, 12px);
+}
+
+/* --- Audio Item --- */
+
+.cometchat-audio-bubble__audio-item {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-2, 8px);
+}
+
+.cometchat-audio-bubble__audio-item--loading {
+  cursor: wait;
+}
+
+.cometchat-audio-bubble__audio-item--loading .cometchat-audio-bubble__leading-view,
+.cometchat-audio-bubble__audio-item--loading .cometchat-audio-bubble__tail-view {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.cometchat-audio-bubble__audio-item--error .cometchat-audio-bubble__leading-view,
+.cometchat-audio-bubble__audio-item--error .cometchat-audio-bubble__tail-view {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* --- Play/Pause Buttons --- */
+
+.cometchat-audio-bubble__leading-view {
+  flex-shrink: 0;
+}
+
+.cometchat-audio-bubble__play-button,
+.cometchat-audio-bubble__pause-button {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.1s ease;
+}
+
+.cometchat-audio-bubble__play-button:hover,
+.cometchat-audio-bubble__pause-button:hover {
+  transform: scale(1.05);
+}
+
+.cometchat-audio-bubble__play-button:focus,
+.cometchat-audio-bubble__pause-button:focus {
+  outline: none;
+}
+
+.cometchat-audio-bubble__play-button:focus-visible,
+.cometchat-audio-bubble__pause-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}
+
+.cometchat-audio-bubble__play-button:disabled,
+.cometchat-audio-bubble__pause-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* Play triangle */
+.cometchat-audio-bubble__play-button::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 10px solid;
+  margin-left: 2px;
+}
+
+/* Pause bars */
+.cometchat-audio-bubble__pause-button::before,
+.cometchat-audio-bubble__pause-button::after {
+  content: '';
+  width: 3px;
+  height: 12px;
+  border-radius: 1px;
+}
+
+.cometchat-audio-bubble__pause-button::before {
+  margin-right: 3px;
+}
+
+/* --- Body (Waveform + Time) --- */
+
+.cometchat-audio-bubble__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-1, 4px);
+  min-width: 0;
+  justify-content: center;
+}
+
+.cometchat-audio-bubble__waveform {
+  /* width: 140px; */
+  height: 16px;
+  cursor: pointer;
+}
+
+.cometchat-audio-bubble__waveform--loading {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.cometchat-audio-bubble__time {
+  font: var(--cometchat-font-caption2-regular, 400 10px/14px sans-serif);
+  white-space: nowrap;
+}
+
+.cometchat-audio-bubble__error-message {
+  font: var(--cometchat-font-caption2-regular, 400 10px/14px sans-serif);
+  opacity: 0.8;
+  min-height: 16px;
+}
+
+/* --- Download --- */
+
+.cometchat-audio-bubble__tail-view {
+  flex-shrink: 0;
+}
+
+.cometchat-audio-bubble__download-button {
+  width: 24px;
+  height: 24px;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--cometchat-radius-1, 4px);
+  mask-image: url('../../../assets/download.svg');
+  -webkit-mask-image: url('../../../assets/download.svg');
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  transition: transform 0.1s ease;
+}
+
+.cometchat-audio-bubble__download-button:focus {
+  outline: none;
+}
+
+.cometchat-audio-bubble__download-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}
+
+.cometchat-audio-bubble__download-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* --- Download Progress --- */
+
+.cometchat-audio-bubble__download-progress {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.cometchat-audio-bubble__download-progress svg {
+  transform: rotate(-90deg);
+}
+
+.cometchat-audio-bubble__progress-bg {
+  fill: none;
+  stroke-width: 2;
+}
+
+.cometchat-audio-bubble__progress-fg {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.1s ease;
+}
+
+.cometchat-audio-bubble__cancel-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border: none;
+  background: transparent;
+  mask-image: url('../../../assets/close.svg');
+  -webkit-mask-image: url('../../../assets/close.svg');
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  cursor: pointer;
+}
+
+.cometchat-audio-bubble--sender .cometchat-audio-bubble__cancel-button {
+  background-color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-audio-bubble--receiver .cometchat-audio-bubble__cancel-button {
+  background-color: var(--cometchat-text-color-primary, #141414);
+}
+
+/* --- Toggle Control (Show more / Show less) --- */
+
+.cometchat-audio-bubble__toggle-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-1, 4px);
+  align-self: flex-end;
+  padding: var(--cometchat-padding-1, 4px) 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--cometchat-radius-1, 4px);
+  font: var(--cometchat-font-caption1-medium, 500 12px/16px sans-serif);
+  cursor: pointer;
+}
+
+.cometchat-audio-bubble__toggle-control:hover {
+  text-decoration: underline;
+}
+
+.cometchat-audio-bubble__toggle-control:focus {
+  outline: none;
+}
+
+.cometchat-audio-bubble__toggle-control:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.cometchat-audio-bubble__toggle-count {
+  font: var(--cometchat-font-caption1-bold, bold 12px/16px sans-serif);
+}
+
+/* --- Caption --- */
+
+.cometchat-audio-bubble__caption {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* Slightly more left padding than image/video since audio UI is narrower */
+  --cometchat-text-bubble-padding: 4px 4px 6px 8px;
+  /* Ensure proper spacing from the timestamp above */
+  margin-top: 2px;
+}
+
+/* --- Reduced Motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-audio-bubble__play-button,
+  .cometchat-audio-bubble__pause-button,
+  .cometchat-audio-bubble__download-button {
+    transition: none;
+  }
+
+  .cometchat-audio-bubble__progress-fg {
+    transition: none;
+  }
+}

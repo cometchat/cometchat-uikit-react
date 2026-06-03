@@ -27,10 +27,6 @@
     box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
 }
 
-.cometchat-groups .cometchat-list__header-menu .cometchat-button .cometchat-button__icon {
-    background: var(--cometchat-icon-color-primary, #141414);
-}
-
 .cometchat-create-group__title {
     color: var(--cometchat-text-color-primary, #141414);
     text-align: center;
@@ -52,7 +48,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--cometchat-padding-1, 4px);
-
 }
 
 .cometchat-create-group__type-text {
@@ -66,8 +61,7 @@
     align-items: flex-start;
     align-self: stretch;
     background: var(--cometchat-background-color-03, #F5F5F5);
-    border-radius: var(--cometchat-radius-Max, 1000px);
-
+    border-radius: var(--cometchat-radius-max, 1000px);
 }
 
 .cometchat-create-group__type {
@@ -82,13 +76,18 @@
     font-style: normal;
     cursor: pointer;
     color: var(--cometchat-text-color-secondary, #727272);
-
+    border-radius: var(--cometchat-radius-max, 1000px);
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
 }
 
+.cometchat-create-group__type:focus-visible {
+    outline: 2px solid var(--cometchat-primary-color, #6852D6);
+    outline-offset: 2px;
+}
 
-.cometchat-create-group__type-selected {
+.cometchat-create-group__type--selected {
     color: var(--cometchat-text-color-highlight, #6852D6);
-    border-radius: var(--cometchat-radius-Max, 1000px);
     border: 1px solid var(--cometchat-border-color-light, #F5F5F5);
     background: var(--cometchat-background-color-01, #FFF);
 }
@@ -105,7 +104,6 @@
     gap: var(--cometchat-padding-1, 4px);
 }
 
-
 .cometchat-create-group__input {
     display: flex;
     height: 36px;
@@ -114,16 +112,18 @@
     gap: var(--cometchat-padding-1, 4px);
     align-self: stretch;
     color: var(--cometchat-text-color-primary, #141414);
-    border: none;
     font: var(--cometchat-font-body-regular);
     font-style: normal;
     border-radius: var(--cometchat-radius-2, 8px);
     border: 1px solid var(--cometchat-border-color-light, #F5F5F5);
     background: var(--cometchat-background-color-02, #FAFAFA);
+    box-sizing: border-box;
 }
 
 .cometchat-create-group__input:focus-visible {
-    outline: none;
+    outline: 2px solid var(--cometchat-primary-color, #6852D6);
+    outline-offset: -1px;
+    border-color: transparent;
 }
 
 .cometchat-create-group__submit-button {
@@ -141,8 +141,22 @@
     font: var(--cometchat-font-button-medium);
     font-style: normal;
     cursor: pointer;
+    transition: opacity 0.15s ease;
 }
 
+.cometchat-create-group__submit-button:hover {
+    opacity: 0.9;
+}
+
+.cometchat-create-group__submit-button:focus-visible {
+    outline: 2px solid var(--cometchat-primary-color, #6852D6);
+    outline-offset: 2px;
+}
+
+.cometchat-create-group__submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 
 .cometchat-create-group__close-button {
     display: flex;
@@ -162,24 +176,18 @@
 }
 
 .cometchat-create-group__close-button:hover {
-    background: var(--cometchat-icon-color-highlight);
+    background: var(--cometchat-icon-color-highlight, #6852D6);
 }
 
-.cometchat-groups .cometchat-list__header-menu .cometchat-button__icon:hover {
-    background: var(--cometchat-icon-color-highlight);
+.cometchat-create-group__close-button:focus-visible {
+    outline: 2px solid var(--cometchat-primary-color, #6852D6);
+    outline-offset: 2px;
+    border-radius: 4px;
 }
 
 @media (max-width: 768px) {
     .cometchat-create-group {
-        display: flex;
         width: 320px;
         padding: var(--cometchat-padding-5, 20px) var(--cometchat-padding-5, 20px) var(--cometchat-padding-10, 40px) var(--cometchat-padding-5, 20px);
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--cometchat-padding-10, 40px);
-        border-radius: var(--cometchat-radius-5, 20px);
-        border: 1px solid var(--cometchat-border-color-dark, #DCDCDC);
-        background: var(--cometchat-background-color-01, #FFF);
-        box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
     }
 }

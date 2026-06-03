@@ -1,0 +1,20 @@
+.cometchat-sticker-bubble {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--cometchat-sticker-bubble-padding, var(--cometchat-padding-2, 8px));
+}
+
+.cometchat-sticker-bubble--incoming {
+  justify-content: flex-start;
+}
+
+.cometchat-sticker-bubble--outgoing {
+  justify-content: flex-end;
+}
+
+.cometchat-sticker-bubble__image {
+  max-width: var(--cometchat-sticker-bubble-image-max-width, 150px);
+  max-height: var(--cometchat-sticker-bubble-image-max-height, 150px);
+  object-fit: contain;
+}

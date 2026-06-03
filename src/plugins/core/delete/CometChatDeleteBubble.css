@@ -1,0 +1,78 @@
+/* ============================================
+   Block: cometchat-delete-bubble
+   ============================================ */
+
+.cometchat-delete-bubble {
+  display: flex;
+  padding: var(--cometchat-padding-2, 8px);
+  flex-direction: column;
+  align-items: flex-end;
+  border-radius: var(--cometchat-radius-3, 12px);
+  max-width: 270px;
+}
+
+/* ============================================
+   Modifiers: Sender / Receiver
+   ============================================ */
+
+.cometchat-delete-bubble--sender {
+  background: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-delete-bubble--receiver {
+  background: var(--cometchat-neutral-color-300, #e0e0e0);
+}
+
+/* ============================================
+   Element: Body
+   ============================================ */
+
+.cometchat-delete-bubble__body {
+  display: flex;
+  padding: 0;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--cometchat-spacing-1, 4px);
+}
+
+/* ============================================
+   Element: Icon (CSS mask on SVG)
+   ============================================ */
+
+.cometchat-delete-bubble__icon {
+  display: flex;
+  width: 16px;
+  height: 16px;
+  justify-content: center;
+  align-items: center;
+  mask: url('../../../assets/message_delete.svg') center center no-repeat;
+  -webkit-mask: url('../../../assets/message_delete.svg') center center no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+}
+
+.cometchat-delete-bubble--sender .cometchat-delete-bubble__icon {
+  background: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-delete-bubble--receiver .cometchat-delete-bubble__icon {
+  background: var(--cometchat-neutral-color-600, #727272);
+}
+
+/* ============================================
+   Element: Text
+   ============================================ */
+
+.cometchat-delete-bubble__text {
+  font: var(--cometchat-font-body-regular, 400 14px / 16.8px Roboto);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.cometchat-delete-bubble--sender .cometchat-delete-bubble__text {
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-delete-bubble--receiver .cometchat-delete-bubble__text {
+  color: var(--cometchat-neutral-color-600, #727272);
+}

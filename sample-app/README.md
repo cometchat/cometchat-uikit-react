@@ -4,49 +4,63 @@
 
 # React Sample App by CometChat
 
-This is a reference application showcasing the integration of [CometChat's React UI Kit](https://www.cometchat.com/docs/ui-kit/react/v6/overview) within a React framework. It provides developers with examples of implementing real-time messaging and voice and video calling features in their own React-based applications.
+A reference application showcasing the integration of CometChat's React UI Kit v7 within a React 19 + Vite project. It demonstrates real-time messaging, voice and video calling, and AI-powered chat features.
 
-<div style="display: flex; align-items: center; justify-content: center">
+<div style="display: flex; align-items: center; justify-content: center;">
    <img src="../screenshots/sample_app_overview.png" />
 </div>
 
 ## Prerequisites
 
-- Ensure that you have Node.js and npm installed:
-
-  ```sh
-    npm install npm@latest -g
-  ```
-
-- Sign up for a [CometChat](https://app.cometchat.com/) account to get your app credentials: _`App ID`_, _`Region`_, and _`Auth Key`_
+- Node.js >= 18
+- npm >= 9
+- A [CometChat](https://app.cometchat.com/) account with app credentials: _App ID_, _Region_, and _Auth Key_
 
 ## Installation
 
 1. Clone the repository:
    ```sh
-     git clone https://github.com/cometchat/cometchat-uikit-react.git
+   git clone https://github.com/cometchat/cometchat-uikit-react.git
    ```
 
-2. Checkout v6 branch:
+2. Checkout the v7 branch:
    ```sh
-     git checkout v6
+   git checkout v7
    ```
 
-3. Navigate to the cloned directory:
+3. Navigate to the sample app:
    ```sh
-     cd cometchat-uikit-react/sample-app
+   cd cometchat-uikit-react/sample-app
    ```
+
 4. Install dependencies:
    ```sh
-     npm install
+   npm install
    ```
-5. `[Optional]` Enter your CometChat _`App ID`_, _`Region`_, and _`Auth Key`_ in the [sample-app/src/AppConstants.ts](https://github.com/cometchat/cometchat-sample-app-react/blob/v6/sample-app/src/AppConstants.ts) file:https://github.com/cometchat/cometchat-uikit-react/blob/2dba5e2e781db6d2f20c59803ff7f8cef4e7c187/sample-app/src/AppConstants.ts#L1-L5
 
-6. Run the project locally to see all CometChat features in action:
+5. _(Optional)_ Enter your CometChat _App ID_, _Region_, and _Auth Key_ in [`src/AppConstants.ts`](./src/AppConstants.ts):
+   ```ts
+   export const AppConstants = {
+     APP_ID: "YOUR_APP_ID",
+     REGION: "YOUR_REGION",
+     AUTH_KEY: "YOUR_AUTH_KEY",
+   };
    ```
-     npm start
+   You can also configure these at runtime through the credentials screen in the app.
+
+6. Start the development server:
+   ```sh
+   npm run dev
    ```
+
+## Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | Type-check and build for production |
+| `npm run preview` | Preview the production build locally |
 
 ## Help and Support
 
-For issues running the project or integrating with our UI Kits, consult our [documentation](https://www.cometchat.com/docs/ui-kit/react/v6/integration) or create a [support ticket](https://help.cometchat.com/hc/en-us) or seek real-time support via the [CometChat Dashboard](http://app.cometchat.com/).
+For issues running the project or integrating with our UI Kits, consult our [documentation](https://www.cometchat.com/docs/ui-kit/react/v7/integration) or create a [support ticket](https://help.cometchat.com/hc/en-us) or seek real-time support via the [CometChat Dashboard](https://app.cometchat.com/).

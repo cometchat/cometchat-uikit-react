@@ -1,48 +1,35 @@
 .cometchat-empty-state-view {
-    display: flex;
-    width: 316px;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--cometchat-padding-5, 20px);
-    background: var(--cometchat-background-color-03, #F5F5F5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  flex: 1;
+  padding: 40px;
 }
 
 .cometchat-empty-state-view__icon {
-    width: 120px;
-    height: 120px;
-    -webkit-mask: url("../../assets/emptyStateIconChat.svg") center center no-repeat;
-    background: var(--cometchat-neutral-color-400, #DCDCDC);
-    -webkit-mask-size: contain;
-}
-
-.cometchat-empty-state-view__icon-call {
-    width: 120px;
-    height: 120px;
-    -webkit-mask: url("../../assets/call_empty.svg") center center no-repeat;
-    background: var(--cometchat-neutral-color-400, #DCDCDC);
-    -webkit-mask-size: contain;
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  opacity: 0.5;
 }
 
 .cometchat-empty-state-view__text {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--cometchat-padding-1, 4px);
-    align-self: stretch;
-    width: 280px;
-    color: var(--cometchat-text-color-secondary, #727272);
-    text-align: center;
-    font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
 }
 
 .cometchat-empty-state-view__text-title {
-    color: var(--cometchat-text-color-primary, #141414);
-    text-align: center;
-    font: var(--cometchat-font-heading3-bold, 700 18px Roboto);
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-heading4-medium, 500 16px/24px sans-serif);
 }
 
-@media (max-width: 768px) {
-    .cometchat-empty-state-view {
-        display: none;
-    }
+.cometchat-empty-state-view__text-subtitle {
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px/20px sans-serif);
 }
