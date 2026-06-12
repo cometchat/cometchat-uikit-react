@@ -460,7 +460,7 @@ function stateReducer(state: State, action: Action): State {
       const { conversation } = action;
       const { conversationList } = state;
       if(conversation){
-        newState = { ...state, conversationList: [conversation, ...conversationList] };
+        newState = { ...state, conversationList: [conversation, ...conversationList], fetchState: States.loaded };
       }
       break;
     }
@@ -477,6 +477,7 @@ function stateReducer(state: State, action: Action): State {
       newState = {
         ...state,
         conversationList: [conversation, ...conversations],
+        fetchState: States.loaded,
       };
       break;
     }
@@ -729,12 +730,13 @@ function stateReducer(state: State, action: Action): State {
         newState = {
           ...state,
           conversationList: [targetConversation, ...newConversationList],
+          fetchState: States.loaded, 
         };
       } else {
         conversation.setUnreadMessageCount(0);
         // conversation.setUnreadMentionInMessageCount(0);
         const newConversationList = [conversation, ...conversationList];
-        newState = { ...state, conversationList: newConversationList };
+        newState = { ...state, conversationList: newConversationList, fetchState: States.loaded };
       }
       break;
     }
@@ -1117,6 +1119,7 @@ export function CometChatConversations(props: ConversationsProps) {
     },
     [errorHandler, updateConversationList, state.conversationList]
   );
+
 
   /**
    * Handles new received messages
