@@ -12,7 +12,7 @@ import { PollsExtension } from "../components/Extensions/Polls/PollsExtension";
 import { StickersExtension } from "../components/Extensions/Stickers/StickersExtension";
 import { ThumbnailGenerationExtension } from "../components/Extensions/ThumbnailGeneration/ThumbnailGenerationExtension";
 import { CometChatLocalize } from "../resources/CometChatLocalize/cometchat-localize";
-import { UIKitSettings } from "./UIKitSettings";
+import { UIKitSettings, UIKitSettingsBuilder } from "./UIKitSettings";
 import { CometChatSoundManager } from "../resources/CometChatSoundManager/CometChatSoundManager";
 import { CometChatUIKitLoginListener } from "./CometChatUIKitLoginListener";
 import { CometChatUIKitUtility } from "./CometChatUIKitUtility";
@@ -77,7 +77,7 @@ class CometChatUIKit {
      */
     static init(uiKitSettings: UIKitSettings | null): Promise<Object> | undefined {
 
-        CometChatUIKit.uiKitSettings = uiKitSettings
+        CometChatUIKit.uiKitSettings = uiKitSettings;
         if (!CometChatUIKit.checkAuthSettings()) return undefined;
         const appSettingsBuilder = new CometChat.AppSettingsBuilder();
         if (uiKitSettings!.getRoles()) {
@@ -101,7 +101,7 @@ class CometChatUIKit {
         return new Promise((resolve, reject) => {
             window.CometChatUiKit = {
                 name: "@cometchat/chat-uikit-react",
-                version: "6.5.1",
+                version: "6.5.2",
             };
             CometChat.init(uiKitSettings?.appId, appSettings).then(() => {
                 CometChat.getLoggedinUser().then((user: CometChat.User | null) => {
@@ -119,6 +119,61 @@ class CometChatUIKit {
                 .catch((error: CometChat.CometChatException) => {
                     return reject(error)
                 })
+        });
+    }
+
+    /**
+     * @internal
+     * File-based init for AI agent skills.
+     * Calls CometChat.initFromSettings(settings) which sets
+     * integrationSource = "ai-agent" in persistent storage.
+     *
+     * This method is completely independent of init() — new→new, old→old.
+     * Regular init(uikitSettings) does NOT set the integrationSource flag.
+     */
+    static initFromSettings(settings: CometChat.CometChatSettings): Promise<Object> {
+        // Extract authKey from credentials (UIKit uses this for login — SDK ignores it)
+        const authKey = settings.credentials?.authKey;
+
+        // Extract UIKit-specific settings
+        const subscribeAll = settings.uiKit?.subscribePresenceForAllUsers ?? true;
+
+        // Build UIKitSettings so downstream code (login, createUser, enableCalling, etc.) works
+        const builder = new UIKitSettingsBuilder()
+            .setAppId(settings.appId)
+            .setRegion(settings.region);
+        if (authKey) builder.setAuthKey(authKey);
+        if (subscribeAll) builder.subscribePresenceForAllUsers();
+        CometChatUIKit.uiKitSettings = builder.build();
+
+        if (CometChat.setSource) {
+            CometChat.setSource("uikit-v6", "web", "reactjs");
+        }
+        CometChatLocalize.setCurrentLanguage(CometChatLocalize.getBrowserLanguage());
+
+        return new Promise((resolve, reject) => {
+            window.CometChatUiKit = {
+                name: "@cometchat/chat-uikit-react",
+                version: "6.5.2",
+            };
+
+            // CRITICAL: Call initFromSettings — NOT init().
+            // Only initFromSettings writes integrationSource = "ai-agent".
+            CometChat.initFromSettings(settings).then(() => {
+                CometChat.getLoggedinUser().then((user: CometChat.User | null) => {
+                    if (user) {
+                        CometChatUIKitLoginListener.setLoggedInUser(user);
+                        ChatConfigurator.init();
+                        this.initiateAfterLogin();
+                    }
+                    return resolve(user!);
+                }).catch((error: CometChat.CometChatException) => {
+                    console.log(error);
+                    return reject(error);
+                });
+            }).catch((error: CometChat.CometChatException) => {
+                return reject(error);
+            });
         });
     }
 
