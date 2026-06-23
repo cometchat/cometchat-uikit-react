@@ -3,8 +3,8 @@
 .cometchat-formatting-toolbar {
   display: flex;
   align-items: center;
-  gap: var(--cometchat-padding-5, 20px);
-  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-3, 12px);
+  gap: var(--cometchat-padding-4, 16px);
+  padding: 8px;
   background: var(--cometchat-background-color-02);
   border-radius: var(--cometchat-radius-2, 8px) var(--cometchat-radius-2, 8px) 0 0;
   font-family: var(--cometchat-font-family);
@@ -145,7 +145,7 @@
 
 .cometchat-formatting-toolbar__separator {
   width: 1px;
-  height: 24px;
+  height: 20px;
   background: var(--cometchat-border-color-default);
   margin: 0 var(--cometchat-margin-1, 4px);
   flex-shrink: 0;

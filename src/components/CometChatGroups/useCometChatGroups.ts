@@ -37,7 +37,10 @@ export function useCometChatGroups(
   const instanceId = useId();
   const anchorIndexRef = useRef<number | null>(null);
   const anchorGuidRef = useRef<string | null>(null);
+  const groupsRef = useRef<CometChat.Group[]>([]);
   const publish = usePublishEvent();
+
+  groupsRef.current = state.groups;
 
   // --- Error handler ---
   const handleError = useCallback(
@@ -158,6 +161,12 @@ export function useCometChatGroups(
 
     const cleanup = CometChatGroupsManager.attachGroupListener(listenerId, {
       onGroupMemberJoined: (_message, _joinedUser, joinedGroup) => {
+        // SDK may provide incorrect membersCount — increment from local state
+        const guid = joinedGroup.getGuid();
+        const existing = groupsRef.current.find(g => g.getGuid() === guid);
+        if (existing) {
+          joinedGroup.setMembersCount(existing.getMembersCount() + 1);
+        }
         dispatch({ type: 'UPDATE_GROUP', group: joinedGroup });
       },
       onGroupMemberLeft: (_message, leavingUser, group) => {
@@ -165,6 +174,11 @@ export function useCometChatGroups(
         if (loggedInUid && leavingUser.getUid() === loggedInUid) {
           dispatch({ type: 'REMOVE_GROUP', groupId: group.getGuid() });
         } else {
+          const guid = group.getGuid();
+          const existing = groupsRef.current.find(g => g.getGuid() === guid);
+          if (existing) {
+            group.setMembersCount(Math.max(0, existing.getMembersCount() - 1));
+          }
           dispatch({ type: 'UPDATE_GROUP', group });
         }
       },
@@ -173,6 +187,11 @@ export function useCometChatGroups(
         if (loggedInUid && bannedUser.getUid() === loggedInUid) {
           dispatch({ type: 'REMOVE_GROUP', groupId: bannedFrom.getGuid() });
         } else {
+          const guid = bannedFrom.getGuid();
+          const existing = groupsRef.current.find(g => g.getGuid() === guid);
+          if (existing) {
+            bannedFrom.setMembersCount(Math.max(0, existing.getMembersCount() - 1));
+          }
           dispatch({ type: 'UPDATE_GROUP', group: bannedFrom });
         }
       },
@@ -181,10 +200,20 @@ export function useCometChatGroups(
         if (loggedInUid && kickedUser.getUid() === loggedInUid) {
           dispatch({ type: 'REMOVE_GROUP', groupId: kickedFrom.getGuid() });
         } else {
+          const guid = kickedFrom.getGuid();
+          const existing = groupsRef.current.find(g => g.getGuid() === guid);
+          if (existing) {
+            kickedFrom.setMembersCount(Math.max(0, existing.getMembersCount() - 1));
+          }
           dispatch({ type: 'UPDATE_GROUP', group: kickedFrom });
         }
       },
       onGroupMemberScopeChanged: (_message, _changedUser, _newScope, _oldScope, changedGroup) => {
+        const guid = changedGroup.getGuid();
+        const existing = groupsRef.current.find(g => g.getGuid() === guid);
+        if (existing) {
+          changedGroup.setMembersCount(existing.getMembersCount());
+        }
         dispatch({ type: 'UPDATE_GROUP', group: changedGroup });
       },
     });

@@ -1,0 +1,87 @@
+/* --- Context menu dropdown overrides for Conversations header --- */
+
+/* Widen the dropdown to 212px (v6 width) */
+.cometchat-conversations__header-menu [class*="cometchat-context-menu__dropdown"] {
+  width: 212px;
+}
+
+/* Make the three-dot trigger icon 24px and use primary color */
+.cometchat-conversations__header-menu [class*="cometchat-context-menu__trigger"] {
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* The base context-menu icon is recolored gray via a `filter`; clear it so the icon
+   uses the primary color at rest and the highlight color on hover (matches v6). */
+.cometchat-conversations__header-menu [class*="cometchat-context-menu__trigger-icon"] {
+  filter: none;
+  color: var(--cometchat-icon-color-primary, #141414);
+}
+
+.cometchat-conversations__header-menu
+  [class*="cometchat-context-menu__trigger"]:hover
+  [class*="cometchat-context-menu__trigger-icon"] {
+  color: var(--cometchat-icon-color-highlight, #6852d6);
+}
+
+.cometchat-conversations__header-menu [class*="cometchat-context-menu__trigger-icon"] svg {
+  width: 24px;
+  height: 24px;
+  color: inherit;
+}
+
+/* Ensure dropdown items show text left-aligned */
+.cometchat-conversations__header-menu [class*="cometchat-context-menu__dropdown-item"] {
+  text-align: left;
+}
+
+/* --- Per-item styling via className prop --- */
+
+/* Logged-in user item: separator + non-clickable */
+.cometchat-conversations__header-menu-item--user {
+  border-bottom: 2px solid var(--cometchat-border-color-default, #E8E8E8);
+  cursor: default !important;
+}
+
+/* Logout item: red text */
+.cometchat-conversations__header-menu-item--logout [class*="cometchat-context-menu__dropdown-item-title"] {
+  color: var(--cometchat-error-color, #F44649);
+}
+
+/* --- Create Group button in Groups tab header --- */
+.cometchat-groups__header-create-group-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  border-radius: var(--cometchat-radius-2, 8px);
+  cursor: pointer;
+}
+
+.cometchat-groups__header-create-group-button:hover {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
+}
+
+.cometchat-groups__header-create-group-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852D6);
+  outline-offset: 2px;
+}
+
+.cometchat-groups__header-create-group-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  mask: url("../../assets/create-group.svg") center center / contain no-repeat;
+  -webkit-mask: url("../../assets/create-group.svg") center center / contain no-repeat;
+  background: var(--cometchat-icon-color-primary, #141414);
+}
+
+.cometchat-groups__header-create-group-button:hover .cometchat-groups__header-create-group-icon {
+  background: var(--cometchat-icon-color-highlight, #6852D6);
+}

@@ -33,13 +33,13 @@ describe('CometChatReactionsOverflow', () => {
   it('has an aria-label indicating the number of hidden reactions', () => {
     render(<CometChatReactionsOverflow count={3} />);
     const button = screen.getByRole('button');
-    expect(button).toHaveAttribute('aria-label', '+3 more reactions');
+    expect(button).toHaveAttribute('aria-label', '3 more reactions');
   });
 
   it('has correct aria-label for count of 1', () => {
     render(<CometChatReactionsOverflow count={1} />);
     const button = screen.getByRole('button');
-    expect(button).toHaveAttribute('aria-label', '+1 more reactions');
+    expect(button).toHaveAttribute('aria-label', '1 more reactions');
   });
 
   // ─── Custom className ─────────────────────────────────────────────

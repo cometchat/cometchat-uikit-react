@@ -56,6 +56,8 @@ export interface CometChatMessagePluginContext {
   showToast?: (text: string) => void;
   /** Disable text truncation (read more / show less) in text bubbles. */
   disableTruncation?: boolean;
+  /** Disable interaction (click handlers, options) on the bubble. Used in thread header parent bubble. */
+  disableInteraction?: boolean;
   /** Set a message into edit mode in the composer. */
   onEditMessage?: (message: CometChat.BaseMessage) => void;
   /** Set a message as the reply-to target in the composer. */

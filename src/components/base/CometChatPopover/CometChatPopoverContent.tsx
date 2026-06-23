@@ -1,6 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import type { CometChatPopoverContentProps } from './CometChatPopover.types';
 import { useCometChatPopoverContext } from './CometChatPopover.context';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatPopover.css';
 
 /**
@@ -29,6 +30,12 @@ export const CometChatPopoverContent: React.FC<CometChatPopoverContentProps> = (
     positionStyle,
     isPositioned,
   } = useCometChatPopoverContext();
+
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
 
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -83,7 +90,7 @@ export const CometChatPopoverContent: React.FC<CometChatPopoverContentProps> = (
         );
         if (focusable.length === 0) return;
 
-        const currentIdx = focusable.indexOf(document.activeElement as HTMLElement);
+        const currentIdx = focusable.indexOf(getCurrentDocument().activeElement as HTMLElement);
         let nextIdx: number;
 
         if (event.shiftKey) {
@@ -96,7 +103,7 @@ export const CometChatPopoverContent: React.FC<CometChatPopoverContentProps> = (
         focusable[nextIdx]?.focus();
       }
     },
-    [trapFocus, popoverRef]
+    [trapFocus, popoverRef, getCurrentDocument]
   );
 
   if (!isOpen) return null;

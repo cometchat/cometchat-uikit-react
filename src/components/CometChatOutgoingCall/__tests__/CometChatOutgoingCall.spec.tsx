@@ -12,15 +12,18 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
 }));
 
 vi.mock('../../base/CometChatAvatar/CometChatAvatar', () => ({
-  CometChatAvatar: {
-    Root: ({ children, name }: { children: React.ReactNode; name: string }) => (
-      <div data-testid="avatar-root" data-name={name}>
-        {children}
-      </div>
-    ),
-    Image: () => <div data-testid="avatar-image" />,
-    Initials: () => <div data-testid="avatar-initials" />,
-  },
+  CometChatAvatar: Object.assign(
+    ({ name }: { name: string }) => <div data-testid="avatar-root" data-name={name} />,
+    {
+      Root: ({ children, name }: { children: React.ReactNode; name: string }) => (
+        <div data-testid="avatar-root" data-name={name}>
+          {children}
+        </div>
+      ),
+      Image: () => <div data-testid="avatar-image" />,
+      Initials: () => <div data-testid="avatar-initials" />,
+    }
+  ),
 }));
 
 vi.mock('../../../resources/CometChatSoundManager/CometChatSoundManager', () => ({

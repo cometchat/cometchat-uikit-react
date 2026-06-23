@@ -13,7 +13,7 @@ import { useLocale } from '../../context/locale/LocaleContext';
  */
 export const CometChatGroupsList: React.FC<CometChatGroupsListProps> = ({ itemView }) => {
   const { getLocalizedString } = useLocale();
-  const { groups, hasMore, fetchState, fetchNext } = useCometChatGroupsContext();
+  const { groups, hasMore, fetchState, fetchNext, showScrollbar } = useCometChatGroupsContext();
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // --- Infinite scroll via IntersectionObserver ---
@@ -37,7 +37,12 @@ export const CometChatGroupsList: React.FC<CometChatGroupsListProps> = ({ itemVi
 
   return (
     <div
-      className={'cometchat-groups__list'}
+      className={[
+        'cometchat-groups__list',
+        !showScrollbar ? 'cometchat-groups__list--hide-scrollbar' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       role="listbox"
       aria-label={getLocalizedString('accessibility_groups_list')}
       aria-busy={fetchState === 'loading'}

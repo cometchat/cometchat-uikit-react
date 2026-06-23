@@ -1,123 +1,209 @@
 /**
  * CometChatMessageComposerMentionsList — dropdown for mention suggestions.
  *
- * Renders inside the text-input-wrapper, positioned absolutely above the input.
- * Shows user/group member suggestions when @ is typed.
- * Supports keyboard navigation and @all mention.
+ * Uses CometChatUsers / CometChatGroupMembers internally for built-in
+ * scroll-based pagination with keyboard navigation and accessibility.
  *
- *  only shows when there are actual results,
- * uses mousedown (not click) to prevent input blur, and mouseenter for hover focus.
+ * Renders inside the text-input-wrapper, positioned absolutely above the input.
  */
 
-import React, { useEffect, useRef } from 'react';
-import type { MentionSuggestion } from './useCometChatMentions';
-import './CometChatMessageComposer.css';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { CometChatUsers } from '../CometChatUsers/CometChatUsers';
+import { CometChatGroupMembers } from '../CometChatGroupMembers/CometChatGroupMembers';
+import { CometChatAvatar } from '../base/CometChatAvatar/CometChatAvatar';
 import { useLocale } from '../../context/locale/LocaleContext';
+import './CometChatMessageComposer.css';
 
 export interface CometChatMessageComposerMentionsListProps {
-  suggestions: MentionSuggestion[];
-  focusedIndex: number;
-  isLoading: boolean;
-  onSelect: (suggestion: MentionSuggestion) => void;
-  onFocusChange?: (index: number) => void;
+  /** Whether the dropdown is open. */
+  isOpen: boolean;
+  /** Current search keyword (text after @). */
+  searchKeyword: string;
+  /** Group for group-member mentions. Mutually exclusive with user. */
+  group?: CometChat.Group;
+  /** User for 1:1 chat mentions (searches all users). Mutually exclusive with group. */
+  user?: CometChat.User;
+  /** Custom users request builder. */
+  usersRequestBuilder?: CometChat.UsersRequestBuilder;
+  /** Custom group members request builder. */
+  groupMembersRequestBuilder?: CometChat.GroupMembersRequestBuilder;
+  /** Whether individual member mentions are disabled (only @all remains). */
+  disableMentions?: boolean;
+  /** Whether @all mention is disabled. */
+  disableMentionAll?: boolean;
+  /** Label for the @all mention. */
+  mentionAllLabel?: string;
+  /** Called when a user/member is selected. */
+  onItemClick: (item: CometChat.User | CometChat.GroupMember | null) => void;
+  /** Called when the list becomes empty (no results). */
+  onEmpty?: () => void;
+  /** Called on error. */
+  onError?: () => void;
 }
 
 export const CometChatMessageComposerMentionsList: React.FC<
   CometChatMessageComposerMentionsListProps
-> = ({ suggestions, focusedIndex, isLoading, onSelect, onFocusChange }) => {
+> = ({
+  isOpen,
+  searchKeyword,
+  group,
+  user,
+  usersRequestBuilder,
+  groupMembersRequestBuilder,
+  disableMentions = false,
+  disableMentionAll = false,
+  mentionAllLabel = 'all',
+  onItemClick,
+  onEmpty,
+  onError,
+}) => {
   const { getLocalizedString } = useLocale();
-  const listRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll focused item into view
-  useEffect(() => {
-    const item = itemRefs.current[focusedIndex];
-    if (item) {
-      item.scrollIntoView({ block: 'nearest' });
+  // Determine if @all should be shown
+  const shouldShowMentionAll = useMemo(() => {
+    if (disableMentionAll || !group) return false;
+    if (
+      searchKeyword &&
+      searchKeyword.trim().length > 0 &&
+      !mentionAllLabel.toLowerCase().startsWith(searchKeyword.trim().toLowerCase())
+    ) {
+      return false;
     }
-  }, [focusedIndex]);
+    return true;
+  }, [searchKeyword, mentionAllLabel, disableMentionAll, group]);
 
-  // Angular: only show when there are suggestions (no "No results" state)
-  if (suggestions.length === 0) {
-    if (isLoading) {
-      return (
-        <div className={'cometchat-message-composer__mentions-list'}>
-          <div className={'cometchat-message-composer__mentions-loading'}>
-            <span className={'cometchat-message-composer__mentions-spinner'} aria-hidden="true" />
-          </div>
-        </div>
-      );
+  // Handle @all selection
+  const handleMentionAllSelect = useCallback(() => {
+    onItemClick(null);
+  }, [onItemClick]);
+
+  // Handle @all click
+  const handleMentionAllClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      handleMentionAllSelect();
+    },
+    [handleMentionAllSelect]
+  );
+
+  // Handle @all keyboard
+  const handleMentionAllKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleMentionAllSelect();
+      }
+    },
+    [handleMentionAllSelect]
+  );
+
+  // Prevent input blur when interacting with the dropdown
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
+  // Handle empty callback — fire when nothing is visible in the dropdown
+  const handleOnEmpty = useCallback(() => {
+    if (!shouldShowMentionAll) {
+      onEmpty?.();
     }
-    return null;
-  }
+  }, [onEmpty, shouldShowMentionAll]);
+
+  const shouldCloseWhenMentionsDisabled = disableMentions && !shouldShowMentionAll;
+
+  React.useEffect(() => {
+    if (isOpen && shouldCloseWhenMentionsDisabled) {
+      onEmpty?.();
+    }
+  }, [isOpen, shouldCloseWhenMentionsDisabled, onEmpty]);
+
+  if (!isOpen || shouldCloseWhenMentionsDisabled) return null;
 
   return (
     <div
-      ref={listRef}
-      className={'cometchat-message-composer__mentions-list'}
+      ref={containerRef}
+      className="cometchat-message-composer__mentions-list"
       role="listbox"
+      tabIndex={-1}
       id="mention-suggestions-listbox"
-      aria-label={getLocalizedString('accessibility_mention_suggestions')}
+      aria-label={getLocalizedString('accessibility_mention_suggestions') || 'Mention suggestions'}
+      onMouseDown={handleMouseDown}
     >
-      {suggestions.map((suggestion, index) => (
+      {/* @all mention option */}
+      {shouldShowMentionAll && group && (
         <div
-          key={suggestion.uid}
-          id={`mention-option-${String(index)}`}
-          ref={el => {
-            itemRefs.current[index] = el;
-          }}
-          className={[
-            'cometchat-message-composer__mentions-item',
-            index === focusedIndex ? 'cometchat-message-composer__mentions-item--focused' : '',
-            suggestion.isAllMention ? 'cometchat-message-composer__mentions-item--all' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
+          className="cometchat-message-composer__mentions-item cometchat-message-composer__mentions-item--all "
           role="option"
-          aria-selected={index === focusedIndex}
+          aria-selected={false}
           tabIndex={-1}
-          // mousedown prevents input blur (Angular pattern)
-          onMouseDown={e => {
-            e.preventDefault();
-            onSelect(suggestion);
-          }}
-          onMouseEnter={() => onFocusChange?.(index)}
+          onClick={handleMentionAllClick}
+          onKeyDown={handleMentionAllKeyDown}
         >
-          {/* Avatar */}
-          {suggestion.isAllMention ? (
-            <div className={'cometchat-message-composer__mentions-item-all-icon'}>@</div>
-          ) : suggestion.avatar ? (
-            <img
-              src={suggestion.avatar}
-              alt={suggestion.name}
-              className={'cometchat-message-composer__mentions-item-avatar'}
-              width={42}
-              height={42}
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <div className={'cometchat-message-composer__mentions-item-initials'}>
-              {suggestion.name.charAt(0).toUpperCase()}
-            </div>
-          )}
-          {/* Name */}
-          <span className={'cometchat-message-composer__mentions-item-name'}>
-            {suggestion.isAllMention ? `@${suggestion.name}` : suggestion.name}
-          </span>
-          {/* Subtitle for @all */}
-          {suggestion.isAllMention && (
-            <span className={'cometchat-message-composer__mentions-item-badge'}>
+          <CometChatAvatar.Root name={group.getName()} image={group.getIcon()} size="medium">
+            <CometChatAvatar.Image />
+            <CometChatAvatar.Initials />
+          </CometChatAvatar.Root>
+          <span className="cometchat-message-composer__mentions-item-name">
+            @{getLocalizedString(`message_composer_mention_${mentionAllLabel}`) || mentionAllLabel}{' '}
+            <span className="cometchat-message-composer__mentions-item-badge">
               {getLocalizedString('message_composer_mention_notify_everyone_label')}
             </span>
-          )}
+          </span>
         </div>
-      ))}
-      {/* Loading indicator for pagination */}
-      {isLoading && suggestions.length > 0 && (
-        <div className={'cometchat-message-composer__mentions-loading'}>
-          <span className={'cometchat-message-composer__mentions-spinner'} aria-hidden="true" />
-        </div>
+      )}
+
+      {/* Users list (1:1 chat) — only when individual mentions are enabled */}
+      {user && !disableMentions && (
+        <CometChatUsers
+          hideSearch={true}
+          showSectionHeader={false}
+          searchKeyword={searchKeyword}
+          onItemClick={(u: CometChat.User) => {
+            onItemClick(u);
+          }}
+          onEmpty={handleOnEmpty}
+          onError={
+            onError
+              ? () => {
+                  onError();
+                }
+              : undefined
+          }
+          {...(usersRequestBuilder ? { usersRequestBuilder } : {})}
+          headerView={null}
+          trailingView={() => null}
+          emptyView={<></>}
+          errorView={<></>}
+        />
+      )}
+
+      {/* Group members list (group chat) — only when individual mentions are enabled */}
+      {group && !disableMentions && (
+        <CometChatGroupMembers
+          group={group}
+          hideSearch={true}
+          searchKeyword={searchKeyword}
+          onItemClick={(member: CometChat.GroupMember) => {
+            onItemClick(member);
+          }}
+          onEmpty={handleOnEmpty}
+          onError={
+            onError
+              ? () => {
+                  onError();
+                }
+              : undefined
+          }
+          {...(groupMembersRequestBuilder
+            ? { groupMemberRequestBuilder: groupMembersRequestBuilder }
+            : {})}
+          headerView={null}
+          trailingView={() => null}
+          emptyView={<></>}
+          errorView={<></>}
+        />
       )}
     </div>
   );

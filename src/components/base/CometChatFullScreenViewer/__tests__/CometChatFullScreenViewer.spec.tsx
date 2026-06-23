@@ -47,7 +47,8 @@ describe('CometChatFullScreenViewer', () => {
 
   it('displays sender initials when avatar is not provided', () => {
     renderViewer({ senderName: 'John Doe' });
-    expect(screen.getByText('JO')).toBeInTheDocument();
+    // Initials are first letter of the first two words: "John Doe" -> "JD".
+    expect(screen.getByText('JD')).toBeInTheDocument();
   });
 
   it('hides sender info when senderName and senderAvatar are not provided', () => {
@@ -68,14 +69,18 @@ describe('CometChatFullScreenViewer', () => {
 
   it('renders video when mediaType is video', () => {
     renderViewer({ url: 'https://example.com/video.mp4', mediaType: 'video' });
-    const video = screen.getByLabelText('Full screen video');
-    expect(video.tagName).toBe('VIDEO');
+    const videos = screen.getAllByLabelText('Full screen video');
+    const video = videos.find(el => el.tagName === 'VIDEO');
+    expect(video).toBeDefined();
+    expect(video!.tagName).toBe('VIDEO');
   });
 
   it('renders audio when mediaType is audio', () => {
     renderViewer({ url: 'https://example.com/audio.mp3', mediaType: 'audio' });
-    const audio = screen.getByLabelText('Full screen audio');
-    expect(audio.tagName).toBe('AUDIO');
+    const audios = screen.getAllByLabelText('Full screen audio');
+    const audio = audios.find(el => el.tagName === 'AUDIO');
+    expect(audio).toBeDefined();
+    expect(audio!.tagName).toBe('AUDIO');
   });
 
   it('renders file preview when mediaType is file', () => {

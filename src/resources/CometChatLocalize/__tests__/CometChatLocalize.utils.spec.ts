@@ -15,8 +15,8 @@ describe('CometChatLocalize — utility methods', () => {
         },
       });
 
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      expect(i18n.getBrowserLanguage()).toBe('de');
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      expect(localize.getBrowserLanguage()).toBe('de');
     });
 
     it('returns full locale code when browser language matches exactly', () => {
@@ -27,8 +27,8 @@ describe('CometChatLocalize — utility methods', () => {
         },
       });
 
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      expect(i18n.getBrowserLanguage()).toBe('en-us');
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      expect(localize.getBrowserLanguage()).toBe('en-us');
     });
 
     it('returns fallback when browser language is unsupported', () => {
@@ -39,8 +39,8 @@ describe('CometChatLocalize — utility methods', () => {
         },
       });
 
-      const i18n = new CometChatLocalize({ language: 'en-us', fallbackLanguage: 'fr' });
-      expect(i18n.getBrowserLanguage()).toBe('fr');
+      const localize = new CometChatLocalize({ language: 'en-us', fallbackLanguage: 'fr' });
+      expect(localize.getBrowserLanguage()).toBe('fr');
     });
 
     it('handles SSR (no window) gracefully by returning fallback', () => {
@@ -49,8 +49,8 @@ describe('CometChatLocalize — utility methods', () => {
       // @ts-expect-error - intentionally removing window for SSR test
       delete globalThis.window;
 
-      const i18n = new CometChatLocalize({ language: 'en-us', fallbackLanguage: 'de' });
-      expect(i18n.getBrowserLanguage()).toBe('de');
+      const localize = new CometChatLocalize({ language: 'en-us', fallbackLanguage: 'de' });
+      expect(localize.getBrowserLanguage()).toBe('de');
 
       // Restore window
       globalThis.window = originalWindow;
@@ -64,34 +64,34 @@ describe('CometChatLocalize — utility methods', () => {
         },
       });
 
-      const i18n = new CometChatLocalize({ language: 'en-us' });
+      const localize = new CometChatLocalize({ language: 'en-us' });
       // 'fr-CA' is not in supported languages, but 'fr' is
-      expect(i18n.getBrowserLanguage()).toBe('fr');
+      expect(localize.getBrowserLanguage()).toBe('fr');
     });
   });
 
   describe('getLocalizedString()', () => {
     it('is an alias for t()', () => {
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      i18n.addTranslation({ 'en-us': { TEST_KEY: 'test value' } });
-      i18n.setCurrentLanguage('en-us');
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      localize.addTranslation({ 'en-us': { TEST_KEY: 'test value' } });
+      localize.setCurrentLanguage('en-us');
 
-      expect(i18n.getLocalizedString('TEST_KEY')).toBe(i18n.t('TEST_KEY'));
-      expect(i18n.getLocalizedString('TEST_KEY')).toBe('test value');
+      expect(localize.getLocalizedString('TEST_KEY')).toBe(localize.t('TEST_KEY'));
+      expect(localize.getLocalizedString('TEST_KEY')).toBe('test value');
     });
 
     it('returns raw key when not found (same as t())', () => {
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      expect(i18n.getLocalizedString('NONEXISTENT')).toBe('NONEXISTENT');
-      expect(i18n.getLocalizedString('NONEXISTENT')).toBe(i18n.t('NONEXISTENT'));
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      expect(localize.getLocalizedString('NONEXISTENT')).toBe('NONEXISTENT');
+      expect(localize.getLocalizedString('NONEXISTENT')).toBe(localize.t('NONEXISTENT'));
     });
   });
 
   describe('getDefaultLanguage()', () => {
     it('returns fallback language when disableAutoDetection is true', () => {
-      const i18n = new CometChatLocalize({ language: 'en-us', fallbackLanguage: 'de' });
-      i18n.init({ disableAutoDetection: true });
-      expect(i18n.getDefaultLanguage()).toBe('de');
+      const localize = new CometChatLocalize({ language: 'en-us', fallbackLanguage: 'de' });
+      localize.init({ disableAutoDetection: true });
+      expect(localize.getDefaultLanguage()).toBe('de');
     });
 
     it('returns browser language when disableAutoDetection is false', () => {
@@ -102,9 +102,9 @@ describe('CometChatLocalize — utility methods', () => {
         },
       });
 
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      i18n.init({ disableAutoDetection: false });
-      expect(i18n.getDefaultLanguage()).toBe('fr');
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      localize.init({ disableAutoDetection: false });
+      expect(localize.getDefaultLanguage()).toBe('fr');
     });
 
     it('returns browser language by default (disableAutoDetection not set)', () => {
@@ -115,8 +115,8 @@ describe('CometChatLocalize — utility methods', () => {
         },
       });
 
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      expect(i18n.getDefaultLanguage()).toBe('es');
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      expect(localize.getDefaultLanguage()).toBe('es');
     });
   });
 });

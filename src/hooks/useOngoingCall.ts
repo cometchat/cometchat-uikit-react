@@ -20,7 +20,7 @@
  * ```
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { CometChat, CometChatException } from '@cometchat/chat-sdk-javascript';
 import { CometChatUIKitCalls } from '../CometChatUIKit/CometChatCalls';
 
 export interface UseOngoingCallOptions {
@@ -33,7 +33,7 @@ export interface UseOngoingCallOptions {
   /** Callback when the call ends (from any source). */
   onCallEnded?: () => void;
   /** Error callback. */
-  onError?: (error: unknown) => void;
+  onError?: ((error: CometChat.CometChatException) => void) | null;
 }
 
 export interface UseOngoingCallReturn {
@@ -63,7 +63,6 @@ export function useOngoingCall(options: UseOngoingCallOptions): UseOngoingCallRe
   const getCallSettings = useCallback(() => {
     return {
       sessionType: isAudioOnly ? 'VOICE' : 'VIDEO',
-      layout: 'SIDEBAR',
       startAudioMuted: false,
       startVideoPaused: false,
       hideControlPanel: false,
@@ -103,7 +102,7 @@ export function useOngoingCall(options: UseOngoingCallOptions): UseOngoingCallRe
               onCallEndedRef.current?.();
             })
             .catch((err: unknown) => {
-              onErrorRef.current?.(err);
+              if (err instanceof CometChatException) onErrorRef.current?.(err);
             });
         } else {
           CometChatUIKitCalls.leaveSession();
@@ -154,7 +153,7 @@ export function useOngoingCall(options: UseOngoingCallOptions): UseOngoingCallRe
         CometChatUIKitCalls.joinSession(callToken, callSettings, callScreenFrame);
         setIsCallActive(true);
       } catch (error) {
-        onErrorRef.current?.(error);
+        if (error instanceof CometChatException) onErrorRef.current?.(error);
       }
     },
     [getCallSettings, registerEventListeners]
@@ -181,7 +180,7 @@ export function useOngoingCall(options: UseOngoingCallOptions): UseOngoingCallRe
         endSession();
         onCallEnded?.();
       } catch (error) {
-        onError?.(error);
+        if (error instanceof CometChatException) onError?.(error);
       }
     } else {
       endSession();

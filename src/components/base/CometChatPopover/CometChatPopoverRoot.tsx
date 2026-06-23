@@ -5,6 +5,7 @@ import type {
   CometChatPopoverPlacement,
 } from './CometChatPopover.types';
 import { CometChatPopoverContext } from './CometChatPopover.context';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatPopover.css';
 
 /** Margin (px) between the popover and the viewport edge. */
@@ -22,12 +23,13 @@ function getAvailablePlacement(
   triggerRect: DOMRect,
   contentHeight: number,
   contentWidth: number,
-  preferred: CometChatPopoverPlacement
+  preferred: CometChatPopoverPlacement,
+  currentWindow: Window
 ): CometChatPopoverPlacement {
   const spaceAbove = triggerRect.top;
-  const spaceBelow = window.innerHeight - triggerRect.bottom;
+  const spaceBelow = currentWindow.innerHeight - triggerRect.bottom;
   const spaceLeft = triggerRect.left;
-  const spaceRight = window.innerWidth - triggerRect.right;
+  const spaceRight = currentWindow.innerWidth - triggerRect.right;
 
   const fits = (placement: CometChatPopoverPlacement): boolean => {
     switch (placement) {
@@ -73,11 +75,12 @@ function computePosition(
   contentWidth: number,
   contentHeight: number,
   placement: CometChatPopoverPlacement,
-  showArrow: boolean
+  showArrow: boolean,
+  currentWindow: Window
 ): React.CSSProperties {
   const gap = showArrow ? ARROW_GAP : TRIGGER_GAP;
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
+  const viewportWidth = currentWindow.innerWidth;
+  const viewportHeight = currentWindow.innerHeight;
   const style: React.CSSProperties = {};
 
   if (placement === 'top' || placement === 'bottom') {
@@ -134,6 +137,16 @@ export const CometChatPopoverRoot: React.FC<CometChatPopoverRootProps> = ({
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
+
+  const getCurrentWindow = useCallback(() => {
+    return IframeContext.iframeWindow ?? window;
+  }, [IframeContext.iframeWindow]);
+
   const reactId = useId();
   const popoverId = `cometchat-popover-${reactId.replace(/:/g, '')}`;
 
@@ -151,14 +164,14 @@ export const CometChatPopoverRoot: React.FC<CometChatPopoverRootProps> = ({
 
   const handleOpen = useCallback(() => {
     if (isOpen) return;
-    previousFocusRef.current = document.activeElement as HTMLElement;
+    previousFocusRef.current = getCurrentDocument().activeElement as HTMLElement;
     if (!isControlled) {
       setInternalOpen(true);
     }
     if (onOpen) {
       onOpen();
     }
-  }, [isOpen, isControlled, onOpen]);
+  }, [isOpen, isControlled, onOpen, getCurrentDocument]);
 
   const handleClose = useCallback(() => {
     if (!isOpen) return;
@@ -194,13 +207,26 @@ export const CometChatPopoverRoot: React.FC<CometChatPopoverRootProps> = ({
     contentEl.style.visibility = '';
     contentEl.style.display = '';
 
-    const resolved = getAvailablePlacement(triggerRect, contentHeight, contentWidth, placement);
-    const style = computePosition(triggerRect, contentWidth, contentHeight, resolved, showArrow);
+    const resolved = getAvailablePlacement(
+      triggerRect,
+      contentHeight,
+      contentWidth,
+      placement,
+      getCurrentWindow()
+    );
+    const style = computePosition(
+      triggerRect,
+      contentWidth,
+      contentHeight,
+      resolved,
+      showArrow,
+      getCurrentWindow()
+    );
 
     setComputedPlacement(resolved);
     setPositionStyle(style);
     setIsPositioned(true);
-  }, [placement, showArrow]);
+  }, [placement, showArrow, getCurrentWindow]);
 
   // Calculate position after the content DOM is rendered.
   // useEffect (not useLayoutEffect) ensures the Content component has mounted.
@@ -261,11 +287,11 @@ export const CometChatPopoverRoot: React.FC<CometChatPopoverRootProps> = ({
       }
     };
 
-    document.addEventListener('mousedown', handleMouseDown);
+    getCurrentDocument().addEventListener('mousedown', handleMouseDown);
     return () => {
-      document.removeEventListener('mousedown', handleMouseDown);
+      getCurrentDocument().removeEventListener('mousedown', handleMouseDown);
     };
-  }, [isOpen, closeOnOutsideClick, handleClose]);
+  }, [isOpen, closeOnOutsideClick, handleClose, getCurrentDocument]);
 
   // --- Escape key (document-level so it works even without focus trap) ---
 
@@ -279,11 +305,11 @@ export const CometChatPopoverRoot: React.FC<CometChatPopoverRootProps> = ({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    getCurrentDocument().addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      getCurrentDocument().removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, handleClose]);
+  }, [isOpen, handleClose, getCurrentDocument]);
 
   // --- Scroll / resize repositioning ---
 
@@ -296,9 +322,9 @@ export const CometChatPopoverRoot: React.FC<CometChatPopoverRootProps> = ({
         const rect = triggerRef.current.getBoundingClientRect();
         if (
           rect.bottom < 0 ||
-          rect.top > window.innerHeight ||
+          rect.top > getCurrentWindow().innerHeight ||
           rect.right < 0 ||
-          rect.left > window.innerWidth
+          rect.left > getCurrentWindow().innerWidth
         ) {
           handleClose();
           return;
@@ -316,17 +342,17 @@ export const CometChatPopoverRoot: React.FC<CometChatPopoverRootProps> = ({
       }, 0);
     };
 
-    window.addEventListener('scroll', handleScroll, true);
-    window.addEventListener('resize', handleResize);
+    getCurrentWindow().addEventListener('scroll', handleScroll, true);
+    getCurrentWindow().addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener('scroll', handleScroll, true);
-      window.removeEventListener('resize', handleResize);
+      getCurrentWindow().removeEventListener('scroll', handleScroll, true);
+      getCurrentWindow().removeEventListener('resize', handleResize);
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
       }
     };
-  }, [isOpen, updatePosition, handleClose]);
+  }, [isOpen, updatePosition, handleClose, getCurrentWindow]);
 
   // --- ResizeObserver on popover content ---
 

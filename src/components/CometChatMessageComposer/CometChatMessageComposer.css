@@ -84,7 +84,6 @@
   gap: var(--cometchat-spacing-1, 4px);
   position: relative;
   background-color: var(--cometchat-background-color-03, #f5f5f5);
-  border-left: 3px solid var(--cometchat-primary-color, #6852d6);
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -115,6 +114,12 @@
   max-width: 300px;
   word-break: break-word;
   width: 100%;
+}
+
+.cometchat-message-composer__edit-preview-subtitle p {
+  margin: 0;
+  padding: 0;
+  display: inline;
 }
 
 .cometchat-message-composer__edit-preview-subtitle blockquote {
@@ -283,6 +288,7 @@
 
 /* ==================== Input Section (Main Body) ==================== */
 .cometchat-message-composer__body {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: var(--cometchat-spacing-2, 8px);
@@ -294,6 +300,18 @@
   background: var(--cometchat-background-color-01, #fff);
   border-radius: var(--cometchat-radius-2, 8px);
   border: 1px solid var(--cometchat-border-color-light, #e8e8e8);
+}
+
+.cometchat-message-composer__recording-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-2, 8px);
+  padding: var(--cometchat-padding-3, 12px);
+  background: var(--cometchat-background-color-01, #fff);
+  border-radius: var(--cometchat-radius-2, 8px);
+  z-index: 4;
 }
 
 /* Compact layout: horizontal — [attachment] [input] [emoji] [voice] [send] */
@@ -327,17 +345,6 @@
   flex: 1 1 auto;
 }
 
-/* Hidden during recording in compact mode */
-.cometchat-message-composer--recording .cometchat-message-composer__input-wrapper {
-  display: none;
-}
-
-/* In multiline recording mode, push recorder to bottom to prevent layout shift */
-.cometchat-message-composer--multiline.cometchat-message-composer--recording
-  .cometchat-message-composer__body {
-  justify-content: flex-end;
-}
-
 /* ==================== Input ==================== */
 .cometchat-message-composer__input {
   width: 100%;
@@ -352,11 +359,10 @@
   word-break: break-word;
   white-space: pre-wrap;
   font: var(--cometchat-font-body-regular, 400 14px Roboto);
-  line-height: 1.4;
   color: var(--cometchat-text-color-primary, #141414);
   /* 6px top+bottom padding: single line = 6 + ~20px text + 6 = ~32px,
      matching the send button height so flex-end alignment looks centered */
-  padding: 6px 0;
+  padding: 8px 0;
   border: none;
   background: transparent;
 }
@@ -501,7 +507,7 @@
   top: 0;
   left: 0;
   right: 0;
-  padding: 6px 0;
+  padding: 8px 0;
   color: var(--cometchat-text-color-tertiary, #a1a1a1);
   font: var(--cometchat-font-body-regular, 400 14px Roboto);
   line-height: 1.4;
@@ -680,7 +686,6 @@
 }
 
 .cometchat-message-composer__voice-button-wrapper {
-  overflow: hidden;
   transition:
     width 0.2s ease,
     opacity 0.2s ease,
@@ -768,7 +773,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--cometchat-overlay-background-heavy, rgba(0, 0, 0, 0.6));
 }
 
 /* ==================== Attachment List (inside Popover) ==================== */
@@ -933,7 +938,7 @@
   gap: var(--cometchat-message-composer-mention-option-gap, var(--cometchat-spacing-3, 12px));
   padding: var(
     --cometchat-message-composer-mention-option-padding,
-    var(--cometchat-padding-2, 8px) var(--cometchat-padding-3, 12px)
+    var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px)
   );
   cursor: pointer;
   transition: background-color 0.15s ease;
@@ -1045,6 +1050,46 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   flex-shrink: 1;
+}
+
+/* Embedded CometChatUsers / CometChatGroupMembers inside mentions dropdown */
+.cometchat-message-composer__mentions-list > .cometchat {
+  border-radius: inherit;
+  background: transparent;
+}
+
+.cometchat-message-composer__mentions-list .cometchat-users,
+.cometchat-message-composer__mentions-list .cometchat-group-members {
+  max-height: none;
+  height: auto;
+  overflow: visible;
+}
+
+.cometchat-message-composer__mentions-list .cometchat-list {
+  max-height: none;
+}
+
+.cometchat-message-composer__mentions-list .cometchat-list .cometchat-list__body {
+  max-height: none;
+  overflow-y: visible;
+}
+
+.cometchat-message-composer__mentions-list .cometchat-list .cometchat-list__header-title {
+  display: none;
+}
+
+.cometchat-message-composer__mentions-list .cometchat-list__item-wrapper {
+  cursor: pointer;
+}
+
+.cometchat-message-composer__mentions-list .cometchat-group-members__list {
+  max-height: none;
+  overflow-y: visible;
+}
+
+.cometchat-message-composer__mentions-list .cometchat-users__list {
+  max-height: none;
+  overflow-y: visible;
 }
 
 /* ==================== AI Button ==================== */

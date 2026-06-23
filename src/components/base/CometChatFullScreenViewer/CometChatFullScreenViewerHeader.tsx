@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CometChatFullScreenViewerHeaderProps } from './CometChatFullScreenViewer.types';
 import { useCometChatFullScreenViewerContext } from './CometChatFullScreenViewer.context';
+import { CometChatAvatar } from '../CometChatAvatar/CometChatAvatar';
 import './CometChatFullScreenViewer.css';
 import { useLocale } from '../../../context/locale/LocaleContext';
 
@@ -81,19 +82,7 @@ export const CometChatFullScreenViewerHeader: React.FC<CometChatFullScreenViewer
         {showSenderInfo && (
           <div className={'cometchat-fullscreen-viewer__sender-info'}>
             <div className={'cometchat-fullscreen-viewer__avatar'}>
-              {senderAvatar ? (
-                <img
-                  src={senderAvatar}
-                  alt={senderName ?? ''}
-                  loading="lazy"
-                  decoding="async"
-                  className={'cometchat-fullscreen-viewer__avatar-image'}
-                />
-              ) : senderName ? (
-                <div className={'cometchat-fullscreen-viewer__avatar-initials'}>
-                  {senderName.substring(0, 2).toUpperCase()}
-                </div>
-              ) : null}
+              <CometChatAvatar name={senderName ?? ''} image={senderAvatar} size="medium" />
             </div>
             <div className={'cometchat-fullscreen-viewer__sender-details'}>
               {senderName && (

@@ -140,7 +140,7 @@ export interface CometChatMessageComposerRootProps {
 
   /** Text formatters pipeline. */
   textFormatters?: CometChatTextFormatter[];
-  /** Disable @mentions. Default: false. */
+  /** Disable individual @mentions (member list). @all remains available unless disableMentionAll is also true. Default: false. */
   disableMentions?: boolean;
   /** Disable @all mention in groups. Default: false. */
   disableMentionAll?: boolean;

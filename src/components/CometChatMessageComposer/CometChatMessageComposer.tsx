@@ -8,7 +8,6 @@ import { CometChatMessageComposerVoiceButton } from './CometChatMessageComposerV
 import { CometChatMessageComposerEditPreview } from './CometChatMessageComposerEditPreview';
 import { CometChatMessageComposerReplyPreview } from './CometChatMessageComposerReplyPreview';
 import { CometChatMessageComposerAuxiliaryButtons } from './CometChatMessageComposerAuxiliaryButtons';
-import { CometChatMessageComposerAIButton } from './CometChatMessageComposerAIButton';
 import { CometChatMessageComposerHeader } from './CometChatMessageComposerHeader';
 import { CometChatMessageComposerFooter } from './CometChatMessageComposerFooter';
 import type { CometChatMessageComposerRootProps } from './CometChatMessageComposer.types';
@@ -75,7 +74,6 @@ export const CometChatMessageComposer = Object.assign(CometChatMessageComposerCo
   EditPreview: CometChatMessageComposerEditPreview,
   ReplyPreview: CometChatMessageComposerReplyPreview,
   AuxiliaryButtons: CometChatMessageComposerAuxiliaryButtons,
-  AIButton: CometChatMessageComposerAIButton,
   Header: CometChatMessageComposerHeader,
   Footer: CometChatMessageComposerFooter,
 });

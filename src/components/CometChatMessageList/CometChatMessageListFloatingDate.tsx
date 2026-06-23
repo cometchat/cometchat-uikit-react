@@ -88,13 +88,11 @@ export const CometChatMessageListFloatingDate: React.FC<CometChatMessageListFloa
 
   return (
     <div className={'cometchat-message-list__floating-date'} aria-hidden="true">
-      <CometChatDate.Root
+      <CometChatDate
         timestamp={floatingTimestamp}
         variant="separator"
         {...(stickyDateTimeFormat ? { formatConfig: stickyDateTimeFormat } : {})}
-      >
-        <CometChatDate.Text />
-      </CometChatDate.Root>
+      />
     </div>
   );
 };

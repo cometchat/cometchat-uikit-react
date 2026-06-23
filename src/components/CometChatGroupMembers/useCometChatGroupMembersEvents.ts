@@ -65,6 +65,23 @@ export function useCometChatGroupMembersEvents(
           break;
         }
 
+        case 'ui:group/ownership-changed': {
+          if (event.group.getGuid() !== guid) break;
+          dispatch({
+            type: 'UPDATE_MEMBER_SCOPE',
+            uid: event.newOwner.getUid(),
+            scope: 'owner',
+          });
+          if (event.previousOwnerUid) {
+            dispatch({
+              type: 'UPDATE_MEMBER_SCOPE',
+              uid: event.previousOwnerUid,
+              scope: 'admin',
+            });
+          }
+          break;
+        }
+
         default:
           break;
       }

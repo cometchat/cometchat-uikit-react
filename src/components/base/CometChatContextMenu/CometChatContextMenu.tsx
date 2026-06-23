@@ -1,30 +1,46 @@
+import React from 'react';
 import { CometChatContextMenuRoot } from './CometChatContextMenuRoot';
 import { CometChatContextMenuItem } from './CometChatContextMenuItem';
 import { CometChatContextMenuTrigger } from './CometChatContextMenuTrigger';
 import { CometChatContextMenuDropdown } from './CometChatContextMenuDropdown';
+import type { CometChatContextMenuRootProps } from './CometChatContextMenu.types';
 
 /**
- * CometChatContextMenu — compound component.
+ * Flat API props for CometChatContextMenu.
+ * Same as Root props — the Root already supports data-driven rendering
+ * when no children are provided (splits items into top-row + dropdown).
+ */
+export type CometChatContextMenuProps = Omit<CometChatContextMenuRootProps, 'children'>;
+
+/**
+ * CometChatContextMenu — Flat API component (data-driven).
  *
- * Data-driven usage:
+ * Usage (flat/data-driven):
  * ```tsx
- * <CometChatContextMenu.Root items={items} topMenuSize={2} placement="left" />
+ * <CometChatContextMenu items={items} topMenuSize={2} placement="left" />
  * ```
  *
- * Fully composed usage:
+ * Usage (compound):
  * ```tsx
  * <CometChatContextMenu.Root placement="bottom">
- *   <CometChatContextMenu.Item item={item1} variant="icon" />
- *   <CometChatContextMenu.Trigger />
+ *   <CometChatContextMenu.Trigger>
+ *     <button>⋮</button>
+ *   </CometChatContextMenu.Trigger>
  *   <CometChatContextMenu.Dropdown>
- *     <CometChatContextMenu.Item item={item2} variant="full" />
+ *     <CometChatContextMenu.Item item={item} variant="full" />
  *   </CometChatContextMenu.Dropdown>
  * </CometChatContextMenu.Root>
  * ```
  */
-export const CometChatContextMenu = {
+const CometChatContextMenuComponent: React.FC<CometChatContextMenuProps> = props => {
+  return <CometChatContextMenuRoot {...props} />;
+};
+
+CometChatContextMenuComponent.displayName = 'CometChatContextMenu';
+
+export const CometChatContextMenu = Object.assign(CometChatContextMenuComponent, {
   Root: CometChatContextMenuRoot,
   Item: CometChatContextMenuItem,
   Trigger: CometChatContextMenuTrigger,
   Dropdown: CometChatContextMenuDropdown,
-} as const;
+});

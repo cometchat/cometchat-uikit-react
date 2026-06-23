@@ -22,17 +22,7 @@ function createContextValue(
     avatarName: '',
     isUserConversation: false,
     isGroupConversation: false,
-    callButtonsDisabled: false,
-    showOutgoingCallScreen: false,
-    showOngoingCall: false,
-    callSessionId: '',
-    isDirectCalling: false,
-    isGroupAudioCall: false,
-    activeCall: null,
-    initiateAudioCall: vi.fn().mockResolvedValue(undefined),
-    initiateVideoCall: vi.fn().mockResolvedValue(undefined),
-    cancelOutgoingCall: vi.fn().mockResolvedValue(undefined),
-    resetCallState: vi.fn(),
+    summaryGenerationMessageCount: 1000,
     ...overrides,
   };
 }

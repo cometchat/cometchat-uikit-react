@@ -250,7 +250,7 @@
   display: flex;
   align-items: center;
   padding: var(--cometchat-padding-4, 16px);
-  font: var(--cometchat-font-heading2-bold, 700 20px Roboto);
+  font: var(--cometchat-font-heading1-bold, 700 24px Roboto);
   color: var(--cometchat-text-color-primary, #141414);
 }
 

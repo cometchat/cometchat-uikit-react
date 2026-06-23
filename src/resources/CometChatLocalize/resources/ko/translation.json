@@ -520,5 +520,16 @@
   "confirm_ownership_transfer": "소유권을 이전하시겠습니까? 이 작업은 취소할 수 없으며, 새 소유자가 전체 제어 권한을 갖게 됩니다.",
   "transfer": "이전",
   "transferring": "이전 중...",
-  "transfer_failed": "이전에 실패했습니다. 다시 시도해 주세요."
+  "transfer_failed": "이전에 실패했습니다. 다시 시도해 주세요.",
+  "loading": "로딩 중...",
+  "retry": "재시도",
+  "notifications_title": "알림",
+  "notifications_filter_all": "전체",
+  "notifications_empty_title": "아직 아무것도 없습니다",
+  "notifications_empty_subtitle": "새로운 활동이 있으면 여기에 표시됩니다.",
+  "notifications_error_title": "이런!",
+  "notifications_error_subtitle": "문제가 발생한 것 같습니다. 다시 시도해 주세요.",
+  "notifications_pagination_error": "더 불러올 수 없습니다",
+  "notifications_tap_to_retry": "탭하여 재시도",
+  "notifications_offline_banner": "오프라인 상태입니다. 캐시된 알림을 표시합니다."
 }

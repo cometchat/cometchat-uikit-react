@@ -357,7 +357,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--cometchat-overlay-background-heavy, rgba(0, 0, 0, 0.6));
 }
 
 .cometchat-message-list__message-info-panel {

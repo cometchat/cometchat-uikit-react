@@ -19,7 +19,7 @@ export function getActionMessageText(
   t?: TranslateFunction
 ): string {
   const translate = t ?? CometChatLocalize.getSharedInstance()?.t ?? ((key: string) => key);
-  const actionMsg = message as Record<string, unknown>;
+  const actionMsg = message as unknown as Record<string, unknown>;
 
   if (!('actionBy' in actionMsg) || !('actionOn' in actionMsg)) {
     return '';

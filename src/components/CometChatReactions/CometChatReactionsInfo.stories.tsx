@@ -12,7 +12,7 @@
 
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import styles from './CometChatReactions.module.css';
+import './CometChatReactions.css';
 
 // ============================================
 // Simulated UI (component needs SDK context)
@@ -32,21 +32,19 @@ function SimulatedReactionInfo({
   const pendingCount = total - names.length;
 
   return (
-    <div className={styles['cometchat-reactions__info']} role="tooltip">
-      <div className={styles['cometchat-reactions__info-content']}>
-        {state === 'loading' && <div className={styles['cometchat-reactions__info-loading']} />}
-        {state === 'error' && (
-          <div className={styles['cometchat-reactions__info-error']}>Failed to load</div>
-        )}
+    <div className="cometchat-reactions__info" role="tooltip">
+      <div className="cometchat-reactions__info-content">
+        {state === 'loading' && <div className="cometchat-reactions__info-loading" />}
+        {state === 'error' && <div className="cometchat-reactions__info-error">Failed to load</div>}
         {state === 'loaded' && (
-          <div className={styles['cometchat-reactions__info-emoji-text']}>
-            <span className={styles['cometchat-reactions__info-emoji']}>{emoji}</span>
+          <div className="cometchat-reactions__info-emoji-text">
+            <span className="cometchat-reactions__info-emoji">{emoji}</span>
             <div>
-              <div className={styles['cometchat-reactions__info-title']}>
+              <div className="cometchat-reactions__info-title">
                 {names.join(', ')}
                 {pendingCount > 0 && ` and ${String(pendingCount)} others`}
               </div>
-              <div className={styles['cometchat-reactions__info-description']}>reacted</div>
+              <div className="cometchat-reactions__info-description">reacted</div>
             </div>
           </div>
         )}

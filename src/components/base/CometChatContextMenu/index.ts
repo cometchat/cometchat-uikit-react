@@ -1,4 +1,5 @@
 export { CometChatContextMenu } from './CometChatContextMenu';
+export type { CometChatContextMenuProps } from './CometChatContextMenu';
 export { useCometChatContextMenuContext } from './CometChatContextMenu.context';
 export type {
   CometChatContextMenuItemData,

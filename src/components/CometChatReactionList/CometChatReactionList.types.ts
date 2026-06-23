@@ -17,7 +17,7 @@ export interface CometChatReactionListRootProps {
   /** Called when all reactions are removed (parent should close the panel). */
   onEmpty?: () => void;
   /** Error callback. */
-  onError?: (error: unknown) => void;
+  onError?: ((error: CometChat.CometChatException) => void) | null;
   /** Children for compound composition. */
   children?: ReactNode;
   /** Optional className. */

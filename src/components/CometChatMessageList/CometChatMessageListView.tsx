@@ -6,7 +6,7 @@ import { CometChatMessageListScrollToBottom } from './CometChatMessageListScroll
 import { CometChatMessageListFloatingDate } from './CometChatMessageListFloatingDate';
 import MessageItem from './CometChatMessageListMessageItem';
 import { CometChatConfirmDialog } from '../base/CometChatConfirmDialog/CometChatConfirmDialog';
-import { CometChatFlagMessageDialog } from '../base/CometChatFlagMessageDialog/CometChatFlagMessageDialog';
+import { CometChatFlagMessageDialog } from '../CometChatFlagMessageDialog/CometChatFlagMessageDialog';
 import { CometChatToast } from '../base/CometChatToast/CometChatToast';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { useMessageListViewScroll } from './useMessageListViewScroll';

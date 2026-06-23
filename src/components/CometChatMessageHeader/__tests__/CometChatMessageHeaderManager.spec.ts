@@ -5,7 +5,6 @@ import {
   attachTypingListener,
   attachGroupMemberListener,
   attachConnectionListener,
-  attachCallListener,
 } from '../CometChatMessageHeaderManager';
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
@@ -46,10 +45,6 @@ const mockRemoveGroupListener = vi.mocked(CometChat.removeGroupListener);
 const mockAddConnectionListener = vi.mocked(CometChat.addConnectionListener);
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const mockRemoveConnectionListener = vi.mocked(CometChat.removeConnectionListener);
-// eslint-disable-next-line @typescript-eslint/unbound-method
-const mockAddCallListener = vi.mocked(CometChat.addCallListener);
-// eslint-disable-next-line @typescript-eslint/unbound-method
-const mockRemoveCallListener = vi.mocked(CometChat.removeCallListener);
 
 function getListenerCallbacks(
   mockFn: ReturnType<typeof vi.fn>
@@ -330,54 +325,4 @@ describe('CometChatMessageHeaderManager', () => {
   });
 
   // ==================== Call Listener ====================
-
-  describe('attachCallListener', () => {
-    it('attaches an SDK call listener', () => {
-      const callbacks = {
-        onIncomingCallReceived: vi.fn(),
-        onIncomingCallCancelled: vi.fn(),
-        onOutgoingCallAccepted: vi.fn(),
-        onOutgoingCallRejected: vi.fn(),
-      };
-      attachCallListener('test-call-listener', callbacks);
-      expect(mockAddCallListener).toHaveBeenCalledWith('test-call-listener', expect.any(Object));
-    });
-
-    it('returns a cleanup function', () => {
-      const callbacks = {
-        onIncomingCallReceived: vi.fn(),
-        onIncomingCallCancelled: vi.fn(),
-        onOutgoingCallAccepted: vi.fn(),
-        onOutgoingCallRejected: vi.fn(),
-      };
-      const cleanup = attachCallListener('test-call-listener', callbacks);
-      cleanup();
-      expect(mockRemoveCallListener).toHaveBeenCalledWith('test-call-listener');
-    });
-
-    it('fires all call event callbacks', () => {
-      const callbacks = {
-        onIncomingCallReceived: vi.fn(),
-        onIncomingCallCancelled: vi.fn(),
-        onOutgoingCallAccepted: vi.fn(),
-        onOutgoingCallRejected: vi.fn(),
-      };
-      attachCallListener('test-call-listener', callbacks);
-
-      const listenerCallbacks = getListenerCallbacks(mockAddCallListener);
-      const mockCall = { getSessionId: () => 'session-1' } as CometChat.Call;
-
-      listenerCallbacks.onIncomingCallReceived(mockCall);
-      expect(callbacks.onIncomingCallReceived).toHaveBeenCalledWith(mockCall);
-
-      listenerCallbacks.onIncomingCallCancelled(mockCall);
-      expect(callbacks.onIncomingCallCancelled).toHaveBeenCalledWith(mockCall);
-
-      listenerCallbacks.onOutgoingCallAccepted(mockCall);
-      expect(callbacks.onOutgoingCallAccepted).toHaveBeenCalledWith(mockCall);
-
-      listenerCallbacks.onOutgoingCallRejected(mockCall);
-      expect(callbacks.onOutgoingCallRejected).toHaveBeenCalledWith(mockCall);
-    });
-  });
 });

@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RichTextEditor } from './RichTextEditor';
+import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import type {
   CometChatRichTextEditorConfig,
   CometChatRichTextFormatState,
@@ -109,6 +110,12 @@ export function useRichTextEditor(options: UseRichTextEditorOptions = {}): UseRi
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const editorInstanceRef = useRef<RichTextEditor | null>(null);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentWindow = useCallback(() => {
+    return IframeContext.iframeWindow ?? window;
+  }, [IframeContext.iframeWindow]);
+
   const [formatState, setFormatState] = useState<CometChatRichTextFormatState>({
     ...DEFAULT_FORMAT_STATE,
   });
@@ -201,14 +208,15 @@ export function useRichTextEditor(options: UseRichTextEditorOptions = {}): UseRi
     if (!editor) return;
     const el = editorRef.current;
     if (!el) return;
-    const sel = window.getSelection();
+    const sel =
+      editorInstanceRef.current?.getWindow().getSelection() ?? getCurrentWindow().getSelection();
     // Only focus if the selection is completely outside the editor.
     // Do NOT re-focus when the editor is empty but already focused — that would
     // trigger selectionchange and clear any armed inline format overrides (bold, italic, etc).
     if (!sel || sel.rangeCount === 0 || !el.contains(sel.anchorNode)) {
       editor.focus('end');
     }
-  }, []);
+  }, [getCurrentWindow]);
 
   const toggleBold = useCallback(() => {
     ensureEditorFocus();

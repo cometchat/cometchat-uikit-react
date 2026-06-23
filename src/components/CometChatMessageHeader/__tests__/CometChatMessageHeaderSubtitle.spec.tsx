@@ -5,6 +5,13 @@ import { CometChatMessageHeaderSubtitle } from '../CometChatMessageHeaderSubtitl
 import { CometChatMessageHeaderContext } from '../CometChatMessageHeader.context';
 import type { CometChatMessageHeaderContextValue } from '../CometChatMessageHeader.types';
 
+vi.mock('../../../context/locale/LocaleContext', () => ({
+  useLocale: () => ({
+    getLocalizedString: (key: string) => key,
+    language: 'en-us',
+  }),
+}));
+
 function createContextValue(
   overrides: Partial<CometChatMessageHeaderContextValue> = {}
 ): CometChatMessageHeaderContextValue {
@@ -22,17 +29,7 @@ function createContextValue(
     avatarName: '',
     isUserConversation: false,
     isGroupConversation: false,
-    callButtonsDisabled: false,
-    showOutgoingCallScreen: false,
-    showOngoingCall: false,
-    callSessionId: '',
-    isDirectCalling: false,
-    isGroupAudioCall: false,
-    activeCall: null,
-    initiateAudioCall: async () => {},
-    initiateVideoCall: async () => {},
-    cancelOutgoingCall: async () => {},
-    resetCallState: () => {},
+    summaryGenerationMessageCount: 1000,
     ...overrides,
   };
 }
@@ -63,10 +60,10 @@ describe('CometChatMessageHeaderSubtitle', () => {
         userStatus: 'offline',
         lastActiveAt: oneHourAgo,
       });
-      expect(screen.getByText('Last seen')).toBeInTheDocument();
+      expect(screen.getByText('message_header_last_seen')).toBeInTheDocument();
     });
 
-    it('shows nothing for offline user without lastActiveAt', () => {
+    it('shows "Offline" for offline user without lastActiveAt', () => {
       const { container } = renderSubtitle({
         isUserConversation: true,
         userStatus: 'offline',
@@ -74,7 +71,7 @@ describe('CometChatMessageHeaderSubtitle', () => {
       });
       const wrapper = container.querySelector('[class*="subtitle-wrapper"]');
       expect(wrapper).toBeInTheDocument();
-      expect(wrapper?.textContent).toBe('');
+      expect(screen.getByText('message_header_offline')).toBeInTheDocument();
     });
 
     it('shows nothing when hideUserStatus is true', () => {
@@ -208,6 +205,7 @@ describe('CometChatMessageHeaderSubtitle', () => {
       const { container } = renderSubtitle({
         isUserConversation: false,
         isGroupConversation: false,
+        summaryGenerationMessageCount: 1000,
       });
       const wrapper = container.querySelector('[class*="subtitle-wrapper"]');
       expect(wrapper).toBeInTheDocument();

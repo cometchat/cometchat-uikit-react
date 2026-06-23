@@ -14,13 +14,22 @@ vi.mock('../../../hooks/useLoggedInUser', () => ({
 
 vi.mock('../../../context/locale/LocaleContext', () => ({
   useLocale: () => ({
-    t: (key: string) => {
+    getLocalizedString: (key: string) => {
       const translations: Record<string, string> = {
         message_header_online: 'Online',
         message_header_offline: 'Offline',
         message_header_members: 'Members',
         message_header_member: 'Member',
         message_header_typing: 'typing...',
+        accessibility_back: 'Go back',
+        accessibility_voice_call: 'Voice call',
+        accessibility_video_call: 'Video call',
+        accessibility_search: 'Search',
+        accessibility_conversation_summary: 'Conversation summary',
+        accessibility_click_for_details: 'Click for details',
+        call_button_voice_hover: 'Voice call',
+        call_button_video_hover: 'Video call',
+        ai_conversation_summary_title: 'Conversation summary',
       };
       return translations[key] ?? key;
     },
@@ -67,8 +76,69 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
     CallListener: vi.fn().mockImplementation((cb: unknown) => cb),
     RECEIVER_TYPE: { GROUP: 'group', USER: 'user' },
     CALL_TYPE: { AUDIO: 'audio', VIDEO: 'video' },
-    CALL_STATUS: { CANCELLED: 'cancelled' },
+    CALL_STATUS: {
+      ONGOING: 'ongoing',
+      ENDED: 'ended',
+      INITIATED: 'initiated',
+      CANCELLED: 'cancelled',
+      REJECTED: 'rejected',
+      UNANSWERED: 'unanswered',
+      BUSY: 'busy',
+    },
     USER_STATUS: { ONLINE: 'online', OFFLINE: 'offline' },
+    CATEGORY_MESSAGE: 'message',
+    CATEGORY_CUSTOM: 'custom',
+    CATEGORY_ACTION: 'action',
+    CATEGORY_CALL: 'call',
+    CATEGORY_INTERACTIVE: 'interactive',
+    MessageCategory: { AGENTIC: 'agentic' },
+    ModerationStatus: {
+      PENDING: 'pending',
+      APPROVED: 'approved',
+      DISAPPROVED: 'disapproved',
+      UNMODERATED: 'unmoderated',
+    },
+    MESSAGE_TYPE: {
+      TEXT: 'text',
+      IMAGE: 'image',
+      VIDEO: 'video',
+      AUDIO: 'audio',
+      FILE: 'file',
+      ASSISTANT: 'assistant',
+      TOOL_ARGUMENTS: 'tool_arguments',
+      TOOL_RESULT: 'tool_result',
+    },
+    ACTION_TYPE: {
+      MEMBER_JOINED: 'joined',
+      MEMBER_LEFT: 'left',
+      MEMBER_ADDED: 'added',
+      MEMBER_BANNED: 'banned',
+      MEMBER_UNBANNED: 'unbanned',
+      MEMBER_KICKED: 'kicked',
+      MEMBER_INVITED: 'invited',
+      MEMBER_SCOPE_CHANGED: 'scopeChanged',
+    },
+    GROUP_MEMBER_SCOPE: { ADMIN: 'admin', MODERATOR: 'moderator', PARTICIPANT: 'participant' },
+    GROUP_TYPE: { PRIVATE: 'private', PASSWORD: 'password', PUBLIC: 'public' },
+    CALL_MODE: {
+      DEFAULT: 'default',
+      GRID: 'grid',
+      SINGLE: 'single',
+      SPOTLIGHT: 'spotlight',
+      TILE: 'tile',
+    },
+    GoalType: { ALL_OF: 'allOf', ANY_OF: 'anyOf', ANY_ACTION: 'anyAction', NONE: 'none' },
+    AI_ASSISTANT_EVENTS: {
+      RUN_STARTED: 'run_started',
+      TEXT_MESSAGE_START: 'text_message_start',
+      TEXT_MESSAGE_CONTENT: 'text_message_content',
+      TEXT_MESSAGE_END: 'text_message_end',
+      RUN_FINISHED: 'run_finished',
+      TOOL_CALL_STARTED: 'tool_call_start',
+      TOOL_CALL_ENDED: 'tool_call_end',
+      TOOL_CALL_ARGUMENT: 'tool_call_args',
+      TOOL_CALL_RESULT: 'tool_call_result',
+    },
     getLoggedinUser: vi.fn().mockResolvedValue({
       getUid: () => 'logged-in-user',
       getName: () => 'Me',
@@ -86,6 +156,8 @@ function createMockUser(overrides: Record<string, unknown> = {}) {
     getAvatar: () => overrides.avatar ?? 'https://example.com/avatar.png',
     getStatus: () => overrides.status ?? 'online',
     getLastActiveAt: () => overrides.lastActiveAt ?? 0,
+    getBlockedByMe: () => overrides.blockedByMe ?? false,
+    getHasBlockedMe: () => overrides.hasBlockedMe ?? false,
   } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.User;
 }
 

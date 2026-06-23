@@ -69,65 +69,44 @@ describe('CometChatFilePlugin', () => {
       expect(result).toBeTruthy();
     });
 
-    it('returns element with correct type', () => {
+    it('returns the CometChatFileBubble component', () => {
       const result = CometChatFilePlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
       expect(result.type?.displayName).toBe('CometChatFileBubble');
     });
 
-    it('passes outgoing variant for right alignment', () => {
+    it('passes the message through to the bubble', () => {
+      const msg = mockMediaMessage();
+      const result = CometChatFilePlugin.renderBubble(msg, mockContext()) as any;
+      expect(result.props.message).toBe(msg);
+    });
+
+    it('passes right alignment for right context alignment', () => {
       const result = CometChatFilePlugin.renderBubble(
         mockMediaMessage(),
         mockContext('right')
       ) as any;
-      expect(result.props.variant).toBe('outgoing');
+      expect(result.props.alignment).toBe('right');
     });
 
-    it('passes incoming variant for left alignment', () => {
+    it('passes left alignment for left context alignment', () => {
       const result = CometChatFilePlugin.renderBubble(
         mockMediaMessage(),
         mockContext('left')
       ) as any;
-      expect(result.props.variant).toBe('incoming');
+      expect(result.props.alignment).toBe('left');
     });
 
-    it('extracts attachments from message', () => {
+    it('passes text formatters to the bubble', () => {
       const result = CometChatFilePlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(1);
-      expect(result.props.attachments[0].name).toBe('doc.pdf');
+      expect(Array.isArray(result.props.textFormatters)).toBe(true);
     });
 
-    it('extracts caption', () => {
-      const msg = mockMediaMessage({ caption: 'Check this file' });
-      const result = CometChatFilePlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.caption).toBe('Check this file');
-    });
-
-    it('omits caption when empty', () => {
+    it('does not pass extracted-data props (extraction moved to the bubble)', () => {
       const result = CometChatFilePlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
+      expect(result.props.attachments).toBeUndefined();
       expect(result.props.caption).toBeUndefined();
-    });
-
-    it('handles empty attachments', () => {
-      const msg = mockMediaMessage({ attachments: [] });
-      const result = CometChatFilePlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(0);
-    });
-
-    it('filters out attachments without URL', () => {
-      const msg = mockMediaMessage({
-        attachments: [
-          {
-            name: 'a.pdf',
-            url: 'https://example.com/a.pdf',
-            mimeType: 'application/pdf',
-            extension: 'pdf',
-            size: 1024,
-          },
-          { name: 'b.pdf', mimeType: 'application/pdf', extension: 'pdf', size: 1024 },
-        ],
-      });
-      const result = CometChatFilePlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(1);
+      expect(result.props.variant).toBeUndefined();
+      expect(result.props.senderName).toBeUndefined();
     });
   });
 

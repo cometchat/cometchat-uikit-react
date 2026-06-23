@@ -6,7 +6,6 @@ export type {
   CometChatReactionsBarProps,
   CometChatReactionsChipProps,
   CometChatReactionsInfoProps,
-  CometChatReactionsListProps,
   CometChatReactionsOverflowProps,
   CometChatReactionsContextValue,
 } from './CometChatReactions.types';

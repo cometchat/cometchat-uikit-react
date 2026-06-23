@@ -99,7 +99,6 @@ interface MockCometChatProviderProps {
   theme?: CometChatTheme;
   eventsContext?: CometChatEventsContextValue;
   locale?: TranslationContextValue;
-  /** @deprecated Use eventsContext instead */
   sdkBridge?: CometChatEventsContextValue;
 }
 
@@ -110,7 +109,7 @@ export function MockCometChatProvider({
   theme,
   eventsContext,
   locale,
-  sdkBridge, // eslint-disable-line @typescript-eslint/no-deprecated
+  sdkBridge,
 }: MockCometChatProviderProps) {
   const mergedConfig: GlobalConfig = { ...defaultGlobalConfig, ...globalConfig };
   const registry = pluginRegistry ?? defaultPluginRegistry;

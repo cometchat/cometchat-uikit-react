@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatVideoPlugin } from '../CometChatVideoPlugin';
+import {
+  extractVideoAttachments,
+  extractVideoCaption,
+  extractVideoSenderName,
+} from '../../../../components/CometChatVideoBubble/CometChatVideoBubble.utils';
 
 function mockMediaMessage(
   overrides: Partial<{
@@ -75,57 +81,77 @@ describe('CometChatVideoPlugin', () => {
       expect(result.type?.displayName).toBe('CometChatVideoBubble');
     });
 
-    it('passes outgoing variant for right alignment', () => {
+    it('forwards the message to the bubble (self-extracting)', () => {
+      const msg = mockMediaMessage();
+      const result = CometChatVideoPlugin.renderBubble(msg, mockContext()) as any;
+      expect(result.props.message).toBe(msg);
+    });
+
+    it('forwards right alignment for right-aligned context', () => {
       const result = CometChatVideoPlugin.renderBubble(
         mockMediaMessage(),
         mockContext('right')
       ) as any;
-      expect(result.props.variant).toBe('outgoing');
+      expect(result.props.alignment).toBe('right');
     });
 
-    it('passes incoming variant for left alignment', () => {
+    it('forwards left alignment for left-aligned context', () => {
       const result = CometChatVideoPlugin.renderBubble(
         mockMediaMessage(),
         mockContext('left')
       ) as any;
-      expect(result.props.variant).toBe('incoming');
+      expect(result.props.alignment).toBe('left');
     });
 
-    it('extracts attachments from message', () => {
+    it('forwards text formatters from context', () => {
+      const formatters = [{ id: 'mentions' }] as any;
+      const context = { ...mockContext(), getTextFormatters: () => formatters };
+      const result = CometChatVideoPlugin.renderBubble(mockMediaMessage(), context) as any;
+      expect(result.props.textFormatters).toBe(formatters);
+    });
+
+    it('does not pass extracted-data props (attachments/variant/caption/senderName)', () => {
       const result = CometChatVideoPlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(1);
-      expect(result.props.attachments[0].url).toBe('https://example.com/video1.mp4');
+      expect(result.props.attachments).toBeUndefined();
+      expect(result.props.variant).toBeUndefined();
+      expect(result.props.caption).toBeUndefined();
+      expect(result.props.senderName).toBeUndefined();
+    });
+  });
+
+  // The data extraction moved from the plugin into the bubble's co-located utils.
+  describe('video extraction utils', () => {
+    it('extracts attachments from the message', () => {
+      const result = extractVideoAttachments(mockMediaMessage() as CometChat.MediaMessage);
+      expect(result).toHaveLength(1);
+      expect(result[0]?.url).toBe('https://example.com/video1.mp4');
     });
 
     it('extracts duration from attachment metadata', () => {
-      const result = CometChatVideoPlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.props.attachments[0].duration).toBe(125);
+      const result = extractVideoAttachments(mockMediaMessage() as CometChat.MediaMessage);
+      expect(result[0]?.duration).toBe(125);
     });
 
     it('extracts caption from getCaption()', () => {
       const msg = mockMediaMessage({ caption: 'Check this out' });
-      const result = CometChatVideoPlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.caption).toBe('Check this out');
+      expect(extractVideoCaption(msg as CometChat.MediaMessage)).toBe('Check this out');
     });
 
-    it('omits caption prop when caption is empty', () => {
-      const result = CometChatVideoPlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.props.caption).toBeUndefined();
+    it('returns empty string when caption is empty', () => {
+      expect(extractVideoCaption(mockMediaMessage() as CometChat.MediaMessage)).toBe('');
     });
 
-    it('extracts sender name', () => {
+    it('extracts the sender name', () => {
       const msg = mockMediaMessage({ senderName: 'Alice' });
-      const result = CometChatVideoPlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.senderName).toBe('Alice');
+      expect(extractVideoSenderName(msg as CometChat.MediaMessage)).toBe('Alice');
     });
 
-    it('handles message with no attachments', () => {
+    it('handles a message with no attachments', () => {
       const msg = mockMediaMessage({ attachments: [] });
-      const result = CometChatVideoPlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(0);
+      expect(extractVideoAttachments(msg as CometChat.MediaMessage)).toHaveLength(0);
     });
 
-    it('filters out attachments without URL', () => {
+    it('filters out attachments without a URL', () => {
       const msg = mockMediaMessage({
         attachments: [
           { url: 'https://example.com/v1.mp4', metadata: {} },
@@ -133,8 +159,7 @@ describe('CometChatVideoPlugin', () => {
           { url: 'https://example.com/v2.mp4', metadata: {} },
         ],
       });
-      const result = CometChatVideoPlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(2);
+      expect(extractVideoAttachments(msg as CometChat.MediaMessage)).toHaveLength(2);
     });
   });
 
@@ -149,7 +174,7 @@ describe('CometChatVideoPlugin', () => {
   describe('getLastMessagePreview', () => {
     it('returns emoji + Video text', () => {
       const preview = CometChatVideoPlugin.getLastMessagePreview?.(mockMediaMessage(), {} as any);
-      expect(preview).toBe('🎥 Video');
+      expect(preview).toBe('Video');
     });
   });
 });

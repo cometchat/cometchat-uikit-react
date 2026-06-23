@@ -23,8 +23,12 @@ describe('CometChatConfirmDialogContent', () => {
   it('renders default localized title and message (keys as fallback)', () => {
     renderContent();
     // Default t() returns the key itself
-    expect(screen.getByText('conversation_delete_title')).toBeInTheDocument();
-    expect(screen.getByText('conversation_delete_subtitle')).toBeInTheDocument();
+    expect(screen.getByText('Delete Conversation?')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Would you like to delete this conversation? This conversation will be deleted from all of your devices.'
+      )
+    ).toBeInTheDocument();
   });
 
   // --- Custom title and message ---
@@ -70,7 +74,7 @@ describe('CometChatConfirmDialogContent', () => {
     expect(screen.getByTestId('custom-content')).toBeInTheDocument();
     expect(screen.getByText('Custom content here')).toBeInTheDocument();
     // Default title/message should not be present
-    expect(screen.queryByText('conversation_delete_title')).not.toBeInTheDocument();
+    expect(screen.queryByText('Delete Conversation?')).not.toBeInTheDocument();
   });
 
   it('does not render title/message ids when children are provided', () => {

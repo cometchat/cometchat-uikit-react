@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import type { CometChatMessageComposerInputProps } from './CometChatMessageComposer.types';
 import { useCometChatMessageComposerContext } from './CometChatMessageComposer.context';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import './CometChatMessageComposer.css';
 
 /**
@@ -29,11 +30,15 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
     canSend,
     enableRichTextEditor,
     richTextEditorRef,
-    disableMentions,
     onMentionQueryChange,
     onMentionEnd,
   } = useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentWindow = useCallback(() => {
+    return IframeContext.iframeWindow ?? window;
+  }, [IframeContext.iframeWindow]);
 
   const internalRef = useRef<HTMLDivElement>(null);
   const isComposingRef = useRef(false);
@@ -63,8 +68,8 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
     setText(newText);
 
     // Mention detection in plain text mode
-    if (!disableMentions && onMentionQueryChange) {
-      const sel = window.getSelection();
+    if (onMentionQueryChange) {
+      const sel = getCurrentWindow().getSelection();
       if (sel && sel.rangeCount > 0) {
         const range = sel.getRangeAt(0);
         const textNode = range.startContainer;
@@ -73,7 +78,6 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
           const before = textContent.substring(0, range.startOffset);
           const atMatch = /(^|\s)@([^\s]*)$/.exec(before);
           if (atMatch) {
-            console.log('[CometChat Mentions Input] @ pattern matched:', atMatch[2]);
             onMentionQueryChange(atMatch[2] ?? '');
           } else {
             onMentionEnd?.();
@@ -83,7 +87,7 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
         }
       }
     }
-  }, [setText, enableRichTextEditor, disableMentions, onMentionQueryChange, onMentionEnd]);
+  }, [setText, enableRichTextEditor, onMentionQueryChange, onMentionEnd, getCurrentWindow]);
 
   // Handle paste in plain text mode — strip all HTML and paste only text
   const handlePaste = useCallback(
@@ -92,12 +96,13 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
       e.preventDefault();
       const plainText = e.clipboardData.getData('text/plain');
       if (plainText) {
+        const currentDoc = IframeContext.iframeDocument ?? document;
         // eslint-disable-next-line @typescript-eslint/no-deprecated -- no modern alternative for inserting plain text at caret in contentEditable
-        document.execCommand('insertText', false, plainText);
+        currentDoc.execCommand('insertText', false, plainText);
         setText(internalRef.current?.textContent ?? '');
       }
     },
-    [enableRichTextEditor, setText]
+    [enableRichTextEditor, setText, IframeContext.iframeDocument]
   );
 
   // Handle key down (plain text mode — rich text editor handles its own shortcuts)

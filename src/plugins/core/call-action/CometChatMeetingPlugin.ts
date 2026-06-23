@@ -5,60 +5,10 @@ import type {
   CometChatMessageOption,
   CometChatMessagePluginContext,
 } from '../../plugin.types';
-import { CometChatCallBubble } from './CometChatCallBubble';
+import { CometChatCallBubble } from '../../../components/CometChatCallBubble/CometChatCallBubble';
+import { getCallType } from '../../../components/CometChatCallBubble/CometChatCallBubble.utils';
 import { CometChatUIKitConstants } from '../../../constants/CometChatUIKitConstants';
 import { CometChatLocalize } from '../../../resources/CometChatLocalize/CometChatLocalize';
-
-/**
- * Extract the session ID from a meeting custom message.
- * Path: data.customData.sessionID
- */
-function getSessionId(message: CometChat.CustomMessage): string {
-  try {
-    const data = message.getData() as Record<string, unknown> | undefined;
-    const customData = data?.customData as Record<string, unknown> | undefined;
-    const sessionID = customData?.sessionID;
-    return typeof sessionID === 'string' ? sessionID : '';
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Extract the call type from a meeting custom message.
- * Path: data.customData.callType — "audio" or "video"
- * Defaults to "video" if not specified.
- */
-function getCallType(message: CometChat.CustomMessage): 'audio' | 'video' {
-  try {
-    const data = message.getData() as Record<string, unknown> | undefined;
-    const customData = data?.customData as Record<string, unknown> | undefined;
-    const callType = customData?.callType as string | undefined;
-    return callType === 'audio' ? 'audio' : 'video';
-  } catch {
-    return 'video';
-  }
-}
-
-/**
- * Format a Unix timestamp (seconds) to a readable date string using the current locale.
- */
-function formatDate(timestamp: number): string {
-  if (!timestamp) return '';
-  const date = new Date(timestamp * 1000);
-  const locale = CometChatLocalize.getSharedInstance()?.getDateLocaleLanguage() ?? 'en-US';
-  try {
-    return new Intl.DateTimeFormat(locale, {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }).format(date);
-  } catch {
-    return date.toLocaleString();
-  }
-}
 
 /**
  * Plugin for group/conference call messages (meeting type).
@@ -76,43 +26,14 @@ export const CometChatMeetingPlugin: CometChatMessagePlugin = {
   messageCategories: [CometChatUIKitConstants.MessageCategory.custom],
 
   renderBubble(message: CometChat.BaseMessage, context: CometChatMessagePluginContext) {
-    const customMsg = message as CometChat.CustomMessage;
-    const isSentByMe = context.alignment === 'right';
-    const sessionId = getSessionId(customMsg);
-    const callType = getCallType(customMsg);
-
-    // Determine icon class based on call type and direction
-    let iconClassName: string;
-    if (callType === 'audio') {
-      iconClassName = isSentByMe
-        ? 'cometchat-call-bubble__icon--outgoing-audio'
-        : 'cometchat-call-bubble__icon--incoming-audio';
-    } else {
-      iconClassName = isSentByMe
-        ? 'cometchat-call-bubble__icon--outgoing-video'
-        : 'cometchat-call-bubble__icon--incoming-video';
-    }
-
-    // Title based on call type
-    const title =
-      callType === 'audio'
-        ? (context.getLocalizedString?.('message_list_voice_call') ?? 'Voice Call')
-        : (context.getLocalizedString?.('message_list_video_call') ?? 'Video Call');
-
-    // Subtitle: formatted date from sentAt
-    const sentAt = message.getSentAt();
-    const subtitle = formatDate(sentAt);
-
+    // The bubble self-extracts call type, session id, title, icon and timestamp
+    // from the message. We only pass alignment and the join handler.
     return React.createElement(CometChatCallBubble, {
-      title,
-      subtitle,
-      buttonText: context.getLocalizedString?.('meeting_join') ?? 'Join',
-      iconClassName,
-      sessionId,
-      isSentByMe,
-      onClicked: (sid: string) => {
+      message,
+      alignment: context.alignment === 'right' ? 'right' : 'left',
+      onJoinClick: (sessionId: string) => {
         // Publish a UI event so the calling integration can handle it
-        context.publish?.({ type: 'ui:call/join', sessionId: sid, message });
+        context.publish?.({ type: 'ui:call/join', sessionId, message });
       },
     });
   },

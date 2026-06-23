@@ -87,6 +87,8 @@ function createMockUser(overrides: Record<string, unknown> = {}) {
       'avatar' in overrides ? String(overrides.avatar) : 'https://example.com/avatar.png',
     getStatus: () => ('status' in overrides ? String(overrides.status) : 'online'),
     getLastActiveAt: () => ('lastActiveAt' in overrides ? Number(overrides.lastActiveAt) : 0),
+    getBlockedByMe: () => ('blockedByMe' in overrides ? Boolean(overrides.blockedByMe) : false),
+    getHasBlockedMe: () => ('hasBlockedMe' in overrides ? Boolean(overrides.hasBlockedMe) : false),
   } as unknown as CometChat.User;
 }
 
@@ -115,15 +117,9 @@ const mockAddMessageListener = vi.mocked(CometChat.addMessageListener);
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const mockAddConnectionListener = vi.mocked(CometChat.addConnectionListener);
 // eslint-disable-next-line @typescript-eslint/unbound-method
-const mockAddCallListener = vi.mocked(CometChat.addCallListener);
-// eslint-disable-next-line @typescript-eslint/unbound-method
 const mockAddGroupListener = vi.mocked(CometChat.addGroupListener);
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const mockAddUserListener = vi.mocked(CometChat.addUserListener);
-// eslint-disable-next-line @typescript-eslint/unbound-method
-const mockInitiateCall = vi.mocked(CometChat.initiateCall);
-// eslint-disable-next-line @typescript-eslint/unbound-method
-const mockRejectCall = vi.mocked(CometChat.rejectCall);
 
 function getListenerCallbacks(
   mockFn: ReturnType<typeof vi.fn>
@@ -518,222 +514,12 @@ describe('useCometChatMessageHeader', () => {
     });
   });
 
-  // --- Call listener ---
-
-  describe('call listener', () => {
-    it('disables call buttons on incoming call', () => {
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user }));
-
-      act(() => {
-        const callbacks = getListenerCallbacks(mockAddCallListener);
-        callbacks.onIncomingCallReceived({});
-      });
-
-      expect(result.current.callButtonsDisabled).toBe(true);
-    });
-
-    it('re-enables call buttons on incoming call cancelled', () => {
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user }));
-
-      act(() => {
-        const callbacks = getListenerCallbacks(mockAddCallListener);
-        callbacks.onIncomingCallReceived({});
-      });
-
-      expect(result.current.callButtonsDisabled).toBe(true);
-
-      act(() => {
-        const callbacks = getListenerCallbacks(mockAddCallListener);
-        callbacks.onIncomingCallCancelled({});
-      });
-
-      expect(result.current.callButtonsDisabled).toBe(false);
-    });
-
-    it('resets call state on outgoing call rejected', () => {
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user }));
-
-      act(() => {
-        const callbacks = getListenerCallbacks(mockAddCallListener);
-        callbacks.onOutgoingCallRejected({});
-      });
-
-      expect(result.current.showOutgoingCallScreen).toBe(false);
-      expect(result.current.callButtonsDisabled).toBe(false);
-    });
-  });
-
-  // --- Call actions ---
-
-  describe('call actions', () => {
-    it('initiateAudioCall initiates a user call', async () => {
-      const mockOutgoingCall = {
-        getSessionId: () => 'session-1',
-        getSender: () => ({ getUid: () => 'logged-in-user' }),
-      };
-      mockInitiateCall.mockResolvedValueOnce(mockOutgoingCall as unknown as CometChat.Call);
-
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user }));
-
-      await act(async () => {
-        await result.current.initiateAudioCall();
-      });
-
-      expect(mockInitiateCall).toHaveBeenCalled();
-      expect(result.current.showOutgoingCallScreen).toBe(true);
-      expect(result.current.activeCall).toBe(mockOutgoingCall);
-    });
-
-    it('initiateVideoCall initiates a user call', async () => {
-      const mockOutgoingCall = {
-        getSessionId: () => 'session-2',
-        getSender: () => ({ getUid: () => 'logged-in-user' }),
-      };
-      mockInitiateCall.mockResolvedValueOnce(mockOutgoingCall as unknown as CometChat.Call);
-
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user }));
-
-      await act(async () => {
-        await result.current.initiateVideoCall();
-      });
-
-      expect(mockInitiateCall).toHaveBeenCalled();
-      expect(result.current.showOutgoingCallScreen).toBe(true);
-    });
-
-    it('initiateAudioCall for group shows ongoing call with direct calling', async () => {
-      const group = createMockGroup();
-      const { result } = renderHook(() => useCometChatMessageHeader({ group }));
-
-      await act(async () => {
-        await result.current.initiateAudioCall();
-      });
-
-      expect(result.current.showOngoingCall).toBe(true);
-      expect(result.current.isDirectCalling).toBe(true);
-      expect(result.current.isGroupAudioCall).toBe(true);
-    });
-
-    it('initiateVideoCall for group shows ongoing call with direct calling', async () => {
-      const group = createMockGroup();
-      const { result } = renderHook(() => useCometChatMessageHeader({ group }));
-
-      await act(async () => {
-        await result.current.initiateVideoCall();
-      });
-
-      expect(result.current.showOngoingCall).toBe(true);
-      expect(result.current.isDirectCalling).toBe(true);
-      expect(result.current.isGroupAudioCall).toBe(false);
-    });
-
-    it('initiateAudioCall calls onError on failure', async () => {
-      const error = new Error('Call failed');
-      mockInitiateCall.mockRejectedValueOnce(error);
-
-      const onError = vi.fn();
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user, onError }));
-
-      await act(async () => {
-        await result.current.initiateAudioCall();
-      });
-
-      expect(onError).toHaveBeenCalledWith(error);
-    });
-
-    it('cancelOutgoingCall rejects the active call', async () => {
-      const mockOutgoingCall = {
-        getSessionId: () => 'session-1',
-        getSender: () => ({ getUid: () => 'logged-in-user' }),
-      };
-      mockInitiateCall.mockResolvedValueOnce(mockOutgoingCall as unknown as CometChat.Call);
-      mockRejectCall.mockResolvedValueOnce({} as unknown as CometChat.Call);
-
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user }));
-
-      // First initiate a call
-      await act(async () => {
-        await result.current.initiateAudioCall();
-      });
-
-      // Then cancel it
-      await act(async () => {
-        await result.current.cancelOutgoingCall();
-      });
-
-      expect(mockRejectCall).toHaveBeenCalledWith('session-1', 'cancelled');
-      expect(result.current.showOutgoingCallScreen).toBe(false);
-      expect(result.current.activeCall).toBeNull();
-    });
-
-    it('cancelOutgoingCall does nothing when no active call', async () => {
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user }));
-
-      await act(async () => {
-        await result.current.cancelOutgoingCall();
-      });
-
-      expect(mockRejectCall).not.toHaveBeenCalled();
-    });
-
-    it('cancelOutgoingCall calls onError on failure but still resets state', async () => {
-      const mockOutgoingCall = {
-        getSessionId: () => 'session-1',
-        getSender: () => ({ getUid: () => 'logged-in-user' }),
-      };
-      mockInitiateCall.mockResolvedValueOnce(mockOutgoingCall as unknown as CometChat.Call);
-      mockRejectCall.mockRejectedValueOnce(new Error('Reject failed'));
-
-      const onError = vi.fn();
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user, onError }));
-
-      await act(async () => {
-        await result.current.initiateAudioCall();
-      });
-
-      await act(async () => {
-        await result.current.cancelOutgoingCall();
-      });
-
-      expect(onError).toHaveBeenCalled();
-      expect(result.current.activeCall).toBeNull();
-    });
-
-    it('resetCallState resets all call-related state', () => {
-      const user = createMockUser();
-      const { result } = renderHook(() => useCometChatMessageHeader({ user }));
-
-      act(() => {
-        result.current.resetCallState();
-      });
-
-      expect(result.current.activeCall).toBeNull();
-      expect(result.current.callButtonsDisabled).toBe(false);
-      expect(result.current.showOutgoingCallScreen).toBe(false);
-      expect(result.current.showOngoingCall).toBe(false);
-    });
-  });
-
   // --- No entity edge cases ---
 
   describe('no entity', () => {
     it('does not attach typing listener when no user or group', () => {
       renderHook(() => useCometChatMessageHeader({}));
       expect(mockAddMessageListener).not.toHaveBeenCalled();
-    });
-
-    it('does not attach call listener when no user or group', () => {
-      renderHook(() => useCometChatMessageHeader({}));
-      expect(mockAddCallListener).not.toHaveBeenCalled();
     });
 
     it('does not attach group listener when no group', () => {

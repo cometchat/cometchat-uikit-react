@@ -182,7 +182,7 @@ describe('CometChatPopoverRoot', () => {
     expect(screen.getByText('Popover body')).toBeInTheDocument();
 
     // Click on the trigger wrapper (not the button itself, which would toggle)
-    const triggerWrapper = screen.getByText('Open').closest('[role="button"]')!;
+    const triggerWrapper = screen.getByText('Open').closest('.cometchat-popover__trigger')!;
     fireEvent.mouseDown(triggerWrapper);
     expect(screen.getByText('Popover body')).toBeInTheDocument();
   });

@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Êtes-vous sûr de vouloir transférer la propriété ? Cette action est irréversible et le nouveau propriétaire aura le contrôle total.",
   "transfer": "Transférer",
   "transferring": "Transfert en cours...",
-  "transfer_failed": "Le transfert a échoué. Veuillez réessayer."
+  "transfer_failed": "Le transfert a échoué. Veuillez réessayer.",
+  "loading": "Chargement...",
+  "retry": "Réessayer",
+  "notifications_title": "Notifications",
+  "notifications_filter_all": "Tous",
+  "notifications_empty_title": "Rien ici pour le moment",
+  "notifications_empty_subtitle": "Les nouvelles activités apparaîtront ici lorsqu'elles seront disponibles.",
+  "notifications_error_title": "Oups !",
+  "notifications_error_subtitle": "Il semble qu'un problème soit survenu. Veuillez réessayer.",
+  "notifications_pagination_error": "Impossible de charger plus",
+  "notifications_tap_to_retry": "Appuyez pour réessayer",
+  "notifications_offline_banner": "Vous êtes hors ligne. Affichage des notifications en cache."
 }

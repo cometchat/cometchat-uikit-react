@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CometChatMediaRecorderState } from './CometChatMediaRecorder.types';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 
 /** Number of waveform bars to display. */
 const WAVEFORM_BAR_COUNT = 30;
@@ -39,6 +40,11 @@ export function useCometChatMediaRecorder(
   options: UseCometChatMediaRecorderOptions
 ): UseCometChatMediaRecorderReturn {
   const { autoRecording = false, onClose, onSubmit, onError } = options;
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentWindow = useCallback(() => {
+    return IframeContext.iframeWindow ?? window;
+  }, [IframeContext.iframeWindow]);
 
   const [state, setState] = useState<CometChatMediaRecorderState>('idle');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -151,10 +157,10 @@ export function useCometChatMediaRecorder(
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
-      window.clearInterval(timerRef.current);
+      getCurrentWindow().clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  }, []);
+  }, [getCurrentWindow]);
 
   const reset = useCallback(() => {
     clearTimer();
@@ -184,12 +190,12 @@ export function useCometChatMediaRecorder(
 
   const startTimer = useCallback(() => {
     clearTimer();
-    timerRef.current = window.setInterval(() => {
+    timerRef.current = getCurrentWindow().setInterval(() => {
       if (mountedRef.current) {
         setElapsedSeconds(prev => prev + 1);
       }
     }, 1000);
-  }, [clearTimer]);
+  }, [clearTimer, getCurrentWindow]);
 
   // ── Permission check ─────────────────────────────────────────────
 

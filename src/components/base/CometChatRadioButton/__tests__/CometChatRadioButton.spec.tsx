@@ -101,10 +101,10 @@ describe('CometChatRadioButton', () => {
     const { rerender } = render(
       <CometChatRadioButton label="Option" name="g" value="a" checked={false} />
     );
-    expect(screen.getByRole('radio')).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('radio')).not.toBeChecked();
 
     rerender(<CometChatRadioButton label="Option" name="g" value="a" checked={true} />);
-    expect(screen.getByRole('radio')).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio')).toBeChecked();
   });
 
   it('applies aria-disabled="true" when disabled', () => {

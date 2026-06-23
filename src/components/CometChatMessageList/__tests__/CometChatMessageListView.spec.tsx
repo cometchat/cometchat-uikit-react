@@ -74,7 +74,7 @@ vi.mock('../../CometChatMessageBubble/CometChatMessageBubbleWrapper', () => ({
 }));
 
 // --- Stub the flag dialog so it doesn't reach the real SDK on open ---
-vi.mock('../../base/CometChatFlagMessageDialog/CometChatFlagMessageDialog', () => ({
+vi.mock('../../CometChatFlagMessageDialog/CometChatFlagMessageDialog', () => ({
   CometChatFlagMessageDialog: {
     Root: ({ isOpen, children }: { isOpen: boolean; children: React.ReactNode }) =>
       isOpen ? (
@@ -655,7 +655,11 @@ describe('CometChatMessageListView — delete message flow', () => {
 
     // CometChatConfirmDialog renders a dialog with "Delete Message" title text
     await waitFor(() => {
-      expect(screen.getByText(/delete message/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Are you sure you want to delete this message? This action cannot be undone.'
+        )
+      ).toBeInTheDocument();
     });
   });
 
@@ -692,7 +696,11 @@ describe('CometChatMessageListView — delete message flow', () => {
 
     expect(ctx.deleteMessage).not.toHaveBeenCalled();
     await waitFor(() => {
-      expect(screen.queryByText(/delete message/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(
+          'Are you sure you want to delete this message? This action cannot be undone.'
+        )
+      ).not.toBeInTheDocument();
     });
   });
 });

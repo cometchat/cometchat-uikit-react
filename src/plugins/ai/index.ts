@@ -1,49 +1,41 @@
 /**
- * AI Plugin public API
+ * AI Plugin — plugin logic, streaming service, types, and constants.
  *
- * Import from this path:
+ * This is the canonical location for AI plugin infrastructure.
+ * UI components (bubbles, chat panel, history) remain in
+ * `src/components/CometChatAIAssistantChat/`.
+ *
+ * @example
  * ```ts
  * import {
  *   CometChatAIPlugin,
- *   CometChatAIAssistantChat,
  *   CometChatAIAssistantTools,
  *   preloadAIAssistantChat,
- * } from '@cometchat/chat-uikit-react/plugins/ai';
+ * } from '@cometchat/chat-uikit-react';
  * ```
  */
 
-// Plugin
+// Plugin registration
 export {
   CometChatAIPlugin,
   preloadAIAssistantChat,
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   preloadAIAssistantPanel,
 } from './CometChatAIPlugin';
 
-// Streaming service (for advanced usage)
+// Streaming service
 export {
   handleWebsocketMessage,
   startStreamingMessage,
   stopStreamingMessage,
   setStreamSpeed,
+  getStreamSpeed,
   setAIAssistantTools,
+  getAIAssistantTools,
   getStreamState,
   subscribeToStreamState,
   setStreamError,
   isStreaming,
-} from './CometChatAIStreamingService';
-
-// Bubble components
-export { CometChatAIAssistantBubble } from './CometChatAIAssistantBubble';
-export { CometChatStreamMessageBubble } from './CometChatStreamMessageBubble';
-export { CometChatToolCallArgumentBubble } from './CometChatToolCallArgumentBubble';
-export { CometChatToolCallResultBubble } from './CometChatToolCallResultBubble';
-
-// Chat history sidebar
-export { CometChatAIAssistantChatHistory } from './CometChatAIAssistantChatHistory';
-
-// Full AI assistant chat orchestrator
-export { CometChatAIAssistantChat } from './CometChatAIAssistantChat';
+} from '../../components/CometChatAIAssistantChat/CometChatAIStreamingService';
 
 // Types
 export type {
@@ -58,10 +50,11 @@ export type {
   CometChatAIAssistantChatProps,
   CometChatAIAssistantToolFunction,
   CometChatAIAssistantToolsMap,
-} from './ai.types';
+  CometChatAIPluginConfig,
+} from '../../components/CometChatAIAssistantChat/ai.types';
 
-// Model class (not a type — needs to be a value export)
-export { CometChatAIAssistantTools } from './ai.types';
+// Model class (value export)
+export { CometChatAIAssistantTools } from '../../components/CometChatAIAssistantChat/ai.types';
 
 // Constants
 export { AI_CONSTANTS } from './ai.constants';

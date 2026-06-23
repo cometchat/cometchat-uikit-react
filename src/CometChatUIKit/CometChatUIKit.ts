@@ -1,9 +1,9 @@
 import { CometChat } from '@cometchat/chat-sdk-javascript';
-import { UIKitSettings } from './UIKitSettings';
-import { CometChatPluginRegistry } from '../plugins/CometChatPluginRegistry';
-import { defaultPlugins } from '../plugins/core';
+import { UIKitSettings, UIKitSettingsBuilder } from './UIKitSettings';
 import { CometChatUIKitCalls, loadCallsSDK } from './CometChatCalls';
 import { CometChatLocalize } from '../resources/CometChatLocalize/CometChatLocalize';
+import type { CometChatEvent } from '../context/CometChatEvents.types';
+import { CometChatMessageStatus } from '../context/CometChatEvents.types';
 
 /**
  * CometChatUIKit — static facade for initializing and interacting with the UIKit.
@@ -36,11 +36,21 @@ export class CometChatUIKit {
   // --- Static state ---
   private static _settings: UIKitSettings | null = null;
   private static _loggedInUser: CometChat.User | null = null;
-  private static _pluginRegistry: CometChatPluginRegistry | null = null;
   private static _initialized = false;
   private static _callingReady = false;
   private static _loginListenerId: string | null = null;
   private static _conversationUpdateSettings: CometChat.ConversationUpdateSettings | null = null;
+  private static _emit: ((event: CometChatEvent) => void) | null = null;
+
+  // --- Emit bridge (static ↔ React context) ---
+
+  /**
+   * Register the emit function from CometChatEventsProvider.
+   * Called internally by the provider on mount/unmount.
+   */
+  static _setEmit(fn: ((event: CometChatEvent) => void) | null): void {
+    CometChatUIKit._emit = fn;
+  }
 
   // --- Getters ---
 
@@ -52,11 +62,6 @@ export class CometChatUIKit {
   /** Returns the currently logged-in user (synchronous). */
   static getLoggedInUser(): CometChat.User | null {
     return CometChatUIKit._loggedInUser;
-  }
-
-  /** Returns the plugin registry instance. */
-  static getPluginRegistry(): CometChatPluginRegistry | null {
-    return CometChatUIKit._pluginRegistry;
   }
 
   /** Returns whether the SDK has been initialized. */
@@ -126,7 +131,7 @@ export class CometChatUIKit {
     if (typeof window !== 'undefined') {
       (window as unknown as Record<string, unknown>).CometChatUiKit = {
         name: '@cometchat/chat-uikit-react',
-        version: '7.0.0-beta.1',
+        version: '7.0.0',
       };
     }
 
@@ -134,15 +139,14 @@ export class CometChatUIKit {
     await CometChat.init(settings.getAppId(), appSettings);
     CometChatUIKit._initialized = true;
 
-    // Set up plugin registry
-    const userPlugins = settings.getPlugins();
-    const allPlugins = userPlugins ? [...defaultPlugins, ...userPlugins] : defaultPlugins;
-    CometChatUIKit._pluginRegistry = new CometChatPluginRegistry(allPlugins);
-
-    // Initialize locale
-    const localize = new CometChatLocalize();
-    localize.init();
-    CometChatLocalize.setSharedInstance(localize);
+    // Initialize locale — only if no shared instance exists yet.
+    // When used with CometChatProvider, the LocaleProvider may have already
+    // created and configured the shared instance before init() completes.
+    if (!CometChatLocalize.getSharedInstance()) {
+      const localize = new CometChatLocalize();
+      localize.init();
+      CometChatLocalize.setSharedInstance(localize);
+    }
 
     // Check for existing session
     try {
@@ -156,6 +160,74 @@ export class CometChatUIKit {
     }
 
     return CometChatUIKit._loggedInUser;
+  }
+
+  /**
+   * @internal
+   * File-based init for AI agent skills.
+   * Calls CometChat.initFromSettings(settings) which sets
+   * integrationSource = "ai-agent" in persistent storage.
+   *
+   * This method is completely independent of init() — new→new, old→old.
+   * Regular init(uikitSettings) does NOT set the integrationSource flag.
+   */
+  static initFromSettings(settings: CometChat.CometChatSettings): Promise<CometChat.User | null> {
+    // Extract authKey from credentials
+    const credentials = settings.credentials as Record<string, unknown> | undefined;
+    const authKey = credentials?.authKey as string | undefined;
+
+    // Extract UIKit-specific settings
+    const uiKitConfig = settings.uiKit;
+    const callingEnabled = !!uiKitConfig?.callsSDK;
+
+    // Build UIKitSettings so downstream code (login, calling, etc.) works
+    const builder = new UIKitSettingsBuilder().setAppId(settings.appId).setRegion(settings.region);
+    if (authKey) builder.setAuthKey(authKey);
+    if (callingEnabled) builder.setCallingEnabled(true);
+    CometChatUIKit._settings = builder.build();
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (CometChat.setSource) {
+      CometChat.setSource('uikit-v7', 'web', 'reactjs');
+    }
+
+    return new Promise((resolve, reject) => {
+      // Analytics: register UIKit metadata on the window for tracking
+      window.CometChatUiKit = {
+        name: '@cometchat/chat-uikit-react',
+        version: '7.0.0',
+      };
+
+      // CRITICAL: Call initFromSettings — NOT init().
+      // Only initFromSettings writes integrationSource = "ai-agent".
+      CometChat.initFromSettings(settings)
+        .then(() => {
+          CometChatUIKit._initialized = true;
+
+          // Initialize locale
+          if (!CometChatLocalize.getSharedInstance()) {
+            const localize = new CometChatLocalize();
+            localize.init();
+            CometChatLocalize.setSharedInstance(localize);
+          }
+
+          CometChat.getLoggedinUser()
+            .then((user: CometChat.User | null) => {
+              if (user) {
+                CometChatUIKit._loggedInUser = user;
+                void CometChatUIKit._postLogin();
+              }
+              resolve(user);
+            })
+            .catch((error: unknown) => {
+              console.log(error);
+              reject(error instanceof Error ? error : new Error(String(error)));
+            });
+        })
+        .catch((error: unknown) => {
+          reject(error instanceof Error ? error : new Error(String(error)));
+        });
+    });
   }
 
   // --- Login ---
@@ -245,30 +317,111 @@ export class CometChatUIKit {
   // --- Send methods (convenience for non-React usage) ---
 
   /**
-   * Send a text message.
-   * Sets muid and sentAt if not already set.
+   * Send a text message with optimistic UI updates.
+   * Emits 'ui:message/sent' at each stage (inprogress → success/error).
    */
   static async sendTextMessage(message: CometChat.TextMessage): Promise<CometChat.BaseMessage> {
     CometChatUIKit._prepareMessage(message);
-    return CometChat.sendMessage(message);
+
+    // Optimistic: show in message list immediately
+    CometChatUIKit._emit?.({
+      type: 'ui:message/sent',
+      message,
+      status: CometChatMessageStatus.inprogress,
+    });
+
+    try {
+      const sent = await CometChat.sendMessage(message);
+      // Confirm: update pending → sent
+      CometChatUIKit._emit?.({
+        type: 'ui:message/sent',
+        message: sent,
+        status: CometChatMessageStatus.success,
+      });
+      return sent;
+    } catch (error) {
+      // Error: mark as failed
+      const meta = (message.getMetadata() as Record<string, unknown> | null) ?? {};
+      message.setMetadata({ ...meta, error });
+      CometChatUIKit._emit?.({
+        type: 'ui:message/sent',
+        message,
+        status: CometChatMessageStatus.error,
+      });
+      throw error;
+    }
   }
 
   /**
-   * Send a media message.
-   * Sets muid and sentAt if not already set.
+   * Send a media message with optimistic UI updates.
+   * Emits 'ui:message/sent' at each stage (inprogress → success/error).
    */
   static async sendMediaMessage(message: CometChat.MediaMessage): Promise<CometChat.BaseMessage> {
     CometChatUIKit._prepareMessage(message);
-    return CometChat.sendMediaMessage(message);
+
+    // Optimistic: show in message list immediately
+    CometChatUIKit._emit?.({
+      type: 'ui:message/sent',
+      message,
+      status: CometChatMessageStatus.inprogress,
+    });
+
+    try {
+      const sent = await CometChat.sendMediaMessage(message);
+      // Confirm: update pending → sent
+      CometChatUIKit._emit?.({
+        type: 'ui:message/sent',
+        message: sent,
+        status: CometChatMessageStatus.success,
+      });
+      return sent;
+    } catch (error) {
+      // Error: mark as failed
+      const meta = (message.getMetadata() as Record<string, unknown> | null) ?? {};
+      message.setMetadata({ ...meta, error });
+      CometChatUIKit._emit?.({
+        type: 'ui:message/sent',
+        message,
+        status: CometChatMessageStatus.error,
+      });
+      throw error;
+    }
   }
 
   /**
-   * Send a custom message.
-   * Sets muid and sentAt if not already set.
+   * Send a custom message with optimistic UI updates.
+   * Emits 'ui:message/sent' at each stage (inprogress → success/error).
    */
   static async sendCustomMessage(message: CometChat.CustomMessage): Promise<CometChat.BaseMessage> {
     CometChatUIKit._prepareMessage(message);
-    return CometChat.sendCustomMessage(message);
+
+    // Optimistic: show in message list immediately
+    CometChatUIKit._emit?.({
+      type: 'ui:message/sent',
+      message,
+      status: CometChatMessageStatus.inprogress,
+    });
+
+    try {
+      const sent = await CometChat.sendCustomMessage(message);
+      // Confirm: update pending → sent
+      CometChatUIKit._emit?.({
+        type: 'ui:message/sent',
+        message: sent,
+        status: CometChatMessageStatus.success,
+      });
+      return sent;
+    } catch (error) {
+      // Error: mark as failed
+      const meta = (message.getMetadata() as Record<string, unknown> | null) ?? {};
+      message.setMetadata({ ...meta, error });
+      CometChatUIKit._emit?.({
+        type: 'ui:message/sent',
+        message,
+        status: CometChatMessageStatus.error,
+      });
+      throw error;
+    }
   }
 
   // --- Private helpers ---
@@ -344,13 +497,19 @@ export class CometChatUIKit {
     }
   }
 
-  /** Prepare a message for sending (set muid, sentAt). */
+  /** Prepare a message for sending (set muid, sentAt, sender). */
   private static _prepareMessage(message: CometChat.BaseMessage): void {
     if (!message.getMuid()) {
       message.setMuid(`_${Math.random().toString(36).slice(2, 12)}`);
     }
     if (!message.getSentAt()) {
       message.setSentAt(Math.floor(Date.now() / 1000));
+    }
+    // Set sender to logged-in user if not already set (needed for optimistic UI).
+    // getSender() may return an empty/uninitialized User object for freshly constructed messages.
+    const senderUid = (message.getSender() as { getUid?: () => string } | undefined)?.getUid?.();
+    if (!senderUid && CometChatUIKit._loggedInUser) {
+      message.setSender(CometChatUIKit._loggedInUser);
     }
   }
 

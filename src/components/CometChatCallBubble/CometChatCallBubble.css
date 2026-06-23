@@ -1,0 +1,161 @@
+/* ============================================
+   Block: cometchat-call-bubble
+   Group/conference call bubble with Join button
+   ============================================ */
+
+.cometchat-call-bubble {
+  display: flex;
+  max-width: 240px;
+  width: 240px;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  border-radius: var(--cometchat-radius-3, 12px);
+  background: inherit;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* Body */
+.cometchat-call-bubble__body {
+  display: flex;
+  padding: var(--cometchat-padding-3, 12px);
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  align-self: stretch;
+}
+
+/* Icon wrapper */
+.cometchat-call-bubble__icon-wrapper {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-static-white, #fff);
+  padding: var(--cometchat-padding-2, 8px);
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Icon */
+.cometchat-call-bubble__icon-wrapper-icon {
+  height: 20px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cometchat-primary-color, #6852d6);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* Call type/direction icon variants */
+.cometchat-call-bubble__icon--incoming-video {
+  -webkit-mask-image: url('../../assets/incoming_video_no_fill.svg');
+  mask-image: url('../../assets/incoming_video_no_fill.svg');
+}
+
+.cometchat-call-bubble__icon--outgoing-video {
+  -webkit-mask-image: url('../../assets/outgoing_video_no_fill.svg');
+  mask-image: url('../../assets/outgoing_video_no_fill.svg');
+}
+
+.cometchat-call-bubble__icon--incoming-audio {
+  -webkit-mask-image: url('../../assets/phone_incoming_no_fill.svg');
+  mask-image: url('../../assets/phone_incoming_no_fill.svg');
+}
+
+.cometchat-call-bubble__icon--outgoing-audio {
+  -webkit-mask-image: url('../../assets/phone_outgoing_no_fill.svg');
+  mask-image: url('../../assets/phone_outgoing_no_fill.svg');
+}
+
+/* Body content */
+.cometchat-call-bubble__body-content {
+  text-align: left;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Title */
+.cometchat-call-bubble__body-content-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--cometchat-font-body-medium, 500 14px 'Inter', sans-serif);
+}
+
+/* Subtitle */
+.cometchat-call-bubble__body-content-subtitle {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  align-self: stretch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: var(--cometchat-font-caption1-regular, 400 12px 'Inter', sans-serif);
+}
+
+/* Button */
+.cometchat-call-bubble__button {
+  display: flex;
+  height: 40px;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-5, 20px);
+  border: none;
+  justify-content: center;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  align-self: stretch;
+  width: 100%;
+  background: inherit;
+  border-radius: 0 0 var(--cometchat-radius-2, 8px) var(--cometchat-radius-2, 8px);
+  font: var(--cometchat-font-body-medium, 500 14px 'Inter', sans-serif);
+  cursor: pointer;
+}
+
+/* ============================================
+   Modifiers: Incoming / Outgoing
+   ============================================ */
+
+.cometchat-call-bubble-incoming {
+  background: var(--cometchat-neutral-color-300, #e8e8e8);
+}
+
+.cometchat-call-bubble-outgoing {
+  background: var(--cometchat-primary-color, #6852d6);
+}
+
+/* Incoming text colors */
+.cometchat-call-bubble-incoming .cometchat-call-bubble__body-content-title {
+  color: var(--cometchat-neutral-color-900, #141414);
+}
+
+.cometchat-call-bubble-incoming .cometchat-call-bubble__body-content-subtitle {
+  color: var(--cometchat-neutral-color-600, #727272);
+}
+
+.cometchat-call-bubble-incoming .cometchat-call-bubble__button {
+  border-top: 1px solid var(--cometchat-border-color-dark, #e0e0e0);
+  color: var(--cometchat-neutral-color-900, #141414);
+}
+
+/* Outgoing text colors */
+.cometchat-call-bubble-outgoing .cometchat-call-bubble__body-content-title {
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-call-bubble-outgoing .cometchat-call-bubble__body-content-subtitle {
+  color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-call-bubble-outgoing .cometchat-call-bubble__button {
+  border-top: 1px solid var(--cometchat-extended-primary-color-800, rgba(104, 82, 214, 0.8));
+  color: var(--cometchat-static-white, #fff);
+}

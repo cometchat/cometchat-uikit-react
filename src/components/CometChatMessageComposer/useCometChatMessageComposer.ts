@@ -7,6 +7,7 @@ import { usePublishEvent } from '../../context/CometChatEventsContext';
 import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import type { CometChatEvent } from '../../context/CometChatEvents.types';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
+import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 
 const TYPING_TIMEOUT_MS = 500;
 
@@ -80,8 +81,18 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
 
   const instanceId = useId();
   const publish = usePublishEvent();
+  const IframeContext = useCometChatFrameContext();
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLDivElement>(null);
+  const isSendingRef = useRef(false);
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
+
+  const getCurrentWindow = useCallback(() => {
+    return IframeContext.iframeWindow ?? window;
+  }, [IframeContext.iframeWindow]);
 
   const receiverId = user?.getUid() ?? group?.getGuid() ?? '';
   const receiverType = user ? CometChat.RECEIVER_TYPE.USER : CometChat.RECEIVER_TYPE.GROUP;
@@ -201,6 +212,10 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
 
   const sendMessage = useCallback(
     async (textOverride?: string, richTextHtml?: string) => {
+      // Guard against double-sends (e.g., Enter key + button click race)
+      if (isSendingRef.current) return;
+      isSendingRef.current = true;
+
       // The markdown is what gets stored in message.setText() — the bubble's
       // formatter pipeline converts it back to HTML on render.
       let textToSend = textOverride ?? state.text;
@@ -211,7 +226,10 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
         textToSend = formatter.format(richTextHtml);
       }
       const trimmedText = textToSend.trim();
-      if (!trimmedText) return;
+      if (!trimmedText) {
+        isSendingRef.current = false;
+        return;
+      }
 
       // Standalone mode: no user/group or SDK not initialized.
       // Still clear text and call onSendButtonClick if provided.
@@ -221,6 +239,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
         }
         dispatch({ type: 'SET_TEXT', text: '' });
         dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
+        isSendingRef.current = false;
         return;
       }
 
@@ -238,6 +257,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           dispatch({ type: 'SET_TEXT', text: '' });
           dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
           dispatch({ type: 'SET_REPLY_MESSAGE', message: null });
+          isSendingRef.current = false;
           return;
         }
 
@@ -312,11 +332,14 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           });
         }
         clearMentionedUsers?.();
+        isSendingRef.current = false;
       } catch (error) {
         // Attach error to the message (v6 pattern) so the bubble shows moderation footer
         try {
-          const existingMetadata = textMessage.getMetadata() as Record<string, unknown>;
-          textMessage.setMetadata({ ...existingMetadata, error });
+          if (textMessage) {
+            const existingMetadata = textMessage.getMetadata() as Record<string, unknown>;
+            textMessage.setMetadata({ ...existingMetadata, error });
+          }
         } catch {
           /* non-fatal */
         }
@@ -333,6 +356,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
         });
         dispatch({ type: 'SET_SEND_STATE', sendState: 'error' });
         handleError(error);
+        isSendingRef.current = false;
       }
     },
     [
@@ -453,8 +477,10 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       } catch (error) {
         // Attach error directly to the message (v6 pattern: message.setMetadata({ ...meta, error }))
         try {
-          const existingMetadata = mediaMessage.getMetadata() as Record<string, unknown>;
-          mediaMessage.setMetadata({ ...existingMetadata, error });
+          if (mediaMessage) {
+            const existingMetadata = mediaMessage.getMetadata() as Record<string, unknown>;
+            mediaMessage.setMetadata({ ...existingMetadata, error });
+          }
         } catch {
           /* non-fatal */
         }
@@ -717,8 +743,8 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
             if (el) {
               el.focus();
               // Move cursor to end of contentEditable
-              const range = document.createRange();
-              const sel = window.getSelection();
+              const range = getCurrentDocument().createRange();
+              const sel = getCurrentWindow().getSelection();
               range.selectNodeContents(el);
               range.collapse(false); // collapse to end
               sel?.removeAllRanges();

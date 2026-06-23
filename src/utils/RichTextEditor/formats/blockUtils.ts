@@ -18,7 +18,7 @@ import type { EditorContext } from './format.types';
  * Returns true if a code block was removed.
  */
 export function removeCodeBlockIfActive(ctx: EditorContext): boolean {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return false;
 
   const range = sel.getRangeAt(0);
@@ -37,9 +37,9 @@ export function removeCodeBlockIfActive(ctx: EditorContext): boolean {
   const text = (pre.textContent ?? '').replace(/\u200B/g, '');
   const lines = text ? text.split('\n') : [''];
 
-  const fragment = document.createDocumentFragment();
+  const fragment = ctx.getDocument().createDocumentFragment();
   for (const line of lines) {
-    const p = document.createElement('p');
+    const p = ctx.getDocument().createElement('p');
     p.textContent = line || '\u200B';
     fragment.appendChild(p);
   }
@@ -49,7 +49,7 @@ export function removeCodeBlockIfActive(ctx: EditorContext): boolean {
   pre.remove();
 
   if (lastP) {
-    const newRange = document.createRange();
+    const newRange = ctx.getDocument().createRange();
     newRange.selectNodeContents(lastP);
     newRange.collapse(false);
     sel.removeAllRanges();
@@ -64,7 +64,7 @@ export function removeCodeBlockIfActive(ctx: EditorContext): boolean {
  * Returns true if a blockquote was removed.
  */
 export function removeBlockquoteIfActive(ctx: EditorContext): boolean {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return false;
 
   const range = sel.getRangeAt(0);
@@ -85,7 +85,7 @@ export function removeBlockquoteIfActive(ctx: EditorContext): boolean {
   bq.remove();
 
   if (lastChild) {
-    const newRange = document.createRange();
+    const newRange = ctx.getDocument().createRange();
     newRange.selectNodeContents(lastChild);
     newRange.collapse(false);
     sel.removeAllRanges();
@@ -100,7 +100,7 @@ export function removeBlockquoteIfActive(ctx: EditorContext): boolean {
  * Returns true if a list was removed.
  */
 export function removeListIfActive(ctx: EditorContext): boolean {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return false;
 
   const range = sel.getRangeAt(0);
@@ -115,9 +115,9 @@ export function removeListIfActive(ctx: EditorContext): boolean {
   if (!parent) return false;
 
   const items = Array.from(list.querySelectorAll('li'));
-  const fragment = document.createDocumentFragment();
+  const fragment = ctx.getDocument().createDocumentFragment();
   for (const li of items) {
-    const p = document.createElement('p');
+    const p = ctx.getDocument().createElement('p');
     p.innerHTML = li.innerHTML || '<br>';
     fragment.appendChild(p);
   }
@@ -127,7 +127,7 @@ export function removeListIfActive(ctx: EditorContext): boolean {
   list.remove();
 
   if (lastP) {
-    const newRange = document.createRange();
+    const newRange = ctx.getDocument().createRange();
     newRange.selectNodeContents(lastP);
     newRange.collapse(false);
     sel.removeAllRanges();
@@ -140,7 +140,7 @@ export function removeListIfActive(ctx: EditorContext): boolean {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function findPreInSelection(editorEl: HTMLElement): HTMLElement | null {
-  const sel = window.getSelection();
+  const sel = editorEl.ownerDocument.defaultView?.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
   const range = sel.getRangeAt(0);
   const container = range.commonAncestorContainer as HTMLElement;
@@ -150,7 +150,7 @@ function findPreInSelection(editorEl: HTMLElement): HTMLElement | null {
 }
 
 function findBlockquoteInSelection(editorEl: HTMLElement): HTMLElement | null {
-  const sel = window.getSelection();
+  const sel = editorEl.ownerDocument.defaultView?.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
   const range = sel.getRangeAt(0);
   const container = range.commonAncestorContainer as HTMLElement;
@@ -160,7 +160,7 @@ function findBlockquoteInSelection(editorEl: HTMLElement): HTMLElement | null {
 }
 
 function findListInSelection(editorEl: HTMLElement): HTMLElement | null {
-  const sel = window.getSelection();
+  const sel = editorEl.ownerDocument.defaultView?.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
   const range = sel.getRangeAt(0);
   const container = range.commonAncestorContainer as HTMLElement;

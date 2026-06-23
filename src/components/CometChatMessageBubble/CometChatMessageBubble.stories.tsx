@@ -3,18 +3,17 @@ import React from 'react';
 import type { Meta } from '@storybook/react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatMessageBubble } from './CometChatMessageBubble';
-import { CometChatTextBubble } from '../../plugins/core/text/CometChatTextBubble';
+import { CometChatTextBubble } from '../CometChatTextBubble/CometChatTextBubble';
 import { CometChatMentionsFormatter } from '../../formatters/CometChatMentionsFormatter';
 import { CometChatUrlFormatter } from '../../formatters/CometChatUrlFormatter';
 import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 import { GlobalConfigProvider } from '../../context/GlobalConfigContext';
 import { CometChatModerationView } from '../base/CometChatModerationView';
-import { CometChatStickerBubble } from '../../plugins/stickers/CometChatStickerBubble';
-import { CometChatCollaborativeBubble } from '../../plugins/shared/CometChatCollaborativeBubble';
-import docBannerLight from '../../assets/Collaborative_Document_Light.png';
-import wbBannerLight from '../../assets/Collaborative_Whiteboard_Light.png';
-import { CometChatImageBubble } from '../../plugins/core/image/CometChatImageBubble';
-import { CometChatPollBubble } from '../../plugins/polls/CometChatPollBubble';
+import { CometChatStickerBubble } from '../CometChatStickerBubble/CometChatStickerBubble';
+import { CometChatCollaborativeDocumentBubble } from '../CometChatCollaborativeDocumentBubble';
+import { CometChatCollaborativeWhiteboardBubble } from '../CometChatCollaborativeWhiteboardBubble';
+import { CometChatImageBubble } from '../CometChatImageBubble/CometChatImageBubble';
+import { CometChatPollBubble } from '../CometChatPollBubble/CometChatPollBubble';
 
 const meta: Meta = {
   title: 'Components/Bubbles/Message Bubble',
@@ -508,50 +507,93 @@ export const GlobalConfigHideReceipts = () => {
 
 // --- Extension Plugin Bubble Stories ---
 
+/** Build a sticker CustomMessage carrying the sticker URL/name; the bubble extracts these itself. */
+function createMockStickerMessage(overrides: {
+  url?: string;
+  name?: string;
+  senderName?: string;
+  senderUid?: string;
+  sentAt?: number;
+  readAt?: number;
+}) {
+  const {
+    url = 'https://data-us.cometchat.io/assets/images/avatars/ironman.png',
+    name = 'Iron Man',
+    senderName = 'John Doe',
+    senderUid = 'user-john',
+    sentAt = Math.floor(Date.now() / 1000),
+    readAt = 0,
+  } = overrides;
+
+  return {
+    getId: () => Math.floor(Math.random() * 10000),
+    getType: () => 'extension_sticker',
+    getCategory: () => 'custom',
+    getSender: () => ({
+      getUid: () => senderUid,
+      getName: () => senderName,
+      getAvatar: () => '',
+      getStatus: () => 'online',
+    }),
+    getSentAt: () => sentAt,
+    getDeliveredAt: () => 0,
+    getReadAt: () => readAt,
+    getEditedAt: () => 0,
+    getDeletedAt: () => 0,
+    getReplyCount: () => 0,
+    getMuid: () => `muid-sticker-${String(Math.random())}`,
+    getMentionedUsers: () => [],
+    getMetadata: () => ({ sticker_url: url }),
+    getCustomData: () => ({ sticker_url: url, sticker_name: name }),
+    getReceiverType: () => 'user',
+    getReactions: () => [],
+  } as unknown as CometChat.CustomMessage;
+}
+
 /** Sticker message in a chat bubble. */
 export const StickerMessage = () => {
+  const incomingMessage = createMockStickerMessage({
+    senderName: 'Jane Smith',
+    senderUid: 'user-jane',
+    sentAt: Math.floor(Date.now() / 1000) - 120,
+  });
+  const outgoingMessage = createMockStickerMessage({
+    url: 'https://data-us.cometchat.io/assets/images/avatars/captainamerica.png',
+    name: 'Captain America',
+    sentAt: Math.floor(Date.now() / 1000),
+    readAt: Math.floor(Date.now() / 1000),
+  });
+
   return (
     <ChatContainer>
       <CometChatMessageBubble
-        message={mockMessage({
-          type: 'extension_sticker',
-          category: 'custom',
-          senderName: 'Jane Smith',
-          senderUid: 'user-jane',
-          sentAt: Math.floor(Date.now() / 1000) - 120,
-        })}
+        message={incomingMessage as unknown as CometChat.BaseMessage}
         alignment="left"
         hideAvatar
         hideSenderName
-        contentView={
-          <CometChatStickerBubble
-            stickerUrl="https://data-us.cometchat.io/assets/images/avatars/ironman.png"
-            stickerName="Iron Man"
-            variant="incoming"
-          />
-        }
+        contentView={<CometChatStickerBubble message={incomingMessage} alignment="left" />}
       />
       <CometChatMessageBubble
-        message={mockMessage({
-          type: 'extension_sticker',
-          category: 'custom',
-          sentAt: Math.floor(Date.now() / 1000),
-          readAt: Math.floor(Date.now() / 1000),
-        })}
+        message={outgoingMessage as unknown as CometChat.BaseMessage}
         alignment="right"
         hideAvatar
         hideSenderName
-        contentView={
-          <CometChatStickerBubble
-            stickerUrl="https://data-us.cometchat.io/assets/images/avatars/captainamerica.png"
-            stickerName="Captain America"
-            variant="outgoing"
-          />
-        }
+        contentView={<CometChatStickerBubble message={outgoingMessage} alignment="right" />}
       />
     </ChatContainer>
   );
 };
+
+/** Build a custom message whose metadata holds a collaborative session URL. */
+function collabMsg(extensionKey: string, urlKey: string, url: string) {
+  return {
+    getSender: () => ({ getUid: () => 'user-jane', getName: () => 'Jane Smith' }),
+    getMetadata: () => ({ '@injected': { extensions: { [extensionKey]: { [urlKey]: url } } } }),
+  } as unknown as Parameters<typeof CometChatCollaborativeDocumentBubble>[0]['message'];
+}
+
+const DOC_URL = 'https://document-embed-us.cc-cluster-2.io/p/example';
+const WB_URL = 'https://whiteboard-embed-us.cc-cluster-2.io/?whiteboardid=example';
 
 /** Collaborative Document message in a chat bubble. */
 export const CollaborativeDocumentMessage = () => {
@@ -568,15 +610,9 @@ export const CollaborativeDocumentMessage = () => {
         hideAvatar
         hideSenderName
         contentView={
-          <CometChatCollaborativeBubble
-            url="https://document-embed-us.cc-cluster-2.io/p/example"
-            variant="outgoing"
-            title="Collaborative Document"
-            subtitle="Open document to edit content together"
-            buttonText="Open Document"
-            iconType="document"
-            bannerImageUrl={docBannerLight}
-            onButtonClick={url => window.open(url, '', 'fullscreen=yes, scrollbars=auto')}
+          <CometChatCollaborativeDocumentBubble
+            message={collabMsg('document', 'document_url', DOC_URL)}
+            alignment="right"
           />
         }
       />
@@ -592,15 +628,9 @@ export const CollaborativeDocumentMessage = () => {
         hideAvatar
         hideSenderName
         contentView={
-          <CometChatCollaborativeBubble
-            url="https://document-embed-us.cc-cluster-2.io/p/example"
-            variant="incoming"
-            title="Collaborative Document"
-            subtitle="Open document to edit content together"
-            buttonText="Open Document"
-            iconType="document"
-            bannerImageUrl={docBannerLight}
-            onButtonClick={url => window.open(url, '', 'fullscreen=yes, scrollbars=auto')}
+          <CometChatCollaborativeDocumentBubble
+            message={collabMsg('document', 'document_url', DOC_URL)}
+            alignment="left"
           />
         }
       />
@@ -623,15 +653,9 @@ export const CollaborativeWhiteboardMessage = () => {
         hideAvatar
         hideSenderName
         contentView={
-          <CometChatCollaborativeBubble
-            url="https://whiteboard-embed-us.cc-cluster-2.io/?whiteboardid=example"
-            variant="outgoing"
-            title="Collaborative Whiteboard"
-            subtitle="Open whiteboard to draw together"
-            buttonText="Open Whiteboard"
-            iconType="whiteboard"
-            bannerImageUrl={wbBannerLight}
-            onButtonClick={url => window.open(url, '', 'fullscreen=yes, scrollbars=auto')}
+          <CometChatCollaborativeWhiteboardBubble
+            message={collabMsg('whiteboard', 'board_url', WB_URL)}
+            alignment="right"
           />
         }
       />
@@ -647,15 +671,9 @@ export const CollaborativeWhiteboardMessage = () => {
         hideAvatar
         hideSenderName
         contentView={
-          <CometChatCollaborativeBubble
-            url="https://whiteboard-embed-us.cc-cluster-2.io/?whiteboardid=example"
-            variant="incoming"
-            title="Collaborative Whiteboard"
-            subtitle="Open whiteboard to draw together"
-            buttonText="Open Whiteboard"
-            iconType="whiteboard"
-            bannerImageUrl={wbBannerLight}
-            onButtonClick={url => window.open(url, '', 'fullscreen=yes, scrollbars=auto')}
+          <CometChatCollaborativeWhiteboardBubble
+            message={collabMsg('whiteboard', 'board_url', WB_URL)}
+            alignment="left"
           />
         }
       />
@@ -815,52 +833,50 @@ export const TranslatedMessage = () => {
   );
 };
 
+/** Build a mock image message with a single attachment (the bubble self-extracts it). */
+function mockImageMessage(
+  url: string,
+  overrides: Parameters<typeof mockMessage>[0] = {}
+): CometChat.MediaMessage {
+  const base = mockMessage({ type: 'image', ...overrides });
+  const attachment = { getUrl: () => url, getSize: () => 0 };
+  return {
+    ...(base as unknown as Record<string, unknown>),
+    getCaption: () => '',
+    getData: () => ({}),
+    getAttachments: () => [attachment],
+  } as unknown as CometChat.MediaMessage;
+}
+
 /** Image message with Thumbnail Generation — shows thumbnail as initial src. */
 export const ThumbnailGenerationMessage = () => {
+  const outgoing = mockImageMessage(
+    'https://data-us.cometchat.io/assets/images/avatars/ironman.png',
+    { sentAt: Math.floor(Date.now() / 1000), readAt: Math.floor(Date.now() / 1000) }
+  );
+  const incoming = mockImageMessage(
+    'https://data-us.cometchat.io/assets/images/avatars/captainamerica.png',
+    {
+      senderName: 'Jane Smith',
+      senderUid: 'user-jane',
+      sentAt: Math.floor(Date.now() / 1000) - 60,
+    }
+  );
   return (
     <ChatContainer>
       <CometChatMessageBubble
-        message={mockMessage({
-          type: 'image',
-          sentAt: Math.floor(Date.now() / 1000),
-          readAt: Math.floor(Date.now() / 1000),
-        })}
+        message={outgoing}
         alignment="right"
         hideAvatar
         hideSenderName
-        contentView={
-          <CometChatImageBubble
-            attachments={[
-              {
-                url: 'https://data-us.cometchat.io/assets/images/avatars/ironman.png',
-              },
-            ]}
-            variant="outgoing"
-            senderName="John"
-          />
-        }
+        contentView={<CometChatImageBubble message={outgoing} alignment="right" />}
       />
       <CometChatMessageBubble
-        message={mockMessage({
-          type: 'image',
-          senderName: 'Jane Smith',
-          senderUid: 'user-jane',
-          sentAt: Math.floor(Date.now() / 1000) - 60,
-        })}
+        message={incoming}
         alignment="left"
         hideAvatar
         hideSenderName
-        contentView={
-          <CometChatImageBubble
-            attachments={[
-              {
-                url: 'https://data-us.cometchat.io/assets/images/avatars/captainamerica.png',
-              },
-            ]}
-            variant="incoming"
-            senderName="Jane"
-          />
-        }
+        contentView={<CometChatImageBubble message={incoming} alignment="left" />}
       />
     </ChatContainer>
   );
@@ -928,12 +944,6 @@ function createMockPollMessage(
   } as unknown as CometChat.BaseMessage;
 }
 
-const pollMockUser = {
-  getUid: () => 'user-1',
-  getName: () => 'Alice',
-  getAvatar: () => '',
-} as unknown as CometChat.User;
-
 /** Poll message in a chat bubble. */
 export const PollMessage = () => {
   return (
@@ -950,12 +960,13 @@ export const PollMessage = () => {
         hideSenderName
         contentView={
           <CometChatPollBubble
-            message={createMockPollMessage({
-              sentAt: Math.floor(Date.now() / 1000),
-              readAt: Math.floor(Date.now() / 1000),
-            })}
+            message={
+              createMockPollMessage({
+                sentAt: Math.floor(Date.now() / 1000),
+                readAt: Math.floor(Date.now() / 1000),
+              }) as unknown as CometChat.CustomMessage
+            }
             alignment="right"
-            loggedInUser={pollMockUser}
           />
         }
       />
@@ -972,13 +983,14 @@ export const PollMessage = () => {
         hideSenderName
         contentView={
           <CometChatPollBubble
-            message={createMockPollMessage({
-              senderName: 'Jane Smith',
-              senderUid: 'user-jane',
-              sentAt: Math.floor(Date.now() / 1000) - 60,
-            })}
+            message={
+              createMockPollMessage({
+                senderName: 'Jane Smith',
+                senderUid: 'user-jane',
+                sentAt: Math.floor(Date.now() / 1000) - 60,
+              }) as unknown as CometChat.CustomMessage
+            }
             alignment="left"
-            loggedInUser={pollMockUser}
           />
         }
       />

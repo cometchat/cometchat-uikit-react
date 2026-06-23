@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { CometChatCheckbox } from './CometChatCheckbox';
 
@@ -46,21 +46,47 @@ const meta: Meta<typeof CometChatCheckbox> = {
     },
     layout: 'centered',
   },
+  decorators: [
+    // White card so the checkbox (light border/background) is visible against
+    // Storybook's gray canvas.
+    Story => (
+      <div
+        style={{
+          display: 'inline-flex',
+          padding: 24,
+          background: 'var(--cometchat-background-color-01, #fff)',
+          borderRadius: 'var(--cometchat-radius-3, 12px)',
+          border: '1px solid var(--cometchat-border-color-light, #f5f5f5)',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
 };
 export default meta;
 
 type Story = StoryObj<typeof CometChatCheckbox>;
 
-export const Default: Story = {
-  render: (args: CheckboxStoryArgs) => (
+function DefaultDemo(args: CheckboxStoryArgs) {
+  const [checked, setChecked] = useState(args.checked);
+  // Keep the local state in sync with the Controls `checked` toggle.
+  useEffect(() => {
+    setChecked(args.checked);
+  }, [args.checked]);
+  return (
     <CometChatCheckbox
-      checked={args.checked}
+      checked={checked}
       disabled={args.disabled}
       indeterminate={args.indeterminate}
       label={args.label}
-      onChange={({ checked }) => console.log('checked:', checked)}
+      onChange={({ checked: c }) => setChecked(c)}
     />
-  ),
+  );
+}
+
+export const Default: Story = {
+  render: (args: CheckboxStoryArgs) => <DefaultDemo {...args} />,
 };
 
 function CheckedDemo(args: CheckboxStoryArgs) {

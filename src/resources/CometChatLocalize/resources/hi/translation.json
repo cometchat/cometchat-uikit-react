@@ -572,5 +572,16 @@
   "confirm_ownership_transfer": "क्या आप वाकई स्वामित्व हस्तांतरित करना चाहते हैं? यह पूर्ववत नहीं किया जा सकता, और नया स्वामी पूर्ण नियंत्रण प्राप्त करेगा।",
   "transfer": "हस्तांतरण",
   "transferring": "हस्तांतरित हो रहा है...",
-  "transfer_failed": "हस्तांतरण विफल। कृपया पुनः प्रयास करें।"
+  "transfer_failed": "हस्तांतरण विफल। कृपया पुनः प्रयास करें।",
+  "loading": "लोड हो रहा है...",
+  "retry": "पुनः प्रयास करें",
+  "notifications_title": "सूचनाएँ",
+  "notifications_filter_all": "सभी",
+  "notifications_empty_title": "अभी यहाँ कुछ नहीं है",
+  "notifications_empty_subtitle": "नई गतिविधि उपलब्ध होने पर यहाँ दिखाई देगी।",
+  "notifications_error_title": "उफ़!",
+  "notifications_error_subtitle": "लगता है कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+  "notifications_pagination_error": "और लोड नहीं हो सका",
+  "notifications_tap_to_retry": "पुनः प्रयास के लिए टैप करें",
+  "notifications_offline_banner": "आप ऑफ़लाइन हैं। कैश्ड सूचनाएँ दिखा रहे हैं।"
 }

@@ -11,7 +11,7 @@ import { CometChatEmojiKeyboardContext } from '../CometChatEmojiKeyboard.context
 // Mock useLocale
 vi.mock('../../../../context/locale/LocaleContext', () => ({
   useLocale: () => ({
-    t: (key: string) => key,
+    getLocalizedString: (key: string) => key,
     language: 'en-us',
   }),
 }));
@@ -89,7 +89,10 @@ describe('CometChatEmojiKeyboardCategoryTabs', () => {
   it('sets aria-label on the tablist', () => {
     const ctx = createMockContext();
     renderWithContext(ctx);
-    expect(screen.getByRole('tablist')).toHaveAttribute('aria-label', 'Emoji categories');
+    expect(screen.getByRole('tablist')).toHaveAttribute(
+      'aria-label',
+      'accessibility_emoji_categories'
+    );
   });
 
   // --- Icon rendering ---

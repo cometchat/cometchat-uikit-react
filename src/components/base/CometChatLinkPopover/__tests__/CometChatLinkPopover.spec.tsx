@@ -163,8 +163,8 @@ describe('CometChatLinkPopover', () => {
 
   it('Edit and Remove buttons have aria-labels', () => {
     render(<CometChatLinkPopover {...defaultProps} />);
-    expect(screen.getByLabelText('Edit link')).toBeInTheDocument();
-    expect(screen.getByLabelText('Remove link')).toBeInTheDocument();
+    expect(screen.getByLabelText('Edit')).toBeInTheDocument();
+    expect(screen.getByLabelText('Remove')).toBeInTheDocument();
   });
 
   it('close button has aria-label', () => {

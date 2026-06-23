@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatUsers, usePublishEvent, CometChatUIKitUtility, useLocale } from '@cometchat/chat-uikit-react';
-import '../../styles/CometChatAddMembers/CometChatAddMembers.css';
+import './CometChatAddMembers.css';
 
 interface CometChatAddMembersProps {
   group: CometChat.Group;
@@ -70,6 +70,8 @@ export const CometChatAddMembers = ({
     setIsLoading(true);
     setIsError(false);
 
+    const countBeforeAdd = group.getMembersCount();
+
     try {
       const response = await CometChat.addMembersToGroup(
         group.getGuid(),
@@ -89,8 +91,11 @@ export const CometChatAddMembers = ({
 
       const loggedInUser = loggedInUserRef.current;
       if (loggedInUser && addedMembers.length > 0) {
+        const newCount = countBeforeAdd + addedMembers.length;
+        // Update the original group object so all components holding a reference see the correct count
+        group.setMembersCount(newCount);
+
         const groupClone = CometChatUIKitUtility.clone(group);
-        groupClone.setMembersCount(group.getMembersCount() + addedMembers.length);
 
         const actionMessages = addedMembers.map(addedMember =>
           CometChatUIKitUtility.createActionMessage(

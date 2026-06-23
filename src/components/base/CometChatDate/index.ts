@@ -1,4 +1,5 @@
 export { CometChatDate } from './CometChatDate';
+export type { CometChatDateProps } from './CometChatDate';
 export { useCometChatDateContext } from './CometChatDate.context';
 export { useCometChatDate } from './useCometChatDate';
 export type {

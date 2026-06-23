@@ -44,11 +44,12 @@ function mockMediaMessage(
   } as any;
 }
 
-function mockContext(alignment: 'left' | 'right' = 'right') {
+function mockContext(alignment: 'left' | 'right' | 'center' = 'right') {
   return {
     loggedInUser: { getUid: () => 'user-1', getName: () => 'Me' } as any,
     alignment,
     theme: 'light' as const,
+    getTextFormatters: () => [],
   };
 }
 
@@ -76,88 +77,41 @@ describe('CometChatImagePlugin', () => {
       expect(result.type?.displayName).toBe('CometChatImageBubble');
     });
 
-    it('passes outgoing variant for right alignment', () => {
+    // The bubble self-extracts attachments/caption/sender from the message now;
+    // the plugin only forwards the message + alignment + formatters.
+    it('forwards the message to the bubble', () => {
+      const msg = mockMediaMessage();
+      const result = CometChatImagePlugin.renderBubble(msg, mockContext()) as any;
+      expect(result.props.message).toBe(msg);
+    });
+
+    it('forwards right alignment', () => {
       const result = CometChatImagePlugin.renderBubble(
         mockMediaMessage(),
         mockContext('right')
       ) as any;
-      expect(result.props.variant).toBe('outgoing');
+      expect(result.props.alignment).toBe('right');
     });
 
-    it('passes incoming variant for left alignment', () => {
+    it('forwards left alignment', () => {
       const result = CometChatImagePlugin.renderBubble(
         mockMediaMessage(),
         mockContext('left')
       ) as any;
-      expect(result.props.variant).toBe('incoming');
+      expect(result.props.alignment).toBe('left');
     });
 
-    it('extracts attachments from message', () => {
+    it('maps non-right alignment (center) to left', () => {
+      const result = CometChatImagePlugin.renderBubble(
+        mockMediaMessage(),
+        mockContext('center')
+      ) as any;
+      expect(result.props.alignment).toBe('left');
+    });
+
+    it('forwards text formatters from context', () => {
       const result = CometChatImagePlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(1);
-      expect(result.props.attachments[0].url).toBe('https://example.com/image1.jpg');
-    });
-
-    it('extracts size from attachment', () => {
-      const result = CometChatImagePlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.props.attachments[0].size).toBe(204800);
-    });
-
-    it('extracts caption from getCaption()', () => {
-      const msg = mockMediaMessage({ caption: 'Beautiful sunset' });
-      const result = CometChatImagePlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.caption).toBe('Beautiful sunset');
-    });
-
-    it('omits caption prop when caption is empty', () => {
-      const result = CometChatImagePlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.props.caption).toBeUndefined();
-    });
-
-    it('extracts sender name', () => {
-      const msg = mockMediaMessage({ senderName: 'Alice' });
-      const result = CometChatImagePlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.senderName).toBe('Alice');
-    });
-
-    it('handles message with no attachments', () => {
-      const msg = mockMediaMessage({ attachments: [] });
-      const result = CometChatImagePlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(0);
-    });
-
-    it('handles message with null attachments', () => {
-      const msg = {
-        ...mockMediaMessage(),
-        getAttachments: () => null,
-      };
-      const result = CometChatImagePlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(0);
-    });
-
-    it('filters out attachments without URL', () => {
-      const msg = mockMediaMessage({
-        attachments: [
-          { getUrl: () => 'https://example.com/img1.jpg', getSize: () => 100 },
-          { getUrl: () => '', getSize: () => 200 },
-          { getUrl: () => 'https://example.com/img2.jpg', getSize: () => 300 },
-        ],
-      });
-      const result = CometChatImagePlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(2);
-    });
-
-    it('returns placeholder attachment for pending message with file metadata', () => {
-      const file = new File([''], 'test.jpg', { type: 'image/jpeg' });
-      const msg = mockMediaMessage({
-        attachments: [],
-        metadata: { file },
-      });
-      // Override getAttachments to return empty/null (pending message)
-      (msg as any).getAttachments = () => null;
-      const result = CometChatImagePlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(1);
-      expect(result.props.attachments[0].url).toBe('');
+      expect(Array.isArray(result.props.textFormatters)).toBe(true);
     });
   });
 

@@ -1,0 +1,543 @@
+.cometchat-notification-feed {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  background: var(--cometchat-background-color-03);
+  overflow: hidden;
+  font-family: var(--cometchat-font-family, 'Roboto', sans-serif);
+}
+
+/* Header */
+.cometchat-notification-feed__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cometchat-padding-2) var(--cometchat-padding-4);
+  border-bottom: 1px solid var(--cometchat-border-color-light);
+  min-height: 64px;
+  gap: var(--cometchat-spacing-3);
+  background: var(--cometchat-background-color-01);
+  width: 100%;
+}
+
+.cometchat-notification-feed__header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-2);
+}
+
+.cometchat-notification-feed__header-title {
+  font: var(--cometchat-font-heading1-bold);
+  color: var(--cometchat-text-color-primary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cometchat-notification-feed__header-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--cometchat-icon-color-primary);
+  cursor: pointer;
+  -webkit-mask: url('../../assets/arrow_back.svg') center center no-repeat;
+  mask: url('../../assets/arrow_back.svg') center center no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.cometchat-notification-feed__header-back:hover {
+  background: var(--cometchat-icon-color-highlight);
+}
+
+.cometchat-notification-feed__mark-all-read {
+  font: var(--cometchat-font-caption1-medium);
+  color: var(--cometchat-primary-color);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: var(--cometchat-padding-1) var(--cometchat-padding-2);
+  border-radius: var(--cometchat-radius-1);
+}
+
+.cometchat-notification-feed__mark-all-read:hover {
+  background: var(--cometchat-extended-primary-color-100);
+}
+
+/* Content */
+.cometchat-notification-feed__content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cometchat-notification-feed__content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Feed list container */
+.cometchat-notification-feed__content > [role='feed'] {
+  width: 100%;
+  max-width: 640px;
+}
+
+/* Feed Item */
+.cometchat-notification-feed__item {
+  display: flex;
+  flex-direction: column;
+  padding: var(--cometchat-padding-3) var(--cometchat-padding-4);
+  border-bottom: 1px solid var(--cometchat-neutral-color-200);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  position: relative;
+}
+
+.cometchat-notification-feed__item:hover {
+  background: transparent;
+}
+
+.cometchat-notification-feed__item--unread {
+  background: var(--cometchat-extended-primary-color-50);
+}
+
+.cometchat-notification-feed__item--unread:hover {
+  background: var(--cometchat-extended-primary-color-50);
+}
+
+/* Unread Indicator */
+.cometchat-notification-feed__unread-indicator {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cometchat-primary-color);
+}
+
+/* Item Meta */
+.cometchat-notification-feed__item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--cometchat-margin-1);
+}
+
+.cometchat-notification-feed__item-category {
+  font: var(--cometchat-font-caption2-medium);
+  color: var(--cometchat-text-color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cometchat-notification-feed__item-time {
+  font: var(--cometchat-font-caption2-regular);
+  color: var(--cometchat-text-color-tertiary);
+}
+
+/* Card Container */
+.cometchat-notification-feed__card-container {
+  border-radius: var(--cometchat-radius-2);
+  overflow: hidden;
+}
+
+/* States */
+.cometchat-notification-feed__loading,
+.cometchat-notification-feed__empty,
+.cometchat-notification-feed__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--cometchat-padding-6);
+  text-align: center;
+  gap: var(--cometchat-spacing-3);
+}
+
+/* Loading State */
+.cometchat-notification-feed__loading {
+  gap: 16px;
+}
+
+.cometchat-notification-feed__loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--cometchat-neutral-color-300);
+  border-top-color: var(--cometchat-primary-color);
+  border-radius: 50%;
+  animation: cometchat-notification-feed-spin 0.8s linear infinite;
+}
+
+.cometchat-notification-feed__loading-text {
+  font: var(--cometchat-font-body-medium);
+  color: var(--cometchat-text-color-secondary);
+  margin: 0;
+  line-height: 20px;
+}
+
+@keyframes cometchat-notification-feed-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty State */
+.cometchat-notification-feed__empty {
+  gap: 20px;
+  padding: 0 16px;
+}
+
+.cometchat-notification-feed__empty-illustration {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cometchat-notification-feed__empty-illustration-img {
+  width: 100px;
+  height: 96px;
+  object-fit: contain;
+}
+
+.cometchat-notification-feed__empty-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.cometchat-notification-feed__empty-title {
+  font: var(--cometchat-font-heading3-bold);
+  color: var(--cometchat-text-color-primary);
+  margin: 0;
+  line-height: 28px;
+}
+
+.cometchat-notification-feed__empty-subtitle {
+  font: var(--cometchat-font-body-regular);
+  color: var(--cometchat-text-color-secondary);
+  margin: 0;
+  line-height: 20px;
+}
+
+/* Error State */
+.cometchat-notification-feed__error {
+  gap: 20px;
+  padding: 0 16px;
+}
+
+.cometchat-notification-feed__error-illustration {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cometchat-notification-feed__error-illustration-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cometchat-notification-feed__error-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.cometchat-notification-feed__error-title {
+  font: var(--cometchat-font-heading3-bold);
+  color: var(--cometchat-text-color-primary);
+  margin: 0;
+  line-height: 28px;
+}
+
+.cometchat-notification-feed__error-subtitle {
+  font: var(--cometchat-font-body-regular);
+  color: var(--cometchat-text-color-secondary);
+  margin: 0;
+  line-height: 20px;
+}
+
+.cometchat-notification-feed__error-retry-button {
+  width: 120px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cometchat-primary-button-background);
+  color: var(--cometchat-primary-button-icon);
+  border: none;
+  border-radius: var(--cometchat-radius-2);
+  font: var(--cometchat-font-caption1-semibold);
+  cursor: pointer;
+  line-height: 18px;
+}
+
+.cometchat-notification-feed__error-retry-button:hover {
+  opacity: 0.9;
+}
+
+.cometchat-notification-feed__empty-text,
+.cometchat-notification-feed__error-text {
+  font: var(--cometchat-font-body-regular);
+  color: var(--cometchat-text-color-secondary);
+}
+
+.cometchat-notification-feed__retry-button {
+  font: var(--cometchat-font-button-medium);
+  color: var(--cometchat-primary-color);
+  border: 1px solid var(--cometchat-primary-color);
+  background: transparent;
+  padding: var(--cometchat-padding-2) var(--cometchat-padding-4);
+  border-radius: var(--cometchat-radius-2);
+  cursor: pointer;
+}
+
+.cometchat-notification-feed__retry-button:hover {
+  background: var(--cometchat-extended-primary-color-50);
+}
+
+/* Loading More (bottom spinner) */
+.cometchat-notification-feed__loading-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 16px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.cometchat-notification-feed__loading-more-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--cometchat-neutral-color-300);
+  border-top-color: var(--cometchat-primary-color);
+  border-radius: 50%;
+  animation: cometchat-notification-feed-spin 0.8s linear infinite;
+}
+
+.cometchat-notification-feed__loading-more-text {
+  font: var(--cometchat-font-body-medium);
+  color: var(--cometchat-text-color-secondary);
+  margin: 0;
+  line-height: 20px;
+}
+
+/* Pagination Error */
+.cometchat-notification-feed__pagination-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 12px;
+  width: 100%;
+  max-width: 640px;
+  cursor: pointer;
+}
+
+.cometchat-notification-feed__pagination-error-icon {
+  width: 32px;
+  height: 32px;
+  border: 2.5px solid var(--cometchat-error-color);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  position: relative;
+}
+
+.cometchat-notification-feed__pagination-error-icon::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: 2px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid var(--cometchat-error-color);
+  transform: rotate(-45deg);
+}
+
+.cometchat-notification-feed__pagination-error-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  text-align: center;
+}
+
+.cometchat-notification-feed__pagination-error-message {
+  font: var(--cometchat-font-body-medium);
+  color: var(--cometchat-text-color-secondary);
+  margin: 0;
+  line-height: 20px;
+}
+
+.cometchat-notification-feed__pagination-error-retry {
+  font: var(--cometchat-font-body-medium);
+  color: var(--cometchat-primary-color);
+  margin: 0;
+  line-height: 20px;
+}
+
+/* Connectivity Banner */
+.cometchat-notification-feed__connectivity-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cometchat-padding-2);
+  background: var(--cometchat-warning-color);
+  color: var(--cometchat-static-white);
+  font: var(--cometchat-font-caption1-medium);
+}
+
+/* Dark mode overrides */
+[data-theme='dark'] .cometchat-notification-feed__item--unread {
+  background: var(--cometchat-extended-primary-color-900);
+}
+
+[data-theme='dark'] .cometchat-notification-feed__item--unread:hover {
+  background: var(--cometchat-extended-primary-color-800);
+}
+
+/* Filter Chips */
+.cometchat-notification-feed__chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin: 0 auto;
+  max-width: fit-content;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cometchat-notification-feed__chips::-webkit-scrollbar {
+  display: none;
+}
+
+.cometchat-notification-feed__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 9999px;
+  padding: 6px 12px;
+  height: 34px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+  font-family: var(--cometchat-font-family, 'Roboto', sans-serif);
+}
+
+.cometchat-notification-feed__chip--active {
+  background: var(--cometchat-primary-color);
+  border-color: var(--cometchat-primary-color);
+}
+
+.cometchat-notification-feed__chip--active .cometchat-notification-feed__chip-text {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--cometchat-text-color-white);
+}
+
+.cometchat-notification-feed__chip--inactive-with-badge {
+  background: var(--cometchat-background-color-02);
+  border-color: var(--cometchat-border-color-default);
+}
+
+.cometchat-notification-feed__chip--inactive-with-badge .cometchat-notification-feed__chip-text {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--cometchat-text-color-tertiary);
+}
+
+.cometchat-notification-feed__chip--inactive {
+  background: var(--cometchat-background-color-02);
+  border-color: var(--cometchat-border-color-default);
+}
+
+.cometchat-notification-feed__chip--inactive .cometchat-notification-feed__chip-text {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--cometchat-text-color-tertiary);
+}
+
+.cometchat-notification-feed__chip:hover {
+  opacity: 0.85;
+}
+
+/* Chip Badge */
+.cometchat-notification-feed__chip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 18px;
+  font-family: var(--cometchat-font-family, 'Roboto', sans-serif);
+}
+
+.cometchat-notification-feed__chip-badge--active {
+  background: var(--cometchat-extended-primary-color-50);
+  border: 1px solid var(--cometchat-extended-primary-color-200);
+  color: var(--cometchat-primary-color);
+}
+
+.cometchat-notification-feed__chip-badge--inactive {
+  background: var(--cometchat-neutral-color-700);
+  color: var(--cometchat-text-color-white);
+}
+
+/* Card Fallback */
+.cometchat-notification-feed__card-fallback {
+  padding: 12px 16px;
+  font: var(--cometchat-font-body-regular);
+  color: var(--cometchat-text-color-secondary);
+  background: var(--cometchat-neutral-color-50);
+  border-radius: var(--cometchat-radius-2);
+  border: 1px solid var(--cometchat-neutral-color-200);
+}

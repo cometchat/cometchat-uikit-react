@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Are you sure you want to transfer ownership? This cannot be undone, and the new owner will take full control.",
   "transfer": "Transfer",
   "transferring": "Transferring...",
-  "transfer_failed": "Transfer failed. Please try again."
+  "transfer_failed": "Transfer failed. Please try again.",
+  "loading": "Loading...",
+  "retry": "Retry",
+  "notifications_title": "Notifications",
+  "notifications_filter_all": "All",
+  "notifications_empty_title": "Nothing here yet",
+  "notifications_empty_subtitle": "New activity will appear here when available.",
+  "notifications_error_title": "Oops!",
+  "notifications_error_subtitle": "Looks like something went wrong. Please try again.",
+  "notifications_pagination_error": "Couldn't load more",
+  "notifications_tap_to_retry": "Tap to retry",
+  "notifications_offline_banner": "You are offline. Showing cached notifications."
 }

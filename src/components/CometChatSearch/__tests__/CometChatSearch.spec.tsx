@@ -81,6 +81,30 @@ vi.mock('../../../resources/CometChatLocalize/CometChatLocalize', () => ({
         };
         return translations[key] ?? key;
       },
+      getLocalizedString: (key: string) => {
+        const translations: Record<string, string> = {
+          search_title: 'Search',
+          search_placeholder: 'Search...',
+          search_empty_title: 'Search for messages',
+          search_empty_subtitle: 'Type to search',
+          search_no_result_title: 'No results found',
+          search_no_result_subtitle: 'Try a different search',
+          search_error_title: 'Something went wrong',
+          search_error_subtitle: 'Please try again',
+          search_filter_audio: 'Audio',
+          search_filter_documents: 'Files',
+          search_filter_groups: 'Groups',
+          search_filter_links: 'Links',
+          search_filter_photos: 'Photos',
+          search_filter_unread: 'Unread',
+          search_filter_videos: 'Videos',
+          search_filter_messages: 'Messages',
+          search_filter_conversations: 'Conversations',
+          accessibility_back: 'Back',
+          accessibility_clear_search: 'Clear search',
+        };
+        return translations[key] ?? key;
+      },
     }),
   },
 }));

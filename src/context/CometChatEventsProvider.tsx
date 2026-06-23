@@ -7,6 +7,7 @@ import type {
 } from './CometChatEvents.types';
 import { CometChatEventsContext } from './CometChatEventsContext';
 import { CometChatLogger } from '../utils/CometChatLogger';
+import { CometChatUIKit } from '../CometChatUIKit/CometChatUIKit';
 
 /**
  * CometChatEventsProvider — unified event system for CometChat UIKit.
@@ -47,6 +48,16 @@ export const CometChatEventsProvider: React.FC<CometChatEventsProviderProps> = (
     },
     [emit]
   );
+
+  // --- Bridge: register emit on CometChatUIKit static class ---
+  // This allows CometChatUIKit.sendTextMessage() etc. to emit UI events
+  // into the React tree for optimistic message rendering.
+  useEffect(() => {
+    CometChatUIKit._setEmit(emit);
+    return () => {
+      CometChatUIKit._setEmit(null);
+    };
+  }, [emit]);
 
   // --- Message listener ---
   useEffect(() => {

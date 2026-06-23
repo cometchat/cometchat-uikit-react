@@ -87,14 +87,11 @@ export const CometChatMessageInformationReceiptList: React.FC<
                     className={'cometchat-message-information__user-item-avatar'}
                     aria-hidden="true"
                   >
-                    <CometChatAvatar.Root
+                    <CometChatAvatar
                       image={receipt.user.getAvatar()}
                       name={receipt.user.getName()}
                       size="large"
-                    >
-                      <CometChatAvatar.Image />
-                      <CometChatAvatar.Initials />
-                    </CometChatAvatar.Root>
+                    />
                   </div>
                   <div className={'cometchat-message-information__user-item-content'}>
                     <span className={'cometchat-message-information__user-item-name'}>
@@ -106,7 +103,7 @@ export const CometChatMessageInformationReceiptList: React.FC<
                           {getLocalizedString('message_information_read')}
                         </span>
                         <span className={'cometchat-message-information__user-item-receipt-time'}>
-                          <CometChatDate.Root
+                          <CometChatDate
                             timestamp={receipt.readAt}
                             formatConfig={messageInfoDateTimeFormat}
                           />
@@ -119,7 +116,7 @@ export const CometChatMessageInformationReceiptList: React.FC<
                           {getLocalizedString('message_information_delivered')}
                         </span>
                         <span className={'cometchat-message-information__user-item-receipt-time'}>
-                          <CometChatDate.Root
+                          <CometChatDate
                             timestamp={receipt.deliveredAt}
                             formatConfig={messageInfoDateTimeFormat}
                           />
@@ -146,7 +143,7 @@ export const CometChatMessageInformationReceiptList: React.FC<
             </h3>
             {oneOnOneReadAt > 0 ? (
               <div className={'cometchat-message-information__section-time'}>
-                <CometChatDate.Root
+                <CometChatDate
                   timestamp={oneOnOneReadAt}
                   formatConfig={messageInfoDateTimeFormat}
                 />
@@ -168,7 +165,7 @@ export const CometChatMessageInformationReceiptList: React.FC<
             </h3>
             {oneOnOneDeliveredAt > 0 ? (
               <div className={'cometchat-message-information__section-time'}>
-                <CometChatDate.Root
+                <CometChatDate
                   timestamp={oneOnOneDeliveredAt}
                   formatConfig={messageInfoDateTimeFormat}
                 />

@@ -1,6 +1,6 @@
 {
   "name": "@cometchat/chat-uikit-react",
-  "version": "7.0.0-beta.1",
+  "version": "7.0.0",
   "description": "Ready-to-use Chat UI Components for React",
   "author": "CometChat",
   "type": "module",
@@ -25,6 +25,7 @@
     "*.css"
   ],
   "dependencies": {
+    "@cometchat/cards-react": "~1.0.0",
     "dompurify": "3.3.1"
   },
   "scripts": {
@@ -34,20 +35,14 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:component": "playwright test --project=chromium --grep",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed",
-    "test:e2e:chromium": "playwright test --project=chromium",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "prepare": "husky"
   },
   "devDependencies": {
     "@cometchat/calls-sdk-javascript": "^5.0.0",
-    "@cometchat/chat-sdk-javascript": "^4.1.9",
+    "@cometchat/chat-sdk-javascript": "^4.1.11",
     "@eslint/js": "^9.39.4",
-    "@playwright/test": "^1.59.1",
     "@storybook/addon-a11y": "^10.3.5",
     "@storybook/addon-docs": "^10.4.1",
     "@storybook/react": "^10.3.5",
@@ -80,7 +75,7 @@
     "vitest": "^3.1.1"
   },
   "peerDependencies": {
-    "@cometchat/chat-sdk-javascript": "^4.1.9",
+    "@cometchat/chat-sdk-javascript": "^4.1.11",
     "react": ">=18.0.0 <21.0.0",
     "react-dom": ">=18.0.0 <21.0.0"
   },

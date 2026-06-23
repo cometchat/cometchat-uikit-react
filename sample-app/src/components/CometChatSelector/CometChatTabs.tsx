@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../styles/CometChatSelector/CometChatTabs.css';
+import './CometChatTabs.css';
 
 export interface TabItem {
   name: string;

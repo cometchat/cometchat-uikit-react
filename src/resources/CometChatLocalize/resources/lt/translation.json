@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Ar tikrai norite perduoti nuosavybę? Tai negali būti atšaukta, o naujasis savininkas turės visišką kontrolę.",
   "transfer": "Perduoti",
   "transferring": "Perduodama...",
-  "transfer_failed": "Perdavimas nepavyko. Bandykite dar kartą."
+  "transfer_failed": "Perdavimas nepavyko. Bandykite dar kartą.",
+  "loading": "Kraunama...",
+  "retry": "Bandyti dar kartą",
+  "notifications_title": "Pranešimai",
+  "notifications_filter_all": "Visi",
+  "notifications_empty_title": "Čia dar nieko nėra",
+  "notifications_empty_subtitle": "Naujos veiklos bus rodomos čia, kai bus prieinamos.",
+  "notifications_error_title": "Oi!",
+  "notifications_error_subtitle": "Atrodo, kad kažkas nutiko. Bandykite dar kartą.",
+  "notifications_pagination_error": "Nepavyko įkelti daugiau",
+  "notifications_tap_to_retry": "Bakstelėkite, kad bandytumėte dar kartą",
+  "notifications_offline_banner": "Esate neprisijungę. Rodomi išsaugoti pranešimai."
 }

@@ -7,7 +7,7 @@ import type { CometChatEmojiKeyboardCategoryData } from '../CometChatEmojiKeyboa
 // Mock useLocale
 vi.mock('../../../../context/locale/LocaleContext', () => ({
   useLocale: () => ({
-    t: (key: string) => key,
+    getLocalizedString: (key: string) => key,
     language: 'en-us',
   }),
 }));
@@ -77,7 +77,10 @@ describe('CometChatEmojiKeyboardRoot', () => {
 
   it('sets aria-label="Emoji keyboard" on the dialog', () => {
     render(<CometChatEmojiKeyboardRoot />);
-    expect(screen.getByRole('dialog')).toHaveAttribute('aria-label', 'Emoji keyboard');
+    expect(screen.getByRole('dialog')).toHaveAttribute(
+      'aria-label',
+      'accessibility_emoji_keyboard'
+    );
   });
 
   it('sets aria-modal="true" on the dialog', () => {

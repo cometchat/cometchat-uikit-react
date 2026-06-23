@@ -8,7 +8,7 @@ import { CometChatTransferOwnership } from '../CometChatTransferOwnership/CometC
 import addMembersIcon from '../../assets/addMembers.svg';
 import deleteIcon from '../../assets/delete.svg';
 import leaveGroupIcon from '../../assets/leaveGroup.svg';
-import '../../styles/CometChatDetails/CometChatDetails.css';
+import './CometChatDetails.css';
 
 interface CometChatGroupDetailsProps {
   group: CometChat.Group;
@@ -17,6 +17,7 @@ interface CometChatGroupDetailsProps {
   onGroupLeft?: () => void;
   onGroupDeleted?: () => void;
   onConversationDeleted?: () => void;
+  isFreshChat?: boolean;
 }
 
 export const CometChatGroupDetails = ({
@@ -26,15 +27,16 @@ export const CometChatGroupDetails = ({
   onGroupLeft,
   onGroupDeleted,
   onConversationDeleted,
+  isFreshChat = false,
 }: CometChatGroupDetailsProps) => {
   const [memberCount, setMemberCount] = useState(group.getMembersCount());
+  const [loggedInUserScope, setLoggedInUserScope] = useState<string | undefined>(group.getScope?.());
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDeleteChatDialog, setShowDeleteChatDialog] = useState(false);
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [showTransferOwnershipDialog, setShowTransferOwnershipDialog] = useState(false);
   const [showTransferOwnership, setShowTransferOwnership] = useState(false);
-  const [isFreshChat, setIsFreshChat] = useState(true);
   const publish = usePublishEvent();
   const [groupTab, setGroupTab] = useState<'view' | 'banned'>('view');
   const groupListenerRef = useRef('GroupDetails_' + Date.now());
@@ -51,47 +53,58 @@ export const CometChatGroupDetails = ({
     if (event.type === 'ui:group/member-banned' && event.group.getGuid() === group.getGuid()) {
       setMemberCount(event.group.getMembersCount());
     }
-    // Driven by MessageList on load — if there's no last message, it's a fresh chat
-    if (event.type === 'ui:active-chat/changed') {
-      if (event.group?.getGuid() === group.getGuid()) {
-        setIsFreshChat(!event.message);
+    // Handle scope changes — update logged-in user's scope in real-time
+    if (event.type === 'ui:group/member-scope-changed' && event.group.getGuid() === group.getGuid()) {
+      if (event.user.getUid() === loggedInUser.getUid()) {
+        setLoggedInUserScope(event.newScope);
       }
     }
-    // When a message is sent to this group, it's no longer fresh
-    if (event.type === 'ui:message/sent') {
-      const msg = event.message;
-      if (msg.getReceiverType() === 'group' && msg.getReceiverId() === group.getGuid()) {
-        setIsFreshChat(false);
+    if (event.type === 'ui:group/ownership-changed' && event.group.getGuid() === group.getGuid()) {
+      if (event.newOwner.getUid() === loggedInUser.getUid()) {
+        setLoggedInUserScope('owner');
+      } else if (loggedInUser.getUid() === event.previousOwnerUid) {
+        setLoggedInUserScope('admin');
       }
     }
-  }, [group]);
+  }, [group, loggedInUser]);
 
   const isAdminOrOwner = () => {
     return (
-      group.getScope?.() === 'admin' || loggedInUser.getUid() === group.getOwner()
+      loggedInUserScope === 'admin' || loggedInUserScope === 'owner' || loggedInUser.getUid() === group.getOwner()
     );
   };
 
   useEffect(() => {
     setMemberCount(group.getMembersCount());
+    setLoggedInUserScope(group.getScope?.());
 
     CometChat.addGroupListener(
       groupListenerRef.current,
       new CometChat.GroupListener({
-        onGroupMemberKicked: (_msg: any, _kicked: any, _by: any, from: CometChat.Group) => {
-          setMemberCount(from.getMembersCount());
+        onGroupMemberKicked: () => {
+          setMemberCount(prev => Math.max(0, prev - 1));
         },
-        onGroupMemberBanned: (_msg: any, _banned: any, _by: any, from: CometChat.Group) => {
-          setMemberCount(from.getMembersCount());
+        onGroupMemberBanned: () => {
+          setMemberCount(prev => Math.max(0, prev - 1));
         },
         onMemberAddedToGroup: (_msg: any, _added: any, _by: any, inGroup: CometChat.Group) => {
-          setMemberCount(inGroup.getMembersCount());
+          // Use the SDK count only if it's greater than current (batch add scenario)
+          setMemberCount(prev => {
+            const sdkCount = inGroup.getMembersCount();
+            return sdkCount > prev ? sdkCount : prev + 1;
+          });
         },
-        onGroupMemberLeft: (_msg: any, _leaving: any, leftGroup: CometChat.Group) => {
-          setMemberCount(leftGroup.getMembersCount());
+        onGroupMemberLeft: () => {
+          setMemberCount(prev => Math.max(0, prev - 1));
         },
-        onGroupMemberJoined: (_msg: any, _joined: any, joinedGroup: CometChat.Group) => {
-          setMemberCount(joinedGroup.getMembersCount());
+        onGroupMemberJoined: () => {
+          setMemberCount(prev => prev + 1);
+        },
+        onGroupMemberScopeChanged: (_msg: any, changedUser: CometChat.User, newScope: string) => {
+          // If the logged-in user's scope was changed, update permissions in real-time
+          if (changedUser.getUid() === loggedInUser.getUid()) {
+            setLoggedInUserScope(newScope);
+          }
         },
       })
     );
@@ -99,11 +112,15 @@ export const CometChatGroupDetails = ({
     return () => {
       CometChat.removeGroupListener(groupListenerRef.current);
     };
-  }, [group]);
+  }, [group, loggedInUser]);
 
   const handleLeaveGroup = async () => {
     try {
       await CometChat.leaveGroup(group.getGuid());
+      // Mark the group as not joined so re-clicking it triggers a join flow
+      group.setHasJoined(false);
+      // Decrement member count before publishing so the groups list updates correctly
+      group.setMembersCount(group.getMembersCount() - 1);
       publish({ type: 'ui:group/left', group });
       setShowLeaveDialog(false);
       onGroupLeft?.();
@@ -188,7 +205,7 @@ export const CometChatGroupDetails = ({
         <div className="cometchat-leave-group__backdrop">
           <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowLeaveDialog(false)}>
             <CometChatConfirmDialog.Icon />
-            <CometChatConfirmDialog.Content title={getLocalizedString('leave_group')} messageText={getLocalizedString('confirm_leave_group')}  />
+            <CometChatConfirmDialog.Content title={getLocalizedString('leave_group')} messageText={getLocalizedString('confirm_leave_group')} />
             <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('leave')} onConfirm={handleLeaveGroup} onCancel={() => setShowLeaveDialog(false)} />
           </CometChatConfirmDialog.Root>
         </div>
@@ -198,7 +215,7 @@ export const CometChatGroupDetails = ({
           <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowDeleteDialog(false)}>
             <CometChatConfirmDialog.Icon />
             <CometChatConfirmDialog.Content title={getLocalizedString('delete_and_exit')} messageText={getLocalizedString('confirm_delete_and_exit')} />
-            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_and_exit')}  onConfirm={handleDeleteGroup} onCancel={() => setShowDeleteDialog(false)} />
+            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_and_exit')} onConfirm={handleDeleteGroup} onCancel={() => setShowDeleteDialog(false)} />
           </CometChatConfirmDialog.Root>
         </div>
       )}
@@ -207,7 +224,7 @@ export const CometChatGroupDetails = ({
           <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowDeleteChatDialog(false)}>
             <CometChatConfirmDialog.Icon />
             <CometChatConfirmDialog.Content title={getLocalizedString('delete_chat')} messageText={getLocalizedString('confirm_delete_chat')} />
-            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_chat')}  onConfirm={handleDeleteConversation} onCancel={() => setShowDeleteChatDialog(false)} />
+            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_chat')} onConfirm={handleDeleteConversation} onCancel={() => setShowDeleteChatDialog(false)} />
           </CometChatConfirmDialog.Root>
         </div>
       )}
@@ -219,10 +236,7 @@ export const CometChatGroupDetails = ({
       <div className="side-component-content">
         <div className="side-component-content__group">
           <div className="side-component-content__avatar">
-            <CometChatAvatar.Root image={group.getIcon?.()} name={group.getName()} size="large">
-              <CometChatAvatar.Image />
-              <CometChatAvatar.Initials />
-            </CometChatAvatar.Root>
+            <CometChatAvatar image={group.getIcon?.()} name={group.getName()} size="large" />
           </div>
           <div className="side-component-content__title__wrapper">
             <div className="side-component-content__title">{group.getName()}</div>
@@ -321,7 +335,6 @@ export const CometChatGroupDetails = ({
             onClose={() => setShowTransferOwnership(false)}
             onTransferred={() => {
               setShowTransferOwnership(false);
-              onGroupLeft?.();
             }}
           />
         </div>

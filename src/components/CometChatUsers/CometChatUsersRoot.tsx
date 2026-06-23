@@ -11,6 +11,7 @@ import { CometChatUsersSelectedPreview } from './CometChatUsersSelectedPreview';
 import type { CometChatUsersRootProps, CometChatUsersContextValue } from './CometChatUsers.types';
 import './CometChatUsers.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useGlobalConfig } from '../../context/GlobalConfigContext';
 
 /**
  * CometChatUsersRoot — Provider + default layout.
@@ -22,7 +23,7 @@ export const CometChatUsersRoot: React.FC<CometChatUsersRootProps> = ({
   usersRequestBuilder,
   searchRequestBuilder,
   searchKeyword,
-  hideUserStatus = false,
+  hideUserStatus: hideUserStatusProp,
   selectionMode = 'none',
   activeUser,
   sectionHeaderKey = 'getName',
@@ -38,6 +39,8 @@ export const CometChatUsersRoot: React.FC<CometChatUsersRootProps> = ({
   children,
 }) => {
   const { getLocalizedString } = useLocale();
+  const globalConfig = useGlobalConfig();
+  const hideUserStatus = hideUserStatusProp ?? globalConfig.hideUserStatus ?? false;
   const hookReturn = useCometChatUsers({
     usersRequestBuilder,
     searchRequestBuilder,

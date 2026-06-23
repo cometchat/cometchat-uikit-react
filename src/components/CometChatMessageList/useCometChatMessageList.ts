@@ -7,7 +7,10 @@ import type {
   CometChatUseMessageListReturn,
   CometChatMessageListState,
 } from './CometChatMessageList.types';
-import { usePluginRegistry } from '../../hooks/usePluginRegistry';
+import {
+  useDefaultMessageTypes,
+  useDefaultMessageCategories,
+} from '../../hooks/useDefaultMessageTypes';
 import { useMessageListInit } from './useMessageListInit';
 import { useMessageListEvents } from './useMessageListEvents';
 import { useMessageListActions } from './useMessageListActions';
@@ -56,10 +59,11 @@ export function useCometChatMessageList(
     onConversationUpdated,
   } = options;
 
-  // --- Plugin registry for default types/categories ---
-  const pluginRegistry = usePluginRegistry();
-  const messageTypes = messageTypesProp ?? pluginRegistry.getAllMessageTypes();
-  const messageCategories = messageCategoriesProp ?? pluginRegistry.getAllMessageCategories();
+  // --- Default types/categories from the active plugin registry ---
+  const defaultMessageTypes = useDefaultMessageTypes();
+  const defaultMessageCategories = useDefaultMessageCategories();
+  const messageTypes = messageTypesProp ?? defaultMessageTypes;
+  const messageCategories = messageCategoriesProp ?? defaultMessageCategories;
 
   // --- Reducer ---
   const [state, dispatch] = useReducer(messageListReducer, initialMessageListState);

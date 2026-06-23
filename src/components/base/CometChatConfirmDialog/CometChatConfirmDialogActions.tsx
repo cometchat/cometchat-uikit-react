@@ -79,16 +79,14 @@ export const CometChatConfirmDialogActions: React.FC<CometChatConfirmDialogActio
       )}
       <div className={actionsClasses}>
         <div className={'cometchat-confirm-dialog__actions-cancel'}>
-          <CometChatButton.Root variant="secondary" onClick={handleCancel}>
-            <CometChatButton.Text>{resolvedCancelText}</CometChatButton.Text>
-          </CometChatButton.Root>
+          <CometChatButton variant="secondary" onClick={handleCancel} text={resolvedCancelText} />
         </div>
         <div
           className={['cometchat-confirm-dialog__actions-confirm', confirmModifier]
             .filter(Boolean)
             .join(' ')}
         >
-          <CometChatButton.Root
+          <CometChatButton
             variant="primary"
             onClick={() => {
               void handleConfirm();
@@ -97,9 +95,8 @@ export const CometChatConfirmDialogActions: React.FC<CometChatConfirmDialogActio
             disabled={isLoading}
             aria-busy={isLoading}
             aria-disabled={isLoading}
-          >
-            <CometChatButton.Text>{resolvedConfirmText}</CometChatButton.Text>
-          </CometChatButton.Root>
+            text={resolvedConfirmText}
+          />
         </div>
       </div>
     </>

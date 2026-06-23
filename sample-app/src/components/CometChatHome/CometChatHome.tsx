@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatIncomingCall, CometChatSearch, CometChatConfirmDialog, usePublishEvent, useCometChatEvents, useLocale } from '@cometchat/chat-uikit-react';
+import blockIcon from '../../assets/block.svg';
 import type {
   CometChatSearchConversationClickEvent,
   CometChatSearchMessageClickEvent,
@@ -16,6 +17,7 @@ import { CometChatThreadPanel } from '../CometChatThreadPanel/CometChatThreadPan
 import { CometChatNewChatView } from '../CometChatNewChat/CometChatNewChatView';
 import { CometChatCreateGroup } from '../CometChatCreateGroup/CometChatCreateGroup';
 import { CometChatCallLogDetails } from '../CometChatCallLog/CometChatCallLogDetails';
+import { CometChatJoinGroup } from '../CometChatJoinGroup/CometChatJoinGroup';
 import '../../styles/App.css';
 
 /**
@@ -51,6 +53,10 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
   });
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [showScopedSearch, setShowScopedSearch] = useState(false);
+  const [isFreshChat, setIsFreshChat] = useState(false);
+  const [joinGroupInfo, setJoinGroupInfo] = useState<{ visible: boolean; group?: CometChat.Group }>({
+    visible: false,
+  });
   const [kickedBannedAlert, setKickedBannedAlert] = useState<{ visible: boolean; message: string }>({
     visible: false,
     message: '',
@@ -62,16 +68,16 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
       const uid = event.user.getUid();
       if (uid === loggedInUser.getUid()) return; 
 
+      setSidePanel({ visible: false, type: 'user' });
+
       void CometChat.getConversation(uid, 'user').then(
         (conversation: CometChat.Conversation) => {
           setAppState({ type: 'updateSelectedItem', payload: conversation });
           setSelectedItem(conversation);
-          setSidePanel({ visible: false, type: 'user' });
         },
         () => {
           setAppState({ type: 'updateSelectedItemUser', payload: event.user });
           setSelectedItem(event.user);
-          setSidePanel({ visible: false, type: 'user' });
         }
       );
     }
@@ -85,6 +91,21 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
         setSidePanel({ visible: false, type: 'user' });
         setSelectedItem(undefined);
       }
+    }
+    // Track whether the active chat has messages (for delete chat button)
+    if (event.type === 'ui:active-chat/changed') {
+      setIsFreshChat(!event.message);
+    }
+    if (event.type === 'ui:message/sent') {
+      setIsFreshChat(false);
+    }
+    if (
+      event.type === 'message/text-received' ||
+      event.type === 'message/media-received' ||
+      event.type === 'message/custom-received' ||
+      event.type === 'message/interactive-received'
+    ) {
+      setIsFreshChat(false);
     }
   }, [loggedInUser]);
 
@@ -192,8 +213,31 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
       setAppState({ type: 'updateSelectedItemUser', payload: e as CometChat.User });
       setSelectedItem(e);
     } else if (type === 'updateSelectedItemGroup') {
-      setAppState({ type: 'updateSelectedItemGroup', payload: e as CometChat.Group });
-      setSelectedItem(e);
+      const group = e as CometChat.Group;
+      if (!group.getHasJoined()) {
+        if (group.getType() === 'public') {
+          // Auto-join public groups
+          CometChat.joinGroup(group.getGuid(), group.getType() as CometChat.GroupType)
+            .then((joinedGroup: CometChat.Group) => {
+              setAppState({ type: 'updateSelectedItemGroup', payload: joinedGroup });
+              setSelectedItem(joinedGroup);
+              publish({
+                type: 'ui:group/member-joined',
+                joinedGroup,
+                joinedUser: loggedInUser,
+              });
+            })
+            .catch((error: unknown) => {
+              console.error('Failed to join public group:', error);
+            });
+        } else if (group.getType() === 'password') {
+          // Show password dialog for password-protected groups
+          setJoinGroupInfo({ visible: true, group });
+        }
+      } else {
+        setAppState({ type: 'updateSelectedItemGroup', payload: group });
+        setSelectedItem(group);
+      }
     } else if (type === 'updateSelectedItemCall') {
       setSelectedCallLog(e);
     }
@@ -203,7 +247,7 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
     if (selectedItem instanceof CometChat.User) {
       return selectedItem;
     }
-    if (activeTab === 'chats' && selectedItem) {
+    if (selectedItem && 'getConversationType' in selectedItem) {
       const conv = selectedItem as CometChat.Conversation;
       if (conv.getConversationType?.() === 'user') {
         return conv.getConversationWith?.() as CometChat.User;
@@ -216,7 +260,7 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
     if (selectedItem instanceof CometChat.Group) {
       return selectedItem;
     }
-    if (activeTab === 'chats' && selectedItem) {
+    if (selectedItem && 'getConversationType' in selectedItem) {
       const conv = selectedItem as CometChat.Conversation;
       if (conv.getConversationType?.() === 'group') {
         return conv.getConversationWith?.() as CometChat.Group;
@@ -330,15 +374,19 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
       <CometChatConfirmDialog.Root
         isOpen={kickedBannedAlert.visible}
         onClose={handleKickedBannedDismiss}
-        variant="info"
+        variant="danger"
         closeOnOutsideClick={false}
       >
-        <CometChatConfirmDialog.Icon />
+        <CometChatConfirmDialog.Icon icon={<img className="cometchat-confirm-dialog__icon-default" src={blockIcon} alt="" aria-hidden="true" width={36} height={36} draggable={false} />} />
         <CometChatConfirmDialog.Content
           title={getLocalizedString('no_longer_part_of_group')}
           messageText={kickedBannedAlert.message}
         />
-        <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('understood')} onConfirm={handleKickedBannedDismiss} onCancel={handleKickedBannedDismiss} cancelButtonText={getLocalizedString('understood')} />
+        <CometChatConfirmDialog.Actions>
+          <div className="cometchat-confirm-dialog__actions-cancel" style={{ flex: 1 }}>
+            <button onClick={handleKickedBannedDismiss}>{getLocalizedString('understood')}</button>
+          </div>
+        </CometChatConfirmDialog.Actions>
       </CometChatConfirmDialog.Root>
 
       {showSidebar && (
@@ -390,23 +438,35 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
                 setShowNewChat(false);
                 setSidePanel({ visible: false, type: 'group' });
                 setAppState({ type: 'updateSelectedItemUser', payload: undefined });
-                setAppState({ type: 'updateSelectedItemGroup', payload: group });
-                setSelectedItem(group);
+                if (!group.getHasJoined()) {
+                  if (group.getType() === 'public') {
+                    CometChat.joinGroup(group.getGuid(), group.getType() as CometChat.GroupType)
+                      .then((joinedGroup: CometChat.Group) => {
+                        setAppState({ type: 'updateSelectedItemGroup', payload: joinedGroup });
+                        setSelectedItem(joinedGroup);
+                        publish({
+                          type: 'ui:group/member-joined',
+                          joinedGroup,
+                          joinedUser: loggedInUser,
+                        });
+                      })
+                      .catch((error: unknown) => {
+                        console.error('Failed to join public group:', error);
+                      });
+                  } else if (group.getType() === 'password') {
+                    setJoinGroupInfo({ visible: true, group });
+                  }
+                } else {
+                  setAppState({ type: 'updateSelectedItemGroup', payload: group });
+                  setSelectedItem(group);
+                }
               }}
             />
           ) : isAgenticUser && messageUser ? (
             /**
              * @agentic user selected — render AI assistant chat.
              */
-            <Suspense fallback={
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: '100%', height: '100%',
-                color: 'var(--cometchat-text-color-secondary)',
-              }}>
-                {getLocalizedString('sample_loading_ai')}
-              </div>
-            }>
+            <Suspense>
               <LazyCometChatAIAssistantChat
                 user={messageUser}
                 onBackButtonClicked={onBack}
@@ -518,6 +578,7 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
           onConversationDeleted={onConversationDeleted}
           onGroupLeft={onConversationDeleted}
           onGroupDeleted={onConversationDeleted}
+          isFreshChat={isFreshChat}
         />
       )}
 
@@ -536,6 +597,21 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
       
       {/* Incoming call listener — renders at root level */}
       <CometChatIncomingCall />
+
+      {/* Join password-protected group dialog */}
+      {joinGroupInfo.visible && joinGroupInfo.group && (
+        <CometChatJoinGroup
+          group={joinGroupInfo.group}
+          loggedInUser={loggedInUser}
+          onClose={() => setJoinGroupInfo({ visible: false })}
+          onGroupJoined={(joinedGroup) => {
+            setJoinGroupInfo({ visible: false });
+            setSidePanel({ visible: false, type: 'group' });
+            setAppState({ type: 'updateSelectedItemGroup', payload: joinedGroup });
+            setSelectedItem(joinedGroup);
+          }}
+        />
+      )}
     </div>
   );
 };

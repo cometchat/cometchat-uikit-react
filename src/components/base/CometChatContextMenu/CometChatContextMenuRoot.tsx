@@ -7,6 +7,7 @@ import { CometChatContextMenuContext } from './CometChatContextMenu.context';
 import { CometChatContextMenuItem } from './CometChatContextMenuItem';
 import { CometChatContextMenuTrigger } from './CometChatContextMenuTrigger';
 import { CometChatContextMenuDropdown } from './CometChatContextMenuDropdown';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatContextMenu.css';
 
 /**
@@ -34,6 +35,11 @@ export const CometChatContextMenuRoot: React.FC<CometChatContextMenuRootProps> =
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
   const onDropdownCloseRef = useRef(onDropdownClose);
   onDropdownCloseRef.current = onDropdownClose;
 
@@ -58,11 +64,11 @@ export const CometChatContextMenuRoot: React.FC<CometChatContextMenuRootProps> =
       }
     };
 
-    document.addEventListener('mousedown', handleClick);
+    getCurrentDocument().addEventListener('mousedown', handleClick);
     return () => {
-      document.removeEventListener('mousedown', handleClick);
+      getCurrentDocument().removeEventListener('mousedown', handleClick);
     };
-  }, [isOpen, closeOnOutsideClick, close]);
+  }, [isOpen, closeOnOutsideClick, close, getCurrentDocument]);
 
   const ctxValue = useMemo<CometChatContextMenuContextValue>(
     () => ({

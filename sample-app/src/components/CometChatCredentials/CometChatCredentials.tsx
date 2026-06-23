@@ -4,7 +4,7 @@ import cometChatLogoDark from '../../assets/cometchat_logo_dark.svg';
 import usIcon from '../../assets/us-icon.svg';
 import euIcon from '../../assets/eu-icon.svg';
 import inIcon from '../../assets/in-icon.svg';
-import '../../styles/CometChatCredentials/CometChatCredentials.css';
+import './CometChatCredentials.css';
 
 interface CometChatCredentialsProps {
   onCredentialsSaved: () => void;

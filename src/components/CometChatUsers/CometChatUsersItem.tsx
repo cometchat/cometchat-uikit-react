@@ -86,7 +86,7 @@ function CometChatUsersItemInner({
           <CometChatAvatar.Root name={name} image={avatar} size="medium">
             <CometChatAvatar.Image />
             <CometChatAvatar.Initials />
-            {!hideStatus && (
+            {!hideStatus && !user.getBlockedByMe() && !user.getHasBlockedMe() && (
               <CometChatAvatar.StatusIndicator
                 status={status === 'online' ? 'online' : 'offline'}
               />
@@ -153,7 +153,7 @@ function CometChatUsersItemInner({
           }}
           role="presentation"
         >
-          <CometChatContextMenu.Root
+          <CometChatContextMenu
             items={ctx.options(user).map(
               (opt): CometChatContextMenuItemData => ({
                 id: opt.id,

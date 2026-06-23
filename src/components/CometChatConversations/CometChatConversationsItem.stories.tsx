@@ -26,6 +26,8 @@ function createMockUser(uid: string, name: string, status = 'online') {
     getName: () => name,
     getStatus: () => status,
     getAvatar: () => `https://i.pravatar.cc/150?u=${uid}`,
+    getBlockedByMe: () => false,
+    getHasBlockedMe: () => false,
   } as unknown as CometChat.User;
 }
 
@@ -242,4 +244,45 @@ export const NoLastMessage: Story = {
       />
     </CometChatConversationsContext.Provider>
   ),
+};
+
+/** With options prop — context menu appears on hover. */
+export const WithOptions: Story = {
+  render: args => {
+    const options = (conversation: CometChat.Conversation) => [
+      {
+        id: 'pin',
+        title: `Pin ${conversation.getConversationType() === 'group' ? 'Group' : 'Chat'}`,
+        onClick: (conv: CometChat.Conversation) => {
+          console.log('Pin clicked for:', conv.getConversationId());
+        },
+      },
+      {
+        id: 'mute',
+        title: 'Mute Notifications',
+        onClick: (conv: CometChat.Conversation) => {
+          console.log('Mute clicked for:', conv.getConversationId());
+        },
+      },
+      {
+        id: 'archive',
+        title: 'Archive',
+        onClick: (conv: CometChat.Conversation) => {
+          console.log('Archive clicked for:', conv.getConversationId());
+        },
+      },
+    ];
+
+    return (
+      <CometChatConversationsContext.Provider value={createMockContext()}>
+        <CometChatConversationsItem
+          conversation={userConversation}
+          hideUserStatus={args.hideUserStatus}
+          hideReceipts={args.hideReceipts}
+          hideDeleteButton={args.hideDeleteButton}
+          options={options}
+        />
+      </CometChatConversationsContext.Provider>
+    );
+  },
 };

@@ -151,7 +151,7 @@ export function useCometChatSearchConversations(
       })
       .catch((err: unknown) => {
         dispatch({ type: 'FETCH_ERROR' });
-        onError?.(err);
+        onError?.(err as CometChat.CometChatException);
       });
   }, [searchKeyword, activeFilters, conversationsRequestBuilder, onError]);
 
@@ -166,7 +166,7 @@ export function useCometChatSearchConversations(
         dispatch({ type: 'LOAD_MORE_SUCCESS', conversations: [], hasMore: false });
       }
     } catch (err: unknown) {
-      onError?.(err);
+      onError?.(err as CometChat.CometChatException);
     }
   }, [state.hasMore, onError]);
 

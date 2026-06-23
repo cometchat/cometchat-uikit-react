@@ -49,7 +49,8 @@ function collectBlockGroups(
   }
 
   // Walk all nodes inside the range
-  const walker = document.createTreeWalker(
+  const doc = editorEl.ownerDocument;
+  const walker = doc.createTreeWalker(
     range.commonAncestorContainer,
     NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
     {
@@ -92,7 +93,8 @@ function collectBlockGroups(
  * Handles partial selection at the start/end of the range.
  */
 function wrapTextInCode(node: Node, range: Range): HTMLElement {
-  const code = document.createElement('code');
+  const doc = node.ownerDocument ?? document;
+  const code = doc.createElement('code');
 
   if (node.nodeType === Node.TEXT_NODE) {
     const text = node as Text;
@@ -121,7 +123,7 @@ export const InlineCodeFormat: FormatCommand = {
   name: 'Inline Code',
 
   execute(ctx: EditorContext): void {
-    const sel = window.getSelection();
+    const sel = ctx.getWindow().getSelection();
     if (!sel || sel.rangeCount === 0) return;
 
     const range = sel.getRangeAt(0);
@@ -130,9 +132,9 @@ export const InlineCodeFormat: FormatCommand = {
     const existingCode = ctx.findAncestor(range.startContainer, 'CODE');
     if (existingCode && !(existingCode as Element).closest('pre')) {
       const text = existingCode.textContent ?? '';
-      const textNode = document.createTextNode(text);
+      const textNode = ctx.getDocument().createTextNode(text);
       existingCode.parentNode?.replaceChild(textNode, existingCode);
-      const newRange = document.createRange();
+      const newRange = ctx.getDocument().createRange();
       newRange.setStartAfter(textNode);
       newRange.collapse(true);
       sel.removeAllRanges();
@@ -146,7 +148,7 @@ export const InlineCodeFormat: FormatCommand = {
 
     // --- Empty selection: insert <code> with ZWS and place cursor inside it ---
     if (range.collapsed) {
-      const code = document.createElement('code');
+      const code = ctx.getDocument().createElement('code');
       code.textContent = '\u200B';
 
       // Ensure the <code> is inserted inside the current inline context, not at the
@@ -187,7 +189,7 @@ export const InlineCodeFormat: FormatCommand = {
         range.insertNode(code);
       }
 
-      const newRange = document.createRange();
+      const newRange = ctx.getDocument().createRange();
       if (code.firstChild) {
         newRange.setStart(code.firstChild, 1);
       } else {
@@ -227,7 +229,7 @@ export const InlineCodeFormat: FormatCommand = {
       if (lastCode.length > 0) {
         const last = lastCode[lastCode.length - 1];
         if (last) {
-          const newRange = document.createRange();
+          const newRange = ctx.getDocument().createRange();
           newRange.setStartAfter(last);
           newRange.collapse(true);
           sel.removeAllRanges();
@@ -236,7 +238,7 @@ export const InlineCodeFormat: FormatCommand = {
       }
     } else {
       // --- Single-block selection: wrap the whole selection in one <code> ---
-      const code = document.createElement('code');
+      const code = ctx.getDocument().createElement('code');
       try {
         range.surroundContents(code);
       } catch {
@@ -244,7 +246,7 @@ export const InlineCodeFormat: FormatCommand = {
         code.appendChild(fragment);
         range.insertNode(code);
       }
-      const newRange = document.createRange();
+      const newRange = ctx.getDocument().createRange();
       newRange.setStartAfter(code);
       newRange.collapse(true);
       sel.removeAllRanges();

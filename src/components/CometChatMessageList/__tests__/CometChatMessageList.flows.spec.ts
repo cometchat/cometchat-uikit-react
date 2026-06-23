@@ -432,6 +432,73 @@ describe('MessageList — end-to-end flows', () => {
     });
   });
 
+  describe('Moderation does not block the first optimistic→confirmed replacement', () => {
+    // Regression: in a moderated group the optimistic message is 'unmoderated' with
+    // id 0, and the server confirmation comes back 'pending' with a real id. The
+    // confirmation MUST replace the optimistic copy, otherwise the bubble is stuck on
+    // id 0 forever (perpetual "sending" clock) while the sidebar advances to delivered.
+    it('MESSAGE_SEND_SUCCESS replaces an unmoderated optimistic message with the pending confirmed one', async () => {
+      const { CometChat } = await import('@cometchat/chat-sdk-javascript');
+
+      const optimistic = new CometChat.TextMessage('group-1', 'hi', 'group');
+      optimistic.setId(0);
+      optimistic.setMuid('m-1');
+      (optimistic as unknown as { getModerationStatus: () => string }).getModerationStatus = () =>
+        'unmoderated';
+
+      const confirmed = new CometChat.TextMessage('group-1', 'hi', 'group');
+      confirmed.setId(900);
+      confirmed.setMuid('m-1');
+      (confirmed as unknown as { getModerationStatus: () => string }).getModerationStatus = () =>
+        'pending';
+
+      const state: CometChatMessageListState = {
+        ...initialMessageListState,
+        messages: [optimistic as unknown as CometChat.BaseMessage],
+        fetchState: 'loaded',
+      };
+
+      const next = messageListReducer(state, {
+        type: 'MESSAGE_SEND_SUCCESS',
+        muid: 'm-1',
+        confirmedMessage: confirmed as unknown as CometChat.BaseMessage,
+      });
+
+      expect(next.messages).toHaveLength(1);
+      expect(next.messages[0]?.getId()).toBe(900); // replaced — not stuck at id 0
+    });
+
+    it('MESSAGE_SEND_SUCCESS still does NOT downgrade an already-approved message back to pending', async () => {
+      const { CometChat } = await import('@cometchat/chat-sdk-javascript');
+
+      const approved = new CometChat.TextMessage('group-1', 'hi', 'group');
+      approved.setId(0);
+      approved.setMuid('m-2');
+      (approved as unknown as { getModerationStatus: () => string }).getModerationStatus = () =>
+        'approved';
+
+      const pending = new CometChat.TextMessage('group-1', 'hi', 'group');
+      pending.setId(901);
+      pending.setMuid('m-2');
+      (pending as unknown as { getModerationStatus: () => string }).getModerationStatus = () =>
+        'pending';
+
+      const state: CometChatMessageListState = {
+        ...initialMessageListState,
+        messages: [approved as unknown as CometChat.BaseMessage],
+        fetchState: 'loaded',
+      };
+
+      const next = messageListReducer(state, {
+        type: 'MESSAGE_SEND_SUCCESS',
+        muid: 'm-2',
+        confirmedMessage: pending as unknown as CometChat.BaseMessage,
+      });
+
+      expect(next.messages[0]).toBe(approved); // resolved status preserved (no downgrade)
+    });
+  });
+
   // ─────────────────────────────────────────────────────────────
   // scrollToBottomOnNewMessages force-scroll
   // ─────────────────────────────────────────────────────────────

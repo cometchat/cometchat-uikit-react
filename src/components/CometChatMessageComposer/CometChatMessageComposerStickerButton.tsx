@@ -2,8 +2,8 @@ import React, { useCallback } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useCometChatMessageComposerContext } from './CometChatMessageComposer.context';
 import { CometChatPopover } from '../base/CometChatPopover';
-import { CometChatStickersKeyboard } from '../../plugins/stickers/CometChatStickersKeyboard';
-import type { CometChatStickerClickEvent } from '../../plugins/stickers/CometChatStickersKeyboard.types';
+import { CometChatStickersKeyboard } from '../CometChatStickersKeyboard/CometChatStickersKeyboard';
+import type { CometChatStickerClickEvent } from '../CometChatStickersKeyboard/CometChatStickersKeyboard.types';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { usePublishEvent } from '../../hooks/usePublishEvent';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
@@ -105,7 +105,7 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
           }
         })
         .catch((error: unknown) => {
-          onError?.(error);
+          onError?.(error as CometChat.CometChatException);
         });
     },
     [
@@ -133,17 +133,19 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
     .join(' ');
 
   return (
-    <CometChatPopover.Root
+    <CometChatPopover
       placement="top"
       closeOnOutsideClick
       isOpen={isActive}
       onClose={handleClose}
-    >
-      <CometChatPopover.Trigger>
+      trigger={
         <button
           type="button"
           className={btnClass}
-          onClick={handleToggle}
+          onClick={e => {
+            e.stopPropagation();
+            handleToggle();
+          }}
           aria-label={getLocalizedString('message_composer_sticker_hover')}
           aria-expanded={isActive}
         >
@@ -157,11 +159,11 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
             className={'cometchat-message-composer__button-icon'}
           />
         </button>
-      </CometChatPopover.Trigger>
-      <CometChatPopover.Content>
+      }
+      content={
         <CometChatStickersKeyboard onStickerClick={handleStickerSelect} onClose={handleClose} />
-      </CometChatPopover.Content>
-    </CometChatPopover.Root>
+      }
+    />
   );
 };
 

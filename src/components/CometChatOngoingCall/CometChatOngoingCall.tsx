@@ -65,7 +65,6 @@ export const CometChatOngoingCall: React.FC<CometChatOngoingCallProps> = ({
 
     return {
       sessionType: isAudioOnly ? 'VOICE' : 'VIDEO',
-      layout: 'SIDEBAR',
       startAudioMuted: false,
       startVideoPaused: false,
       hideControlPanel: false,

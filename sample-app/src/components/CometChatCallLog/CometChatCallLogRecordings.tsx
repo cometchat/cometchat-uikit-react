@@ -1,5 +1,5 @@
 import { useLocale } from '@cometchat/chat-uikit-react';
-import '../../styles/CometChatCallLog/CometChatCallLogRecordings.css';
+import './CometChatCallLogRecordings.css';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const CometChatCallLogRecordings = ({ call }: { call: any }) => {

@@ -102,7 +102,7 @@ describe('useCometChatThreadHeader', () => {
 
   describe('initial state', () => {
     it('returns the replyCount from the prop when provided', () => {
-      const parentMessage = createMockMessage({ replyCount: 10 });
+      const parentMessage = createMockMessage({ replyCount: 42 });
       const loggedInUser = createMockUser();
 
       const { result } = renderHook(() =>

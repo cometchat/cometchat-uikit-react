@@ -9,12 +9,19 @@ import './styles/index.css';
 // CometChatUIKit (main entry point)
 export { CometChatUIKit, UIKitSettingsBuilder, UIKitSettings } from './CometChatUIKit';
 export type { CometChatPresenceSubscription } from './CometChatUIKit';
-export const VERSION = '7.0.0-beta.1';
+export const VERSION = '7.0.0';
 
 // Root Provider
 export { CometChatProvider } from './context/CometChatProvider';
 export { useLoggedInUser } from './hooks/useLoggedInUser';
 export type { CometChatProviderProps } from './context/ChatState.types';
+
+// Frame Context (iframe embedding support)
+export { CometChatFrameProvider, useCometChatFrameContext } from './context/CometChatFrameContext';
+export type {
+  CometChatFrameContextValue,
+  CometChatFrameProviderProps,
+} from './context/CometChatFrameContext';
 
 // Logger
 export { CometChatLogger, LogLevel } from './utils/CometChatLogger';
@@ -203,7 +210,6 @@ export type {
 } from './components/base/CometChatConfirmDialog/CometChatConfirmDialog.types';
 
 // Localization
-export { LocaleProvider } from './context/locale/LocaleProvider';
 export { useLocale } from './context/locale/LocaleContext';
 export { CometChatLocalize } from './resources/CometChatLocalize/CometChatLocalize';
 export type {
@@ -215,8 +221,11 @@ export type {
 
 // Plugin Registry
 export { CometChatPluginRegistry } from './plugins/CometChatPluginRegistry';
-export { CometChatPluginRegistryContext } from './context/PluginRegistryContext';
 export { usePluginRegistry } from './hooks/usePluginRegistry';
+export {
+  useDefaultMessageTypes,
+  useDefaultMessageCategories,
+} from './hooks/useDefaultMessageTypes';
 export { defaultPlugins } from './plugins/core';
 export type {
   CometChatMessagePlugin,
@@ -229,16 +238,12 @@ export type {
 export type { CometChatFetchState } from './types';
 
 // Theme
-export { CometChatThemeProvider } from './context/ThemeProvider';
 export { useTheme } from './context/ThemeContext';
 export type {
   CometChatTheme,
   CometChatThemeContextValue,
   CometChatThemeProviderProps,
 } from './context/ThemeContext.types';
-
-// Events Provider
-export { CometChatEventsProvider } from './context/CometChatEventsProvider';
 
 // Unified Events (SDK + UI)
 export { useCometChatEvents } from './hooks/useCometChatEvents';
@@ -317,40 +322,53 @@ export type {
   CometChatReactionsBarProps,
   CometChatReactionsChipProps,
   CometChatReactionsInfoProps,
-  CometChatReactionsListProps,
   CometChatReactionsOverflowProps,
   CometChatReactionsContextValue,
 } from './components/CometChatReactions/CometChatReactions.types';
 
-// Extension Plugins — NOT exported from main entry point.
-// Consumers import extension plugins directly from their paths:
-//   import { CometChatPollsPlugin } from '@cometchat/chat-uikit-react/plugins/polls';
-//   import { CometChatStickersPlugin } from '@cometchat/chat-uikit-react/plugins/stickers';
-//   import { CometChatCollaborativeDocumentPlugin } from '@cometchat/chat-uikit-react/plugins/collaborative-document';
-//   import { CometChatCollaborativeWhiteboardPlugin } from '@cometchat/chat-uikit-react/plugins/collaborative-whiteboard';
-//   import { CometChatMessageTranslationPlugin } from '@cometchat/chat-uikit-react/plugins/message-translation';
-//   import { CometChatAIPlugin, CometChatAIAssistantPanel } from '@cometchat/chat-uikit-react/plugins/ai';
-
-// Core Plugin Bubbles (for direct usage in sample app / custom renderers)
-export { CometChatTextBubble } from './plugins/core/text/CometChatTextBubble';
-export type { CometChatTextBubbleProps } from './plugins/core/text/CometChatTextBubble.types';
-export { CometChatImageBubble } from './plugins/core/image/CometChatImageBubble';
+// Core Plugin Bubbles (self-extracting — take the SDK message directly)
+export { CometChatTextBubble } from './components/CometChatTextBubble/CometChatTextBubble';
+export type { CometChatTextBubbleProps } from './components/CometChatTextBubble/CometChatTextBubble.types';
+export { CometChatImageBubble } from './components/CometChatImageBubble/CometChatImageBubble';
 export type {
   CometChatImageBubbleProps,
   CometChatImageBubbleAttachment,
-} from './plugins/core/image/CometChatImageBubble.types';
+} from './components/CometChatImageBubble/CometChatImageBubble.types';
+export { CometChatVideoBubble } from './components/CometChatVideoBubble/CometChatVideoBubble';
+export type { CometChatVideoBubbleProps } from './components/CometChatVideoBubble/CometChatVideoBubble.types';
+export { CometChatAudioBubble } from './components/CometChatAudioBubble/CometChatAudioBubble';
+export type { CometChatAudioBubbleProps } from './components/CometChatAudioBubble/CometChatAudioBubble.types';
+export { CometChatFileBubble } from './components/CometChatFileBubble/CometChatFileBubble';
+export type { CometChatFileBubbleProps } from './components/CometChatFileBubble/CometChatFileBubble.types';
+export { CometChatCallBubble } from './components/CometChatCallBubble/CometChatCallBubble';
+export type { CometChatCallBubbleProps } from './components/CometChatCallBubble/CometChatCallBubble.types';
+
+// Action Bubbles (self-extracting) + the shared presentational primitive
+export { CometChatCallActionBubble } from './components/CometChatCallActionBubble';
+export type { CometChatCallActionBubbleProps } from './components/CometChatCallActionBubble/CometChatCallActionBubble.types';
+export { CometChatGroupActionBubble } from './components/CometChatGroupActionBubble';
+export type { CometChatGroupActionBubbleProps } from './components/CometChatGroupActionBubble/CometChatGroupActionBubble.types';
+export { CometChatActionBubble } from './components/base/CometChatActionBubble';
+export type { CometChatActionBubbleProps } from './components/base/CometChatActionBubble/CometChatActionBubble.types';
+
+// Delete Bubble (base/presentational)
+export { CometChatDeleteBubble } from './components/base/CometChatDeleteBubble/CometChatDeleteBubble';
+export type { CometChatDeleteBubbleProps } from './components/base/CometChatDeleteBubble/CometChatDeleteBubble.types';
 
 // Extension Plugin Bubbles (for direct usage in sample app / custom renderers)
 export { CometChatPollsPlugin } from './plugins/polls/CometChatPollsPlugin';
 export { CometChatStickersPlugin } from './plugins/stickers/CometChatStickersPlugin';
-export { CometChatPollBubble } from './plugins/polls/CometChatPollBubble';
-export type { CometChatPollBubbleProps } from './plugins/polls/CometChatPollBubble.types';
-export { CometChatCreatePoll } from './plugins/polls/CometChatCreatePoll';
-export type { CometChatCreatePollProps } from './plugins/polls/CometChatCreatePoll.types';
-export { CometChatStickerBubble } from './plugins/stickers/CometChatStickerBubble';
-export type { CometChatStickerBubbleProps } from './plugins/stickers/CometChatStickerBubble.types';
-export { CometChatCollaborativeBubble } from './plugins/shared/CometChatCollaborativeBubble';
-export type { CometChatCollaborativeBubbleProps } from './plugins/shared/CometChatCollaborativeBubble.types';
+export { CometChatPollBubble } from './components/CometChatPollBubble/CometChatPollBubble';
+export type { CometChatPollBubbleProps } from './components/CometChatPollBubble/CometChatPollBubble.types';
+export { CometChatCreatePoll } from './components/CometChatCreatePoll/CometChatCreatePoll';
+export type { CometChatCreatePollProps } from './components/CometChatCreatePoll/CometChatCreatePoll.types';
+export { CometChatStickerBubble } from './components/CometChatStickerBubble/CometChatStickerBubble';
+export type { CometChatStickerBubbleProps } from './components/CometChatStickerBubble/CometChatStickerBubble.types';
+// Self-extracting collaborative bubbles + the shared presentational primitive
+export { CometChatCollaborativeDocumentBubble } from './components/CometChatCollaborativeDocumentBubble';
+export type { CometChatCollaborativeDocumentBubbleProps } from './components/CometChatCollaborativeDocumentBubble/CometChatCollaborativeDocumentBubble.types';
+export { CometChatCollaborativeWhiteboardBubble } from './components/CometChatCollaborativeWhiteboardBubble';
+export type { CometChatCollaborativeWhiteboardBubbleProps } from './components/CometChatCollaborativeWhiteboardBubble/CometChatCollaborativeWhiteboardBubble.types';
 
 // Translation utilities (used by MessageTranslationPlugin but also useful standalone)
 export {
@@ -400,8 +418,8 @@ export type {
 } from './components/CometChatMessageHeader/CometChatMessageHeader.types';
 
 // Flag Message Dialog
-export { CometChatFlagMessageDialog } from './components/base/CometChatFlagMessageDialog';
-export { useCometChatFlagMessageDialogContext } from './components/base/CometChatFlagMessageDialog/CometChatFlagMessageDialog.context';
+export { CometChatFlagMessageDialog } from './components/CometChatFlagMessageDialog';
+export { useCometChatFlagMessageDialogContext } from './components/CometChatFlagMessageDialog/CometChatFlagMessageDialog.context';
 export type {
   CometChatFlagMessageDialogRootProps,
   CometChatFlagMessageDialogHeaderProps,
@@ -409,7 +427,7 @@ export type {
   CometChatFlagMessageDialogRemarkProps,
   CometChatFlagMessageDialogActionsProps,
   CometChatFlagMessageDialogContextValue,
-} from './components/base/CometChatFlagMessageDialog/CometChatFlagMessageDialog.types';
+} from './components/CometChatFlagMessageDialog/CometChatFlagMessageDialog.types';
 
 // Users
 export { CometChatUsers } from './components/CometChatUsers';
@@ -551,6 +569,14 @@ export type {
   CometChatSearchConversationsListProps,
   CometChatSearchMessagesListProps,
 } from './components/CometChatSearch';
+// Call Buttons (standalone)
+export { CometChatCallButtons, useCometChatCallButtons } from './components/CometChatCallButtons';
+export type {
+  CometChatCallButtonsProps,
+  CometChatCallButtonsState,
+  UseCometChatCallButtonsOptions,
+} from './components/CometChatCallButtons';
+
 // Ongoing Call
 export { CometChatOngoingCall } from './components/CometChatOngoingCall';
 export type {
@@ -595,4 +621,36 @@ export type {
   CometChatMessageInformationContextValue,
 } from './components/CometChatMessageInformation';
 
+export * from './components/CometChatAIAssistantChat';
 export * from './plugins/ai';
+
+// all remaining plugins
+export { CometChatCollaborativeDocumentPlugin } from './plugins/collaborative-document/CometChatCollaborativeDocumentPlugin';
+export { CometChatCollaborativeWhiteboardPlugin } from './plugins/collaborative-whiteboard/CometChatCollaborativeWhiteboardPlugin';
+
+// Core Plugins (individual plugins for custom plugin arrays)
+export { CometChatTextPlugin } from './plugins/core/text/CometChatTextPlugin';
+export { CometChatImagePlugin } from './plugins/core/image/CometChatImagePlugin';
+export { CometChatVideoPlugin } from './plugins/core/video/CometChatVideoPlugin';
+export { CometChatFilePlugin } from './plugins/core/file/CometChatFilePlugin';
+export { CometChatAudioPlugin } from './plugins/core/audio/CometChatAudioPlugin';
+export { CometChatGroupActionPlugin } from './plugins/core/group-action/CometChatGroupActionPlugin';
+export { CometChatCallActionPlugin } from './plugins/core/call-action/CometChatCallActionPlugin';
+export { CometChatMeetingPlugin } from './plugins/core/call-action/CometChatMeetingPlugin';
+export { CometChatDeletePlugin } from './plugins/core/delete/CometChatDeletePlugin';
+
+// Notification Feed
+export { CometChatNotificationFeed } from './components/CometChatNotificationFeed';
+export { useCometChatNotificationFeedContext } from './components/CometChatNotificationFeed';
+export { useCometChatNotificationFeed } from './components/CometChatNotificationFeed';
+export { useNotificationUnreadCount } from './components/CometChatNotificationFeed';
+export type {
+  CometChatNotificationFeedProps,
+  CometChatNotificationFeedRootProps,
+  CometChatNotificationFeedContextValue,
+  NotificationFeedItem,
+  NotificationCategory,
+  CardAction,
+  TimestampGroup,
+  ScreenState,
+} from './components/CometChatNotificationFeed';

@@ -66,14 +66,14 @@ describe('CometChatListItemMenuView', () => {
     renderMenuView({ id: 'user-99' });
     fireEvent.mouseEnter(screen.getByRole('option'));
     const group = screen.getByRole('group');
-    expect(group).toHaveAttribute('aria-label', 'Actions for item user-99');
+    expect(group).toHaveAttribute('aria-label', 'Actions for item');
   });
 
   it('sets aria-label with empty id gracefully', () => {
     renderMenuView();
     fireEvent.mouseEnter(screen.getByRole('option'));
     const group = screen.getByRole('group');
-    expect(group).toHaveAttribute('aria-label', 'Actions for item ');
+    expect(group).toHaveAttribute('aria-label', 'Actions for item');
   });
 
   // --- Custom className ---

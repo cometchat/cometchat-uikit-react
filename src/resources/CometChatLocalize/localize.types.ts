@@ -70,11 +70,11 @@ export interface TranslationContextValue {
 
 export interface CometChatLocaleProviderProps {
   locale?: string;
-  i18nInstance?: CometChatI18nInstance;
+  localizeInstance?: CometChatLocalizeInstance;
   children: React.ReactNode;
 }
 
-export interface CometChatI18nInstance {
+export interface CometChatLocalizeInstance {
   init: (settings?: LocalizationSettings) => void;
   getTranslators: () => { t: TranslateFunction; tDateTimeParser: TDateTimeParser };
   setCurrentLanguage: (language: string) => void;

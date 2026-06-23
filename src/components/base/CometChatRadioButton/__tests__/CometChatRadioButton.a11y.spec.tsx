@@ -46,7 +46,7 @@ describe('CometChatRadioButton a11y', () => {
   it('screen reader can identify the radio button role and state', () => {
     render(<CometChatRadioButton label="Option A" name="a11y-g" value="a" checked />);
     const input = screen.getByRole('radio');
-    expect(input).toHaveAttribute('aria-checked', 'true');
+    expect(input).toBeChecked();
     expect(input).toHaveAttribute('aria-label', 'Option A');
   });
 });

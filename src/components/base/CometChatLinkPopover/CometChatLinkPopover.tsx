@@ -1,6 +1,7 @@
 import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
 import type { CometChatLinkPopoverProps } from './CometChatLinkPopover.types';
 import { CometChatButton } from '../CometChatButton';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatLinkPopover.css';
 import { useLocale } from '../../../context/locale/LocaleContext';
 
@@ -27,6 +28,15 @@ export const CometChatLinkPopover = forwardRef<HTMLDivElement, CometChatLinkPopo
   ({ text, url, position, onEdit, onRemove, onClose, className, ...rest }, ref) => {
     const { getLocalizedString } = useLocale();
     const popoverRef = useRef<HTMLDivElement>(null);
+    const IframeContext = useCometChatFrameContext();
+
+    const getCurrentWindow = useCallback(() => {
+      return IframeContext.iframeWindow ?? window;
+    }, [IframeContext.iframeWindow]);
+
+    const getCurrentDocument = useCallback(() => {
+      return IframeContext.iframeDocument ?? document;
+    }, [IframeContext.iframeDocument]);
 
     // Merge refs
     const setRef = useCallback(
@@ -50,14 +60,14 @@ export const CometChatLinkPopover = forwardRef<HTMLDivElement, CometChatLinkPopo
       };
 
       const timeoutId = setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside);
+        getCurrentDocument().addEventListener('mousedown', handleClickOutside);
       }, 100);
 
       return () => {
         clearTimeout(timeoutId);
-        document.removeEventListener('mousedown', handleClickOutside);
+        getCurrentDocument().removeEventListener('mousedown', handleClickOutside);
       };
-    }, [onClose]);
+    }, [onClose, getCurrentDocument]);
 
     // Close on Escape key
     useEffect(() => {
@@ -67,11 +77,11 @@ export const CometChatLinkPopover = forwardRef<HTMLDivElement, CometChatLinkPopo
         }
       };
 
-      document.addEventListener('keydown', handleKeyDown);
+      getCurrentDocument().addEventListener('keydown', handleKeyDown);
       return () => {
-        document.removeEventListener('keydown', handleKeyDown);
+        getCurrentDocument().removeEventListener('keydown', handleKeyDown);
       };
-    }, [onClose]);
+    }, [onClose, getCurrentDocument]);
 
     const handleEdit = useCallback(() => {
       onEdit({ url, text });
@@ -80,9 +90,9 @@ export const CometChatLinkPopover = forwardRef<HTMLDivElement, CometChatLinkPopo
     const handleUrlClick = useCallback(
       (e: React.MouseEvent) => {
         e.preventDefault();
-        window.open(url, '_blank', 'noopener,noreferrer');
+        getCurrentWindow().open(url, '_blank', 'noopener,noreferrer');
       },
-      [url]
+      [url, getCurrentWindow]
     );
 
     const rootClass = ['cometchat-link-popover', className].filter(Boolean).join(' ');

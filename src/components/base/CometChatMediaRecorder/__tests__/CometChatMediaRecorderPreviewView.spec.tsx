@@ -9,7 +9,7 @@ import type { CometChatMediaRecorderContextValue } from '../CometChatMediaRecord
 
 vi.mock('../../../../context/locale/LocaleContext', () => ({
   useLocale: () => ({
-    t: (key: string) => key,
+    getLocalizedString: (key: string) => key,
     tDateTimeParser: (d: Date) => d.toISOString(),
     language: 'en-us',
   }),

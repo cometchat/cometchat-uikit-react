@@ -200,7 +200,7 @@ function CometChatGroupMembersItemInner({
           <CometChatAvatar.Root name={name} image={avatar} size="medium">
             <CometChatAvatar.Image />
             <CometChatAvatar.Initials />
-            {!hideStatus && (
+            {!hideStatus && !member.getHasBlockedMe() && (
               <CometChatAvatar.StatusIndicator
                 status={status === 'online' ? 'online' : 'offline'}
               />
@@ -318,7 +318,8 @@ export const CometChatGroupMembersItem = React.memo(
     prev.member.getAvatar() === next.member.getAvatar() &&
     prev.member.getStatus() === next.member.getStatus() &&
     prev.isActive === next.isActive &&
-    prev.hideUserStatus === next.hideUserStatus
+    prev.hideUserStatus === next.hideUserStatus &&
+    prev.trailingView === next.trailingView
 );
 
 CometChatGroupMembersItem.displayName = 'CometChatGroupMembers.Item';

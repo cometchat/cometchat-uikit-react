@@ -5,6 +5,7 @@ import { CometChatAvatar } from '../base/CometChatAvatar/CometChatAvatar';
 import { CometChatOngoingCall } from '../CometChatOngoingCall/CometChatOngoingCall';
 import { CometChatSoundManager } from '../../resources/CometChatSoundManager/CometChatSoundManager';
 import { usePublishEvent } from '../../hooks/usePublishEvent';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { useGlobalConfig } from '../../context/GlobalConfigContext';
 import './CometChatIncomingCall.css';
 import { useLocale } from '../../context/locale/LocaleContext';
@@ -53,6 +54,11 @@ export const CometChatIncomingCall: React.FC<CometChatIncomingCallProps> = ({
       id,
       new CometChat.CallListener({
         onIncomingCallReceived: (call: CometChat.Call) => {
+          const loggedInUser = CometChatUIKit.getLoggedInUser();
+          if (call.getSender().getUid() === loggedInUser?.getUid()) {
+            return;
+          }
+
           callRef.current = call;
           setIncomingCall(call);
           // Play incoming call sound
@@ -101,7 +107,7 @@ export const CometChatIncomingCall: React.FC<CometChatIncomingCallProps> = ({
       console.error('[CometChatIncomingCall] acceptCall error:', error);
       onError?.(error as CometChat.CometChatException);
     }
-  }, [onAccept, onError]);
+  }, [onAccept, onError, publish]);
 
   const handleDecline = useCallback(async () => {
     if (!callRef.current) return;

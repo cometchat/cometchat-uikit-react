@@ -1,9 +1,8 @@
 import { CometChat } from '@cometchat/chat-sdk-javascript';
-import { CometChatMessageHeader, CometChatMessageList, useCometChatEvents, usePublishEvent, useLocale } from '@cometchat/chat-uikit-react';
+import { CometChatMessageHeader, CometChatMessageList, useCometChatEvents, usePublishEvent, useLocale, CometChatMessageComposer } from '@cometchat/chat-uikit-react';
 import type { CometChatEvent } from '@cometchat/chat-uikit-react';
 import { useCallback, useEffect, useState } from 'react';
-import { CometChatMessageComposer } from './CometChatMessageComposer';
-import '../../styles/CometChatMessages/CometChatMessages.css';
+import './CometChatMessages.css';
 
 interface MessagesViewProps {
   user?: CometChat.User;
@@ -94,7 +93,12 @@ export const CometChatMessages = (props: MessagesViewProps) => {
       </div>
       {showComposer && !isBlockedByMe && (
         <div className="cometchat-composer-wrapper">
-          <CometChatMessageComposer user={user} group={group} />
+          <CometChatMessageComposer
+            user={user}
+            group={group}
+            layout="compact"
+            enableRichTextEditor
+          />
         </div>
       )}
       {isBlockedByMe && (
@@ -106,7 +110,9 @@ export const CometChatMessages = (props: MessagesViewProps) => {
               onClick={handleUnblock}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleUnblock(); }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleUnblock();
+              }}
             >
               {getLocalizedString('click_to_unblock')}
             </span>

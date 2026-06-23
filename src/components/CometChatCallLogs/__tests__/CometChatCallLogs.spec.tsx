@@ -83,39 +83,42 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
 }));
 
 vi.mock('../../base/CometChatAvatar/CometChatAvatar', () => ({
-  CometChatAvatar: {
-    Root: ({ children, name }: { children: React.ReactNode; name: string }) => (
-      <div data-testid="avatar-root" data-name={name}>
-        {children}
-      </div>
-    ),
-    Image: () => <div data-testid="avatar-image" />,
-    Initials: () => <div data-testid="avatar-initials" />,
-  },
+  CometChatAvatar: Object.assign(
+    ({ name }: { name: string }) => <div data-testid="avatar-root" data-name={name} />,
+    {
+      Root: ({ children, name }: { children: React.ReactNode; name: string }) => (
+        <div data-testid="avatar-root" data-name={name}>
+          {children}
+        </div>
+      ),
+      Image: () => <div data-testid="avatar-image" />,
+      Initials: () => <div data-testid="avatar-initials" />,
+    }
+  ),
 }));
 
 vi.mock('../../base/CometChatDate', () => ({
-  CometChatDate: {
+  CometChatDate: Object.assign(() => <span data-testid="date-text">Jan 1, 12:00 PM</span>, {
     Root: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="date-root">{children}</div>
     ),
     Text: () => <span data-testid="date-text">Jan 1, 12:00 PM</span>,
-  },
+  }),
 }));
 
-vi.mock('../../CometChatOutgoingCall/CometChatOutgoingCall', () => ({
-  CometChatOutgoingCall: (props: { onCallCanceled?: () => void }) => (
-    <div data-testid="outgoing-call">
-      <button onClick={props.onCallCanceled}>Cancel</button>
-    </div>
-  ),
-}));
-
-vi.mock('../../CometChatOngoingCall/CometChatOngoingCall', () => ({
-  CometChatOngoingCall: (props: { sessionID: string; onCallEnded?: () => void }) => (
-    <div data-testid="ongoing-call" data-session-id={props.sessionID}>
-      <button onClick={props.onCallEnded}>End</button>
-    </div>
+// CometChatCallButtons is rendered in the default trailing view and manages
+// the entire call lifecycle (outgoing + ongoing) internally. Mock it to keep
+// this suite focused on CometChatCallLogs.
+vi.mock('../../CometChatCallButtons/CometChatCallButtons', () => ({
+  CometChatCallButtons: (props: {
+    hideVoiceCallButton?: boolean;
+    hideVideoCallButton?: boolean;
+  }) => (
+    <div
+      data-testid="call-buttons"
+      data-hide-voice={String(props.hideVoiceCallButton)}
+      data-hide-video={String(props.hideVideoCallButton)}
+    />
   ),
 }));
 
@@ -174,41 +177,43 @@ const mockLoggedInUser = {
   getName: () => 'Me',
 } as unknown as CometChat.User;
 
+/**
+ * Build the value returned by the (mocked) useCometChatCallLogs hook.
+ * The hook now only exposes list/fetch state — call initiation is handled by
+ * CometChatCallButtons in the trailing view.
+ */
+function buildHookValue(
+  overrides: Partial<{
+    callList: unknown[];
+    fetchState: string;
+    hasMore: boolean;
+    error: string | null;
+    loggedInUser: CometChat.User | null;
+    fetchNext: () => void;
+  }> = {}
+) {
+  return {
+    callList: [],
+    fetchState: 'idle',
+    hasMore: true,
+    error: null,
+    loggedInUser: mockLoggedInUser,
+    fetchNext: vi.fn(),
+    ...overrides,
+  };
+}
+
 describe('CometChatCallLogs', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseCometChatCallLogs.mockReturnValue({
-      callList: [],
-      fetchState: 'idle',
-      loggedInUser: mockLoggedInUser,
-      fetchNext: vi.fn(),
-      handleCallButtonClick: vi.fn(),
-      cancelOutgoingCall: vi.fn(),
-      closeCallScreen: vi.fn(),
-      showOutgoingCallScreen: false,
-      showOngoingCall: false,
-      activeCallObj: null,
-      callSessionId: null,
-    });
+    mockUseCometChatCallLogs.mockReturnValue(buildHookValue());
   });
 
   // ─── Loading state ──────────────────────────────────────────────
 
   describe('loading state', () => {
     it('renders loading shimmer when fetchState is loading', () => {
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'loading',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'loading' }));
 
       const { container } = render(<CometChatCallLogs />);
       // Shimmer items should be rendered
@@ -216,38 +221,14 @@ describe('CometChatCallLogs', () => {
     });
 
     it('renders loading shimmer when fetchState is idle', () => {
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'idle',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'idle' }));
 
       const { container } = render(<CometChatCallLogs />);
       expect(container.querySelectorAll('[class*="shimmer"]').length).toBeGreaterThan(0);
     });
 
     it('renders custom loadingView when provided', () => {
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'loading',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'loading' }));
 
       render(
         <CometChatCallLogs loadingView={<div data-testid="custom-loading">Loading...</div>} />
@@ -260,38 +241,14 @@ describe('CometChatCallLogs', () => {
 
   describe('empty state', () => {
     it('renders empty state when fetchState is empty', () => {
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'empty',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'empty' }));
 
       render(<CometChatCallLogs />);
       expect(screen.getByText('No Call Logs Yet')).toBeInTheDocument();
     });
 
     it('renders custom emptyView when provided', () => {
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'empty',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'empty' }));
 
       render(<CometChatCallLogs emptyView={<div data-testid="custom-empty">No calls</div>} />);
       expect(screen.getByTestId('custom-empty')).toBeInTheDocument();
@@ -302,38 +259,14 @@ describe('CometChatCallLogs', () => {
 
   describe('error state', () => {
     it('renders error state when fetchState is error', () => {
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'error',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'error' }));
 
       render(<CometChatCallLogs />);
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     });
 
     it('renders custom errorView when provided', () => {
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'error',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'error' }));
 
       render(<CometChatCallLogs errorView={<div data-testid="custom-error">Error!</div>} />);
       expect(screen.getByTestId('custom-error')).toBeInTheDocument();
@@ -349,19 +282,9 @@ describe('CometChatCallLogs', () => {
         buildMockCallLog({ receiverName: 'Bob', sessionId: 's2' }),
       ];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
       render(<CometChatCallLogs />);
       expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -369,19 +292,9 @@ describe('CometChatCallLogs', () => {
     });
 
     it('renders the header with title', () => {
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [buildMockCallLog()],
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: [buildMockCallLog()], fetchState: 'loaded' })
+      );
 
       render(<CometChatCallLogs />);
       expect(screen.getByText('Call Logs')).toBeInTheDocument();
@@ -395,19 +308,9 @@ describe('CometChatCallLogs', () => {
       const onItemClick = vi.fn();
       const calls = [buildMockCallLog({ receiverName: 'Alice' })];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
       render(<CometChatCallLogs onItemClick={onItemClick} />);
       fireEvent.click(screen.getByText('Alice'));
@@ -415,29 +318,19 @@ describe('CometChatCallLogs', () => {
       expect(onItemClick).toHaveBeenCalledWith(calls[0]);
     });
 
-    it('calls handleCallButtonClick when trailing view is clicked', () => {
-      const handleCallButtonClick = vi.fn();
+    it('calls onCallButtonClicked when trailing view is clicked', () => {
+      const onCallButtonClicked = vi.fn();
       const calls = [buildMockCallLog({ type: 'audio' })];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick,
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
-      render(<CometChatCallLogs />);
+      render(<CometChatCallLogs onCallButtonClicked={onCallButtonClicked} />);
       const callButton = screen.getByRole('button', { name: 'Voice call' });
       fireEvent.click(callButton);
 
-      expect(handleCallButtonClick).toHaveBeenCalledWith(calls[0]);
+      expect(onCallButtonClicked).toHaveBeenCalledWith(calls[0]);
     });
   });
 
@@ -447,19 +340,9 @@ describe('CometChatCallLogs', () => {
     it('renders custom itemView when provided', () => {
       const calls = [buildMockCallLog()];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
       render(
         <CometChatCallLogs itemView={() => <div data-testid="custom-item">Custom Item</div>} />
@@ -470,19 +353,9 @@ describe('CometChatCallLogs', () => {
     it('renders custom leadingView when provided', () => {
       const calls = [buildMockCallLog()];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
       render(
         <CometChatCallLogs
@@ -495,19 +368,9 @@ describe('CometChatCallLogs', () => {
     it('renders custom titleView when provided', () => {
       const calls = [buildMockCallLog()];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
       render(
         <CometChatCallLogs titleView={() => <div data-testid="custom-title">Custom Title</div>} />
@@ -518,19 +381,9 @@ describe('CometChatCallLogs', () => {
     it('renders custom subtitleView when provided', () => {
       const calls = [buildMockCallLog()];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
       render(
         <CometChatCallLogs
@@ -543,19 +396,9 @@ describe('CometChatCallLogs', () => {
     it('renders custom trailingView when provided', () => {
       const calls = [buildMockCallLog()];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
       render(
         <CometChatCallLogs
@@ -566,108 +409,46 @@ describe('CometChatCallLogs', () => {
     });
   });
 
-  // ─── Outgoing call overlay ──────────────────────────────────────
+  // ─── Trailing call buttons ─────────────────────────────────────
+  // Call initiation now lives in CometChatCallButtons, rendered in the
+  // default trailing view when no onCallButtonClicked/trailingView is given.
 
-  describe('outgoing call overlay', () => {
-    it('renders CometChatOutgoingCall when showOutgoingCallScreen is true', () => {
-      const activeCallObj = {
-        getSessionId: () => 'session-out',
-        getType: () => 'audio',
-      } as unknown as CometChat.Call;
+  describe('trailing call buttons', () => {
+    it('renders CometChatCallButtons in the default trailing view', () => {
+      const calls = [buildMockCallLog({ type: 'audio' })];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: true,
-        showOngoingCall: false,
-        activeCallObj,
-        callSessionId: null,
-      });
-
-      render(<CometChatCallLogs />);
-      expect(screen.getByTestId('outgoing-call')).toBeInTheDocument();
-    });
-
-    it('calls cancelOutgoingCall when outgoing call is canceled', () => {
-      const cancelOutgoingCall = vi.fn();
-      const activeCallObj = {
-        getSessionId: () => 'session-out',
-        getType: () => 'audio',
-      } as unknown as CometChat.Call;
-
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall,
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: true,
-        showOngoingCall: false,
-        activeCallObj,
-        callSessionId: null,
-      });
-
-      render(<CometChatCallLogs />);
-      fireEvent.click(screen.getByText('Cancel'));
-
-      expect(cancelOutgoingCall).toHaveBeenCalled();
-    });
-  });
-
-  // ─── Ongoing call overlay ──────────────────────────────────────
-
-  describe('ongoing call overlay', () => {
-    it('renders CometChatOngoingCall when showOngoingCall is true', () => {
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: true,
-        activeCallObj: null,
-        callSessionId: 'session-ongoing',
-      });
-
-      render(<CometChatCallLogs />);
-      expect(screen.getByTestId('ongoing-call')).toBeInTheDocument();
-      expect(screen.getByTestId('ongoing-call')).toHaveAttribute(
-        'data-session-id',
-        'session-ongoing'
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
       );
-    });
-
-    it('calls closeCallScreen when ongoing call ends', () => {
-      const closeCallScreen = vi.fn();
-
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: [],
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen,
-        showOutgoingCallScreen: false,
-        showOngoingCall: true,
-        activeCallObj: null,
-        callSessionId: 'session-ongoing',
-      });
 
       render(<CometChatCallLogs />);
-      fireEvent.click(screen.getByText('End'));
+      expect(screen.getByTestId('call-buttons')).toBeInTheDocument();
+    });
 
-      expect(closeCallScreen).toHaveBeenCalled();
+    it('hides the video button for audio call logs', () => {
+      const calls = [buildMockCallLog({ type: 'audio' })];
+
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
+
+      render(<CometChatCallLogs />);
+      const buttons = screen.getByTestId('call-buttons');
+      expect(buttons).toHaveAttribute('data-hide-video', 'true');
+      expect(buttons).toHaveAttribute('data-hide-voice', 'false');
+    });
+
+    it('hides the voice button for video call logs', () => {
+      const calls = [buildMockCallLog({ type: 'video' })];
+
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
+
+      render(<CometChatCallLogs />);
+      const buttons = screen.getByTestId('call-buttons');
+      expect(buttons).toHaveAttribute('data-hide-voice', 'true');
+      expect(buttons).toHaveAttribute('data-hide-video', 'false');
     });
   });
 
@@ -680,19 +461,9 @@ describe('CometChatCallLogs', () => {
         buildMockCallLog({ receiverName: `User ${i}`, sessionId: `s${i}` })
       );
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext,
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded', fetchNext })
+      );
 
       const { container } = render(<CometChatCallLogs />);
       const listEl = container.querySelector('[class*="call-logs__list"]');
@@ -715,42 +486,22 @@ describe('CometChatCallLogs', () => {
     it('trailing view has correct aria-label for audio calls', () => {
       const calls = [buildMockCallLog({ type: 'audio' })];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
-      render(<CometChatCallLogs />);
+      render(<CometChatCallLogs onCallButtonClicked={vi.fn()} />);
       expect(screen.getByRole('button', { name: 'Voice call' })).toBeInTheDocument();
     });
 
     it('trailing view has correct aria-label for video calls', () => {
       const calls = [buildMockCallLog({ type: 'video' })];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
-      render(<CometChatCallLogs />);
+      render(<CometChatCallLogs onCallButtonClicked={vi.fn()} />);
       expect(screen.getByRole('button', { name: 'Video call' })).toBeInTheDocument();
     });
 
@@ -758,19 +509,9 @@ describe('CometChatCallLogs', () => {
       const onItemClick = vi.fn();
       const calls = [buildMockCallLog({ receiverName: 'Alice' })];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick: vi.fn(),
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
       render(<CometChatCallLogs onItemClick={onItemClick} />);
       const item = screen.getByText('Alice').closest('[role="button"]');
@@ -783,28 +524,18 @@ describe('CometChatCallLogs', () => {
     });
 
     it('trailing view responds to keyboard Enter', () => {
-      const handleCallButtonClick = vi.fn();
+      const onCallButtonClicked = vi.fn();
       const calls = [buildMockCallLog({ type: 'audio' })];
 
-      mockUseCometChatCallLogs.mockReturnValue({
-        callList: calls,
-        fetchState: 'loaded',
-        loggedInUser: mockLoggedInUser,
-        fetchNext: vi.fn(),
-        handleCallButtonClick,
-        cancelOutgoingCall: vi.fn(),
-        closeCallScreen: vi.fn(),
-        showOutgoingCallScreen: false,
-        showOngoingCall: false,
-        activeCallObj: null,
-        callSessionId: null,
-      });
+      mockUseCometChatCallLogs.mockReturnValue(
+        buildHookValue({ callList: calls, fetchState: 'loaded' })
+      );
 
-      render(<CometChatCallLogs />);
+      render(<CometChatCallLogs onCallButtonClicked={onCallButtonClicked} />);
       const callButton = screen.getByRole('button', { name: 'Voice call' });
       fireEvent.keyDown(callButton, { key: 'Enter' });
 
-      expect(handleCallButtonClick).toHaveBeenCalledWith(calls[0]);
+      expect(onCallButtonClicked).toHaveBeenCalledWith(calls[0]);
     });
   });
 

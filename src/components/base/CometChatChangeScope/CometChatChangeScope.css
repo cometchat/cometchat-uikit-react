@@ -16,6 +16,12 @@
   box-sizing: border-box;
 }
 
+/* Container is focused on open for the focus trap — don't paint a ring on it. */
+.cometchat-change-scope:focus,
+.cometchat-change-scope:focus-visible {
+  outline: none;
+}
+
 /* Header */
 .cometchat-change-scope__header {
   display: flex;

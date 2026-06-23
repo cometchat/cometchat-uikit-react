@@ -39,13 +39,11 @@ export const CometChatMessageListDateSeparator: React.FC<
       role="separator"
       aria-label={getLocalizedString('accessibility_date_separator')}
     >
-      <CometChatDate.Root
+      <CometChatDate
         timestamp={timestamp}
         variant="separator"
         formatConfig={resolvedFormatConfig}
-      >
-        <CometChatDate.Text />
-      </CometChatDate.Root>
+      />
     </div>
   );
 };

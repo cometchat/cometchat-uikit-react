@@ -120,9 +120,9 @@ export class CometChatSoundManager {
         isActive?: boolean;
         hasBeenActive?: boolean;
       };
-      return Boolean(activation.isActive ?? activation.hasBeenActive);
+      if (activation.isActive) return true;
+      return Boolean(activation.hasBeenActive);
     }
-    // Fallback: assume interaction happened
     return true;
   }
 }

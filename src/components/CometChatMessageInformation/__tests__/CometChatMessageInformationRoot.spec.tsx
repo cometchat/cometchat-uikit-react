@@ -7,6 +7,13 @@ import { useCometChatMessageInformationContext } from '../CometChatMessageInform
 import { buildTextMessage } from '../../../testing/mock-builders';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 
+vi.mock('../../../context/locale/LocaleContext', () => ({
+  useLocale: () => ({
+    getLocalizedString: (key: string) => key,
+    language: 'en-us',
+  }),
+}));
+
 vi.mock('@cometchat/chat-sdk-javascript', async importOriginal => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   const actualCometChat = (actual.CometChat ?? {}) as Record<string, unknown>;

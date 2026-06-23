@@ -16,6 +16,10 @@ export interface CometChatGlobalConfig {
   disableSoundForCalls?: boolean;
   /** Custom sound URL for calls. */
   customSoundForCalls?: string;
+  /** Disable sound for incoming messages across all components. Default: false. */
+  disableSoundForMessages?: boolean;
+  /** Custom sound URL for incoming messages. */
+  customSoundForMessages?: string;
   /**
    * Custom call settings builder for ongoing call sessions.
    * Passed to OngoingCall component when a call is started.

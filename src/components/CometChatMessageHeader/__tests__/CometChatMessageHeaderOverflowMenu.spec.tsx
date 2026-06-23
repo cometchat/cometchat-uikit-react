@@ -5,6 +5,13 @@ import { CometChatMessageHeaderOverflowMenu } from '../CometChatMessageHeaderOve
 import { CometChatMessageHeaderContext } from '../CometChatMessageHeader.context';
 import type { CometChatMessageHeaderContextValue } from '../CometChatMessageHeader.types';
 
+vi.mock('../../../context/locale/LocaleContext', () => ({
+  useLocale: () => ({
+    getLocalizedString: (key: string) => key,
+    language: 'en-us',
+  }),
+}));
+
 // Mock the CometChatContextMenu compound component so we can test
 // the OverflowMenu's rendering and click behavior in isolation.
 vi.mock('../../base/CometChatContextMenu', () => {
@@ -56,17 +63,7 @@ function createContextValue(
     avatarName: '',
     isUserConversation: false,
     isGroupConversation: false,
-    callButtonsDisabled: false,
-    showOutgoingCallScreen: false,
-    showOngoingCall: false,
-    callSessionId: '',
-    isDirectCalling: false,
-    isGroupAudioCall: false,
-    activeCall: null,
-    initiateAudioCall: vi.fn().mockResolvedValue(undefined),
-    initiateVideoCall: vi.fn().mockResolvedValue(undefined),
-    cancelOutgoingCall: vi.fn().mockResolvedValue(undefined),
-    resetCallState: vi.fn(),
+    summaryGenerationMessageCount: 1000,
     ...overrides,
   };
 }
@@ -94,7 +91,7 @@ describe('CometChatMessageHeaderOverflowMenu', () => {
 
   it('renders a trigger button with "More options" aria-label', () => {
     renderOverflowMenu();
-    expect(screen.getByRole('button', { name: 'More options' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'accessibility_more_options' })).toBeInTheDocument();
   });
 
   it('renders the dropdown container', () => {
@@ -106,8 +103,8 @@ describe('CometChatMessageHeaderOverflowMenu', () => {
     renderOverflowMenu();
     expect(screen.getByTestId('context-menu-item-search')).toBeInTheDocument();
     expect(screen.getByTestId('context-menu-item-summary')).toBeInTheDocument();
-    expect(screen.getByText('Search')).toBeInTheDocument();
-    expect(screen.getByText('Conversation Summary')).toBeInTheDocument();
+    expect(screen.getByText('search_title')).toBeInTheDocument();
+    expect(screen.getByText('ai_conversation_summary_title')).toBeInTheDocument();
   });
 
   it('calls onSearchOptionClicked when Search item is clicked', () => {

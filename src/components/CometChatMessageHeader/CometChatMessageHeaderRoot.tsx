@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo, useRef } from 'react';
-import { CometChat } from '@cometchat/chat-sdk-javascript';
 import type {
   CometChatMessageHeaderRootProps,
   CometChatMessageHeaderContextValue,
@@ -17,9 +16,8 @@ import { CometChatMessageHeaderCallButtons } from './CometChatMessageHeaderCallB
 import { CometChatMessageHeaderSearchButton } from './CometChatMessageHeaderSearchButton';
 import { CometChatMessageHeaderSummaryButton } from './CometChatMessageHeaderSummaryButton';
 import { CometChatMessageHeaderOverflowMenu } from './CometChatMessageHeaderOverflowMenu';
-import { CometChatOngoingCall } from '../CometChatOngoingCall/CometChatOngoingCall';
-import { CometChatOutgoingCall } from '../CometChatOutgoingCall/CometChatOutgoingCall';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useGlobalConfig } from '../../context/GlobalConfigContext';
 import './CometChatMessageHeader.css';
 
 /**
@@ -28,11 +26,13 @@ import './CometChatMessageHeader.css';
  * Provides message header context to all sub-components.
  * If no children are provided, renders the default layout:
  * BackButton (optional) + Content (Avatar + Title + Subtitle) + Trailing (CallButtons + Menu).
+ *
+ * Call logic is fully delegated to CometChatCallButtons (rendered by CometChatMessageHeaderCallButtons).
  */
 export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProps> = ({
   user,
   group,
-  hideUserStatus = false,
+  hideUserStatus: hideUserStatusProp,
   hideBackButton = false,
   showSearchOption = true,
   showConversationSummaryButton = false,
@@ -40,6 +40,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
   summaryGenerationMessageCount = 1000,
   hideVoiceCallButton = false,
   hideVideoCallButton = false,
+  callSettingsBuilder,
   onBack,
   onItemClick,
   onSearchOptionClicked,
@@ -50,6 +51,8 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
   className,
   children,
 }) => {
+  const globalConfig = useGlobalConfig();
+  const hideUserStatus = hideUserStatusProp ?? globalConfig.hideUserStatus ?? false;
   const hookResult = useCometChatMessageHeader({
     user,
     group,
@@ -61,11 +64,10 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
 
   const publish = usePublishEvent();
 
-  // and enableAutoSummaryGeneration is true, it auto-fires loadConversationSummary().
   const onSummaryClickRef = useRef(onSummaryClick);
   onSummaryClickRef.current = onSummaryClick;
 
-  // Default summary click handler: publishes ui:panel/show event to show
+  // Default summary click handler: publishes ui:panel/show event
   const defaultSummaryClick = useCallback(() => {
     publish({ type: 'ui:panel/show', position: 'messageListFooter', panel: 'conversationSummary' });
   }, [publish]);
@@ -145,7 +147,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
     getLocalizedString,
   ]);
 
-  // Build context value
+  // Build context value (no longer includes call state/actions)
   const contextValue: CometChatMessageHeaderContextValue = useMemo(
     () => ({
       user: user ?? null,
@@ -161,27 +163,12 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
       avatarName,
       isUserConversation,
       isGroupConversation,
-      // Call state
-      callButtonsDisabled: hookResult.callButtonsDisabled,
-      showOutgoingCallScreen: hookResult.showOutgoingCallScreen,
-      showOngoingCall: hookResult.showOngoingCall,
-      callSessionId: hookResult.callSessionId,
-      isDirectCalling: hookResult.isDirectCalling,
-      isGroupAudioCall: hookResult.isGroupAudioCall,
-      activeCall: hookResult.activeCall,
-      // Actions
-      initiateAudioCall: hookResult.initiateAudioCall,
-      initiateVideoCall: hookResult.initiateVideoCall,
-      cancelOutgoingCall: hookResult.cancelOutgoingCall,
-      resetCallState: hookResult.resetCallState,
       // Callbacks
       onBack,
       onItemClick,
       onSearchOptionClicked,
       onSummaryClick: effectiveSummaryClick,
       summaryGenerationMessageCount,
-      onVoiceCallClick,
-      onVideoCallClick,
     }),
     [
       user,
@@ -198,8 +185,6 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
       onSearchOptionClicked,
       effectiveSummaryClick,
       summaryGenerationMessageCount,
-      onVoiceCallClick,
-      onVideoCallClick,
     ]
   );
 
@@ -207,8 +192,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
     .filter(Boolean)
     .join(' ');
 
-  // Determine trailing section content
-  // Determine trailing section content — call buttons hidden by default when calling is not enabled
+  // Determine trailing section content — call buttons hidden when calling is not enabled
   const callingEnabled = CometChatUIKit.getSettings()?.isCallingEnabled() ?? false;
   const effectiveHideVoiceCall = hideVoiceCallButton || !callingEnabled;
   const effectiveHideVideoCall = hideVideoCallButton || !callingEnabled;
@@ -246,7 +230,17 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
 
             {/* Trailing: Call Buttons + Menu */}
             <div className={'cometchat-message-header__trailing'}>
-              {showCallButtons && <CometChatMessageHeaderCallButtons />}
+              {showCallButtons && (
+                <CometChatMessageHeaderCallButtons
+                  onVoiceCallClick={onVoiceCallClick}
+                  onVideoCallClick={onVideoCallClick}
+                  onError={onError}
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                  callSettingsBuilder={callSettingsBuilder}
+                  hideVoiceCallButton={effectiveHideVoiceCall}
+                  hideVideoCallButton={effectiveHideVideoCall}
+                />
+              )}
 
               {/* Menu Section */}
               <div className={'cometchat-message-header__menu-buttons'}>
@@ -258,48 +252,6 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
           </>
         )}
       </div>
-      {/* Outgoing Call — overlay shown when initiating a call */}
-      {hookResult.showOutgoingCallScreen && hookResult.activeCall && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9998,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.5)',
-          }}
-        >
-          <CometChatOutgoingCall
-            call={hookResult.activeCall}
-            onCallCanceled={() => void hookResult.cancelOutgoingCall()}
-            onError={
-              onError
-                ? (error: CometChat.CometChatException) => {
-                    onError(error);
-                  }
-                : null
-            }
-          />
-        </div>
-      )}
-      {/* Ongoing Call — full-screen overlay when a call is active */}
-      {hookResult.showOngoingCall && hookResult.callSessionId && (
-        <CometChatOngoingCall
-          sessionID={hookResult.callSessionId}
-          isAudioOnly={hookResult.isGroupAudioCall || hookResult.activeCall?.getType() === 'audio'}
-          isDirectCalling={hookResult.isDirectCalling}
-          onCallEnded={hookResult.resetCallState}
-          onError={
-            onError
-              ? (error: CometChat.CometChatException) => {
-                  onError(error);
-                }
-              : null
-          }
-        />
-      )}
     </CometChatMessageHeaderContext.Provider>
   );
 };

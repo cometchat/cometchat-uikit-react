@@ -56,10 +56,7 @@ export const CometChatUsersSelectedPreview: React.FC<CometChatUsersSelectedPrevi
           return (
             <div key={uid} className={'cometchat-users__selected-preview-chip'}>
               <div className={'cometchat-users__selected-preview-chip-avatar'}>
-                <CometChatAvatar.Root name={name} image={avatar} size="small">
-                  <CometChatAvatar.Image />
-                  <CometChatAvatar.Initials />
-                </CometChatAvatar.Root>
+                <CometChatAvatar name={name} image={avatar} size="small" />
               </div>
               <span className={'cometchat-users__selected-preview-chip-name'}>{displayName}</span>
               <button

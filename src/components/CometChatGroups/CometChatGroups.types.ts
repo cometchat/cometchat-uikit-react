@@ -155,6 +155,8 @@ export interface CometChatGroupsContextValue {
   hideGroupType: boolean;
   /** Whether to hide the search bar. */
   hideSearch: boolean;
+  /** Whether to show the native scrollbar. Default: false (hidden). */
+  showScrollbar: boolean;
   /** Context menu options function. */
   options?: ((group: CometChat.Group) => CometChatGroupOption[]) | undefined;
 

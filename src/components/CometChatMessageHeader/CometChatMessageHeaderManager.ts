@@ -233,28 +233,3 @@ export function attachConnectionListener(
     CometChat.removeConnectionListener(listenerId);
   };
 }
-
-// --- Call Listener ---
-
-export function attachCallListener(
-  listenerId: string,
-  callbacks: {
-    onIncomingCallReceived: (call: CometChat.Call) => void;
-    onIncomingCallCancelled: (call: CometChat.Call) => void;
-    onOutgoingCallAccepted: (call: CometChat.Call) => void;
-    onOutgoingCallRejected: (call: CometChat.Call) => void;
-  }
-): () => void {
-  CometChat.addCallListener(
-    listenerId,
-    new CometChat.CallListener({
-      onIncomingCallReceived: callbacks.onIncomingCallReceived,
-      onIncomingCallCancelled: callbacks.onIncomingCallCancelled,
-      onOutgoingCallAccepted: callbacks.onOutgoingCallAccepted,
-      onOutgoingCallRejected: callbacks.onOutgoingCallRejected,
-    })
-  );
-  return () => {
-    CometChat.removeCallListener(listenerId);
-  };
-}

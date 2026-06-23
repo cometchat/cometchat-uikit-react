@@ -13,7 +13,7 @@ import type { CometChat } from '@cometchat/chat-sdk-javascript';
 
 vi.mock('../../../hooks/useLocale', () => ({
   useLocale: () => ({
-    t: (key: string) => key,
+    getLocalizedString: (key: string) => key,
     language: 'en-us',
   }),
 }));

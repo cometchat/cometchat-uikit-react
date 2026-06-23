@@ -33,6 +33,7 @@ import type {
   CometChatSearchMessageClickEvent,
 } from './CometChatSearch.types';
 import type { CometChatFetchState } from '../../types';
+import { useGlobalConfig } from '../../context/GlobalConfigContext';
 import './CometChatSearch.css';
 
 const DEFAULT_FILTERS: CometChatSearchFilter[] = [
@@ -73,9 +74,9 @@ export const CometChatSearchRoot: React.FC<CometChatSearchRootProps> = ({
   uid,
   guid,
   hideBackButton = false,
-  hideUserStatus = false,
+  hideUserStatus: hideUserStatusProp,
   hideGroupType = false,
-  hideReceipts = false,
+  hideReceipts: hideReceiptsProp,
   textFormatters = [],
   conversationsRequestBuilder,
   messagesRequestBuilder,
@@ -104,6 +105,10 @@ export const CometChatSearchRoot: React.FC<CometChatSearchRootProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const globalConfig = useGlobalConfig();
+  const hideUserStatus = hideUserStatusProp ?? globalConfig.hideUserStatus ?? false;
+  const hideReceipts = hideReceiptsProp ?? globalConfig.hideReceipts ?? false;
 
   // ── Search state ──
   const [searchValue, setSearchValueState] = useState(defaultSearchText);

@@ -14,7 +14,7 @@ export class CometChatUrlFormatter extends CometChatTextFormatter {
   private urls: string[] = [];
 
   getRegex(): RegExp {
-    return /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
+    return /(https?:\/\/[^\s<]+)|(www\.[^\s<]+)/gi;
   }
 
   format(text: string): string {

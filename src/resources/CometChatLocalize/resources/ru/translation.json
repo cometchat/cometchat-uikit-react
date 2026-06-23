@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Вы уверены, что хотите передать владение? Это действие нельзя отменить, и новый владелец получит полный контроль.",
   "transfer": "Передать",
   "transferring": "Передача...",
-  "transfer_failed": "Передача не удалась. Пожалуйста, попробуйте снова."
+  "transfer_failed": "Передача не удалась. Пожалуйста, попробуйте снова.",
+  "loading": "Загрузка...",
+  "retry": "Повторить",
+  "notifications_title": "Уведомления",
+  "notifications_filter_all": "Все",
+  "notifications_empty_title": "Пока ничего нет",
+  "notifications_empty_subtitle": "Новая активность появится здесь, когда будет доступна.",
+  "notifications_error_title": "Ой!",
+  "notifications_error_subtitle": "Кажется, что-то пошло не так. Пожалуйста, попробуйте снова.",
+  "notifications_pagination_error": "Не удалось загрузить ещё",
+  "notifications_tap_to_retry": "Нажмите, чтобы повторить",
+  "notifications_offline_banner": "Вы не в сети. Показаны кэшированные уведомления."
 }

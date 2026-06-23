@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Adakah anda pasti mahu memindahkan pemilikan? Ini tidak boleh dibatalkan, dan pemilik baharu akan mempunyai kawalan penuh.",
   "transfer": "Pindahkan",
   "transferring": "Memindahkan...",
-  "transfer_failed": "Pemindahan gagal. Sila cuba lagi."
+  "transfer_failed": "Pemindahan gagal. Sila cuba lagi.",
+  "loading": "Memuatkan...",
+  "retry": "Cuba semula",
+  "notifications_title": "Pemberitahuan",
+  "notifications_filter_all": "Semua",
+  "notifications_empty_title": "Belum ada apa-apa di sini",
+  "notifications_empty_subtitle": "Aktiviti baharu akan muncul di sini apabila tersedia.",
+  "notifications_error_title": "Alamak!",
+  "notifications_error_subtitle": "Nampaknya ada masalah. Sila cuba semula.",
+  "notifications_pagination_error": "Tidak dapat memuatkan lagi",
+  "notifications_tap_to_retry": "Ketik untuk cuba semula",
+  "notifications_offline_banner": "Anda di luar talian. Menunjukkan pemberitahuan yang dicache."
 }

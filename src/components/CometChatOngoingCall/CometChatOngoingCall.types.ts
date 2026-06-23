@@ -60,7 +60,6 @@ export interface CometChatOngoingCallProps {
    */
   callSettings?: SessionSettings;
   /**
-   * @deprecated Use `callSettings` instead. This prop is kept for backward compatibility.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   callSettingsBuilder?: any;

@@ -8,7 +8,7 @@ import { CometChatEmojiKeyboardContext } from '../CometChatEmojiKeyboard.context
 // Mock useLocale
 vi.mock('../../../../context/locale/LocaleContext', () => ({
   useLocale: () => ({
-    t: (key: string) => {
+    getLocalizedString: (key: string) => {
       const translations: Record<string, string> = {
         emoji_search_placeholder: 'Search emoji...',
       };
@@ -30,12 +30,12 @@ vi.mock('../../CometChatSearchBar', () => ({
           <input
             data-testid="search-input"
             type="text"
-            value={typeof props.value === 'string' ? props.value : ''}
+            defaultValue={typeof props.searchText === 'string' ? props.searchText : ''}
             onChange={e => {
               const onChange = props.onChange as ((v: string) => void) | undefined;
               onChange?.(e.target.value);
             }}
-            placeholder={props.placeholder as string}
+            placeholder={props.placeholderText as string}
           />
           {props.children as React.ReactNode}
         </div>
@@ -101,13 +101,13 @@ describe('CometChatEmojiKeyboardSearchBar', () => {
   it('uses default localized placeholder when none provided', () => {
     const ctx = createMockContext();
     renderWithContext(ctx);
-    expect(capturedSearchBarProps.placeholder).toBe('Search emoji...');
+    expect(capturedSearchBarProps.placeholderText).toBe('Search emoji...');
   });
 
   it('uses custom placeholder when provided', () => {
     const ctx = createMockContext();
     renderWithContext(ctx, { placeholder: 'Find an emoji' });
-    expect(capturedSearchBarProps.placeholder).toBe('Find an emoji');
+    expect(capturedSearchBarProps.placeholderText).toBe('Find an emoji');
   });
 
   // --- Value binding ---
@@ -115,7 +115,7 @@ describe('CometChatEmojiKeyboardSearchBar', () => {
   it('passes searchQuery from context as value', () => {
     const ctx = createMockContext({ searchQuery: 'smile' });
     renderWithContext(ctx);
-    expect(capturedSearchBarProps.value).toBe('smile');
+    expect(capturedSearchBarProps.searchText).toBe('smile');
   });
 
   // --- onChange ---

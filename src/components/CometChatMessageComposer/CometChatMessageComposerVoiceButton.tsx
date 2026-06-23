@@ -49,6 +49,10 @@ export const CometChatMessageComposerVoiceButton: React.FC<
       type="button"
       className={btnClass}
       onClick={handleToggle}
+      onKeyDown={e => {
+        e.preventDefault();
+        handleToggle();
+      }}
       aria-label={getLocalizedString('VOICE_RECORDING')}
       aria-hidden={!showVoiceButton}
       tabIndex={showVoiceButton ? 0 : -1}

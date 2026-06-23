@@ -53,7 +53,7 @@ export function isActivated(command: string): boolean {
 function execInlineFormat(command: string, ctx: EditorContext): void {
   let stateBefore = false;
   try {
-    stateBefore = document.queryCommandState(command);
+    stateBefore = ctx.getDocument().queryCommandState(command);
   } catch {
     // ignore
   }
@@ -63,11 +63,11 @@ function execInlineFormat(command: string, ctx: EditorContext): void {
   // previous toolbar clicks (e.g., bold armed, then underline clicked).
   ctx.markFormattingApplied();
   ctx.focus();
-  document.execCommand(command, false);
+  ctx.execCommand(command);
 
   let stateAfter = false;
   try {
-    stateAfter = document.queryCommandState(command);
+    stateAfter = ctx.getDocument().queryCommandState(command);
   } catch {
     // ignore
   }
@@ -108,7 +108,7 @@ export function queryInlineFormatState(
   if (activatedFormats.has(command)) return true;
 
   try {
-    return document.queryCommandState(command);
+    return ctx.getDocument().queryCommandState(command);
   } catch {
     // Only use DOM fallback if queryCommandState throws
     return tags.some(tag => ctx.hasAncestor(node, tag));

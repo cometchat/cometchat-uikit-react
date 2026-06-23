@@ -27,9 +27,8 @@ import { fixOrderedListContinuation } from '../formats/ListFormat';
  * Attempt to detect and convert inline markdown at the current cursor position.
  * Returns true if a conversion was applied, false otherwise.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function detectAndConvertMarkdown(_ctx?: EditorContext): boolean {
-  const sel = window.getSelection();
+export function detectAndConvertMarkdown(ctx: EditorContext): boolean {
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return false;
 
   const range = sel.getRangeAt(0);
@@ -112,23 +111,25 @@ function applyInlineFormat(
   const end = cursor;
   const start = end - fullMatch.length;
 
-  const range = document.createRange();
+  const doc = textNode.ownerDocument;
+  if (!doc) return;
+  const range = doc.createRange();
   range.setStart(textNode, start);
   range.setEnd(textNode, end);
   range.deleteContents();
 
-  const el = document.createElement(tag);
+  const el = doc.createElement(tag);
   el.textContent = content;
   range.insertNode(el);
 
   // Place cursor in a ZWS text node after the element so the next keystroke
   // is typed outside the formatted span.
-  const exit = document.createTextNode('\u200B');
+  const exit = doc.createTextNode('\u200B');
   el.after(exit);
-  const newRange = document.createRange();
+  const newRange = doc.createRange();
   newRange.setStart(exit, 1);
   newRange.collapse(true);
-  const sel = window.getSelection();
+  const sel = doc.defaultView?.getSelection();
   sel?.removeAllRanges();
   sel?.addRange(newRange);
 }
@@ -144,24 +145,26 @@ function applyLinkFormat(textNode: Node, match: RegExpMatchArray, cursor: number
   const end = cursor;
   const start = end - fullMatch.length;
 
-  const range = document.createRange();
+  const doc = textNode.ownerDocument;
+  if (!doc) return;
+  const range = doc.createRange();
   range.setStart(textNode, start);
   range.setEnd(textNode, end);
   range.deleteContents();
 
-  const a = document.createElement('a');
+  const a = doc.createElement('a');
   a.href = url;
   a.textContent = label;
   a.setAttribute('target', '_blank');
   a.setAttribute('rel', 'noopener noreferrer');
   range.insertNode(a);
 
-  const exit = document.createTextNode('\u200B');
+  const exit = doc.createTextNode('\u200B');
   a.after(exit);
-  const newRange = document.createRange();
+  const newRange = doc.createRange();
   newRange.setStart(exit, 1);
   newRange.collapse(true);
-  const sel = window.getSelection();
+  const sel = doc.defaultView?.getSelection();
   sel?.removeAllRanges();
   sel?.addRange(newRange);
 }

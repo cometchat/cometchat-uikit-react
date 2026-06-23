@@ -5,6 +5,7 @@ import { useCometChatMessageInformation } from './useCometChatMessageInformation
 import { CometChatMessageInformationHeader } from './CometChatMessageInformationHeader';
 import { CometChatMessageInformationMessagePreview } from './CometChatMessageInformationMessagePreview';
 import { CometChatMessageInformationReceiptList } from './CometChatMessageInformationReceiptList';
+import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import './CometChatMessageInformation.css';
 
 const DEFAULT_DATE_FORMAT = {
@@ -33,6 +34,11 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
 
   const {
     fetchState,
@@ -54,21 +60,17 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
   // --- Focus management ---
   useEffect(() => {
     // Store the element that had focus before the panel opened
-    previousFocusRef.current = document.activeElement as HTMLElement;
+    previousFocusRef.current = getCurrentDocument().activeElement as HTMLElement;
 
-    // Focus the close button on mount
-    const closeButton = panelRef.current?.querySelector<HTMLElement>(
-      '[data-cometchat-message-info-close]'
-    );
-    if (closeButton) {
-      closeButton.focus();
-    }
+    // Focus the panel container, not the close button — traps focus for
+    // accessibility without painting a focus ring on the close button on open.
+    panelRef.current?.focus();
 
     return () => {
       // Return focus to the trigger element on unmount
       previousFocusRef.current?.focus();
     };
-  }, []);
+  }, [getCurrentDocument]);
 
   // --- Keyboard handler (Escape to close, focus trap) ---
   const handleKeyDown = useCallback(
@@ -90,19 +92,19 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
         const lastElement = focusableElements[focusableElements.length - 1];
 
         if (event.shiftKey) {
-          if (document.activeElement === firstElement) {
+          if (getCurrentDocument().activeElement === firstElement) {
             event.preventDefault();
             lastElement?.focus();
           }
         } else {
-          if (document.activeElement === lastElement) {
+          if (getCurrentDocument().activeElement === lastElement) {
             event.preventDefault();
             firstElement?.focus();
           }
         }
       }
     },
-    [handleClose]
+    [handleClose, getCurrentDocument]
   );
 
   const contextValue = useMemo(
@@ -145,6 +147,7 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
       <div
         ref={panelRef}
         className={rootClass}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="cometchat-message-info-title"

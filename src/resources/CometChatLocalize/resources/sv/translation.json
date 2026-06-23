@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Är du säker på att du vill överföra ägandeskapet? Detta kan inte ångras och den nya ägaren får full kontroll.",
   "transfer": "Överför",
   "transferring": "Överför...",
-  "transfer_failed": "Överföringen misslyckades. Försök igen."
+  "transfer_failed": "Överföringen misslyckades. Försök igen.",
+  "loading": "Laddar...",
+  "retry": "Försök igen",
+  "notifications_title": "Aviseringar",
+  "notifications_filter_all": "Alla",
+  "notifications_empty_title": "Inget här ännu",
+  "notifications_empty_subtitle": "Ny aktivitet visas här när den är tillgänglig.",
+  "notifications_error_title": "Hoppsan!",
+  "notifications_error_subtitle": "Något verkar ha gått fel. Försök igen.",
+  "notifications_pagination_error": "Kunde inte ladda mer",
+  "notifications_tap_to_retry": "Tryck för att försöka igen",
+  "notifications_offline_banner": "Du är offline. Visar cachade aviseringar."
 }

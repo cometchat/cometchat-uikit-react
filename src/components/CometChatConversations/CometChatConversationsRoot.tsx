@@ -14,6 +14,7 @@ import type {
 } from './CometChatConversations.types';
 import './CometChatConversations.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useGlobalConfig } from '../../context/GlobalConfigContext';
 
 /**
  * CometChatConversationsRoot — Provider + default layout.
@@ -25,13 +26,13 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
   conversationsRequestBuilder,
   searchRequestBuilder,
   searchKeyword,
-  hideUserStatus = false,
+  hideUserStatus: hideUserStatusProp,
   hideUnreadCount = false,
-  hideReceipts = false,
+  hideReceipts: hideReceiptsProp,
   hideGroupType = false,
   lastMessageDateTimeFormat,
-  disableSoundForMessages = false,
-  customSoundForMessages,
+  disableSoundForMessages: disableSoundForMessagesProp,
+  customSoundForMessages: customSoundForMessagesProp,
   selectionMode = 'none',
   activeConversation,
   options,
@@ -46,6 +47,12 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
   children,
 }) => {
   const { getLocalizedString } = useLocale();
+  const globalConfig = useGlobalConfig();
+  const hideUserStatus = hideUserStatusProp ?? globalConfig.hideUserStatus ?? false;
+  const hideReceipts = hideReceiptsProp ?? globalConfig.hideReceipts ?? false;
+  const disableSoundForMessages =
+    disableSoundForMessagesProp ?? globalConfig.disableSoundForMessages ?? false;
+  const customSoundForMessages = customSoundForMessagesProp ?? globalConfig.customSoundForMessages;
   const hookReturn = useCometChatConversations({
     conversationsRequestBuilder,
     searchRequestBuilder,

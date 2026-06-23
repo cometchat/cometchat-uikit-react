@@ -6,6 +6,7 @@ import type {
 } from './CometChatConversationStarter.types';
 import { CometChatConversationStarterContext } from './CometChatConversationStarter.context';
 import { CometChatConversationStarterItem } from './CometChatConversationStarterItem';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatConversationStarter.css';
 import { useLocale } from '../../../context/locale/LocaleContext';
 
@@ -25,6 +26,11 @@ export const CometChatConversationStarterRoot: React.FC<CometChatConversationSta
   const [error, setError] = useState<Error | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const fetchIdRef = useRef(0);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
 
   const fetchStarters = useCallback(() => {
     const id = ++fetchIdRef.current;
@@ -53,38 +59,41 @@ export const CometChatConversationStarterRoot: React.FC<CometChatConversationSta
     fetchStarters();
   }, [fetchStarters]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    const root = rootRef.current;
-    if (!root) return;
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const root = rootRef.current;
+      if (!root) return;
 
-    if (
-      e.key === 'ArrowRight' ||
-      e.key === 'ArrowDown' ||
-      e.key === 'ArrowLeft' ||
-      e.key === 'ArrowUp' ||
-      e.key === 'Home' ||
-      e.key === 'End'
-    ) {
-      const buttons = Array.from(root.querySelectorAll<HTMLElement>('button:not(:disabled)'));
-      if (buttons.length === 0) return;
+      if (
+        e.key === 'ArrowRight' ||
+        e.key === 'ArrowDown' ||
+        e.key === 'ArrowLeft' ||
+        e.key === 'ArrowUp' ||
+        e.key === 'Home' ||
+        e.key === 'End'
+      ) {
+        const buttons = Array.from(root.querySelectorAll<HTMLElement>('button:not(:disabled)'));
+        if (buttons.length === 0) return;
 
-      const currentIndex = buttons.indexOf(document.activeElement as HTMLElement);
-      let nextIndex: number;
+        const currentIndex = buttons.indexOf(getCurrentDocument().activeElement as HTMLElement);
+        let nextIndex: number;
 
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        nextIndex = currentIndex < buttons.length - 1 ? currentIndex + 1 : 0;
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        nextIndex = currentIndex > 0 ? currentIndex - 1 : buttons.length - 1;
-      } else if (e.key === 'Home') {
-        nextIndex = 0;
-      } else {
-        nextIndex = buttons.length - 1;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          nextIndex = currentIndex < buttons.length - 1 ? currentIndex + 1 : 0;
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          nextIndex = currentIndex > 0 ? currentIndex - 1 : buttons.length - 1;
+        } else if (e.key === 'Home') {
+          nextIndex = 0;
+        } else {
+          nextIndex = buttons.length - 1;
+        }
+
+        e.preventDefault();
+        buttons[nextIndex]?.focus();
       }
-
-      e.preventDefault();
-      buttons[nextIndex]?.focus();
-    }
-  }, []);
+    },
+    [getCurrentDocument]
+  );
 
   const ctxValue = useMemo<CometChatConversationStarterContextValue>(
     () => ({ state, suggestions, error, onSuggestionClick, retry: fetchStarters }),

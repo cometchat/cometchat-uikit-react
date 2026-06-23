@@ -6,7 +6,7 @@ import { CometChatEmojiKeyboardEmptyState } from '../CometChatEmojiKeyboardEmpty
 describe('CometChatEmojiKeyboardEmptyState', () => {
   it('renders default "No emojis found" text when no children provided', () => {
     render(<CometChatEmojiKeyboardEmptyState />);
-    expect(screen.getByText('emoji_keyboard_empty')).toBeInTheDocument();
+    expect(screen.getByText('No emojis found')).toBeInTheDocument();
   });
 
   it('renders custom children when provided', () => {

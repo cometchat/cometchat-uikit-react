@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-deprecated */
 /**
  * AutoListDetector — detects Slack-style auto-block patterns as the user types.
  *
@@ -16,7 +15,7 @@ import type { EditorContext } from '../formats/format.types';
 import { applyListStyles, fixOrderedListContinuation } from './MarkdownDetector';
 
 export function detectAndConvertAutoList(ctx: EditorContext): boolean {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) return false;
 
   const range = sel.getRangeAt(0);
@@ -64,10 +63,10 @@ export function detectAndConvertAutoList(ctx: EditorContext): boolean {
   deletePrefixFromDOM(node, offset, prevSiblingText);
 
   if (listType === 'OL') {
-    document.execCommand('insertOrderedList', false);
+    ctx.execCommand('insertOrderedList');
     fixOrderedListContinuation(ctx.element);
   } else {
-    document.execCommand('insertUnorderedList', false);
+    ctx.execCommand('insertUnorderedList');
   }
   applyListStyles(ctx.element);
   ctx.updateFormatState();
@@ -124,8 +123,10 @@ function isAtStartOfBlock(node: Node, _editorEl: HTMLElement): boolean {
  * Then restores the collapsed range as the active selection.
  */
 function deletePrefixFromDOM(caretNode: Node, caretOffset: number, prevSiblingText: string): void {
-  const sel = window.getSelection();
-  const r = document.createRange();
+  const doc = caretNode.ownerDocument;
+  if (!doc) return;
+  const sel = doc.defaultView?.getSelection();
+  const r = doc.createRange();
 
   if (prevSiblingText.length > 0 && caretNode.previousSibling?.nodeType === Node.TEXT_NODE) {
     r.setStart(caretNode.previousSibling as Text, 0);
@@ -142,7 +143,7 @@ function deletePrefixFromDOM(caretNode: Node, caretOffset: number, prevSiblingTe
 }
 
 function applyBlockquote(ctx: EditorContext): void {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return;
 
   const range = sel.getRangeAt(0);
@@ -156,7 +157,7 @@ function applyBlockquote(ctx: EditorContext): void {
     block = block.parentNode;
   }
 
-  const bq = document.createElement('blockquote');
+  const bq = ctx.getDocument().createElement('blockquote');
   bq.style.borderLeft = '3px solid var(--cometchat-primary-color, #6852d6)';
   bq.style.margin = '0';
   bq.style.paddingLeft = '12px';
@@ -165,7 +166,7 @@ function applyBlockquote(ctx: EditorContext): void {
     block.parentNode?.insertBefore(bq, block);
     bq.appendChild(block);
   } else {
-    const p = document.createElement('p');
+    const p = ctx.getDocument().createElement('p');
     p.style.margin = '0';
     const tn = range.startContainer;
     if (tn.nodeType === Node.TEXT_NODE && tn.parentNode === ctx.element) {
@@ -178,7 +179,7 @@ function applyBlockquote(ctx: EditorContext): void {
   }
 
   const inner = bq.querySelector('p, div, li') ?? bq;
-  const nr = document.createRange();
+  const nr = ctx.getDocument().createRange();
   nr.setStart(inner, inner.childNodes.length);
   nr.collapse(true);
   sel.removeAllRanges();
@@ -186,15 +187,15 @@ function applyBlockquote(ctx: EditorContext): void {
 }
 
 function applyCodeBlock(ctx: EditorContext): void {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return;
 
   const range = sel.getRangeAt(0);
-  const pre = document.createElement('pre');
+  const pre = ctx.getDocument().createElement('pre');
   pre.style.cssText =
     'background:var(--cometchat-neutral-color-200,#f5f5f5);border-radius:4px;padding:8px 12px;margin:4px 0;font-family:monospace;white-space:pre-wrap;overflow-x:auto';
 
-  const code = document.createElement('code');
+  const code = ctx.getDocument().createElement('code');
   code.textContent = '\u200B';
   pre.appendChild(code);
 
@@ -214,7 +215,7 @@ function applyCodeBlock(ctx: EditorContext): void {
     range.insertNode(pre);
   }
 
-  const nr = document.createRange();
+  const nr = ctx.getDocument().createRange();
   if (code.firstChild) {
     nr.setStart(code.firstChild, 1);
   } else {

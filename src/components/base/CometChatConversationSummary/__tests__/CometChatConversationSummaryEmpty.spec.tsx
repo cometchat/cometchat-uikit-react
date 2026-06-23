@@ -11,7 +11,7 @@ describe('CometChatConversationSummaryEmpty', () => {
       </CometChatConversationSummary.Root>
     );
     await waitFor(() => {
-      expect(screen.getByText('conversation_summary_empty')).toBeInTheDocument();
+      expect(screen.getByText('No Summary Available')).toBeInTheDocument();
     });
   });
 

@@ -11,7 +11,7 @@ import {
 import userIcon from '../../assets/user.svg';
 import startChatIcon from '../../assets/start_chat.svg';
 import logoutIcon from '../../assets/logout.svg';
-import '../../styles/CometChatSelector/CometChatSelector.css';
+import './CometChatSelector.css';
 
 interface SelectorProps {
   activeTab?: string;
@@ -48,7 +48,7 @@ export const CometChatSelector = (props: SelectorProps) => {
         title: loggedInUser?.getName() || 'User',
         iconURL: userIcon,
         onClick: () => {},
-        className: 'cometchat-selector-header__menu-item--user',
+        className: 'cometchat-conversations__header-menu-item--user',
       },
       {
         id: 'create-conversation',
@@ -65,7 +65,7 @@ export const CometChatSelector = (props: SelectorProps) => {
         onClick: () => {
           onLogout?.();
         },
-        className: 'cometchat-selector-header__menu-item--logout',
+        className: 'cometchat-conversations__header-menu-item--logout',
       },
     ];
     return options;
@@ -73,10 +73,10 @@ export const CometChatSelector = (props: SelectorProps) => {
 
   const conversationsHeaderView = () => {
     return (
-      <div className="cometchat-selector-header">
-        <div className="cometchat-selector-header__title">{getLocalizedString('chats')}</div>
-        <div className="cometchat-selector-header__menu">
-          <CometChatContextMenu.Root
+      <div className="cometchat-conversations__header">
+        <div className="cometchat-conversations__header-title">{getLocalizedString('chats')}</div>
+        <div className="cometchat-conversations__header-menu">
+          <CometChatContextMenu
             items={getMenuOptions()}
             topMenuSize={0}
             placement="bottom"
@@ -103,7 +103,7 @@ export const CometChatSelector = (props: SelectorProps) => {
         />
       ) : activeTab === 'users' ? (
         <CometChatUsers
-          headerView={<div className="cometchat-selector-header"><div className="cometchat-selector-header__title">{getLocalizedString('users')}</div></div>}
+          headerView={<div className="cometchat-users__header"><div className="cometchat-users__header-title">{getLocalizedString('users')}</div></div>}
           activeUser={activeItem as CometChat.User}
           onItemClick={(e) => {
             onSelectorItemClicked(e, 'updateSelectedItemUser');
@@ -112,15 +112,15 @@ export const CometChatSelector = (props: SelectorProps) => {
       ) : activeTab === 'groups' ? (
         <CometChatGroups
           headerView={
-            <div className="cometchat-selector-header">
-              <div className="cometchat-selector-header__title">{getLocalizedString('groups')}</div>
+            <div className="cometchat-groups__header">
+              <div className="cometchat-groups__header-title">{getLocalizedString('groups')}</div>
               <button
-                className="cometchat-selector-header__create-group-button"
+                className="cometchat-groups__header-create-group-button"
                 onClick={() => onCreateGroupClicked?.()}
                 aria-label="Create group"
                 type="button"
               >
-                <span className="cometchat-selector-header__create-group-icon" />
+                <span className="cometchat-groups__header-create-group-icon" />
               </button>
             </div>
           }

@@ -5,6 +5,7 @@ import { useCometChatSearchMessages } from './useCometChatSearchMessages';
 import { CometChatLocalize } from '../../resources/CometChatLocalize/CometChatLocalize';
 import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import type { CometChatSearchMessagesListProps } from './CometChatSearch.types';
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 import './CometChatSearch.css';
 
 // File type icons
@@ -75,12 +76,13 @@ function getMessageSubtitle(
     text = text.replace(/<strike>([\s\S]*?)<\/strike>/gi, '~~$1~~');
     text = text.replace(/<del>([\s\S]*?)<\/del>/gi, '~~$1~~');
 
-    // Step 2: Strip remaining HTML tags but preserve mention pseudo-tags and <u> tags
+    // Step 2: escape (don't drop) remaining HTML tags so payloads render as inert text;
+    // preserve mention pseudo-tags and <u>. Output is also sanitized at the render sink.
     text = text.replace(/<[^>]*>/g, match => {
       const inner = match.slice(1, -1).trim();
       if (/^\/?u$/i.test(inner)) return match; // preserve <u> and </u>
       if (inner.startsWith('@')) return match; // preserve <@uid:...> mentions
-      return '';
+      return match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     });
 
     // Step 3: Convert markdown to HTML for display
@@ -503,11 +505,13 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                           ? ctx.messageSubtitleView(message)
                           : (() => {
                               const hasThread = !!message.getParentMessageId();
-                              const subtitleHtml = getMessageSubtitle(
-                                message,
-                                CometChatUIKit.getLoggedInUser()?.getUid(),
-                                ctx.uid,
-                                ctx.guid
+                              const subtitleHtml = sanitizeHtml(
+                                getMessageSubtitle(
+                                  message,
+                                  CometChatUIKit.getLoggedInUser()?.getUid(),
+                                  ctx.uid,
+                                  ctx.guid
+                                )
                               );
                               return (
                                 <>

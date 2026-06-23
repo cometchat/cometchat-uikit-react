@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Sahipliği transfer etmek istediğinizden emin misiniz? Bu geri alınamaz ve yeni sahip tam kontrol sahibi olacaktır.",
   "transfer": "Transfer Et",
   "transferring": "Transfer ediliyor...",
-  "transfer_failed": "Transfer başarısız oldu. Lütfen tekrar deneyin."
+  "transfer_failed": "Transfer başarısız oldu. Lütfen tekrar deneyin.",
+  "loading": "Yükleniyor...",
+  "retry": "Tekrar dene",
+  "notifications_title": "Bildirimler",
+  "notifications_filter_all": "Tümü",
+  "notifications_empty_title": "Henüz burada hiçbir şey yok",
+  "notifications_empty_subtitle": "Yeni etkinlikler mevcut olduğunda burada görünecektir.",
+  "notifications_error_title": "Hay aksi!",
+  "notifications_error_subtitle": "Bir şeyler ters gitmiş gibi görünüyor. Lütfen tekrar deneyin.",
+  "notifications_pagination_error": "Daha fazla yüklenemedi",
+  "notifications_tap_to_retry": "Tekrar denemek için dokunun",
+  "notifications_offline_banner": "Çevrimdışısınız. Önbelleğe alınmış bildirimler gösteriliyor."
 }

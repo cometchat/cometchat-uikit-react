@@ -119,13 +119,11 @@ export const CometChatThreadHeaderParentBubble: React.FC<
       <div className={wrapperClasses}>
         {!hideDate && (
           <div className={'cometchat-thread-header__body-timestamp'}>
-            <CometChatDate.Root
+            <CometChatDate
               timestamp={parentMessage.getSentAt()}
               variant="separator"
               formatConfig={separatorDateTimeFormat}
-            >
-              <CometChatDate.Text />
-            </CometChatDate.Root>
+            />
           </div>
         )}
         <div className={'cometchat-thread-header__bubble-fallback'}>
@@ -139,13 +137,11 @@ export const CometChatThreadHeaderParentBubble: React.FC<
     <div className={wrapperClasses}>
       {!hideDate && (
         <div className={'cometchat-thread-header__body-timestamp'}>
-          <CometChatDate.Root
+          <CometChatDate
             timestamp={parentMessage.getSentAt()}
             variant="separator"
             formatConfig={separatorDateTimeFormat}
-          >
-            <CometChatDate.Text />
-          </CometChatDate.Root>
+          />
         </div>
       )}
       <CometChatMessageBubble

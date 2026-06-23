@@ -23,7 +23,6 @@ const CometChatGroupMembersDefaultLayout: React.FC<CometChatGroupMembersConvenie
   subtitleView,
   trailingView,
   itemView,
-  headerView,
   loadingView,
   errorView,
   emptyView,
@@ -32,7 +31,6 @@ const CometChatGroupMembersDefaultLayout: React.FC<CometChatGroupMembersConvenie
 
   return (
     <>
-      {headerView !== undefined ? headerView : <CometChatGroupMembersHeader />}
       {!hideSearch && <CometChatGroupMembersSearchBar />}
       {fetchState === 'loading' &&
         (loadingView !== undefined ? (

@@ -15,6 +15,7 @@ import type {
 } from './CometChatGroupMembers.types';
 import './CometChatGroupMembers.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useGlobalConfig } from '../../context/GlobalConfigContext';
 
 /**
  * CometChatGroupMembersRoot — Provider + default layout.
@@ -27,7 +28,7 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
   groupMemberRequestBuilder,
   searchRequestBuilder,
   searchKeyword,
-  hideUserStatus = false,
+  hideUserStatus: hideUserStatusProp,
   hideSearch = false,
   hideKickMemberOption = false,
   hideBanMemberOption = false,
@@ -41,6 +42,8 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
   children,
 }) => {
   const { getLocalizedString } = useLocale();
+  const globalConfig = useGlobalConfig();
+  const hideUserStatus = hideUserStatusProp ?? globalConfig.hideUserStatus ?? false;
   const hookReturn = useCometChatGroupMembers({
     group,
     groupMemberRequestBuilder,
@@ -167,22 +170,16 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
               }}
               role="presentation"
             >
-              <CometChatChangeScope.Root
+              <CometChatChangeScope
                 options={changeScopeOptions}
                 defaultSelection={hookReturn.memberToChangeScope.getScope()}
                 onScopeChanged={handleChangeScopeConfirm}
                 onClose={handleChangeScopeClose}
-              >
-                <CometChatChangeScope.Header
-                  title={getLocalizedString('change_scope_title')}
-                  description="You can change scope for the group member to manage group permissions and responsibilities."
-                />
-                <CometChatChangeScope.ScopeList />
-                <CometChatChangeScope.Actions
-                  submitText={getLocalizedString('change_scope_confirm_yes')}
-                  cancelText={getLocalizedString('change_scope_confirm_no')}
-                />
-              </CometChatChangeScope.Root>
+                title={getLocalizedString('change_scope_title')}
+                description="You can change scope for the group member to manage group permissions and responsibilities."
+                submitText={getLocalizedString('change_scope_confirm_yes')}
+                cancelText={getLocalizedString('change_scope_confirm_no')}
+              />
             </div>
           </div>
         )}

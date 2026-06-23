@@ -7,6 +7,7 @@ import { CometChatConfirmDialogContext } from './CometChatConfirmDialog.context'
 import { CometChatConfirmDialogIcon } from './CometChatConfirmDialogIcon';
 import { CometChatConfirmDialogContent } from './CometChatConfirmDialogContent';
 import { CometChatConfirmDialogActions } from './CometChatConfirmDialogActions';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatConfirmDialog.css';
 
 /** Stable IDs for aria-labelledby / aria-describedby. */
@@ -27,6 +28,11 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
 
   // Uncontrolled fallback
   const [internalOpen, setInternalOpen] = useState(false);
@@ -43,19 +49,13 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
   }, [onClose, isControlled]);
 
   // Store previous focus and restore on close.
-  // Focus the first focusable child (cancel button) on open — not the container.
+  // Focus the container, not the first control — traps focus without painting a
+  // focus ring on the cancel button when the dialog opens.
   useEffect(() => {
     if (isOpen) {
-      previousFocusRef.current = document.activeElement as HTMLElement;
+      previousFocusRef.current = getCurrentDocument().activeElement as HTMLElement;
       const id = requestAnimationFrame(() => {
-        const firstFocusable = containerRef.current?.querySelector<HTMLElement>(
-          'button:not([disabled]):not([aria-disabled="true"]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        );
-        if (firstFocusable) {
-          firstFocusable.focus();
-        } else {
-          containerRef.current?.focus();
-        }
+        containerRef.current?.focus();
       });
       return () => {
         cancelAnimationFrame(id);
@@ -65,7 +65,7 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
       previousFocusRef.current = null;
     }
     return undefined;
-  }, [isOpen]);
+  }, [isOpen, getCurrentDocument]);
 
   // Outside click
   useEffect(() => {
@@ -78,11 +78,11 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
       }
     };
 
-    document.addEventListener('mousedown', handleMouseDown);
+    getCurrentDocument().addEventListener('mousedown', handleMouseDown);
     return () => {
-      document.removeEventListener('mousedown', handleMouseDown);
+      getCurrentDocument().removeEventListener('mousedown', handleMouseDown);
     };
-  }, [isOpen, closeOnOutsideClick, handleClose]);
+  }, [isOpen, closeOnOutsideClick, handleClose, getCurrentDocument]);
 
   // Keyboard handler
   const handleKeyDown = useCallback(
@@ -104,7 +104,7 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
         );
         if (focusable.length === 0) return;
 
-        const currentIdx = focusable.indexOf(document.activeElement as HTMLElement);
+        const currentIdx = focusable.indexOf(getCurrentDocument().activeElement as HTMLElement);
         let nextIdx: number;
         if (event.shiftKey) {
           nextIdx = currentIdx <= 0 ? focusable.length - 1 : currentIdx - 1;
@@ -116,7 +116,7 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
         focusable[nextIdx]?.focus();
       }
     },
-    [handleClose]
+    [handleClose, getCurrentDocument]
   );
 
   // Context value

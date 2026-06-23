@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useCometChatMessageList } from './useCometChatMessageList';
 import { CometChatMessageListProvider as ContextProvider } from './CometChatMessageList.context';
+import { useGlobalConfig } from '../../context/GlobalConfigContext';
 import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
 import type { CometChatMessageListAlignment } from './CometChatMessageList.types';
 
@@ -119,7 +120,7 @@ export interface CometChatMessageListProviderProps {
 
   // --- Error callback ---
   /** Error callback. */
-  onError?: (error: unknown) => void;
+  onError?: ((error: CometChat.CometChatException) => void) | null;
 
   /** Children. */
   children: ReactNode;
@@ -182,6 +183,12 @@ export const CometChatMessageListProviderComponent: React.FC<CometChatMessageLis
   onError,
   children,
 }) => {
+  const globalConfig = useGlobalConfig();
+  const effectiveDisableSoundForMessages =
+    disableSoundForMessages ?? globalConfig.disableSoundForMessages ?? false;
+  const effectiveCustomSoundForMessages =
+    customSoundForMessages ?? globalConfig.customSoundForMessages;
+
   // The hook calls usePluginRegistry() internally for default types/categories
   const hookOptions: import('./CometChatMessageList.types').CometChatUseMessageListOptions = {
     loggedInUser,
@@ -195,8 +202,10 @@ export const CometChatMessageListProviderComponent: React.FC<CometChatMessageLis
   if (goToMessageId) hookOptions.goToMessageId = goToMessageId;
   if (messageTypes) hookOptions.messageTypes = messageTypes;
   if (messageCategories) hookOptions.messageCategories = messageCategories;
-  if (disableSoundForMessages) hookOptions.disableSoundForMessages = disableSoundForMessages;
-  if (customSoundForMessages) hookOptions.customSoundForMessages = customSoundForMessages;
+  if (effectiveDisableSoundForMessages)
+    hookOptions.disableSoundForMessages = effectiveDisableSoundForMessages;
+  if (effectiveCustomSoundForMessages)
+    hookOptions.customSoundForMessages = effectiveCustomSoundForMessages;
   if (scrollToBottomOnNewMessages)
     hookOptions.scrollToBottomOnNewMessages = scrollToBottomOnNewMessages;
   if (hideReceipts) hookOptions.hideReceipts = hideReceipts;

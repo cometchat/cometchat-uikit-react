@@ -4,12 +4,19 @@ import type {
   CometChatEmojiKeyboardEmojiData,
 } from './CometChatEmojiKeyboard.types';
 import { getDefaultEmojiCategories } from './CometChatEmojiData';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 
 interface UseCometChatEmojiKeyboardOptions {
   emojiData?: CometChatEmojiKeyboardCategoryData[] | undefined;
 }
 
 export function useCometChatEmojiKeyboard({ emojiData }: UseCometChatEmojiKeyboardOptions) {
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentWindow = useCallback(() => {
+    return IframeContext.iframeWindow ?? window;
+  }, [IframeContext.iframeWindow]);
+
   const categories = useMemo<CometChatEmojiKeyboardCategoryData[]>(
     () => (emojiData && emojiData.length > 0 ? emojiData : getDefaultEmojiCategories()),
     [emojiData]
@@ -38,34 +45,37 @@ export function useCometChatEmojiKeyboard({ emojiData }: UseCometChatEmojiKeyboa
 
   const isSearching = searchQuery.length > 0;
 
-  const setActiveCategory = useCallback((categoryId: string) => {
-    setActiveCategoryId(categoryId);
-    setSearchQuery('');
+  const setActiveCategory = useCallback(
+    (categoryId: string) => {
+      setActiveCategoryId(categoryId);
+      setSearchQuery('');
 
-    const listEl = listRef.current;
-    if (!listEl) return;
+      const listEl = listRef.current;
+      if (!listEl) return;
 
-    const escapedId = CSS.escape(categoryId);
-    const headerEl = listEl.querySelector<HTMLElement>(`#emoji-cat-${escapedId}`);
-    if (!headerEl) return;
+      const escapedId = CSS.escape(categoryId);
+      const headerEl = listEl.querySelector<HTMLElement>(`#emoji-cat-${escapedId}`);
+      if (!headerEl) return;
 
-    isProgrammaticScrollRef.current = true;
+      isProgrammaticScrollRef.current = true;
 
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        getCurrentWindow().matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    listEl.scrollTo({
-      top: headerEl.offsetTop - listEl.offsetTop,
-      behavior: prefersReducedMotion ? 'instant' : 'smooth',
-    });
+      listEl.scrollTo({
+        top: headerEl.offsetTop - listEl.offsetTop,
+        behavior: prefersReducedMotion ? 'instant' : 'smooth',
+      });
 
-    // Re-enable scroll tracking after animation completes.
-    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
-    scrollTimerRef.current = setTimeout(() => {
-      isProgrammaticScrollRef.current = false;
-    }, 500);
-  }, []);
+      // Re-enable scroll tracking after animation completes.
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 500);
+    },
+    [getCurrentWindow]
+  );
 
   /** Handle scroll events on the emoji list to track the active category. */
   const handleListScroll = useCallback(() => {

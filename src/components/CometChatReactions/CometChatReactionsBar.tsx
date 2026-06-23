@@ -1,16 +1,48 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatReactionsBarProps } from './CometChatReactions.types';
 import { useCometChatReactionsContext } from './CometChatReactions.context';
 import { CometChatReactionsChip } from './CometChatReactionsChip';
 import { CometChatReactionsOverflow } from './CometChatReactionsOverflow';
 import { CometChatReactionsInfo } from './CometChatReactionsInfo';
-import { CometChatReactionsList } from './CometChatReactionsList';
-import { CometChatPopover } from '../base/CometChatPopover';
+import { CometChatReactionList } from '../CometChatReactionList';
+import { CometChatPopover, useCometChatPopoverContext } from '../base/CometChatPopover';
 import './CometChatReactions.css';
 import { useLocale } from '../../context/locale/LocaleContext';
 
 const CHIP_WIDTH = 48; // 46px chip + 2px gap
 const REACTIONS_PADDING = 8;
+
+/**
+ * Internal wrapper rendered inside the popover content.
+ * Uses the popover context to programmatically close the popover
+ * and wires the reactions context props to CometChatReactionList.Root.
+ */
+const ReactionListPopoverContent: React.FC = () => {
+  const { message, reactionsRequestBuilder, onReactionClick } = useCometChatReactionsContext();
+  const { close } = useCometChatPopoverContext();
+
+  const handleItemClick = useCallback(
+    (reaction: CometChat.Reaction) => {
+      onReactionClick(reaction.getReaction());
+    },
+    [onReactionClick]
+  );
+
+  const handleEmpty = useCallback(() => {
+    close();
+  }, [close]);
+
+  return (
+    <CometChatReactionList.Root
+      message={message}
+      reactionsRequestBuilder={reactionsRequestBuilder}
+      onItemClick={handleItemClick}
+      onEmpty={handleEmpty}
+    />
+  );
+};
+
 /**
  * CometChatReactionsBar — the reaction chips bar (role="group").
  *
@@ -111,26 +143,23 @@ export const CometChatReactionsBar: React.FC<CometChatReactionsBarProps> = ({
     >
       {visibleReactions.map(reaction => (
         <div key={reaction.getReaction()} className={'cometchat-reactions__info-wrapper'}>
-          <CometChatPopover.Root showOnHover debounceOnHover={500} placement="top">
-            <CometChatPopover.Trigger>
-              <CometChatReactionsChip reaction={reaction} />
-            </CometChatPopover.Trigger>
-            <CometChatPopover.Content>
-              <CometChatReactionsInfo emoji={reaction.getReaction()} />
-            </CometChatPopover.Content>
-          </CometChatPopover.Root>
+          <CometChatPopover
+            showOnHover
+            debounceOnHover={500}
+            placement="top"
+            trigger={<CometChatReactionsChip reaction={reaction} />}
+            content={<CometChatReactionsInfo emoji={reaction.getReaction()} />}
+          />
         </div>
       ))}
 
       {overflowCount > 0 && (
-        <CometChatPopover.Root placement={listPlacement} closeOnOutsideClick>
-          <CometChatPopover.Trigger>
-            <CometChatReactionsOverflow count={overflowCount} />
-          </CometChatPopover.Trigger>
-          <CometChatPopover.Content>
-            <CometChatReactionsList />
-          </CometChatPopover.Content>
-        </CometChatPopover.Root>
+        <CometChatPopover
+          placement={listPlacement}
+          closeOnOutsideClick
+          trigger={<CometChatReactionsOverflow count={overflowCount} />}
+          content={<ReactionListPopoverContent />}
+        />
       )}
     </div>
   );

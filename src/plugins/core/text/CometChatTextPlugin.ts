@@ -9,7 +9,7 @@ import type { CometChatTextFormatter } from '../../../formatters/CometChatTextFo
 import { CometChatMentionsFormatter } from '../../../formatters/CometChatMentionsFormatter';
 import { CometChatUrlFormatter } from '../../../formatters/CometChatUrlFormatter';
 import { CometChatMarkdownFormatter } from '../../../formatters/CometChatMarkdownFormatter';
-import { CometChatTextBubble } from './CometChatTextBubble';
+import { CometChatTextBubble } from '../../../components/CometChatTextBubble/CometChatTextBubble';
 import { getTextMessageOptions } from '../shared/CometChatMessageOptions';
 import { CometChatUIKitConstants } from '../../../constants/CometChatUIKitConstants';
 
@@ -29,32 +29,15 @@ export const CometChatTextPlugin: CometChatMessagePlugin = {
   messageCategories: [CometChatUIKitConstants.MessageCategory.message],
 
   renderBubble(message: CometChat.BaseMessage, context: CometChatMessagePluginContext) {
-    const textMessage = message as CometChat.TextMessage;
-    const isSentByMe = context.alignment === 'right';
-
-    // Always use the plain text and run through the full formatter pipeline.
-    // still contains the markdown/mention tokens. convertFormattingHtmlToMarkdown
-    // handles any HTML formatting tags that may be present.
-    const text = textMessage.getText();
-
-    // Create and configure formatters
+    // The bubble extracts the text (getText()) and configures mention formatting
+    // from the message itself. The plugin only supplies the formatter instances,
+    // alignment, and truncation flag.
     const formatters = this.getTextFormatters ? this.getTextFormatters() : [];
-    for (const formatter of formatters) {
-      if (formatter instanceof CometChatMentionsFormatter) {
-        formatter.setLoggedInUser(context.loggedInUser);
-        formatter.setMessageBubbleAlignment(context.alignment === 'right' ? 'right' : 'left');
-        const mentionedUsers = textMessage.getMentionedUsers();
-        if (mentionedUsers.length > 0) {
-          formatter.setUsers(mentionedUsers);
-        }
-      }
-    }
 
     return React.createElement(CometChatTextBubble, {
-      text,
-      isSentByMe,
+      message: message as CometChat.TextMessage,
+      isSentByMe: context.alignment === 'right',
       textFormatters: formatters,
-      message: textMessage,
       disableTruncation: context.disableTruncation,
     });
   },

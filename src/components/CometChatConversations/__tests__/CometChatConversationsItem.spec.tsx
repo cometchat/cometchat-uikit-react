@@ -44,12 +44,17 @@ vi.mock('../../base/CometChatConfirmDialog/CometChatConfirmDialog', () => ({
   },
 }));
 vi.mock('../../base/CometChatDate', () => ({
-  CometChatDate: {
-    Root: ({ children }: { children?: React.ReactNode }) => (
-      <span data-testid="date">{children}</span>
-    ),
-    Text: () => <span>time</span>,
-  },
+  // CometChatDate is a callable component with attached sub-components
+  // (Object.assign(Component, { Root, Text })), so the mock must be callable too.
+  CometChatDate: Object.assign(
+    ({ children }: { children?: React.ReactNode }) => <span data-testid="date">{children}</span>,
+    {
+      Root: ({ children }: { children?: React.ReactNode }) => (
+        <span data-testid="date">{children}</span>
+      ),
+      Text: () => <span>time</span>,
+    }
+  ),
 }));
 
 // Import the Item component after mocks
@@ -262,6 +267,20 @@ describe('CometChatConversationsItem', () => {
     expect(receiptEl).toBeInTheDocument();
   });
 
+  // 7b. A sent-but-not-yet-delivered message reads as 'sent' (single tick).
+  it('shows the sent receipt for a delivered-pending message', () => {
+    const conv = createMockConversation({
+      lastMessageSenderId: 'user-1',
+      lastMessageSentAt: Math.floor(Date.now() / 1000),
+      lastMessageDeliveredAt: 0,
+      lastMessageReadAt: 0,
+    });
+    const { container } = renderWithContext(conv, { loggedInUserId: 'user-1' });
+
+    const receiptEl = container.querySelector('[class*="cometchat-conversations__item-receipt--"]');
+    expect(receiptEl?.className).toContain('cometchat-conversations__item-receipt--sent');
+  });
+
   // 8. Does NOT show receipt for messages from others
   it('does NOT show receipt for messages from others', () => {
     const conv = createMockConversation({ lastMessageSenderId: 'other-user' });
@@ -351,7 +370,7 @@ describe('CometChatConversationsItem', () => {
     });
     renderWithContext(conv);
 
-    expect(screen.getByText('extension_poll')).toBeInTheDocument();
+    expect(screen.getByText('Poll')).toBeInTheDocument();
   });
 
   // 15. Shows type for sticker messages (plugin provides friendly name when registry available)
@@ -362,7 +381,7 @@ describe('CometChatConversationsItem', () => {
     });
     renderWithContext(conv);
 
-    expect(screen.getByText('extension_sticker')).toBeInTheDocument();
+    expect(screen.getByText('Sticker')).toBeInTheDocument();
   });
 
   // 16. Shows type for whiteboard messages (plugin provides friendly name when registry available)
@@ -373,7 +392,7 @@ describe('CometChatConversationsItem', () => {
     });
     renderWithContext(conv);
 
-    expect(screen.getByText('extension_whiteboard')).toBeInTheDocument();
+    expect(screen.getByText('Collaborative Whiteboard')).toBeInTheDocument();
   });
 
   // 17. Shows type for document messages (plugin provides friendly name when registry available)
@@ -384,7 +403,7 @@ describe('CometChatConversationsItem', () => {
     });
     renderWithContext(conv);
 
-    expect(screen.getByText('extension_document')).toBeInTheDocument();
+    expect(screen.getByText('Collaborative Document')).toBeInTheDocument();
   });
 
   // 18. Shows "Voice call" for audio call messages

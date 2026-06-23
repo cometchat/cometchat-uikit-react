@@ -32,6 +32,18 @@ export interface CometChatRichTextEditorConfig {
   ariaLabel?: string;
   /** Whether to enable rich text formatting. When false, strips formatting on paste. Default: true. */
   enableFormatting?: boolean;
+  /**
+   * The document to use for DOM operations (createElement, createRange, execCommand, etc.).
+   * Defaults to the global `document`. Provide the iframe's contentDocument when rendering
+   * inside an iframe via CometChatFrameProvider.
+   */
+  ownerDocument?: Document;
+  /**
+   * The window to use for selection APIs (getSelection, etc.).
+   * Defaults to the global `window`. Provide the iframe's contentWindow when rendering
+   * inside an iframe via CometChatFrameProvider.
+   */
+  ownerWindow?: Window;
   /** Called when editor content changes. */
   onUpdate?: (html: string, text: string) => void;
   /** Called when selection changes (format state updates). */

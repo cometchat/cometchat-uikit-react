@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatAvatar, usePublishEvent, CometChatUIKitUtility, useLocale } from '@cometchat/chat-uikit-react';
-import '../../styles/CometChatDetails/CometChatBannedMembers.css';
+import './CometChatBannedMembers.css';
 
 interface CometChatBannedMembersProps {
   group: CometChat.Group;
@@ -99,10 +99,7 @@ export const CometChatBannedMembers = ({ group }: CometChatBannedMembersProps) =
       {bannedMembers.map((member) => (
         <div key={member.getUid()} className="cometchat-banned-members__item">
           <div className="cometchat-banned-members__item-avatar">
-            <CometChatAvatar.Root image={member.getAvatar()} name={member.getName()} size="medium">
-              <CometChatAvatar.Image />
-              <CometChatAvatar.Initials />
-            </CometChatAvatar.Root>
+            <CometChatAvatar image={member.getAvatar()} name={member.getName()} size="medium" />
           </div>
           <div className="cometchat-banned-members__item-name">{member.getName()}</div>
           <button

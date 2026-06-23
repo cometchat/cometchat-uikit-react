@@ -21,6 +21,13 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
   },
 }));
 
+// The component reads the logged-in user synchronously via CometChatUIKit.
+vi.mock('../../../CometChatUIKit/CometChatUIKit', () => ({
+  CometChatUIKit: {
+    getLoggedInUser: vi.fn(() => ({ getUid: () => 'me-uid' })),
+  },
+}));
+
 vi.mock('../../base/CometChatAvatar/CometChatAvatar', () => ({
   CometChatAvatar: {
     Root: ({ children }: { children: React.ReactNode }) => (
@@ -77,11 +84,14 @@ function buildMockCall(
     senderName?: string;
     senderAvatar?: string;
     type?: string;
+    initiatorUid?: string;
   } = {}
 ) {
   return {
     getSessionId: () => overrides.sessionId ?? 'session-123',
+    // Default sender is someone else ('alice'), not the logged-in user ('me-uid').
     getSender: () => ({
+      getUid: () => overrides.initiatorUid ?? 'alice',
       getName: () => overrides.senderName ?? 'Alice',
       getAvatar: () => overrides.senderAvatar ?? 'https://example.com/avatar.png',
     }),
@@ -135,6 +145,15 @@ describe('CometChatIncomingCall', () => {
       simulateIncomingCall(buildMockCall({ type: 'video' }));
 
       expect(screen.getByText('Incoming Video Call')).toBeInTheDocument();
+    });
+
+    it('does NOT render when the call is initiated by the logged-in user', () => {
+      const { container } = render(<CometChatIncomingCall />);
+      // Self-initiated call (sender === logged-in user 'me-uid') must be ignored.
+      simulateIncomingCall(buildMockCall({ initiatorUid: 'me-uid' }));
+
+      expect(container.firstChild).toBeNull();
+      expect(screen.queryByText('Accept')).not.toBeInTheDocument();
     });
 
     it('applies custom className', () => {

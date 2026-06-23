@@ -1,17 +1,17 @@
+import React from 'react';
 import { CometChatDateRoot } from './CometChatDateRoot';
 import { CometChatDateText } from './CometChatDateText';
+import type { CometChatDateRootProps } from './CometChatDate.types';
 
-/**
- * CometChatDate — compound component for formatted date/time display.
- *
- * Usage:
- * ```tsx
- * <CometChatDate.Root timestamp={1713200000}>
- *   <CometChatDate.Text />
- * </CometChatDate.Root>
- * ```
- */
-export const CometChatDate = {
+export type CometChatDateProps = Omit<CometChatDateRootProps, 'children'>;
+
+const CometChatDateComponent: React.FC<CometChatDateProps> = props => {
+  return <CometChatDateRoot {...props} />;
+};
+
+CometChatDateComponent.displayName = 'CometChatDate';
+
+export const CometChatDate = Object.assign(CometChatDateComponent, {
   Root: CometChatDateRoot,
   Text: CometChatDateText,
-} as const;
+});

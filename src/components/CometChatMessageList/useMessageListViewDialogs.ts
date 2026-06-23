@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,6 +76,12 @@ export function useMessageListViewDialogs(
     getLocalizedString,
   } = options;
 
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
+
   // --- Toast state ---
   const [toastText, setToastText] = useState('');
   const showToast = useCallback((text: string) => {
@@ -137,7 +144,9 @@ export function useMessageListViewDialogs(
   const [reactTarget, setReactTarget] = useState<ReactTargetState | null>(null);
   const handleReactToMessage = useCallback(
     (message: CometChat.BaseMessage) => {
-      const bubbleEl = document.querySelector(`[data-message-id="${String(message.getId())}"]`);
+      const bubbleEl = getCurrentDocument().querySelector(
+        `[data-message-id="${String(message.getId())}"]`
+      );
       const optionsEl = bubbleEl?.querySelector('[class*="message-bubble__options"]');
       const scrollWrapper = scrollContainerRef.current?.parentElement;
 
@@ -177,7 +186,7 @@ export function useMessageListViewDialogs(
         setReactTarget({ message, top: 100, left: 50 });
       }
     },
-    [loggedInUser, scrollContainerRef]
+    [loggedInUser, scrollContainerRef, getCurrentDocument]
   );
   const handleReactClose = useCallback(() => {
     setReactTarget(null);
@@ -196,7 +205,7 @@ export function useMessageListViewDialogs(
     if (!reactTarget) return;
 
     const handleOutsideClick = (e: MouseEvent) => {
-      const overlay = document.querySelector('[class*="emoji-picker-overlay"]');
+      const overlay = getCurrentDocument().querySelector('[class*="emoji-picker-overlay"]');
       if (overlay && !overlay.contains(e.target as Node)) {
         setReactTarget(null);
       }
@@ -206,15 +215,15 @@ export function useMessageListViewDialogs(
       setReactTarget(null);
     };
 
-    document.addEventListener('mousedown', handleOutsideClick);
+    getCurrentDocument().addEventListener('mousedown', handleOutsideClick);
     const scrollEl = scrollContainerRef.current;
     scrollEl?.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
+      getCurrentDocument().removeEventListener('mousedown', handleOutsideClick);
       scrollEl?.removeEventListener('scroll', handleScroll);
     };
-  }, [reactTarget, scrollContainerRef]);
+  }, [reactTarget, scrollContainerRef, getCurrentDocument]);
 
   // --- Message info panel state ---
   const [messageInfoTarget, setMessageInfoTarget] = useState<CometChat.BaseMessage | null>(null);

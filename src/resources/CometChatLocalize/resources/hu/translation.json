@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Biztosan át szeretné ruházni a tulajdonjogot? Ez nem vonható vissza, és az új tulajdonos teljes irányítást kap.",
   "transfer": "Átruházás",
   "transferring": "Átruházás folyamatban...",
-  "transfer_failed": "Az átruházás sikertelen. Kérjük, próbálja újra."
+  "transfer_failed": "Az átruházás sikertelen. Kérjük, próbálja újra.",
+  "loading": "Betöltés...",
+  "retry": "Újrapróbálás",
+  "notifications_title": "Értesítések",
+  "notifications_filter_all": "Összes",
+  "notifications_empty_title": "Még nincs itt semmi",
+  "notifications_empty_subtitle": "Az új tevékenységek itt jelennek meg, amikor elérhetők.",
+  "notifications_error_title": "Hoppá!",
+  "notifications_error_subtitle": "Úgy tűnik, valami hiba történt. Kérjük, próbálja újra.",
+  "notifications_pagination_error": "Nem sikerült többet betölteni",
+  "notifications_tap_to_retry": "Koppintson az újrapróbáláshoz",
+  "notifications_offline_banner": "Ön offline. Gyorsítótárazott értesítések megjelenítése."
 }

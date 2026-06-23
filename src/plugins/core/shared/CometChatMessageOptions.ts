@@ -1,7 +1,9 @@
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatMessageOption, CometChatMessagePluginContext } from '../../plugin.types';
 import { CometChatMarkdownFormatter } from '../../../formatters/CometChatMarkdownFormatter';
+import { escapeUserHtml, sanitizeHtml } from '../../../utils/sanitizeHtml';
 import { CometChatMessageStatus } from '../../../context/CometChatEvents.types';
+import { translateMessage } from '../../../utils/CometChatTranslationUtils';
 
 // --- Icons ---
 import addReactionIcon from '../../../assets/add_reaction_icon.svg';
@@ -14,6 +16,7 @@ import infoIcon from '../../../assets/info_icon_fill.svg';
 import flagIcon from '../../../assets/warning_neutral.svg';
 import sendPrivatelyIcon from '../../../assets/send_message_privately.svg';
 import markUnreadIcon from '../../../assets/mark_unread.svg';
+import translateIcon from '../../../assets/translate.svg';
 
 // --- Option ID constants ---
 
@@ -42,7 +45,7 @@ function isSentByMe(message: CometChat.BaseMessage, loggedInUser: CometChat.User
 function loc(context: CometChatMessagePluginContext, key: string, fallback: string): string {
   if (!context.getLocalizedString) return fallback;
   const result = context.getLocalizedString(key);
-  // i18next returns the key itself when no translation is found
+  // localization returns the key itself when no translation is found
   return result && result !== key ? result : fallback;
 }
 
@@ -69,6 +72,7 @@ function replyOption(context: CometChatMessagePluginContext): CometChatMessageOp
         type: 'ui:compose/reply',
         message,
         status: CometChatMessageStatus.inprogress,
+        parentMessageId: message.getParentMessageId() || null,
       });
       context.onReplyMessage?.(message);
     },
@@ -109,9 +113,10 @@ function copyOption(context: CometChatMessagePluginContext): CometChatMessageOpt
         });
       }
 
-      // Convert markdown to HTML for the text/html clipboard blob
+      // SECURITY: escape raw HTML before formatting + sanitize, else the clipboard
+      // text/html carries a live payload that executes on paste.
       const markdownFormatter = new CometChatMarkdownFormatter();
-      const htmlContent = markdownFormatter.format(text);
+      const htmlContent = sanitizeHtml(markdownFormatter.format(escapeUserHtml(text)));
 
       // Strip markdown formatting for the text/plain clipboard blob
       const plainText = stripMarkdownFormatting(text);
@@ -219,6 +224,38 @@ function markAsUnreadOption(context: CometChatMessagePluginContext): CometChatMe
     receiverOnly: true,
     onClick: message => {
       context.onMarkAsUnread?.(message);
+    },
+  };
+}
+
+function translateOption(context: CometChatMessagePluginContext): CometChatMessageOption {
+  return {
+    id: MESSAGE_OPTION_IDS.translate,
+    title: loc(context, 'message_list_translate', 'Translate'),
+    iconURL: translateIcon,
+    onClick: message => {
+      const textMessage = message as CometChat.TextMessage;
+      const browserLang = navigator.language;
+      void translateMessage(textMessage, browserLang).then(result => {
+        if (result.isSameLanguage) {
+          context.showToast?.(
+            loc(
+              context,
+              'message_list_message_already_translated',
+              'The selected language for translation is similar to the original message language.'
+            )
+          );
+        } else if (result.translatedText) {
+          const metadata: Record<string, unknown> =
+            (textMessage.getMetadata() as Record<string, unknown> | null) ?? {};
+          metadata.translated_message = result.translatedText;
+          textMessage.setMetadata(metadata);
+          context.publish?.({ type: 'message/edited', message: textMessage } as never);
+          context.showToast?.(
+            loc(context, 'message_list_message_translated', 'Message translated successfully.')
+          );
+        }
+      });
     },
   };
 }
@@ -351,6 +388,7 @@ export function getTextMessageOptions(
     replyInThreadOption(context),
     copyOption(context),
     editOption(context),
+    translateOption(context),
     messageInfoOption(context),
     deleteOption(context),
     flagOption(context),

@@ -5,7 +5,7 @@ import type {
   CometChatMessagePluginContext,
   CometChatMessageOption,
 } from '../../plugin.types';
-import { CometChatDeleteBubble } from './CometChatDeleteBubble';
+import { CometChatDeleteBubble } from '../../../components/base/CometChatDeleteBubble/CometChatDeleteBubble';
 
 /**
  * Core plugin for deleted messages.

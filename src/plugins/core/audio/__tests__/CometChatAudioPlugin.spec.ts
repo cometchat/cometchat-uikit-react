@@ -74,43 +74,40 @@ describe('CometChatAudioPlugin', () => {
       expect(result.type?.displayName).toBe('CometChatAudioBubble');
     });
 
-    it('passes outgoing variant for right alignment', () => {
+    it('forwards the message for self-extraction', () => {
+      const msg = mockMediaMessage();
+      const result = CometChatAudioPlugin.renderBubble(msg, mockContext()) as any;
+      expect(result.props.message).toBe(msg);
+    });
+
+    it('passes right alignment for right alignment', () => {
       const result = CometChatAudioPlugin.renderBubble(
         mockMediaMessage(),
         mockContext('right')
       ) as any;
-      expect(result.props.variant).toBe('outgoing');
+      expect(result.props.alignment).toBe('right');
     });
 
-    it('passes incoming variant for left alignment', () => {
+    it('passes left alignment for left alignment', () => {
       const result = CometChatAudioPlugin.renderBubble(
         mockMediaMessage(),
         mockContext('left')
       ) as any;
-      expect(result.props.variant).toBe('incoming');
+      expect(result.props.alignment).toBe('left');
     });
 
-    it('extracts attachments from message', () => {
+    it('forwards text formatters for caption rendering', () => {
+      const formatters = [{ id: 'mentions' }] as any;
+      const ctx = { ...mockContext(), getTextFormatters: () => formatters };
+      const result = CometChatAudioPlugin.renderBubble(mockMediaMessage(), ctx) as any;
+      expect(result.props.textFormatters).toBe(formatters);
+    });
+
+    it('does not extract message-derived data itself', () => {
       const result = CometChatAudioPlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(1);
-      expect(result.props.attachments[0].url).toBe('https://example.com/voice.mp3');
-    });
-
-    it('extracts caption', () => {
-      const msg = mockMediaMessage({ caption: 'Voice note' });
-      const result = CometChatAudioPlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.caption).toBe('Voice note');
-    });
-
-    it('omits caption when empty', () => {
-      const result = CometChatAudioPlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
+      expect(result.props.attachments).toBeUndefined();
       expect(result.props.caption).toBeUndefined();
-    });
-
-    it('handles empty attachments', () => {
-      const msg = mockMediaMessage({ attachments: [] });
-      const result = CometChatAudioPlugin.renderBubble(msg, mockContext()) as any;
-      expect(result.props.attachments).toHaveLength(0);
+      expect(result.props.variant).toBeUndefined();
     });
   });
 

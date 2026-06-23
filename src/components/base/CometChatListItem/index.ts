@@ -1,4 +1,5 @@
 export { CometChatListItem } from './CometChatListItem';
+export type { CometChatListItemProps } from './CometChatListItem';
 export { useCometChatListItemContext } from './CometChatListItem.context';
 export type {
   CometChatListItemRootProps,

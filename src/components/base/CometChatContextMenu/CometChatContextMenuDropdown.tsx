@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { CometChatContextMenuDropdownProps } from './CometChatContextMenu.types';
 import { useCometChatContextMenuContext } from './CometChatContextMenu.context';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatContextMenu.css';
 import { useLocale } from '../../../context/locale/LocaleContext';
 
@@ -43,11 +44,20 @@ export const CometChatContextMenuDropdown: React.FC<CometChatContextMenuDropdown
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<DropdownPosition | null>(null);
   const [measured, setMeasured] = useState(false);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
 
   // Props take precedence over context
   const useParentContainer = useParentContainerProp ?? useParentContainerCtx ?? false;
   const useParentHeight = useParentHeightProp ?? useParentHeightCtx ?? false;
   const forceStaticPlacement = forceStaticPlacementProp ?? forceStaticPlacementCtx ?? false;
+
+  const getCurrentWindow = useCallback(() => {
+    return IframeContext.iframeWindow ?? window;
+  }, [IframeContext.iframeWindow]);
 
   // Close on scroll when disableBackgroundInteraction is enabled
   useEffect(() => {
@@ -58,11 +68,11 @@ export const CometChatContextMenuDropdown: React.FC<CometChatContextMenuDropdown
     };
 
     // Listen on capture phase to catch scroll on any ancestor
-    document.addEventListener('scroll', handleScroll, true);
+    getCurrentDocument().addEventListener('scroll', handleScroll, true);
     return () => {
-      document.removeEventListener('scroll', handleScroll, true);
+      getCurrentDocument().removeEventListener('scroll', handleScroll, true);
     };
-  }, [isOpen, disableBackgroundInteraction, close]);
+  }, [isOpen, disableBackgroundInteraction, close, getCurrentDocument]);
 
   // Measure and compute position after the dropdown content renders
   useEffect(() => {
@@ -84,9 +94,9 @@ export const CometChatContextMenuDropdown: React.FC<CometChatContextMenuDropdown
 
       // Determine boundary: parent container or viewport
       let boundaryTop = 0;
-      let boundaryBottom = window.innerHeight;
+      let boundaryBottom = getCurrentWindow().innerHeight;
       let boundaryLeft = 0;
-      let boundaryRight = window.innerWidth;
+      let boundaryRight = getCurrentWindow().innerWidth;
 
       if (useParentContainer) {
         // Find the nearest `.cometchat` ancestor or scrollable parent
@@ -165,7 +175,15 @@ export const CometChatContextMenuDropdown: React.FC<CometChatContextMenuDropdown
     return () => {
       cancelAnimationFrame(id);
     };
-  }, [isOpen, triggerRef, placement, useParentContainer, useParentHeight, forceStaticPlacement]);
+  }, [
+    isOpen,
+    triggerRef,
+    placement,
+    useParentContainer,
+    useParentHeight,
+    forceStaticPlacement,
+    getCurrentWindow,
+  ]);
 
   // Focus the first enabled menu item after positioning is done
   useEffect(() => {
@@ -195,7 +213,7 @@ export const CometChatContextMenuDropdown: React.FC<CometChatContextMenuDropdown
       const items = getMenuItems();
       if (items.length === 0) return;
 
-      const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+      const currentIndex = items.indexOf(getCurrentDocument().activeElement as HTMLElement);
 
       switch (e.key) {
         case 'ArrowDown': {
@@ -243,7 +261,7 @@ export const CometChatContextMenuDropdown: React.FC<CometChatContextMenuDropdown
           break;
       }
     },
-    [close, getMenuItems, triggerRef]
+    [close, getMenuItems, triggerRef, getCurrentDocument]
   );
 
   const baseClass = 'cometchat-context-menu__dropdown';

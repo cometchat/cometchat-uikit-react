@@ -11,7 +11,7 @@ import type { CometChatThreadHeaderContextValue } from '../CometChatThreadHeader
 
 vi.mock('../../../hooks/useLocale', () => ({
   useLocale: () => ({
-    t: (key: string) => key,
+    getLocalizedString: (key: string) => key,
     language: 'en-us',
   }),
 }));

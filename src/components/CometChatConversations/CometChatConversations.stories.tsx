@@ -31,6 +31,8 @@ function createMockUser(uid: string, name: string, status = 'online') {
     getName: () => name,
     getStatus: () => status,
     getAvatar: () => `https://i.pravatar.cc/150?u=${uid}`,
+    getBlockedByMe: () => false,
+    getHasBlockedMe: () => false,
   } as unknown as CometChat.User;
 }
 
@@ -642,6 +644,54 @@ export const HiddenUnreadCount: Story = {
     const ctx = createMockContext({
       hideUnreadCount: args.hideUnreadCount,
       hideUserStatus: args.hideUserStatus,
+      hideReceipts: args.hideReceipts,
+      hideGroupType: args.hideGroupType,
+      hideDeleteConversation: args.hideDeleteConversation,
+      showSearchBar: args.showSearchBar,
+      selectionMode: args.selectionMode,
+    });
+    return (
+      <CometChatConversationsContext.Provider value={ctx}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <CometChatConversations.Header />
+          <CometChatConversations.List />
+        </div>
+      </CometChatConversationsContext.Provider>
+    );
+  },
+};
+
+/** With options prop — context menu appears on hover. */
+export const WithOptions: Story = {
+  render: args => {
+    const options = (conversation: CometChat.Conversation) => [
+      {
+        id: 'pin',
+        title: `Pin ${conversation.getConversationType() === 'group' ? 'Group' : 'Chat'}`,
+        onClick: (conv: CometChat.Conversation) => {
+          console.log('Pin clicked for:', conv.getConversationId());
+        },
+      },
+      {
+        id: 'mute',
+        title: 'Mute Notifications',
+        onClick: (conv: CometChat.Conversation) => {
+          console.log('Mute clicked for:', conv.getConversationId());
+        },
+      },
+      {
+        id: 'archive',
+        title: 'Archive',
+        onClick: (conv: CometChat.Conversation) => {
+          console.log('Archive clicked for:', conv.getConversationId());
+        },
+      },
+    ];
+
+    const ctx = createMockContext({
+      options,
+      hideUserStatus: args.hideUserStatus,
+      hideUnreadCount: args.hideUnreadCount,
       hideReceipts: args.hideReceipts,
       hideGroupType: args.hideGroupType,
       hideDeleteConversation: args.hideDeleteConversation,

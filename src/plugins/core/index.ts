@@ -12,6 +12,7 @@ import { CometChatPollsPlugin } from '../polls/CometChatPollsPlugin';
 import { CometChatStickersPlugin } from '../stickers/CometChatStickersPlugin';
 import { CometChatCollaborativeDocumentPlugin } from '../collaborative-document/CometChatCollaborativeDocumentPlugin';
 import { CometChatCollaborativeWhiteboardPlugin } from '../collaborative-whiteboard/CometChatCollaborativeWhiteboardPlugin';
+import { CometChatAIPlugin } from '../ai/CometChatAIPlugin';
 
 /**
  * Default core plugins. Consumers can extend by spreading this array
@@ -34,6 +35,7 @@ export const defaultPlugins: CometChatMessagePlugin[] = [
   CometChatGroupActionPlugin,
   CometChatCallActionPlugin,
   CometChatMeetingPlugin,
+  CometChatAIPlugin,
   // Extension plugins
   CometChatPollsPlugin,
   CometChatStickersPlugin,

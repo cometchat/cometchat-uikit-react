@@ -4,7 +4,7 @@
  */
 
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
-import { STICKERS_CONSTANTS } from './stickers.constants';
+import { STICKERS_CONSTANTS } from '../../constants/CometChatExtensionConstants';
 
 /**
  * Extract sticker image URL from a CustomMessage using a priority-based fallback chain.

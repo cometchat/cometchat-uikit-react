@@ -38,8 +38,8 @@ describe('CometChatConfirmDialogActions', () => {
   it('renders default localized button text (keys as fallback)', () => {
     renderActions();
     // Default t() returns the key itself
-    expect(screen.getByText('conversation_delete_confirm_no')).toBeInTheDocument();
-    expect(screen.getByText('conversation_delete_confirm_yes')).toBeInTheDocument();
+    expect(screen.getByText('Cancel')).toBeInTheDocument();
+    expect(screen.getByText('Delete')).toBeInTheDocument();
   });
 
   it('renders custom cancel and confirm text', () => {
@@ -54,7 +54,7 @@ describe('CometChatConfirmDialogActions', () => {
     });
     expect(screen.getByText('Custom Action')).toBeInTheDocument();
     // Default buttons should not be present
-    expect(screen.queryByText('conversation_delete_confirm_no')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
   });
 
   it('applies custom className to actions container', () => {
@@ -168,7 +168,7 @@ describe('CometChatConfirmDialogActions', () => {
       const errorEl = screen.getByRole('alert');
       expect(errorEl).toBeInTheDocument();
       // Default error text is the locale key
-      expect(errorEl.textContent).toBe('conversation_delete_error');
+      expect(errorEl.textContent).toBe('Something went wrong. Please try again.');
     });
   });
 

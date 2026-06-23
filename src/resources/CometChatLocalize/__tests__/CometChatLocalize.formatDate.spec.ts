@@ -5,40 +5,40 @@ import type { CometChatDateFormatConfig } from '../../../components/base/CometCh
 describe('CometChatLocalize — date/time configuration', () => {
   describe('getTimezone()', () => {
     it('returns undefined when no timezone is configured', () => {
-      const i18n = new CometChatLocalize();
-      expect(i18n.getTimezone()).toBeUndefined();
+      const localize = new CometChatLocalize();
+      expect(localize.getTimezone()).toBeUndefined();
     });
 
     it('returns the configured timezone string', () => {
-      const i18n = new CometChatLocalize();
-      i18n.init({ timezone: 'Europe/Berlin' });
-      expect(i18n.getTimezone()).toBe('Europe/Berlin');
+      const localize = new CometChatLocalize();
+      localize.init({ timezone: 'Europe/Berlin' });
+      expect(localize.getTimezone()).toBe('Europe/Berlin');
     });
   });
 
   describe('getDateLocaleLanguage()', () => {
     it('returns en-US when disableDateTimeLocalization is true', () => {
-      const i18n = new CometChatLocalize({ language: 'de' });
-      i18n.init({ disableDateTimeLocalization: true });
-      expect(i18n.getDateLocaleLanguage()).toBe('en-US');
+      const localize = new CometChatLocalize({ language: 'de' });
+      localize.init({ disableDateTimeLocalization: true });
+      expect(localize.getDateLocaleLanguage()).toBe('en-US');
     });
 
     it('returns current language when disableDateTimeLocalization is false', () => {
-      const i18n = new CometChatLocalize({ language: 'de' });
-      i18n.init({ disableDateTimeLocalization: false });
-      expect(i18n.getDateLocaleLanguage()).toBe('de');
+      const localize = new CometChatLocalize({ language: 'de' });
+      localize.init({ disableDateTimeLocalization: false });
+      expect(localize.getDateLocaleLanguage()).toBe('de');
     });
 
     it('returns current language when disableDateTimeLocalization is not set', () => {
-      const i18n = new CometChatLocalize({ language: 'fr' });
-      expect(i18n.getDateLocaleLanguage()).toBe('fr');
+      const localize = new CometChatLocalize({ language: 'fr' });
+      expect(localize.getDateLocaleLanguage()).toBe('fr');
     });
   });
 
   describe('getCalendarObject()', () => {
     it('returns undefined when no calendarObject is configured', () => {
-      const i18n = new CometChatLocalize();
-      expect(i18n.getCalendarObject()).toBeUndefined();
+      const localize = new CometChatLocalize();
+      expect(localize.getCalendarObject()).toBeUndefined();
     });
 
     it('returns the stored calendar configuration', () => {
@@ -48,9 +48,9 @@ describe('CometChatLocalize — date/time configuration', () => {
         lastWeek: 'dddd',
         otherDays: 'DD/MM/YYYY',
       };
-      const i18n = new CometChatLocalize();
-      i18n.init({ calendarObject: config });
-      expect(i18n.getCalendarObject()).toEqual(config);
+      const localize = new CometChatLocalize();
+      localize.init({ calendarObject: config });
+      expect(localize.getCalendarObject()).toEqual(config);
     });
   });
 
@@ -59,7 +59,7 @@ describe('CometChatLocalize — date/time configuration', () => {
     const fixedTimestamp = Math.floor(new Date('2024-01-15T10:30:00Z').getTime() / 1000);
 
     it('formats with explicit calendarObject argument', () => {
-      const i18n = new CometChatLocalize({ language: 'en-us' });
+      const localize = new CometChatLocalize({ language: 'en-us' });
       const config: CometChatDateFormatConfig = {
         today: 'hh:mm A',
         yesterday: 'Yesterday',
@@ -67,7 +67,7 @@ describe('CometChatLocalize — date/time configuration', () => {
         otherDays: 'DD MMM, YYYY',
       };
       // This timestamp is likely in the "otherDays" bucket
-      const result = i18n.formatDate(fixedTimestamp, config);
+      const result = localize.formatDate(fixedTimestamp, config);
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
     });
@@ -79,29 +79,29 @@ describe('CometChatLocalize — date/time configuration', () => {
         lastWeek: 'dddd',
         otherDays: 'YYYY-MM-DD',
       };
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      i18n.init({ calendarObject: globalConfig });
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      localize.init({ calendarObject: globalConfig });
 
-      const result = i18n.formatDate(fixedTimestamp);
+      const result = localize.formatDate(fixedTimestamp);
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
     });
 
     it('uses default config when neither argument nor global calendarObject is available', () => {
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      const result = i18n.formatDate(fixedTimestamp);
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      const result = localize.formatDate(fixedTimestamp);
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
     });
 
     it('passes timezone to the formatting utility', () => {
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      i18n.init({ timezone: 'America/New_York' });
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      localize.init({ timezone: 'America/New_York' });
 
       const config: CometChatDateFormatConfig = {
         otherDays: 'DD MMM, YYYY',
       };
-      const result = i18n.formatDate(fixedTimestamp, config);
+      const result = localize.formatDate(fixedTimestamp, config);
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
     });
@@ -115,14 +115,14 @@ describe('CometChatLocalize — date/time configuration', () => {
         otherDays: 'DD MMM, YYYY',
       };
 
-      const i18nUTC = new CometChatLocalize({ language: 'en-us' });
-      i18nUTC.init({ timezone: 'UTC' });
+      const localizeUTC = new CometChatLocalize({ language: 'en-us' });
+      localizeUTC.init({ timezone: 'UTC' });
 
-      const i18nTokyo = new CometChatLocalize({ language: 'en-us' });
-      i18nTokyo.init({ timezone: 'Asia/Tokyo' });
+      const localizeTokyo = new CometChatLocalize({ language: 'en-us' });
+      localizeTokyo.init({ timezone: 'Asia/Tokyo' });
 
-      const resultUTC = i18nUTC.formatDate(nearMidnightUTC, config);
-      const resultTokyo = i18nTokyo.formatDate(nearMidnightUTC, config);
+      const resultUTC = localizeUTC.formatDate(nearMidnightUTC, config);
+      const resultTokyo = localizeTokyo.formatDate(nearMidnightUTC, config);
 
       // UTC should show Jan 15, Tokyo should show Jan 16
       expect(resultUTC).toContain('15');
@@ -137,8 +137,8 @@ describe('CometChatLocalize — date/time configuration', () => {
         yesterday: 'Yesterday',
         otherDays: 'DD/MM/YYYY',
       };
-      const i18n = new CometChatLocalize({ language: 'en-us' });
-      const result = i18n.formatDate(nowTimestamp, config);
+      const localize = new CometChatLocalize({ language: 'en-us' });
+      const result = localize.formatDate(nowTimestamp, config);
       expect(result).toBe('Today');
     });
   });

@@ -3,6 +3,13 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CometChatMessageInformationEmptyState } from '../CometChatMessageInformationEmptyState';
 
+vi.mock('../../../context/locale/LocaleContext', () => ({
+  useLocale: () => ({
+    getLocalizedString: (key: string) => key,
+    language: 'en-us',
+  }),
+}));
+
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
   CometChat: {
     RECEIVER_TYPE: { GROUP: 'group', USER: 'user' },

@@ -27,11 +27,21 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
 }));
 
 function createMockUser(uid: string, name = 'User', status = 'offline') {
+  let blockedByMe = false;
+  let hasBlockedMe = false;
   return {
     getUid: () => uid,
     getName: () => name,
     getStatus: () => status,
     getAvatar: () => `https://example.com/${uid}.png`,
+    getBlockedByMe: () => blockedByMe,
+    getHasBlockedMe: () => hasBlockedMe,
+    setBlockedByMe: (value: boolean) => {
+      blockedByMe = value;
+    },
+    setHasBlockedMe: (value: boolean) => {
+      hasBlockedMe = value;
+    },
   } as unknown as CometChat.User;
 }
 

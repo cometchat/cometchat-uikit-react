@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useLocale } from '@cometchat/chat-uikit-react';
 import { CometChatDate } from '@cometchat/chat-uikit-react';
-import '../../styles/CometChatCallLog/CometChatCallLogInfo.css';
+import './CometChatCallLogInfo.css';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const CometChatCallLogInfo = ({ call }: { call: any }) => {
@@ -65,7 +65,7 @@ export const CometChatCallLogInfo = ({ call }: { call: any }) => {
           <div className="cometchat-call-log-info__title">{callStatus}</div>
           <div className="cometchat-call-log-info__subtitle">
             {initiatedAt > 0 ? (
-              <CometChatDate.Root
+              <CometChatDate
                 timestamp={initiatedAt}
                 formatConfig={{
                   today: 'DD MMM, hh:mm A',
@@ -74,9 +74,7 @@ export const CometChatCallLogInfo = ({ call }: { call: any }) => {
                   otherDays: 'DD MMM, hh:mm A',
                 }}
                 variant="body"
-              >
-                <CometChatDate.Text />
-              </CometChatDate.Root>
+              />
             ) : ''}
           </div>
         </div>

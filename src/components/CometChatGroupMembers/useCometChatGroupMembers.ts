@@ -9,6 +9,7 @@ import type {
 import { CometChatLogger } from '../../utils/CometChatLogger';
 import { useCometChatGroupMembersEvents } from './useCometChatGroupMembersEvents';
 import { usePublishEvent } from '../../hooks/usePublishEvent';
+import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import { clone, createActionMessage } from '../../utils/CometChatUIKitUtility';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
 
@@ -46,6 +47,15 @@ export function useCometChatGroupMembers(
 
   const guid = group.getGuid();
   const publish = usePublishEvent();
+
+  // Track member count in a ref so successive kicks/bans always use the latest value,
+  // even if the parent hasn't re-rendered with an updated group prop.
+  const memberCountRef = useRef<number>(group.getMembersCount());
+
+  // Sync ref whenever the group prop changes (parent re-renders with fresh group)
+  useEffect(() => {
+    memberCountRef.current = group.getMembersCount();
+  }, [group]);
 
   // --- Get logged-in user on mount ---
   useEffect(() => {
@@ -202,6 +212,7 @@ export function useCometChatGroupMembers(
     const cleanup = CometChatGroupMembersManager.attachGroupListener(listenerId, {
       onGroupMemberJoined: (_message, joinedUser, joinedGroup) => {
         if (joinedGroup.getGuid() !== guid) return;
+        memberCountRef.current = joinedGroup.getMembersCount();
         // Create a GroupMember from the User
         const member = new CometChat.GroupMember(
           joinedUser.getUid(),
@@ -214,19 +225,26 @@ export function useCometChatGroupMembers(
       },
       onGroupMemberLeft: (_message, leavingUser, leftGroup) => {
         if (leftGroup.getGuid() !== guid) return;
+        memberCountRef.current = leftGroup.getMembersCount();
         dispatch({ type: 'REMOVE_MEMBER', uid: leavingUser.getUid() });
       },
       onGroupMemberBanned: (_message, bannedUser, _bannedBy, bannedFrom) => {
         if (bannedFrom.getGuid() !== guid) return;
+        memberCountRef.current = bannedFrom.getMembersCount();
         dispatch({ type: 'REMOVE_MEMBER', uid: bannedUser.getUid() });
       },
       onGroupMemberKicked: (_message, kickedUser, _kickedBy, kickedFrom) => {
         if (kickedFrom.getGuid() !== guid) return;
+        memberCountRef.current = kickedFrom.getMembersCount();
         dispatch({ type: 'REMOVE_MEMBER', uid: kickedUser.getUid() });
       },
       onGroupMemberScopeChanged: (_message, changedUser, newScope, _oldScope, changedGroup) => {
         if (changedGroup.getGuid() !== guid) return;
         dispatch({ type: 'UPDATE_MEMBER_SCOPE', uid: changedUser.getUid(), scope: newScope });
+        // If the logged-in user's scope was changed, update permissions in real-time
+        if (changedUser.getUid() === loggedInUser?.getUid()) {
+          setLoggedInUserScope(newScope);
+        }
       },
     });
 
@@ -266,6 +284,39 @@ export function useCometChatGroupMembers(
 
   // --- UI Events subscription (cross-component communication) ---
   useCometChatGroupMembersEvents({ dispatch, guid });
+
+  // Keep memberCountRef in sync with UI events from other components
+  // (e.g., when AddMembers publishes ui:group/member-added)
+  useCometChatEvents(
+    event => {
+      if (event.type === 'ui:group/member-added' && event.group.getGuid() === guid) {
+        memberCountRef.current = event.group.getMembersCount();
+      }
+      if (event.type === 'ui:group/member-kicked' && event.group.getGuid() === guid) {
+        memberCountRef.current = event.group.getMembersCount();
+      }
+      if (event.type === 'ui:group/member-banned' && event.group.getGuid() === guid) {
+        memberCountRef.current = event.group.getMembersCount();
+      }
+      if (event.type === 'ui:group/member-joined' && event.joinedGroup.getGuid() === guid) {
+        memberCountRef.current = event.joinedGroup.getMembersCount();
+      }
+      // If the logged-in user's scope was changed via UI event, update permissions
+      if (event.type === 'ui:group/member-scope-changed' && event.group.getGuid() === guid) {
+        if (event.user.getUid() === loggedInUser?.getUid()) {
+          setLoggedInUserScope(event.newScope);
+        }
+      }
+      if (event.type === 'ui:group/ownership-changed' && event.group.getGuid() === guid) {
+        if (event.newOwner.getUid() === loggedInUser?.getUid()) {
+          setLoggedInUserScope('owner');
+        } else if (loggedInUser?.getUid() === event.previousOwnerUid) {
+          setLoggedInUserScope('admin');
+        }
+      }
+    },
+    [guid, loggedInUser]
+  );
 
   // --- Selection actions ---
   const selectMember = useCallback(
@@ -328,8 +379,10 @@ export function useCometChatGroupMembers(
         const result = await CometChatGroupMembersManager.kickMember(guid, uid);
         dispatch({ type: 'REMOVE_MEMBER', uid });
 
+        // Use the ref for an always-accurate count, then decrement it
+        memberCountRef.current = Math.max(0, memberCountRef.current - 1);
         const groupClone = clone(group);
-        groupClone.setMembersCount(groupClone.getMembersCount() - 1);
+        groupClone.setMembersCount(memberCountRef.current);
 
         publish({
           type: 'ui:group/member-kicked',
@@ -362,8 +415,10 @@ export function useCometChatGroupMembers(
         const result = await CometChatGroupMembersManager.banMember(guid, uid);
         dispatch({ type: 'REMOVE_MEMBER', uid });
 
+        // Use the ref for an always-accurate count, then decrement it
+        memberCountRef.current = Math.max(0, memberCountRef.current - 1);
         const groupClone = clone(group);
-        groupClone.setMembersCount(groupClone.getMembersCount() - 1);
+        groupClone.setMembersCount(memberCountRef.current);
 
         publish({
           type: 'ui:group/member-banned',
@@ -393,10 +448,15 @@ export function useCometChatGroupMembers(
         const result = await CometChatGroupMembersManager.unbanMember(guid, uid);
 
         const unbannedUser = new CometChat.User(uid);
+        // Unbanning increments member count
+        memberCountRef.current = memberCountRef.current + 1;
+        const groupClone = clone(group);
+        groupClone.setMembersCount(memberCountRef.current);
+
         publish({
           type: 'ui:group/member-unbanned',
           user: unbannedUser,
-          group: clone(group),
+          group: groupClone,
         });
 
         return result;
@@ -421,16 +481,21 @@ export function useCometChatGroupMembers(
         const updatedMember = clone(changedMember);
         updatedMember.setScope(scope as CometChat.GroupMemberScope);
 
+        // Use memberCountRef to ensure the published group has the correct count,
+        // since the group prop may be stale after add/remove operations.
+        const groupClone = clone(group);
+        groupClone.setMembersCount(memberCountRef.current);
+
         publish({
           type: 'ui:group/member-scope-changed',
           message: createActionMessage(
             updatedMember,
             CometChatUIKitConstants.groupMemberAction.SCOPE_CHANGE,
-            group,
+            groupClone,
             loggedInUser
           ),
           user: clone(updatedMember) as unknown as CometChat.User,
-          group: clone(group),
+          group: groupClone,
           newScope: scope,
         });
 

@@ -17,6 +17,12 @@
   overflow: hidden;
 }
 
+/* Container is focused on open for the focus trap — don't paint a ring on it. */
+.cometchat-message-information:focus,
+.cometchat-message-information:focus-visible {
+  outline: none;
+}
+
 /* ==================== Header ==================== */
 .cometchat-message-information__header {
   display: flex;

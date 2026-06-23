@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Möchten Sie das Eigentum wirklich übertragen? Dies kann nicht rückgängig gemacht werden, und der neue Eigentümer erhält die volle Kontrolle.",
   "transfer": "Übertragen",
   "transferring": "Wird übertragen...",
-  "transfer_failed": "Übertragung fehlgeschlagen. Bitte versuchen Sie es erneut."
+  "transfer_failed": "Übertragung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+  "loading": "Laden...",
+  "retry": "Erneut versuchen",
+  "notifications_title": "Benachrichtigungen",
+  "notifications_filter_all": "Alle",
+  "notifications_empty_title": "Noch nichts hier",
+  "notifications_empty_subtitle": "Neue Aktivitäten werden hier angezeigt, sobald sie verfügbar sind.",
+  "notifications_error_title": "Hoppla!",
+  "notifications_error_subtitle": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+  "notifications_pagination_error": "Weitere konnten nicht geladen werden",
+  "notifications_tap_to_retry": "Zum Wiederholen tippen",
+  "notifications_offline_banner": "Sie sind offline. Zwischengespeicherte Benachrichtigungen werden angezeigt."
 }

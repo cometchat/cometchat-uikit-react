@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Tem certeza de que deseja transferir a propriedade? Isso não pode ser desfeito, e o novo proprietário terá controle total.",
   "transfer": "Transferir",
   "transferring": "Transferindo...",
-  "transfer_failed": "A transferência falhou. Por favor, tente novamente."
+  "transfer_failed": "A transferência falhou. Por favor, tente novamente.",
+  "loading": "Carregando...",
+  "retry": "Tentar novamente",
+  "notifications_title": "Notificações",
+  "notifications_filter_all": "Todos",
+  "notifications_empty_title": "Nada aqui ainda",
+  "notifications_empty_subtitle": "Novas atividades aparecerão aqui quando disponíveis.",
+  "notifications_error_title": "Ops!",
+  "notifications_error_subtitle": "Parece que algo deu errado. Por favor, tente novamente.",
+  "notifications_pagination_error": "Não foi possível carregar mais",
+  "notifications_tap_to_retry": "Toque para tentar novamente",
+  "notifications_offline_banner": "Você está offline. Exibindo notificações em cache."
 }

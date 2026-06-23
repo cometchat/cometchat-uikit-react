@@ -57,16 +57,6 @@ export function useCometChatGroupsEvents(options: UseCometChatGroupsEventsOption
         break;
       }
 
-      case 'ui:group/member-scope-changed': {
-        dispatch({ type: 'UPDATE_GROUP', group: event.group });
-        break;
-      }
-
-      case 'ui:group/ownership-changed': {
-        dispatch({ type: 'UPDATE_GROUP', group: event.group });
-        break;
-      }
-
       default:
         break;
     }

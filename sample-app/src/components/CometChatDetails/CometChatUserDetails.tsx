@@ -4,7 +4,7 @@ import { CometChatAvatar, CometChatConfirmDialog, usePublishEvent, useCometChatE
 import type { CometChatEvent } from '@cometchat/chat-uikit-react';
 import blockIcon from '../../assets/block.svg';
 import deleteIcon from '../../assets/delete.svg';
-import '../../styles/CometChatDetails/CometChatDetails.css';
+import './CometChatDetails.css';
 
 interface CometChatUserDetailsProps {
   user: CometChat.User;
@@ -116,7 +116,7 @@ export const CometChatUserDetails = ({
           <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowDeleteDialog(false)}>
             <CometChatConfirmDialog.Icon />
             <CometChatConfirmDialog.Content title={getLocalizedString('delete_chat')} messageText={getLocalizedString('confirm_delete_chat')} />
-            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_chat')}  onConfirm={handleDeleteConversation} onCancel={() => setShowDeleteDialog(false)} />
+            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_chat')} onConfirm={handleDeleteConversation} onCancel={() => setShowDeleteDialog(false)} />
           </CometChatConfirmDialog.Root>
         </div>
       )}
@@ -128,14 +128,11 @@ export const CometChatUserDetails = ({
       <div className="side-component-content">
         <div className="side-component-content__group">
           <div className="side-component-content__avatar">
-            <CometChatAvatar.Root image={user.getAvatar?.()} name={user.getName()} size="large">
-              <CometChatAvatar.Image />
-              <CometChatAvatar.Initials />
-            </CometChatAvatar.Root>
+            <CometChatAvatar image={user.getAvatar?.()} name={user.getName()} size="large" />
           </div>
           <div className="side-component-content__title__wrapper">
             <div className="side-component-content__title">{user.getName()}</div>
-            {!isBlocked && (
+            {!isBlocked && !user.getHasBlockedMe?.() && (
               <div className="side-component-content__description">
                 {user.getStatus?.() === 'online' ? getLocalizedString('call_logs_user_status_online') : getLocalizedString('call_logs_user_status_offline')}
               </div>

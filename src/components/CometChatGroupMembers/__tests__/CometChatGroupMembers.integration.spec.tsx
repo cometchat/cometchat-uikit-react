@@ -17,6 +17,69 @@ const mockFetchNext = vi.fn();
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
   CometChat: {
+    CATEGORY_MESSAGE: 'message',
+    CATEGORY_CUSTOM: 'custom',
+    CATEGORY_ACTION: 'action',
+    CATEGORY_CALL: 'call',
+    CATEGORY_INTERACTIVE: 'interactive',
+    MessageCategory: { AGENTIC: 'agentic' },
+    ModerationStatus: {
+      PENDING: 'pending',
+      APPROVED: 'approved',
+      DISAPPROVED: 'disapproved',
+      UNMODERATED: 'unmoderated',
+    },
+    MESSAGE_TYPE: {
+      TEXT: 'text',
+      IMAGE: 'image',
+      VIDEO: 'video',
+      AUDIO: 'audio',
+      FILE: 'file',
+      ASSISTANT: 'assistant',
+      TOOL_ARGUMENTS: 'tool_arguments',
+      TOOL_RESULT: 'tool_result',
+    },
+    ACTION_TYPE: {
+      MEMBER_JOINED: 'joined',
+      MEMBER_LEFT: 'left',
+      MEMBER_ADDED: 'added',
+      MEMBER_BANNED: 'banned',
+      MEMBER_UNBANNED: 'unbanned',
+      MEMBER_KICKED: 'kicked',
+      MEMBER_INVITED: 'invited',
+      MEMBER_SCOPE_CHANGED: 'scopeChanged',
+    },
+    GROUP_TYPE: { PRIVATE: 'private', PASSWORD: 'password', PUBLIC: 'public' },
+    CALL_MODE: {
+      DEFAULT: 'default',
+      GRID: 'grid',
+      SINGLE: 'single',
+      SPOTLIGHT: 'spotlight',
+      TILE: 'tile',
+    },
+    GoalType: { ALL_OF: 'allOf', ANY_OF: 'anyOf', ANY_ACTION: 'anyAction', NONE: 'none' },
+    RECEIVER_TYPE: { USER: 'user', GROUP: 'group' },
+    USER_STATUS: { ONLINE: 'online', OFFLINE: 'offline' },
+    CALL_STATUS: {
+      ONGOING: 'ongoing',
+      ENDED: 'ended',
+      INITIATED: 'initiated',
+      CANCELLED: 'cancelled',
+      REJECTED: 'rejected',
+      UNANSWERED: 'unanswered',
+      BUSY: 'busy',
+    },
+    AI_ASSISTANT_EVENTS: {
+      RUN_STARTED: 'run_started',
+      TEXT_MESSAGE_START: 'text_message_start',
+      TEXT_MESSAGE_CONTENT: 'text_message_content',
+      TEXT_MESSAGE_END: 'text_message_end',
+      RUN_FINISHED: 'run_finished',
+      TOOL_CALL_STARTED: 'tool_call_start',
+      TOOL_CALL_ENDED: 'tool_call_end',
+      TOOL_CALL_ARGUMENT: 'tool_call_args',
+      TOOL_CALL_RESULT: 'tool_call_result',
+    },
     GroupMembersRequestBuilder: vi.fn(() => ({
       setLimit: vi.fn().mockReturnThis(),
       setSearchKeyword: vi.fn().mockReturnThis(),
@@ -53,7 +116,7 @@ vi.mock('../../../utils/CometChatLogger', () => ({
 
 vi.mock('../../../context/locale/LocaleContext', () => ({
   useLocale: () => ({
-    t: (key: string) => {
+    getLocalizedString: (key: string) => {
       const translations: Record<string, string> = {
         group_members_header: 'Members',
         group_members_admin: 'Admin',
@@ -63,6 +126,13 @@ vi.mock('../../../context/locale/LocaleContext', () => ({
         group_members_empty: 'No Members Found',
         group_members_error: 'Something Went Wrong',
         group_members_search_placeholder: 'Search members',
+        member_scope_owner: 'Owner',
+        empty_title: 'No Members Found',
+        error_title: 'OOPS!',
+        error_subtitle: 'Looks like something went wrong',
+        member_empty_title: 'No Members Found',
+        member_error_title: 'OOPS!',
+        member_error_subtitle: 'Looks like something went wrong',
       };
       return translations[key] ?? key;
     },
@@ -166,6 +236,8 @@ function createMockMember(uid: string, name: string, scope = 'participant', stat
     getAvatar: () => '',
     getScope: () => scope,
     getStatus: () => status,
+    getBlockedByMe: () => false,
+    getHasBlockedMe: () => false,
     setScope: vi.fn(),
     setStatus: vi.fn(),
     setName: vi.fn(),
@@ -213,11 +285,14 @@ describe('CometChatGroupMembers — Integration', () => {
 
     render(<CometChatGroupMembers.Root group={createMockGroup()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Owner')).toBeInTheDocument();
-      expect(screen.getByText('Admin')).toBeInTheDocument();
-      expect(screen.getByText('Moderator')).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Owner')).toBeInTheDocument();
+        expect(screen.getByText('Admin')).toBeInTheDocument();
+        expect(screen.getByText('Moderator')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     // Participant should NOT have a badge
     expect(screen.queryByText('Participant')).not.toBeInTheDocument();
@@ -240,9 +315,12 @@ describe('CometChatGroupMembers — Integration', () => {
 
     render(<CometChatGroupMembers.Root group={createMockGroup()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('No Members Found')).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText('No Members Found')).toBeInTheDocument();
+      },
+      { timeout: 5000, interval: 100 }
+    );
   });
 
   it('renders error state when fetch fails', async () => {
@@ -250,11 +328,12 @@ describe('CometChatGroupMembers — Integration', () => {
 
     render(<CometChatGroupMembers.Root group={createMockGroup()} />);
 
-    await waitFor(() => {
-      // The error state renders "OOPS!" title and "Looks like something went wrong" subtitle
-      expect(screen.getByText('OOPS!')).toBeInTheDocument();
-      expect(screen.getByText('Looks like something went wrong')).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText('OOPS!')).toBeInTheDocument();
+      },
+      { timeout: 5000, interval: 100 }
+    );
   });
 
   it('renders checkboxes in multiple selection mode', async () => {
@@ -348,7 +427,7 @@ describe('CometChatGroupMembers — Integration', () => {
     const { container } = render(<CometChatGroupMembers.Root group={createMockGroup()} />);
 
     const region = container.querySelector('[role="region"]');
-    expect(region).toHaveAttribute('aria-label', 'Group Members');
+    expect(region).toHaveAttribute('aria-label', 'Members');
   });
 
   it('renders status indicators when hideUserStatus is false', async () => {

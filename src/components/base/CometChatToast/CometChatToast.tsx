@@ -1,5 +1,6 @@
 import React, { forwardRef, useEffect, useRef, useCallback } from 'react';
 import type { CometChatToastProps } from './CometChatToast.types';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatToast.css';
 import { useLocale } from '../../../context/locale/LocaleContext';
 
@@ -38,6 +39,11 @@ export const CometChatToast = forwardRef<HTMLDivElement, CometChatToastProps>(
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Guard against double-fire: once onClose is called, skip subsequent calls
     const closedRef = useRef(false);
+    const IframeContext = useCometChatFrameContext();
+
+    const getCurrentDocument = useCallback(() => {
+      return IframeContext.iframeDocument ?? document;
+    }, [IframeContext.iframeDocument]);
 
     const handleClose = useCallback(() => {
       if (closedRef.current) return;
@@ -78,11 +84,11 @@ export const CometChatToast = forwardRef<HTMLDivElement, CometChatToastProps>(
         }
       };
 
-      document.addEventListener('keydown', handleKeyDown);
+      getCurrentDocument().addEventListener('keydown', handleKeyDown);
       return () => {
-        document.removeEventListener('keydown', handleKeyDown);
+        getCurrentDocument().removeEventListener('keydown', handleKeyDown);
       };
-    }, [dismissOnEscape, handleClose]);
+    }, [dismissOnEscape, handleClose, getCurrentDocument]);
 
     if (!text) return null;
 

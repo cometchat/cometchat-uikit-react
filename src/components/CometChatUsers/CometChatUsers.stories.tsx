@@ -30,6 +30,8 @@ function createMockUser(uid: string, name: string, status = 'online') {
     getName: () => name,
     getStatus: () => status,
     getAvatar: () => `https://i.pravatar.cc/150?u=${uid}`,
+    getBlockedByMe: () => false,
+    getHasBlockedMe: () => false,
   } as unknown as CometChat.User;
 }
 

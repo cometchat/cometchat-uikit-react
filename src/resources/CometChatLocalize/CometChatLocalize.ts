@@ -1,5 +1,5 @@
 /**
- * CometChatLocalize — core i18n service class.
+ * CometChatLocalize — core localization service class.
  *
  * Simple key-value lookup with fallback language support.
  * React integration is in LocaleProvider.
@@ -7,7 +7,7 @@
 
 import { translationResources } from './translations';
 import type {
-  CometChatI18nInstance,
+  CometChatLocalizeInstance,
   TranslateFunction,
   TDateTimeParser,
   TDateTimeParserInput,
@@ -25,7 +25,7 @@ export interface CometChatLocalizeOptions {
   fallbackLanguage?: string;
 }
 
-export class CometChatLocalize implements CometChatI18nInstance {
+export class CometChatLocalize implements CometChatLocalizeInstance {
   private static _sharedInstance: CometChatLocalize | null = null;
 
   /**

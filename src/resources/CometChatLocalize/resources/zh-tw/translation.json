@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "您確定要轉讓所有權嗎？此操作無法撤銷，新所有者將獲得完全控制權。",
   "transfer": "轉讓",
   "transferring": "轉讓中...",
-  "transfer_failed": "轉讓失敗，請重試。"
+  "transfer_failed": "轉讓失敗，請重試。",
+  "loading": "載入中...",
+  "retry": "重試",
+  "notifications_title": "通知",
+  "notifications_filter_all": "全部",
+  "notifications_empty_title": "這裡還沒有內容",
+  "notifications_empty_subtitle": "有新活動時將在此顯示。",
+  "notifications_error_title": "糟糕！",
+  "notifications_error_subtitle": "好像出了點問題。請重試。",
+  "notifications_pagination_error": "無法載入更多",
+  "notifications_tap_to_retry": "點擊重試",
+  "notifications_offline_banner": "您已離線。正在顯示快取的通知。"
 }

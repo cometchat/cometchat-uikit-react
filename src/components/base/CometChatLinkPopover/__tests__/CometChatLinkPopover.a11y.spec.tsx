@@ -32,7 +32,7 @@ describe('CometChatLinkPopover a11y', () => {
 
   it('Edit button is focusable and has aria-label', () => {
     render(<CometChatLinkPopover {...defaultProps} />);
-    const editBtn = screen.getByLabelText('Edit link');
+    const editBtn = screen.getByLabelText('Edit');
     expect(editBtn).toBeTruthy();
     editBtn.focus();
     expect(document.activeElement).toBe(editBtn);
@@ -40,7 +40,7 @@ describe('CometChatLinkPopover a11y', () => {
 
   it('Remove button is focusable and has aria-label', () => {
     render(<CometChatLinkPopover {...defaultProps} />);
-    const removeBtn = screen.getByLabelText('Remove link');
+    const removeBtn = screen.getByLabelText('Remove');
     expect(removeBtn).toBeTruthy();
     removeBtn.focus();
     expect(document.activeElement).toBe(removeBtn);

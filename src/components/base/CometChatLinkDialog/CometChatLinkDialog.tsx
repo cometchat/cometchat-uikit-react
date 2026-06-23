@@ -2,6 +2,7 @@ import React, { forwardRef, useState, useCallback, useEffect, useRef, useId, use
 import type { CometChatLinkDialogProps } from './CometChatLinkDialog.types';
 import { CometChatButton } from '../CometChatButton';
 import { useLocale } from '../../../context/locale/LocaleContext';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatLinkDialog.css';
 
 /**
@@ -63,6 +64,11 @@ export const CometChatLinkDialog = forwardRef<HTMLDivElement, CometChatLinkDialo
     const cancelButtonRef = useRef<HTMLButtonElement>(null);
     const saveButtonRef = useRef<HTMLButtonElement>(null);
     const previousFocusRef = useRef<HTMLElement | null>(null);
+    const IframeContext = useCometChatFrameContext();
+
+    const getCurrentDocument = useCallback(() => {
+      return IframeContext.iframeDocument ?? document;
+    }, [IframeContext.iframeDocument]);
 
     // Has changes check for edit mode
     const hasChanges = useMemo(() => {
@@ -72,8 +78,8 @@ export const CometChatLinkDialog = forwardRef<HTMLDivElement, CometChatLinkDialo
 
     // Store previously focused element
     useEffect(() => {
-      previousFocusRef.current = document.activeElement as HTMLElement;
-    }, []);
+      previousFocusRef.current = getCurrentDocument().activeElement as HTMLElement;
+    }, [getCurrentDocument]);
 
     // Auto-focus appropriate input
     useEffect(() => {
@@ -124,7 +130,7 @@ export const CometChatLinkDialog = forwardRef<HTMLDivElement, CometChatLinkDialo
 
           const first = focusable[0];
           const last = focusable[focusable.length - 1];
-          const active = document.activeElement;
+          const active = getCurrentDocument().activeElement;
 
           if (event.shiftKey && active === first) {
             event.preventDefault();
@@ -136,9 +142,9 @@ export const CometChatLinkDialog = forwardRef<HTMLDivElement, CometChatLinkDialo
         }
       };
 
-      document.addEventListener('keydown', handleKeyDown);
+      getCurrentDocument().addEventListener('keydown', handleKeyDown);
       return () => {
-        document.removeEventListener('keydown', handleKeyDown);
+        getCurrentDocument().removeEventListener('keydown', handleKeyDown);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onCancel, text, url, hasChanges, mode]);
@@ -271,25 +277,23 @@ export const CometChatLinkDialog = forwardRef<HTMLDivElement, CometChatLinkDialo
         {/* Buttons */}
         <div className={'cometchat-link-dialog__button-group'}>
           <div className={'cometchat-link-dialog__button-group-cancel'}>
-            <CometChatButton.Root
+            <CometChatButton
               ref={cancelButtonRef}
               variant="secondary"
               onClick={onCancel}
               aria-label={getLocalizedString('cancel')}
-            >
-              <CometChatButton.Text>{getLocalizedString('cancel')}</CometChatButton.Text>
-            </CometChatButton.Root>
+              text={getLocalizedString('cancel')}
+            />
           </div>
           <div className={'cometchat-link-dialog__button-group-save'}>
-            <CometChatButton.Root
+            <CometChatButton
               ref={saveButtonRef}
               variant="primary"
               onClick={handleSave}
               disabled={saveDisabled}
               aria-label={getLocalizedString('link_dialog_save')}
-            >
-              <CometChatButton.Text>{getLocalizedString('link_dialog_save')}</CometChatButton.Text>
-            </CometChatButton.Root>
+              text={getLocalizedString('link_dialog_save')}
+            />
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import { clone } from '../../utils/CometChatUIKitUtility';
 import type { CometChatFetchState } from '../../types';
 
 // ==================== State ====================
@@ -130,7 +131,9 @@ export function groupMembersReducer(
       const updatedMembers = [...state.members];
       const member = updatedMembers[idx];
       if (member) {
-        member.setScope(action.scope as unknown as CometChat.GroupMemberScope);
+        const clonedMember = clone(member);
+        clonedMember.setScope(action.scope as unknown as CometChat.GroupMemberScope);
+        updatedMembers[idx] = clonedMember;
       }
       return {
         ...state,

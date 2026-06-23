@@ -59,14 +59,6 @@ export interface CometChatReactionsInfoProps {
   className?: string;
 }
 
-// --- List (full reactor list in popover) ---
-
-/** Props for CometChatReactions.List. */
-export interface CometChatReactionsListProps {
-  /** Optional custom className. */
-  className?: string;
-}
-
 // --- Overflow ---
 
 /** Props for CometChatReactions.Overflow. */
@@ -93,26 +85,8 @@ export interface CometChatReactionsContextValue {
   visibleReactions: CometChat.ReactionCount[];
   /** Number of overflow reactions. */
   overflowCount: number;
-  /** Active tab in the reactor list ('all' or emoji string). */
-  activeTab: string;
-  /** Reactor details for the active tab. */
-  reactors: CometChat.Reaction[];
-  /** Fetch state for reactor details. */
-  reactorsFetchState: CometChatReactionsFetchState;
-  /** Whether more reactors can be fetched. */
-  reactorsHasMore: boolean;
   /** Toggle a reaction (fires parent callback). */
   onReactionClick: (emoji: string) => void;
-  /** Click a reactor in the list. */
-  onReactorClick: (reaction: CometChat.Reaction) => void;
-  /** Switch the active tab in the reactor list. */
-  setActiveTab: (tab: string) => void;
-  /** Fetch reactors for the active tab. */
-  fetchReactors: () => Promise<void>;
-  /** Fetch next page of reactors. */
-  fetchNextReactors: () => Promise<void>;
-  /** Remove a reactor optimistically from the cached list. */
-  removeReactor: (uid: string, emoji: string) => void;
   /** Request builder for reactor fetching. */
   reactionsRequestBuilder?: CometChat.ReactionsRequestBuilder;
   /** Debounce time in ms before showing reaction info tooltip on hover. */

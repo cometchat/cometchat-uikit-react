@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { CometChatReactionsRoot } from '../CometChatReactionsRoot';
 import { useCometChatReactionsContext } from '../CometChatReactions.context';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
@@ -25,13 +25,24 @@ const mockResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 vi.stubGlobal('ResizeObserver', mockResizeObserver);
 
-// Mock CometChatPopover to simplify testing
+// Mock CometChatPopover to simplify testing.
+// The bar uses the flat API: <CometChatPopover trigger={...} content={...} />,
+// so the mock must be a callable component that renders the trigger (and content).
 vi.mock('../../base/CometChatPopover', () => ({
-  CometChatPopover: {
-    Root: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    Trigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    Content: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  },
+  CometChatPopover: Object.assign(
+    ({ trigger, content }: { trigger: React.ReactNode; content: React.ReactNode }) => (
+      <div>
+        <div>{trigger}</div>
+        <div>{content}</div>
+      </div>
+    ),
+    {
+      Root: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+      Trigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+      Content: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    }
+  ),
+  useCometChatPopoverContext: () => ({ close: vi.fn() }),
 }));
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -129,9 +140,8 @@ describe('CometChatReactionsRoot', () => {
       return (
         <div>
           <span data-testid="alignment">{ctx.alignment}</span>
-          <span data-testid="active-tab">{ctx.activeTab}</span>
-          <span data-testid="fetch-state">{ctx.reactorsFetchState}</span>
-          <span data-testid="has-more">{String(ctx.reactorsHasMore)}</span>
+          <span data-testid="max-visible">{ctx.maxVisible}</span>
+          <span data-testid="overflow-count">{ctx.overflowCount}</span>
         </div>
       );
     }
@@ -145,9 +155,8 @@ describe('CometChatReactionsRoot', () => {
     );
 
     expect(screen.getByTestId('alignment')).toHaveTextContent('left');
-    expect(screen.getByTestId('active-tab')).toHaveTextContent('all');
-    expect(screen.getByTestId('fetch-state')).toHaveTextContent('idle');
-    expect(screen.getByTestId('has-more')).toHaveTextContent('true');
+    expect(screen.getByTestId('max-visible')).toHaveTextContent('1');
+    expect(screen.getByTestId('overflow-count')).toHaveTextContent('0');
   });
 
   it('provides custom alignment from props', () => {
@@ -225,57 +234,9 @@ describe('CometChatReactionsRoot', () => {
     }).not.toThrow();
   });
 
-  // ─── onReactorClick callback ──────────────────────────────────────
+  // ─── onReactorClick removed (consolidated into CometChatReactionList) ──
 
-  it('calls onReactorClick prop when a reactor is clicked via context', () => {
-    const onReactorClick = vi.fn();
-    const mockReaction = {
-      getReaction: () => '👍',
-      getReactedBy: () => ({ getUid: () => 'u1', getName: () => 'Alice' }),
-    } as unknown as CometChat.Reaction;
-
-    function ContextConsumer() {
-      const ctx = useCometChatReactionsContext();
-      return <button onClick={() => ctx.onReactorClick(mockReaction)}>Click Reactor</button>;
-    }
-
-    const reactions = [buildReactionCount('👍', 3)];
-    const message = createMockMessage(reactions);
-    render(
-      <CometChatReactionsRoot message={message} onReactorClick={onReactorClick}>
-        <ContextConsumer />
-      </CometChatReactionsRoot>
-    );
-
-    fireEvent.click(screen.getByText('Click Reactor'));
-    expect(onReactorClick).toHaveBeenCalledWith(mockReaction, message);
-  });
-
-  // ─── setActiveTab ─────────────────────────────────────────────────
-
-  it('provides setActiveTab that updates the active tab', () => {
-    function ContextConsumer() {
-      const ctx = useCometChatReactionsContext();
-      return (
-        <div>
-          <span data-testid="active-tab">{ctx.activeTab}</span>
-          <button onClick={() => ctx.setActiveTab('👍')}>Set Tab</button>
-        </div>
-      );
-    }
-
-    const reactions = [buildReactionCount('👍', 3)];
-    const message = createMockMessage(reactions);
-    render(
-      <CometChatReactionsRoot message={message}>
-        <ContextConsumer />
-      </CometChatReactionsRoot>
-    );
-
-    expect(screen.getByTestId('active-tab')).toHaveTextContent('all');
-    fireEvent.click(screen.getByText('Set Tab'));
-    expect(screen.getByTestId('active-tab')).toHaveTextContent('👍');
-  });
+  // ─── setActiveTab removed (consolidated into CometChatReactionList) ──
 
   // ─── Context throws outside Root ──────────────────────────────────
 
@@ -312,55 +273,7 @@ describe('CometChatReactionsRoot', () => {
     expect(screen.getByTestId('alignment')).toHaveTextContent('left');
   });
 
-  // ─── fetchReactors via context ──────────────────────────────────
-
-  it('provides fetchReactors that can be called from children', async () => {
-    let fetchFn: (() => Promise<void>) | undefined;
-
-    function ContextConsumer() {
-      const ctx = useCometChatReactionsContext();
-      fetchFn = ctx.fetchReactors;
-      return <span data-testid="fetch-state">{ctx.reactorsFetchState}</span>;
-    }
-
-    const reactions = [buildReactionCount('👍', 3)];
-    const message = createMockMessage(reactions);
-    render(
-      <CometChatReactionsRoot message={message}>
-        <ContextConsumer />
-      </CometChatReactionsRoot>
-    );
-
-    expect(fetchFn).toBeDefined();
-    // Calling fetchReactors should not throw
-    await act(async () => {
-      await fetchFn!();
-    });
-  });
-
-  it('provides fetchNextReactors that can be called from children', async () => {
-    let fetchNextFn: (() => Promise<void>) | undefined;
-
-    function ContextConsumer() {
-      const ctx = useCometChatReactionsContext();
-      fetchNextFn = ctx.fetchNextReactors;
-      return <span data-testid="has-more">{String(ctx.reactorsHasMore)}</span>;
-    }
-
-    const reactions = [buildReactionCount('👍', 3)];
-    const message = createMockMessage(reactions);
-    render(
-      <CometChatReactionsRoot message={message}>
-        <ContextConsumer />
-      </CometChatReactionsRoot>
-    );
-
-    expect(fetchNextFn).toBeDefined();
-    // Calling fetchNextReactors should not throw
-    await act(async () => {
-      await fetchNextFn!();
-    });
-  });
+  // ─── fetchReactors/fetchNextReactors removed (consolidated into CometChatReactionList) ──
 
   // ─── onError callback ─────────────────────────────────────────────
 

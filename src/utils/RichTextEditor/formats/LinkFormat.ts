@@ -2,7 +2,7 @@
 /**
  * LinkFormat — handles creating, editing, and removing hyperlinks.
  *
- * Uses document.execCommand('createLink') and 'unlink' under the hood,
+ * Uses ctx.execCommand('createLink') and 'unlink' under the hood,
  * plus manual attribute setting for target="_blank" and rel.
  */
 
@@ -16,7 +16,7 @@ import { deactivateUnderline } from './InlineFormat';
  * @param ctx - Editor context.
  */
 export function setLink(url: string | null, ctx: EditorContext, text?: string): void {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return;
 
   if (url === null) {
@@ -24,13 +24,13 @@ export function setLink(url: string | null, ctx: EditorContext, text?: string): 
     const range = sel.getRangeAt(0);
     const anchor = ctx.findAncestor(range.startContainer, 'A') as HTMLAnchorElement | null;
     if (anchor) {
-      const selectRange = document.createRange();
+      const selectRange = ctx.getDocument().createRange();
       selectRange.selectNodeContents(anchor);
       sel.removeAllRanges();
       sel.addRange(selectRange);
-      document.execCommand('unlink', false);
+      ctx.execCommand('unlink');
     } else {
-      document.execCommand('unlink', false);
+      ctx.execCommand('unlink');
     }
   } else {
     const range = sel.getRangeAt(0);
@@ -46,7 +46,7 @@ export function setLink(url: string | null, ctx: EditorContext, text?: string): 
       existingAnchor.setAttribute('target', '_blank');
       existingAnchor.setAttribute('rel', 'noopener noreferrer');
       // Place cursor after the anchor
-      const newRange = document.createRange();
+      const newRange = ctx.getDocument().createRange();
       newRange.setStartAfter(existingAnchor);
       newRange.collapse(true);
       sel.removeAllRanges();
@@ -54,14 +54,14 @@ export function setLink(url: string | null, ctx: EditorContext, text?: string): 
     } else {
       // Add mode: create a new link
       // Check if underline was active BEFORE creating the link
-      const wasUnderlineActive = document.queryCommandState('underline');
+      const wasUnderlineActive = ctx.getDocument().queryCommandState('underline');
 
       if (text && sel.toString() !== text) {
-        document.execCommand('insertText', false, text);
+        ctx.execCommand('insertText', text);
         const r = sel.getRangeAt(0);
         r.setStart(r.startContainer, r.startOffset - text.length);
       }
-      document.execCommand('createLink', false, url);
+      ctx.execCommand('createLink', url);
       const anchor = ctx.findAncestor(sel.anchorNode, 'A') as HTMLAnchorElement | null;
       if (anchor) {
         anchor.setAttribute('target', '_blank');
@@ -69,9 +69,9 @@ export function setLink(url: string | null, ctx: EditorContext, text?: string): 
 
         // Place cursor AFTER the anchor with a zero-width space so the cursor
         // is outside the link and the browser's underline state is reset.
-        const zws = document.createTextNode('\u200B');
+        const zws = ctx.getDocument().createTextNode('\u200B');
         anchor.parentNode?.insertBefore(zws, anchor.nextSibling);
-        const newRange = document.createRange();
+        const newRange = ctx.getDocument().createRange();
         newRange.setStart(zws, 1);
         newRange.collapse(true);
         sel.removeAllRanges();
@@ -80,8 +80,8 @@ export function setLink(url: string | null, ctx: EditorContext, text?: string): 
 
       // If underline was NOT active before creating the link, turn it off now.
       // execCommand('createLink') can arm underline as a side effect in some browsers.
-      if (!wasUnderlineActive && document.queryCommandState('underline')) {
-        document.execCommand('underline', false);
+      if (!wasUnderlineActive && ctx.getDocument().queryCommandState('underline')) {
+        ctx.execCommand('underline');
       }
       // Also explicitly deactivate underline in the override set so the toolbar
       // doesn't show it as active even if queryCommandState still returns true.
@@ -97,7 +97,7 @@ export function setLink(url: string | null, ctx: EditorContext, text?: string): 
 
 /** Get the URL of the link at the current cursor position. */
 export function getCurrentLink(ctx: EditorContext): string | null {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return null;
   const anchor = ctx.findAncestor(sel.anchorNode, 'A') as HTMLAnchorElement | null;
   return anchor?.href ?? null;
@@ -105,7 +105,7 @@ export function getCurrentLink(ctx: EditorContext): string | null {
 
 /** Get the text of the link at the current cursor position. */
 export function getCurrentLinkText(ctx: EditorContext): string | null {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return null;
   const anchor = ctx.findAncestor(sel.anchorNode, 'A') as HTMLAnchorElement | null;
   return anchor?.textContent ?? null;

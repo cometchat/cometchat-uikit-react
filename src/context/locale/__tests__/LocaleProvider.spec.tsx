@@ -26,11 +26,11 @@ describe('LocaleProvider — context expansion', () => {
   });
 
   it('exposes timezone from the CometChatLocalize instance', () => {
-    const i18n = new CometChatLocalize({ language: 'en-us' });
-    i18n.init({ timezone: 'America/Chicago' });
+    const localize = new CometChatLocalize({ language: 'en-us' });
+    localize.init({ timezone: 'America/Chicago' });
 
     render(
-      <LocaleProvider i18nInstance={i18n}>
+      <LocaleProvider localizeInstance={localize}>
         <LocaleConsumer />
       </LocaleProvider>
     );
@@ -39,12 +39,12 @@ describe('LocaleProvider — context expansion', () => {
   });
 
   it('exposes calendarObject from the CometChatLocalize instance', () => {
-    const i18n = new CometChatLocalize({ language: 'en-us' });
+    const localize = new CometChatLocalize({ language: 'en-us' });
     const config = { today: 'hh:mm A', yesterday: 'Yesterday' };
-    i18n.init({ calendarObject: config });
+    localize.init({ calendarObject: config });
 
     render(
-      <LocaleProvider i18nInstance={i18n}>
+      <LocaleProvider localizeInstance={localize}>
         <LocaleConsumer />
       </LocaleProvider>
     );
@@ -53,10 +53,10 @@ describe('LocaleProvider — context expansion', () => {
   });
 
   it('exposes dateLocaleLanguage from the CometChatLocalize instance', () => {
-    const i18n = new CometChatLocalize({ language: 'de' });
+    const localize = new CometChatLocalize({ language: 'de' });
 
     render(
-      <LocaleProvider i18nInstance={i18n}>
+      <LocaleProvider localizeInstance={localize}>
         <LocaleConsumer />
       </LocaleProvider>
     );
@@ -65,10 +65,10 @@ describe('LocaleProvider — context expansion', () => {
   });
 
   it('shows timezone as undefined when not configured', () => {
-    const i18n = new CometChatLocalize({ language: 'en-us' });
+    const localize = new CometChatLocalize({ language: 'en-us' });
 
     render(
-      <LocaleProvider i18nInstance={i18n}>
+      <LocaleProvider localizeInstance={localize}>
         <LocaleConsumer />
       </LocaleProvider>
     );
@@ -77,10 +77,10 @@ describe('LocaleProvider — context expansion', () => {
   });
 
   it('updates dateLocaleLanguage when setCurrentLanguage is called', () => {
-    const i18n = new CometChatLocalize({ language: 'en-us' });
+    const localize = new CometChatLocalize({ language: 'en-us' });
 
     render(
-      <LocaleProvider i18nInstance={i18n}>
+      <LocaleProvider localizeInstance={localize}>
         <LocaleConsumer />
       </LocaleProvider>
     );
@@ -88,7 +88,7 @@ describe('LocaleProvider — context expansion', () => {
     expect(screen.getByTestId('dateLocaleLanguage').textContent).toBe('en-us');
 
     act(() => {
-      i18n.setCurrentLanguage('fr');
+      localize.setCurrentLanguage('fr');
     });
 
     expect(screen.getByTestId('dateLocaleLanguage').textContent).toBe('fr');
@@ -103,14 +103,14 @@ describe('LocaleProvider — context expansion', () => {
       },
     });
 
-    const i18n = new CometChatLocalize({ language: 'en-us', fallbackLanguage: 'fr' });
-    i18n.init({ disableAutoDetection: true });
+    const localize = new CometChatLocalize({ language: 'en-us', fallbackLanguage: 'fr' });
+    localize.init({ disableAutoDetection: true });
 
     // When disableAutoDetection is true, getDefaultLanguage returns fallback
-    expect(i18n.getDefaultLanguage()).toBe('fr');
+    expect(localize.getDefaultLanguage()).toBe('fr');
 
     render(
-      <LocaleProvider i18nInstance={i18n}>
+      <LocaleProvider localizeInstance={localize}>
         <LocaleConsumer />
       </LocaleProvider>
     );
@@ -119,10 +119,10 @@ describe('LocaleProvider — context expansion', () => {
     expect(screen.getByTestId('language').textContent).toBe('en-us');
   });
 
-  it('uses provided i18nInstance prop', () => {
-    const i18n = new CometChatLocalize({ language: 'ja' });
-    i18n.addTranslation({ ja: { HELLO: 'こんにちは' } });
-    i18n.setCurrentLanguage('ja');
+  it('uses provided localizeInstance prop', () => {
+    const localize = new CometChatLocalize({ language: 'ja' });
+    localize.addTranslation({ ja: { HELLO: 'こんにちは' } });
+    localize.setCurrentLanguage('ja');
 
     function TranslationConsumer() {
       const { getLocalizedString } = useLocale();
@@ -130,7 +130,7 @@ describe('LocaleProvider — context expansion', () => {
     }
 
     render(
-      <LocaleProvider i18nInstance={i18n}>
+      <LocaleProvider localizeInstance={localize}>
         <TranslationConsumer />
       </LocaleProvider>
     );
@@ -139,11 +139,11 @@ describe('LocaleProvider — context expansion', () => {
   });
 
   it('multiple LocaleProvider instances operate independently', () => {
-    const i18n1 = new CometChatLocalize({ language: 'en-us' });
-    i18n1.init({ timezone: 'UTC' });
+    const localize1 = new CometChatLocalize({ language: 'en-us' });
+    localize1.init({ timezone: 'UTC' });
 
-    const i18n2 = new CometChatLocalize({ language: 'de' });
-    i18n2.init({ timezone: 'Europe/Berlin' });
+    const localize2 = new CometChatLocalize({ language: 'de' });
+    localize2.init({ timezone: 'Europe/Berlin' });
 
     function Consumer({ testId }: { testId: string }) {
       const ctx = useLocale();
@@ -157,10 +157,10 @@ describe('LocaleProvider — context expansion', () => {
 
     render(
       <div>
-        <LocaleProvider i18nInstance={i18n1}>
+        <LocaleProvider localizeInstance={localize1}>
           <Consumer testId="first" />
         </LocaleProvider>
-        <LocaleProvider i18nInstance={i18n2}>
+        <LocaleProvider localizeInstance={localize2}>
           <Consumer testId="second" />
         </LocaleProvider>
       </div>

@@ -5,6 +5,13 @@ import { describe, it, expect, vi } from 'vitest';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { CometChatThreadView } from '../CometChatThreadView';
 
+vi.mock('../../../../context/locale/LocaleContext', () => ({
+  useLocale: () => ({
+    getLocalizedString: (key: string) => key,
+    language: 'en-us',
+  }),
+}));
+
 expect.extend(toHaveNoViolations);
 
 describe('CometChatThreadView accessibility', () => {

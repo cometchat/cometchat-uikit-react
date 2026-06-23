@@ -1,20 +1,20 @@
 /**
- * useCometChatMentions — hook for mention suggestions in the message composer.
+ * useCometChatMentions — hook for mention state management in the message composer.
  *
  * Handles:
- * - Detecting @ trigger from the RichTextEditor callbacks
- * - Fetching user/group member suggestions via SDK
- * - Keyboard navigation (ArrowUp, ArrowDown, Enter, Escape)
+ * - Detecting @ trigger from the editor callbacks
+ * - Managing open/close state and search keyword
+ * - Tracking mentioned users for the message
  * - Inserting the selected mention into the editor
  * - @all mention support in groups
  *
+ * NOTE: Suggestion fetching and pagination are delegated to CometChatUsers /
+ * CometChatGroupMembers components rendered by CometChatMessageComposerMentionsList.
+ * This hook no longer fetches suggestions directly.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
-
-const MENTION_LIMIT = 10;
-const SEARCH_DEBOUNCE_MS = 300;
 
 export interface MentionSuggestion {
   uid: string;
@@ -25,7 +25,7 @@ export interface MentionSuggestion {
 }
 
 export interface UseCometChatMentionsOptions {
-  /** Whether mentions are disabled entirely. */
+  /** Whether individual member mentions are disabled. */
   disableMentions?: boolean;
   /** Whether @all mention is disabled. */
   disableMentionAll?: boolean;
@@ -48,21 +48,19 @@ export interface UseCometChatMentionsOptions {
 }
 
 export interface UseCometChatMentionsReturn {
-  /** Whether the suggestions dropdown is open. */
+  /** Whether the mentions dropdown is open. */
   isOpen: boolean;
-  /** Current list of suggestions. */
-  suggestions: MentionSuggestion[];
-  /** Index of the focused suggestion (for keyboard nav). */
-  focusedIndex: number;
-  /** Whether suggestions are loading. */
-  isLoading: boolean;
+  /** Current search keyword (text after @). */
+  searchKeyword: string;
   /** Called by the editor when @ is detected. */
   handleMentionStart: (query: string) => void;
   /** Called by the editor when mention context is lost. */
   handleMentionEnd: () => void;
-  /** Called when a suggestion is clicked. */
-  handleSelect: (suggestion: MentionSuggestion) => void;
-  /** Keyboard handler — attach to the editor's keydown for ArrowUp/Down/Enter/Escape. */
+  /** Called when a user/member is selected from the list. */
+  handleItemClick: (item: CometChat.User | CometChat.GroupMember | null) => void;
+  /** Called when the mentions list is empty (no results). */
+  handleEmpty: () => void;
+  /** Keyboard handler — attach to the editor's keydown for Escape. */
   handleKeyDown: (e: KeyboardEvent) => boolean;
   /** Get the list of mentioned users in the current message (uid + name). */
   getMentionedUsers: () => { uid: string; name: string }[];
@@ -81,33 +79,19 @@ export function useCometChatMentions(
     mentionAllLabel = 'all',
     group,
     user,
-    usersRequestBuilder,
-    groupMembersRequestBuilder,
     onInsertMention,
     loggedInUser,
     onMentionSelected,
   } = options;
 
+  const isMentionsCompletelyDisabled = disableMentions && (disableMentionAll || !group);
+
   const [isOpen, setIsOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<MentionSuggestion[]>([]);
-  const [focusedIndex, setFocusedIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const queryRef = useRef('');
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const charsToDeleteRef = useRef(0);
-  // Incremented on conversation change to invalidate in-flight fetches
-  const fetchGenerationRef = useRef(0);
-  // Map uid → full SDK object for onMentionSelected callback
-  const sdkObjectsRef = useRef<Map<string, CometChat.User | CometChat.GroupMember>>(new Map());
+
   // Accumulates mentioned users in the current message (cleared after send)
   const mentionedUsersRef = useRef<Map<string, { uid: string; name: string }>>(new Map());
-
-  // Cleanup debounce on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
 
   // Close mentions list when conversation changes (group or user prop changes)
   const prevGroupRef = useRef(group);
@@ -119,211 +103,78 @@ export function useCometChatMentions(
     prevUserRef.current = user;
 
     if (groupChanged || userChanged) {
-      // Increment generation to invalidate any in-flight fetch
-      fetchGenerationRef.current += 1;
       setIsOpen(false);
-      setSuggestions([]);
-      setFocusedIndex(0);
-      setIsLoading(false);
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      setSearchKeyword('');
     }
   }, [group, user]);
-
-  // --- Fetch suggestions ---
-  const fetchSuggestions = useCallback(
-    async (query: string) => {
-      if (disableMentions) return;
-
-      // Capture the current generation to detect stale fetches
-      const generation = fetchGenerationRef.current;
-
-      setIsLoading(true);
-      const results: MentionSuggestion[] = [];
-
-      try {
-        // Add @all if applicable (group chat, not disabled, matches query)
-        if (
-          group &&
-          !disableMentionAll &&
-          mentionAllLabel.toLowerCase().startsWith(query.toLowerCase())
-        ) {
-          results.push({
-            uid: 'all',
-            name: mentionAllLabel,
-            isAllMention: true,
-          });
-        }
-
-        // Fetch from SDK
-        if (CometChat.isInitialized()) {
-          // Ensure we have a logged-in user before making SDK calls
-          const currentUser = await CometChat.getLoggedinUser();
-          if (generation !== fetchGenerationRef.current) return; // stale
-
-          if (!currentUser) {
-            console.warn('[CometChat Mentions] No logged-in user, skipping fetch');
-            if (generation !== fetchGenerationRef.current) return;
-            setSuggestions(results);
-            setFocusedIndex(0);
-            setIsLoading(false);
-            setIsOpen(results.length > 0);
-            return;
-          }
-
-          if (group) {
-            const request = groupMembersRequestBuilder
-              ? groupMembersRequestBuilder.setSearchKeyword(query).build()
-              : new CometChat.GroupMembersRequestBuilder(group.getGuid())
-                  .setLimit(MENTION_LIMIT)
-                  .setSearchKeyword(query)
-                  .build();
-            const members = await request.fetchNext();
-            if (generation !== fetchGenerationRef.current) return; // stale
-            for (const member of members) {
-              if (member.getUid() !== loggedInUser?.getUid()) {
-                results.push({
-                  uid: member.getUid(),
-                  name: member.getName(),
-                  avatar: member.getAvatar(),
-                });
-                sdkObjectsRef.current.set(member.getUid(), member);
-              }
-            }
-          } else {
-            const request = usersRequestBuilder
-              ? usersRequestBuilder.setSearchKeyword(query).build()
-              : new CometChat.UsersRequestBuilder()
-                  .setLimit(MENTION_LIMIT)
-                  .setSearchKeyword(query)
-                  .build();
-            const users = await request.fetchNext();
-            if (generation !== fetchGenerationRef.current) return; // stale
-            for (const u of users) {
-              results.push({
-                uid: u.getUid(),
-                name: u.getName(),
-                avatar: u.getAvatar(),
-              });
-              sdkObjectsRef.current.set(u.getUid(), u);
-            }
-          }
-        } else {
-          console.warn(
-            '[CometChat Mentions] SDK not initialized, cannot fetch mention suggestions'
-          );
-        }
-      } catch (error) {
-        console.warn('[CometChat Mentions] Error fetching suggestions:', error);
-      }
-
-      // Final stale check before updating state
-      if (generation !== fetchGenerationRef.current) return;
-
-      console.log('[CometChat Mentions] Query:', query, '| Results:', results.length, results);
-      setSuggestions(results);
-      setFocusedIndex(0);
-      setIsLoading(false);
-      setIsOpen(results.length > 0);
-    },
-    [
-      disableMentions,
-      disableMentionAll,
-      mentionAllLabel,
-      group,
-      loggedInUser,
-      usersRequestBuilder,
-      groupMembersRequestBuilder,
-    ]
-  );
 
   // --- Handlers ---
 
   const handleMentionStart = useCallback(
     (query: string) => {
-      if (disableMentions) return;
+      if (isMentionsCompletelyDisabled) return;
 
-      console.log('[CometChat Mentions] @ detected, query:', JSON.stringify(query));
-      queryRef.current = query;
       // +1 for the @ character itself
       charsToDeleteRef.current = query.length + 1;
 
-      // Show the dropdown immediately (loading state)
+      setSearchKeyword(query);
       setIsOpen(true);
-      setIsLoading(true);
-
-      // Debounce the search
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        void fetchSuggestions(query);
-      }, SEARCH_DEBOUNCE_MS);
     },
-    [disableMentions, fetchSuggestions]
+    [isMentionsCompletelyDisabled]
   );
 
   const handleMentionEnd = useCallback(() => {
     setIsOpen(false);
-    setSuggestions([]);
-    setFocusedIndex(0);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setSearchKeyword('');
   }, []);
 
-  const handleSelect = useCallback(
-    (suggestion: MentionSuggestion) => {
-      const isSelf =
-        (suggestion.isAllMention ?? false) || suggestion.uid === loggedInUser?.getUid();
+  /** Called when a user/member is selected from the CometChatUsers/CometChatGroupMembers list. */
+  const handleItemClick = useCallback(
+    (item: CometChat.User | CometChat.GroupMember | null) => {
+      if (item === null) {
+        // @all mention
+        const label = mentionAllLabel;
+        onInsertMention('all', label, charsToDeleteRef.current, true);
+        mentionedUsersRef.current.set('all', { uid: 'all', name: label });
+      } else {
+        const uid = item.getUid();
+        const name = item.getName();
+        const isSelf = uid === loggedInUser?.getUid();
 
-      onInsertMention(suggestion.uid, suggestion.name, charsToDeleteRef.current, isSelf);
+        onInsertMention(uid, name, charsToDeleteRef.current, isSelf);
+        mentionedUsersRef.current.set(uid, { uid, name });
 
-      // Track this mention for setMentionedUsers on the message
-      mentionedUsersRef.current.set(suggestion.uid, { uid: suggestion.uid, name: suggestion.name });
-
-      // Fire onMentionSelected with the full SDK object if available
-      if (onMentionSelected && !suggestion.isAllMention) {
-        const sdkObj = sdkObjectsRef.current.get(suggestion.uid);
-        if (sdkObj) {
-          onMentionSelected(sdkObj);
+        // Fire onMentionSelected callback
+        if (onMentionSelected) {
+          onMentionSelected(item);
         }
       }
 
       setIsOpen(false);
-      setSuggestions([]);
-      setFocusedIndex(0);
+      setSearchKeyword('');
     },
-    [onInsertMention, onMentionSelected, loggedInUser]
+    [onInsertMention, onMentionSelected, loggedInUser, mentionAllLabel]
   );
+
+  /** Called when the mentions list is empty — close the dropdown. */
+  const handleEmpty = useCallback(() => {
+    setIsOpen(false);
+    setSearchKeyword('');
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent): boolean => {
-      if (!isOpen || suggestions.length === 0) return false;
+      if (!isOpen) return false;
 
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setFocusedIndex(prev => (prev + 1) % suggestions.length);
-          return true;
-
-        case 'ArrowUp':
-          e.preventDefault();
-          setFocusedIndex(prev => (prev - 1 + suggestions.length) % suggestions.length);
-          return true;
-
-        case 'Enter':
-          e.preventDefault();
-          if (suggestions[focusedIndex]) {
-            handleSelect(suggestions[focusedIndex]);
-          }
-          return true;
-
-        case 'Escape':
-          e.preventDefault();
-          handleMentionEnd();
-          return true;
-
-        default:
-          return false;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleMentionEnd();
+        return true;
       }
+
+      return false;
     },
-    [isOpen, suggestions, focusedIndex, handleSelect, handleMentionEnd]
+    [isOpen, handleMentionEnd]
   );
 
   /** Get the list of mentioned users in the current message. */
@@ -346,12 +197,11 @@ export function useCometChatMentions(
 
   return {
     isOpen,
-    suggestions,
-    focusedIndex,
-    isLoading,
+    searchKeyword,
     handleMentionStart,
     handleMentionEnd,
-    handleSelect,
+    handleItemClick,
+    handleEmpty,
     handleKeyDown,
     getMentionedUsers,
     clearMentionedUsers,

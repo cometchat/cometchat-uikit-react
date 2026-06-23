@@ -20,7 +20,7 @@ import {
   isStreaming as isStreamingActive,
   subscribeToStreamState,
   getStreamState,
-} from '../../plugins/ai/CometChatAIStreamingService';
+} from '../CometChatAIAssistantChat/CometChatAIStreamingService';
 import { createStreamingMessage } from '../../utils/CometChatStreamingMessageFactory';
 
 // ---------------------------------------------------------------------------
@@ -184,9 +184,7 @@ export function useMessageListEvents(
             // Mark as read if at bottom and at latest, but NOT if user manually
             // marked unread, and NEVER on our own messages (from another tab/device
             // or our own optimistic send bouncing back).
-            // Thread mode: NEVER mark as read — read operations only happen via main list.
             if (
-              !parentMessageId &&
               !isOwnMessageFromElsewhere &&
               currentState.isAtBottom &&
               currentState.hasReachedLatest &&
@@ -508,7 +506,14 @@ export function useMessageListEvents(
 
             const muid = msg.getMuid() || '';
             if (muid) {
+              const currentState = refs.stateRef.current;
+
+              if (!currentState.hasReachedLatest) {
+                break;
+              }
+
               dispatch({ type: 'MESSAGE_SEND_START', muid, message: msg });
+              dispatch({ type: 'SET_AT_BOTTOM', isAtBottom: true });
             }
             break;
           }
@@ -538,8 +543,10 @@ export function useMessageListEvents(
           );
           // For error events, skip the conversation check — the SDK may clear
           // receiverId on failure. The message was already added via inprogress.
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- error status reaches here at runtime
-          if (!isForConv && event.status !== CometChatMessageStatus.error) {
+          if (
+            !isForConv &&
+            (event.status as CometChatMessageStatus) !== CometChatMessageStatus.error
+          ) {
             // Not for this list — but check if it's a thread reply for this conversation
             // (main list needs to update reply count when a thread reply is sent locally)
             if (isThreadReplyForConversation(msg, user, group)) {
@@ -569,9 +576,9 @@ export function useMessageListEvents(
           // The streaming bubble (run_started type) shows "Thinking..." while the AI generates a response.
           if (opts.isAgentChat && currentState.messages.length > 0) {
             const chatId = msg.getReceiverId();
-            startStreamingMessage(chatId);
-
             const msgId = msg.getId() || Date.now();
+            startStreamingMessage(chatId, msgId);
+
             const agentUser = user;
             if (agentUser) {
               const streamingMsg = createStreamingMessage({

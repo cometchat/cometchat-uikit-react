@@ -7,7 +7,7 @@ import type { CometChatEmojiKeyboardCategoryData } from '../CometChatEmojiKeyboa
 // Mock useLocale to return a passthrough t()
 vi.mock('../../../../context/locale/LocaleContext', () => ({
   useLocale: () => ({
-    t: (key: string) => key,
+    getLocalizedString: (key: string) => key,
     language: 'en-us',
   }),
 }));

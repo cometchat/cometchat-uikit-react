@@ -16,9 +16,6 @@
 
 import { useEffect, useId, useState, lazy, Suspense } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
-import {
-  handleWebsocketMessage,
-} from '@cometchat/chat-uikit-react/plugins/ai';
 
 // Lazy-load — Tier 4, only loaded when this page is shown
 const LazyCometChatAIAssistantChat = lazy(() =>
@@ -32,33 +29,13 @@ interface CometChatAIAssistantProps {
 
 export const CometChatAIAssistant = ({ onBack }: CometChatAIAssistantProps) => {
   const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(null);
-  const listenerId = `ai-assistant-demo-${useId()}`;
 
-  // Step 1 — get the logged-in user (same as Angular's CometChatUIKit.getLoggedInUser())
+  // Step 1 — get the logged-in user
   useEffect(() => {
     CometChat.getLoggedinUser().then(user => {
       if (user) setLoggedInUser(user);
     });
   }, []);
-
-  // Step 2 — attach the AI assistant WebSocket listener and forward events
-  // to CometChatAIStreamingService (same as Angular's _attachAIListener)
-  useEffect(() => {
-    if (!loggedInUser) return;
-
-    CometChat.addAIAssistantListener(
-      listenerId,
-      new CometChat.AIAssistantListener({
-        onAIAssistantEventReceived: (event: CometChat.AIAssistantBaseEvent) => {
-          handleWebsocketMessage(event, loggedInUser.getUid());
-        },
-      })
-    );
-
-    return () => {
-      CometChat.removeAIAssistantListener(listenerId);
-    };
-  }, [loggedInUser, listenerId]);
 
   if (!loggedInUser) {
     return (

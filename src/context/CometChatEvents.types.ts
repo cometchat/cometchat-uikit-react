@@ -196,7 +196,12 @@ export type CometChatUIEvent =
       group: CometChat.Group;
       newScope: string;
     }
-  | { type: 'ui:group/ownership-changed'; group: CometChat.Group; newOwner: CometChat.User }
+  | {
+      type: 'ui:group/ownership-changed';
+      group: CometChat.Group;
+      newOwner: CometChat.User;
+      previousOwnerUid: string;
+    }
   // --- Thread (from message list / thread panel) ---
   | { type: 'ui:thread/opened'; parentMessage: CometChat.BaseMessage }
   | { type: 'ui:thread/closed' }

@@ -47,10 +47,13 @@ function shouldReplace(existing: CometChat.BaseMessage, incoming: CometChat.Base
   ) {
     const existingStatus = existing.getModerationStatus();
     const incomingStatus = incoming.getModerationStatus();
-    if (
-      existingStatus !== CometChatUIKitConstants.moderationStatus.pending &&
-      incomingStatus === CometChatUIKitConstants.moderationStatus.pending
-    ) {
+    const moderation = CometChatUIKitConstants.moderationStatus;
+    // Block only a true downgrade: a RESOLVED (approved/disapproved) message must not
+    // revert to pending. The normal optimistic 'unmoderated' → confirmed 'pending'
+    // send must still replace, else the bubble stays stuck on the id=0 copy.
+    const existingResolved =
+      existingStatus === moderation.approved || existingStatus === moderation.disapproved;
+    if (existingResolved && incomingStatus === moderation.pending) {
       return false;
     }
   }

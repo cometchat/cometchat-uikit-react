@@ -35,22 +35,27 @@ import type {
 } from '../plugin.types';
 import { AI_CONSTANTS } from './ai.constants';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
-import { CometChatStreamMessageBubble } from './CometChatStreamMessageBubble';
+import { CometChatStreamMessageBubble } from '../../components/CometChatAIAssistantChat/CometChatStreamMessageBubble';
 
 // Lazy-load all bubble components — keeps them out of the initial bundle
-const LazyCometChatAIAssistantBubble = lazy(() => import('./CometChatAIAssistantBubble'));
-const LazyCometChatToolCallArgumentBubble = lazy(() => import('./CometChatToolCallArgumentBubble'));
-const LazyCometChatToolCallResultBubble = lazy(() => import('./CometChatToolCallResultBubble'));
+const LazyCometChatAIAssistantBubble = lazy(
+  () => import('../../components/CometChatAIAssistantChat/CometChatAIAssistantBubble')
+);
+const LazyCometChatToolCallArgumentBubble = lazy(
+  () => import('../../components/CometChatAIAssistantChat/CometChatToolCallArgumentBubble')
+);
+const LazyCometChatToolCallResultBubble = lazy(
+  () => import('../../components/CometChatAIAssistantChat/CometChatToolCallResultBubble')
+);
 
 /**
  * Preload function for the AI assistant chat.
  * Called on AI button hover/focus to reduce perceived latency.
  */
 export const preloadAIAssistantChat = (): Promise<unknown> =>
-  import('./CometChatAIAssistantChat.lazy');
+  import('../../components/CometChatAIAssistantChat/CometChatAIAssistantChat.lazy');
 
 /**
- * @deprecated Use preloadAIAssistantChat instead.
  */
 export const preloadAIAssistantPanel = preloadAIAssistantChat;
 
@@ -83,8 +88,13 @@ export const CometChatAIPlugin: CometChatMessagePlugin = {
     if (type === CometChatUIKitConstants.streamMessageTypes.run_started) {
       // The streaming service is keyed by chatId, so this connects to the right stream.
       const chatId = message.getReceiverId() || '';
+      const data = (
+        message as unknown as { getData?: () => { runId?: string | number } }
+      ).getData?.();
+      const runId = data?.runId != null ? String(data.runId) : undefined;
       return React.createElement(CometChatStreamMessageBubble, {
         chatId,
+        runId,
         alignment,
       });
     }

@@ -1,4 +1,5 @@
 export { CometChatConversationStarter } from './CometChatConversationStarter';
+export type { CometChatConversationStarterProps } from './CometChatConversationStarter';
 export { useCometChatConversationStarterContext } from './CometChatConversationStarter.context';
 export type {
   CometChatConversationStarterState,

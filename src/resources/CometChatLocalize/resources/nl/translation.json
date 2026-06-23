@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "Weet u zeker dat u het eigendom wilt overdragen? Dit kan niet ongedaan worden gemaakt en de nieuwe eigenaar krijgt volledige controle.",
   "transfer": "Overdragen",
   "transferring": "Bezig met overdragen...",
-  "transfer_failed": "Overdracht mislukt. Probeer het opnieuw."
+  "transfer_failed": "Overdracht mislukt. Probeer het opnieuw.",
+  "loading": "Laden...",
+  "retry": "Opnieuw proberen",
+  "notifications_title": "Meldingen",
+  "notifications_filter_all": "Alle",
+  "notifications_empty_title": "Nog niets hier",
+  "notifications_empty_subtitle": "Nieuwe activiteit verschijnt hier wanneer beschikbaar.",
+  "notifications_error_title": "Oeps!",
+  "notifications_error_subtitle": "Er lijkt iets mis te zijn gegaan. Probeer het opnieuw.",
+  "notifications_pagination_error": "Kon niet meer laden",
+  "notifications_tap_to_retry": "Tik om opnieuw te proberen",
+  "notifications_offline_banner": "Je bent offline. Gecachte meldingen worden weergegeven."
 }

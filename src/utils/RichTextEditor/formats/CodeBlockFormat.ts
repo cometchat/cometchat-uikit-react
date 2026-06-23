@@ -12,20 +12,18 @@
 import type { EditorContext, FormatCommand } from './format.types';
 
 function findActiveList(ctx: EditorContext): HTMLElement | null {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return null;
   const range = sel.getRangeAt(0);
   return (ctx.findAncestor(range.startContainer, 'OL') ??
-    ctx.findAncestor(range.startContainer, 'UL') ??
-    ctx.element.querySelector('ol, ul')) as HTMLElement | null;
+    ctx.findAncestor(range.startContainer, 'UL')) as HTMLElement | null;
 }
 
 function findActiveBlockquote(ctx: EditorContext): HTMLElement | null {
-  const sel = window.getSelection();
+  const sel = ctx.getWindow().getSelection();
   if (!sel || sel.rangeCount === 0) return null;
   const range = sel.getRangeAt(0);
-  return (ctx.findAncestor(range.startContainer, 'BLOCKQUOTE') ??
-    ctx.element.querySelector('blockquote')) as HTMLElement | null;
+  return ctx.findAncestor(range.startContainer, 'BLOCKQUOTE') as HTMLElement | null;
 }
 
 /**
@@ -104,7 +102,7 @@ export const CodeBlockFormat: FormatCommand = {
   name: 'Code Block',
 
   execute(ctx: EditorContext): void {
-    const sel = window.getSelection();
+    const sel = ctx.getWindow().getSelection();
     if (!sel || sel.rangeCount === 0) return;
 
     const range = sel.getRangeAt(0);
@@ -118,9 +116,9 @@ export const CodeBlockFormat: FormatCommand = {
       if (!parent) return;
 
       const lines = text.split('\n');
-      const fragment = document.createDocumentFragment();
+      const fragment = ctx.getDocument().createDocumentFragment();
       for (const line of lines) {
-        const p = document.createElement('p');
+        const p = ctx.getDocument().createElement('p');
         p.textContent = line || '\u200B';
         fragment.appendChild(p);
       }
@@ -129,7 +127,7 @@ export const CodeBlockFormat: FormatCommand = {
 
       const lastP = parent.querySelector('p:last-of-type') ?? parent.lastElementChild;
       if (lastP) {
-        const newRange = document.createRange();
+        const newRange = ctx.getDocument().createRange();
         newRange.selectNodeContents(lastP);
         newRange.collapse(false);
         sel.removeAllRanges();
@@ -199,7 +197,7 @@ export const CodeBlockFormat: FormatCommand = {
           }
         } else {
           const fragment = range.extractContents();
-          const wrapper = document.createElement('div');
+          const wrapper = ctx.getDocument().createElement('div');
           wrapper.appendChild(fragment);
           // Bug fix #7: Strip inline formatting from extracted content
           // (same as Angular's stripInlineFormatting)
@@ -209,8 +207,8 @@ export const CodeBlockFormat: FormatCommand = {
 
       if (!text) text = '\u200B';
 
-      const pre = document.createElement('pre');
-      const code = document.createElement('code');
+      const pre = ctx.getDocument().createElement('pre');
+      const code = ctx.getDocument().createElement('code');
       code.textContent = text;
       pre.appendChild(code);
 
@@ -239,7 +237,7 @@ export const CodeBlockFormat: FormatCommand = {
         ancestor = nextAncestor;
       }
 
-      const newRange = document.createRange();
+      const newRange = ctx.getDocument().createRange();
       newRange.selectNodeContents(code);
       newRange.collapse(false);
       sel.removeAllRanges();

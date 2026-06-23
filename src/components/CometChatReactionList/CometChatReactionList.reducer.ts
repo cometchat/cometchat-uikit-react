@@ -93,10 +93,18 @@ export function reactionListReducer(
         return key !== action.reactionId;
       });
       const grouped = groupByEmoji(filtered);
+
+      // If the currently selected emoji tab is now empty, switch back to "All"
+      let selectedEmoji = state.selectedEmoji;
+      if (selectedEmoji !== null && !grouped.has(selectedEmoji)) {
+        selectedEmoji = null;
+      }
+
       return {
         ...state,
         allReactions: filtered,
         groupedReactions: grouped,
+        selectedEmoji,
         fetchState: filtered.length === 0 ? 'empty' : state.fetchState,
       };
     }

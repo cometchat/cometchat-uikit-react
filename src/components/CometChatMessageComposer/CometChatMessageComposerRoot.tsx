@@ -9,10 +9,10 @@ import { CometChatMessageComposerAttachmentButton } from './CometChatMessageComp
 import { CometChatMessageComposerEmojiButton } from './CometChatMessageComposerEmojiButton';
 import { CometChatMessageComposerVoiceButton } from './CometChatMessageComposerVoiceButton';
 import { CometChatMessageComposerStickerButton } from './CometChatMessageComposerStickerButton';
-import { CometChatMessageComposerAIButton } from './CometChatMessageComposerAIButton';
 import { CometChatMessageComposerEditPreview } from './CometChatMessageComposerEditPreview';
 import { CometChatMessageComposerReplyPreview } from './CometChatMessageComposerReplyPreview';
 import { CometChatMessageComposerMentionsList } from './CometChatMessageComposerMentionsList';
+import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { CometChatFormattingToolbar } from '../base/CometChatFormattingToolbar/CometChatFormattingToolbar';
 import { CometChatLinkDialog } from '../base/CometChatLinkDialog/CometChatLinkDialog';
 import { CometChatLinkPopover } from '../base/CometChatLinkPopover/CometChatLinkPopover';
@@ -20,6 +20,7 @@ import { CometChatMediaRecorder } from '../base/CometChatMediaRecorder/CometChat
 import { useCometChatMediaRecorderContext } from '../base/CometChatMediaRecorder/CometChatMediaRecorder.context';
 import { useRichTextEditor } from '../../utils/RichTextEditor/useRichTextEditor';
 import { convertMarkdownToHtml } from '../../utils/RichTextEditor/RichTextEditor';
+import { applyListStyles, fixOrderedListContinuation } from '../../utils/RichTextEditor/formats';
 import { useCometChatMentions } from './useCometChatMentions';
 import { useLocale } from '../../context/locale/LocaleContext';
 import sendFillIcon from '../../assets/send_fill.svg';
@@ -166,6 +167,16 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     clearMentionedUsers: () => void;
   } | null>(null);
 
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
+
+  const getCurrentWindow = useCallback(() => {
+    return IframeContext.iframeWindow ?? window;
+  }, [IframeContext.iframeWindow]);
+
   const hook = useCometChatMessageComposer({
     ...(user !== undefined && { user }),
     ...(group !== undefined && { group }),
@@ -283,7 +294,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       }
     },
     onLinkClick: handleEditorLinkClick,
-    ...(disableMentions
+    ...(disableMentions && (disableMentionAll || !group)
       ? {}
       : {
           onMentionStart: (query: string) => {
@@ -332,12 +343,16 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
 
     if ((userChanged || groupChanged) && enableRichTextEditor) {
       richText.clear();
+      // Re-populate with initialText after clearing
+      if (initialText) {
+        richText.insertPlainText(initialText);
+      }
     }
-  }, [user, group, enableRichTextEditor, richText]);
+  }, [user, group, enableRichTextEditor, richText, initialText]);
 
   // Sync rich text editor with state.text for programmatic changes
-  // (e.g., smart reply click, conversation starter click, controlled text prop).
-  const prevTextRef = useRef(hook.state.text);
+  // (e.g., smart reply click, conversation starter click, controlled text prop, initialText).
+  const prevTextRef = useRef('');
   useEffect(() => {
     const prevText = prevTextRef.current;
     const currentText = hook.state.text;
@@ -493,6 +508,9 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       // Capture the initial editor HTML for dirty-detection (formatting-only changes)
       // Must be captured BEFORE focus to avoid race with onUpdate callback.
       if (richText.editorRef.current) {
+        // Apply list styles to ensure nested lists show correct markers (a. i. etc.)
+        applyListStyles(richText.editorRef.current);
+        fixOrderedListContinuation(richText.editorRef.current);
         editInitialHtmlRef.current = richText.editorRef.current.innerHTML;
       }
       richText.focus('end');
@@ -505,13 +523,19 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
   }, [hook.state.textMessageToEdit, enableRichTextEditor, richText]);
 
   // --- Mentions ---
+  // Save editor selection when mention popup opens so we can restore it
+  const mentionSavedRangeRef = useRef<Range | null>(null);
+
   const handleInsertMention = useCallback(
     (uid: string, label: string, charsToDelete: number, isSelf?: boolean) => {
       if (enableRichTextEditor) {
+        // Restore the saved selection (cursor position at @) before inserting
+        if (mentionSavedRangeRef.current) {
+          richText.restoreSelection(mentionSavedRangeRef.current);
+          mentionSavedRangeRef.current = null;
+        }
         richText.insertMention(uid, label, charsToDelete, isSelf);
       }
-      // Plain text mode: append @label (simplified — no atomic span)
-      // In practice, mentions are primarily used with rich text editor.
     },
     [enableRichTextEditor, richText]
   );
@@ -568,8 +592,18 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
 
   // Sync mention callbacks ref (breaks circular dep between richText and mentions)
   mentionCallbacksRef.current = {
-    onStart: mentions.handleMentionStart,
-    onEnd: mentions.handleMentionEnd,
+    onStart: (query: string) => {
+      // Save the cursor position so we can restore it on mention selection
+      // even if the user clicks outside the editor while the popup is open.
+      if (enableRichTextEditor) {
+        mentionSavedRangeRef.current = richText.saveSelection();
+      }
+      mentions.handleMentionStart(query);
+    },
+    onEnd: () => {
+      mentionSavedRangeRef.current = null;
+      mentions.handleMentionEnd();
+    },
     onKeyDown: mentions.handleKeyDown,
   };
 
@@ -592,13 +626,13 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
         const el = hook.inputRef.current;
         if (el) {
           // Get current selection/cursor position
-          const selection = window.getSelection();
+          const selection = getCurrentWindow().getSelection();
           const range = selection?.getRangeAt(0);
 
           if (range && el.contains(range.startContainer)) {
             // Insert emoji at cursor position
             range.deleteContents();
-            const textNode = document.createTextNode(emoji);
+            const textNode = getCurrentDocument().createTextNode(emoji);
             range.insertNode(textNode);
             // Move cursor after the inserted emoji
             range.setStartAfter(textNode);
@@ -609,7 +643,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
             // No cursor in input — append to end
             el.textContent = (el.textContent ?? '') + emoji;
             // Move cursor to end
-            const newRange = document.createRange();
+            const newRange = getCurrentDocument().createRange();
             newRange.selectNodeContents(el);
             newRange.collapse(false);
             selection?.removeAllRanges();
@@ -628,7 +662,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
         }
       }
     },
-    [enableRichTextEditor, richText, hook]
+    [enableRichTextEditor, richText, hook, getCurrentDocument, getCurrentWindow]
   );
 
   const handleLinkClick = useCallback(() => {
@@ -961,9 +995,95 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
           ' '
         )}
       >
-        {hook.state.isRecording ? (
-          <>
-            {/* Recording mode: flat row — recorder fills space, send button at end */}
+        {layout === 'compact' && !hideAttachmentButton && (
+          <div className={'cometchat-message-composer__attachment-button-wrapper'}>
+            <CometChatMessageComposerAttachmentButton
+              {...(hideAttachmentOptions ? { hideOptions: hideAttachmentOptions } : {})}
+            />
+          </div>
+        )}
+        <div
+          className={[
+            'cometchat-message-composer__input-area',
+            'cometchat-message-composer__input-area',
+            !showScrollbar ? 'cometchat-message-composer__input-area--hide-scrollbar' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          <CometChatMessageComposerInput />
+          {/* Mention suggestions — inside input area, positioned above input */}
+          {!(disableMentions && (disableMentionAll || !group)) && (
+            <CometChatMessageComposerMentionsList
+              isOpen={mentions.isOpen}
+              searchKeyword={mentions.searchKeyword}
+              group={group}
+              user={user}
+              usersRequestBuilder={mentionsUsersRequestBuilder}
+              groupMembersRequestBuilder={mentionsGroupMembersRequestBuilder}
+              disableMentions={disableMentions}
+              disableMentionAll={disableMentionAll}
+              mentionAllLabel={mentionAllLabel}
+              onItemClick={mentions.handleItemClick}
+              onEmpty={mentions.handleEmpty}
+            />
+          )}
+        </div>
+        <div
+          className={[
+            'cometchat-message-composer__actions',
+            'cometchat-message-composer__actions',
+          ].join(' ')}
+        >
+          {layout === 'multiline' && !hideAttachmentButton && (
+            <div className={'cometchat-message-composer__attachment-button-wrapper'}>
+              <CometChatMessageComposerAttachmentButton
+                {...(hideAttachmentOptions ? { hideOptions: hideAttachmentOptions } : {})}
+              />
+            </div>
+          )}
+          {!hideEmojiKeyboardButton && (
+            <div className={'cometchat-message-composer__emoji-button-wrapper'}>
+              <CometChatMessageComposerEmojiButton />
+            </div>
+          )}
+          {!hideStickersButton && (
+            <div className={'cometchat-message-composer__sticker-button-wrapper'}>
+              <CometChatMessageComposerStickerButton />
+            </div>
+          )}
+          <div
+            className={[
+              'cometchat-message-composer__voice-button-wrapper',
+              !hook.showVoiceButton || hideVoiceRecordingButton
+                ? 'cometchat-message-composer__voice-button-wrapper--hidden'
+                : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
+            {!hideVoiceRecordingButton && <CometChatMessageComposerVoiceButton />}
+          </div>
+          {auxiliaryButtonView !== undefined && (
+            <div className={'cometchat-message-composer__auxiliary-button-view'}>
+              {auxiliaryButtonView}
+            </div>
+          )}
+          <div
+            className={[
+              'cometchat-message-composer__send-button-wrapper',
+              'cometchat-message-composer__send-button-wrapper',
+            ].join(' ')}
+          >
+            {!hideSendButton && (
+              <CometChatMessageComposerSendButton>
+                {sendButtonView}
+              </CometChatMessageComposerSendButton>
+            )}
+          </div>
+        </div>
+        {hook.state.isRecording && (
+          <div className={'cometchat-message-composer__recording-overlay'}>
             <CometChatMediaRecorder.Root
               autoRecording
               onClose={() => {
@@ -973,7 +1093,6 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
               onSubmit={blob => {
                 hook.setRecording(false);
                 hook.setContentToDisplay('none');
-                // Convert Blob to File for sendMediaMessage
                 const file = new File([blob], 'voice-recording.wav', {
                   type: blob.type || 'audio/webm',
                 });
@@ -993,98 +1112,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
               </CometChatMediaRecorder.PreviewView>
               <RecordingSendButton />
             </CometChatMediaRecorder.Root>
-          </>
-        ) : (
-          <>
-            {/* Normal mode: attachment + input + actions */}
-            {layout === 'compact' && !hideAttachmentButton && (
-              <div className={'cometchat-message-composer__attachment-button-wrapper'}>
-                <CometChatMessageComposerAttachmentButton
-                  {...(hideAttachmentOptions ? { hideOptions: hideAttachmentOptions } : {})}
-                />
-              </div>
-            )}
-            <div
-              className={[
-                'cometchat-message-composer__input-area',
-                'cometchat-message-composer__input-area',
-                !showScrollbar ? 'cometchat-message-composer__input-area--hide-scrollbar' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              <CometChatMessageComposerInput />
-              {/* Mention suggestions — inside input area, positioned above input (Angular pattern) */}
-              {!disableMentions &&
-                mentions.isOpen &&
-                (mentions.suggestions.length > 0 || mentions.isLoading) && (
-                  <CometChatMessageComposerMentionsList
-                    suggestions={mentions.suggestions}
-                    focusedIndex={mentions.focusedIndex}
-                    isLoading={mentions.isLoading}
-                    onSelect={mentions.handleSelect}
-                  />
-                )}
-            </div>
-            <div
-              className={[
-                'cometchat-message-composer__actions',
-                'cometchat-message-composer__actions',
-              ].join(' ')}
-            >
-              {layout === 'multiline' && !hideAttachmentButton && (
-                <div className={'cometchat-message-composer__attachment-button-wrapper'}>
-                  <CometChatMessageComposerAttachmentButton
-                    {...(hideAttachmentOptions ? { hideOptions: hideAttachmentOptions } : {})}
-                  />
-                </div>
-              )}
-              {!hideEmojiKeyboardButton && (
-                <div className={'cometchat-message-composer__emoji-button-wrapper'}>
-                  <CometChatMessageComposerEmojiButton />
-                </div>
-              )}
-              {!hideStickersButton && (
-                <div className={'cometchat-message-composer__sticker-button-wrapper'}>
-                  <CometChatMessageComposerStickerButton />
-                </div>
-              )}
-              {!hideAIButton && (
-                <div className={'cometchat-message-composer__ai-button-wrapper'}>
-                  <CometChatMessageComposerAIButton />
-                </div>
-              )}
-              <div
-                className={[
-                  'cometchat-message-composer__voice-button-wrapper',
-                  !hook.showVoiceButton || hideVoiceRecordingButton
-                    ? 'cometchat-message-composer__voice-button-wrapper--hidden'
-                    : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-              >
-                {!hideVoiceRecordingButton && <CometChatMessageComposerVoiceButton />}
-              </div>
-              {auxiliaryButtonView !== undefined && (
-                <div className={'cometchat-message-composer__auxiliary-button-view'}>
-                  {auxiliaryButtonView}
-                </div>
-              )}
-              <div
-                className={[
-                  'cometchat-message-composer__send-button-wrapper',
-                  'cometchat-message-composer__send-button-wrapper',
-                ].join(' ')}
-              >
-                {!hideSendButton && (
-                  <CometChatMessageComposerSendButton>
-                    {sendButtonView}
-                  </CometChatMessageComposerSendButton>
-                )}
-              </div>
-            </div>
-          </>
+          </div>
         )}
       </div>
     </>
@@ -1130,7 +1158,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
               onCancel={handleLinkDialogCancel}
             />
           </div>,
-          document.querySelector('.cometchat') ?? document.body
+          getCurrentDocument().querySelector('.cometchat') ?? getCurrentDocument().body
         )}
     </CometChatMessageComposerContext.Provider>
   );

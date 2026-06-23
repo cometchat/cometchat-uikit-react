@@ -335,7 +335,7 @@ export interface CometChatUseCometChatSearchConversationsOptions {
   activeFilters: CometChatSearchFilter[];
   conversationsRequestBuilder?: CometChat.ConversationsRequestBuilder;
   lastMessageDateTimeFormat?: CometChatDateFormatConfig;
-  onError?: (error: unknown) => void;
+  onError?: ((error: CometChat.CometChatException) => void) | null;
   onStateChange?: (state: CometChatFetchState) => void;
 }
 
@@ -348,6 +348,6 @@ export interface CometChatUseCometChatSearchMessagesOptions {
   alwaysShowSeeMore?: boolean;
   messagesRequestBuilder?: CometChat.MessagesRequestBuilder;
   messageSentAtDateTimeFormat?: CometChatDateFormatConfig;
-  onError?: (error: unknown) => void;
+  onError?: ((error: CometChat.CometChatException) => void) | null;
   onStateChange?: (state: CometChatFetchState) => void;
 }

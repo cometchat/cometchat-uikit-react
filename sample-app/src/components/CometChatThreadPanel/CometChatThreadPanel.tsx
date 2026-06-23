@@ -8,7 +8,7 @@ import {
   usePublishEvent,
 } from '@cometchat/chat-uikit-react';
 import type { CometChatEvent } from '@cometchat/chat-uikit-react';
-import '../../styles/CometChatThreadPanel/CometChatThreadPanel.css';
+import './CometChatThreadPanel.css';
 
 interface CometChatThreadPanelProps {
   /** The parent message of the thread. */

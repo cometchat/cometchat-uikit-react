@@ -7,7 +7,7 @@ import { useCometChatThreadHeaderContext } from '../CometChatThreadHeader.contex
 // Mock dependencies
 vi.mock('../../../hooks/useLocale', () => ({
   useLocale: () => ({
-    t: (key: string) => {
+    getLocalizedString: (key: string) => {
       const translations: Record<string, string> = {
         thread_title: 'Thread',
         thread_reply: 'Reply',
@@ -33,13 +33,78 @@ vi.mock('../useLoggedInUser', () => ({
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
   CometChat: {
+    CATEGORY_MESSAGE: 'message',
+    CATEGORY_CUSTOM: 'custom',
+    CATEGORY_ACTION: 'action',
+    CATEGORY_CALL: 'call',
+    CATEGORY_INTERACTIVE: 'interactive',
+    MessageCategory: { AGENTIC: 'agentic' },
+    ModerationStatus: {
+      PENDING: 'pending',
+      APPROVED: 'approved',
+      DISAPPROVED: 'disapproved',
+      UNMODERATED: 'unmoderated',
+    },
+    MESSAGE_TYPE: {
+      TEXT: 'text',
+      IMAGE: 'image',
+      VIDEO: 'video',
+      AUDIO: 'audio',
+      FILE: 'file',
+      ASSISTANT: 'assistant',
+      TOOL_ARGUMENTS: 'tool_arguments',
+      TOOL_RESULT: 'tool_result',
+    },
+    ACTION_TYPE: {
+      MEMBER_JOINED: 'joined',
+      MEMBER_LEFT: 'left',
+      MEMBER_ADDED: 'added',
+      MEMBER_BANNED: 'banned',
+      MEMBER_UNBANNED: 'unbanned',
+      MEMBER_KICKED: 'kicked',
+      MEMBER_INVITED: 'invited',
+      MEMBER_SCOPE_CHANGED: 'scopeChanged',
+    },
+    GROUP_TYPE: { PRIVATE: 'private', PASSWORD: 'password', PUBLIC: 'public' },
+    CALL_MODE: {
+      DEFAULT: 'default',
+      GRID: 'grid',
+      SINGLE: 'single',
+      SPOTLIGHT: 'spotlight',
+      TILE: 'tile',
+    },
+    GoalType: { ALL_OF: 'allOf', ANY_OF: 'anyOf', ANY_ACTION: 'anyAction', NONE: 'none' },
+    RECEIVER_TYPE: { USER: 'user', GROUP: 'group' },
+    USER_STATUS: { ONLINE: 'online', OFFLINE: 'offline' },
+    GROUP_MEMBER_SCOPE: { ADMIN: 'admin', PARTICIPANT: 'participant', MODERATOR: 'moderator' },
+    CALL_STATUS: {
+      ONGOING: 'ongoing',
+      ENDED: 'ended',
+      INITIATED: 'initiated',
+      CANCELLED: 'cancelled',
+      REJECTED: 'rejected',
+      UNANSWERED: 'unanswered',
+      BUSY: 'busy',
+    },
+    AI_ASSISTANT_EVENTS: {
+      RUN_STARTED: 'run_started',
+      TEXT_MESSAGE_START: 'text_message_start',
+      TEXT_MESSAGE_CONTENT: 'text_message_content',
+      TEXT_MESSAGE_END: 'text_message_end',
+      RUN_FINISHED: 'run_finished',
+      TOOL_CALL_STARTED: 'tool_call_start',
+      TOOL_CALL_ENDED: 'tool_call_end',
+      TOOL_CALL_ARGUMENT: 'tool_call_args',
+      TOOL_CALL_RESULT: 'tool_call_result',
+    },
     addMessageListener: vi.fn(),
     removeMessageListener: vi.fn(),
     MessageListener: vi.fn().mockImplementation(callbacks => callbacks),
-    getLoggedinUser: () => ({
-      getUid: () => 'logged-in-user',
-      getName: () => 'Me',
-    }),
+    getLoggedinUser: () =>
+      Promise.resolve({
+        getUid: () => 'logged-in-user',
+        getName: () => 'Me',
+      }),
   },
 }));
 
@@ -108,7 +173,10 @@ describe('CometChatThreadHeaderRoot', () => {
     }
 
     render(
-      <CometChatThreadHeaderRoot parentMessage={createMockMessage()} replyCount={10}>
+      <CometChatThreadHeaderRoot
+        parentMessage={createMockMessage({ replyCount: 10 })}
+        replyCount={10}
+      >
         <ContextConsumer />
       </CometChatThreadHeaderRoot>
     );

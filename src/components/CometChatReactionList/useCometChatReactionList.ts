@@ -11,7 +11,7 @@ export interface CometChatUseCometChatReactionListOptions {
   reactionsRequestBuilder?: CometChat.ReactionsRequestBuilder;
   onItemClick?: (reaction: CometChat.Reaction, message: CometChat.BaseMessage) => void;
   onEmpty?: () => void;
-  onError?: (error: unknown) => void;
+  onError?: ((error: CometChat.CometChatException) => void) | null;
 }
 
 /**
@@ -53,7 +53,7 @@ export function useCometChatReactionList(
   // --- Error handler ---
   const handleError = useCallback(
     (error: unknown) => {
-      onError?.(error);
+      onError?.(error as CometChat.CometChatException);
       dispatch({ type: 'FETCH_ERROR' });
     },
     [onError]

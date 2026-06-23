@@ -28,6 +28,7 @@ export const CometChatMessageHeaderSubtitle: React.FC<CometChatMessageHeaderSubt
     hideUserStatus,
     lastActiveAt,
     groupMemberCount,
+    user,
   } = useCometChatMessageHeaderContext();
   const { getLocalizedString } = useLocale();
 
@@ -59,6 +60,11 @@ export const CometChatMessageHeaderSubtitle: React.FC<CometChatMessageHeaderSubt
 
   // --- User conversation subtitle ---
   if (isUserConversation && !hideUserStatus) {
+    const isBlocked = user ? user.getBlockedByMe() || user.getHasBlockedMe() : false;
+    if (isBlocked) {
+      return <div className={rootClasses} />;
+    }
+
     if (userStatus === 'online') {
       return (
         <div className={rootClasses}>
@@ -94,8 +100,19 @@ export const CometChatMessageHeaderSubtitle: React.FC<CometChatMessageHeaderSubt
       );
     }
 
-    // Offline without last active — show nothing
-    return <div className={rootClasses} />;
+    // Offline without last active — show "Offline"
+    return (
+      <div className={rootClasses}>
+        <span
+          className={[
+            'cometchat-message-header__subtitle',
+            'cometchat-message-header__subtitle--offline',
+          ].join(' ')}
+        >
+          {getLocalizedString('message_header_offline')}
+        </span>
+      </div>
+    );
   }
 
   // --- Group conversation subtitle ---

@@ -1,44 +1,25 @@
 /**
- * CometChatProvider — the single root provider for the CometChat UIKit.
+ * CometChatProvider — the root provider for the CometChat UIKit.
  *
- * Internally delegates to CometChatUIKit.init() and CometChatUIKit.login() so that
- * all static state (plugin registry, logged-in user, conversation settings, calling)
- * stays in sync between the declarative React layer and the imperative static API.
- *
- * Handles:
- * 1. SDK initialization via CometChatUIKit.init()
- * 2. User login via CometChatUIKit.login() / loginWithAuthToken()
- * 3. Plugin registry (from CometChatUIKit)
- * 4. Theme, locale, global config
- * 5. SDK + UI event bus (CometChatEventsProvider)
+ * Wraps children with the necessary context providers for the UIKit to function.
+ * SDK initialization and login must be handled by the consumer before mounting
+ * this provider (via CometChatUIKit.init() / CometChatUIKit.login()).
  *
  * Provider composition (inside → outside):
  *   CometChatProvider
- *     └─ PluginRegistryContext     — plugin registry from CometChatUIKit
+ *     └─ PluginRegistryContext     — plugin registry (built from plugins prop + defaults)
  *        └─ GlobalConfigProvider   — hideReceipts, hideUserStatus, etc.
  *           └─ ThemeProvider        — data-theme attribute + CSS variables
- *              └─ LocaleProvider   — i18n
- *                 └─ CometChatEventsProvider — SDK listeners + UI events (only when logged in)
+ *              └─ LocaleProvider   — localization
+ *                 └─ CometChatEventsProvider — SDK listeners + UI events
  *                    └─ {children}
  *
- * Usage (simple — individual props):
+ * Usage:
  * ```tsx
- * <CometChatProvider appId="APP_ID" region="us" authToken={token}>
- *   <ChatUI />
- * </CometChatProvider>
- * ```
+ * await CometChatUIKit.init(settings);
+ * await CometChatUIKit.login(uid);
  *
- * Usage (advanced — pre-built settings):
- * ```tsx
- * const settings = new UIKitSettingsBuilder()
- *   .setAppId('APP_ID')
- *   .setRegion('us')
- *   .setAuthKey('AUTH_KEY')
- *   .subscribePresenceForAllUsers()
- *   .setCallingEnabled(true)
- *   .build();
- *
- * <CometChatProvider settings={settings} uid="superhero1">
+ * <CometChatProvider plugins={[CometChatAIPlugin]}>
  *   <ChatUI />
  * </CometChatProvider>
  * ```
@@ -52,86 +33,39 @@ import { GlobalConfigProvider } from './GlobalConfigContext';
 import { CometChatThemeProvider } from './ThemeProvider';
 import { LocaleProvider } from './locale/LocaleProvider';
 import { CometChatEventsProvider } from './CometChatEventsProvider';
-import { useCometChatInit } from '../hooks/useCometChatInit';
-import { useCometChatLogin } from '../hooks/useCometChatLogin';
+import { CometChatPluginRegistry } from '../plugins/CometChatPluginRegistry';
+import { defaultPlugins } from '../plugins/core';
 import { CometChatUIKit } from '../CometChatUIKit/CometChatUIKit';
-import { UIKitSettingsBuilder } from '../CometChatUIKit/UIKitSettings';
-import type { UIKitSettings } from '../CometChatUIKit/UIKitSettings';
 
 export const CometChatProvider: React.FC<CometChatProviderProps> = ({
-  settings: settingsProp,
-  appId,
-  region,
-  authToken,
-  uid,
-  authKey,
-  callingEnabled = false,
   plugins,
+  removePlugins,
   config = {},
   theme = 'light',
   locale = 'en-us',
-  onError,
-  onLoginSuccess,
   children,
 }) => {
-  // --- Build UIKitSettings ---
-  // If a pre-built settings object is provided, use it directly.
-  // Otherwise, build one from individual props.
-  const settings = useMemo((): UIKitSettings => {
-    if (settingsProp) return settingsProp;
-
-    if (!appId || !region) {
-      throw new Error(
-        'CometChatProvider: Either `settings` or both `appId` and `region` must be provided.'
-      );
-    }
-
-    const builder = new UIKitSettingsBuilder()
-      .setAppId(appId)
-      .setRegion(region)
-      .subscribePresenceForAllUsers()
-      .setCallingEnabled(callingEnabled);
-
-    if (authKey) {
-      builder.setAuthKey(authKey);
-    }
-
-    if (plugins) {
-      builder.setPlugins(plugins);
-    }
-
-    return builder.build();
-  }, [settingsProp, appId, region, authKey, callingEnabled, plugins]);
-
-  // --- Step 1: Initialize SDK via CometChatUIKit.init() ---
-  const { initState } = useCometChatInit({
-    settings,
-    onError,
-  });
-
-  // --- Step 2: Login via CometChatUIKit.login() / loginWithAuthToken() ---
-  const { loggedInUser } = useCometChatLogin({
-    initState,
-    authToken,
-    uid,
-    onError,
-    onLoginSuccess,
-  });
-
-  // --- Step 3: Get plugin registry from CometChatUIKit (populated during init) ---
   const pluginRegistry = useMemo(() => {
-    // After init, CometChatUIKit holds the registry. Use it directly so
-    // both the static API and React context share the same instance.
-    return CometChatUIKit.getPluginRegistry();
-  }, [initState]); // eslint-disable-line react-hooks/exhaustive-deps
+    const allPlugins = plugins ? [...plugins, ...defaultPlugins] : defaultPlugins;
+    const filtered = removePlugins?.length
+      ? allPlugins.filter(
+          p =>
+            !removePlugins.some(
+              r => p.messageTypes.includes(r.text) && p.messageCategories.includes(r.category)
+            )
+        )
+      : allPlugins;
+    return new CometChatPluginRegistry(filtered);
+  }, [plugins, removePlugins]);
 
-  // --- Compose providers ---
+  const isInitialized = CometChatUIKit.isInitialized();
+
   return (
     <CometChatPluginRegistryContext.Provider value={pluginRegistry}>
       <GlobalConfigProvider config={config}>
         <CometChatThemeProvider theme={theme}>
           <LocaleProvider locale={locale}>
-            {loggedInUser ? (
+            {isInitialized ? (
               <CometChatEventsProvider>{children}</CometChatEventsProvider>
             ) : (
               children

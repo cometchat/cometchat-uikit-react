@@ -1,15 +1,13 @@
 import React, { useCallback, useMemo } from 'react';
-import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatReactionsRootProps } from './CometChatReactions.types';
 import { CometChatReactionsContext } from './CometChatReactions.context';
-import { useCometChatReactions } from './useCometChatReactions';
 import { CometChatReactionsBar } from './CometChatReactionsBar';
 import './CometChatReactions.css';
 
 /**
  * CometChatReactions.Root — context provider and root container.
  *
- * Initializes the reactions hook, provides context to sub-components.
+ * Provides bar-relevant context to sub-components.
  * When no children are provided, renders the default Bar layout.
  */
 export const CometChatReactionsRoot: React.FC<CometChatReactionsRootProps> = ({
@@ -17,27 +15,13 @@ export const CometChatReactionsRoot: React.FC<CometChatReactionsRootProps> = ({
   alignment = 'left',
   reactionsRequestBuilder,
   onReactionClick,
-  onReactorClick,
   hoverDebounceTime = 500,
   onError,
   children,
   className,
 }) => {
-  const {
-    reactions,
-    activeTab,
-    reactors,
-    reactorsFetchState,
-    reactorsHasMore,
-    setActiveTab,
-    fetchReactors,
-    fetchNextReactors,
-    removeReactor,
-  } = useCometChatReactions({
-    message,
-    reactionsRequestBuilder,
-    onError,
-  });
+  // Derive reaction counts directly from the message
+  const reactions = useMemo(() => message.getReactions(), [message]);
 
   // Compute visible reactions and overflow (default maxVisible = all)
   const maxVisible = reactions.length;
@@ -51,13 +35,6 @@ export const CometChatReactionsRoot: React.FC<CometChatReactionsRootProps> = ({
     [onReactionClick, message]
   );
 
-  const handleReactorClick = useCallback(
-    (reaction: CometChat.Reaction) => {
-      onReactorClick?.(reaction, message);
-    },
-    [onReactorClick, message]
-  );
-
   const contextValue = useMemo(
     () => ({
       message,
@@ -66,16 +43,7 @@ export const CometChatReactionsRoot: React.FC<CometChatReactionsRootProps> = ({
       maxVisible,
       visibleReactions,
       overflowCount,
-      activeTab,
-      reactors,
-      reactorsFetchState,
-      reactorsHasMore,
       onReactionClick: handleReactionClick,
-      onReactorClick: handleReactorClick,
-      setActiveTab,
-      fetchReactors,
-      fetchNextReactors,
-      removeReactor,
       reactionsRequestBuilder,
       hoverDebounceTime,
       onError,
@@ -87,16 +55,7 @@ export const CometChatReactionsRoot: React.FC<CometChatReactionsRootProps> = ({
       maxVisible,
       visibleReactions,
       overflowCount,
-      activeTab,
-      reactors,
-      reactorsFetchState,
-      reactorsHasMore,
       handleReactionClick,
-      handleReactorClick,
-      setActiveTab,
-      fetchReactors,
-      fetchNextReactors,
-      removeReactor,
       reactionsRequestBuilder,
       hoverDebounceTime,
       onError,

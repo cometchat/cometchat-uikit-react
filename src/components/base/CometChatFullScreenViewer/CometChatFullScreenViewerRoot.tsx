@@ -7,6 +7,7 @@ import { CometChatFullScreenViewerContext } from './CometChatFullScreenViewer.co
 import { CometChatFullScreenViewerHeader } from './CometChatFullScreenViewerHeader';
 import { CometChatFullScreenViewerBody } from './CometChatFullScreenViewerBody';
 import { CometChatFullScreenViewerNavigation } from './CometChatFullScreenViewerNavigation';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import { useLocale } from '../../../context/locale/LocaleContext';
 import './CometChatFullScreenViewer.css';
 
@@ -35,6 +36,11 @@ export const CometChatFullScreenViewerRoot: React.FC<CometChatFullScreenViewerRo
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
   const { getLocalizedString } = useLocale();
 
   // Gallery state
@@ -79,23 +85,24 @@ export const CometChatFullScreenViewerRoot: React.FC<CometChatFullScreenViewerRo
 
   // Body scroll lock — runs on mount, restores on unmount
   useEffect(() => {
-    const original = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const doc = getCurrentDocument();
+    const original = doc.body.style.overflow;
+    doc.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = original;
+      doc.body.style.overflow = original;
     };
-  }, []);
+  }, [getCurrentDocument]);
 
   // Focus management — focus container on mount, restore on unmount
   useEffect(() => {
-    previousFocusRef.current = document.activeElement as HTMLElement;
+    previousFocusRef.current = getCurrentDocument().activeElement as HTMLElement;
     requestAnimationFrame(() => {
       containerRef.current?.focus();
     });
     return () => {
       previousFocusRef.current?.focus();
     };
-  }, []);
+  }, [getCurrentDocument]);
 
   // Keyboard handler
   const handleKeyDown = useCallback(
@@ -109,7 +116,7 @@ export const CometChatFullScreenViewerRoot: React.FC<CometChatFullScreenViewerRo
       // Gallery navigation — works for all media types.
       // Skip only when focus is on a <video> or <audio> element (arrows should seek there).
       if (isGalleryMode) {
-        const activeTag = document.activeElement?.tagName;
+        const activeTag = getCurrentDocument().activeElement?.tagName;
         const isFocusedOnMedia = activeTag === 'VIDEO' || activeTag === 'AUDIO';
 
         if (!isFocusedOnMedia) {
@@ -136,16 +143,16 @@ export const CometChatFullScreenViewerRoot: React.FC<CometChatFullScreenViewerRo
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
+        if (event.shiftKey && getCurrentDocument().activeElement === first) {
           event.preventDefault();
           last?.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
+        } else if (!event.shiftKey && getCurrentDocument().activeElement === last) {
           event.preventDefault();
           first?.focus();
         }
       }
     },
-    [onClose, isGalleryMode, navigatePrev, navigateNext]
+    [onClose, isGalleryMode, navigatePrev, navigateNext, getCurrentDocument]
   );
 
   // Context value

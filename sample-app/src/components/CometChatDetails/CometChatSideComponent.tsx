@@ -1,7 +1,7 @@
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatUserDetails } from './CometChatUserDetails';
 import { CometChatGroupDetails } from './CometChatGroupDetails';
-import '../../styles/CometChatDetails/CometChatDetails.css';
+import './CometChatDetails.css';
 
 interface CometChatSideComponentProps {
   type: 'user' | 'group';
@@ -12,6 +12,7 @@ interface CometChatSideComponentProps {
   onConversationDeleted?: () => void;
   onGroupLeft?: () => void;
   onGroupDeleted?: () => void;
+  isFreshChat?: boolean;
 }
 
 export const CometChatSideComponent = ({
@@ -23,6 +24,7 @@ export const CometChatSideComponent = ({
   onConversationDeleted,
   onGroupLeft,
   onGroupDeleted,
+  isFreshChat,
 }: CometChatSideComponentProps) => {
   return (
     <div className="side-component-wrapper">
@@ -42,6 +44,7 @@ export const CometChatSideComponent = ({
             onConversationDeleted={onConversationDeleted}
             onGroupLeft={onGroupLeft}
             onGroupDeleted={onGroupDeleted}
+            isFreshChat={isFreshChat}
           />
         )}
       </div>

@@ -1,4 +1,5 @@
 export { CometChatAvatar } from './CometChatAvatar';
+export type { CometChatAvatarProps } from './CometChatAvatar';
 export { useCometChatAvatarContext } from './CometChatAvatar.context';
 export { getInitials } from './CometChatAvatar.utils';
 export type {

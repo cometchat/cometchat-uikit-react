@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { CometChat, CometChatException } from '@cometchat/chat-sdk-javascript';
 import type { CometChatMessageComposerAttachmentButtonProps } from './CometChatMessageComposer.types';
 import { useCometChatMessageComposerContext } from './CometChatMessageComposer.context';
 import { CometChatPopover } from '../base/CometChatPopover';
 import type { CometChatActionSheetItemData } from '../base/CometChatActionSheet/CometChatActionSheet.types';
 import { useLocale } from '../../context/locale/LocaleContext';
-import { CometChatCreatePoll } from '../../plugins/polls/CometChatCreatePoll';
+import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
+import { CometChatCreatePoll } from '../CometChatCreatePoll/CometChatCreatePoll';
 import addCircleIcon from '../../assets/add_circle.svg';
 import addCircleFillIcon from '../../assets/add_circle_fill.svg';
 import photoIcon from '../../assets/photo.svg';
@@ -41,6 +42,11 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     onError,
   } = useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
 
   const [showCreatePoll, setShowCreatePoll] = useState(false);
 
@@ -50,7 +56,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
 
   const handleFileSelect = useCallback(
     (type: string) => {
-      const input = document.createElement('input');
+      const input = getCurrentDocument().createElement('input');
       input.type = 'file';
       input.accept =
         type === 'image'
@@ -69,7 +75,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
       input.click();
       setContentToDisplay('none');
     },
-    [sendMediaMessage, setContentToDisplay]
+    [sendMediaMessage, setContentToDisplay, getCurrentDocument]
   );
 
   const handleOpenPoll = useCallback(() => {
@@ -107,7 +113,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
         }
       })
       .catch((error: unknown) => {
-        onError?.(error);
+        if (error instanceof CometChatException) onError?.(error);
       });
   }, [setContentToDisplay, user, group, parentMessageId, messageToReply, closePreview, onError]);
 
@@ -133,7 +139,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
         }
       })
       .catch((error: unknown) => {
-        onError?.(error);
+        if (error instanceof CometChatException) onError?.(error);
       });
   }, [setContentToDisplay, user, group, parentMessageId, messageToReply, closePreview, onError]);
 
@@ -311,7 +317,6 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     handleCollaborativeDocument,
     handleCollaborativeWhiteboard,
     attachmentOptions,
-    parentMessageId,
   ]);
 
   const btnClass = [
@@ -326,19 +331,21 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
 
   return (
     <>
-      <CometChatPopover.Root
+      <CometChatPopover
         placement="top"
         closeOnOutsideClick
         isOpen={contentToDisplay === 'attachments'}
         onClose={() => {
           setContentToDisplay('none');
         }}
-      >
-        <CometChatPopover.Trigger>
+        trigger={
           <button
             type="button"
             className={btnClass}
-            onClick={handleToggle}
+            onClick={e => {
+              e.stopPropagation();
+              handleToggle();
+            }}
             aria-label={getLocalizedString('ATTACHMENTS') || 'Attachments'}
             aria-expanded={contentToDisplay === 'attachments'}
           >
@@ -352,8 +359,8 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
               className={'cometchat-message-composer__button-icon'}
             />
           </button>
-        </CometChatPopover.Trigger>
-        <CometChatPopover.Content>
+        }
+        content={
           <div className={'cometchat-message-composer__attachment-list'}>
             {attachmentItems.map(item => (
               <button
@@ -374,8 +381,8 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
               </button>
             ))}
           </div>
-        </CometChatPopover.Content>
-      </CometChatPopover.Root>
+        }
+      />
 
       {/* Create Poll Modal */}
       {showCreatePoll && (

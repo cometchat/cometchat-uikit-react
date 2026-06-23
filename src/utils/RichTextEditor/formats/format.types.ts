@@ -20,6 +20,12 @@ export interface EditorContext {
   /** Execute a native document.execCommand. */
   execCommand(command: string, value?: string): void;
 
+  /** Get the owner document (iframe-aware). Falls back to global document. */
+  getDocument(): Document;
+
+  /** Get the owner window (iframe-aware). Falls back to global window. */
+  getWindow(): Window;
+
   /** Find the nearest ancestor with the given tag name. Returns null if not found. */
   findAncestor(node: Node | null, tagName: string): Node | null;
 

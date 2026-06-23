@@ -5,18 +5,26 @@ import { describe, it, expect, vi } from 'vitest';
 import { CometChatSearchBar } from '../CometChatSearchBar';
 
 function renderInput(
-  rootProps: Partial<React.ComponentProps<typeof CometChatSearchBar.Root>> = {},
+  rootProps: Partial<React.ComponentProps<typeof CometChatSearchBar.Root>> & {
+    value?: string;
+    placeholder?: string;
+    disabled?: boolean;
+  } = {},
   inputProps: Partial<React.ComponentProps<typeof CometChatSearchBar.Input>> = {}
 ) {
+  // Extract test-specific shorthand props
+  const { value, placeholder, ...rest } = rootProps;
+
   function Wrapper() {
-    const [val, setVal] = React.useState(rootProps.value ?? rootProps.defaultValue ?? '');
+    const [val, setVal] = React.useState(value ?? rest.searchText ?? '');
     return (
       <CometChatSearchBar.Root
-        {...rootProps}
-        value={rootProps.value ?? val}
+        {...rest}
+        searchText={value ?? rest.searchText ?? val}
+        placeholderText={placeholder ?? rest.placeholderText}
         onChange={v => {
-          if (rootProps.value === undefined) setVal(v);
-          rootProps.onChange?.(v);
+          setVal(v);
+          rest.onChange?.(v);
         }}
       >
         <CometChatSearchBar.Input {...inputProps} />
@@ -56,7 +64,7 @@ describe('CometChatSearchBarInput', () => {
       const [val, setVal] = React.useState('hello');
       return (
         <CometChatSearchBar.Root
-          value={val}
+          searchText={val}
           onChange={v => {
             setVal(v);
             onChange(v);

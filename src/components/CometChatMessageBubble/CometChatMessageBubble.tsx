@@ -1,7 +1,8 @@
-import React, { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CometChatMessageBubbleProps } from './CometChatMessageBubble.types';
 import { useGlobalConfig } from '../../context/GlobalConfigContext';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { CometChatAvatar } from '../base/CometChatAvatar';
 import { CometChatDate } from '../base/CometChatDate';
 import { CometChatThreadView } from '../base/CometChatThreadView';
@@ -94,12 +95,43 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   const [isHovering, setIsHovering] = useState(false);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const [isOptionsLocked, setIsOptionsLocked] = useState(false);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
 
   // Called when the context menu dropdown closes (option click, overlay, scroll)
   // Hides the quick options toolbar.
   const handleDropdownClose = useCallback(() => {
     setIsHovering(false);
   }, []);
+
+  // Unlock + hide on outside click when locked
+  useEffect(() => {
+    if (!isOptionsLocked) return;
+
+    const handleOutsideClick = (e: MouseEvent) => {
+      const optionsEl = getCurrentDocument().querySelector(
+        '[class*="message-bubble__options--visible"]'
+      );
+      if (optionsEl && !optionsEl.contains(e.target as Node)) {
+        setIsOptionsLocked(false);
+        setIsHovering(false);
+      }
+    };
+
+    // Delay listener attachment to avoid catching the same click that locked
+    const timeoutId = setTimeout(() => {
+      getCurrentDocument().addEventListener('mousedown', handleOutsideClick);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      getCurrentDocument().removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isOptionsLocked, getCurrentDocument]);
 
   const isOutgoing = alignment === 'right';
   const isIncoming = alignment === 'left';
@@ -370,7 +402,7 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
               }
               role="toolbar"
             >
-              <CometChatContextMenu.Root
+              <CometChatContextMenu
                 key={isHovering ? 'hovered' : 'not-hovered'}
                 items={contextMenuItems}
                 topMenuSize={quickOptionsCount ?? 2}
@@ -428,7 +460,7 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
                         </span>
                       )}
                       {!hideTimestamp && sentAt > 0 && (
-                        <CometChatDate.Root
+                        <CometChatDate
                           timestamp={sentAt}
                           variant="caption2"
                           formatConfig={
@@ -439,9 +471,7 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
                               otherDays: 'hh:mm a',
                             }
                           }
-                        >
-                          <CometChatDate.Text />
-                        </CometChatDate.Root>
+                        />
                       )}
                       {shouldShowReceipts && (
                         <div

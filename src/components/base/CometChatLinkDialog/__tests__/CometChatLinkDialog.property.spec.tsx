@@ -44,7 +44,7 @@ describe('CometChatLinkDialog property-based tests', () => {
         const { unmount } = render(
           <CometChatLinkDialog mode={mode} onSave={noop} onCancel={noop} />
         );
-        const expectedTitle = mode === 'add' ? 'link_dialog_add_link' : 'link_dialog_edit_link';
+        const expectedTitle = mode === 'add' ? 'Add Link' : 'Edit Link';
         expect(screen.getByText(expectedTitle)).toBeInTheDocument();
         unmount();
       })

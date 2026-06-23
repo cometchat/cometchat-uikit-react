@@ -48,6 +48,10 @@ function optionalPeerDependency(...packageNames: string[]) {
 export default defineConfig({
   plugins: [optionalPeerDependency(CALLS_SDK), react()],
   resolve: {
+    // Ensure shared dependencies resolve to a single copy — prevents instanceof
+    // failures when the UIKit source (aliased from ../src) and the sample app
+    // both import the same package from different locations on disk.
+    dedupe: ['@cometchat/chat-sdk-javascript', 'react', 'react-dom'],
     alias: [
       // Uncomment below to use local UIKit source instead of the installed package:
       // {

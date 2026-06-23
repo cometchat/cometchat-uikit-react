@@ -12,3 +12,7 @@ blob-report/
 Thumbs.db
 *.log
 *.swp
+
+# E2E test credentials
+.env.e2e
+sample-app/.env.e2e

@@ -1,15 +1,36 @@
+import React from 'react';
 import { CometChatPopoverRoot } from './CometChatPopoverRoot';
 import { CometChatPopoverTrigger } from './CometChatPopoverTrigger';
 import { CometChatPopoverContent } from './CometChatPopoverContent';
+import type { CometChatPopoverRootProps } from './CometChatPopover.types';
 
 /**
- * CometChatPopover — compound component for floating popover UI.
+ * Flat API props for CometChatPopover.
  *
- * Positions content relative to a trigger element with viewport-aware
- * auto-flipping. Supports click and hover triggers, focus trap,
- * keyboard navigation, and full ARIA attributes.
+ * Note: Popover inherently requires composed children (Trigger + Content),
+ * so the flat API accepts `trigger` and `content` as render props.
+ */
+export interface CometChatPopoverProps extends Omit<CometChatPopoverRootProps, 'children'> {
+  /** The trigger element that toggles the popover. */
+  trigger: React.ReactNode;
+  /** The popover content displayed when open. */
+  content: React.ReactNode;
+}
+
+/**
+ * CometChatPopover — Flat API component.
  *
- * Usage:
+ * Usage (flat):
+ * ```tsx
+ * <CometChatPopover
+ *   placement="bottom"
+ *   closeOnOutsideClick
+ *   trigger={<button>Click me</button>}
+ *   content={<div>Popover content here</div>}
+ * />
+ * ```
+ *
+ * Usage (compound):
  * ```tsx
  * <CometChatPopover.Root placement="bottom" closeOnOutsideClick>
  *   <CometChatPopover.Trigger>
@@ -21,8 +42,23 @@ import { CometChatPopoverContent } from './CometChatPopoverContent';
  * </CometChatPopover.Root>
  * ```
  */
-export const CometChatPopover = {
+const CometChatPopoverComponent: React.FC<CometChatPopoverProps> = ({
+  trigger,
+  content,
+  ...rootProps
+}) => {
+  return (
+    <CometChatPopoverRoot {...rootProps}>
+      <CometChatPopoverTrigger>{trigger}</CometChatPopoverTrigger>
+      <CometChatPopoverContent>{content}</CometChatPopoverContent>
+    </CometChatPopoverRoot>
+  );
+};
+
+CometChatPopoverComponent.displayName = 'CometChatPopover';
+
+export const CometChatPopover = Object.assign(CometChatPopoverComponent, {
   Root: CometChatPopoverRoot,
   Trigger: CometChatPopoverTrigger,
   Content: CometChatPopoverContent,
-} as const;
+});

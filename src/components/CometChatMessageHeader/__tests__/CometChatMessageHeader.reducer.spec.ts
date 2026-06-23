@@ -15,13 +15,6 @@ describe('CometChatMessageHeader.reducer', () => {
       expect(initialMessageHeaderState.typingUsers).toEqual([]);
       expect(initialMessageHeaderState.groupMemberCount).toBe(0);
       expect(initialMessageHeaderState.connectionStatus).toBe('connected');
-      expect(initialMessageHeaderState.activeCall).toBeNull();
-      expect(initialMessageHeaderState.callButtonsDisabled).toBe(false);
-      expect(initialMessageHeaderState.showOutgoingCallScreen).toBe(false);
-      expect(initialMessageHeaderState.showOngoingCall).toBe(false);
-      expect(initialMessageHeaderState.callSessionId).toBe('');
-      expect(initialMessageHeaderState.isDirectCalling).toBe(false);
-      expect(initialMessageHeaderState.isGroupAudioCall).toBe(false);
     });
   });
 
@@ -137,7 +130,7 @@ describe('CometChatMessageHeader.reducer', () => {
         userId: 'u1',
       });
       expect(result.typingUsers).toHaveLength(1);
-      expect(result.typingUsers[0].getUid()).toBe('u2');
+      expect(result.typingUsers[0]!.getUid()).toBe('u2');
     });
 
     it('handles removing non-existent user gracefully', () => {
@@ -211,110 +204,12 @@ describe('CometChatMessageHeader.reducer', () => {
     });
   });
 
-  describe('SET_ACTIVE_CALL', () => {
-    it('sets active call and disables buttons', () => {
-      const mockCall = { getSessionId: () => 'session-1' } as any;
-      const result = messageHeaderReducer(initialMessageHeaderState, {
-        type: 'SET_ACTIVE_CALL',
-        call: mockCall,
-      });
-      expect(result.activeCall).toBe(mockCall);
-      expect(result.callButtonsDisabled).toBe(true);
-    });
-  });
-
-  describe('SET_CALL_BUTTONS_DISABLED', () => {
-    it('sets call buttons disabled state', () => {
-      const result = messageHeaderReducer(initialMessageHeaderState, {
-        type: 'SET_CALL_BUTTONS_DISABLED',
-        disabled: true,
-      });
-      expect(result.callButtonsDisabled).toBe(true);
-    });
-  });
-
-  describe('SHOW_OUTGOING_CALL_SCREEN', () => {
-    it('shows outgoing call screen', () => {
-      const result = messageHeaderReducer(initialMessageHeaderState, {
-        type: 'SHOW_OUTGOING_CALL_SCREEN',
-        show: true,
-      });
-      expect(result.showOutgoingCallScreen).toBe(true);
-    });
-  });
-
-  describe('SHOW_ONGOING_CALL', () => {
-    it('sets ongoing call state', () => {
-      const result = messageHeaderReducer(initialMessageHeaderState, {
-        type: 'SHOW_ONGOING_CALL',
-        show: true,
-        sessionId: 'session-123',
-        isDirectCalling: true,
-        isGroupAudioCall: true,
-      });
-      expect(result.showOngoingCall).toBe(true);
-      expect(result.callSessionId).toBe('session-123');
-      expect(result.isDirectCalling).toBe(true);
-      expect(result.isGroupAudioCall).toBe(true);
-      expect(result.showOutgoingCallScreen).toBe(false);
-      expect(result.callButtonsDisabled).toBe(true);
-    });
-
-    it('defaults isGroupAudioCall to false', () => {
-      const result = messageHeaderReducer(initialMessageHeaderState, {
-        type: 'SHOW_ONGOING_CALL',
-        show: true,
-        sessionId: 'session-123',
-        isDirectCalling: false,
-      });
-      expect(result.isGroupAudioCall).toBe(false);
-    });
-  });
-
-  describe('RESET_CALL_STATE', () => {
-    it('resets all call-related state', () => {
-      const state: CometChatMessageHeaderState = {
-        ...initialMessageHeaderState,
-        activeCall: {} as any,
-        callButtonsDisabled: true,
-        showOutgoingCallScreen: true,
-        showOngoingCall: true,
-        callSessionId: 'session-123',
-        isDirectCalling: true,
-        isGroupAudioCall: true,
-      };
-      const result = messageHeaderReducer(state, { type: 'RESET_CALL_STATE' });
-      expect(result.activeCall).toBeNull();
-      expect(result.callButtonsDisabled).toBe(false);
-      expect(result.showOutgoingCallScreen).toBe(false);
-      expect(result.showOngoingCall).toBe(false);
-      expect(result.callSessionId).toBe('');
-      expect(result.isDirectCalling).toBe(false);
-      expect(result.isGroupAudioCall).toBe(false);
-    });
-
-    it('preserves non-call state', () => {
-      const state: CometChatMessageHeaderState = {
-        ...initialMessageHeaderState,
-        userStatus: 'online',
-        groupMemberCount: 12,
-        activeCall: {} as any,
-        callButtonsDisabled: true,
-      };
-      const result = messageHeaderReducer(state, { type: 'RESET_CALL_STATE' });
-      expect(result.userStatus).toBe('online');
-      expect(result.groupMemberCount).toBe(12);
-    });
-  });
-
   describe('RESET', () => {
     it('returns initial state', () => {
       const state: CometChatMessageHeaderState = {
         ...initialMessageHeaderState,
         userStatus: 'online',
         groupMemberCount: 12,
-        activeCall: {} as any,
-        callButtonsDisabled: true,
         typingUsers: [{ getUid: () => 'u1' } as any],
       };
       const result = messageHeaderReducer(state, { type: 'RESET' });

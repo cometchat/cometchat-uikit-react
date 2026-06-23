@@ -27,25 +27,23 @@ export const CometChatChangeScopeActions: React.FC<CometChatChangeScopeActionsPr
   return (
     <div className={actionsClass}>
       <div className={'cometchat-change-scope__cancel-button'}>
-        <CometChatButton.Root
+        <CometChatButton
           variant="secondary"
           onClick={cancel}
           style={{ width: '100%', height: '100%' }}
-        >
-          <CometChatButton.Text>{resolvedCancelText}</CometChatButton.Text>
-        </CometChatButton.Root>
+          text={resolvedCancelText}
+        />
       </div>
       <div className={'cometchat-change-scope__submit-button'}>
-        <CometChatButton.Root
+        <CometChatButton
           variant="primary"
           onClick={confirmChange}
           disabled={isSubmitDisabled}
           isLoading={hasChanged && isLoading}
           aria-disabled={isSubmitDisabled || undefined}
           style={{ width: '100%', height: '100%' }}
-        >
-          <CometChatButton.Text>{resolvedSubmitText}</CometChatButton.Text>
-        </CometChatButton.Root>
+          text={resolvedSubmitText}
+        />
       </div>
     </div>
   );

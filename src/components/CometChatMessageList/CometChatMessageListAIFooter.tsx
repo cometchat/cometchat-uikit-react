@@ -220,16 +220,10 @@ export const CometChatMessageListAIFooter: React.FC = () => {
   if (displayPanel === 'conversationSummary') {
     return (
       <div className={'cometchat-message-list__footer-panel'}>
-        <CometChatConversationSummary.Root
+        <CometChatConversationSummary
           getConversationSummary={getConversationSummary}
           onClose={handleSummaryClose}
-        >
-          <CometChatConversationSummary.Header />
-          <CometChatConversationSummary.Loading />
-          <CometChatConversationSummary.Error />
-          <CometChatConversationSummary.Empty />
-          <CometChatConversationSummary.Body />
-        </CometChatConversationSummary.Root>
+        />
       </div>
     );
   }
@@ -237,7 +231,7 @@ export const CometChatMessageListAIFooter: React.FC = () => {
   if (displayPanel === 'conversationStarters') {
     return (
       <div className={'cometchat-message-list__footer-conversation-starter'}>
-        <CometChatConversationStarter.Root
+        <CometChatConversationStarter
           getConversationStarters={getConversationStarters}
           onSuggestionClick={handleSuggestionClick}
         />
@@ -248,16 +242,11 @@ export const CometChatMessageListAIFooter: React.FC = () => {
   if (displayPanel === 'smartReplies') {
     return (
       <div className={'cometchat-message-list__footer-smart-replies'}>
-        <CometChatSmartReplies.Root
+        <CometChatSmartReplies
           getSmartReplies={getSmartReplies}
           onSuggestionClick={handleSuggestionClick}
           onClose={handleSmartRepliesClose}
-        >
-          <CometChatSmartReplies.Header />
-          <CometChatSmartReplies.Loading />
-          <CometChatSmartReplies.Error />
-          <CometChatSmartReplies.Empty />
-        </CometChatSmartReplies.Root>
+        />
       </div>
     );
   }

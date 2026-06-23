@@ -1,0 +1,90 @@
+/* ============================================
+   Block: cometchat-action-bubble
+   Centered pill-shaped system message for group actions and call status.
+   ============================================ */
+
+.cometchat-action-bubble {
+  display: flex;
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-3, 12px);
+  justify-content: center;
+  align-items: center;
+  gap: var(--cometchat-spacing-1, 4px);
+  border-radius: var(--cometchat-radius-max, 1000px);
+  border: 1px solid var(--cometchat-border-color-default, rgba(20, 20, 20, 0.08));
+  background: var(--cometchat-background-color-02, #f5f5f5);
+  height: 32px;
+}
+
+/* ============================================
+   Element: Text
+   ============================================ */
+
+.cometchat-action-bubble__text {
+  color: var(--cometchat-text-color-secondary, rgba(20, 20, 20, 0.58));
+  text-align: center;
+  font: var(--cometchat-font-caption1-regular, 400 12px / 14.4px Roboto);
+}
+
+.cometchat-action-bubble__text--error {
+  color: var(--cometchat-error-color, #f44336);
+}
+
+/* ============================================
+   Element: Icon
+   Maps icon class modifiers to SVG masks in CSS.
+   Users can override icons by overriding the mask property.
+   ============================================ */
+
+.cometchat-action-bubble__icon {
+  display: flex;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  background: var(--cometchat-icon-color-secondary, rgba(20, 20, 20, 0.58));
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.cometchat-action-bubble__icon--error {
+  background: var(--cometchat-error-color, #f44336);
+}
+
+/* Call direction/type icon variants */
+.cometchat-action-bubble__icon--missed-video {
+  -webkit-mask-image: url('../../../assets/missed_video_call_no_fill.svg');
+  mask-image: url('../../../assets/missed_video_call_no_fill.svg');
+}
+
+.cometchat-action-bubble__icon--missed-audio {
+  -webkit-mask-image: url('../../../assets/phone_missed_no_fill.svg');
+  mask-image: url('../../../assets/phone_missed_no_fill.svg');
+}
+
+.cometchat-action-bubble__icon--outgoing-video {
+  -webkit-mask-image: url('../../../assets/outgoing_video_no_fill.svg');
+  mask-image: url('../../../assets/outgoing_video_no_fill.svg');
+}
+
+.cometchat-action-bubble__icon--outgoing-audio {
+  -webkit-mask-image: url('../../../assets/phone_outgoing_no_fill.svg');
+  mask-image: url('../../../assets/phone_outgoing_no_fill.svg');
+}
+
+.cometchat-action-bubble__icon--incoming-video {
+  -webkit-mask-image: url('../../../assets/incoming_video_no_fill.svg');
+  mask-image: url('../../../assets/incoming_video_no_fill.svg');
+}
+
+.cometchat-action-bubble__icon--incoming-audio {
+  -webkit-mask-image: url('../../../assets/phone_incoming_no_fill.svg');
+  mask-image: url('../../../assets/phone_incoming_no_fill.svg');
+}
+
+.cometchat-action-bubble__icon--call-ended {
+  -webkit-mask-image: url('../../../assets/call_end_no_fill.svg');
+  mask-image: url('../../../assets/call_end_no_fill.svg');
+}

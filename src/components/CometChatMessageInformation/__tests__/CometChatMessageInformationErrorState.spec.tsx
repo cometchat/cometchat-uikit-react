@@ -7,6 +7,13 @@ import { buildTextMessage } from '../../../testing/mock-builders';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatMessageInformationContextValue } from '../CometChatMessageInformation.types';
 
+vi.mock('../../../context/locale/LocaleContext', () => ({
+  useLocale: () => ({
+    getLocalizedString: (key: string) => key,
+    language: 'en-us',
+  }),
+}));
+
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
   CometChat: {
     RECEIVER_TYPE: { GROUP: 'group', USER: 'user' },

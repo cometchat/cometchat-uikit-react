@@ -105,7 +105,7 @@
     --cometchat-text-shadow-strong: 0 1px 3px rgba(0, 0, 0, 0.3);
 
     /* Image Bubble */
-    --cometchat-image-bubble-container-max-width: 350px;
+    --cometchat-image-bubble-container-max-width: 250px;
     --cometchat-image-bubble-container-border-radius: var(--cometchat-radius-2);
     --cometchat-image-bubble-single-max-height: 350px;
     --cometchat-image-bubble-grid-gap-mobile: var(--cometchat-spacing);

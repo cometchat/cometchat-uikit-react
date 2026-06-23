@@ -7,6 +7,15 @@ import type { CometChatConversationsContextValue } from '../CometChatConversatio
 
 // ==================== Global Mocks ====================
 
+// Mock locale
+vi.mock('../../../context/locale/LocaleContext', () => ({
+  useLocale: () => ({
+    getLocalizedString: (key: string) => key,
+    tDateTimeParser: (d: Date) => d.toISOString(),
+    language: 'en-us',
+  }),
+}));
+
 // Mock IntersectionObserver
 vi.stubGlobal(
   'IntersectionObserver',
@@ -24,6 +33,70 @@ vi.mock('../../../assets/conversations_empty_state.svg', () => ({ default: 'empt
 // Mock CometChat SDK
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
   CometChat: {
+    CATEGORY_MESSAGE: 'message',
+    CATEGORY_CUSTOM: 'custom',
+    CATEGORY_ACTION: 'action',
+    CATEGORY_CALL: 'call',
+    CATEGORY_INTERACTIVE: 'interactive',
+    MessageCategory: { AGENTIC: 'agentic' },
+    ModerationStatus: {
+      PENDING: 'pending',
+      APPROVED: 'approved',
+      DISAPPROVED: 'disapproved',
+      UNMODERATED: 'unmoderated',
+    },
+    MESSAGE_TYPE: {
+      TEXT: 'text',
+      IMAGE: 'image',
+      VIDEO: 'video',
+      AUDIO: 'audio',
+      FILE: 'file',
+      ASSISTANT: 'assistant',
+      TOOL_ARGUMENTS: 'tool_arguments',
+      TOOL_RESULT: 'tool_result',
+    },
+    RECEIVER_TYPE: { USER: 'user', GROUP: 'group' },
+    USER_STATUS: { ONLINE: 'online', OFFLINE: 'offline' },
+    ACTION_TYPE: {
+      MEMBER_JOINED: 'joined',
+      MEMBER_LEFT: 'left',
+      MEMBER_ADDED: 'added',
+      MEMBER_BANNED: 'banned',
+      MEMBER_UNBANNED: 'unbanned',
+      MEMBER_KICKED: 'kicked',
+      MEMBER_INVITED: 'invited',
+      MEMBER_SCOPE_CHANGED: 'scopeChanged',
+    },
+    GROUP_MEMBER_SCOPE: { ADMIN: 'admin', MODERATOR: 'moderator', PARTICIPANT: 'participant' },
+    GROUP_TYPE: { PRIVATE: 'private', PASSWORD: 'password', PUBLIC: 'public' },
+    CALL_STATUS: {
+      ONGOING: 'ongoing',
+      ENDED: 'ended',
+      INITIATED: 'initiated',
+      CANCELLED: 'cancelled',
+      REJECTED: 'rejected',
+      UNANSWERED: 'unanswered',
+      BUSY: 'busy',
+    },
+    CALL_MODE: {
+      DEFAULT: 'default',
+      GRID: 'grid',
+      SINGLE: 'single',
+      SPOTLIGHT: 'spotlight',
+      TILE: 'tile',
+    },
+    GoalType: { ALL_OF: 'allOf', ANY_OF: 'anyOf', ANY_ACTION: 'anyAction', NONE: 'none' },
+    AI_ASSISTANT_EVENTS: {
+      RUN_STARTED: 'run_started',
+      TEXT_MESSAGE_START: 'text_message_start',
+      TEXT_MESSAGE_CONTENT: 'text_message_content',
+      TEXT_MESSAGE_END: 'text_message_end',
+      RUN_FINISHED: 'run_finished',
+      TOOL_CALL_STARTED: 'tool_call_start',
+      TOOL_CALL_ENDED: 'tool_call_end',
+      TOOL_CALL_ARGUMENT: 'tool_call_args',
+      TOOL_CALL_RESULT: 'tool_call_result',
+    },
     ConversationsRequestBuilder: vi.fn(() => ({
       setLimit: vi.fn().mockReturnThis(),
       build: vi.fn(() => ({
@@ -56,17 +129,19 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
 vi.mock('../../base/CometChatSearchBar/CometChatSearchBar', () => ({
   CometChatSearchBar: {
     Root: ({
+      placeholderText,
       placeholder,
       children,
     }: {
       placeholder?: string;
+      placeholderText?: string;
       onChange?: (text: string) => void;
       debounceMs?: number;
       children: React.ReactNode;
       inputRef?: any;
       className?: string;
     }) => (
-      <div data-testid="search-bar-root" data-placeholder={placeholder}>
+      <div data-testid="search-bar-root" data-placeholder={placeholderText ?? placeholder}>
         {children}
       </div>
     ),
@@ -208,7 +283,7 @@ describe('CometChatConversationsHeader', () => {
 
   it('renders default title "Chats"', () => {
     render(<CometChatConversationsHeader />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chats');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('conversation_chat_title');
   });
 
   it('renders custom title', () => {
@@ -245,7 +320,7 @@ describe('CometChatConversationsSearchBar', () => {
     expect(screen.getByTestId('search-bar-root')).toBeInTheDocument();
     expect(screen.getByTestId('search-bar-root')).toHaveAttribute(
       'data-placeholder',
-      'Search conversations'
+      'search_placeholder'
     );
   });
 
@@ -383,10 +458,8 @@ describe('CometChatConversationsErrorState', () => {
       </CometChatConversationsContext.Provider>
     );
     expect(screen.getByRole('status')).toBeInTheDocument();
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    expect(
-      screen.getByText("We couldn't load the conversations. Please try again.")
-    ).toBeInTheDocument();
+    expect(screen.getByText('conversation_error_title')).toBeInTheDocument();
+    expect(screen.getByText('conversation_error_subtitle')).toBeInTheDocument();
   });
 
   it('does not render when fetchState is not "error"', () => {
@@ -409,7 +482,7 @@ describe('CometChatConversationsErrorState', () => {
       </CometChatConversationsContext.Provider>
     );
     expect(screen.getByTestId('custom-error')).toBeInTheDocument();
-    expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument();
+    expect(screen.queryByText('conversation_error_title')).not.toBeInTheDocument();
   });
 });
 
@@ -431,7 +504,7 @@ describe('CometChatConversationsLoadingState', () => {
     const status = screen.getByRole('status');
     expect(status).toBeInTheDocument();
     expect(status).toHaveAttribute('aria-busy', 'true');
-    expect(status).toHaveAttribute('aria-label', 'Loading conversations');
+    expect(status).toHaveAttribute('aria-label', 'accessibility_loading_conversations');
   });
 
   it('renders 12 shimmer items by default', () => {
@@ -485,7 +558,7 @@ describe('CometChatConversationsRoot', () => {
     // Should render the region container
     const region = container.querySelector('[role="region"]');
     expect(region).toBeInTheDocument();
-    expect(region).toHaveAttribute('aria-label', 'Conversations');
+    expect(region).toHaveAttribute('aria-label', 'conversation_chat_title');
   });
 
   it('renders custom children when provided', () => {
@@ -556,7 +629,7 @@ describe('CometChatConversationsRoot', () => {
 
     const region = container.querySelector('[role="region"]');
     expect(region).toBeInTheDocument();
-    expect(region).toHaveAttribute('aria-label', 'Conversations');
+    expect(region).toHaveAttribute('aria-label', 'conversation_chat_title');
   });
 });
 
@@ -574,7 +647,7 @@ describe('CometChatConversations (flat API)', () => {
 
     const region = container.querySelector('[role="region"]');
     expect(region).toBeInTheDocument();
-    expect(region).toHaveAttribute('aria-label', 'Conversations');
+    expect(region).toHaveAttribute('aria-label', 'conversation_chat_title');
   });
 
   it('renders with convenience props (custom headerView)', () => {

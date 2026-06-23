@@ -109,7 +109,7 @@ export function useCometChatSearchMessages(
       })
       .catch((err: unknown) => {
         dispatch({ type: 'FETCH_ERROR' });
-        onError?.(err);
+        onError?.(err as CometChat.CometChatException);
       });
   }, [searchKeyword, activeFilters, uid, guid, alwaysShowSeeMore, messagesRequestBuilder, onError]);
 
@@ -120,7 +120,7 @@ export function useCometChatSearchMessages(
       const { results, hasMore } = await managerRef.current.loadMore();
       dispatch({ type: 'LOAD_MORE_SUCCESS', messages: results, hasMore });
     } catch (err: unknown) {
-      onError?.(err);
+      onError?.(err as CometChat.CometChatException);
     }
   }, [state.hasMore, onError]);
 

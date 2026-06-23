@@ -10,7 +10,7 @@
   color: var(--cometchat-static-white, #fff);
   font: var(--cometchat-font-caption1-regular, 400 12px Roboto);
   position: absolute;
-  bottom: 80px;
+  bottom: var(--cometchat-toast-bottom, 8px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;

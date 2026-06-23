@@ -83,10 +83,7 @@ export const CometChatOutgoingCall: React.FC<CometChatOutgoingCallProps> = ({
 
       {avatarView ?? (
         <div className={'cometchat-outgoing-call__avatar'}>
-          <CometChatAvatar.Root name={receiverName} image={receiverAvatar} size="large">
-            <CometChatAvatar.Image />
-            <CometChatAvatar.Initials />
-          </CometChatAvatar.Root>
+          <CometChatAvatar name={receiverName} image={receiverAvatar} size="large" />
         </div>
       )}
 

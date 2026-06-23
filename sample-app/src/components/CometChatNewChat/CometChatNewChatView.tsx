@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatUsers, CometChatGroups, useLocale } from '@cometchat/chat-uikit-react';
-import '../../styles/CometChatNewChat/CometChatNewChatView.css';
+import './CometChatNewChatView.css';
 
 interface CometChatNewChatViewProps {
   onBack: () => void;

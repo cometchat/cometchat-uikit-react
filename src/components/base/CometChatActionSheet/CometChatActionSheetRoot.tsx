@@ -5,6 +5,7 @@ import type {
 } from './CometChatActionSheet.types';
 import { CometChatActionSheetContext } from './CometChatActionSheet.context';
 import { HEADER_TITLE_ID } from './CometChatActionSheetHeader';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatActionSheet.css';
 
 /**
@@ -21,11 +22,16 @@ export const CometChatActionSheetRoot: React.FC<CometChatActionSheetRootProps> =
   const sheetRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const wasOpenRef = useRef(false);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
 
   // Capture the trigger element during render, before effects run.
   // This ensures we grab the button that was focused when the user clicked to open.
   if (isOpen && !wasOpenRef.current) {
-    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    previousFocusRef.current = getCurrentDocument().activeElement as HTMLElement | null;
   }
   wasOpenRef.current = isOpen;
 
@@ -72,7 +78,7 @@ export const CometChatActionSheetRoot: React.FC<CometChatActionSheetRootProps> =
         );
         if (focusable.length === 0) return;
 
-        const currentIndex = focusable.indexOf(document.activeElement as HTMLElement);
+        const currentIndex = focusable.indexOf(getCurrentDocument().activeElement as HTMLElement);
 
         let nextIndex: number;
         if (e.key === 'ArrowDown') {
@@ -103,7 +109,7 @@ export const CometChatActionSheetRoot: React.FC<CometChatActionSheetRootProps> =
         );
         if (focusable.length === 0) return;
 
-        const currentIdx = focusable.indexOf(document.activeElement as HTMLElement);
+        const currentIdx = focusable.indexOf(getCurrentDocument().activeElement as HTMLElement);
 
         let nextIdx: number;
         if (e.shiftKey) {
@@ -116,7 +122,7 @@ export const CometChatActionSheetRoot: React.FC<CometChatActionSheetRootProps> =
         focusable[nextIdx]?.focus();
       }
     },
-    [onClose]
+    [onClose, getCurrentDocument]
   );
 
   // Backdrop click handler.

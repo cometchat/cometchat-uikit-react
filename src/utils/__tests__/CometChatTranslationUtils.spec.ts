@@ -81,7 +81,8 @@ describe('CometChatTranslationUtils', () => {
 
       const msg = createMockTextMessage(10, 'Hello');
       const result = await translateMessage(msg, 'es');
-      expect(result).toBe('Hola');
+      expect(result.translatedText).toBe('Hola');
+      expect(result.isSameLanguage).toBe(false);
     });
 
     it('caches the translation and returns it on subsequent calls', async () => {
@@ -93,12 +94,12 @@ describe('CometChatTranslationUtils', () => {
 
       // First call — hits the API
       const first = await translateMessage(msg, 'de');
-      expect(first).toBe('Hallo');
+      expect(first.translatedText).toBe('Hallo');
       expect(CometChat.callExtension).toHaveBeenCalledTimes(1);
 
       // Second call — should use cache, not call API again
       const second = await translateMessage(msg, 'de');
-      expect(second).toBe('Hallo');
+      expect(second.translatedText).toBe('Hallo');
       expect(CometChat.callExtension).toHaveBeenCalledTimes(1);
     });
 
@@ -121,7 +122,7 @@ describe('CometChatTranslationUtils', () => {
       const msg = createMockTextMessage(40, 'Hello');
       // Request French but API returns Italian
       const result = await translateMessage(msg, 'fr');
-      expect(result).toBe('');
+      expect(result.translatedText).toBe('');
     });
 
     it('returns empty string when translations array is empty', async () => {
@@ -131,7 +132,7 @@ describe('CometChatTranslationUtils', () => {
 
       const msg = createMockTextMessage(50, 'Hello');
       const result = await translateMessage(msg, 'fr');
-      expect(result).toBe('');
+      expect(result.translatedText).toBe('');
     });
 
     it('returns empty string when translations field is undefined', async () => {
@@ -139,7 +140,7 @@ describe('CometChatTranslationUtils', () => {
 
       const msg = createMockTextMessage(60, 'Hello');
       const result = await translateMessage(msg, 'fr');
-      expect(result).toBe('');
+      expect(result.translatedText).toBe('');
     });
 
     it('returns empty string when message_translated is empty', async () => {
@@ -149,7 +150,7 @@ describe('CometChatTranslationUtils', () => {
 
       const msg = createMockTextMessage(70, 'Hello');
       const result = await translateMessage(msg, 'fr');
-      expect(result).toBe('');
+      expect(result.translatedText).toBe('');
     });
 
     it('returns empty string when the SDK call throws', async () => {
@@ -157,7 +158,7 @@ describe('CometChatTranslationUtils', () => {
 
       const msg = createMockTextMessage(80, 'Hello');
       const result = await translateMessage(msg, 'fr');
-      expect(result).toBe('');
+      expect(result.translatedText).toBe('');
     });
 
     it('does not cache failed translations', async () => {
@@ -194,8 +195,8 @@ describe('CometChatTranslationUtils', () => {
       const fr = await translateMessage(msg, 'fr');
       const de = await translateMessage(msg, 'de');
 
-      expect(fr).toBe('Bonjour');
-      expect(de).toBe('Hallo');
+      expect(fr.translatedText).toBe('Bonjour');
+      expect(de.translatedText).toBe('Hallo');
       expect(getCachedTranslation(110, 'fr')).toBe('Bonjour');
       expect(getCachedTranslation(110, 'de')).toBe('Hallo');
     });

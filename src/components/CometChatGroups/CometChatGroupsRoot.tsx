@@ -26,6 +26,7 @@ export const CometChatGroupsRoot: React.FC<CometChatGroupsRootProps> = ({
   searchKeyword,
   hideGroupType = false,
   hideSearch = false,
+  showScrollbar = false,
   selectionMode = 'none',
   activeGroup,
   options,
@@ -54,9 +55,10 @@ export const CometChatGroupsRoot: React.FC<CometChatGroupsRootProps> = ({
       selectionMode,
       hideGroupType,
       hideSearch,
+      showScrollbar,
       options,
     }),
-    [hookReturn, selectionMode, hideGroupType, hideSearch, options]
+    [hookReturn, selectionMode, hideGroupType, hideSearch, showScrollbar, options]
   );
 
   const hasChildren = React.Children.count(children) > 0;

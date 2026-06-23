@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "所有権を移転してもよろしいですか？この操作は元に戻せません。新しい所有者が完全な管理権を持ちます。",
   "transfer": "移転",
   "transferring": "移転中...",
-  "transfer_failed": "移転に失敗しました。もう一度お試しください。"
+  "transfer_failed": "移転に失敗しました。もう一度お試しください。",
+  "loading": "読み込み中...",
+  "retry": "再試行",
+  "notifications_title": "通知",
+  "notifications_filter_all": "すべて",
+  "notifications_empty_title": "まだ何もありません",
+  "notifications_empty_subtitle": "新しいアクティビティが利用可能になるとここに表示されます。",
+  "notifications_error_title": "おっと！",
+  "notifications_error_subtitle": "問題が発生したようです。もう一度お試しください。",
+  "notifications_pagination_error": "さらに読み込めませんでした",
+  "notifications_tap_to_retry": "タップして再試行",
+  "notifications_offline_banner": "オフラインです。キャッシュされた通知を表示しています。"
 }

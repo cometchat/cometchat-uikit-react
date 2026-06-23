@@ -8,7 +8,7 @@ import type { CometChatThreadHeaderContextValue } from '../CometChatThreadHeader
 // Mock useLocale
 vi.mock('../../../hooks/useLocale', () => ({
   useLocale: () => ({
-    t: (key: string) => {
+    getLocalizedString: (key: string) => {
       const translations: Record<string, string> = {
         thread_reply: 'Reply',
         thread_replies: 'Replies',

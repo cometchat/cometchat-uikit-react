@@ -1,0 +1,219 @@
+.cometchat-call-log-details {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--cometchat-background-color-01, #fff);
+  overflow: hidden;
+}
+
+.cometchat-call-log-details__header {
+  display: flex;
+  height: 64px;
+  min-height: 64px;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-4, 16px);
+  align-items: center;
+  gap: var(--cometchat-padding-3, 12px);
+  align-self: stretch;
+  border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-heading2-bold, 700 20px Roboto);
+}
+
+.cometchat-call-log-details__header-back {
+  width: 24px;
+  height: 24px;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: var(--cometchat-icon-color-primary, #141414);
+  -webkit-mask: url('../../assets/arrow_back.svg') center center no-repeat;
+  mask: url('../../assets/arrow_back.svg') center center no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .cometchat-call-log-details__header-back {
+    display: flex;
+  }
+}
+
+/* User info section — full width */
+.cometchat-call-log-details__call-log-item {
+  width: 100%;
+  padding: var(--cometchat-padding-3, 12px) var(--cometchat-padding-4, 16px) var(--cometchat-padding-5, 20px) var(--cometchat-padding-4, 16px);
+  box-sizing: border-box;
+}
+
+.cometchat-call-log-details__user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-padding-5, 20px);
+}
+
+/* Avatar override — 60px size */
+.cometchat-call-log-details__user-avatar-wrapper {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+}
+
+.cometchat-call-log-details__user-avatar-wrapper > div {
+  width: 60px !important;
+  height: 60px !important;
+}
+
+.cometchat-call-log-details__user-avatar-wrapper > div > span {
+  font: 700 24px/28px var(--cometchat-font-family, Roboto) !important;
+}
+
+.cometchat-call-log-details__user-avatar-wrapper > div > img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.cometchat-call-log-details__user-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cometchat-call-log-details__user-name {
+  font: var(--cometchat-font-heading3-bold, 700 20px Roboto);
+  color: var(--cometchat-text-color-primary, #141414);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cometchat-call-log-details__subtitle {
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+/* Call buttons (voice + video) — highlight color icons */
+.cometchat-call-log-details__call-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-padding-2, 8px);
+  flex-shrink: 0;
+}
+
+/* Override CometChatCallButtons styles when inside CallLogDetails */
+.cometchat-call-log-details__call-buttons .cometchat-call-buttons {
+  gap: var(--cometchat-padding-2, 8px);
+}
+
+.cometchat-call-log-details__call-buttons .cometchat-call-buttons__button {
+  width: auto;
+  height: auto;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-5, 20px);
+  border-radius: var(--cometchat-radius-2, 8px);
+  border: 1px solid var(--cometchat-border-color-default, #e8e8e8);
+  background: transparent;
+}
+
+.cometchat-call-log-details__call-buttons .cometchat-call-buttons__button:hover {
+  background: var(--cometchat-background-color-03, #f5f5f5);
+}
+
+.cometchat-call-log-details__call-buttons .cometchat-call-buttons__button-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-call-log-details__call-buttons .cometchat-call-buttons__button:hover .cometchat-call-buttons__button-icon {
+  background-color: var(--cometchat-primary-color, #6852d6);
+}
+
+/* Tabs */
+.cometchat-call-log-details__tabs {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  border-bottom: 1px solid var(--cometchat-border-color-default, #e8e8e8);
+}
+
+.cometchat-call-log-details__tabs-tab-item,
+.cometchat-call-log-details__tabs-tab-item-active {
+  display: flex;
+  height: 40px;
+  padding: var(--cometchat-padding-2, 8px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1 0 0;
+  color: var(--cometchat-text-color-secondary, #727272);
+  text-align: center;
+  font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+  cursor: pointer;
+}
+
+.cometchat-call-log-details__tabs-tab-item-active {
+  border-bottom: 2px solid var(--cometchat-primary-color, #6852d6);
+  color: var(--cometchat-text-color-highlight, #6852d6);
+}
+
+/* Shimmer */
+.cometchat-call-log-details__shimmer {
+  width: 100%;
+  padding: 16px;
+}
+
+.cometchat-call-log-details__shimmer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cometchat-call-log-details__shimmer-item-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--cometchat-background-color-03, #f5f5f5);
+  animation: callLogDetailsShimmer 1.5s infinite ease-in-out;
+}
+
+.cometchat-call-log-details__shimmer-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cometchat-call-log-details__shimmer-item-body-title {
+  width: 120px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--cometchat-background-color-03, #f5f5f5);
+  animation: callLogDetailsShimmer 1.5s infinite ease-in-out;
+}
+
+.cometchat-call-log-details__shimmer-item-body-subtitle {
+  width: 60px;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--cometchat-background-color-03, #f5f5f5);
+  animation: callLogDetailsShimmer 1.5s infinite ease-in-out;
+}
+
+@keyframes callLogDetailsShimmer {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+/* Tab content area — fills remaining height */
+.cometchat-call-log-details__tab-content {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+}

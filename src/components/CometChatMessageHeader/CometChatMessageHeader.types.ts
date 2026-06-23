@@ -46,30 +46,6 @@ export interface CometChatMessageHeaderContextValue {
   isUserConversation: boolean;
   /** Whether this is a group conversation. */
   isGroupConversation: boolean;
-  // --- Call State ---
-  /** Whether call buttons are disabled (during active call). */
-  callButtonsDisabled: boolean;
-  /** Whether to show the outgoing call screen overlay. */
-  showOutgoingCallScreen: boolean;
-  /** Whether to show the ongoing call screen. */
-  showOngoingCall: boolean;
-  /** Call session ID for ongoing call. */
-  callSessionId: string;
-  /** Whether current call uses direct calling (group) vs default (user). */
-  isDirectCalling: boolean;
-  /** Whether current group call is audio-only. */
-  isGroupAudioCall: boolean;
-  /** Active outgoing call object. */
-  activeCall: CometChat.Call | null;
-  // --- Actions ---
-  /** Initiate an audio call. */
-  initiateAudioCall: () => Promise<void>;
-  /** Initiate a video call. */
-  initiateVideoCall: () => Promise<void>;
-  /** Cancel the current outgoing call. */
-  cancelOutgoingCall: () => Promise<void>;
-  /** Reset all call state. */
-  resetCallState: () => void;
   // --- Callbacks ---
   /** Callback when the back button is clicked. */
   onBack?: () => void;
@@ -81,10 +57,6 @@ export interface CometChatMessageHeaderContextValue {
   onSummaryClick?: () => void;
   /** Number of messages to include in summary generation (default: 1000). */
   summaryGenerationMessageCount: number;
-  /** Callback when the voice call button is clicked. */
-  onVoiceCallClick?: (entity: CometChat.User | CometChat.Group) => void;
-  /** Callback when the video call button is clicked. */
-  onVideoCallClick?: (entity: CometChat.User | CometChat.Group) => void;
 }
 
 // --- Root Props ---
@@ -106,14 +78,11 @@ export interface CometChatMessageHeaderRootProps {
   /**
    * Auto-trigger conversation summary when unread message count >= 15.
    * Requires `showConversationSummaryButton` to be true and `onSummaryClick` to be provided.
-   * Matches prop.
    * Default: false.
    */
   enableAutoSummaryGeneration?: boolean;
   /**
    * Number of last messages to include in the summary request.
-   * Passed to the `onSummaryClick` callback via the `summaryGenerationMessageCount` context field.
-   * Matches prop.
    * Default: 1000.
    */
   summaryGenerationMessageCount?: number;
@@ -123,8 +92,7 @@ export interface CometChatMessageHeaderRootProps {
   hideVideoCallButton?: boolean;
   /**
    * Custom call settings builder for ongoing call sessions.
-   * Passed to the OngoingCall component when a call is started.
-   * If not provided, falls back to GlobalConfig.callSettingsBuilder, then default.
+   * Passed to the CometChatCallButtons component.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   callSettingsBuilder?: any;
@@ -176,10 +144,23 @@ export interface CometChatMessageHeaderSubtitleProps {
   className?: string;
 }
 
-/** Props for CometChatMessageHeaderCallButtons. */
+/** Props for CometChatMessageHeaderCallButtons (now renders CometChatCallButtons). */
 export interface CometChatMessageHeaderCallButtonsProps {
   /** Optional custom className. */
   className?: string;
+  /** Whether to hide the voice call button. */
+  hideVoiceCallButton?: boolean;
+  /** Whether to hide the video call button. */
+  hideVideoCallButton?: boolean;
+  /** Callback when the voice call button is clicked. Overrides default call initiation. */
+  onVoiceCallClick?: (entity: CometChat.User | CometChat.Group) => void;
+  /** Callback when the video call button is clicked. Overrides default call initiation. */
+  onVideoCallClick?: (entity: CometChat.User | CometChat.Group) => void;
+  /** Custom call settings builder. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callSettingsBuilder?: any;
+  /** Error callback. */
+  onError?: ((error: CometChat.CometChatException) => void) | null;
 }
 
 /** Props for CometChatMessageHeaderSearchButton. */

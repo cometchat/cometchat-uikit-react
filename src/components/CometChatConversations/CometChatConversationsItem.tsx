@@ -1,16 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-nullish-coalescing */
-import React, { useCallback, useContext } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
-import { CometChatAvatar } from '../base/CometChatAvatar/CometChatAvatar';
-import { CometChatCheckbox } from '../base/CometChatCheckbox/CometChatCheckbox';
-import { CometChatRadioButton } from '../base/CometChatRadioButton/CometChatRadioButton';
-import { CometChatDate } from '../base/CometChatDate';
-import { useOptionalConversationsContext } from './CometChatConversations.context';
+import React, { useCallback, useContext, useState } from 'react';
 import { CometChatPluginRegistryContext } from '../../context/PluginRegistryContext';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
 import { CometChatLocalize } from '../../resources/CometChatLocalize/CometChatLocalize';
-import type { CometChatConversationsItemProps } from './CometChatConversations.types';
+import { CometChatAvatar } from '../base/CometChatAvatar/CometChatAvatar';
+import { CometChatCheckbox } from '../base/CometChatCheckbox/CometChatCheckbox';
+import { CometChatContextMenu } from '../base/CometChatContextMenu/CometChatContextMenu';
+import type { CometChatContextMenuItemData } from '../base/CometChatContextMenu/CometChatContextMenu.types';
+import { CometChatDate } from '../base/CometChatDate';
+import { CometChatRadioButton } from '../base/CometChatRadioButton/CometChatRadioButton';
+import { useOptionalConversationsContext } from './CometChatConversations.context';
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 import './CometChatConversations.css';
+import type { CometChatConversationsItemProps } from './CometChatConversations.types';
 
 /**
  * Get the display name for a conversation.
@@ -41,11 +44,14 @@ function getConversationAvatar(conversation: CometChat.Conversation): string | u
 
 /**
  * Get the user status for a 1:1 conversation.
+ * Returns undefined if the user has blocked/been blocked — status should be hidden.
  */
 function getUserStatus(conversation: CometChat.Conversation): string | undefined {
   if (conversation.getConversationType() !== 'user') return undefined;
   const user = conversation.getConversationWith() as CometChat.User;
-  return user?.getStatus?.();
+  if (!user) return undefined;
+  if (user.getBlockedByMe?.() || user.getHasBlockedMe?.()) return undefined;
+  return user.getStatus?.();
 }
 
 /**
@@ -403,10 +409,6 @@ function getLastMessageTimestamp(conversation: CometChat.Conversation): number |
  * Determine the receipt status of the last message.
  * Only applicable when the last message was sent by the logged-in user.
  */
-/**
- * Determine the receipt status of the last message.
- * Only applicable when the last message was sent by the logged-in user.
- */
 type ReceiptStatus = 'wait' | 'sent' | 'delivered' | 'read' | 'error' | null;
 
 function getReceiptStatus(
@@ -429,7 +431,7 @@ function getReceiptStatus(
   if (!sender || !loggedInUserId) return null;
   if (sender.getUid() !== loggedInUserId) return null;
 
-  // Check receipt status
+  // Check receipt status.
   if (lastMessage.getReadAt?.()) return 'read';
   if (lastMessage.getDeliveredAt?.()) return 'delivered';
   if (lastMessage.getSentAt?.()) return 'sent';
@@ -450,6 +452,7 @@ function CometChatConversationsItemInner({
   hideReceipts: hideReceiptsProp,
   hideDeleteButton = false,
   isActive: isActiveProp,
+  options: optionsProp,
   leadingView,
   titleView,
   subtitleView,
@@ -498,8 +501,17 @@ function CometChatConversationsItemInner({
   const hideReceipts = hideReceiptsProp ?? ctx?.hideReceipts ?? false;
   const effectiveHideDeleteButton = hideDeleteButton || (ctx?.hideDeleteConversation ?? false);
 
+  const options = optionsProp ?? ctx?.options;
+
   const convWith = conversation.getConversationWith();
   const isAgentChat = convWith instanceof CometChat.User && convWith.getRole() === '@agentic';
+
+  // Determine group type for the indicator icon
+  const hideGroupType = ctx?.hideGroupType ?? false;
+  const groupType =
+    conversation.getConversationType() === 'group'
+      ? ((convWith as CometChat.Group).getType?.() ?? '')
+      : '';
 
   const handleDeleteClick = useCallback(
     (e: React.MouseEvent) => {
@@ -541,10 +553,12 @@ function CometChatConversationsItemInner({
     'cometchat-conversations__item',
     isActive ? 'cometchat-conversations__item--active' : '',
     isSelected ? 'cometchat-conversations__item--selected' : '',
-    effectiveHideDeleteButton ? 'cometchat-conversations__item--subtle-hover' : '',
+    effectiveHideDeleteButton && !options ? 'cometchat-conversations__item--subtle-hover' : '',
   ]
     .filter(Boolean)
     .join(' ');
+
+  const [isItemHovered, setIsItemHovered] = useState(false);
 
   return (
     <div
@@ -554,6 +568,12 @@ function CometChatConversationsItemInner({
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
+      onMouseEnter={() => {
+        setIsItemHovered(true);
+      }}
+      onMouseLeave={() => {
+        setIsItemHovered(false);
+      }}
     >
       {/* Leading: Avatar + Status Indicator */}
       {leadingView ?? (
@@ -565,6 +585,14 @@ function CometChatConversationsItemInner({
               <CometChatAvatar.StatusIndicator status="online" />
             )}
           </CometChatAvatar.Root>
+          {!hideGroupType && (groupType === 'private' || groupType === 'password') && (
+            <span
+              className={`cometchat-conversations__item-group-type cometchat-conversations__item-group-type--${groupType}`}
+              aria-label={groupType === 'private' ? 'Private group' : 'Password protected group'}
+            >
+              <span className="cometchat-conversations__item-group-type-icon" />
+            </span>
+          )}
         </div>
       )}
 
@@ -658,7 +686,15 @@ function CometChatConversationsItemInner({
                 })()}
                 {lastMessageIconName && (
                   <span
-                    className={`cometchat-conversations__item-subtitle-icon cometchat-conversations__item-subtitle-icon--${lastMessageIconName}`}
+                    className={[
+                      'cometchat-conversations__item-subtitle-icon',
+                      `cometchat-conversations__item-subtitle-icon--${lastMessageIconName}`,
+                      lastMessageIconName === 'unsupported'
+                        ? `cometchat-conversations__item-subtitle-icon--${String(conversation.getLastMessage()?.getType() ?? '')}`
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                     aria-hidden="true"
                   />
                 )}
@@ -670,7 +706,7 @@ function CometChatConversationsItemInner({
                     .filter(Boolean)
                     .join(' ')}
                   dangerouslySetInnerHTML={{
-                    __html: lastMessageResult.text,
+                    __html: sanitizeHtml(lastMessageResult.text),
                   }}
                 />
               </>
@@ -687,7 +723,7 @@ function CometChatConversationsItemInner({
           {/* Default trailing view: time + badge (hidden on hover when menu is present) */}
           <div className={'cometchat-conversations__item-trailing'}>
             {lastMessageTimestamp && (
-              <CometChatDate.Root
+              <CometChatDate
                 timestamp={lastMessageTimestamp}
                 variant="caption2"
                 formatConfig={{
@@ -696,9 +732,7 @@ function CometChatConversationsItemInner({
                     CometChatLocalize.getSharedInstance()?.t('date_yesterday') ?? 'Yesterday',
                   otherDays: 'DD/MM/YYYY',
                 }}
-              >
-                <CometChatDate.Text />
-              </CometChatDate.Root>
+              />
             )}
             {!hideUnread && unreadCount > 0 && (
               <span
@@ -712,23 +746,52 @@ function CometChatConversationsItemInner({
               </span>
             )}
           </div>
-          {/* Menu view: delete button (shown on hover, replaces trailing) */}
-          {!effectiveHideDeleteButton && (
+          {(options || !effectiveHideDeleteButton) && (
             <div className={'cometchat-conversations__item-menu-view'}>
-              <button
-                type="button"
-                className={'cometchat-conversations__item-delete-button'}
-                onClick={handleDeleteClick}
-                onKeyDown={e => {
-                  e.stopPropagation();
-                }}
-                aria-label={
-                  CometChatLocalize.getSharedInstance()?.t('conversation_delete_icon_hover') ??
-                  'Delete conversation'
-                }
-              >
-                <span className={'cometchat-conversations__item-delete-icon'} />
-              </button>
+              {!effectiveHideDeleteButton && (
+                <button
+                  type="button"
+                  className={'cometchat-conversations__item-delete-button'}
+                  onClick={handleDeleteClick}
+                  onKeyDown={e => {
+                    e.stopPropagation();
+                  }}
+                  aria-label={
+                    CometChatLocalize.getSharedInstance()?.t('conversation_delete_icon_hover') ??
+                    'Delete conversation'
+                  }
+                >
+                  <span className={'cometchat-conversations__item-delete-icon'} />
+                </button>
+              )}
+              {options && (
+                <div
+                  className={'cometchat-conversations__item-options'}
+                  onClick={e => {
+                    e.stopPropagation();
+                  }}
+                  onKeyDown={e => {
+                    e.stopPropagation();
+                  }}
+                  role="presentation"
+                >
+                  <CometChatContextMenu
+                    key={isItemHovered ? 'hovered' : 'not-hovered'}
+                    items={options(conversation).map(
+                      (opt): CometChatContextMenuItemData => ({
+                        id: opt.id,
+                        title: opt.title,
+                        ...(opt.iconURL ? { iconURL: opt.iconURL } : {}),
+                        onClick: () => {
+                          opt.onClick(conversation);
+                        },
+                      })
+                    )}
+                    topMenuSize={0}
+                    placement="left"
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

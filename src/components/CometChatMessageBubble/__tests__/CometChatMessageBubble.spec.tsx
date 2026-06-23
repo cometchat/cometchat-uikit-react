@@ -7,7 +7,7 @@ import type { CometChat } from '@cometchat/chat-sdk-javascript';
 
 vi.mock('../../../context/locale/LocaleContext', () => ({
   useLocale: () => ({
-    t: (key: string) => {
+    getLocalizedString: (key: string) => {
       const translations: Record<string, string> = {
         message_bubble_error: 'Error',
         message_bubble_sending: 'Sending',
@@ -78,12 +78,12 @@ describe('CometChatMessageBubble', () => {
 
   it('shows avatar for left-aligned messages in group context', () => {
     render(<CometChatMessageBubble {...defaultProps} alignment="left" group={mockGroup()} />);
-    expect(screen.getByLabelText(/Avatar for/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/accessibility_avatar_for/)).toBeInTheDocument();
   });
 
   it('hides avatar for right-aligned messages', () => {
     render(<CometChatMessageBubble {...defaultProps} alignment="right" group={mockGroup()} />);
-    expect(screen.queryByLabelText(/Avatar for/)).toBeNull();
+    expect(screen.queryByLabelText(/accessibility_avatar_for/)).toBeNull();
   });
 
   it('hides avatar when hideAvatar is true', () => {
@@ -95,7 +95,7 @@ describe('CometChatMessageBubble', () => {
         hideAvatar={true}
       />
     );
-    expect(screen.queryByLabelText(/Avatar for/)).toBeNull();
+    expect(screen.queryByLabelText(/accessibility_avatar_for/)).toBeNull();
   });
 
   it('shows sender name for left-aligned messages in group context', () => {
@@ -138,12 +138,16 @@ describe('CometChatMessageBubble', () => {
         message={mockMessage({ readAt: 1000 })}
       />
     );
-    expect(screen.getByRole('img', { name: 'Read' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'message_bubble_read' })).toBeInTheDocument();
   });
 
   it('hides receipts when hideReceipts prop is true', () => {
     render(<CometChatMessageBubble {...defaultProps} alignment="right" hideReceipts={true} />);
-    expect(screen.queryByRole('img', { name: /Sent|Delivered|Read/ })).toBeNull();
+    expect(
+      screen.queryByRole('img', {
+        name: /message_bubble_sent|message_bubble_delivered|message_bubble_read/,
+      })
+    ).toBeNull();
   });
 
   it('hides receipts when GlobalConfig hideReceipts is true', () => {
@@ -152,7 +156,11 @@ describe('CometChatMessageBubble', () => {
         <CometChatMessageBubble {...defaultProps} alignment="right" />
       </GlobalConfigProvider>
     );
-    expect(screen.queryByRole('img', { name: /Sent|Delivered|Read/ })).toBeNull();
+    expect(
+      screen.queryByRole('img', {
+        name: /message_bubble_sent|message_bubble_delivered|message_bubble_read/,
+      })
+    ).toBeNull();
   });
 
   it('prop hideReceipts overrides GlobalConfig', () => {
@@ -166,7 +174,7 @@ describe('CometChatMessageBubble', () => {
         />
       </GlobalConfigProvider>
     );
-    expect(screen.getByRole('img', { name: 'Read' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'message_bubble_read' })).toBeInTheDocument();
   });
 
   it('shows "(edited)" when message has editedAt', () => {
@@ -181,7 +189,7 @@ describe('CometChatMessageBubble', () => {
 
   it('shows correct receipt state — sent', () => {
     render(<CometChatMessageBubble {...defaultProps} alignment="right" />);
-    expect(screen.getByRole('img', { name: 'Sent' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'message_bubble_sent' })).toBeInTheDocument();
   });
 
   it('shows correct receipt state — delivered', () => {
@@ -192,7 +200,7 @@ describe('CometChatMessageBubble', () => {
         message={mockMessage({ deliveredAt: 1000 })}
       />
     );
-    expect(screen.getByRole('img', { name: 'Delivered' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'message_bubble_delivered' })).toBeInTheDocument();
   });
 
   it('shows thread view when message has reply count', () => {
@@ -245,7 +253,7 @@ describe('CometChatMessageBubble', () => {
         onAvatarClick={onAvatarClick}
       />
     );
-    fireEvent.click(screen.getByLabelText(/Avatar for/));
+    fireEvent.click(screen.getByLabelText(/accessibility_avatar_for/));
     expect(onAvatarClick).toHaveBeenCalledOnce();
   });
 

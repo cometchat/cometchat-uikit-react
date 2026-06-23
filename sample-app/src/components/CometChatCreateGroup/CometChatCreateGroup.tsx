@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useLocale } from '@cometchat/chat-uikit-react';
-import '../../styles/CometChatCreateGroup/CometChatCreateGroup.css';
+import './CometChatCreateGroup.css';
 
 interface CometChatCreateGroupProps {
   onClose: () => void;

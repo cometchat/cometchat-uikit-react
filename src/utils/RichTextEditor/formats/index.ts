@@ -34,6 +34,8 @@ export {
   BulletListFormat,
   fixOrderedListContinuation,
   handleListEnter,
+  handleListIndent,
+  handleListOutdent,
   applyListStyles,
 } from './ListFormat';
 

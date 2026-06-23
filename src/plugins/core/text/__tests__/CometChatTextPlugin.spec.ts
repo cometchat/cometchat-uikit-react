@@ -151,13 +151,19 @@ describe('CometChatTextPlugin', () => {
       expect(React.isValidElement(result)).toBe(true);
     });
 
-    it('passes text prop from message.getText()', () => {
+    it('forwards the message so the bubble self-extracts getText()', () => {
       const message = createMockTextMessage({ text: 'My message text' });
       const context = createMockContext();
 
       const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
 
-      expect(element.props.text).toBe('My message text');
+      // The plugin no longer pre-extracts text; it forwards the message and the
+      // bubble derives the content itself via message.getText().
+      expect(element.props.text).toBeUndefined();
+      expect(element.props.message).toBe(message);
+      expect((element.props.message as { getText: () => string }).getText()).toBe(
+        'My message text'
+      );
     });
 
     it('sets isSentByMe=true when alignment is right', () => {

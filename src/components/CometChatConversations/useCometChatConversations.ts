@@ -295,10 +295,14 @@ export function useCometChatConversations(
           });
       },
       onMessagesDelivered: (receipt: CometChat.MessageReceipt) => {
-        handleReceiptUpdate(receipt, false);
+        if (receipt.getReceiverType() === 'user') {
+          handleReceiptUpdate(receipt, false);
+        }
       },
       onMessagesRead: (receipt: CometChat.MessageReceipt) => {
-        handleReceiptUpdate(receipt, true);
+        if (receipt.getReceiverType() === 'user') {
+          handleReceiptUpdate(receipt, true);
+        }
       },
       onMessagesDeliveredToAll: (receipt: CometChat.MessageReceipt) => {
         handleReceiptUpdate(receipt, false);
@@ -331,6 +335,7 @@ export function useCometChatConversations(
         });
         if (conv) {
           const convUser = conv.getConversationWith() as CometChat.User;
+          if (convUser.getBlockedByMe?.() || convUser.getHasBlockedMe?.()) return;
           convUser.setStatus('online');
           dispatch({ type: 'UPDATE_CONVERSATION', conversation: conv });
         }
@@ -343,6 +348,7 @@ export function useCometChatConversations(
         });
         if (conv) {
           const convUser = conv.getConversationWith() as CometChat.User;
+          if (convUser.getBlockedByMe?.() || convUser.getHasBlockedMe?.()) return;
           convUser.setStatus('offline');
           dispatch({ type: 'UPDATE_CONVERSATION', conversation: conv });
         }

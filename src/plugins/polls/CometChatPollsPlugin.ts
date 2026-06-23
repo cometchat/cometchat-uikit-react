@@ -14,10 +14,12 @@ import type {
   CometChatMessageOption,
 } from '../plugin.types';
 import { getMediaMessageOptions } from '../core/shared/CometChatMessageOptions';
-import { POLLS_CONSTANTS } from './polls.constants';
+import { POLLS_CONSTANTS } from '../../constants/CometChatExtensionConstants';
 
 // Lazy-load the bubble component — keeps it out of the initial bundle
-const LazyCometChatPollBubble = lazy(() => import('./CometChatPollBubble'));
+const LazyCometChatPollBubble = lazy(
+  () => import('../../components/CometChatPollBubble/CometChatPollBubble')
+);
 
 export const CometChatPollsPlugin: CometChatMessagePlugin = {
   id: 'polls',
@@ -28,13 +30,16 @@ export const CometChatPollsPlugin: CometChatMessagePlugin = {
     const customMessage = message as CometChat.CustomMessage;
     const alignment = context.alignment === 'right' ? 'right' : 'left';
 
+    // The bubble extracts all poll data (question, options, vote counts, voted
+    // state, total votes) from `message` itself, so we only forward `message`
+    // plus non-data props (alignment + interaction flags).
     return React.createElement(
       Suspense,
       { fallback: null },
       React.createElement(LazyCometChatPollBubble, {
         message: customMessage,
         alignment,
-        loggedInUser: context.loggedInUser,
+        disableInteraction: context.disableInteraction,
       })
     );
   },

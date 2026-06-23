@@ -103,7 +103,8 @@ describe('CometChatMessageBubbleRenderer', () => {
         total={1}
       />
     );
-    expect(screen.getByText('Unsupported message type')).toBeInTheDocument();
+    // Unknown message types render the bubble wrapper without specific content
+    expect(screen.getByRole('article')).toBeInTheDocument();
   });
 
   it('outgoing message gets right alignment', () => {

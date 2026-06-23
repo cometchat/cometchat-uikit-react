@@ -1,7 +1,7 @@
 import React from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatMessagePlugin, CometChatMessageOption } from '../../plugin.types';
-import { CometChatActionBubble } from '../../../components/CometChatActionBubble';
+import { CometChatGroupActionBubble } from '../../../components/CometChatGroupActionBubble';
 import { getActionMessageText } from '../shared/CometChatActionMessageUtils';
 import { CometChatUIKitConstants } from '../../../constants/CometChatUIKitConstants';
 
@@ -20,14 +20,8 @@ export const CometChatGroupActionPlugin: CometChatMessagePlugin = {
   messageCategories: [CometChatUIKitConstants.MessageCategory.action],
 
   renderBubble(message: CometChat.BaseMessage) {
-    // getActionMessageText handles localization internally when getLocalizedString() is available.
-    // At render time, the bubble component will use useLocale() for the final text.
-    // Here we pass the raw action message — the bubble receives pre-computed text.
-    const messageText = getActionMessageText(message);
-
-    return React.createElement(CometChatActionBubble, {
-      messageText,
-    });
+    // The bubble extracts and localizes the action text itself (via useLocale).
+    return React.createElement(CometChatGroupActionBubble, { message });
   },
 
   getOptions(): CometChatMessageOption[] {

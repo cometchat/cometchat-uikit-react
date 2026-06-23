@@ -10,7 +10,7 @@ export function insertMention(
   charsToDelete: number,
   isSelf = false
 ): void {
-  const sel = window.getSelection();
+  const sel = element.ownerDocument.defaultView?.getSelection();
   if (!sel || sel.rangeCount === 0) return;
 
   const range = sel.getRangeAt(0);
@@ -20,7 +20,7 @@ export function insertMention(
     range.deleteContents();
   }
 
-  const mention = document.createElement('span');
+  const mention = element.ownerDocument.createElement('span');
   mention.className = isSelf
     ? 'cometchat-mention cometchat-mention--self cometchat-mentions cometchat-mentions-you'
     : 'cometchat-mention cometchat-mentions cometchat-mentions-other';
@@ -31,9 +31,9 @@ export function insertMention(
 
   range.insertNode(mention);
 
-  const space = document.createTextNode('\u00A0');
+  const space = element.ownerDocument.createTextNode('\u00A0');
   mention.after(space);
-  const newRange = document.createRange();
+  const newRange = element.ownerDocument.createRange();
   newRange.setStartAfter(space);
   newRange.collapse(true);
   sel.removeAllRanges();
@@ -45,7 +45,10 @@ export function getTextWithMentionFormat(element: HTMLDivElement): string {
   const clone = element.cloneNode(true) as HTMLElement;
   clone.querySelectorAll('[data-uid]').forEach(mention => {
     const uid = mention.getAttribute('data-uid') ?? '';
-    mention.parentNode?.replaceChild(document.createTextNode(`<@uid:${uid}>`), mention);
+    mention.parentNode?.replaceChild(
+      element.ownerDocument.createTextNode(`<@uid:${uid}>`),
+      mention
+    );
   });
   return clone.textContent ?? '';
 }
@@ -63,11 +66,12 @@ export function getUniqueMentionUids(element: HTMLDivElement): Set<string> {
 /** Check if @ was typed and invoke the mention callback. */
 export function checkMentionTrigger(
   onMentionStart?: (query: string) => void,
-  onMentionEnd?: () => void
+  onMentionEnd?: () => void,
+  win?: Window
 ): void {
   if (!onMentionStart) return;
 
-  const sel = window.getSelection();
+  const sel = (win ?? window).getSelection();
   if (!sel || sel.rangeCount === 0) return;
 
   const range = sel.getRangeAt(0);

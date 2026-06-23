@@ -1,9 +1,20 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { CometChatMessageHeaderCallButtons } from '../CometChatMessageHeaderCallButtons';
 import { CometChatMessageHeaderContext } from '../CometChatMessageHeader.context';
 import type { CometChatMessageHeaderContextValue } from '../CometChatMessageHeader.types';
+
+// Mock CometChatCallButtons to verify what props are passed to it
+vi.mock('../../CometChatCallButtons/CometChatCallButtons', () => ({
+  CometChatCallButtons: (props: Record<string, unknown>) => (
+    <div
+      data-testid="call-buttons"
+      data-user={props.user ? 'true' : 'false'}
+      data-group={props.group ? 'true' : 'false'}
+    />
+  ),
+}));
 
 function createContextValue(
   overrides: Partial<CometChatMessageHeaderContextValue> = {}
@@ -22,17 +33,7 @@ function createContextValue(
     avatarName: '',
     isUserConversation: false,
     isGroupConversation: false,
-    callButtonsDisabled: false,
-    showOutgoingCallScreen: false,
-    showOngoingCall: false,
-    callSessionId: '',
-    isDirectCalling: false,
-    isGroupAudioCall: false,
-    activeCall: null,
-    initiateAudioCall: vi.fn().mockResolvedValue(undefined),
-    initiateVideoCall: vi.fn().mockResolvedValue(undefined),
-    cancelOutgoingCall: vi.fn().mockResolvedValue(undefined),
-    resetCallState: vi.fn(),
+    summaryGenerationMessageCount: 1000,
     ...overrides,
   };
 }
@@ -50,105 +51,26 @@ function renderCallButtons(contextOverrides: Partial<CometChatMessageHeaderConte
 }
 
 describe('CometChatMessageHeaderCallButtons', () => {
-  it('renders voice and video call buttons', () => {
+  it('renders CometChatCallButtons', () => {
     renderCallButtons();
-    expect(screen.getByRole('button', { name: 'Voice call' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Video call' })).toBeInTheDocument();
+    expect(screen.getByTestId('call-buttons')).toBeInTheDocument();
   });
 
-  it('voice call button has correct aria-label', () => {
-    renderCallButtons();
-    const voiceBtn = screen.getByRole('button', { name: 'Voice call' });
-    expect(voiceBtn).toHaveAttribute('aria-label', 'Voice call');
+  it('passes user from context to CometChatCallButtons', () => {
+    const mockUser = { getUid: () => 'u1', getName: () => 'Test User' } as any;
+    renderCallButtons({ user: mockUser });
+    expect(screen.getByTestId('call-buttons')).toHaveAttribute('data-user', 'true');
   });
 
-  it('video call button has correct aria-label', () => {
-    renderCallButtons();
-    const videoBtn = screen.getByRole('button', { name: 'Video call' });
-    expect(videoBtn).toHaveAttribute('aria-label', 'Video call');
+  it('passes group from context to CometChatCallButtons', () => {
+    const mockGroup = { getGuid: () => 'g1', getName: () => 'Test Group' } as any;
+    renderCallButtons({ group: mockGroup });
+    expect(screen.getByTestId('call-buttons')).toHaveAttribute('data-group', 'true');
   });
 
-  it('calls initiateAudioCall when voice button is clicked', () => {
-    const { contextValue } = renderCallButtons();
-    const voiceBtn = screen.getByRole('button', { name: 'Voice call' });
-    fireEvent.click(voiceBtn);
-    expect(contextValue.initiateAudioCall).toHaveBeenCalledTimes(1);
-  });
-
-  it('calls initiateVideoCall when video button is clicked', () => {
-    const { contextValue } = renderCallButtons();
-    const videoBtn = screen.getByRole('button', { name: 'Video call' });
-    fireEvent.click(videoBtn);
-    expect(contextValue.initiateVideoCall).toHaveBeenCalledTimes(1);
-  });
-
-  it('calls onVoiceCallClick override when provided', () => {
-    const onVoiceCallClick = vi.fn();
-    const mockUser = { getUid: () => 'u1' } as any;
-    renderCallButtons({ user: mockUser, onVoiceCallClick });
-    const voiceBtn = screen.getByRole('button', { name: 'Voice call' });
-    fireEvent.click(voiceBtn);
-    expect(onVoiceCallClick).toHaveBeenCalledWith(mockUser);
-  });
-
-  it('calls onVideoCallClick override when provided', () => {
-    const onVideoCallClick = vi.fn();
-    const mockUser = { getUid: () => 'u1' } as any;
-    renderCallButtons({ user: mockUser, onVideoCallClick });
-    const videoBtn = screen.getByRole('button', { name: 'Video call' });
-    fireEvent.click(videoBtn);
-    expect(onVideoCallClick).toHaveBeenCalledWith(mockUser);
-  });
-
-  it('disables buttons when callButtonsDisabled is true', () => {
-    renderCallButtons({ callButtonsDisabled: true });
-    const voiceBtn = screen.getByRole('button', { name: 'Voice call' });
-    const videoBtn = screen.getByRole('button', { name: 'Video call' });
-    expect(voiceBtn).toBeDisabled();
-    expect(videoBtn).toBeDisabled();
-  });
-
-  it('does not call initiateAudioCall when disabled', () => {
-    const { contextValue } = renderCallButtons({ callButtonsDisabled: true });
-    const voiceBtn = screen.getByRole('button', { name: 'Voice call' });
-    fireEvent.click(voiceBtn);
-    expect(contextValue.initiateAudioCall).not.toHaveBeenCalled();
-  });
-
-  it('does not call initiateVideoCall when disabled', () => {
-    const { contextValue } = renderCallButtons({ callButtonsDisabled: true });
-    const videoBtn = screen.getByRole('button', { name: 'Video call' });
-    fireEvent.click(videoBtn);
-    expect(contextValue.initiateVideoCall).not.toHaveBeenCalled();
-  });
-
-  it('voice button responds to Enter key', () => {
-    const { contextValue } = renderCallButtons();
-    const voiceBtn = screen.getByRole('button', { name: 'Voice call' });
-    fireEvent.keyDown(voiceBtn, { key: 'Enter' });
-    expect(contextValue.initiateAudioCall).toHaveBeenCalled();
-  });
-
-  it('video button responds to Space key', () => {
-    const { contextValue } = renderCallButtons();
-    const videoBtn = screen.getByRole('button', { name: 'Video call' });
-    fireEvent.keyDown(videoBtn, { key: ' ' });
-    expect(contextValue.initiateVideoCall).toHaveBeenCalled();
-  });
-
-  it('stops click propagation to prevent triggering parent onItemClick', () => {
-    const parentClick = vi.fn();
-    const contextValue = createContextValue();
-    render(
-      <CometChatMessageHeaderContext.Provider value={contextValue}>
-        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
-        <div onClick={parentClick}>
-          <CometChatMessageHeaderCallButtons />
-        </div>
-      </CometChatMessageHeaderContext.Provider>
-    );
-    const voiceBtn = screen.getByRole('button', { name: 'Voice call' });
-    fireEvent.click(voiceBtn);
-    expect(parentClick).not.toHaveBeenCalled();
+  it('passes undefined when user/group are null in context', () => {
+    renderCallButtons({ user: null, group: null });
+    expect(screen.getByTestId('call-buttons')).toHaveAttribute('data-user', 'false');
+    expect(screen.getByTestId('call-buttons')).toHaveAttribute('data-group', 'false');
   });
 });

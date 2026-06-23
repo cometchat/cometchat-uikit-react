@@ -1,5 +1,4 @@
 import { CometChat } from '@cometchat/chat-sdk-javascript';
-import type { CometChatMessagePlugin } from '../plugins/plugin.types';
 
 // ---------------------------------------------------------------------------
 // UIKitSettings
@@ -72,12 +71,6 @@ export class UIKitSettings {
   readonly storageMode: CometChat.StorageMode;
 
   /**
-   * Message plugins to register with the UIKit plugin registry.
-   * @type {CometChatMessagePlugin[]}
-   */
-  readonly plugins?: CometChatMessagePlugin[];
-
-  /**
    * Whether calling functionality is enabled.
    * When true, the Calls SDK is initialized after login.
    * When false (default), call buttons are hidden across all components.
@@ -109,7 +102,6 @@ export class UIKitSettings {
     this.adminHost = builder.adminHost;
     this.clientHost = builder.clientHost;
     this.storageMode = builder.storageMode ?? CometChat.StorageMode.LOCAL;
-    this.plugins = builder.plugins;
     this.callingEnabled = builder.callingEnabled ?? false;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     this.callAppSettings = builder.callAppSettings;
@@ -197,14 +189,6 @@ export class UIKitSettings {
   }
 
   /**
-   * Retrieves the list of message plugins.
-   * @returns {CometChatMessagePlugin[] | undefined} The list of plugins.
-   */
-  getPlugins(): CometChatMessagePlugin[] | undefined {
-    return this.plugins;
-  }
-
-  /**
    * Checks if calling functionality is enabled.
    * @returns {boolean} True if calling is enabled, otherwise false.
    */
@@ -286,12 +270,6 @@ export class UIKitSettingsBuilder {
    * @type {CometChat.StorageMode}
    */
   storageMode?: CometChat.StorageMode;
-
-  /**
-   * Message plugins to register with the UIKit plugin registry.
-   * @type {CometChatMessagePlugin[]}
-   */
-  plugins?: CometChatMessagePlugin[];
 
   /**
    * Whether calling functionality is enabled.
@@ -421,16 +399,6 @@ export class UIKitSettingsBuilder {
    */
   setStorageMode(mode: CometChat.StorageMode): this {
     this.storageMode = mode;
-    return this;
-  }
-
-  /**
-   * Sets the list of message plugins.
-   * @param {CometChatMessagePlugin[]} plugins - The list of plugins.
-   * @returns {UIKitSettingsBuilder} The builder instance.
-   */
-  setPlugins(plugins: CometChatMessagePlugin[]): this {
-    this.plugins = plugins;
     return this;
   }
 

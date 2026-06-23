@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatUIKitCalls, verifyCallUser, useLocale } from '@cometchat/chat-uikit-react';
-import '../../styles/CometChatCallLog/CometChatCallLogHistory.css';
+import './CometChatCallLogHistory.css';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const CometChatCallLogHistory = ({ call }: { call: any }) => {

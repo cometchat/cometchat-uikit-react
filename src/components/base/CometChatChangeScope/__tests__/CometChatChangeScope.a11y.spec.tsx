@@ -63,7 +63,7 @@ describe('CometChatChangeScope accessibility', () => {
     renderFull('admin');
     const radios = screen.getAllByRole('radio');
     const adminRadio = radios.find(r => (r as HTMLInputElement).value === 'admin');
-    expect(adminRadio).toHaveAttribute('aria-checked', 'true');
+    expect(adminRadio).toBeChecked();
   });
 
   it('unselected options have aria-checked="false"', () => {
@@ -71,7 +71,7 @@ describe('CometChatChangeScope accessibility', () => {
     const radios = screen.getAllByRole('radio');
     const others = radios.filter(r => (r as HTMLInputElement).value !== 'admin');
     others.forEach(r => {
-      expect(r).toHaveAttribute('aria-checked', 'false');
+      expect(r).not.toBeChecked();
     });
   });
 

@@ -5,8 +5,7 @@ import { useCometChatCallLogs } from './useCometChatCallLogs';
 import { verifyCallUser, isSentByMe, isMissedCall } from './CometChatCallLogs.utils';
 import { CometChatAvatar } from '../base/CometChatAvatar/CometChatAvatar';
 import { CometChatDate } from '../base/CometChatDate';
-import { CometChatOutgoingCall } from '../CometChatOutgoingCall/CometChatOutgoingCall';
-import { CometChatOngoingCall } from '../CometChatOngoingCall/CometChatOngoingCall';
+import { CometChatCallButtons } from '../CometChatCallButtons/CometChatCallButtons';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import emptyIcon from '../../assets/call-logs_empty_state.svg';
 import errorIcon from '../../assets/list_error_state_icon.svg';
@@ -16,7 +15,8 @@ import { useLocale } from '../../context/locale/LocaleContext';
 /**
  * CometChatCallLogs — displays a list of call logs with the ability to initiate calls.
  *
- * Matches component UI and functionality.
+ * Uses CometChatCallButtons for the trailing call action, which handles
+ * the entire call flow (outgoing + ongoing) independently.
  */
 export const CometChatCallLogs: React.FC<CometChatCallLogsProps> = ({
   activeCall,
@@ -36,19 +36,7 @@ export const CometChatCallLogs: React.FC<CometChatCallLogsProps> = ({
   trailingView,
   showScrollbar = false,
 }) => {
-  const {
-    callList,
-    fetchState,
-    loggedInUser,
-    fetchNext,
-    handleCallButtonClick,
-    cancelOutgoingCall,
-    closeCallScreen,
-    showOutgoingCallScreen,
-    showOngoingCall,
-    activeCallObj,
-    callSessionId,
-  } = useCometChatCallLogs({
+  const { callList, fetchState, loggedInUser, fetchNext } = useCometChatCallLogs({
     callLogRequestBuilder,
     onError,
     onCallButtonClicked,
@@ -87,7 +75,7 @@ export const CometChatCallLogs: React.FC<CometChatCallLogsProps> = ({
         <div className={`cometchat-call-logs__list-item-subtitle-icon ${iconClass}`} />
         <div className={'cometchat-call-logs__list-item-subtitle-text'}>
           {initiatedAt > 0 ? (
-            <CometChatDate.Root
+            <CometChatDate
               timestamp={initiatedAt}
               formatConfig={
                 callInitiatedDateTimeFormat ?? {
@@ -98,9 +86,7 @@ export const CometChatCallLogs: React.FC<CometChatCallLogsProps> = ({
                 }
               }
               variant="body"
-            >
-              <CometChatDate.Text />
-            </CometChatDate.Root>
+            />
           ) : (
             ''
           )}
@@ -109,39 +95,76 @@ export const CometChatCallLogs: React.FC<CometChatCallLogsProps> = ({
     );
   };
 
-  // --- Trailing view (call button) ---
+  // --- Trailing view (CometChatCallButtons filtered by call type) ---
   const getTrailingView = (call: any) => {
     if (trailingView) return trailingView(call);
+    if (!loggedInUser) return null;
 
     const callType = call.type ?? call.getType?.() ?? 'audio';
     const isVideo = callType === CometChat.CALL_TYPE.VIDEO || callType === 'video';
+    const isAudio = !isVideo;
 
-    const trailingClass = isVideo
-      ? `cometchat-call-logs__list-item-trailing-view cometchat-call-logs__list-item-trailing-view-video`
-      : `cometchat-call-logs__list-item-trailing-view cometchat-call-logs__list-item-trailing-view-audio`;
+    // Get the user entity from the call log
+    const entity = verifyCallUser(call, loggedInUser);
+    const uid: string = (entity?.uid ?? entity?.getUid?.()) as string;
 
+    if (!uid) return null;
+
+    // Create a minimal user object for CometChatCallButtons
+    // We need to construct a CometChat.User to pass to the component
+    const callUser = entity as CometChat.User | undefined;
+
+    if (!callUser) return null;
+
+    // If onCallButtonClicked is provided, use custom handler
+    if (onCallButtonClicked) {
+      const handleClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onCallButtonClicked(call);
+      };
+
+      const trailingClass = isVideo
+        ? `cometchat-call-logs__list-item-trailing-view cometchat-call-logs__list-item-trailing-view-video`
+        : `cometchat-call-logs__list-item-trailing-view cometchat-call-logs__list-item-trailing-view-audio`;
+
+      return (
+        <div
+          className={trailingClass}
+          onClick={handleClick}
+          role="button"
+          tabIndex={0}
+          aria-label={
+            isVideo
+              ? getLocalizedString('accessibility_video_call')
+              : getLocalizedString('accessibility_voice_call')
+          }
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onCallButtonClicked(call);
+            }
+          }}
+        />
+      );
+    }
+
+    // Use CometChatCallButtons filtered by call type
     return (
       <div
-        className={trailingClass}
         onClick={e => {
           e.stopPropagation();
-          handleCallButtonClick(call);
         }}
-        role="button"
-        tabIndex={0}
-        aria-label={
-          isVideo
-            ? getLocalizedString('accessibility_video_call')
-            : getLocalizedString('accessibility_voice_call')
-        }
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            e.stopPropagation();
-            handleCallButtonClick(call);
-          }
-        }}
-      />
+        role="presentation"
+      >
+        <CometChatCallButtons
+          user={callUser}
+          hideVoiceCallButton={isVideo}
+          hideVideoCallButton={isAudio}
+          callSettingsBuilder={callSettingsBuilder}
+          onError={onError}
+        />
+      </div>
     );
   };
 
@@ -289,33 +312,6 @@ export const CometChatCallLogs: React.FC<CometChatCallLogsProps> = ({
 
   return (
     <div className={rootClasses}>
-      {/* Outgoing call overlay */}
-      {showOutgoingCallScreen && activeCallObj && (
-        <div className={'cometchat-call-logs__outgoing-call'}>
-          <CometChatOutgoingCall call={activeCallObj} onCallCanceled={cancelOutgoingCall} />
-        </div>
-      )}
-
-      {/* Ongoing call overlay */}
-      {showOngoingCall && callSessionId && (
-        <div className={'cometchat-call-logs__ongoing-call'}>
-          <CometChatOngoingCall
-            sessionID={callSessionId}
-            isAudioOnly={activeCallObj?.getType() === 'audio'}
-            isDirectCalling={false}
-            callSettingsBuilder={callSettingsBuilder}
-            onCallEnded={closeCallScreen}
-            onError={
-              onError
-                ? error => {
-                    onError(error);
-                  }
-                : null
-            }
-          />
-        </div>
-      )}
-
       {/* Header */}
       <div className={'cometchat-call-logs__header'}>{getLocalizedString('call_logs_title')}</div>
 

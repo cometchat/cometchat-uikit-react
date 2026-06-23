@@ -21,7 +21,7 @@ describe('CometChatLinkDialog', () => {
   it('renders the dialog with title, inputs, and buttons', () => {
     render(<CometChatLinkDialog {...defaultProps} />);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('link_dialog_add_link')).toBeInTheDocument();
+    expect(screen.getByText('Add Link')).toBeInTheDocument();
     expect(screen.getByLabelText('Text')).toBeInTheDocument();
     expect(screen.getByLabelText('Link')).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
@@ -30,12 +30,12 @@ describe('CometChatLinkDialog', () => {
 
   it('shows "Add Link" title in add mode', () => {
     render(<CometChatLinkDialog {...defaultProps} mode="add" />);
-    expect(screen.getByText('link_dialog_add_link')).toBeInTheDocument();
+    expect(screen.getByText('Add Link')).toBeInTheDocument();
   });
 
   it('shows "Edit Link" title in edit mode', () => {
     render(<CometChatLinkDialog {...defaultProps} mode="edit" />);
-    expect(screen.getByText('link_dialog_edit_link')).toBeInTheDocument();
+    expect(screen.getByText('Edit Link')).toBeInTheDocument();
   });
 
   it('pre-fills text input with selectedText in add mode', () => {
@@ -204,7 +204,7 @@ describe('CometChatLinkDialog', () => {
     const labelledBy = dialog.getAttribute('aria-labelledby');
     expect(labelledBy).toBeTruthy();
     const title = document.getElementById(labelledBy!);
-    expect(title?.textContent).toBe('link_dialog_add_link');
+    expect(title?.textContent).toBe('Add Link');
   });
 
   it('error message has role="alert"', () => {

@@ -24,6 +24,8 @@ import {
   LinkFormat,
   clearInlineOverrides,
   handleListEnter,
+  handleListIndent,
+  handleListOutdent,
   fixOrderedListContinuation,
   applyListStyles,
   setLink as linkSetLink,
@@ -40,6 +42,7 @@ import {
   getUniqueMentionUids,
   checkMentionTrigger,
 } from './mentions';
+import { escapeUserHtml } from '../sanitizeHtml';
 
 export class RichTextEditor {
   private element: HTMLDivElement;
@@ -62,8 +65,10 @@ export class RichTextEditor {
         this.element.focus();
       },
       execCommand: (cmd, val?) => {
-        document.execCommand(cmd, false, val);
+        this.getDocument().execCommand(cmd, false, val);
       },
+      getDocument: () => this.getDocument(),
+      getWindow: () => this.getWindow(),
       findAncestor: (node, tag) => this.findAncestor(node, tag),
       hasAncestor: (node, tag) => this.findAncestor(node, tag) !== null,
       markFormattingApplied: () => {
@@ -100,6 +105,16 @@ export class RichTextEditor {
 
   // ===== Public: Content =====
 
+  /** Get the document to use for DOM operations. Falls back to global `document`. */
+  getDocument(): Document {
+    return this.config.ownerDocument ?? document;
+  }
+
+  /** Get the window to use for selection APIs. Falls back to global `window`. */
+  getWindow(): Window {
+    return this.config.ownerWindow ?? window;
+  }
+
   getFormatState(): CometChatRichTextFormatState {
     return { ...this.formatState };
   }
@@ -129,7 +144,7 @@ export class RichTextEditor {
     this.element.focus();
     for (const cmd of ['bold', 'italic', 'underline', 'strikeThrough']) {
       try {
-        if (document.queryCommandState(cmd)) document.execCommand(cmd, false);
+        if (this.getDocument().queryCommandState(cmd)) this.getDocument().execCommand(cmd, false);
       } catch {
         /* ignore */
       }
@@ -138,9 +153,9 @@ export class RichTextEditor {
     // inside any formatting element (<code>, <b>, <i>, etc.).
     // Without this, the browser remembers the last caret position was inside
     // a <code> and new typing inherits that formatting even after innerHTML=''.
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
     if (sel) {
-      const range = document.createRange();
+      const range = this.getDocument().createRange();
       range.setStart(this.element, 0);
       range.collapse(true);
       sel.removeAllRanges();
@@ -153,7 +168,7 @@ export class RichTextEditor {
 
   focus(position: 'start' | 'end' = 'end'): void {
     this.element.focus();
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
     if (sel) {
       if (this.element.childNodes.length > 0) {
         sel.selectAllChildren(this.element);
@@ -164,7 +179,7 @@ export class RichTextEditor {
         }
       } else {
         // Empty editor — create a range at position 0 so execCommands have a target
-        const range = document.createRange();
+        const range = this.getDocument().createRange();
         range.setStart(this.element, 0);
         range.collapse(true);
         sel.removeAllRanges();
@@ -175,7 +190,7 @@ export class RichTextEditor {
 
   insertText(text: string): void {
     this.element.focus();
-    document.execCommand('insertText', false, text);
+    this.getDocument().execCommand('insertText', false, text);
     this.pushHistory();
     this.emitUpdate();
   }
@@ -189,9 +204,9 @@ export class RichTextEditor {
    */
   insertPlainText(text: string): void {
     this.element.focus();
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
     if (!sel || sel.rangeCount === 0) {
-      document.execCommand('insertText', false, text);
+      this.getDocument().execCommand('insertText', false, text);
       this.pushHistory();
       this.emitUpdate();
       return;
@@ -219,7 +234,7 @@ export class RichTextEditor {
 
     if (insideFormatting) {
       // Wrap emoji in a span that resets all inline formatting
-      const span = document.createElement('span');
+      const span = this.getDocument().createElement('span');
       span.style.fontWeight = 'normal';
       span.style.fontStyle = 'normal';
       span.style.textDecoration = 'none';
@@ -228,13 +243,13 @@ export class RichTextEditor {
       insertedNode = span;
     } else {
       // Not inside formatting — plain text node is fine
-      const textNode = document.createTextNode(text);
+      const textNode = this.getDocument().createTextNode(text);
       range.insertNode(textNode);
       insertedNode = textNode;
     }
 
     // Move cursor after the inserted node
-    const newRange = document.createRange();
+    const newRange = this.getDocument().createRange();
     newRange.setStartAfter(insertedNode);
     newRange.setEndAfter(insertedNode);
     sel.removeAllRanges();
@@ -296,17 +311,17 @@ export class RichTextEditor {
   // ===== Public: Selection =====
 
   getSelectedText(): string {
-    return window.getSelection()?.toString() ?? '';
+    return this.getWindow().getSelection()?.toString() ?? '';
   }
 
   saveSelection(): Range | null {
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
     return sel && sel.rangeCount > 0 ? sel.getRangeAt(0).cloneRange() : null;
   }
 
   restoreSelection(range: Range | null): void {
     if (!range) return;
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
     if (sel) {
       sel.removeAllRanges();
       sel.addRange(range);
@@ -395,7 +410,7 @@ export class RichTextEditor {
       return;
     }
     if (this.config.enableFormatting !== false) {
-      if (detectAndConvertMarkdown()) {
+      if (detectAndConvertMarkdown(this.ctx)) {
         this.justAppliedFormatting += 2;
         this.updateFormatState();
         this.pushHistory();
@@ -410,14 +425,14 @@ export class RichTextEditor {
       applyListStyles(this.element);
     }
     // §5.5 / §6.7 — suppress mention trigger inside <code> or <pre>
-    const sel2 = window.getSelection();
+    const sel2 = this.getWindow().getSelection();
     const anchorNode = sel2?.anchorNode ?? null;
     const insideCode = anchorNode
       ? this.findAncestor(anchorNode, 'CODE') !== null ||
         this.findAncestor(anchorNode, 'PRE') !== null
       : false;
     if (!insideCode) {
-      checkMentionTrigger(this.config.onMentionStart, this.config.onMentionEnd);
+      checkMentionTrigger(this.config.onMentionStart, this.config.onMentionEnd, this.getWindow());
     } else {
       // Inside code — close any open mention panel
       this.config.onMentionEnd?.();
@@ -440,9 +455,9 @@ export class RichTextEditor {
         });
         if (allEmpty) {
           this.element.innerHTML = '';
-          const sel = window.getSelection();
+          const sel = this.getWindow().getSelection();
           if (sel) {
-            const r = document.createRange();
+            const r = this.getDocument().createRange();
             r.setStart(this.element, 0);
             r.collapse(true);
             sel.removeAllRanges();
@@ -460,9 +475,9 @@ export class RichTextEditor {
 
         if (html === '' || isOnlyBr || isEmptyWrappers || isWrappedBr) {
           this.element.innerHTML = '';
-          const sel = window.getSelection();
+          const sel = this.getWindow().getSelection();
           if (sel) {
-            const r = document.createRange();
+            const r = this.getDocument().createRange();
             r.setStart(this.element, 0);
             r.collapse(true);
             sel.removeAllRanges();
@@ -481,20 +496,28 @@ export class RichTextEditor {
 
     const mod = e.ctrlKey || e.metaKey;
     if (mod && !e.shiftKey && this.config.enableFormatting !== false) {
+      // Don't apply inline formatting inside code blocks
+      const sel = this.getWindow().getSelection();
+      const anchorNode = sel?.anchorNode;
+      const isInsideCodeBlock =
+        anchorNode &&
+        (anchorNode.parentElement?.closest('pre') ??
+          (anchorNode.nodeType === Node.ELEMENT_NODE && (anchorNode as Element).closest('pre')));
+
       const key = e.key.toLowerCase();
       if (key === 'b') {
         e.preventDefault();
-        this.applyBold();
+        if (!isInsideCodeBlock) this.applyBold();
         return;
       }
       if (key === 'i') {
         e.preventDefault();
-        this.applyItalic();
+        if (!isInsideCodeBlock) this.applyItalic();
         return;
       }
       if (key === 'u') {
         e.preventDefault();
-        this.applyUnderline();
+        if (!isInsideCodeBlock) this.applyUnderline();
         return;
       }
     }
@@ -510,11 +533,49 @@ export class RichTextEditor {
     }
     if (e.key === 'Escape') this.config.onMentionEnd?.();
 
+    // Backspace/Delete with full selection: clear editor entirely.
+    // This handles the case where mention spans (contenteditable="false") survive
+    // browser-native deletion after Ctrl+A.
+    if ((e.key === 'Backspace' || e.key === 'Delete') && !mod) {
+      const sel = this.getWindow().getSelection();
+      if (sel && !sel.isCollapsed) {
+        const range = sel.getRangeAt(0);
+        // Check if the selection covers the entire editor content
+        const editorText = this.element.textContent ?? '';
+        const selectedText = range.toString();
+        if (
+          selectedText.length >= editorText.replace(/\u00A0/g, ' ').trim().length &&
+          this.element.contains(range.startContainer) &&
+          this.element.contains(range.endContainer)
+        ) {
+          e.preventDefault();
+          this.element.innerHTML = '';
+          const r = this.getDocument().createRange();
+          r.setStart(this.element, 0);
+          r.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(r);
+          this.pushHistory();
+          this.emitUpdate();
+          return;
+        }
+      }
+    }
+
     // ArrowRight: exit inline code when cursor is at the end of a <code> element
     if (e.key === 'ArrowRight' && !mod && !e.shiftKey) {
       if (this.handleArrowRightExitInlineCode()) {
         e.preventDefault();
         return;
+      }
+    }
+
+    // Tab / Shift+Tab: indent / outdent list items
+    if (e.key === 'Tab' && !mod && this.config.enableFormatting !== false) {
+      if (e.shiftKey) {
+        if (handleListOutdent(e, this.ctx)) return;
+      } else {
+        if (handleListIndent(e, this.ctx)) return;
       }
     }
 
@@ -558,7 +619,7 @@ export class RichTextEditor {
    * Returns true if handled.
    */
   private handleArrowRightExitInlineCode(): boolean {
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
     if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) return false;
 
     const range = sel.getRangeAt(0);
@@ -589,12 +650,12 @@ export class RichTextEditor {
     if (offset < textContent.length) return false;
 
     // Cursor is at the end — move it after the code element
-    const newRange = document.createRange();
+    const newRange = this.getDocument().createRange();
     if (codeEl.nextSibling) {
       newRange.setStartBefore(codeEl.nextSibling);
     } else {
       // No next sibling — insert a zero-width space after the code and place cursor there
-      const textNode = document.createTextNode('\u200B');
+      const textNode = this.getDocument().createTextNode('\u200B');
       codeEl.parentNode?.insertBefore(textNode, codeEl.nextSibling);
       newRange.setStart(textNode, 1);
     }
@@ -609,7 +670,7 @@ export class RichTextEditor {
    */
   private getTextOffsetInNode(container: Node, cursorNode: Node, cursorOffset: number): number {
     let offset = 0;
-    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const walker = this.getDocument().createTreeWalker(container, NodeFilter.SHOW_TEXT);
     let current = walker.nextNode();
     while (current) {
       if (current === cursorNode) {
@@ -628,7 +689,7 @@ export class RichTextEditor {
    * Returns true if handled (caller should return early).
    */
   private handleCodeBlockShiftEnter(e: KeyboardEvent): boolean {
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
     if (!sel || sel.rangeCount === 0) return false;
     const range = sel.getRangeAt(0);
     const pre = this.findAncestor(range.startContainer, 'PRE') as HTMLElement | null;
@@ -644,7 +705,7 @@ export class RichTextEditor {
     // Compute cursor offset within the code element
     let cursorOffset = 0;
     if (range.startContainer.nodeType === Node.TEXT_NODE) {
-      const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT, null);
+      const walker = this.getDocument().createTreeWalker(code, NodeFilter.SHOW_TEXT, null);
       let node: Node | null = walker.nextNode();
       while (node) {
         if (node === range.startContainer) {
@@ -655,7 +716,37 @@ export class RichTextEditor {
         node = walker.nextNode();
       }
     } else {
+      // Cursor is positioned on the element itself (not a text node).
+      // This happens with freshly created code blocks.
       cursorOffset = rawText.length;
+
+      const textNode =
+        code.firstChild?.nodeType === Node.TEXT_NODE ? (code.firstChild as Text) : null;
+      if (textNode) {
+        const insertAt = Math.min(cursorOffset, textNode.data.length);
+        const after = textNode.data.slice(insertAt);
+        const needsZws = !after || after === '\n' || after.trim() === '';
+        const insert = needsZws ? '\n\u200B' : '\n';
+        textNode.data = textNode.data.slice(0, insertAt) + insert + textNode.data.slice(insertAt);
+        const newRange = this.getDocument().createRange();
+        newRange.setStart(textNode, insertAt + insert.length);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      } else {
+        const newText = this.getDocument().createTextNode('\n\u200B');
+        code.appendChild(newText);
+        const newRange = this.getDocument().createRange();
+        newRange.setStart(newText, 2);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      }
+      this.justAppliedFormatting += 2;
+      this.updateFormatState();
+      this.pushHistory();
+      this.emitUpdate();
+      return true;
     }
 
     const isAtEnd = cursorOffset >= text.length - 1 || cursorOffset >= rawText.length - 1;
@@ -670,10 +761,10 @@ export class RichTextEditor {
         t.data = t.data.replace(/[\n\u200B]+$/, '') || '\u200B';
       }
       // Insert a paragraph after the <pre>
-      const p = document.createElement('p');
+      const p = this.getDocument().createElement('p');
       p.innerHTML = '<br>';
       pre.parentNode?.insertBefore(p, pre.nextSibling);
-      const newRange = document.createRange();
+      const newRange = this.getDocument().createRange();
       newRange.setStart(p, 0);
       newRange.collapse(true);
       sel.removeAllRanges();
@@ -688,7 +779,7 @@ export class RichTextEditor {
         const needsZws = !after || after === '\n' || after.trim() === '';
         const insert = needsZws ? '\n\u200B' : '\n';
         t.data = t.data.slice(0, offset) + insert + t.data.slice(offset);
-        const newRange = document.createRange();
+        const newRange = this.getDocument().createRange();
         newRange.setStart(t, offset + insert.length);
         newRange.collapse(true);
         sel.removeAllRanges();
@@ -710,7 +801,7 @@ export class RichTextEditor {
    * Returns true if handled (caller should return early).
    */
   private handleBlockquoteShiftEnter(e: KeyboardEvent): boolean {
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
     if (!sel || sel.rangeCount === 0) return false;
     const range = sel.getRangeAt(0);
     const bq = this.findAncestor(range.startContainer, 'BLOCKQUOTE') as HTMLElement | null;
@@ -742,7 +833,7 @@ export class RichTextEditor {
     e.preventDefault();
     if (blockEl?.parentNode === bq) blockEl.remove();
 
-    const p = document.createElement('p');
+    const p = this.getDocument().createElement('p');
     p.innerHTML = '<br>';
     if ((bq.textContent ?? '').replace(/\u200B/g, '').trim() === '') {
       bq.parentNode?.insertBefore(p, bq.nextSibling);
@@ -750,7 +841,7 @@ export class RichTextEditor {
     } else {
       bq.parentNode?.insertBefore(p, bq.nextSibling);
     }
-    const newRange = document.createRange();
+    const newRange = this.getDocument().createRange();
     newRange.setStart(p, 0);
     newRange.collapse(true);
     sel.removeAllRanges();
@@ -769,7 +860,10 @@ export class RichTextEditor {
       this.suppressNextSelectionChange--;
       return;
     }
-    if (!this.element.contains(document.activeElement) && document.activeElement !== this.element)
+    if (
+      !this.element.contains(this.getDocument().activeElement) &&
+      this.getDocument().activeElement !== this.element
+    )
       return;
     clearInlineOverrides();
     this.updateFormatState();
@@ -786,13 +880,62 @@ export class RichTextEditor {
     }
     if (this.config.enableFormatting === false) {
       e.preventDefault();
-      document.execCommand('insertText', false, data.getData('text/plain'));
+      this.getDocument().execCommand('insertText', false, data.getData('text/plain'));
       return;
     }
 
-    // §10.5 — Paste URL on selection: if clipboard is a URL and there's a selection, create a link
+    // When pasting inside a code block, always paste as plain text.
+    // Rich HTML content should not break out of the code block or introduce formatting.
     const pastedText = data.getData('text/plain').trim();
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const pasteNode = sel.getRangeAt(0).startContainer;
+      const insidePre = this.findAncestor(pasteNode, 'PRE');
+      if (insidePre) {
+        e.preventDefault();
+        const code = (insidePre as HTMLElement).querySelector('code') ?? insidePre;
+        const range = sel.getRangeAt(0);
+        const plainText = data.getData('text/plain');
+
+        if (range.startContainer.nodeType === Node.TEXT_NODE) {
+          const t = range.startContainer as Text;
+          const offset = range.startOffset;
+          t.data = t.data.slice(0, offset) + plainText + t.data.slice(offset);
+          const newRange = this.getDocument().createRange();
+          newRange.setStart(t, offset + plainText.length);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+        } else {
+          // Cursor is on the element itself (no text node yet, e.g. freshly created code block)
+          const existingText = code.firstChild;
+          if (existingText?.nodeType === Node.TEXT_NODE) {
+            const t = existingText as Text;
+            const childOffset = range.startOffset;
+            const insertPos = Math.min(childOffset, t.data.length);
+            t.data = t.data.slice(0, insertPos) + plainText + t.data.slice(insertPos);
+            const newRange = this.getDocument().createRange();
+            newRange.setStart(t, insertPos + plainText.length);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          } else {
+            const textNode = this.getDocument().createTextNode(plainText);
+            code.appendChild(textNode);
+            const newRange = this.getDocument().createRange();
+            newRange.setStart(textNode, plainText.length);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          }
+        }
+        this.pushHistory();
+        this.emitUpdate();
+        return;
+      }
+    }
+
+    // §10.5 — Paste URL on selection: if clipboard is a URL and there's a selection, create a link
     const hasSelection = sel && !sel.isCollapsed && sel.toString().trim().length > 0;
     const isUrl = /^https?:\/\/\S+$/.test(pastedText);
 
@@ -813,9 +956,9 @@ export class RichTextEditor {
         const converted = convertMarkdownToHtml(pastedText);
         if (converted !== pastedText) {
           // Has markdown — insert as HTML
-          document.execCommand('insertHTML', false, converted);
+          this.getDocument().execCommand('insertHTML', false, converted);
         } else {
-          document.execCommand('insertText', false, pastedText);
+          this.getDocument().execCommand('insertText', false, pastedText);
         }
         this.pushHistory();
         this.emitUpdate();
@@ -827,12 +970,24 @@ export class RichTextEditor {
       // Strip all component-level markup (chat bubble wrappers, styled divs, etc.)
       // and preserve only semantic formatting tags (bold, italic, lists, links, etc.).
       e.preventDefault();
+
+      // Heuristic: if the HTML contains complex layouts (tables, multi-column),
+      // prefer plain text — complex HTML produces garbled output (Slack-style approach).
+      const hasComplexLayout = /<(?:table|colgroup|col|thead|tbody)\b/i.test(html);
+      if (hasComplexLayout) {
+        this.getDocument().execCommand('insertText', false, pastedText);
+        this.pushHistory();
+        this.emitUpdate();
+        this.updateFormatState();
+        return;
+      }
+
       const cleanedHtml = this.sanitizePastedHtml(html);
       if (cleanedHtml) {
-        document.execCommand('insertHTML', false, cleanedHtml);
+        this.getDocument().execCommand('insertHTML', false, cleanedHtml);
       } else {
         // Fallback to plain text if sanitization yields nothing
-        document.execCommand('insertText', false, pastedText);
+        this.getDocument().execCommand('insertText', false, pastedText);
       }
       this.pushHistory();
       this.emitUpdate();
@@ -847,8 +1002,10 @@ export class RichTextEditor {
    * and keeps only semantic formatting elements.
    */
   private sanitizePastedHtml(html: string): string {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
+    // SECURITY: parse into an inert <template> so images don't load and
+    // onerror/onload can't fire during parsing.
+    const template = this.getDocument().createElement('template');
+    template.innerHTML = html;
 
     // Tags that represent content formatting (keep these)
     const ALLOWED_PASTE_TAGS = new Set([
@@ -887,7 +1044,7 @@ export class RichTextEditor {
      * - Otherwise, unwrap the element (replace with its children).
      */
     const cleanNode = (parent: Node): DocumentFragment => {
-      const fragment = document.createDocumentFragment();
+      const fragment = this.getDocument().createDocumentFragment();
 
       for (const child of Array.from(parent.childNodes)) {
         if (child.nodeType === Node.TEXT_NODE) {
@@ -911,7 +1068,7 @@ export class RichTextEditor {
 
         // If it's an allowed formatting tag, keep it with cleaned attributes
         if (ALLOWED_PASTE_TAGS.has(tagName)) {
-          const newEl = document.createElement(tagName);
+          const newEl = this.getDocument().createElement(tagName);
 
           // For links, preserve href and target
           if (tagName === 'a') {
@@ -945,6 +1102,19 @@ export class RichTextEditor {
           'aside',
           'figure',
           'figcaption',
+          'table',
+          'thead',
+          'tbody',
+          'tfoot',
+          'tr',
+          'td',
+          'th',
+          'caption',
+          'details',
+          'summary',
+          'dl',
+          'dt',
+          'dd',
         ].includes(tagName);
         if (isBlockElement && childContent.textContent?.trim()) {
           // Check if the previous sibling is already a <br> to avoid double breaks
@@ -953,7 +1123,7 @@ export class RichTextEditor {
             lastInFragment instanceof HTMLElement ? lastInFragment.tagName.toLowerCase() : '';
           const needsBreak = lastInFragment != null && lastTagName !== 'br';
           if (needsBreak && fragment.childNodes.length > 0) {
-            fragment.appendChild(document.createElement('br'));
+            fragment.appendChild(this.getDocument().createElement('br'));
           }
         }
 
@@ -964,8 +1134,8 @@ export class RichTextEditor {
       return fragment;
     };
 
-    const cleaned = cleanNode(tempDiv);
-    const wrapper = document.createElement('div');
+    const cleaned = cleanNode(template.content);
+    const wrapper = this.getDocument().createElement('div');
     wrapper.appendChild(cleaned);
 
     // Final cleanup: collapse multiple consecutive <br> tags into at most 2
@@ -991,7 +1161,7 @@ export class RichTextEditor {
   // ===== Private: Format State =====
 
   private updateFormatState(): void {
-    const sel = window.getSelection();
+    const sel = this.getWindow().getSelection();
     if (!sel || sel.rangeCount === 0) return;
     const node = sel.anchorNode;
     if (!node || !this.element.contains(node)) return;
@@ -1073,27 +1243,31 @@ export function convertMarkdownToHtml(text: string): string {
   const htmlLines: string[] = [];
   let inCodeBlock = false;
   let codeBlockLines: string[] = [];
-  let inOrderedList = false;
-  let inUnorderedList = false;
+  // Stack-based list tracking for nested ordered/unordered lists
+  const listStack: { type: 'ol' | 'ul'; depth: number }[] = [];
 
-  const closeOrderedList = () => {
-    if (inOrderedList) {
-      htmlLines.push('</ol>');
-      inOrderedList = false;
+  const closeListsToDepth = (targetDepth: number) => {
+    while (listStack.length > 0 && (listStack[listStack.length - 1]?.depth ?? 0) >= targetDepth) {
+      const popped = listStack.pop();
+      if (popped) {
+        htmlLines.push(`</${popped.type}>`);
+      }
     }
   };
-  const closeUnorderedList = () => {
-    if (inUnorderedList) {
-      htmlLines.push('</ul>');
-      inUnorderedList = false;
-    }
+
+  const closeAllLists = () => {
+    closeListsToDepth(0);
   };
+
+  // Match ordered list: leading spaces + (digits. | alpha. | roman.) + space + content
+  const olRegex = /^( *)(?:(\d+)\.|([a-z])\.|([ivxlcdm]+)\.)\s+(.*)$/;
+  // Match unordered list: leading spaces + (• or -) + space + content
+  const ulRegex = /^( *)[•-]\s+(.*)$/;
 
   for (const line of lines) {
     // Code block fence (standalone ```)
     if (line.trim() === '```') {
-      closeOrderedList();
-      closeUnorderedList();
+      closeAllLists();
       if (inCodeBlock) {
         inCodeBlock = false;
         const codeContent = codeBlockLines.join('\n');
@@ -1108,8 +1282,7 @@ export function convertMarkdownToHtml(text: string): string {
     if (!inCodeBlock) {
       const inlineCodeBlockMatch = /^```([\s\S]+?)```$/.exec(line.trim());
       if (inlineCodeBlockMatch) {
-        closeOrderedList();
-        closeUnorderedList();
+        closeAllLists();
         const codeContent = inlineCodeBlockMatch[1] ?? '';
         htmlLines.push(`<pre><code>${escapeHtml(codeContent)}</code></pre>`);
         continue;
@@ -1121,42 +1294,94 @@ export function convertMarkdownToHtml(text: string): string {
     }
 
     // Block patterns
-    const olMatch = /^(\d+)\.\s+(.*)$/.exec(line);
-    const ulMatch = /^[•-]\s+(.*)$/.exec(line);
+    const olMatch = olRegex.exec(line);
+    const ulMatch = ulRegex.exec(line);
     const bqMatch = /^>\s?(.*)$/.exec(line);
 
     if (olMatch) {
-      closeUnorderedList();
-      if (!inOrderedList) {
-        htmlLines.push('<ol>');
-        inOrderedList = true;
+      const leadingSpaces = olMatch[1]?.length ?? 0;
+      const content = olMatch[5] ?? '';
+      const depth = Math.floor(leadingSpaces / 4);
+
+      // Close any unordered lists and ordered lists deeper than current
+      while (listStack.length > 0) {
+        const top = listStack[listStack.length - 1];
+        if (!top) break;
+        if (top.depth > depth || (top.depth === depth && top.type !== 'ol')) {
+          htmlLines.push(`</${top.type}>`);
+          listStack.pop();
+        } else {
+          break;
+        }
       }
-      htmlLines.push(`<li>${applyInlineMarkdown(olMatch[2] ?? '')}</li>`);
+
+      // Open new ordered lists as needed to reach current depth
+      const currentListDepth =
+        listStack.length > 0 ? (listStack[listStack.length - 1]?.depth ?? -1) : -1;
+      if (currentListDepth < depth || listStack.length === 0) {
+        while (
+          (listStack.length === 0 ? -1 : (listStack[listStack.length - 1]?.depth ?? -1)) < depth
+        ) {
+          const newDepth =
+            listStack.length === 0 ? 0 : (listStack[listStack.length - 1]?.depth ?? -1) + 1;
+          htmlLines.push('<ol>');
+          listStack.push({ type: 'ol', depth: newDepth });
+          if (newDepth < depth) {
+            // Need to wrap in an <li> for proper nesting
+            htmlLines.push('<li>');
+          }
+        }
+      }
+
+      htmlLines.push(`<li>${applyInlineMarkdown(content)}</li>`);
     } else if (ulMatch) {
-      closeOrderedList();
-      if (!inUnorderedList) {
-        htmlLines.push('<ul>');
-        inUnorderedList = true;
+      const leadingSpaces = ulMatch[1]?.length ?? 0;
+      const content = ulMatch[2] ?? '';
+      const depth = Math.floor(leadingSpaces / 4);
+
+      // Close lists deeper than current
+      while (listStack.length > 0) {
+        const top = listStack[listStack.length - 1];
+        if (!top) break;
+        if (top.depth > depth || (top.depth === depth && top.type !== 'ul')) {
+          htmlLines.push(`</${top.type}>`);
+          listStack.pop();
+        } else {
+          break;
+        }
       }
-      htmlLines.push(`<li>${applyInlineMarkdown(ulMatch[1] ?? '')}</li>`);
+
+      const currentListDepth =
+        listStack.length > 0 ? (listStack[listStack.length - 1]?.depth ?? -1) : -1;
+      if (currentListDepth < depth || listStack.length === 0) {
+        while (
+          (listStack.length === 0 ? -1 : (listStack[listStack.length - 1]?.depth ?? -1)) < depth
+        ) {
+          const newDepth =
+            listStack.length === 0 ? 0 : (listStack[listStack.length - 1]?.depth ?? -1) + 1;
+          htmlLines.push('<ul>');
+          listStack.push({ type: 'ul', depth: newDepth });
+          if (newDepth < depth) {
+            htmlLines.push('<li>');
+          }
+        }
+      }
+
+      htmlLines.push(`<li>${applyInlineMarkdown(content)}</li>`);
     } else if (bqMatch) {
-      closeOrderedList();
-      closeUnorderedList();
+      closeAllLists();
       htmlLines.push(`<blockquote>${applyInlineMarkdown(bqMatch[1] ?? '')}</blockquote>`);
     } else if (line === '') {
-      closeOrderedList();
-      closeUnorderedList();
+      closeAllLists();
       htmlLines.push('<br>');
     } else {
-      closeOrderedList();
-      closeUnorderedList();
+      closeAllLists();
       htmlLines.push(`<p>${applyInlineMarkdown(line)}</p>`);
     }
   }
 
   // Close any open lists
-  closeOrderedList();
-  closeUnorderedList();
+  closeAllLists();
 
   // Close any unclosed code block
   if (inCodeBlock && codeBlockLines.length > 0) {
@@ -1167,17 +1392,36 @@ export function convertMarkdownToHtml(text: string): string {
 }
 
 function applyInlineMarkdown(text: string): string {
-  return text
+  // SECURITY: escape raw HTML before converting markdown markers to tags — output is
+  // inserted via insertHTML (e.g. raw paste), so literal tags must stay inert text.
+  return escapeUserHtml(text)
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<strong>$1</strong>')
     .replace(/~~([^~]+)~~/g, '<s>$1</s>')
     .replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/<u>([^<]+)<\/u>/g, '<u>$1</u>')
-    .replace(
-      /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-    );
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, url: string) => {
+      // Block dangerous URL schemes so links can't become script vectors.
+      const safeUrl = sanitizeLinkUrl(url);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    });
+}
+
+/** Block dangerous URL schemes (javascript:, data:, …) and escape quotes in the href. */
+function sanitizeLinkUrl(url: string): string {
+  const trimmed = url.trim();
+  // Strip whitespace/control chars that can obfuscate the scheme (e.g. "java\tscript:").
+  let normalized = '';
+  for (const ch of trimmed) {
+    if (ch.charCodeAt(0) > 0x20) normalized += ch;
+  }
+  normalized = normalized.toLowerCase();
+  if (/^(?:javascript|data|vbscript|file):/i.test(normalized)) {
+    return '#';
+  }
+  // Escape quotes so the URL can't break out of the href attribute.
+  return trimmed.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function escapeHtml(text: string): string {

@@ -1,0 +1,92 @@
+/* CometChatCallButtons — standalone call buttons component */
+
+.cometchat-call-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cometchat-call-buttons__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cometchat-call-buttons__button:hover .cometchat-call-buttons__button-icon {
+  background-color: var(--cometchat-primary-color, #3399ff);
+}
+
+.cometchat-call-buttons__button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+.cometchat-call-buttons__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cometchat-call-buttons__button:disabled:hover .cometchat-call-buttons__button-icon {
+  background-color: var(--cometchat-icon-color-primary, #141414);
+}
+
+.cometchat-call-buttons__button-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background-color: var(--cometchat-icon-color-primary, #141414);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.cometchat-call-buttons__button-icon--voice {
+  -webkit-mask-image: url('../../assets/audio_call_button.svg');
+  mask-image: url('../../assets/audio_call_button.svg');
+}
+
+.cometchat-call-buttons__button-icon--video {
+  -webkit-mask-image: url('../../assets/video_call_button.svg');
+  mask-image: url('../../assets/video_call_button.svg');
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cometchat-call-buttons__button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cometchat-call-buttons__button-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cometchat-call-buttons__button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .cometchat-call-buttons__button-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .cometchat-call-buttons {
+    gap: 0;
+  }
+}

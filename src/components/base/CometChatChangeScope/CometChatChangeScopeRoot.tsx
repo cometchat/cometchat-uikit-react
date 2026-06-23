@@ -5,6 +5,7 @@ import type {
 } from './CometChatChangeScope.types';
 import { CometChatChangeScopeContext } from './CometChatChangeScope.context';
 import { useCometChatChangeScope } from './useCometChatChangeScope';
+import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
 import './CometChatChangeScope.css';
 
 const TITLE_ID = 'cometchat-change-scope-title';
@@ -23,6 +24,11 @@ export const CometChatChangeScopeRoot: React.FC<CometChatChangeScopeRootProps> =
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
 
   const hookValue = useCometChatChangeScope({
     options,
@@ -33,14 +39,12 @@ export const CometChatChangeScopeRoot: React.FC<CometChatChangeScopeRootProps> =
 
   // Capture trigger element on mount.
   useEffect(() => {
-    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    previousFocusRef.current = getCurrentDocument().activeElement as HTMLElement | null;
 
-    // Move focus into the dialog.
+    // Focus the dialog container, not the first control — traps focus without
+    // painting a focus ring on the first radio when the dialog opens.
     const id = requestAnimationFrame(() => {
-      const firstFocusable = dialogRef.current?.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      firstFocusable?.focus();
+      dialogRef.current?.focus();
     });
 
     return () => {
@@ -48,7 +52,7 @@ export const CometChatChangeScopeRoot: React.FC<CometChatChangeScopeRootProps> =
       // Restore focus on unmount.
       previousFocusRef.current?.focus();
     };
-  }, []);
+  }, [getCurrentDocument]);
 
   // Keyboard handler: Escape to close, Tab focus trap, Arrow keys for radio navigation.
   const handleKeyDown = useCallback(
@@ -71,7 +75,7 @@ export const CometChatChangeScopeRoot: React.FC<CometChatChangeScopeRootProps> =
         );
         if (focusable.length === 0) return;
 
-        const currentIdx = focusable.indexOf(document.activeElement as HTMLElement);
+        const currentIdx = focusable.indexOf(getCurrentDocument().activeElement as HTMLElement);
         let nextIdx: number;
 
         if (e.shiftKey) {
@@ -84,7 +88,7 @@ export const CometChatChangeScopeRoot: React.FC<CometChatChangeScopeRootProps> =
         focusable[nextIdx]?.focus();
       }
     },
-    [hookValue]
+    [hookValue, getCurrentDocument]
   );
 
   const ctxValue = useMemo<CometChatChangeScopeContextValue>(
@@ -110,6 +114,7 @@ export const CometChatChangeScopeRoot: React.FC<CometChatChangeScopeRootProps> =
       <div
         ref={dialogRef}
         className={rootClass}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={TITLE_ID}

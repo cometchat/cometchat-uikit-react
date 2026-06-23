@@ -1,4 +1,5 @@
 import { CometChatTextFormatter } from './CometChatTextFormatter';
+import { escapeUserHtml } from '../utils/sanitizeHtml';
 
 /**
  * CometChatMarkdownFormatter
@@ -25,7 +26,7 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
   override priority = 10;
 
   getRegex(): RegExp {
-    return /(\*\*|__|~~|`|>|\[.*?\]\(.*?\)|\d+\.\s|[•-]\s)/g;
+    return /(\*\*|__|~~|`|>|\[.*?\]\(.*?\)|(?:\d+|[a-z]|[ivxlcdm]+)\.\s|[•-]\s)/g;
   }
 
   format(text: string): string {
@@ -82,9 +83,28 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
    * Used for blockquote processing which runs before inline code conversion.
    */
   private formatOutsideCodeBlocks(text: string, formatter: (segment: string) => string): string {
+    // Protect mention tokens from being mangled by formatting regexes
+    // (e.g., underscores in UIDs like <@uid:under_score> triggering italic)
+    const mentionTokens: string[] = [];
+    const mentionPattern = /(<@uid:[^>]+>|<@all:[^>]+>)/g;
+    const protectedText = text.replace(mentionPattern, match => {
+      const idx = mentionTokens.length;
+      mentionTokens.push(match);
+      return `\u200B\uFFFCMTKN${String(idx)}\uFFFC\u200B`;
+    });
+
     const codeBlockPattern = /(<pre><code>[\s\S]*?<\/code><\/pre>)/g;
-    const parts = text.split(codeBlockPattern);
-    return parts.map(part => (part.startsWith('<pre><code>') ? part : formatter(part))).join('');
+    const parts = protectedText.split(codeBlockPattern);
+    let result = parts
+      .map(part => (part.startsWith('<pre><code>') ? part : formatter(part)))
+      .join('');
+
+    // Restore mention tokens
+    result = result.replace(/\u200B\uFFFCMTKN(\d+)\uFFFC\u200B/g, (_, idx: string) => {
+      return mentionTokens[parseInt(idx, 10)] ?? '';
+    });
+
+    return result;
   }
 
   /**
@@ -151,10 +171,36 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
   }
 
   private formatLinks(text: string): string {
-    return text.replace(
-      /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-    );
+    return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, rawUrl: string) => {
+      const href = this.normalizeLinkUrl(rawUrl);
+      // Dangerous scheme — drop the link but keep the visible text.
+      if (!href) return label;
+      // The `cometchat-link` class is what the text bubble's click handler keys off of
+      // to open the URL; without it a non-http(s) (scheme-less) link is not clickable.
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="cometchat-link">${label}</a>`;
+    });
+  }
+
+  private normalizeLinkUrl(rawUrl: string): string {
+    const url = rawUrl.trim();
+    if (!url) return '';
+
+    // Strip whitespace/control chars that can obfuscate the scheme (e.g. "java\tscript:").
+    const compact = Array.from(url)
+      .filter(ch => ch.charCodeAt(0) > 0x20)
+      .join('')
+      .toLowerCase();
+    if (/^(?:javascript|data|vbscript|file):/.test(compact)) return '';
+
+    let href = url;
+    const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(href); // http:, https:, mailto:, tel:, …
+    const isAnchorOrRelative =
+      /^[#/?]/.test(href) || href.startsWith('./') || href.startsWith('../');
+    if (!hasScheme && !isAnchorOrRelative) {
+      href = `https://${href}`;
+    }
+
+    return href.replace(/"/g, '&quot;');
   }
 
   // ─── Block Formatting ──────────────────────────────────────────────────
@@ -206,12 +252,45 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
       }
     };
 
+    // Match ordered list items: digits (1. 2.), alpha (a. b. c.), or roman (i. ii. iii. iv.)
+    const orderedListRegex = /^( *)(?:(\d+)\.|([a-z])\.|([ivxlcdm]+)\.)\s+(.+)$/;
+
+    /**
+     * Determine list depth from the marker type and indentation.
+     * - Decimal markers (1. 2.) → depth from indentation (base depth 0)
+     * - Alpha markers (a. b.) → depth from indentation + 1 (at minimum depth 1)
+     * - Roman markers (i. ii.) → depth from indentation + 2 (at minimum depth 2)
+     *   BUT only treated as roman if indentation >= 8 spaces OR we're already nested at depth ≥ 2.
+     *   Otherwise single-letter roman numerals like "i." are treated as alpha.
+     */
+    const getDepthFromMarker = (
+      leadingSpaces: number,
+      decimal: string | undefined,
+      alpha: string | undefined,
+      roman: string | undefined
+    ): number => {
+      const indentDepth = Math.floor(leadingSpaces / 4);
+      if (decimal) return indentDepth;
+      if (
+        roman &&
+        (indentDepth >= 2 ||
+          (depthStack.length > 0 && (depthStack[depthStack.length - 1] ?? 0) >= 1))
+      ) {
+        return Math.max(indentDepth, 2);
+      }
+      if (alpha) return Math.max(indentDepth, 1);
+      return indentDepth;
+    };
+
     for (const line of lines) {
-      const match = /^( *)(\d+)\.\s+(.+)$/.exec(line);
+      const match = orderedListRegex.exec(line);
       if (match) {
         const leadingSpaces = match[1]?.length ?? 0;
-        const content = match[3];
-        const currentDepth = Math.floor(leadingSpaces / 4);
+        const decimal = match[2];
+        const alpha = match[3];
+        const roman = match[4];
+        const content = match[5];
+        const currentDepth = getDepthFromMarker(leadingSpaces, decimal, alpha, roman);
 
         if (depthStack.length === 0) {
           result.push(
@@ -364,12 +443,21 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
     // Strip zero-width spaces (U+200B) inserted by contenteditable
     result = result.replace(/\u200B/g, '');
 
+    // SECURITY: output is injected via dangerouslySetInnerHTML in previews — escape
+    // raw HTML so tags become inert text (preserves mentions and <u>).
+    result = escapeUserHtml(result);
+
     // Handle code blocks and inline code on the full text BEFORE splitting
     // into lines, because they can span multiple lines.
     // Strip code blocks: ```content``` → content (flatten for subtitle)
     result = result.replace(/```\n?([\s\S]*?)\n?```/g, '$1');
     // Convert inline code: `content` → <code>content</code>
     result = result.replace(/`([\s\S]+?)`/g, '<code>$1</code>');
+
+    // Normalize ordered list markers: convert indented numeric markers (1.) to
+    // depth-appropriate markers (a. for depth 1, i. for depth 2).
+    // This handles old messages that stored all levels as "1."
+    result = this.normalizeOrderedListMarkers(result);
 
     // Process remaining formatting line by line
     const lines = result.split('\n');
@@ -396,6 +484,106 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
       r = r.replace(/^(?:&gt;|>)\s?/, '');
 
       return r;
+    });
+
+    return processedLines.join('\n');
+  }
+
+  /**
+   * Normalize ordered list markers so indented items show correct depth markers.
+   * Handles backward compatibility: old messages store all levels as "1. 2. 3."
+   * regardless of nesting. This converts them based on indentation:
+   * - depth 0 (no indent): keep numeric (1. 2. 3.)
+   * - depth 1 (4 spaces): convert to alpha (a. b. c.)
+   * - depth 2 (8 spaces): convert to roman (i. ii. iii.)
+   */
+  private normalizeOrderedListMarkers(text: string): string {
+    const lines = text.split('\n');
+    // Track counters per depth level to assign correct sequential markers
+    const depthCounters: number[] = [0, 0, 0];
+    let prevDepth = -1;
+
+    const numberToAlpha = (n: number): string => {
+      let result = '';
+      let num = n;
+      while (num > 0) {
+        num--;
+        result = String.fromCharCode(97 + (num % 26)) + result;
+        num = Math.floor(num / 26);
+      }
+      return result;
+    };
+
+    const numberToRoman = (n: number): string => {
+      const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+      const symbols = ['m', 'cm', 'd', 'cd', 'c', 'xc', 'l', 'xl', 'x', 'ix', 'v', 'iv', 'i'];
+      let result = '';
+      let num = n;
+      for (let i = 0; i < values.length; i++) {
+        while (num >= (values[i] ?? 0)) {
+          result += symbols[i] ?? '';
+          num -= values[i] ?? 0;
+        }
+      }
+      return result;
+    };
+
+    const processedLines = lines.map(line => {
+      // Match ordered list item: leading spaces + number/alpha/roman + dot + space + content
+      const match = /^( *)(?:(\d+)\.|([a-z])\.|([ivxlcdm]+)\.)\s+(.+)$/.exec(line);
+      if (!match) {
+        // Non-list line resets counters
+        prevDepth = -1;
+        depthCounters[0] = 0;
+        depthCounters[1] = 0;
+        depthCounters[2] = 0;
+        return line;
+      }
+
+      const leadingSpaces = match[1]?.length ?? 0;
+      const content = match[5] ?? '';
+      const depth = Math.min(Math.floor(leadingSpaces / 4), 2);
+
+      // If already has alpha/roman marker, it's already correct (new format)
+      if (match[3] || match[4]) {
+        // Already has correct marker — just track the depth
+        prevDepth = depth;
+        return line;
+      }
+
+      // Numeric marker — check if it needs conversion based on depth
+      if (depth === 0) {
+        // Top-level: keep as numeric
+        if (prevDepth < 0 || depth <= prevDepth) {
+          // Same or higher level — counter continues or resets
+        }
+        prevDepth = depth;
+        return line;
+      }
+
+      // Reset deeper counters when going back up
+      if (depth <= prevDepth) {
+        for (let d = depth + 1; d < depthCounters.length; d++) {
+          depthCounters[d] = 0;
+        }
+      }
+      // Reset this level's counter if we're entering it fresh from a shallower depth
+      if (depth > prevDepth) {
+        depthCounters[depth] = 0;
+      }
+
+      depthCounters[depth] = (depthCounters[depth] ?? 0) + 1;
+      prevDepth = depth;
+
+      const indent = '    '.repeat(depth);
+      const count = depthCounters[depth] ?? 1;
+      if (depth === 1) {
+        return `${indent}${numberToAlpha(count)}. ${content}`;
+      }
+      if (depth >= 2) {
+        return `${indent}${numberToRoman(count)}. ${content}`;
+      }
+      return line;
     });
 
     return processedLines.join('\n');

@@ -95,10 +95,7 @@ function CometChatGroupsItemInner({
       {/* Leading: CometChatAvatar + Group type status badge */}
       {leadingView ?? (
         <div className={'cometchat-groups__item-avatar'}>
-          <CometChatAvatar.Root name={name} image={icon} size="medium">
-            <CometChatAvatar.Image />
-            <CometChatAvatar.Initials />
-          </CometChatAvatar.Root>
+          <CometChatAvatar name={name} image={icon} size="medium" />
           {!ctx.hideGroupType && groupType === 'private' && (
             <span
               className={`cometchat-groups__item-type-badge cometchat-groups__item-type-badge--private`}
@@ -187,7 +184,7 @@ function CometChatGroupsItemInner({
           }}
           role="presentation"
         >
-          <CometChatContextMenu.Root
+          <CometChatContextMenu
             items={ctx.options(group).map(
               (opt): CometChatContextMenuItemData => ({
                 id: opt.id,

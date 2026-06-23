@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { CometChatRadioButton } from './CometChatRadioButton';
 
@@ -33,23 +33,48 @@ const meta: Meta<typeof CometChatRadioButton> = {
     },
     layout: 'centered',
   },
+  decorators: [
+    // White card so the radio button is visible against Storybook's gray canvas.
+    Story => (
+      <div
+        style={{
+          display: 'inline-flex',
+          padding: 24,
+          background: 'var(--cometchat-background-color-01, #fff)',
+          borderRadius: 'var(--cometchat-radius-3, 12px)',
+          border: '1px solid var(--cometchat-border-color-light, #f5f5f5)',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
 };
 export default meta;
 
 type Story = StoryObj<typeof CometChatRadioButton>;
 
 /** Default radio button with interactive controls. */
-export const Default: Story = {
-  render: args => (
+function DefaultDemo(args: { checked: boolean; disabled: boolean; label: string }) {
+  const [checked, setChecked] = useState(args.checked);
+  // Keep the local state in sync with the Controls `checked` toggle.
+  useEffect(() => {
+    setChecked(args.checked);
+  }, [args.checked]);
+  return (
     <CometChatRadioButton
       label={args.label}
       name="default-group"
       value="option1"
-      checked={args.checked}
+      checked={checked}
       disabled={args.disabled}
-      onChange={({ checked, value }) => console.log('changed:', checked, value)}
+      onChange={({ checked: c }) => setChecked(c)}
     />
-  ),
+  );
+}
+
+export const Default: Story = {
+  render: args => <DefaultDemo {...args} />,
 };
 
 /** Radio button in the selected state. */

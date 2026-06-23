@@ -4,7 +4,7 @@ import { CometChatUIKit } from '@cometchat/chat-uikit-react';
 import { sampleUsers } from './sampledata';
 import cometChatLogo from '../../assets/cometchat_logo.svg';
 import cometChatLogoDark from '../../assets/cometchat_logo_dark.svg';
-import '../../styles/CometChatLogin/CometChatLogin.css';
+import './CometChatLogin.css';
 
 type User = {
   name: string;

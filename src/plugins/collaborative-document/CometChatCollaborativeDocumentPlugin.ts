@@ -13,20 +13,17 @@ import type {
   CometChatMessagePluginContext,
   CometChatMessageOption,
 } from '../plugin.types';
-import { extractExtensionUrl } from '../shared/extractExtensionUrl';
 import { getMediaMessageOptions } from '../core/shared/CometChatMessageOptions';
-import bannerLight from '../../assets/Collaborative_Document_Light.png';
-import bannerDark from '../../assets/Collaborative_Document_Dark.png';
 
 // Lazy-load the bubble component — keeps it out of the initial bundle
-const LazyCometChatCollaborativeBubble = lazy(() =>
-  import('../shared/CometChatCollaborativeBubble').then(m => ({
-    default: m.CometChatCollaborativeBubble,
-  }))
+const LazyCometChatCollaborativeDocumentBubble = lazy(() =>
+  import('../../components/CometChatCollaborativeDocumentBubble/CometChatCollaborativeDocumentBubble').then(
+    m => ({
+      default: m.CometChatCollaborativeDocumentBubble,
+    })
+  )
 );
 
-const EXTENSION_KEY = 'document';
-const URL_KEY = 'document_url';
 const MESSAGE_TYPE = 'extension_document';
 
 export const CometChatCollaborativeDocumentPlugin: CometChatMessagePlugin = {
@@ -35,25 +32,11 @@ export const CometChatCollaborativeDocumentPlugin: CometChatMessagePlugin = {
   messageCategories: ['custom'],
 
   renderBubble(message: CometChat.BaseMessage, context: CometChatMessagePluginContext) {
-    const url = extractExtensionUrl(message, EXTENSION_KEY, URL_KEY);
-    const variant = context.alignment === 'right' ? 'outgoing' : 'incoming';
-    const t = context.getLocalizedString ?? ((key: string) => key);
-
+    const alignment = context.alignment === 'right' ? 'right' : 'left';
     return React.createElement(
       Suspense,
       { fallback: null },
-      React.createElement(LazyCometChatCollaborativeBubble, {
-        url,
-        variant,
-        title: t('message_list_collaborative_document_title'),
-        subtitle: t('message_list_collaborative_document_subtitile'),
-        buttonText: t('message_list_collaborative_document_open'),
-        bannerImageUrl: context.theme === 'dark' ? bannerDark : bannerLight,
-        iconType: 'document' as const,
-        onButtonClick: (docUrl: string) => {
-          window.open(docUrl, '', 'fullscreen=yes, scrollbars=auto');
-        },
-      })
+      React.createElement(LazyCometChatCollaborativeDocumentBubble, { message, alignment })
     );
   },
 

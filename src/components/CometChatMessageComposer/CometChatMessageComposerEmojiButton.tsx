@@ -4,6 +4,7 @@ import { useCometChatMessageComposerContext } from './CometChatMessageComposer.c
 import { CometChatPopover } from '../base/CometChatPopover';
 import { CometChatEmojiKeyboard } from '../base/CometChatEmojiKeyboard';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import moodIcon from '../../assets/mood.svg';
 import moodFillIcon from '../../assets/mood_fill.svg';
 import './CometChatMessageComposer.css';
@@ -19,6 +20,15 @@ export const CometChatMessageComposerEmojiButton: React.FC<
   const { contentToDisplay, setContentToDisplay, insertEmoji } =
     useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
+  const IframeContext = useCometChatFrameContext();
+
+  const getCurrentDocument = useCallback(() => {
+    return IframeContext.iframeDocument ?? document;
+  }, [IframeContext.iframeDocument]);
+
+  const getCurrentWindow = useCallback(() => {
+    return IframeContext.iframeWindow ?? window;
+  }, [IframeContext.iframeWindow]);
 
   const handleToggle = useCallback(() => {
     setContentToDisplay(contentToDisplay === 'emojiKeyboard' ? 'none' : 'emojiKeyboard');
@@ -31,15 +41,15 @@ export const CometChatMessageComposerEmojiButton: React.FC<
       // to the emoji button. Override that by focusing the input after a microtask.
       // This ensures our focus call runs AFTER the popover's focus restoration.
       requestAnimationFrame(() => {
-        const input = document.querySelector<HTMLDivElement>(
+        const input = getCurrentDocument().querySelector<HTMLDivElement>(
           '[role="textbox"][contenteditable="true"]'
         );
         if (input) {
           input.focus();
           // Move cursor to end
-          const sel = window.getSelection();
+          const sel = getCurrentWindow().getSelection();
           if (sel) {
-            const range = document.createRange();
+            const range = getCurrentDocument().createRange();
             range.selectNodeContents(input);
             range.collapse(false);
             sel.removeAllRanges();
@@ -48,7 +58,7 @@ export const CometChatMessageComposerEmojiButton: React.FC<
         }
       });
     },
-    [insertEmoji]
+    [insertEmoji, getCurrentDocument, getCurrentWindow]
   );
 
   const btnClass = [
@@ -60,19 +70,21 @@ export const CometChatMessageComposerEmojiButton: React.FC<
     .join(' ');
 
   return (
-    <CometChatPopover.Root
+    <CometChatPopover
       placement="top"
       closeOnOutsideClick
       isOpen={contentToDisplay === 'emojiKeyboard'}
       onClose={() => {
         setContentToDisplay('none');
       }}
-    >
-      <CometChatPopover.Trigger>
+      trigger={
         <button
           type="button"
           className={btnClass}
-          onClick={handleToggle}
+          onClick={e => {
+            e.stopPropagation();
+            handleToggle();
+          }}
           aria-label={getLocalizedString('EMOJI') || 'Emoji'}
           aria-expanded={contentToDisplay === 'emojiKeyboard'}
           aria-haspopup="dialog"
@@ -87,10 +99,8 @@ export const CometChatMessageComposerEmojiButton: React.FC<
             className={'cometchat-message-composer__button-icon'}
           />
         </button>
-      </CometChatPopover.Trigger>
-      <CometChatPopover.Content>
-        <CometChatEmojiKeyboard.Root onEmojiClick={handleEmojiClick} />
-      </CometChatPopover.Content>
-    </CometChatPopover.Root>
+      }
+      content={<CometChatEmojiKeyboard onEmojiClick={handleEmojiClick} />}
+    />
   );
 };

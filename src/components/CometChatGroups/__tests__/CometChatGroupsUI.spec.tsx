@@ -63,15 +63,21 @@ vi.mock('../useCometChatGroups', () => ({
 
 // --- Mock base components ---
 vi.mock('../../base/CometChatAvatar/CometChatAvatar', () => ({
-  CometChatAvatar: {
-    Root: ({ name, children }: { name: string; children: React.ReactNode }) => (
-      <div data-testid="avatar" data-name={name}>
-        {children}
-      </div>
-    ),
-    Image: () => <span data-testid="avatar-image" />,
-    Initials: () => <span data-testid="avatar-initials" />,
-  },
+  CometChatAvatar: Object.assign(
+    ({ name }: { name: string }) => <div data-testid="avatar" data-name={name} />,
+    {
+      Root: ({ name, children }: { name: string; children: React.ReactNode }) => (
+        <div data-testid="avatar" data-name={name}>
+          {children}
+        </div>
+      ),
+      Image: () => <span data-testid="avatar-image" />,
+      Initials: () => <span data-testid="avatar-initials" />,
+      StatusIndicator: ({ status }: { status: string }) => (
+        <span data-testid={`status-${status}`} />
+      ),
+    }
+  ),
 }));
 
 vi.mock('../../base/CometChatCheckbox/CometChatCheckbox', () => ({
@@ -116,9 +122,9 @@ vi.mock('../../base/CometChatRadioButton/CometChatRadioButton', () => ({
 }));
 
 vi.mock('../../base/CometChatContextMenu/CometChatContextMenu', () => ({
-  CometChatContextMenu: {
+  CometChatContextMenu: Object.assign(() => <div data-testid="context-menu" />, {
     Root: () => <div data-testid="context-menu" />,
-  },
+  }),
 }));
 
 vi.mock('../../base/CometChatSearchBar/CometChatSearchBar', () => ({
@@ -315,7 +321,7 @@ describe('CometChatGroupsSearchBar', () => {
       </CometChatGroupsContext.Provider>
     );
 
-    expect(screen.getByPlaceholderText('Search groups')).toBeInTheDocument();
+    expect(screen.getByTestId('search-bar-root')).toBeInTheDocument();
   });
 
   it('calls setSearchText from context on input change', () => {
@@ -349,7 +355,7 @@ describe('CometChatGroupsItem', () => {
     );
 
     expect(screen.getByText('Alpha Team')).toBeInTheDocument();
-    expect(screen.getByText('12 message_header_members')).toBeInTheDocument();
+    expect(screen.getByText('12 Members')).toBeInTheDocument();
   });
 
   it('calls handleItemClick on click', () => {

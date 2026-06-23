@@ -1,40 +1,84 @@
+import React from 'react';
 import { CometChatChangeScopeRoot } from './CometChatChangeScopeRoot';
 import { CometChatChangeScopeHeader } from './CometChatChangeScopeHeader';
 import { CometChatChangeScopeList } from './CometChatChangeScopeList';
 import { CometChatChangeScopeOption } from './CometChatChangeScopeOption';
 import { CometChatChangeScopeActions } from './CometChatChangeScopeActions';
 import { CometChatChangeScopeErrorMessage } from './CometChatChangeScopeErrorMessage';
+import type {
+  CometChatChangeScopeRootProps,
+  CometChatChangeScopeHeaderProps,
+  CometChatChangeScopeActionsProps,
+} from './CometChatChangeScope.types';
 
 /**
- * CometChatChangeScope — compound component.
+ * Flat API props for CometChatChangeScope.
+ * Renders Root + Header + ScopeList + ErrorMessage + Actions in one call.
+ */
+export interface CometChatChangeScopeProps extends Omit<CometChatChangeScopeRootProps, 'children'> {
+  /** Title for the header. */
+  title?: CometChatChangeScopeHeaderProps['title'];
+  /** Description for the header. */
+  description?: CometChatChangeScopeHeaderProps['description'];
+  /** Whether to show the scope icon in the header. */
+  showIcon?: CometChatChangeScopeHeaderProps['showIcon'];
+  /** Submit button text for the actions. */
+  submitText?: CometChatChangeScopeActionsProps['submitText'];
+  /** Cancel button text for the actions. */
+  cancelText?: CometChatChangeScopeActionsProps['cancelText'];
+}
+
+/**
+ * CometChatChangeScope — Flat API component.
  *
- * Presents a dialog for changing a group member's scope
- * (admin, moderator, participant).
- *
- * Usage:
+ * Usage (flat):
  * ```tsx
- * <CometChatChangeScope.Root
+ * <CometChatChangeScope
  *   options={scopeOptions}
  *   defaultSelection="participant"
  *   onScopeChanged={handleChange}
  *   onClose={handleClose}
- * >
- *   <CometChatChangeScope.Header />
- *   <CometChatChangeScope.ScopeList>
- *     {scopeOptions.map((opt) => (
- *       <CometChatChangeScope.ScopeOption key={opt.id} option={opt} />
- *     ))}
- *   </CometChatChangeScope.ScopeList>
+ *   title="Change Scope"
+ *   submitText="Save"
+ *   cancelText="Cancel"
+ * />
+ * ```
+ *
+ * Usage (compound):
+ * ```tsx
+ * <CometChatChangeScope.Root options={options} onScopeChanged={handleChange} onClose={handleClose}>
+ *   <CometChatChangeScope.Header title="Change Scope" />
+ *   <CometChatChangeScope.ScopeList />
  *   <CometChatChangeScope.ErrorMessage />
- *   <CometChatChangeScope.Actions />
+ *   <CometChatChangeScope.Actions submitText="Save" cancelText="Cancel" />
  * </CometChatChangeScope.Root>
  * ```
  */
-export const CometChatChangeScope = {
+const CometChatChangeScopeComponent: React.FC<CometChatChangeScopeProps> = ({
+  title,
+  description,
+  showIcon,
+  submitText,
+  cancelText,
+  ...rootProps
+}) => {
+  return (
+    <CometChatChangeScopeRoot {...rootProps}>
+      <CometChatChangeScopeHeader title={title} description={description} showIcon={showIcon} />
+      <CometChatChangeScopeList />
+      <CometChatChangeScopeErrorMessage />
+      <CometChatChangeScopeActions submitText={submitText} cancelText={cancelText} />
+    </CometChatChangeScopeRoot>
+  );
+};
+
+CometChatChangeScopeComponent.displayName = 'CometChatChangeScope';
+
+export const CometChatChangeScope = Object.assign(CometChatChangeScopeComponent, {
   Root: CometChatChangeScopeRoot,
   Header: CometChatChangeScopeHeader,
   ScopeList: CometChatChangeScopeList,
   ScopeOption: CometChatChangeScopeOption,
   Actions: CometChatChangeScopeActions,
   ErrorMessage: CometChatChangeScopeErrorMessage,
-} as const;
+});

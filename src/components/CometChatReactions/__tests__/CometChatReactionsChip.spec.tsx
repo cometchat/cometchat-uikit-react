@@ -33,15 +33,8 @@ function createMockContext(
     maxVisible: 10,
     visibleReactions: [],
     overflowCount: 0,
-    activeTab: 'all',
-    reactors: [],
-    reactorsFetchState: 'idle',
-    reactorsHasMore: true,
     onReactionClick: vi.fn(),
-    onReactorClick: vi.fn(),
-    setActiveTab: vi.fn(),
-    fetchReactors: vi.fn().mockResolvedValue(undefined),
-    fetchNextReactors: vi.fn().mockResolvedValue(undefined),
+    hoverDebounceTime: 500,
     ...overrides,
   };
 }
@@ -117,16 +110,16 @@ describe('CometChatReactionsChip', () => {
 
   // ─── Accessibility ────────────────────────────────────────────────
 
-  it('has an aria-label with emoji, count, and "person" for count=1', () => {
+  it('has an aria-label with emoji and count for count=1', () => {
     renderChip(buildReactionCount('❤️', 1));
     const button = screen.getByRole('button');
-    expect(button).toHaveAttribute('aria-label', '❤️ reacted by 1 person');
+    expect(button).toHaveAttribute('aria-label', '❤️ reacted by 1');
   });
 
-  it('has an aria-label with emoji, count, and "people" for count>1', () => {
+  it('has an aria-label with emoji and count for count>1', () => {
     renderChip(buildReactionCount('❤️', 5));
     const button = screen.getByRole('button');
-    expect(button).toHaveAttribute('aria-label', '❤️ reacted by 5 people');
+    expect(button).toHaveAttribute('aria-label', '❤️ reacted by 5');
   });
 
   // ─── Click handler ────────────────────────────────────────────────

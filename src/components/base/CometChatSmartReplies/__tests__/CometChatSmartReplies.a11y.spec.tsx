@@ -148,7 +148,7 @@ describe('CometChatSmartReplies accessibility', () => {
       </CometChatSmartReplies.Root>
     );
     await waitFor(() => {
-      const retryBtn = screen.getByLabelText('Retry loading smart replies');
+      const retryBtn = screen.getByLabelText('Looks like something went wrong');
       expect(retryBtn).toBeInTheDocument();
     });
   });

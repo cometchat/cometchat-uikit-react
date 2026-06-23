@@ -545,5 +545,16 @@
   "confirm_ownership_transfer": "您确定要转让所有权吗？此操作无法撤消，新所有者将获得完全控制权。",
   "transfer": "转让",
   "transferring": "转让中...",
-  "transfer_failed": "转让失败，请重试。"
+  "transfer_failed": "转让失败，请重试。",
+  "loading": "加载中...",
+  "retry": "重试",
+  "notifications_title": "通知",
+  "notifications_filter_all": "全部",
+  "notifications_empty_title": "这里还没有内容",
+  "notifications_empty_subtitle": "有新活动时将在此显示。",
+  "notifications_error_title": "糟糕！",
+  "notifications_error_subtitle": "好像出了点问题。请重试。",
+  "notifications_pagination_error": "无法加载更多",
+  "notifications_tap_to_retry": "点击重试",
+  "notifications_offline_banner": "您已离线。正在显示缓存的通知。"
 }

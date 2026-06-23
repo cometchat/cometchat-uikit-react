@@ -13,11 +13,12 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
 
 // --- Mock base components with onChange handlers that actually fire ---
 vi.mock('../../base/CometChatAvatar/CometChatAvatar', () => ({
-  CometChatAvatar: {
+  CometChatAvatar: Object.assign(() => <div />, {
     Root: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     Image: () => <span />,
     Initials: () => <span />,
-  },
+    StatusIndicator: () => <span />,
+  }),
 }));
 
 vi.mock('../../base/CometChatCheckbox/CometChatCheckbox', () => ({
@@ -47,9 +48,9 @@ vi.mock('../../base/CometChatRadioButton/CometChatRadioButton', () => ({
 }));
 
 vi.mock('../../base/CometChatContextMenu/CometChatContextMenu', () => ({
-  CometChatContextMenu: {
+  CometChatContextMenu: Object.assign(() => <div data-testid="context-menu" />, {
     Root: () => <div data-testid="context-menu" />,
-  },
+  }),
 }));
 
 function createMockGroup(
@@ -164,7 +165,7 @@ describe('CometChatGroupsItem — callback coverage', () => {
       </CometChatGroupsContext.Provider>
     );
 
-    expect(screen.getByText('1 message_header_member')).toBeInTheDocument();
+    expect(screen.getByText('1 Member')).toBeInTheDocument();
   });
 
   it('renders context menu when options are provided', () => {

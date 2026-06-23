@@ -174,7 +174,8 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
             );
             const trimmed = textContent.replace(/\n/g, '').trim();
             if (trimmed) {
-              listResult += `${indent}${String(index)}. ${textContent}\n`;
+              const marker = this.getOrderedListMarker(index, depth);
+              listResult += `${indent}${marker} ${textContent}\n`;
               index++;
             }
             if (nested) listResult += nested;
@@ -236,6 +237,52 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────────
+
+  /**
+   * Get the ordered list marker based on nesting depth.
+   * depth 0: 1. 2. 3. (decimal)
+   * depth 1: a. b. c. (lower-alpha)
+   * depth 2: i. ii. iii. (lower-roman)
+   * depth 3+: cycles back through the pattern
+   */
+  private getOrderedListMarker(index: number, depth: number): string {
+    const level = depth % 3;
+    switch (level) {
+      case 0:
+        return `${String(index)}.`;
+      case 1:
+        return `${this.numberToLowerAlpha(index)}.`;
+      case 2:
+        return `${this.numberToLowerRoman(index)}.`;
+      default:
+        return `${String(index)}.`;
+    }
+  }
+
+  private numberToLowerAlpha(n: number): string {
+    let result = '';
+    let num = n;
+    while (num > 0) {
+      num--;
+      result = String.fromCharCode(97 + (num % 26)) + result;
+      num = Math.floor(num / 26);
+    }
+    return result;
+  }
+
+  private numberToLowerRoman(n: number): string {
+    const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    const symbols = ['m', 'cm', 'd', 'cd', 'c', 'xc', 'l', 'xl', 'x', 'ix', 'v', 'iv', 'i'];
+    let result = '';
+    let num = n;
+    for (let i = 0; i < values.length; i++) {
+      while (num >= (values[i] ?? 0)) {
+        result += symbols[i] ?? '';
+        num -= values[i] ?? 0;
+      }
+    }
+    return result;
+  }
 
   /**
    * Wrap inline markers per-line to handle block elements nested inside inline tags.

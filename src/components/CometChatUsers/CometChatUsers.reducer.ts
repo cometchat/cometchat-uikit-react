@@ -91,7 +91,18 @@ export function usersReducer(
       if (idx === -1) return state;
 
       const updatedUsers = [...state.users];
-      updatedUsers[idx] = action.user;
+      const existingUser = updatedUsers[idx];
+      if (!existingUser) return state;
+      const incomingUser = action.user;
+
+      if (!incomingUser.getHasBlockedMe() && existingUser.getHasBlockedMe()) {
+        incomingUser.setHasBlockedMe(true);
+      }
+      if (!incomingUser.getBlockedByMe() && existingUser.getBlockedByMe()) {
+        incomingUser.setBlockedByMe(true);
+      }
+
+      updatedUsers[idx] = incomingUser;
       return {
         ...state,
         users: updatedUsers,
