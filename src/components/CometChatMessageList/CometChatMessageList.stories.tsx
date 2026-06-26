@@ -33,6 +33,7 @@ import type {
 import { CometChatPluginRegistry } from '../../plugins/CometChatPluginRegistry';
 import { defaultPlugins } from '../../plugins/core';
 import { CometChatPluginRegistryContext } from '../../context/PluginRegistryContext';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 
 // ============================================
 // Mock Helpers
@@ -172,6 +173,12 @@ const LOGGED_IN_USER = mockUser({
   avatar: 'https://assets.cometchat.io/sampleapp/v2/users/cometchat-uid-1.webp',
   status: 'online',
 });
+
+// The bubble components (MessageItem / BubbleRenderer / ReplyPreview) resolve the
+// logged-in user via CometChatUIKit.getLoggedInUser(). Storybook has no real login,
+// so seed the cached user here for correct alignment and "You" labels.
+(CometChatUIKit as unknown as { _loggedInUser: CometChat.User | null })._loggedInUser =
+  LOGGED_IN_USER;
 
 const OTHER_USER = mockUser({
   uid: 'user-jane-smith',

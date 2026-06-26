@@ -7,7 +7,6 @@ import './CometChatMessages.css';
 interface MessagesViewProps {
   user?: CometChat.User;
   group?: CometChat.Group;
-  loggedInUser: CometChat.User;
   onHeaderClicked?: () => void;
   onThreadRepliesClick?: (message: CometChat.BaseMessage) => void;
   onSearchClicked?: () => void;
@@ -20,7 +19,6 @@ export const CometChatMessages = (props: MessagesViewProps) => {
   const {
     user,
     group,
-    loggedInUser,
     onHeaderClicked = () => {},
     onThreadRepliesClick = () => {},
     onSearchClicked,
@@ -84,7 +82,6 @@ export const CometChatMessages = (props: MessagesViewProps) => {
         <CometChatMessageList
           user={user}
           group={group}
-          loggedInUser={loggedInUser}
           onThreadRepliesClick={(message: CometChat.BaseMessage) => onThreadRepliesClick(message)}
           goToMessageId={goToMessageId ? Number(goToMessageId) : undefined}
           startFromUnreadMessages={true}

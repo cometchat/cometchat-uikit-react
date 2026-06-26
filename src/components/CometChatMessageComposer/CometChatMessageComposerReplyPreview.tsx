@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import type { CometChatMessageComposerReplyPreviewProps } from './CometChatMessageComposer.types';
 import { useCometChatMessageComposerContext } from './CometChatMessageComposer.context';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { CometChatUrlFormatter } from '../../formatters/CometChatUrlFormatter';
 import { CometChatMarkdownFormatter } from '../../formatters/CometChatMarkdownFormatter';
@@ -142,11 +143,14 @@ export const CometChatMessageComposerReplyPreview: React.FC<
 
     return DOMPurify.sanitize(formatted);
   }, [messageToReply, getLocalizedString]);
-
   if (!isInReplyMode || !messageToReply) return null;
 
   const sender = messageToReply.getSender();
-  const senderName = sender.getName();
+  const loggedInUser = CometChatUIKit.getLoggedInUser();
+  const isSentByMe = sender.getUid() === loggedInUser?.getUid();
+  const senderName = isSentByMe
+    ? getLocalizedString('conversation_subtitle_you_message') || 'You'
+    : sender.getName();
 
   const rootClass = ['cometchat-message-composer__reply-preview', className ?? '']
     .filter(Boolean)

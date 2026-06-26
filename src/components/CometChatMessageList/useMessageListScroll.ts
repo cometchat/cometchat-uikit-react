@@ -173,7 +173,7 @@ export function useMessageListScroll(
 
     // Only relevant if the last message is from another user
     const senderId = lastMsg.getSender().getUid();
-    const loggedInUserId = refs.optionsRef.current.loggedInUser.getUid();
+    const loggedInUserId = refs.optionsRef.current.loggedInUser?.getUid();
     if (senderId === loggedInUserId) {
       return;
     }

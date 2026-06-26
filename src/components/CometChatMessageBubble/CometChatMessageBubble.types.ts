@@ -115,8 +115,6 @@ export interface CometChatMessageBubbleProps {
 export interface CometChatMessageBubbleRendererProps {
   /** The message to render. */
   message: CometChat.BaseMessage;
-  /** The logged-in user (for determining outgoing vs incoming). */
-  loggedInUser: CometChat.User;
   /** The group (if group conversation). */
   group?: CometChat.Group;
   /** List alignment mode. 0 = all left, 1 = standard (incoming left, outgoing right). */

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import type { CometChatMessageBubbleRendererProps } from './CometChatMessageBubble.types';
 import { CometChatMessageBubble } from './CometChatMessageBubble';
 import { CometChatMessageReplyPreview } from './CometChatMessageReplyPreview';
@@ -38,7 +39,6 @@ const MODERATED_MESSAGE_QUICK_OPTIONS_COUNT = 3;
  */
 export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRendererProps> = ({
   message,
-  loggedInUser,
   group,
   messageAlignment = 1, // 1 = standard (incoming left, outgoing right)
   index,
@@ -82,6 +82,8 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
   const { theme } = useTheme();
   const { getLocalizedString } = useLocale();
   const publish = usePublishEvent();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const loggedInUser = CometChatUIKit.getLoggedInUser()!;
 
   const alignment: CometChatMessageBubbleAlignment = useMemo(() => {
     const category = message.getCategory() as string;
@@ -289,13 +291,12 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
     return (
       <CometChatMessageReplyPreview
         quotedMessage={quotedMessage}
-        loggedInUser={loggedInUser}
         alignment={alignment === 'right' ? 'right' : 'left'}
         onClick={() => onReplyPreviewClick?.(quotedMessage)}
         isModerated={isBlocked}
       />
     );
-  }, [plugin, message, pluginContext, loggedInUser, alignment, onReplyPreviewClick, isBlocked]);
+  }, [plugin, message, pluginContext, alignment, onReplyPreviewClick, isBlocked]);
 
   const effectiveHideThreadView = Boolean(hideThreadView) || isBlocked || isAgentChat;
 

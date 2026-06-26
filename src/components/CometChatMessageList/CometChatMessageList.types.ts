@@ -257,8 +257,12 @@ export interface CometChatUseMessageListOptions {
   user?: CometChat.User;
   /** Group for group chat. Mutually exclusive with user. */
   group?: CometChat.Group;
-  /** The logged-in user. Required for alignment, receipt logic, and conversation filter. */
-  loggedInUser: CometChat.User;
+  /**
+   * The logged-in user. Optional — when omitted, falls back to
+   * `CometChatUIKit.getLoggedInUser()`. Used for alignment, receipt logic,
+   * and the conversation filter.
+   */
+  loggedInUser?: CometChat.User;
   /** Optional custom MessagesRequestBuilder. */
   messagesRequestBuilder?: CometChat.MessagesRequestBuilder;
   /**

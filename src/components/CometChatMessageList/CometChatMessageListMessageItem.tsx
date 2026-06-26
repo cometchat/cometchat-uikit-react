@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { CometChatMessageBubbleRenderer } from '../CometChatMessageBubble/CometChatMessageBubbleRenderer';
 import { CometChatMessageBubbleWrapper } from '../CometChatMessageBubble/CometChatMessageBubbleWrapper';
 import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
@@ -17,7 +18,6 @@ import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatD
  */
 export interface MessageItemProps {
   message: CometChat.BaseMessage;
-  loggedInUser: CometChat.User;
   group?: CometChat.Group;
   messageAlignment?: number;
   index: number;
@@ -56,7 +56,6 @@ export interface MessageItemProps {
 
 const MessageItem: React.FC<MessageItemProps> = ({
   message,
-  loggedInUser,
   group,
   messageAlignment,
   index,
@@ -92,13 +91,14 @@ const MessageItem: React.FC<MessageItemProps> = ({
   showMarkAsUnreadOption,
   messageSentAtDateTimeFormat,
 }) => {
+  const loggedInUser = CometChatUIKit.getLoggedInUser();
   const category = message.getCategory() as string;
   const alignment =
     category === 'action' || category === 'call'
       ? ('center' as const)
       : messageAlignment === 0
         ? ('left' as const)
-        : message.getSender().getUid() === loggedInUser.getUid()
+        : message.getSender().getUid() === loggedInUser?.getUid()
           ? ('right' as const)
           : ('left' as const);
 
@@ -106,7 +106,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
     <CometChatMessageBubbleWrapper alignment={alignment}>
       <CometChatMessageBubbleRenderer
         message={message}
-        loggedInUser={loggedInUser}
         {...(group !== undefined && { group })}
         {...(messageAlignment !== undefined && { messageAlignment })}
         index={index}

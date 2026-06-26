@@ -478,7 +478,6 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
             <CometChatMessages
               user={messageUser}
               group={messageGroup}
-              loggedInUser={loggedInUser}
               onBack={onBack}
               onHeaderClicked={onHeaderClicked}
               onSearchClicked={() => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import DOMPurify from 'dompurify';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { useLocale } from '../../context/locale/LocaleContext';
 import './CometChatMessageReplyPreview.css';
 import { CometChatMarkdownFormatter } from '../../formatters/CometChatMarkdownFormatter';
@@ -19,8 +20,6 @@ function sanitizePreviewHtml(html: string): string {
 export interface CometChatMessageReplyPreviewProps {
   /** The quoted message to preview. */
   quotedMessage: CometChat.BaseMessage;
-  /** The logged-in user (to show "You" for own messages). */
-  loggedInUser: CometChat.User;
   /** Bubble alignment (affects colors). */
   alignment: 'left' | 'right';
   /** Click handler — scrolls to the quoted message. */
@@ -241,7 +240,6 @@ function getSubtitleContent(
  */
 export const CometChatMessageReplyPreview: React.FC<CometChatMessageReplyPreviewProps> = ({
   quotedMessage,
-  loggedInUser,
   alignment,
   onClick,
   isModerated = false,
@@ -289,7 +287,8 @@ export const CometChatMessageReplyPreview: React.FC<CometChatMessageReplyPreview
 
   const isDeleted = Boolean(quotedMessage.getDeletedAt());
   const sender = quotedMessage.getSender();
-  const isSentByMe = sender.getUid() === loggedInUser.getUid();
+  const loggedInUser = CometChatUIKit.getLoggedInUser();
+  const isSentByMe = sender.getUid() === loggedInUser?.getUid();
   const titleText = isSentByMe
     ? getLocalizedString('conversation_subtitle_you_message') || 'You'
     : sender.getName() || '';

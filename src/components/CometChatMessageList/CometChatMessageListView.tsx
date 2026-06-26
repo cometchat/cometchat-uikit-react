@@ -183,7 +183,6 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
           ) : (
             <MessageItem
               message={msg}
-              loggedInUser={loggedInUser}
               {...(group !== undefined && { group })}
               {...{ messageAlignment }}
               index={i}

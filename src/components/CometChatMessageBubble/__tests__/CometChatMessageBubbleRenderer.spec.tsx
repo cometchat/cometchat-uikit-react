@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { CometChatMessageBubbleRenderer } from '../CometChatMessageBubbleRenderer';
+import { CometChatUIKit } from '../../../CometChatUIKit/CometChatUIKit';
 import { CometChatPluginRegistryContext } from '../../../context/PluginRegistryContext';
 import { CometChatPluginRegistry } from '../../../plugins/CometChatPluginRegistry';
 import { CometChatThemeContext } from '../../../context/ThemeContext';
@@ -40,6 +41,11 @@ const groupActionPlugin: CometChatMessagePlugin = {
 
 const registry = new CometChatPluginRegistry([textPlugin, groupActionPlugin, deletePlugin]);
 
+// The renderer resolves the logged-in user from the SDK rather than a prop.
+beforeEach(() => {
+  vi.spyOn(CometChatUIKit, 'getLoggedInUser').mockReturnValue(loggedInUser);
+});
+
 function renderWithProviders(ui: React.ReactElement) {
   const themeValue = { theme: 'light' as const, setTheme: vi.fn() };
   return render(
@@ -54,27 +60,13 @@ describe('CometChatMessageBubbleRenderer', () => {
     const msg = buildTextMessage({
       sender: buildUser({ uid: 'other' }),
     }) as unknown as CometChat.BaseMessage;
-    renderWithProviders(
-      <CometChatMessageBubbleRenderer
-        message={msg}
-        loggedInUser={loggedInUser}
-        index={0}
-        total={1}
-      />
-    );
+    renderWithProviders(<CometChatMessageBubbleRenderer message={msg} index={0} total={1} />);
     expect(screen.getByTestId('text-bubble')).toBeInTheDocument();
   });
 
   it('renders delete plugin for deleted message', () => {
     const msg = buildDeletedMessage() as unknown as CometChat.BaseMessage;
-    renderWithProviders(
-      <CometChatMessageBubbleRenderer
-        message={msg}
-        loggedInUser={loggedInUser}
-        index={0}
-        total={1}
-      />
-    );
+    renderWithProviders(<CometChatMessageBubbleRenderer message={msg} index={0} total={1} />);
     expect(screen.getByTestId('delete-bubble')).toBeInTheDocument();
   });
 
@@ -95,14 +87,7 @@ describe('CometChatMessageBubbleRenderer', () => {
       getMuid: () => 'muid-1',
       getParentMessageId: () => 0,
     } as unknown as CometChat.BaseMessage;
-    renderWithProviders(
-      <CometChatMessageBubbleRenderer
-        message={msg}
-        loggedInUser={loggedInUser}
-        index={0}
-        total={1}
-      />
-    );
+    renderWithProviders(<CometChatMessageBubbleRenderer message={msg} index={0} total={1} />);
     // Unknown message types render the bubble wrapper without specific content
     expect(screen.getByRole('article')).toBeInTheDocument();
   });
@@ -112,12 +97,7 @@ describe('CometChatMessageBubbleRenderer', () => {
       sender: buildUser({ uid: 'me' }),
     }) as unknown as CometChat.BaseMessage;
     const { container } = renderWithProviders(
-      <CometChatMessageBubbleRenderer
-        message={msg}
-        loggedInUser={loggedInUser}
-        index={0}
-        total={1}
-      />
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={1} />
     );
     // The wrapper div should have the outgoing class
     const wrapper = container.querySelector('[class*="outgoing"]');
@@ -129,12 +109,7 @@ describe('CometChatMessageBubbleRenderer', () => {
       sender: buildUser({ uid: 'other' }),
     }) as unknown as CometChat.BaseMessage;
     const { container } = renderWithProviders(
-      <CometChatMessageBubbleRenderer
-        message={msg}
-        loggedInUser={loggedInUser}
-        index={0}
-        total={1}
-      />
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={1} />
     );
     const wrapper = container.querySelector('[class*="incoming"]');
     expect(wrapper).toBeInTheDocument();
@@ -143,12 +118,7 @@ describe('CometChatMessageBubbleRenderer', () => {
   it('action message gets center alignment', () => {
     const msg = buildActionMessage() as unknown as CometChat.BaseMessage;
     const { container } = renderWithProviders(
-      <CometChatMessageBubbleRenderer
-        message={msg}
-        loggedInUser={loggedInUser}
-        index={0}
-        total={1}
-      />
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={1} />
     );
     const wrapper = container.querySelector('[class*="action"]');
     expect(wrapper).toBeInTheDocument();
@@ -159,13 +129,7 @@ describe('CometChatMessageBubbleRenderer', () => {
       sender: buildUser({ uid: 'me' }),
     }) as unknown as CometChat.BaseMessage;
     const { container } = renderWithProviders(
-      <CometChatMessageBubbleRenderer
-        message={msg}
-        loggedInUser={loggedInUser}
-        messageAlignment={0}
-        index={0}
-        total={1}
-      />
+      <CometChatMessageBubbleRenderer message={msg} messageAlignment={0} index={0} total={1} />
     );
     // In left-aligned mode, even outgoing messages should be left
     const wrapper = container.querySelector('[class*="incoming"]');
@@ -176,14 +140,7 @@ describe('CometChatMessageBubbleRenderer', () => {
     const msg = buildTextMessage({
       sender: buildUser({ uid: 'other' }),
     }) as unknown as CometChat.BaseMessage;
-    renderWithProviders(
-      <CometChatMessageBubbleRenderer
-        message={msg}
-        loggedInUser={loggedInUser}
-        index={2}
-        total={10}
-      />
-    );
+    renderWithProviders(<CometChatMessageBubbleRenderer message={msg} index={2} total={10} />);
     const article = screen.getByRole('article');
     expect(article).toHaveAttribute('aria-posinset', '3');
     expect(article).toHaveAttribute('aria-setsize', '10');

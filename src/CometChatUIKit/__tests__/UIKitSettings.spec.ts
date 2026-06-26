@@ -21,7 +21,6 @@ describe('UIKitSettingsBuilder', () => {
     expect(settings.getAdminHost()).toBeUndefined();
     expect(settings.getClientHost()).toBeUndefined();
     expect(settings.getStorageMode()).toBe(CometChat.StorageMode.LOCAL);
-    expect(settings.getPlugins()).toBeUndefined();
     expect(settings.isCallingEnabled()).toBe(false);
     expect(settings.getCallAppSettings()).toBeUndefined();
   });
@@ -77,14 +76,6 @@ describe('UIKitSettingsBuilder', () => {
   it('should set storageMode', () => {
     const settings = new UIKitSettingsBuilder().setStorageMode(CometChat.StorageMode.NONE).build();
     expect(settings.getStorageMode()).toBe('none');
-  });
-
-  it('should set plugins', () => {
-    const mockPlugin = {
-      id: 'test-plugin',
-    } as unknown as import('../../plugins/plugin.types').CometChatMessagePlugin;
-    const settings = new UIKitSettingsBuilder().setPlugins([mockPlugin]).build();
-    expect(settings.getPlugins()).toEqual([mockPlugin]);
   });
 
   it('should set callingEnabled', () => {

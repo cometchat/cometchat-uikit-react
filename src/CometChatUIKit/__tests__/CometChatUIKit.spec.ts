@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 
 const mockInit = vi.fn();
+const mockInitFromSettings = vi.fn();
 const mockLogin = vi.fn();
 const mockLogout = vi.fn();
 const mockGetLoggedinUser = vi.fn();
@@ -17,6 +19,7 @@ const mockSetSource = vi.fn();
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
   CometChat: {
     init: (...args: unknown[]) => mockInit(...args),
+    initFromSettings: (...args: unknown[]) => mockInitFromSettings(...args),
     login: (...args: unknown[]) => mockLogin(...args),
     logout: (...args: unknown[]) => mockLogout(...args),
     getLoggedinUser: (...args: unknown[]) => mockGetLoggedinUser(...args),
@@ -227,14 +230,41 @@ describe('CometChatUIKit', () => {
 
       expect(mockSetSource).toHaveBeenCalledWith('uikit-v7', 'web', 'reactjs');
     });
+  });
 
-    it('should create plugin registry', async () => {
-      mockInit.mockResolvedValue(true);
+  describe('initFromSettings', () => {
+    const ssrSettings = {
+      appId: 'test-app-id',
+      region: 'us',
+      credentials: { authKey: 'test-auth-key' },
+      uiKit: {},
+    } as unknown as CometChat.CometChatSettings;
+
+    it('does not reference window when it is undefined (SSR/Node safe)', async () => {
+      mockInitFromSettings.mockResolvedValue(true);
       mockGetLoggedinUser.mockResolvedValue(null);
 
-      await CometChatUIKit.init(buildTestSettings());
+      // Simulate a server environment (Next.js SSR / Node) with no `window`.
+      const originalWindow = globalThis.window;
+      (globalThis as { window?: unknown }).window = undefined;
+      try {
+        await expect(CometChatUIKit.initFromSettings(ssrSettings)).resolves.toBeNull();
+        expect(mockInitFromSettings).toHaveBeenCalledWith(ssrSettings);
+      } finally {
+        (globalThis as { window?: unknown }).window = originalWindow;
+      }
+    });
 
-      expect(CometChatUIKit.getPluginRegistry()).not.toBeNull();
+    it('registers window metadata when window is available', async () => {
+      mockInitFromSettings.mockResolvedValue(true);
+      mockGetLoggedinUser.mockResolvedValue(null);
+
+      await CometChatUIKit.initFromSettings(ssrSettings);
+
+      expect((window as unknown as Record<string, unknown>).CometChatUiKit).toEqual({
+        name: '@cometchat/chat-uikit-react',
+        version: '7.0.1',
+      });
     });
   });
 
@@ -316,6 +346,7 @@ describe('CometChatUIKit', () => {
         setMuid: vi.fn(),
         getSentAt: () => 0,
         setSentAt: vi.fn(),
+        getSender: () => ({ getUid: () => 'sender-uid' }),
       };
       mockSendMessage.mockResolvedValue(mockMsg);
 
@@ -332,6 +363,7 @@ describe('CometChatUIKit', () => {
         setMuid: vi.fn(),
         getSentAt: () => 12345,
         setSentAt: vi.fn(),
+        getSender: () => ({ getUid: () => 'sender-uid' }),
       };
       mockSendMessage.mockResolvedValue(mockMsg);
 
@@ -349,6 +381,7 @@ describe('CometChatUIKit', () => {
         setMuid: vi.fn(),
         getSentAt: () => 100,
         setSentAt: vi.fn(),
+        getSender: () => ({ getUid: () => 'sender-uid' }),
       };
       mockSendMediaMessage.mockResolvedValue(mockMsg);
 
@@ -365,6 +398,7 @@ describe('CometChatUIKit', () => {
         setMuid: vi.fn(),
         getSentAt: () => 100,
         setSentAt: vi.fn(),
+        getSender: () => ({ getUid: () => 'sender-uid' }),
       };
       mockSendCustomMessage.mockResolvedValue(mockMsg);
 

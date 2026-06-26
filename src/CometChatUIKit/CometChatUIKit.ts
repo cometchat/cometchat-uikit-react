@@ -131,7 +131,7 @@ export class CometChatUIKit {
     if (typeof window !== 'undefined') {
       (window as unknown as Record<string, unknown>).CometChatUiKit = {
         name: '@cometchat/chat-uikit-react',
-        version: '7.0.0',
+        version: '7.0.1',
       };
     }
 
@@ -192,11 +192,13 @@ export class CometChatUIKit {
     }
 
     return new Promise((resolve, reject) => {
-      // Analytics: register UIKit metadata on the window for tracking
-      window.CometChatUiKit = {
-        name: '@cometchat/chat-uikit-react',
-        version: '7.0.0',
-      };
+      // Analytics: register UIKit metadata on the window for tracking.
+      if (typeof window !== 'undefined') {
+        (window as unknown as Record<string, unknown>).CometChatUiKit = {
+          name: '@cometchat/chat-uikit-react',
+          version: '7.0.1',
+        };
+      }
 
       // CRITICAL: Call initFromSettings — NOT init().
       // Only initFromSettings writes integrationSource = "ai-agent".

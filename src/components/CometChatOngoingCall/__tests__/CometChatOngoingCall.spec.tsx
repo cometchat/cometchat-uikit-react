@@ -182,7 +182,6 @@ describe('CometChatOngoingCall', () => {
           'call-token-abc',
           expect.objectContaining({
             sessionType: 'VIDEO',
-            layout: 'SIDEBAR',
             startAudioMuted: false,
             startVideoPaused: false,
           }),

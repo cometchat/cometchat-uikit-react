@@ -101,6 +101,7 @@ import {
 } from '../CometChatMessageList.types';
 import { LocaleProvider } from '../../../context/locale/LocaleProvider';
 import { buildUser, buildGroup, buildTextMessage } from '../../../testing/mock-builders';
+import { CometChatUIKit } from '../../../CometChatUIKit/CometChatUIKit';
 
 // ---------------------------------------------------------------------------
 // IntersectionObserver mock
@@ -304,6 +305,10 @@ function renderView(
 beforeEach(() => {
   vi.clearAllMocks();
   observerInstances.length = 0;
+
+  // MessageItem resolves the logged-in user from the SDK (uid 'me' matches the
+  // mock context's loggedInUser), so alignment tests still compute correctly.
+  vi.spyOn(CometChatUIKit, 'getLoggedInUser').mockReturnValue(buildUser({ uid: 'me' }) as never);
 
   // @ts-expect-error override global for jsdom
   globalThis.IntersectionObserver = FakeIntersectionObserver;

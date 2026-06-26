@@ -1,5 +1,6 @@
 import { useMemo, useReducer, useRef } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import type { CometChatMessageListManager } from './CometChatMessageListManager';
 import { messageListReducer, initialMessageListState } from './CometChatMessageList.reducer';
 import type {
@@ -40,7 +41,7 @@ export function useCometChatMessageList(
   const {
     user,
     group,
-    loggedInUser,
+    loggedInUser: loggedInUserProp,
     messagesRequestBuilder,
     parentMessageId,
     startFromUnreadMessages = false,
@@ -58,6 +59,9 @@ export function useCometChatMessageList(
     onConversationMarkedAsRead,
     onConversationUpdated,
   } = options;
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const loggedInUser = (loggedInUserProp ?? CometChatUIKit.getLoggedInUser())!;
 
   // --- Default types/categories from the active plugin registry ---
   const defaultMessageTypes = useDefaultMessageTypes();
@@ -81,9 +85,11 @@ export function useCometChatMessageList(
   const stateRef = useRef<CometChatMessageListState>(state);
   stateRef.current = state;
 
-  // Keep callback refs stable so the event handler doesn't re-subscribe
+  // Keep callback refs stable so the event handler doesn't re-subscribe.
+  // Store the resolved loggedInUser (prop or SDK fallback) so consumers reading
+  // through the ref get the same value as the rest of the hook.
   const optionsRef = useRef(options);
-  optionsRef.current = options;
+  optionsRef.current = { ...options, loggedInUser };
 
   /**
    * Core initialization logic. Extracted so it can be called from both
