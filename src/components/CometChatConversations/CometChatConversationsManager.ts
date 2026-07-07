@@ -142,6 +142,7 @@ export class CometChatConversationsManager {
       onTextMessageReceived?: (message: CometChat.TextMessage) => void;
       onMediaMessageReceived?: (message: CometChat.MediaMessage) => void;
       onCustomMessageReceived?: (message: CometChat.CustomMessage) => void;
+      onCardMessageReceived?: (message: CometChat.BaseMessage) => void;
       onMessageEdited?: (message: CometChat.BaseMessage) => void;
       onMessageDeleted?: (message: CometChat.BaseMessage) => void;
       onMessagesDelivered?: (receipt: CometChat.MessageReceipt) => void;
@@ -158,6 +159,7 @@ export class CometChatConversationsManager {
         onTextMessageReceived: callbacks.onTextMessageReceived,
         onMediaMessageReceived: callbacks.onMediaMessageReceived,
         onCustomMessageReceived: callbacks.onCustomMessageReceived,
+        onCardMessageReceived: callbacks.onCardMessageReceived,
         onMessageEdited: callbacks.onMessageEdited,
         onMessageDeleted: callbacks.onMessageDeleted,
         onMessagesDelivered: callbacks.onMessagesDelivered,

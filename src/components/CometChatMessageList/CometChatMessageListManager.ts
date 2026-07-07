@@ -42,7 +42,9 @@ export class CometChatMessageListManager {
     }
 
     // Default builder: construct from individual options.
-    const builder = new CometChat.MessagesRequestBuilder().setLimit(opts.limit ?? 30);
+    const builder = new CometChat.MessagesRequestBuilder()
+      .setLimit(opts.limit ?? 30)
+      .hideDeletedMessages(true);
 
     if (opts.user) {
       builder.setUID(opts.user.getUid());
@@ -53,6 +55,7 @@ export class CometChatMessageListManager {
     if (opts.parentMessageId) {
       builder.setParentMessageId(opts.parentMessageId);
       builder.hideReplies(false);
+      builder.withParent(true);
     } else {
       builder.hideReplies(true);
     }

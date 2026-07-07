@@ -7,6 +7,7 @@ import { CometChatAudioPlugin } from './audio/CometChatAudioPlugin';
 import { CometChatGroupActionPlugin } from './group-action/CometChatGroupActionPlugin';
 import { CometChatCallActionPlugin } from './call-action/CometChatCallActionPlugin';
 import { CometChatMeetingPlugin } from './call-action/CometChatMeetingPlugin';
+import { CometChatCardBubblePlugin } from './card/CometChatCardBubblePlugin';
 import { CometChatDeletePlugin } from './delete/CometChatDeletePlugin';
 import { CometChatPollsPlugin } from '../polls/CometChatPollsPlugin';
 import { CometChatStickersPlugin } from '../stickers/CometChatStickersPlugin';
@@ -35,6 +36,8 @@ export const defaultPlugins: CometChatMessagePlugin[] = [
   CometChatGroupActionPlugin,
   CometChatCallActionPlugin,
   CometChatMeetingPlugin,
+  // Developer card messages (category-only wildcard plugin)
+  CometChatCardBubblePlugin,
   CometChatAIPlugin,
   // Extension plugins
   CometChatPollsPlugin,

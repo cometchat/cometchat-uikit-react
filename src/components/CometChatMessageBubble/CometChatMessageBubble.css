@@ -205,9 +205,55 @@
   background: var(--cometchat-primary-color, #6852d6);
 }
 
+/* Incoming card */
+.cometchat-message-bubble-incoming .cometchat-message-bubble__card-message {
+  background: var(--cometchat-neutral-color-300, #e8e8e8);
+}
+
+/* Outgoing card */
+.cometchat-message-bubble-outgoing .cometchat-message-bubble__card-message {
+  background: var(--cometchat-primary-color, #6852d6);
+}
+
 /* Group action */
 .cometchat-message-bubble__group-message {
   background: transparent;
+}
+
+/* AI agent reply (agentic/assistant) — match the V6 incoming bubble background
+   so the bubble stays distinct from the conversation background, and size to
+   content (V6 behaviour) instead of stretching to the full 65% cap. The parent
+   .cometchat-message-bubble still caps it at max-width 65%.
+   The 1:1 AI Assistant chat keeps its full-width look via its own
+   higher-specificity `.cometchat-ai-assistant-chat …` rules. */
+.cometchat-message-bubble-incoming .cometchat-message-bubble__assistant-message {
+  background: var(--cometchat-neutral-color-300, #e8e8e8);
+  width: fit-content;
+  max-width: 100%;
+  align-items: flex-start;
+}
+
+/* The 1:1 AI Assistant chat keeps its full-width, transparent (ChatGPT-style)
+   bubble — only the group/agent-as-member case gets the background above. */
+.cometchat-ai-assistant-chat .cometchat-message-bubble__assistant-message {
+  background: transparent;
+}
+
+/* Group agent reply has a background — pad its content view like a text bubble. */
+.cometchat-message-bubble__assistant-message .cometchat-message-bubble__body-content-view {
+  padding: var(--cometchat-text-bubble-padding, var(--cometchat-padding-2, 8px));
+}
+
+/* 1:1 AI Assistant chat is transparent — keep its content view flush. */
+.cometchat-ai-assistant-chat
+  .cometchat-message-bubble__assistant-message
+  .cometchat-message-bubble__body-content-view {
+  padding: 0;
+}
+
+/* Reset the parent's min-width: fit-content so a long agent reply wraps within the max-width 65% cap instead of pushing the hover options off-screen. */
+.cometchat-message-bubble-incoming:has(.cometchat-message-bubble__assistant-message) {
+  min-width: 0;
 }
 
 /* Action message centering */

@@ -1,0 +1,27 @@
+/**
+ * Card bubble width constraint.
+ *
+ * The message bubble container uses `min-width: fit-content`, which overrides its
+ * `max-width: 65%`. The card renderer (CometChatCardView) has a large intrinsic
+ * width (fixed layout + natural-size images), so without a cap here the bubble
+ * grows to the full message-list width. Give the card a definite, chat-appropriate
+ * width so the bubble sizes correctly; `max-width: 100%` keeps it responsive on
+ * narrow screens and inside the AI assistant bubble.
+ *
+ * This class is shared by the developer-card bubble, the nested agent-card blocks,
+ * and the streamed agent card.
+ */
+.cometchat-card-bubble {
+  max-width: 100%;
+}
+
+/* The card renderer should fill the constrained wrapper. */
+.cometchat-card-bubble > * {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Plain-text fallback ("Card Message") shouldn't be forced to the card width. */
+.cometchat-card-bubble__fallback {
+  width: auto;
+}

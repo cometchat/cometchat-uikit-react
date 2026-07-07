@@ -263,7 +263,7 @@ describe('CometChatUIKit', () => {
 
       expect((window as unknown as Record<string, unknown>).CometChatUiKit).toEqual({
         name: '@cometchat/chat-uikit-react',
-        version: '7.0.1',
+        version: '7.0.3',
       });
     });
   });

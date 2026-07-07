@@ -37,13 +37,22 @@ function getBubbleTypeClass(type: string, category: string): string {
     audio_message: 'cometchat-message-bubble__audio-message',
     file_message: 'cometchat-message-bubble__file-message',
     groupMember_action: 'cometchat-message-bubble__group-message',
+    // AI agent reply (category 'agentic', type 'assistant') — gets its own
+    // background class so it doesn't blend into the conversation background.
+    assistant_agentic: 'cometchat-message-bubble__assistant-message',
     // Extension plugins — custom message types that need bubble backgrounds
     extension_sticker_custom: 'cometchat-message-bubble__image-message',
     extension_poll_custom: 'cometchat-message-bubble__text-message',
     extension_document_custom: 'cometchat-message-bubble__text-message',
     extension_whiteboard_custom: 'cometchat-message-bubble__text-message',
   };
-  return map[key] ?? '';
+  if (map[key]) return map[key];
+  // Developer cards have an arbitrary type under category "card" — resolve on the
+  // category alone so the card gets the standard per-direction bubble background.
+  if (category === (CometChat.MessageCategory.CARD as string)) {
+    return 'cometchat-message-bubble__card-message';
+  }
+  return '';
 }
 
 /**

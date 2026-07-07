@@ -77,6 +77,12 @@ export const CometChatEventsProvider: React.FC<CometChatEventsProviderProps> = (
         onInteractiveMessageReceived: (msg: CometChat.InteractiveMessage) => {
           emit({ type: 'message/interactive-received', message: msg });
         },
+        onCardMessageReceived: (msg: CometChat.BaseMessage) => {
+          emit({ type: 'message/card-received', message: msg });
+        },
+        onAIAssistantMessageReceived: (msg: CometChat.BaseMessage) => {
+          emit({ type: 'message/ai-assistant-received', message: msg });
+        },
         onMessageEdited: (msg: CometChat.BaseMessage) => {
           emit({ type: 'message/edited', message: msg });
         },

@@ -272,3 +272,78 @@
     animation: none;
   }
 }
+
+/* Streamed card loader — card-shaped skeleton shown after card_start, before the card arrives. */
+.cometchat-stream-message-bubble__card-loader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: var(--cometchat-radius-3, 12px);
+  background: var(--cometchat-background-color-02, #fafafa);
+}
+
+/* Shimmer applied to each skeleton block */
+.cometchat-stream-message-bubble__card-loader-image,
+.cometchat-stream-message-bubble__card-loader-line,
+.cometchat-stream-message-bubble__card-loader-button {
+  border-radius: var(--cometchat-radius-2, 8px);
+  background: linear-gradient(
+    90deg,
+    var(--cometchat-background-color-03, #f0f0f0) 25%,
+    var(--cometchat-neutral-color-300, #e4e4e4) 37%,
+    var(--cometchat-background-color-03, #f0f0f0) 63%
+  );
+  background-size: 400% 100%;
+  animation: cometchat-stream-card-shimmer 1.4s ease infinite;
+}
+
+/* Image placeholder block */
+.cometchat-stream-message-bubble__card-loader-image {
+  width: 100%;
+  height: 140px;
+  border-radius: var(--cometchat-radius-3, 12px);
+}
+
+.cometchat-stream-message-bubble__card-loader-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Text line placeholders */
+.cometchat-stream-message-bubble__card-loader-line {
+  height: 12px;
+}
+
+.cometchat-stream-message-bubble__card-loader-line--title {
+  width: 60%;
+  height: 16px;
+}
+
+.cometchat-stream-message-bubble__card-loader-line--text {
+  width: 90%;
+}
+
+/* Button placeholders */
+.cometchat-stream-message-bubble__card-loader-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cometchat-stream-message-bubble__card-loader-button {
+  flex: 1;
+  height: 32px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+}
+
+@keyframes cometchat-stream-card-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}

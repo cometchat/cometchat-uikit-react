@@ -16,6 +16,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { CometChatCardView, type CometChatCardActionEvent } from '@cometchat/cards-react';
 import type { CometChatStreamMessageBubbleProps } from './ai.types';
 import {
   getStreamState,
@@ -25,6 +26,8 @@ import {
 import { CometChatMarkdownFormatter } from '../../formatters/CometChatMarkdownFormatter';
 import { sanitizeAIHtml } from './CometChatAISanitize';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
+import { useTheme } from '../../context/ThemeContext';
+import { usePublishEvent } from '../../hooks/usePublishEvent';
 import './CometChatStreamMessageBubble.css';
 import { useLocale } from '../../context/locale/LocaleContext';
 import copyIcon from '../../assets/Copy.svg';
@@ -40,8 +43,11 @@ export const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubble
   runId,
   alignment = 'left',
   className,
+  message,
 }) => {
   const { getLocalizedString } = useLocale();
+  const { theme } = useTheme();
+  const publish = usePublishEvent();
   const NO_INTERNET_TEXT = getLocalizedString('ai_assistant_chat_no_internet');
   // Subscribe to stream state via useSyncExternalStore for tear-free reads
   const subscribe = useCallback(
@@ -99,6 +105,18 @@ export const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubble
   const activeToolCall = snapshotText === null && isOwner ? streamState.activeToolCall : null;
   const toolExecutionText = snapshotText === null && isOwner ? streamState.toolExecutionText : '';
   const hasError = snapshotText === null && isOwner && streamState.hasError;
+  // Streamed card lifecycle entries — only while this bubble owns the live run.
+  const streamCards = snapshotText === null && isOwner ? streamState.streamCards : [];
+
+  // Forward a streamed card action to the app via the event bus.
+  const handleCardAction = useCallback(
+    (event: CometChatCardActionEvent) => {
+      if (!message) return;
+      publish({ type: 'ui:card/action', message, action: event.action });
+    },
+    [message, publish]
+  );
+  const isStreamComplete = snapshotText !== null || (isOwner && streamState.isComplete);
 
   // Detect offline errors
   useEffect(() => {
@@ -174,8 +192,8 @@ export const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubble
             />
           )}
 
-          {/* Copy button — shown when content is available */}
-          {hasContent && (
+          {/* Copy button — shown only once the response has finished streaming */}
+          {hasContent && isStreamComplete && (
             <button
               className={'cometchat-stream-message-bubble__copy'}
               title={copied ? getLocalizedString('ai_copied') : getLocalizedString('ai_copy')}
@@ -197,6 +215,46 @@ export const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubble
                 style={{ opacity: copied ? 1 : 0.6 }}
               />
             </button>
+          )}
+
+          {/* Streamed cards — loader while generating, rendered card once it arrives */}
+          {streamCards.map((entry, index) =>
+            entry.card != null ? (
+              <div key={`card-${entry.cardId || String(index)}`} className="cometchat-card-bubble">
+                <CometChatCardView
+                  cardJson={JSON.stringify(entry.card)}
+                  themeMode={theme}
+                  onAction={handleCardAction}
+                />
+              </div>
+            ) : (
+              <div
+                key={`card-loader-${entry.cardId || String(index)}`}
+                className={'cometchat-card-bubble cometchat-stream-message-bubble__card-loader'}
+                role="status"
+                aria-busy="true"
+                aria-label={entry.executionText || 'Loading card'}
+              >
+                {/* Card-shaped skeleton: image block, title/text lines, action buttons */}
+                <div className={'cometchat-stream-message-bubble__card-loader-image'} />
+                <div className={'cometchat-stream-message-bubble__card-loader-body'}>
+                  <div
+                    className={
+                      'cometchat-stream-message-bubble__card-loader-line cometchat-stream-message-bubble__card-loader-line--title'
+                    }
+                  />
+                  <div
+                    className={
+                      'cometchat-stream-message-bubble__card-loader-line cometchat-stream-message-bubble__card-loader-line--text'
+                    }
+                  />
+                  <div className={'cometchat-stream-message-bubble__card-loader-actions'}>
+                    <div className={'cometchat-stream-message-bubble__card-loader-button'} />
+                    <div className={'cometchat-stream-message-bubble__card-loader-button'} />
+                  </div>
+                </div>
+              </div>
+            )
           )}
         </>
       )}

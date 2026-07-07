@@ -24,6 +24,14 @@ const deletePlugin: CometChatMessagePlugin = {
   renderBubble: () => null,
 };
 
+// Developer card plugin: empty messageTypes acts as a category-only wildcard.
+const cardPlugin: CometChatMessagePlugin = {
+  id: 'card',
+  messageTypes: [],
+  messageCategories: ['card'],
+  renderBubble: () => null,
+};
+
 // Mock message factory
 function mockMessage(type: string, category: string, deletedAt: number | null = null) {
   return {
@@ -56,6 +64,21 @@ describe('CometChatPluginRegistry', () => {
     const registry = new CometChatPluginRegistry([textPlugin]);
     const found = registry.findPlugin(mockMessage('unknown', 'unknown'));
     expect(found).toBeUndefined();
+  });
+
+  it('findPlugin matches a wildcard plugin (empty messageTypes) by category for any type', () => {
+    const registry = new CometChatPluginRegistry([textPlugin, cardPlugin, deletePlugin]);
+    // Developer card type is arbitrary — both resolve to the card plugin by category.
+    expect(registry.findPlugin(mockMessage('buy_button', 'card'))?.id).toBe('card');
+    expect(registry.findPlugin(mockMessage('product', 'card'))?.id).toBe('card');
+  });
+
+  it('wildcard plugin does not match other categories', () => {
+    const registry = new CometChatPluginRegistry([textPlugin, cardPlugin]);
+    // category 'message' must still go to the text plugin, never the card wildcard.
+    expect(registry.findPlugin(mockMessage('text', 'message'))?.id).toBe('text');
+    // a type that no strict plugin handles in a non-card category yields no match.
+    expect(registry.findPlugin(mockMessage('buy_button', 'message'))).toBeUndefined();
   });
 
   it('register returns a new registry instance', () => {

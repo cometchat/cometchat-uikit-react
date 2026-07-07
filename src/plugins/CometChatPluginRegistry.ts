@@ -26,8 +26,12 @@ export class CometChatPluginRegistry {
    *
    * Resolution order:
    * 1. If the message is deleted (getDeletedAt() !== null), return the DeletePlugin.
-   * 2. Otherwise, find the first plugin whose messageTypes includes the message's type
-   *    AND whose messageCategories includes the message's category.
+   * 2. Otherwise, find the first plugin whose messageCategories includes the message's
+   *    category AND whose messageTypes includes the message's type — OR whose messageTypes
+   *    is empty, which acts as a category-only render wildcard. Note: an empty messageTypes
+   *    contributes nothing to the request builder (getAllMessageTypes), so a plugin that
+   *    needs its messages fetched must declare its type explicitly. Strict type+category
+   *    matching is unchanged for every plugin that declares a non-empty messageTypes.
    * 3. If no plugin matches, return undefined.
    */
   findPlugin(message: CometChat.BaseMessage): CometChatMessagePlugin | undefined {
@@ -37,7 +41,9 @@ export class CometChatPluginRegistry {
     const type = message.getType();
     const category = message.getCategory();
     return this.plugins.find(
-      p => p.messageTypes.includes(type) && p.messageCategories.includes(category)
+      p =>
+        p.messageCategories.includes(category) &&
+        (p.messageTypes.length === 0 || p.messageTypes.includes(type))
     );
   }
 

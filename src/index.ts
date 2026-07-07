@@ -9,7 +9,7 @@ import './styles/index.css';
 // CometChatUIKit (main entry point)
 export { CometChatUIKit, UIKitSettingsBuilder, UIKitSettings } from './CometChatUIKit';
 export type { CometChatPresenceSubscription } from './CometChatUIKit';
-export const VERSION = '7.0.1';
+export const VERSION = '7.0.3';
 
 // Root Provider
 export { CometChatProvider } from './context/CometChatProvider';
@@ -637,6 +637,9 @@ export { CometChatAudioPlugin } from './plugins/core/audio/CometChatAudioPlugin'
 export { CometChatGroupActionPlugin } from './plugins/core/group-action/CometChatGroupActionPlugin';
 export { CometChatCallActionPlugin } from './plugins/core/call-action/CometChatCallActionPlugin';
 export { CometChatMeetingPlugin } from './plugins/core/call-action/CometChatMeetingPlugin';
+export { CometChatCardBubblePlugin } from './plugins/core/card/CometChatCardBubblePlugin';
+export { CometChatCardBubble } from './plugins/core/card/CometChatCardBubble';
+export type { CometChatCardBubbleProps } from './plugins/core/card/CometChatCardBubble';
 export { CometChatDeletePlugin } from './plugins/core/delete/CometChatDeletePlugin';
 
 // Notification Feed

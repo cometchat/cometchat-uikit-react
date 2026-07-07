@@ -15,7 +15,7 @@ export interface UseMessageListScrollOptions {
   group: CometChat.Group | undefined;
   messagesRequestBuilder: CometChat.MessagesRequestBuilder | undefined;
   parentMessageId: number | undefined;
-  messageTypes: string[];
+  messageTypes: string[] | undefined;
   messageCategories: string[];
   onError: ((error: CometChat.CometChatException) => void) | null | undefined;
   onConversationMarkedAsRead: ((conversation: CometChat.Conversation) => void) | undefined;

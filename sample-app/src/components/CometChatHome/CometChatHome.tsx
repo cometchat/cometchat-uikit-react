@@ -99,6 +99,84 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
     if (event.type === 'ui:message/sent') {
       setIsFreshChat(false);
     }
+    // Card action dispatcher (§2.9.8). One hookup covers both developer cards and
+    // nested agent cards — the UI Kit forwards the raw action; the app performs the behavior.
+    if (event.type === 'ui:card/action') {
+      const action = event.action;
+      switch (action.type) {
+        case 'openUrl':
+          // Open the URL (webview hint → same tab, else new tab).
+          window.open(
+            action.url,
+            action.openIn === 'webview' ? '_self' : '_blank',
+            'noopener,noreferrer'
+          );
+          break;
+        case 'copyToClipboard':
+          // Copy the supplied value to the clipboard.
+          void navigator.clipboard?.writeText(action.value);
+          break;
+        case 'downloadFile': {
+          // Trigger a file download via a transient anchor.
+          const anchor = document.createElement('a');
+          anchor.href = action.url;
+          if (action.filename) anchor.download = action.filename;
+          anchor.rel = 'noopener noreferrer';
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          break;
+        }
+        case 'sendMessage': {
+          // Send a text message to the given user/group (defaults to the open chat).
+          const receiver = action.receiverUid ?? action.receiverGuid;
+          const receiverType = action.receiverGuid ? 'group' : 'user';
+          if (receiver) {
+            const textMessage = new CometChat.TextMessage(receiver, action.text, receiverType);
+            void CometChat.sendMessage(textMessage);
+          }
+          break;
+        }
+        case 'chatWithUser':
+          // Open a 1:1 chat with the user.
+          void CometChat.getUser(action.uid).then(user => {
+            publish({ type: 'ui:open-chat', user });
+          });
+          break;
+        case 'chatWithGroup':
+          // Open the group chat.
+          void CometChat.getGroup(action.guid).then(group => {
+            publish({ type: 'ui:open-chat', group });
+          });
+          break;
+        case 'initiateCall': {
+          // Start an audio/video call with the user or group.
+          const receiver = action.uid ?? action.guid;
+          const receiverType = action.guid ? 'group' : 'user';
+          if (receiver) {
+            const call = new CometChat.Call(receiver, action.callType, receiverType);
+            void CometChat.initiateCall(call).then(initiatedCall => {
+              publish({ type: 'ui:call/outgoing', call: initiatedCall as CometChat.Call });
+            });
+          }
+          break;
+        }
+        case 'apiCall':
+          // Fire the configured HTTP request.
+          void fetch(action.url, {
+            method: action.method ?? 'GET',
+            headers: action.headers,
+            body: action.body ? JSON.stringify(action.body) : undefined,
+          });
+          break;
+        case 'customCallback':
+          // App-specific hook — handle by callbackId.
+          console.info('[sample-app] card customCallback', action.callbackId, action.payload);
+          break;
+        default:
+          break;
+      }
+    }
     if (
       event.type === 'message/text-received' ||
       event.type === 'message/media-received' ||

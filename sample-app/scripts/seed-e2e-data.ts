@@ -18,6 +18,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 config({ path: resolve(__dirname, '../.env.e2e') });
 
+// Provisions the agentic test groups (ENG-36495). Safe regardless of import
+// ordering — the helper reads env lazily at call time, not at module load.
+// No-op unless GROUP_AGENT_1_UID / GROUP_AGENT_2_UID are set.
+import { ensureAgenticGroups } from '../e2e/helpers/seed';
+
 const APP_ID = process.env.COMETCHAT_APP_ID ?? '';
 const REGION = process.env.COMETCHAT_REGION ?? '';
 const AUTH_KEY = process.env.COMETCHAT_AUTH_KEY ?? '';
@@ -325,6 +330,11 @@ async function main() {
     }
   }
   console.log('   Done.\n');
+
+  // ─── Step 8: Seed agentic group chat groups (ENG-36495) ────────────────────
+  console.log('🤖 Ensuring agentic group chat groups...');
+  await ensureAgenticGroups();
+  console.log('');
 
   // ─── Summary ───────────────────────────────────────────────────────────────
   console.log('═══════════════════════════════════════════════════════');

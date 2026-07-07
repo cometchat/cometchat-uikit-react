@@ -19,7 +19,7 @@ export interface UseMessageListInitOptions {
   parentMessageId: number | undefined;
   startFromUnreadMessages: boolean;
   goToMessageId: number | undefined;
-  messageTypes: string[];
+  messageTypes: string[] | undefined;
   messageCategories: string[];
   onError: ((error: CometChat.CometChatException) => void) | null | undefined;
   /**

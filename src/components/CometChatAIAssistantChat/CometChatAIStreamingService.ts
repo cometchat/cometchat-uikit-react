@@ -38,6 +38,7 @@ const DEFAULT_STREAM_STATE: CometChatStreamState = Object.freeze({
   hasError: false,
   hasStarted: false,
   currentRunId: '',
+  streamCards: [],
 });
 
 export function getStreamState(chatId: string): CometChatStreamState {
@@ -173,6 +174,7 @@ function processEvent(event: CometChat.AIAssistantBaseEvent, chatId: string): vo
         hasError: false,
         hasStarted: true,
         currentRunId: eventRunId,
+        streamCards: [],
       }));
       break;
     }
@@ -259,6 +261,45 @@ function processEvent(event: CometChat.AIAssistantBaseEvent, chatId: string): vo
       break;
     }
 
+    case streamMessageTypes.card_start: {
+      // Card generation started → show a card-shaped loader (label = executionText).
+      const cardEvent = event as CometChat.AIAssistantCardStartedEvent;
+      const cardId = typeof cardEvent.getCardId === 'function' ? cardEvent.getCardId() : '';
+      const executionText =
+        typeof cardEvent.getExecutionText === 'function' ? cardEvent.getExecutionText() : '';
+      setStreamState(chatId, prev => {
+        if (prev.streamCards.some(c => c.cardId === cardId)) return prev;
+        return {
+          ...prev,
+          isThinking: false,
+          streamCards: [...prev.streamCards, { cardId, executionText, card: null }],
+        };
+      });
+      break;
+    }
+
+    case streamMessageTypes.card: {
+      // Card payload arrived → replace the loader in place (correlate by cardId).
+      const cardEvent = event as CometChat.AIAssistantCardReceivedEvent;
+      const cardId = typeof cardEvent.getCardId === 'function' ? cardEvent.getCardId() : '';
+      const card: unknown =
+        typeof cardEvent.getCard === 'function' ? (cardEvent.getCard() as unknown) : null;
+      setStreamState(chatId, prev => {
+        const exists = prev.streamCards.some(c => c.cardId === cardId);
+        const streamCards = exists
+          ? prev.streamCards.map(c => (c.cardId === cardId ? { ...c, card } : c))
+          : [...prev.streamCards, { cardId, executionText: '', card }];
+        return { ...prev, isThinking: false, streamCards };
+      });
+      break;
+    }
+
+    case streamMessageTypes.card_end: {
+      // No-op — the card is already rendered; the persisted AIAssistantMessage will
+      // replace the streamed bubble when the run completes.
+      break;
+    }
+
     case streamMessageTypes.run_finished: {
       setStreamState(chatId, prev => ({
         ...prev,
@@ -290,6 +331,7 @@ export function startStreamingMessage(chatId: string, runId?: string | number): 
     hasError: false,
     hasStarted: true,
     currentRunId: runId ? String(runId) : String(Date.now()),
+    streamCards: [],
   });
   notifyListeners(chatId);
 }

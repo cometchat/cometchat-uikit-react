@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatAIAssistantBubble } from '../CometChatAIAssistantBubble';
+import { CometChatUIKitConstants } from '../../../constants/CometChatUIKitConstants';
 
 // Mock the locale hook so getLocalizedString returns the key itself.
 vi.mock('../../../context/locale/LocaleContext', () => ({
@@ -21,10 +22,38 @@ vi.mock('../../../context/CometChatFrameContext', () => ({
 // Mock the copy icon asset (svg import).
 vi.mock('../../../assets/Copy.svg', () => ({ default: 'copy-icon.svg' }));
 
-/** Build a message exposing getAssistantMessageData().getText(). */
-function makeAssistantMessage(text: string | undefined): CometChat.BaseMessage {
+// Stub the card renderer so we can assert it receives the stringified payload.
+vi.mock('@cometchat/cards-react', () => ({
+  CometChatCardView: ({ cardJson }: { cardJson: string }) => (
+    <div data-testid="card-view" data-card-json={cardJson} />
+  ),
+}));
+
+/**
+ * Build a message exposing getAssistantMessageData().getText().
+ * Pass a receiverType to simulate a group agent message (which hides the
+ * inline copy button); omit it for a 1:1 message (which keeps it).
+ */
+function makeAssistantMessage(
+  text: string | undefined,
+  receiverType: string = CometChatUIKitConstants.MessageReceiverType.user
+): CometChat.BaseMessage {
   return {
     getAssistantMessageData: () => ({ getText: () => text }),
+    getReceiverType: () => receiverType,
+  } as unknown as CometChat.BaseMessage;
+}
+
+/** Build a message exposing ordered content blocks via getElements(). */
+function makeElementsMessage(
+  elements: { type: string; data: unknown }[],
+  flatText?: string,
+  receiverType: string = CometChatUIKitConstants.MessageReceiverType.user
+): CometChat.BaseMessage {
+  return {
+    getAssistantMessageData: () => ({ getText: () => flatText }),
+    getElements: () => elements.map(e => ({ getType: () => e.type, getData: () => e.data })),
+    getReceiverType: () => receiverType,
   } as unknown as CometChat.BaseMessage;
 }
 
@@ -98,6 +127,7 @@ describe('CometChatAIAssistantBubble', () => {
   it('falls back to getText() for TextMessage-like messages', () => {
     const message = {
       getText: () => 'from getText',
+      getReceiverType: () => CometChatUIKitConstants.MessageReceiverType.user,
     } as unknown as CometChat.BaseMessage;
     const { container } = render(<CometChatAIAssistantBubble message={message} />);
     expect(
@@ -106,7 +136,10 @@ describe('CometChatAIAssistantBubble', () => {
   });
 
   it('falls back to data.text when no accessor methods return text', () => {
-    const message = { data: { text: 'data text' } } as unknown as CometChat.BaseMessage;
+    const message = {
+      data: { text: 'data text' },
+      getReceiverType: () => CometChatUIKitConstants.MessageReceiverType.user,
+    } as unknown as CometChat.BaseMessage;
     const { container } = render(<CometChatAIAssistantBubble message={message} />);
     expect(
       container.querySelector('.cometchat-ai-assistant-bubble__content')?.textContent
@@ -114,7 +147,10 @@ describe('CometChatAIAssistantBubble', () => {
   });
 
   it('falls back to data.content when data.text is absent', () => {
-    const message = { data: { content: 'data content' } } as unknown as CometChat.BaseMessage;
+    const message = {
+      data: { content: 'data content' },
+      getReceiverType: () => CometChatUIKitConstants.MessageReceiverType.user,
+    } as unknown as CometChat.BaseMessage;
     const { container } = render(<CometChatAIAssistantBubble message={message} />);
     expect(
       container.querySelector('.cometchat-ai-assistant-bubble__content')?.textContent
@@ -126,6 +162,28 @@ describe('CometChatAIAssistantBubble', () => {
     const button = screen.getByRole('button');
     expect(button.getAttribute('title')).toBe('ai_copy');
     expect(button.getAttribute('aria-label')).toBe('accessibility_copy_message');
+  });
+
+  it('renders the inline copy button for a 1:1 (non-group) message', () => {
+    render(
+      <CometChatAIAssistantBubble
+        message={makeAssistantMessage('hi', CometChatUIKitConstants.MessageReceiverType.user)}
+      />
+    );
+    expect(screen.queryByRole('button')).toBeInTheDocument();
+  });
+
+  it('hides the inline copy button for a group agent message', () => {
+    const { container } = render(
+      <CometChatAIAssistantBubble
+        message={makeAssistantMessage('hi', CometChatUIKitConstants.MessageReceiverType.group)}
+      />
+    );
+    expect(screen.queryByRole('button')).toBeNull();
+    // content still renders
+    expect(
+      container.querySelector('.cometchat-ai-assistant-bubble__content')?.textContent
+    ).toContain('hi');
   });
 
   it('copies text via navigator.clipboard and toggles to copied state', async () => {
@@ -161,6 +219,73 @@ describe('CometChatAIAssistantBubble', () => {
       vi.advanceTimersByTime(2000);
     });
     expect(screen.getByRole('button').getAttribute('title')).toBe('ai_copy');
+  });
+
+  it('renders text and card blocks in array order from getElements()', () => {
+    const message = makeElementsMessage(
+      [
+        { type: 'text', data: 'Intro line' },
+        { type: 'card', data: { card: { version: '1.0' }, cardId: 'c1' } },
+        { type: 'text', data: 'Outro line' },
+      ],
+      'flat fallback'
+    );
+    const { container } = render(<CometChatAIAssistantBubble message={message} />);
+
+    // Card renderer receives the stringified card payload, no transformation.
+    const cardView = screen.getByTestId('card-view');
+    expect(cardView.getAttribute('data-card-json')).toBe(JSON.stringify({ version: '1.0' }));
+
+    // Blocks appear in array order: text → card → text.
+    const blocks = Array.from(
+      container.querySelectorAll(
+        '.cometchat-ai-assistant-bubble__content, [data-testid="card-view"]'
+      )
+    );
+    expect(blocks).toHaveLength(3);
+    expect(blocks[0]?.textContent).toContain('Intro line');
+    expect(blocks[1]?.getAttribute('data-testid')).toBe('card-view');
+    expect(blocks[2]?.textContent).toContain('Outro line');
+  });
+
+  it('skips a card block whose card payload is missing', () => {
+    const message = makeElementsMessage([{ type: 'card', data: {} }], 'flat fallback');
+    render(<CometChatAIAssistantBubble message={message} />);
+    expect(screen.queryByTestId('card-view')).toBeNull();
+  });
+
+  it('hides the inline copy button for a group message rendered via getElements() (card + text)', () => {
+    const message = makeElementsMessage(
+      [
+        { type: 'text', data: 'Here is a card' },
+        { type: 'card', data: { card: { version: '1.0' }, cardId: 'c1' } },
+      ],
+      'Here is a card',
+      CometChatUIKitConstants.MessageReceiverType.group
+    );
+    render(<CometChatAIAssistantBubble message={message} />);
+    // Card still renders, but no inline copy button (group uses context-menu copy).
+    expect(screen.getByTestId('card-view')).toBeInTheDocument();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('shows the inline copy button for a 1:1 message rendered via getElements()', () => {
+    const message = makeElementsMessage(
+      [{ type: 'text', data: 'Here is a card' }],
+      'Here is a card',
+      CometChatUIKitConstants.MessageReceiverType.user
+    );
+    render(<CometChatAIAssistantBubble message={message} />);
+    expect(screen.queryByRole('button')).toBeInTheDocument();
+  });
+
+  it('falls back to flat getText() rendering when getElements() is empty (regression)', () => {
+    const message = makeElementsMessage([], 'plain assistant reply');
+    const { container } = render(<CometChatAIAssistantBubble message={message} />);
+    expect(screen.queryByTestId('card-view')).toBeNull();
+    expect(
+      container.querySelector('.cometchat-ai-assistant-bubble__content')?.textContent
+    ).toContain('plain assistant reply');
   });
 
   it('uses the execCommand fallback when clipboard API is unavailable', () => {

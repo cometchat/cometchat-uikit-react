@@ -33,7 +33,7 @@ export interface UseMessageListEventsOptions {
   loggedInUser: CometChat.User;
   messagesRequestBuilder: CometChat.MessagesRequestBuilder | undefined;
   parentMessageId: number | undefined;
-  messageTypes: string[];
+  messageTypes: string[] | undefined;
   messageCategories: string[];
   disableSoundForMessages: boolean;
   customSoundForMessages: string | undefined;
@@ -79,7 +79,9 @@ export function useMessageListEvents(
         case 'message/text-received':
         case 'message/media-received':
         case 'message/custom-received':
-        case 'message/interactive-received': {
+        case 'message/interactive-received':
+        case 'message/card-received':
+        case 'message/ai-assistant-received': {
           const msg = event.message as CometChat.BaseMessage;
 
           // When an agentic message arrives (AI response), collect it in pendingMessagesMap.

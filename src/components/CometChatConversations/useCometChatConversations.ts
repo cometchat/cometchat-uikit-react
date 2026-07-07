@@ -276,6 +276,7 @@ export function useCometChatConversations(
       onTextMessageReceived: handleNewMessage,
       onMediaMessageReceived: handleNewMessage,
       onCustomMessageReceived: handleNewMessage,
+      onCardMessageReceived: handleNewMessage,
       onMessageEdited: (message: CometChat.BaseMessage) => {
         CometChat.CometChatHelper.getConversationFromMessage(message)
           .then((conversation: CometChat.Conversation) => {

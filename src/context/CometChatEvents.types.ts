@@ -1,4 +1,5 @@
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import type { CometChatCardAction } from '@cometchat/cards-react';
 import type { ReactNode } from 'react';
 
 // ---------------------------------------------------------------------------
@@ -34,6 +35,8 @@ export type CometChatSDKEvent =
   | { type: 'message/media-received'; message: CometChat.MediaMessage }
   | { type: 'message/custom-received'; message: CometChat.CustomMessage }
   | { type: 'message/interactive-received'; message: CometChat.InteractiveMessage }
+  | { type: 'message/card-received'; message: CometChat.BaseMessage }
+  | { type: 'message/ai-assistant-received'; message: CometChat.BaseMessage }
   | { type: 'message/edited'; message: CometChat.BaseMessage }
   | { type: 'message/deleted'; message: CometChat.BaseMessage }
   | { type: 'message/moderated'; message: CometChat.BaseMessage }
@@ -213,6 +216,10 @@ export type CometChatUIEvent =
   | { type: 'ui:call/join'; sessionId: string; message: CometChat.BaseMessage }
   // --- Conversation actions ---
   | { type: 'ui:conversation/deleted'; conversation: CometChat.Conversation }
+  // --- Card actions (from a card bubble — developer card or nested agent card) ---
+  // The kit performs no behavior; it forwards the raw action to the app. This is the
+  // only channel that can reach a nested agent card (kit-instantiated, no prop reachable).
+  | { type: 'ui:card/action'; message: CometChat.BaseMessage; action: CometChatCardAction }
   // --- Open chat (message privately) ---
   | { type: 'ui:open-chat'; user?: CometChat.User; group?: CometChat.Group }
   | {

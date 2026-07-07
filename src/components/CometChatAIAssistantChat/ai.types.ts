@@ -49,6 +49,19 @@ export interface CometChatAIStreamEvent {
 // ---------------------------------------------------------------------------
 
 /** Internal streaming state per message ID. */
+/**
+ * A streamed card lifecycle entry for the current run.
+ * `card` is null while loading (after `card_start`) and set once `card` arrives.
+ */
+export interface CometChatStreamCard {
+  /** Correlation id from the card events. */
+  cardId: string;
+  /** Optional loader label from `card_start` (e.g. "Building your card…"). */
+  executionText: string;
+  /** Raw card payload (null while the loader is showing). */
+  card: unknown;
+}
+
 export interface CometChatStreamState {
   /** Accumulated text content. */
   text: string;
@@ -68,6 +81,8 @@ export interface CometChatStreamState {
   hasStarted: boolean;
   /** The run ID of the currently active stream (used to scope bubbles). */
   currentRunId: string;
+  /** Streamed card lifecycle entries for the current run, in arrival order. */
+  streamCards: CometChatStreamCard[];
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +119,11 @@ export interface CometChatStreamMessageBubbleProps {
   alignment?: 'left' | 'right';
   /** Optional custom className. */
   className?: string;
+  /**
+   * The streaming placeholder message, forwarded so streamed card actions can
+   * reference an owning message when emitting `ui:card/action`.
+   */
+  message?: CometChat.BaseMessage;
 }
 
 // ---------------------------------------------------------------------------
