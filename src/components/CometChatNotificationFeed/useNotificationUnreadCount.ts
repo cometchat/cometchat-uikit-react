@@ -58,7 +58,7 @@ class UnreadCountStore {
     this.isFetching = true;
 
     try {
-      const result = await (CometChat as any).getNotificationFeedUnreadCount();
+      const result = await CometChat.getNotificationFeedUnreadCount();
       const newCount = typeof result === "number" ? result : result?.count ?? 0;
       this.count = newCount;
       this.isLoading = false;
@@ -83,7 +83,7 @@ class UnreadCountStore {
 
     // Single real-time listener
     try {
-      (CometChat as any).addNotificationFeedListener(this.listenerId, {
+      CometChat.addNotificationFeedListener(this.listenerId, {
         onFeedItemReceived: () => {
           this.count = this.count + 1;
           this.notify();
@@ -106,7 +106,7 @@ class UnreadCountStore {
     }
 
     try {
-      (CometChat as any).removeNotificationFeedListener(this.listenerId);
+      CometChat.removeNotificationFeedListener(this.listenerId);
     } catch (error) {
       // Ignore cleanup errors
     }

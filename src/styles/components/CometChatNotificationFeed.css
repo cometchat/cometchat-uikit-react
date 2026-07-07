@@ -429,7 +429,7 @@
   justify-content: center;
   padding: var(--cometchat-padding-2);
   background: var(--cometchat-warning-color, #FFAB00);
-  color: #fff;
+  color: var(--cometchat-static-white);
   font: var(--cometchat-font-caption1-medium, 500 12px "Roboto");
 }
 
@@ -523,39 +523,39 @@
 }
 
 .cometchat-notification-feed__chip--active {
-  background: #6852d6;
-  border-color: #6852d6;
+  background: var(--cometchat-primary-color);
+  border-color: var(--cometchat-primary-color);
 }
 
 .cometchat-notification-feed__chip--active .cometchat-notification-feed__chip-text {
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
-  color: #ffffff;
+  color: var(--cometchat-text-color-white);
 }
 
 .cometchat-notification-feed__chip--inactive-with-badge {
-  background: #ffffff;
-  border-color: #d5d7da;
+  background: var(--cometchat-background-color-02);
+  border-color: var(--cometchat-border-color-default);
 }
 
 .cometchat-notification-feed__chip--inactive-with-badge .cometchat-notification-feed__chip-text {
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
-  color: #535862;
+  color: var(--cometchat-text-color-tertiary);
 }
 
 .cometchat-notification-feed__chip--inactive {
-  background: #fafafa;
-  border-color: #e9eaeb;
+  background: var(--cometchat-background-color-02);
+  border-color: var(--cometchat-border-color-default);
 }
 
 .cometchat-notification-feed__chip--inactive .cometchat-notification-feed__chip-text {
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
-  color: #717680;
+  color: var(--cometchat-text-color-tertiary);
 }
 
 .cometchat-notification-feed__chip:hover {
@@ -576,14 +576,14 @@
 }
 
 .cometchat-notification-feed__chip-badge--active {
-  background: #f4f3ff;
-  border: 1px solid #d9d6fe;
-  color: #5925dc;
+  background: var(--cometchat-extended-primary-color-50);
+  border: 1px solid var(--cometchat-extended-primary-color-200);
+  color: var(--cometchat-primary-color);
 }
 
 .cometchat-notification-feed__chip-badge--inactive {
-  background: #535862;
-  color: #ffffff;
+  background: var(--cometchat-neutral-color-700);
+  color: var(--cometchat-text-color-white);
 }
 
 /* Card Fallback */

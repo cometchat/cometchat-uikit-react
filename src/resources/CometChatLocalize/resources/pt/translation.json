@@ -292,6 +292,7 @@
     "month_november_full": "Novembro",
     "month_december_full": "Dezembro",
     "message_type_not_supported": "Este tipo de mensagem não é suportado.",
+    "card_message": "Mensagem de cartão",
     "message_list_message_already_translated": "O idioma selecionado para tradução é semelhante ao idioma da mensagem original.",
     "media_recorder_error_title": "Acesso ao Microfone Necessário",
     "media_recorder_error_subtitle": "Não conseguimos acessar seu microfone. Conceda permissão para iniciar a gravação.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Fechar",
     "link_popover_edit": "Editar",
     "link_popover_remove": "Remover",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "loading": "Carregando...",
+    "retry": "Tentar novamente",
+    "notifications_mark_all_read": "Marcar tudo como lido",
+    "notifications_filter_all": "Todos",
+    "notifications_empty_title": "Nada aqui ainda",
+    "notifications_empty_subtitle": "Novas atividades aparecerão aqui quando disponíveis.",
+    "notifications_error_title": "Ops!",
+    "notifications_error_subtitle": "Parece que algo deu errado. Por favor, tente novamente.",
+    "notifications_pagination_error": "Não foi possível carregar mais",
+    "notifications_tap_to_retry": "Toque para tentar novamente",
+    "notifications_offline_banner": "Você está offline. Exibindo notificações em cache.",
+    "notifications_title": "Notificações"
 }

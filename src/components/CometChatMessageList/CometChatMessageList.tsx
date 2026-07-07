@@ -860,7 +860,23 @@ const CometChatMessageList = (props: MessageListProps) => {
     messagesTemplate.forEach((el: CometChatMessageTemplate) => {
       messagesTypesArray[el.category + "_" + el.type] = el;
     });
-    return messagesTypesArray;
+    // Developer cards carry an arbitrary `type` and are routed on category alone
+    // (Card Messages — Section 2 §2.7). Lookups are keyed `category_type`, so any
+    // `card_*` miss is redirected to the registered card template.
+    const cardCategory = CometChatUIKitConstants.MessageCategory.card;
+    const cardKey = cardCategory + "_" + CometChatUIKitConstants.MessageTypes.card;
+    return new Proxy(messagesTypesArray, {
+      get(target, prop) {
+        if (
+          typeof prop === "string" &&
+          !(prop in target) &&
+          prop.startsWith(cardCategory + "_")
+        ) {
+          return target[cardKey];
+        }
+        return (target as any)[prop];
+      },
+    });
   }, [messagesTemplate]);
 
   /*
@@ -1415,10 +1431,25 @@ const CometChatMessageList = (props: MessageListProps) => {
   const onCopyMessage: (id: number) => void = useCallback(
     (id: number) => {
       try {
-        let message: CometChat.TextMessage = getMessageById(id) as CometChat.TextMessage;
+        let message: CometChat.BaseMessage | undefined = getMessageById(id);
         if (message) {
-          // Always convert mention tokens to display names.
-          let text = getMentionsTextWithoutStyle(message);
+          let text: string;
+          if (message instanceof CometChat.AIAssistantMessage) {
+            const elements = message.getElements() || [];
+            if(Array.isArray(elements) && elements.length > 0) {
+              text = elements.reduce((prevValue, currElement) => {
+                if(currElement.getType() === 'card') return prevValue;
+                const data = currElement.getData()
+                const text = typeof data === 'string' ? data : (data?.text as string ?? '');
+                return prevValue + text + "\n";
+              }, "")
+            } else {
+              text = message.getAssistantMessageData()?.getText() || '';
+            }
+          } else {
+            // Always convert mention tokens to display names.
+            text = getMentionsTextWithoutStyle(message as CometChat.TextMessage);
+          }
           
           // Convert markdown to HTML so pasting into the composer renders formatting
           const markdownFormatter = new CometChatMarkdownFormatter();
@@ -4026,6 +4057,9 @@ const CometChatMessageList = (props: MessageListProps) => {
             updateMessageByMuid(moderatedMessage);
           }
         );
+        onAIAssistantMessageReceived = CometChatMessageEvents.onAIAssistantMessageReceived.subscribe((message: CometChat.AIAssistantMessage) => {
+          messageReceivedHandler(message);
+        });
       }
       else {
         onAIAssistantMessageReceived = CometChatMessageEvents.onAIAssistantMessageReceived.subscribe((message: CometChat.AIAssistantMessage) => {

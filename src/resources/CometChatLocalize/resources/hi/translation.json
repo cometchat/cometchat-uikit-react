@@ -292,6 +292,7 @@
     "month_november_full": "नवंबर",
     "month_december_full": "दिसंबर",
     "message_type_not_supported": "यह संदेश प्रकार समर्थित नहीं है।",
+    "card_message": "कार्ड संदेश",
     "message_list_message_already_translated": "अनुवाद के लिए चयनित भाषा मूल संदेश की भाषा के समान है।",
     "media_recorder_error_title": "माइक्रोफ़ोन एक्सेस आवश्यक",
     "media_recorder_error_subtitle": "हम आपके माइक्रोफ़ोन तक पहुँच नहीं पा रहे हैं। रिकॉर्डिंग शुरू करने के लिए कृपया माइक्रोफ़ोन अनुमति दें।",
@@ -352,5 +353,17 @@
     "link_popover_close": "बंद करें",
     "link_popover_edit": "संपादित करें",
     "link_popover_remove": "हटाएं",
-    "cancel": "रद्द करें"
+    "cancel": "रद्द करें",
+    "loading": "लोड हो रहा है...",
+    "retry": "पुनः प्रयास करें",
+    "notifications_mark_all_read": "सभी को पढ़ा हुआ चिह्नित करें",
+    "notifications_filter_all": "सभी",
+    "notifications_empty_title": "अभी यहाँ कुछ नहीं है",
+    "notifications_empty_subtitle": "नई गतिविधि उपलब्ध होने पर यहाँ दिखाई देगी।",
+    "notifications_error_title": "उफ़!",
+    "notifications_error_subtitle": "लगता है कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+    "notifications_pagination_error": "और लोड नहीं हो सका",
+    "notifications_tap_to_retry": "पुनः प्रयास के लिए टैप करें",
+    "notifications_offline_banner": "आप ऑफ़लाइन हैं। कैश्ड सूचनाएँ दिखा रहे हैं।",
+    "notifications_title": "सूचनाएँ"
 }

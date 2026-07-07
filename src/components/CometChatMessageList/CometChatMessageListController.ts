@@ -43,8 +43,11 @@ export class MessageListManager {
          
             this.messagesRequest = requestBuilder.build()!;
         } else {
+            // Developer card types are developer-chosen and aren't in getAllMessageTypes(),
+            // so a plain type filter drops them — enumerate the supported card type(s)
+            // inline here (e.g. "card"), mirroring the other platform SDKs.
             const builder: CometChat.MessagesRequestBuilder = new CometChat.MessagesRequestBuilder()
-                .setTypes(ChatConfigurator.dataSource.getAllMessageTypes())
+                .setTypes([...ChatConfigurator.dataSource.getAllMessageTypes(), "card"])
                 .setCategories(ChatConfigurator.dataSource.getAllMessageCategories({ hideGroupActionMessages }))
                 .hideReplies(true)
                 .setLimit(30)
@@ -80,7 +83,7 @@ export class MessageListManager {
      * @returns {Promise}
      */
     fetchNextMessages: () => Promise<CometChat.BaseMessage[] | []> | undefined = () => {
-        return this.messagesRequest?.fetchNext();
+        return this.messagesRequest?.fetchNext().then(MessageListManager.excludeStandaloneToolMessages);
     };
     /**
     * Function to invoke the fetchPrevious method of the messagesRequestBuilder to retrieve the subsequent messages following the last fetched message.
@@ -88,8 +91,24 @@ export class MessageListManager {
     * @returns {Promise}
     */
     fetchPreviousMessages: () => Promise<CometChat.BaseMessage[] | []> | undefined = () => {
-        return this.messagesRequest?.fetchPrevious();
+        return this.messagesRequest?.fetchPrevious().then(MessageListManager.excludeStandaloneToolMessages);
     }
+
+    /**
+     * Drop AI tool-argument/result messages from history — they're consumed by the
+     * streaming bubble, not rendered standalone. Category-only fetch no longer filters
+     * them by type, so exclude them here instead.
+     */
+    private static excludeStandaloneToolMessages = (
+        messages: CometChat.BaseMessage[] | []
+    ): CometChat.BaseMessage[] | [] => {
+        if (!Array.isArray(messages)) return messages;
+        return messages.filter(
+            (message) =>
+                message?.getType() !== CometChatUIKitConstants.MessageTypes.toolArguments &&
+                message?.getType() !== CometChatUIKitConstants.MessageTypes.toolResults
+        );
+    };
 
     /**
      * Function to get the limit set in the messagesRequestBuilder.

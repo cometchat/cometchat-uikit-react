@@ -292,6 +292,7 @@
     "month_november_full": "十一月",
     "month_december_full": "十二月",
     "message_type_not_supported": "此訊息類型不受支援。",
+    "card_message": "卡片訊息",
     "message_list_message_already_translated": "所選的翻譯語言與原始訊息的語言相似。",
     "media_recorder_error_title": "需要麥克風存取權",
     "media_recorder_error_subtitle": "我們無法存取您的麥克風。請授予麥克風權限以開始錄音。",
@@ -352,5 +353,17 @@
     "link_popover_close": "關閉",
     "link_popover_edit": "編輯",
     "link_popover_remove": "移除",
-    "cancel": "取消"
+    "cancel": "取消",
+    "loading": "載入中...",
+    "retry": "重試",
+    "notifications_mark_all_read": "全部標為已讀",
+    "notifications_filter_all": "全部",
+    "notifications_empty_title": "這裡還沒有內容",
+    "notifications_empty_subtitle": "有新活動時將在此顯示。",
+    "notifications_error_title": "糟糕！",
+    "notifications_error_subtitle": "好像出了點問題。請重試。",
+    "notifications_pagination_error": "無法載入更多",
+    "notifications_tap_to_retry": "點擊重試",
+    "notifications_offline_banner": "您已離線。正在顯示快取的通知。",
+    "notifications_title": "通知"
 }

@@ -7,7 +7,11 @@ export class CometChatUIKitConstants {
         action: CometChat.CATEGORY_ACTION,
         call: CometChat.CATEGORY_CALL,
         interactive: CometChat.CATEGORY_INTERACTIVE,
-        agentic:CometChat.MessageCategory.AGENTIC
+        agentic:CometChat.MessageCategory.AGENTIC,
+        // Developer card messages (Card Messages — Section 2). Routed on category alone;
+        // the developer-chosen message `type` is ignored. Distinct from the legacy
+        // `interactive`/`card` (MessageTypes.card) NOT_SUPPORTED stub.
+        card: CometChat.MessageCategory.CARD
     })
     static moderationStatus = Object.freeze({
         pending: CometChat.ModerationStatus.PENDING,
@@ -182,6 +186,10 @@ export class CometChatUIKitConstants {
         tool_call_start: CometChat.AI_ASSISTANT_EVENTS.TOOL_CALL_STARTED,
         tool_call_end: CometChat.AI_ASSISTANT_EVENTS.TOOL_CALL_ENDED,
         tool_call_args: CometChat.AI_ASSISTANT_EVENTS.TOOL_CALL_ARGUMENT,
-        tool_call_result: CometChat.AI_ASSISTANT_EVENTS.TOOL_CALL_RESULT
+        tool_call_result: CometChat.AI_ASSISTANT_EVENTS.TOOL_CALL_RESULT,
+        // Agent card streaming lifecycle (Card Messages — Section 2).
+        card_start: CometChat.AI_ASSISTANT_EVENTS.CARD_START,
+        card: CometChat.AI_ASSISTANT_EVENTS.CARD,
+        card_end: CometChat.AI_ASSISTANT_EVENTS.CARD_END
     })
 }

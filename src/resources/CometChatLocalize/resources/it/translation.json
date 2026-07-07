@@ -292,6 +292,7 @@
     "month_november_full": "Novembre",
     "month_december_full": "Dicembre",
     "message_type_not_supported": "Questo tipo di messaggio non è supportato.",
+    "card_message": "Messaggio con scheda",
     "message_list_message_already_translated": "La lingua selezionata per la traduzione è simile alla lingua del messaggio originale.",
     "media_recorder_error_title": "Accesso al Microfono Necessario",
     "media_recorder_error_subtitle": "Non siamo riusciti ad accedere al tuo microfono. Concedi l’autorizzazione per iniziare a registrare.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Chiudi",
     "link_popover_edit": "Modifica",
     "link_popover_remove": "Rimuovi",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "loading": "Caricamento...",
+    "retry": "Riprova",
+    "notifications_mark_all_read": "Segna tutto come letto",
+    "notifications_filter_all": "Tutti",
+    "notifications_empty_title": "Ancora niente qui",
+    "notifications_empty_subtitle": "Le nuove attività appariranno qui quando disponibili.",
+    "notifications_error_title": "Ops!",
+    "notifications_error_subtitle": "Sembra che qualcosa sia andato storto. Per favore riprova.",
+    "notifications_pagination_error": "Impossibile caricare altro",
+    "notifications_tap_to_retry": "Tocca per riprovare",
+    "notifications_offline_banner": "Sei offline. Visualizzazione delle notifiche memorizzate nella cache.",
+    "notifications_title": "Notifiche"
 }

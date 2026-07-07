@@ -7,7 +7,10 @@ import { getAIAssistantTools, IStreamData, messageStream, stopStreamingMessage, 
 import { getLocalizedString } from '../../../resources/CometChatLocalize/cometchat-localize';
 import CometChatErrorView from '../CometChatErrorView/CometChatErrorView';
 import remarkGfm from 'remark-gfm';
+import { CometChatCardView } from '@cometchat/cards-react';
 import { getThemeMode } from '../../../utils/util';
+import { CometChatUIKit } from '../../../CometChatUIKit/CometChatUIKit';
+import { CometChatUIEvents } from '../../../events/CometChatUIEvents';
 interface CometChatStreamMessageBubbleProps {
   message?: CometChat.AIAssistantBaseEvent
 }
@@ -18,8 +21,16 @@ const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubbleProps> 
   const [data, setData] = useState<CometChat.AIAssistantBaseEvent | null>(initialMessageRef.current || null);
   const [fullMessage, setFullMessage] = useState<string>("");
     const [executionText, setExecutionText] = useState<string>("");
+  const [cardLoading, setCardLoading] = useState<boolean>(false);
+  const [cardExecutionText, setCardExecutionText] = useState<string>("");
+  const [streamCards, setStreamCards] = useState<{ cardId: string; cardJson: string }[]>([]);
   const toolCallNameRef = useRef<string>("")
   const toolCallDataRef = useRef<object>({})
+  const cardEventsMap: string[] = [
+    CometChatUIKitConstants.streamMessageTypes.card_start,
+    CometChatUIKitConstants.streamMessageTypes.card,
+    CometChatUIKitConstants.streamMessageTypes.card_end
+  ]
 
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -87,6 +98,29 @@ const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubbleProps> 
         }
       }
 
+      // Card lifecycle: card_start → loader, card → render, card_end → no-op.
+      if (cardEventsMap.includes(eventType)) {
+        if (eventType === CometChatUIKitConstants.streamMessageTypes.card_start) {
+          setCardLoading(true);
+          setCardExecutionText(
+            data.message.getData()?.executionText || getLocalizedString("ai_assistant_chat_thinking")
+          );
+        } else if (eventType === CometChatUIKitConstants.streamMessageTypes.card) {
+          const ev: any = data.message;
+          const cardObj = ev.getCard?.() ?? ev.getData?.()?.card;
+          const cardId = ev.getData?.()?.cardId ?? `${data.message.getMessageId()}`;
+          if (cardObj) {
+            const cardJson = typeof cardObj === "string" ? cardObj : JSON.stringify(cardObj);
+            setStreamCards((prev) => [
+              ...prev.filter((c) => c.cardId !== cardId),
+              { cardId, cardJson },
+            ]);
+          }
+          setCardLoading(false);
+        }
+        // card_end → no-op
+      }
+
       if (!initialMessageRef.current?.getMessageId() || (data.message.getMessageId()) === initialMessageRef.current?.getMessageId()) {
         setData(data.message);
         if (data.streamedMessages && data.streamedMessages != "") {
@@ -95,6 +129,9 @@ const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubbleProps> 
       }
 
       if (data.message.getType() === CometChatUIKitConstants.streamMessageTypes.run_finished) {
+        // `streamedMessages` already carries the final text — including the card
+        // fallbackText, which stream-message.service resolves on run_finished.
+        setFullMessage(data.streamedMessages || '');
         subscription.unsubscribe();
         streamState.unsubscribe();
       }
@@ -179,6 +216,37 @@ const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubbleProps> 
             }}
           />
         )}
+
+        {cardLoading && (
+          // Image-style shimmer placeholder; shares dimensions with the rendered
+          // card (.__card) so it swaps in with no layout shift.
+          <div
+            className="cometchat-stream-message-bubble__card-loading"
+            role="img"
+            aria-busy="true"
+            aria-label={cardExecutionText}
+          />
+        )}
+
+        {streamCards.map((card) => (
+          <div
+            key={card.cardId}
+            className="cometchat-stream-message-bubble__card"
+          >
+            <CometChatCardView
+              cardJson={card.cardJson}
+              themeMode={CometChatUIKit.themeMode as any}
+              onAction={(event: any) => {
+                if (event && event.action) {
+                  CometChatUIEvents.ccCardActionClicked.next({
+                    message: data as any,
+                    action: event.action,
+                  });
+                }
+              }}
+            />
+          </div>
+        ))}
 
       </div>
         {hasError && <CometChatErrorView message={getLocalizedString("ai_assistant_chat_no_internet")} />}

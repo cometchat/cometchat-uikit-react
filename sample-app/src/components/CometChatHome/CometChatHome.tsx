@@ -93,6 +93,38 @@ function CometChatHome(props: { theme?: string }) {
         return () => chatChanged.unsubscribe();
     }, []);
 
+    // Card Messages — Section 2 §2.9.8: single app-level dispatcher for card
+    // element actions. The UI Kit only forwards the raw action; behavior lives here.
+    useEffect(() => {
+        const cardAction = CometChatUIEvents.ccCardActionClicked.subscribe((e: any) => {
+            const action = e?.action;
+            if (!action) return;
+            switch (action.type) {
+                case "openUrl":
+                    if (action.url) window.open(action.url, "_blank", "noopener,noreferrer");
+                    break;
+                case "copyToClipboard":
+                    if (action.text && navigator?.clipboard) navigator.clipboard.writeText(action.text);
+                    break;
+                case "downloadFile":
+                    if (action.url) window.open(action.url, "_blank", "noopener,noreferrer");
+                    break;
+                case "sendMessage":
+                case "chatWithUser":
+                case "chatWithGroup":
+                case "initiateCall":
+                case "apiCall":
+                case "customCallback":
+                    // App-specific handling hook (e.g. dispatch by action.callbackId).
+                    // Left as a no-op default in the sample app.
+                    break;
+                default:
+                    break;
+            }
+        });
+        return () => cardAction.unsubscribe();
+    }, []);
+
     useEffect(() => {
         const listenerID = `HomeLoginListener_${new Date().getTime()}`;
         CometChat.addLoginListener(

@@ -292,6 +292,7 @@
     "month_november_full": "November",
     "month_december_full": "December",
     "message_type_not_supported": "Dit berichttype wordt niet ondersteund.",
+    "card_message": "Kaartbericht",
     "message_list_message_already_translated": "De geselecteerde taal voor vertaling is vergelijkbaar met de taal van het oorspronkelijke bericht.",
     "media_recorder_error_title": "Microfoontoegang Nodig",
     "media_recorder_error_subtitle": "We hebben geen toegang tot je microfoon. Geef microfoonmachtiging om te beginnen met opnemen.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Sluiten",
     "link_popover_edit": "Bewerken",
     "link_popover_remove": "Verwijderen",
-    "cancel": "Annuleren"
+    "cancel": "Annuleren",
+    "loading": "Laden...",
+    "retry": "Opnieuw proberen",
+    "notifications_mark_all_read": "Alles als gelezen markeren",
+    "notifications_filter_all": "Alle",
+    "notifications_empty_title": "Nog niets hier",
+    "notifications_empty_subtitle": "Nieuwe activiteit verschijnt hier wanneer beschikbaar.",
+    "notifications_error_title": "Oeps!",
+    "notifications_error_subtitle": "Er lijkt iets mis te zijn gegaan. Probeer het opnieuw.",
+    "notifications_pagination_error": "Kon niet meer laden",
+    "notifications_tap_to_retry": "Tik om opnieuw te proberen",
+    "notifications_offline_banner": "Je bent offline. Gecachte meldingen worden weergegeven.",
+    "notifications_title": "Meldingen"
 }

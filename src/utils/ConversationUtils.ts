@@ -76,8 +76,15 @@ export class ConversationUtils {
     else if (msgObject?.getCategory() == CometChatUIKitConstants.MessageCategory.custom) {
       message = this.getLastMessageCustom(conversationObject)
     }
+    else if (msgObject?.getCategory() == CometChatUIKitConstants.MessageCategory.card) {
+      // Developer card preview: the message text, else a generic "Card Message".
+      message = (msgObject as any)?.getText?.() || getLocalizedString("card_message");
+    }
     else if (msgObject?.getCategory() == CometChatUIKitConstants.MessageCategory.interactive) {
       message = getLocalizedString("message_type_not_supported");
+    }
+    else if (msgObject?.getCategory() == CometChatUIKitConstants.MessageCategory.agentic) {
+      message = this.getLastAgenticMessage(conversationObject)
     }
     return message;
   }
@@ -225,5 +232,55 @@ export class ConversationUtils {
     } else {
       return messageObject?.getType()
     }
+  }
+
+  /**
+   * Retrieves the last agentic message for a given conversation.
+   *
+   * @param {CometChat.Conversation} conversation - The conversation object.
+   * @returns {string} - The last message as a string.
+   */
+  static getLastAgenticMessage(conversation: CometChat.Conversation) {
+    let message: string;
+    let messageObject: CometChat.AIAssistantMessage =
+      conversation.getLastMessage();
+    switch (messageObject?.getType()) {
+      case CometChatUIKitConstants.MessageTypes.assistant:
+        {
+          let lastMessageText: string;
+          const elements = messageObject.getElements() || [];
+
+          if (Array.isArray(elements) && elements.length > 0) {
+            lastMessageText = elements.reduce((prevValue, currElement) => {
+              const data = currElement.getData();
+              if (currElement.getType() === "card") {
+                const cardPayload = data?.card ?? data;
+                if (!cardPayload) return prevValue;
+                return prevValue + cardPayload.fallbackText + " ";
+              }
+              const text =
+                typeof data === "string"
+                  ? data
+                  : ((data?.text as string) ?? "");
+              return prevValue + text + " ";
+            }, "");
+          } else {
+            lastMessageText =
+              messageObject.getAssistantMessageData()?.getText() || "";
+          }
+          
+          const markdownMessage =
+            CometChatUIKitUtility.convertFormattingHtmlToMarkdown(
+              lastMessageText,
+            );
+          message = CometChatUIKitUtility.sanitizeText(markdownMessage);
+        }
+        break;
+      default:
+        message = messageObject.getType();
+        break;
+    }
+    return message
+
   }
 }

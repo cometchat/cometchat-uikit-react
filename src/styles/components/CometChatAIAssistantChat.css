@@ -6,8 +6,12 @@
     overflow: hidden;
     background: var(--cometchat-background-color-02);
     align-items: center;
-
 }
+
+.cometchat-ai-assistant-chat .cometchat-ai-assistant-message-bubble{
+    padding: 0;
+}
+
 .cometchat-ai-assistant-chat  .cometchat-message-bubble-incoming{
     overflow: hidden;
     max-width: 100%;

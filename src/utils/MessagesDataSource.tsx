@@ -32,6 +32,7 @@ import ThreadIcon from "../assets/reply_in_thread.svg";
 import Reply from "../assets/reply.svg";
 import VideoIcon from "../assets/videocam.svg";
 import { CometChatTextBubble } from "../components/BaseComponents/CometChatTextBubble/CometChatTextBubble";
+import { CometChatCardBubble } from "../components/BaseComponents/CometChatCardBubble/CometChatCardBubble";
 import { CometChatDeleteBubble } from "../components/BaseComponents/CometChatDeleteBubble/CometChatDeleteBubble";
 import { CometChatVideoBubble } from "../components/BaseComponents/CometChatVideoBubble/CometChatVideoBubble";
 import { CometChatAudioBubble } from "../components/BaseComponents/CometChatAudioBubble/CometChatAudioBubble";
@@ -487,16 +488,23 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
   }
 
   getFooterView(_messageObject: CometChat.BaseMessage) {
-    return _messageObject instanceof CometChat.AIAssistantMessage ? (
-      <div
-        title={getLocalizedString("message_list_option_copy")}
-        className="cometchat-ai-assistant-message-bubble__copy"
-        style={{ cursor: "pointer" }}
-        onClick={() =>
-          this.handleCopy(_messageObject as CometChat.AIAssistantMessage)
-        }
-      ></div>
-    ) : null;
+    if (_messageObject instanceof CometChat.AIAssistantMessage) {
+      // In groups, copy is handled via context menu options — don't show footer button
+      if (_messageObject.getReceiverType() === CometChatUIKitConstants.MessageReceiverType.group) {
+        return null;
+      }
+      return (
+        <div
+          title={getLocalizedString("message_list_option_copy")}
+          className="cometchat-ai-assistant-message-bubble__copy"
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            this.handleCopy(_messageObject as CometChat.AIAssistantMessage)
+          }
+        ></div>
+      );
+    }
+    return null;
   }
 
   getTextMessageTemplate(
@@ -558,6 +566,51 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       },
     });
   }
+  /**
+   * Template for developer card messages (`category: "card"`).
+   *
+   * A first-party, full-featured bubble (mirrors the text template: status info,
+   * reply view, reactions, options) whose only differences are (a) the content
+   * view renders the raw card via the prebuilt renderer instead of text, and
+   * (b) edit/copy options are suppressed (see getMessageOptions).
+   *
+   * NOTE: This is intentionally separate from the legacy `getCardMessageTemplate()`
+   * (interactive `card` NOT_SUPPORTED stub) — do not merge the two.
+   */
+  getCardBubbleTemplate(): CometChatMessageTemplate {
+    return new CometChatMessageTemplate({
+      // Sentinel type; developer cards carry an arbitrary `type` and are routed on
+      // category alone (see CometChatMessageList card-category resolution).
+      type: CometChatUIKitConstants.MessageTypes.card,
+      category: CometChatUIKitConstants.MessageCategory.card,
+      statusInfoView: ChatConfigurator.getDataSource().getStatusInfoView,
+      replyView: ChatConfigurator.getDataSource().getReplyView,
+      contentView: (
+        message: CometChat.BaseMessage,
+        _alignment: MessageBubbleAlignment
+      ) => {
+        if (message.getDeletedAt() != null) {
+          return this.getDeleteMessageBubble(message, undefined, _alignment);
+        }
+        return (
+          <CometChatCardBubble
+            message={message}
+            isSentByMe={this.getIsSentByMe(message)}
+          />
+        );
+      },
+      options: ChatConfigurator.getDataSource().getMessageOptions,
+      bottomView: (
+        _message: CometChat.BaseMessage,
+        _alignment: MessageBubbleAlignment
+      ) => {
+        return ChatConfigurator.getDataSource().getBottomView(
+          _message,
+          _alignment
+        );
+      },
+    });
+  }
   getAgentAssistantMessageBubble(message: CometChat.AIAssistantMessage) {
     return <CometChatAIAssistantMessageBubble message={message} />
 
@@ -589,7 +642,14 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     return new CometChatMessageTemplate({
       type: CometChatUIKitConstants.MessageTypes.assistant,
       category: CometChatUIKitConstants.MessageCategory.agentic,
-      statusInfoView: undefined,
+      statusInfoView: (message: CometChat.BaseMessage, alignment: MessageBubbleAlignment, hideReceipts?: boolean, messageSentAtDateTimeFormat?: CalendarObject, showError?: boolean) => {
+        // Show timestamp only in groups, not in 1:1 AI assistant chat
+        if (message.getReceiverType() === CometChatUIKitConstants.MessageReceiverType.group) {
+          return ChatConfigurator.getDataSource().getStatusInfoView(message, alignment, hideReceipts, messageSentAtDateTimeFormat, showError);
+        }
+        return null;
+      },
+      replyView: ChatConfigurator.getDataSource().getReplyView,
       contentView: (
         message: CometChat.BaseMessage,
         _alignment: MessageBubbleAlignment,
@@ -598,7 +658,15 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
         return ChatConfigurator.getDataSource().getAgentAssistantMessageBubble(message as CometChat.AIAssistantMessage, _alignment);
 
       },
-      options: undefined,
+      options: (
+        _loggedInUser: CometChat.User,
+        messageObject: CometChat.BaseMessage,
+        _group?: CometChat.Group,
+        additionalParams?: additionalParamsOptions
+      ) => {
+        if (additionalParams?.hideCopyMessageOption) return [];
+        return [this.getCopyOption()];
+      },
       footerView: (message: CometChat.BaseMessage) => {
         return ChatConfigurator.getDataSource().getFooterView(message as CometChat.AIAssistantMessage);
       },
@@ -833,6 +901,7 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       ChatConfigurator.getDataSource().getFormMessageTemplate(),
       ChatConfigurator.getDataSource().getSchedulerMessageTemplate(),
       ChatConfigurator.getDataSource().getCardMessageTemplate(),
+      this.getCardBubbleTemplate(),
       ChatConfigurator.getDataSource().getAgentAssistantMessageTemplate(),
       ChatConfigurator.getDataSource().getStreamMessageTemplate(),
       this.getToolResultsMessageTemplate(),
@@ -853,6 +922,11 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     }
 
     let _template: CometChatMessageTemplate | null = null;
+    // Developer cards are routed on category alone — the message `type` is
+    // developer-chosen and ignored (Card Messages — Section 2 §2.7).
+    if (messageCategory === CometChatUIKitConstants.MessageCategory.card) {
+      return this.getCardBubbleTemplate();
+    }
     if (messageCategory !== CometChatUIKitConstants.MessageCategory.call) {
       switch (messageType) {
         case CometChatUIKitConstants.MessageTypes.text:
@@ -1007,6 +1081,24 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
         additionalParams
       );
     }
+    else if (
+      messageObject.getCategory() ==
+      CometChatUIKitConstants.MessageCategory.card
+    ) {
+      // Developer card options = the text option set minus edit and copy
+      // (Card Messages — Section 2 §2.8). Conditional visibility of the remaining
+      // options (delete own/admin, etc.) is preserved by deriving from text.
+      _optionList = ChatConfigurator.getDataSource().getTextMessageOptions(
+        loggedInUser,
+        messageObject,
+        group,
+        {
+          ...additionalParams,
+          hideEditMessageOption: true,
+          hideCopyMessageOption: true,
+        }
+      );
+    }
     return _optionList;
   }
 
@@ -1067,8 +1159,6 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
       CometChatUIKitConstants.MessageTypes.scheduler,
       CometChatUIKitConstants.MessageTypes.card,
       CometChatUIKitConstants.MessageTypes.assistant,
-      // CometChatUIKitConstants.MessageTypes.toolArguments,
-      // CometChatUIKitConstants.MessageTypes.toolResults
     ];
   }
 
@@ -1080,7 +1170,8 @@ getMessageSentAtDateFormat(messageSentAtDateTimeFormat?:CalendarObject) {
     let categories =  [
       CometChatUIKitConstants.MessageCategory.message,
       CometChatUIKitConstants.MessageCategory.interactive,
-      CometChatUIKitConstants.MessageCategory.agentic
+      CometChatUIKitConstants.MessageCategory.agentic,
+      CometChatUIKitConstants.MessageCategory.card
     ];
     if (!additionalConfigurations?.hideGroupActionMessages){
       categories.push(CometChatUIKitConstants.MessageCategory.action)

@@ -292,6 +292,7 @@
     "month_november_full": "十一月",
     "month_december_full": "十二月",
     "message_type_not_supported": "此消息类型不受支持。",
+    "card_message": "卡片消息",
     "message_list_message_already_translated": "所选的翻译语言与原始消息的语言相似。",
     "media_recorder_error_title": "需要麦克风访问权限",
     "media_recorder_error_subtitle": "无法访问您的麦克风。请授予麦克风权限以开始录音。",
@@ -352,5 +353,17 @@
     "link_popover_close": "关闭",
     "link_popover_edit": "编辑",
     "link_popover_remove": "移除",
-    "cancel": "取消"
+    "cancel": "取消",
+    "loading": "加载中...",
+    "retry": "重试",
+    "notifications_mark_all_read": "全部标为已读",
+    "notifications_filter_all": "全部",
+    "notifications_empty_title": "这里还没有内容",
+    "notifications_empty_subtitle": "有新活动时将在此显示。",
+    "notifications_error_title": "糟糕！",
+    "notifications_error_subtitle": "好像出了点问题。请重试。",
+    "notifications_pagination_error": "无法加载更多",
+    "notifications_tap_to_retry": "点击重试",
+    "notifications_offline_banner": "您已离线。正在显示缓存的通知。",
+    "notifications_title": "通知"
 }

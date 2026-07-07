@@ -292,6 +292,7 @@
     "month_november_full": "Ноябрь",
     "month_december_full": "Декабрь",
     "message_type_not_supported": "Этот тип сообщения не поддерживается.",
+    "card_message": "Сообщение-карточка",
     "message_list_message_already_translated": "Выбранный язык для перевода похож на язык исходного сообщения.",
     "media_recorder_error_title": "Требуется доступ к микрофону",
     "media_recorder_error_subtitle": "Не удалось получить доступ к вашему микрофону. Пожалуйста, предоставьте разрешение на использование микрофона для начала записи.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Закрыть",
     "link_popover_edit": "Редактировать",
     "link_popover_remove": "Удалить",
-    "cancel": "Отмена"
+    "cancel": "Отмена",
+    "loading": "Загрузка...",
+    "retry": "Повторить",
+    "notifications_mark_all_read": "Отметить все как прочитанные",
+    "notifications_filter_all": "Все",
+    "notifications_empty_title": "Пока ничего нет",
+    "notifications_empty_subtitle": "Новая активность появится здесь, когда будет доступна.",
+    "notifications_error_title": "Ой!",
+    "notifications_error_subtitle": "Кажется, что-то пошло не так. Пожалуйста, попробуйте снова.",
+    "notifications_pagination_error": "Не удалось загрузить ещё",
+    "notifications_tap_to_retry": "Нажмите, чтобы повторить",
+    "notifications_offline_banner": "Вы не в сети. Показаны кэшированные уведомления.",
+    "notifications_title": "Уведомления"
 }

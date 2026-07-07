@@ -13,6 +13,7 @@ import {
 } from "./types";
 import emptyInboxIcon from "./assets/empty-inbox.svg";
 import errorStateIcon from "../../assets/list_error_state_icon.svg";
+import { getLocalizedString } from "../../resources/CometChatLocalize/cometchat-localize";
 
 /**
  * CometChatNotificationFeed — Main notification feed component.
@@ -21,7 +22,7 @@ import errorStateIcon from "../../assets/list_error_state_icon.svg";
  */
 export function CometChatNotificationFeed(props: CometChatNotificationFeedProps) {
   const {
-    title = "Notifications",
+    title = getLocalizedString("notifications_title"),
     showHeader = true,
     showBackButton = false,
     showFilterChips = true,
@@ -144,11 +145,6 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
     viewModelRef.current?.refresh();
   }, []);
 
-  // Handle mark all as read
-  const handleMarkAllRead = useCallback(() => {
-    viewModelRef.current?.markAllAsRead();
-  }, []);
-
   // --- Render Functions ---
 
   // Handle chip click
@@ -184,15 +180,7 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
             {title}
           </h2>
         </div>
-        {state.totalUnreadCount > 0 && (
-          <button
-            className="cometchat-notification-feed__mark-all-read"
-            onClick={handleMarkAllRead}
-            aria-label="Mark all notifications as read"
-          >
-            Mark all read
-          </button>
-        )}
+
       </div>
     );
   };
@@ -228,7 +216,7 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
             borderColor: !isAllActive ? style?.chipBorderColor : undefined,
           }}
         >
-          <span className="cometchat-notification-feed__chip-text">All</span>
+          <span className="cometchat-notification-feed__chip-text">{getLocalizedString("notifications_filter_all")}</span>
           {state.totalUnreadCount > 0 && (
             <span
               className={`cometchat-notification-feed__chip-badge ${
@@ -296,7 +284,7 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
     return (
       <div className="cometchat-notification-feed__loading" aria-busy="true" aria-label="Loading notifications">
         <div className="cometchat-notification-feed__loading-spinner" />
-        <p className="cometchat-notification-feed__loading-text">Loading...</p>
+        <p className="cometchat-notification-feed__loading-text">{getLocalizedString("loading")}</p>
       </div>
     );
   };
@@ -315,10 +303,10 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
         </div>
         <div className="cometchat-notification-feed__empty-text-container">
           <p className="cometchat-notification-feed__empty-title">
-            Nothing here yet
+            {getLocalizedString("notifications_empty_title")}
           </p>
           <p className="cometchat-notification-feed__empty-subtitle">
-            New activity will appear here when available.
+            {getLocalizedString("notifications_empty_subtitle")}
           </p>
         </div>
       </div>
@@ -339,10 +327,10 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
         </div>
         <div className="cometchat-notification-feed__error-text-container">
           <p className="cometchat-notification-feed__error-title">
-            Oops!
+            {getLocalizedString("notifications_error_title")}
           </p>
           <p className="cometchat-notification-feed__error-subtitle">
-            Looks like something went wrong. Please try again.
+            {getLocalizedString("notifications_error_subtitle")}
           </p>
         </div>
         <button
@@ -350,7 +338,7 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
           onClick={handleRetry}
           aria-label="Retry loading notifications"
         >
-          Retry
+          {getLocalizedString("retry")}
         </button>
       </div>
     );
@@ -454,7 +442,7 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
         {state.isLoadingMore && (
           <div className="cometchat-notification-feed__loading-more" aria-busy="true">
             <div className="cometchat-notification-feed__loading-more-spinner" />
-            <span className="cometchat-notification-feed__loading-more-text">Loading...</span>
+            <span className="cometchat-notification-feed__loading-more-text">{getLocalizedString("loading")}</span>
           </div>
         )}
         {state.paginationError && !state.isLoadingMore && (
@@ -468,8 +456,8 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
           >
             <div className="cometchat-notification-feed__pagination-error-icon" />
             <div className="cometchat-notification-feed__pagination-error-text">
-              <p className="cometchat-notification-feed__pagination-error-message">Couldn't load more</p>
-              <p className="cometchat-notification-feed__pagination-error-retry">Tap to retry</p>
+              <p className="cometchat-notification-feed__pagination-error-message">{getLocalizedString("notifications_pagination_error")}</p>
+              <p className="cometchat-notification-feed__pagination-error-retry">{getLocalizedString("notifications_tap_to_retry")}</p>
             </div>
           </div>
         )}
@@ -521,7 +509,7 @@ export function CometChatNotificationFeed(props: CometChatNotificationFeedProps)
           role="alert"
           aria-live="polite"
         >
-          You are offline. Showing cached notifications.
+          {getLocalizedString("notifications_offline_banner")}
         </div>
       )}
       <div

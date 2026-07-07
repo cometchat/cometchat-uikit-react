@@ -116,6 +116,7 @@ export { CometChatContextMenu } from './components/BaseComponents/CometChatConte
 export { CometChatVideoBubble } from './components/BaseComponents/CometChatVideoBubble/CometChatVideoBubble';
 export { CometChatToast };
 export { CometChatTextBubble } from './components/BaseComponents/CometChatTextBubble/CometChatTextBubble';
+export { CometChatCardBubble } from './components/BaseComponents/CometChatCardBubble/CometChatCardBubble';
 export { CometChatSearchBar } from './components/BaseComponents/CometChatSearchBar/CometChatSearchBar';
 export { CometChatRadioButton } from './components/BaseComponents/CometChatRadioButton/CometChatRadioButton';
 export { CometChatPopover } from './components/BaseComponents/CometChatPopover/CometChatPopover';

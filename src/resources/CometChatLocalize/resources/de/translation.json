@@ -292,6 +292,7 @@
     "month_november_full": "November",
     "month_december_full": "Dezember",
     "message_type_not_supported": "Dieser Nachrichtentyp wird nicht unterstützt.",
+    "card_message": "Kartennachricht",
     "message_list_message_already_translated": "Die ausgewählte Sprache für die Übersetzung ist der Sprache der Originalnachricht ähnlich.",
     "media_recorder_error_title": "Mikrofonzugriff Erforderlich",
     "media_recorder_error_subtitle": "Wir konnten nicht auf dein Mikrofon zugreifen. Bitte erteile die Mikrofonberechtigung, um mit der Aufnahme zu beginnen.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Schließen",
     "link_popover_edit": "Bearbeiten",
     "link_popover_remove": "Entfernen",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "loading": "Laden...",
+    "retry": "Erneut versuchen",
+    "notifications_mark_all_read": "Alle als gelesen markieren",
+    "notifications_filter_all": "Alle",
+    "notifications_empty_title": "Noch nichts hier",
+    "notifications_empty_subtitle": "Neue Aktivitäten werden hier angezeigt, sobald sie verfügbar sind.",
+    "notifications_error_title": "Hoppla!",
+    "notifications_error_subtitle": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "notifications_pagination_error": "Weitere konnten nicht geladen werden",
+    "notifications_tap_to_retry": "Zum Wiederholen tippen",
+    "notifications_offline_banner": "Sie sind offline. Zwischengespeicherte Benachrichtigungen werden angezeigt.",
+    "notifications_title": "Benachrichtigungen"
 }

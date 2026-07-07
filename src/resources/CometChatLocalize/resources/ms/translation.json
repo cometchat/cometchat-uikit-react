@@ -292,6 +292,7 @@
     "month_november_full": "November",
     "month_december_full": "Disember",
     "message_type_not_supported": "Jenis mesej ini tidak disokong.",
+    "card_message": "Mesej Kad",
     "message_list_message_already_translated": "Bahasa yang dipilih untuk terjemahan adalah serupa dengan bahasa mesej asal.",
     "media_recorder_error_title": "Akses Mikrofon Diperlukan",
     "media_recorder_error_subtitle": "Kami tidak dapat mengakses mikrofon anda. Sila berikan kebenaran mikrofon untuk memulakan rakaman.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Tutup",
     "link_popover_edit": "Edit",
     "link_popover_remove": "Buang",
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "loading": "Memuatkan...",
+    "retry": "Cuba semula",
+    "notifications_mark_all_read": "Tandai semua sebagai dibaca",
+    "notifications_filter_all": "Semua",
+    "notifications_empty_title": "Belum ada apa-apa di sini",
+    "notifications_empty_subtitle": "Aktiviti baharu akan muncul di sini apabila tersedia.",
+    "notifications_error_title": "Alamak!",
+    "notifications_error_subtitle": "Nampaknya ada masalah. Sila cuba semula.",
+    "notifications_pagination_error": "Tidak dapat memuatkan lagi",
+    "notifications_tap_to_retry": "Ketik untuk cuba semula",
+    "notifications_offline_banner": "Anda di luar talian. Menunjukkan pemberitahuan yang dicache.",
+    "notifications_title": "Pemberitahuan"
 }

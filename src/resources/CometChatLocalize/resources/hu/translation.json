@@ -292,6 +292,7 @@
     "month_november_full": "november",
     "month_december_full": "december",
     "message_type_not_supported": "Ez az üzenettípus nem támogatott.",
+    "card_message": "Kártyaüzenet",
     "message_list_message_already_translated": "A fordításhoz kiválasztott nyelv hasonló az eredeti üzenet nyelvéhez.",
     "media_recorder_error_title": "Mikrofon-hozzáférés Szükséges",
     "media_recorder_error_subtitle": "Nem tudtuk elérni a mikrofont. Kérjük, adjon engedélyt a mikrofon használatához a felvétel megkezdéséhez.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Bezárás",
     "link_popover_edit": "Szerkesztés",
     "link_popover_remove": "Eltávolítás",
-    "cancel": "Mégse"
+    "cancel": "Mégse",
+    "loading": "Betöltés...",
+    "retry": "Újrapróbálás",
+    "notifications_mark_all_read": "Összes olvasottnak jelölése",
+    "notifications_filter_all": "Összes",
+    "notifications_empty_title": "Még nincs itt semmi",
+    "notifications_empty_subtitle": "Az új tevékenységek itt jelennek meg, amikor elérhetők.",
+    "notifications_error_title": "Hoppá!",
+    "notifications_error_subtitle": "Úgy tűnik, valami hiba történt. Kérjük, próbálja újra.",
+    "notifications_pagination_error": "Nem sikerült többet betölteni",
+    "notifications_tap_to_retry": "Koppintson az újrapróbáláshoz",
+    "notifications_offline_banner": "Ön offline. Gyorsítótárazott értesítések megjelenítése.",
+    "notifications_title": "Értesítések"
 }

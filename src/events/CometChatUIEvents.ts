@@ -24,7 +24,24 @@ export class CometChatUIEvents {
   static ccShowMentionsCountWarning: Subject<IMentionsCountWarning> =
     new Subject<IMentionsCountWarning>();
     static ccActivePopover: Subject<string> = new Subject<string>();
+  /**
+   * Emitted when a card element action is triggered (developer cards and nested
+   * agent cards). The UI Kit forwards the raw action only — it performs no
+   * action behavior. Apps subscribe to handle the 9 renderer action types.
+   */
+  static ccCardActionClicked: Subject<ICardActionClicked> =
+    new Subject<ICardActionClicked>();
 
+}
+
+/**
+ * Payload for {@link CometChatUIEvents.ccCardActionClicked}.
+ * `action` is the raw action object emitted by the card renderer
+ * (`@cometchat/cards-react`); the kit never interprets it.
+ */
+export interface ICardActionClicked {
+  message: CometChat.BaseMessage;
+  action: any;
 }
 
 /**

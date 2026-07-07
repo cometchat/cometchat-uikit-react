@@ -5,7 +5,6 @@ import { CometChatUIKitLoginListener } from "../CometChatUIKit/CometChatUIKitLog
 import { CometChatUIKitConstants } from "../constants/CometChatUIKitConstants";
 import { CometChatUIKitUtility } from "../CometChatUIKit/CometChatUIKitUtility";
 import { CometChatTextFormatter } from "../formatters";
-
 interface MediaPlayer {
 video?:HTMLVideoElement | null,
 mediaRecorder?:MediaRecorder | null

@@ -292,6 +292,7 @@
     "month_november_full": "Lapkritis",
     "month_december_full": "Gruodis",
     "message_type_not_supported": "Šis pranešimo tipas nepalaikomas.",
+    "card_message": "Kortelės žinutė",
     "message_list_message_already_translated": "Pasirinkta vertimo kalba yra panaši į originalaus pranešimo kalbą.",
     "media_recorder_error_title": "Reikalinga Prieiga prie Mikrofono",
     "media_recorder_error_subtitle": "Nepavyko pasiekti jūsų mikrofono. Prašome suteikti leidimą naudoti mikrofoną, kad galėtumėte pradėti įrašymą.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Uždaryti",
     "link_popover_edit": "Redaguoti",
     "link_popover_remove": "Pašalinti",
-    "cancel": "Atšaukti"
+    "cancel": "Atšaukti",
+    "loading": "Kraunama...",
+    "retry": "Bandyti dar kartą",
+    "notifications_mark_all_read": "Žymėti visus kaip skaitytus",
+    "notifications_filter_all": "Visi",
+    "notifications_empty_title": "Čia dar nieko nėra",
+    "notifications_empty_subtitle": "Naujos veiklos bus rodomos čia, kai bus prieinamos.",
+    "notifications_error_title": "Oi!",
+    "notifications_error_subtitle": "Atrodo, kad kažkas nutiko. Bandykite dar kartą.",
+    "notifications_pagination_error": "Nepavyko įkelti daugiau",
+    "notifications_tap_to_retry": "Bakstelėkite, kad bandytumėte dar kartą",
+    "notifications_offline_banner": "Esate neprisijungę. Rodomi išsaugoti pranešimai.",
+    "notifications_title": "Pranešimai"
 }

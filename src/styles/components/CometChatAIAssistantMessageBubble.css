@@ -6,6 +6,7 @@
   width: 100%;
   max-width: 100%;
   overflow: hidden;
+  padding: var(--cometchat-spacing-2) var(--cometchat-spacing-1) 0 var(--cometchat-spacing-1);
 }
 
 .cometchat-ai-assistant-message-bubble * {
@@ -76,7 +77,10 @@
   width: 100%;
 }
 
-
+.cometchat-ai-assistant-message-bubble__code-block code {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+}
 
 .cometchat-ai-assistant-message-bubble *:not(pre *) {
   color: var(--cometchat-text-color-primary);

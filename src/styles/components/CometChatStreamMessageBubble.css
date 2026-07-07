@@ -327,3 +327,31 @@ padding-top: 0px;
     left: 100%;
   }
 }
+
+/* Card-loading shimmer placeholder; shares dimensions with the rendered card
+   (.__card) so swapping the skeleton for the real card causes no layout shift. */
+.cometchat-stream-message-bubble__card-loading,
+.cometchat-stream-message-bubble__card {
+  width: 100%;
+  max-width: 320px;
+  min-width: 0;
+  min-height: 200px;
+}
+
+.cometchat-stream-message-bubble__card-loading {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #E0E0E0 25%, #F5F5F5 50%, #E0E0E0 75%);
+  background-size: 200% 100%;
+  animation: cardImageShimmer 1.5s infinite;
+  align-self: flex-start;
+}
+
+@keyframes cardImageShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

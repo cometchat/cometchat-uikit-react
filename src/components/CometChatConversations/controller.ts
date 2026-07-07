@@ -145,8 +145,16 @@ export class ConversationsManager {
                 message: CometChat.InteractiveMessage
             ) => {
                 callback(message);
+            },
+            onAIAssistantMessageReceived: (message: CometChat.AIAssistantMessage) => {
+                callback(message);
+            },
+            // Cards arrive via this dedicated SDK callback, not onText/onInteractive;
+            // without it the conversation list never refreshes on an incoming card.
+            onCardMessageReceived: (message: CometChat.BaseMessage) => {
+                callback(message);
             }
-            
+
           }))
         return () => {
             CometChat.removeMessageListener(messageListenerId)
@@ -313,7 +321,7 @@ try {
          let isCustomMessage = message?.getCategory() === CometChatUIKitConstants.MessageCategory.custom
          // Check if the message is a reply to another message
          if (message?.getParentMessageId() && !CometChatUIKit.conversationUpdateSettings?.shouldUpdateOnMessageReplies()) {
-             return false;
+            return false;
          }
          if (isCustomMessage) {
              if (message?.getParentMessageId() && CometChatUIKit.conversationUpdateSettings?.shouldUpdateOnMessageReplies() && this.shouldIncrementForCustomMessage(message as CometChat.CustomMessage)) {

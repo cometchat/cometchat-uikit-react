@@ -292,6 +292,7 @@
     "month_november_full": "Novembre",
     "month_december_full": "Décembre",
     "message_type_not_supported": "Ce type de message n'est pas pris en charge.",
+    "card_message": "Message de carte",
     "message_list_message_already_translated": "La langue sélectionnée pour la traduction est similaire à la langue du message original.",
     "media_recorder_error_title": "Accès au Microphone Nécessaire",
     "media_recorder_error_subtitle": "Nous n’avons pas pu accéder à votre microphone. Veuillez autoriser l’accès pour commencer l’enregistrement.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Fermer",
     "link_popover_edit": "Modifier",
     "link_popover_remove": "Supprimer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "loading": "Chargement...",
+    "retry": "Réessayer",
+    "notifications_mark_all_read": "Tout marquer comme lu",
+    "notifications_filter_all": "Tous",
+    "notifications_empty_title": "Rien ici pour le moment",
+    "notifications_empty_subtitle": "Les nouvelles activités apparaîtront ici lorsqu'elles seront disponibles.",
+    "notifications_error_title": "Oups !",
+    "notifications_error_subtitle": "Il semble qu'un problème soit survenu. Veuillez réessayer.",
+    "notifications_pagination_error": "Impossible de charger plus",
+    "notifications_tap_to_retry": "Appuyez pour réessayer",
+    "notifications_offline_banner": "Vous êtes hors ligne. Affichage des notifications en cache.",
+    "notifications_title": "Notifications"
 }

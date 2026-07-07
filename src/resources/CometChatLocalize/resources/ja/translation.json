@@ -292,6 +292,7 @@
     "month_november_full": "11月",
     "month_december_full": "12月",
     "message_type_not_supported": "このメッセージタイプはサポートされていません。",
+    "card_message": "カードメッセージ",
     "message_list_message_already_translated": "翻訳のために選択された言語は、元のメッセージの言語と似ています。",
     "media_recorder_error_title": "マイクへのアクセスが必要です",
     "media_recorder_error_subtitle": "マイクにアクセスできませんでした。録音を開始するには、マイクの許可を与えてください。",
@@ -352,5 +353,17 @@
     "link_popover_close": "閉じる",
     "link_popover_edit": "編集",
     "link_popover_remove": "削除",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "loading": "読み込み中...",
+    "retry": "再試行",
+    "notifications_mark_all_read": "すべて既読にする",
+    "notifications_filter_all": "すべて",
+    "notifications_empty_title": "まだ何もありません",
+    "notifications_empty_subtitle": "新しいアクティビティが利用可能になるとここに表示されます。",
+    "notifications_error_title": "おっと！",
+    "notifications_error_subtitle": "問題が発生したようです。もう一度お試しください。",
+    "notifications_pagination_error": "さらに読み込めませんでした",
+    "notifications_tap_to_retry": "タップして再試行",
+    "notifications_offline_banner": "オフラインです。キャッシュされた通知を表示しています。",
+    "notifications_title": "通知"
 }

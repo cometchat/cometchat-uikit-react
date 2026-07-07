@@ -55,6 +55,12 @@ const toolEventsMap = [
   CometChatUIKitConstants.streamMessageTypes.tool_call_result,
   CometChatUIKitConstants.streamMessageTypes.tool_call_start
 ]
+// Agent card streaming lifecycle events (Card Messages — Section 2 §2.6.2).
+const cardEventsMap: string[] = [
+  CometChatUIKitConstants.streamMessageTypes.card_start,
+  CometChatUIKitConstants.streamMessageTypes.card,
+  CometChatUIKitConstants.streamMessageTypes.card_end
+]
 
 /**
  * Initializes the message processing pipeline with configurable delays
@@ -131,6 +137,11 @@ const processMessage = (msg: CometChat.AIAssistantBaseEvent) => {
     streamedMessages[msg.getMessageId()] = '';
     messageSubject.next({ message: msg });
   }
+  // Agent card lifecycle: forward the event so the bubble can show a loader
+  // (card_start), render the card (card), or no-op (card_end).
+  if (cardEventsMap.includes(msg.getType())) {
+    messageSubject.next({ message: msg });
+  }
   else if (msg.getType() === CometChatUIKitConstants.streamMessageTypes.text_message_start) {
     streamedMessages[msg.getMessageId()] = '';
     messageSubject.next({message:msg});
@@ -153,9 +164,22 @@ const processMessage = (msg: CometChat.AIAssistantBaseEvent) => {
       streamedMessages: streamedMessages[msg.getMessageId()] || ''
     });
   } else if (msg.getType() === CometChatUIKitConstants.streamMessageTypes.run_finished) {
+    // If no streamed text was accumulated, try to extract fallbackText from card elements
+    let finalText = streamedMessages[msg.getMessageId()] || '';
+    if (!finalText) {
+      const eventData = msg.getData?.();
+      if (eventData?.elements && Array.isArray(eventData.elements)) {
+        for (const element of eventData.elements) {
+          if (element?.type === 'card' && element?.value?.fallbackText) {
+            finalText = element.value.fallbackText;
+            break;
+          }
+        }
+      }
+    }
     messageSubject.next({
       message:msg,
-      streamedMessages: streamedMessages[msg.getMessageId()] || ''
+      streamedMessages: finalText
     });
   }
 };

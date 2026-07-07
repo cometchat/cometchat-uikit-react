@@ -333,7 +333,10 @@ function isAMessage(message: unknown): message is Message {
     message instanceof CometChat.CustomMessage ||
     message instanceof CometChat.InteractiveMessage ||
     message instanceof CometChat.Action ||
-    message instanceof CometChat.Call
+    message instanceof CometChat.Call || 
+    message instanceof CometChat.AIAssistantMessage ||
+    // Cards extend BaseMessage directly, so they need an explicit check.
+    message instanceof CometChat.CardMessage
   );
 }
 
@@ -1056,7 +1059,7 @@ export function CometChatConversations(props: ConversationsProps) {
         if (!ConversationsManager.shouldLastMessageAndUnreadCountBeUpdated(message)) {
           return;
         }
-        if (message.getSender().getUid() != state.loggedInUser?.getUid()) {
+        if (message.getSender()?.getUid() != state.loggedInUser?.getUid()) {
           conversation.setUnreadMessageCount(
             (conversation.getUnreadMessageCount() ?? 0) + 1);
         }
@@ -1110,7 +1113,9 @@ export function CometChatConversations(props: ConversationsProps) {
             (conversation) => {
               updateConversationList(conversation, message);
             }
-          );
+          ).catch((error) => {
+            errorHandler(error, "getConversationFromMessage");
+          });
 
         }
       } catch (error) {
@@ -1129,10 +1134,12 @@ export function CometChatConversations(props: ConversationsProps) {
       try {
         let shouldRefreshConversation = true;
         if (
-          message.getSender().getUid() !== state.loggedInUser?.getUid() &&
+          message.getSender()?.getUid() !== state.loggedInUser?.getUid() &&
           !message.getDeliveredAt()
         ) {
-          CometChat.markAsDelivered(message);
+          // Some types (e.g. cards) can reject internally; swallow it so it doesn't
+          // surface as an uncaught-in-promise error.
+          Promise.resolve(CometChat.markAsDelivered(message)).catch(() => { });
         }
         if (
           !disableSoundForMessages && !hideConversation(conversationsRequestBuilder?.build() || null, message) &&
@@ -1378,8 +1385,8 @@ export function CometChatConversations(props: ConversationsProps) {
         let iconName = ""
         const lastMessage = conversation.getLastMessage();
         const isGroupSubtitle = lastMessage && conversation?.getConversationType() != CometChat.RECEIVER_TYPE.USER;
-        const isMessageFromLoggedInUser = lastMessage?.getSender().getUid() == state.loggedInUser?.getUid();
-        const getLastMessageSenderName = isMessageFromLoggedInUser ? getLocalizedString("conversation_subtitle_you_message") : lastMessage?.getSender().getName()
+        const isMessageFromLoggedInUser = lastMessage?.getSender()?.getUid() == state.loggedInUser?.getUid();
+        const getLastMessageSenderName = isMessageFromLoggedInUser ? getLocalizedString("conversation_subtitle_you_message") : lastMessage?.getSender()?.getName()
         let subtitle =
           ChatConfigurator.getDataSource().getLastConversationMessage(
             conversation,

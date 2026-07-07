@@ -292,6 +292,7 @@
     "month_november_full": "November",
     "month_december_full": "December",
     "message_type_not_supported": "Denna meddelandetyp stöds inte.",
+    "card_message": "Kortmeddelande",
     "message_list_message_already_translated": "Det valda språket för översättning liknar språket i det ursprungliga meddelandet.",
     "media_recorder_error_title": "Mikrofonåtkomst Krävs",
     "media_recorder_error_subtitle": "Vi kunde inte komma åt din mikrofon. Vänligen ge mikrofontillstånd för att börja spela in.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Stäng",
     "link_popover_edit": "Redigera",
     "link_popover_remove": "Ta bort",
-    "cancel": "Avbryt"
+    "cancel": "Avbryt",
+    "loading": "Laddar...",
+    "retry": "Försök igen",
+    "notifications_mark_all_read": "Markera alla som lästa",
+    "notifications_filter_all": "Alla",
+    "notifications_empty_title": "Inget här ännu",
+    "notifications_empty_subtitle": "Ny aktivitet visas här när den är tillgänglig.",
+    "notifications_error_title": "Hoppsan!",
+    "notifications_error_subtitle": "Något verkar ha gått fel. Försök igen.",
+    "notifications_pagination_error": "Kunde inte ladda mer",
+    "notifications_tap_to_retry": "Tryck för att försöka igen",
+    "notifications_offline_banner": "Du är offline. Visar cachade aviseringar.",
+    "notifications_title": "Aviseringar"
 }

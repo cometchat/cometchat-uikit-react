@@ -260,7 +260,9 @@ function isAMessage(message: unknown): message is Message {
     message instanceof CometChat.CustomMessage ||
     message instanceof CometChat.InteractiveMessage ||
     message instanceof CometChat.Action ||
-    message instanceof CometChat.Call
+    message instanceof CometChat.Call ||
+    // Developer card messages extend BaseMessage directly.
+    message instanceof CometChat.CardMessage
   );
 }
 

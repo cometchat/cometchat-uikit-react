@@ -292,6 +292,7 @@
     "month_november_full": "Kasım",
     "month_december_full": "Aralık",
     "message_type_not_supported": "Bu mesaj türü desteklenmemektedir.",
+    "card_message": "Kart Mesajı",
     "message_list_message_already_translated": "Çeviri için seçilen dil, orijinal mesajın diliyle benzer.",
     "media_recorder_error_title": "Mikrofon Erişimi Gerekli",
     "media_recorder_error_subtitle": "Mikrofonunuza erişemedik. Kayıt başlatmak için lütfen mikrofon izni verin.",
@@ -352,5 +353,17 @@
     "link_popover_close": "Kapat",
     "link_popover_edit": "Düzenle",
     "link_popover_remove": "Kaldır",
-    "cancel": "İptal"
+    "cancel": "İptal",
+    "loading": "Yükleniyor...",
+    "retry": "Tekrar dene",
+    "notifications_mark_all_read": "Tümünü okundu olarak işaretle",
+    "notifications_filter_all": "Tümü",
+    "notifications_empty_title": "Henüz burada hiçbir şey yok",
+    "notifications_empty_subtitle": "Yeni etkinlikler mevcut olduğunda burada görünecektir.",
+    "notifications_error_title": "Hay aksi!",
+    "notifications_error_subtitle": "Bir şeyler ters gitmiş gibi görünüyor. Lütfen tekrar deneyin.",
+    "notifications_pagination_error": "Daha fazla yüklenemedi",
+    "notifications_tap_to_retry": "Tekrar denemek için dokunun",
+    "notifications_offline_banner": "Çevrimdışısınız. Önbelleğe alınmış bildirimler gösteriliyor.",
+    "notifications_title": "Bildirimler"
 }

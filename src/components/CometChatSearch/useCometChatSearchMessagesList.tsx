@@ -610,6 +610,66 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
   }
 
   /**
+   * Extracts a human-readable title for a developer card message (`category: "card"`).
+   *
+   * Developer cards carry an arbitrary `type`, so they are detected by category, not
+   * type. The title is read from the card JSON (`getCard()` → `data.card`): the first
+   * `text` element with `variant: "title"`, falling back to the schema `fallbackText`,
+   * then the message text, then a localized label.
+   */
+  function getCardTitle(message: CometChat.BaseMessage): string {
+    try {
+      const raw =
+        (message as any)?.getCard?.() ??
+        ((message?.getData?.() as any)?.card);
+      const card = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (card && typeof card === "object") {
+        // Card bodies can nest text inside row/column/grid/accordion/tabs
+        // containers (children live under varying keys: items/body/content), so
+        // walk the whole tree and collect every text element in document order.
+        const texts: Array<{ content: string; variant?: string }> = [];
+        const walk = (node: any, depth: number) => {
+          if (!node || depth > 8) return;
+          if (Array.isArray(node)) {
+            node.forEach((n) => walk(n, depth + 1));
+            return;
+          }
+          if (typeof node === "object") {
+            if (
+              node.type === "text" &&
+              typeof node.content === "string" &&
+              node.content.trim()
+            ) {
+              texts.push({ content: node.content, variant: node.variant });
+            }
+            Object.values(node).forEach((v) => {
+              if (v && typeof v === "object") walk(v, depth + 1);
+            });
+          }
+        };
+        walk(card.body ?? card, 0);
+
+        const titleEl =
+          texts.find((t) => t.variant === "title") ??
+          texts.find((t) => t.variant?.startsWith("heading")) ??
+          texts[0];
+        if (titleEl?.content) {
+          return CometChatUIKitUtility.sanitizeText(titleEl.content);
+        }
+
+        const fb = card.fallbackText ?? card?.value?.fallbackText;
+        if (typeof fb === "string" && fb.trim()) {
+          return CometChatUIKitUtility.sanitizeText(fb);
+        }
+      }
+    } catch (error) {
+      errorHandler(error, "getCardTitle");
+    }
+    const fallback = (message as any)?.getText?.() || getLocalizedString("card_message");
+    return CometChatUIKitUtility.sanitizeText(fallback);
+  }
+
+  /**
    * Creates subtitle view for the list item view
    */
   function getListItemSubtitleView(message: CometChat.BaseMessage): JSX.Element {
@@ -621,6 +681,16 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
       return (<div className='cometchat-search-messages__subtitle'>
         {getSubtitleTextView(message as CometChat.TextMessage)}
       </div>)
+    }
+    // Developer cards are routed on category alone (arbitrary type), so the type-based
+    // switch below never matches them — surface the card title here instead.
+    if (CometChatUIKitConstants.MessageCategory.card === message.getCategory()) {
+      return (
+        <div className='cometchat-search-messages__subtitle'>
+          {getSubtitleThreadView(message)}
+          {getCardTitle(message)}
+        </div>
+      );
     }
     switch (message.getType()) {
       case CometChatUIKitConstants.MessageTypes.image:

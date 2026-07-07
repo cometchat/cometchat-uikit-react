@@ -120,6 +120,11 @@ export class SearchConversationsManager {
                 },
                 onInteractiveMessageReceived: (message: CometChat.InteractiveMessage) => {
                     callback(message);
+                },
+                // Developer card messages (category: "card") arrive via this dedicated
+                // SDK callback, not onText/onInteractive.
+                onCardMessageReceived: (message: CometChat.BaseMessage) => {
+                    callback(message);
                 }
             }))
             return () => {
