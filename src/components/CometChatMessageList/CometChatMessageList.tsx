@@ -54,6 +54,29 @@ import { CometChatFlagMessageDialog } from "../CometChatFlagMessageDialog/CometC
 import { CometChatConversationEvents } from "../../events/CometChatConversationEvents";
 
 /**
+ * Checks whether two messages refer to the same message.
+ * Messages are matched on id when both carry one, and fall back to muid so that
+ * a message added optimistically (which has a muid but no id yet) is still
+ * recognised when the same message arrives over the socket.
+ * @param {CometChat.BaseMessage} messageOne - The first message to compare.
+ * @param {CometChat.BaseMessage} messageTwo - The second message to compare.
+ * @returns {boolean}
+ */
+const isSameMessage = (messageOne: CometChat.BaseMessage, messageTwo: CometChat.BaseMessage): boolean => {
+  const idOne = messageOne?.getId?.();
+  const idTwo = messageTwo?.getId?.();
+  if (idOne && idTwo) {
+    return String(idOne) === String(idTwo);
+  }
+  const muidOne = messageOne?.getMuid?.();
+  const muidTwo = messageTwo?.getMuid?.();
+  if (muidOne && muidTwo) {
+    return String(muidOne) === String(muidTwo);
+  }
+  return false;
+};
+
+/**
  * Props for the MessageList component.
  */
 interface MessageListProps {
@@ -2724,9 +2747,13 @@ const CometChatMessageList = (props: MessageListProps) => {
       return new Promise((resolve, reject) => {
         try {
           setMessageList((prevMessageList: CometChat.BaseMessage[]): CometChat.BaseMessage[] => {
+            const uniqueMessages: CometChat.BaseMessage[] = messages.filter(
+              (message: CometChat.BaseMessage) =>
+                !prevMessageList.some((m: CometChat.BaseMessage) => isSameMessage(m, message))
+            );
             const updatedMessageList: CometChat.BaseMessage[] = [
               ...prevMessageList,
-              ...messages,
+              ...uniqueMessages,
             ];
 
             if(updatedMessageList.find(
@@ -3057,8 +3084,20 @@ const CometChatMessageList = (props: MessageListProps) => {
         }
         if (!hideGroupActionMessages || (hideGroupActionMessages && message.getCategory() !== CometChatUIKitConstants.MessageCategory.action)) {
           setMessageList((prevMessageList: CometChat.BaseMessage[]) => {
+            if (prevMessageList.some((m: CometChat.BaseMessage) => isSameMessage(m, message))) {
+              return prevMessageList;
+            }
             return [...prevMessageList, message];
           });
+          /**
+           * Advance the pagination cursor so it stays in sync with messages that arrive
+           * in real time. Without this the cursor only moves on fetch, so a reconnect
+           * re-fetches from a stale id and re-appends messages already in the list.
+           */
+          const messageId = message.getId();
+          if (messageId && messageIdRef.current.prevMessageId !== messageId) {
+            messageIdRef.current.nextMessageId = messageId;
+          }
         }
         if (!message.getSender() || (message.getSender()?.getUid() == loggedInUserRef.current?.getUid())) {
           setScrollListToBottom(true);
