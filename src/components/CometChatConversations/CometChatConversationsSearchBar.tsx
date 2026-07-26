@@ -16,7 +16,7 @@ export const CometChatConversationsSearchBar: React.FC<CometChatConversationsSea
   placeholder,
   onClick: onClickProp,
 }) => {
-  const { setSearchText, onSearchBarClicked } = useCometChatConversationsContext();
+  const { onSearchBarClicked } = useCometChatConversationsContext();
   const { getLocalizedString } = useLocale();
   const effectivePlaceholder = placeholder ?? getLocalizedString('search_placeholder');
 
@@ -39,11 +39,7 @@ export const CometChatConversationsSearchBar: React.FC<CometChatConversationsSea
 
   return (
     <div className={'cometchat-conversations__search-bar'}>
-      <CometChatSearchBar.Root
-        placeholderText={effectivePlaceholder}
-        {...(!clickHandler && { onChange: setSearchText })}
-        debounceMs={300}
-      >
+      <CometChatSearchBar.Root placeholderText={effectivePlaceholder} debounceMs={300}>
         <CometChatSearchBar.Icon />
         <CometChatSearchBar.Input
           readOnly={!!clickHandler}

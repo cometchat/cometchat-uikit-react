@@ -1,0 +1,11 @@
+{
+  // Dedicated config so the IDE type-checks the Playwright e2e suite with Node
+  // globals available (process, Buffer, etc.). Not part of the app build — the
+  // root `tsc -b` only compiles the "src" program — Playwright transpiles these
+  // files itself at runtime.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["."]
+}

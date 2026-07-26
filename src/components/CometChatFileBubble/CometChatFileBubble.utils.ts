@@ -27,39 +27,42 @@ export function extractFileAttachments(
       return extractFromMetadata(mediaMessage);
     }
 
-    return (rawAttachments as unknown[])
-      .filter(
-        (att): att is Record<string, unknown> =>
-          att != null &&
-          typeof att === 'object' &&
-          typeof (
-            (att as Record<string, unknown>).url ?? (att as Record<string, unknown>).getUrl
-          ) !== 'undefined'
-      )
-      .map(att => {
-        const url =
-          (typeof att.url === 'string' ? att.url : '') ||
-          (typeof att.getUrl === 'function' ? String((att.getUrl as () => unknown)()) : '');
+    // Only use the first attachment — multi-attachment rendering is handled by CometChatFilesBubble
+    const firstRaw = (rawAttachments as unknown[]).find(
+      (att): att is Record<string, unknown> =>
+        att != null &&
+        typeof att === 'object' &&
+        typeof ((att as Record<string, unknown>).url ?? (att as Record<string, unknown>).getUrl) !==
+          'undefined'
+    );
 
-        const name =
-          (typeof att.name === 'string' ? att.name : '') ||
-          (typeof att.getName === 'function' ? String((att.getName as () => unknown)()) : 'File');
-        const mimeType =
-          (typeof att.mimeType === 'string' ? att.mimeType : '') ||
-          (typeof att.getMimeType === 'function'
-            ? String((att.getMimeType as () => unknown)())
-            : 'application/octet-stream');
-        const extension =
-          (typeof att.extension === 'string' ? att.extension : '') ||
-          (typeof att.getExtension === 'function'
-            ? String((att.getExtension as () => unknown)())
-            : '');
-        const rawSize =
-          att.size ?? (typeof att.getSize === 'function' ? (att.getSize as () => unknown)() : 0);
-        const size = typeof rawSize === 'number' ? rawSize : 0;
+    if (!firstRaw) return [];
 
-        return { name, url, mimeType, extension, size } satisfies CometChatFileBubbleAttachment;
-      });
+    const url =
+      (typeof firstRaw.url === 'string' ? firstRaw.url : '') ||
+      (typeof firstRaw.getUrl === 'function' ? String((firstRaw.getUrl as () => unknown)()) : '');
+
+    const name =
+      (typeof firstRaw.name === 'string' ? firstRaw.name : '') ||
+      (typeof firstRaw.getName === 'function'
+        ? String((firstRaw.getName as () => unknown)())
+        : 'File');
+    const mimeType =
+      (typeof firstRaw.mimeType === 'string' ? firstRaw.mimeType : '') ||
+      (typeof firstRaw.getMimeType === 'function'
+        ? String((firstRaw.getMimeType as () => unknown)())
+        : 'application/octet-stream');
+    const extension =
+      (typeof firstRaw.extension === 'string' ? firstRaw.extension : '') ||
+      (typeof firstRaw.getExtension === 'function'
+        ? String((firstRaw.getExtension as () => unknown)())
+        : '');
+    const rawSize =
+      firstRaw.size ??
+      (typeof firstRaw.getSize === 'function' ? (firstRaw.getSize as () => unknown)() : 0);
+    const size = typeof rawSize === 'number' ? rawSize : 0;
+
+    return [{ name, url, mimeType, extension, size } satisfies CometChatFileBubbleAttachment];
   } catch {
     return [];
   }

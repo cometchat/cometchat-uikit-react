@@ -56,6 +56,7 @@ vi.mock('../../CometChatMessageBubble/CometChatMessageBubbleRenderer', () => ({
       data-hide-edit-option={String(props.hideEditMessageOption ?? '')}
       data-show-mark-unread={String(props.showMarkAsUnreadOption ?? '')}
       data-sent-at-format={props.messageSentAtDateTimeFormat ? 'custom' : 'default'}
+      data-batch-position={String(props.batchPosition ?? '')}
     />
   ),
 }));
@@ -293,6 +294,47 @@ describe('CometChatMessageList — option visibility props', () => {
       renderView(buildCtx(msgs, { showMarkAsUnreadOption: true }));
       const bubble = screen.getByTestId('mock-bubble');
       expect(bubble.getAttribute('data-show-mark-unread')).toBe('true');
+    });
+  });
+
+  describe('batch positions', () => {
+    // A message carrying a specific batchId in metadata.
+    function buildBatchMessage(id: number, batchId = 'batch-1') {
+      return { ...buildMessage({ id }), getMetadata: () => ({ batchId }) };
+    }
+
+    it('computes batch positions (first/last) for a shared batchId', () => {
+      const msgs = [buildBatchMessage(1), buildBatchMessage(2)];
+      renderView(buildCtx(msgs));
+      const bubbles = screen.getAllByTestId('mock-bubble');
+      expect(bubbles[0]?.getAttribute('data-batch-position')).toBe('first');
+      expect(bubbles[1]?.getAttribute('data-batch-position')).toBe('last');
+    });
+
+    it('computes first/middle/last for three consecutive messages in one batch', () => {
+      const msgs = [buildBatchMessage(1), buildBatchMessage(2), buildBatchMessage(3)];
+      renderView(buildCtx(msgs));
+      const bubbles = screen.getAllByTestId('mock-bubble');
+      expect(bubbles[0]?.getAttribute('data-batch-position')).toBe('first');
+      expect(bubbles[1]?.getAttribute('data-batch-position')).toBe('middle');
+      expect(bubbles[2]?.getAttribute('data-batch-position')).toBe('last');
+    });
+
+    it('marks two adjacent messages from DIFFERENT batches as "single" each', () => {
+      // Locks in that the neighbor comparison is batchId equality — not mere
+      // presence of a batchId. Two distinct one-item batches side by side must
+      // stay separate ('single'), never render as one first/last group.
+      const msgs = [buildBatchMessage(1, 'batch-1'), buildBatchMessage(2, 'batch-2')];
+      renderView(buildCtx(msgs));
+      const bubbles = screen.getAllByTestId('mock-bubble');
+      expect(bubbles[0]?.getAttribute('data-batch-position')).toBe('single');
+      expect(bubbles[1]?.getAttribute('data-batch-position')).toBe('single');
+    });
+
+    it('marks a standalone message (no batchId) as "single"', () => {
+      renderView(buildCtx([buildMessage({ id: 1 })]));
+      const bubble = screen.getByTestId('mock-bubble');
+      expect(bubble.getAttribute('data-batch-position')).toBe('single');
     });
   });
 

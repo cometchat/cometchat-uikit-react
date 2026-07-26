@@ -22,6 +22,21 @@ import {
 } from '../../utils/MessageReceiptUtils';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 
+/**
+ * Message types whose content is user-editable (text body or media caption).
+ * A non-zero `editedAt` on any of these means the message was edited, so the
+ * bubble surfaces the "Edited" indicator. Media types are included so edited
+ * image/video/audio/file messages — including multi-attachment/plural bubbles —
+ * show it too, not just plain text.
+ */
+const EDITABLE_MESSAGE_TYPES = new Set<string>([
+  CometChat.MESSAGE_TYPE.TEXT,
+  CometChat.MESSAGE_TYPE.IMAGE,
+  CometChat.MESSAGE_TYPE.VIDEO,
+  CometChat.MESSAGE_TYPE.AUDIO,
+  CometChat.MESSAGE_TYPE.FILE,
+]);
+
 const LazyCometChatReactionsRoot = lazy(() =>
   import('../CometChatReactions/CometChatReactionsRoot').then(m => ({
     default: m.CometChatReactionsRoot,
@@ -104,6 +119,7 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   const [isHovering, setIsHovering] = useState(false);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const bottomViewRef = useRef<HTMLDivElement>(null);
   const [isOptionsLocked, setIsOptionsLocked] = useState(false);
   const IframeContext = useCometChatFrameContext();
 
@@ -149,10 +165,14 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   const sender = message.getSender();
   const messageType = message.getType();
   const messageCategory = message.getCategory();
+  // "Edited" applies to any editable-content message, not just text: media
+  // messages (image/video/audio/file — including multi-attachment/plural bubbles)
+  // carry an editable caption, so a non-zero editedAt on them is a real edit.
+  // Restricting this to `text` hid the indicator for edited media messages.
   const isEdited =
     Boolean(message.getEditedAt()) &&
     messageCategory === CometChat.MessageCategory.MESSAGE &&
-    messageType === 'text';
+    EDITABLE_MESSAGE_TYPES.has(messageType);
   const replyCount = message.getReplyCount();
   const sentAt = message.getSentAt();
 
@@ -208,6 +228,26 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
     if (bottomView !== undefined) return bottomView(message);
     return null; // no built-in default here
   }, [bottomView, message]);
+
+  // Sync moderation bottom-view max-width to the body's rendered width.
+  // Only active when a bottom view (moderation) exists.
+  useEffect(() => {
+    const bodyEl = bodyRef.current;
+    const bottomEl = bottomViewRef.current;
+    if (!bodyEl || !bottomEl) return;
+
+    const sync = () => {
+      const w = String(Math.max(bodyEl.offsetWidth, 240));
+      bottomEl.style.maxWidth = `${w}px`;
+    };
+    sync();
+
+    const ro = new ResizeObserver(sync);
+    ro.observe(bodyEl);
+    return () => {
+      ro.disconnect();
+    };
+  }, [effectiveBottomContent]);
 
   const effectiveReplyContent = useMemo(() => {
     if (replyView === null) return null;
@@ -513,7 +553,7 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
             )}
 
             {effectiveBottomContent && (
-              <div className={'cometchat-message-bubble__body-bottom-view'}>
+              <div ref={bottomViewRef} className={'cometchat-message-bubble__body-bottom-view'}>
                 {effectiveBottomContent}
               </div>
             )}

@@ -47,17 +47,26 @@ describe('extractImageAttachments', () => {
     expect(result).toHaveLength(0);
   });
 
-  it('filters out attachments without a URL', () => {
+  it('returns only the first attachment (multi-attachment handled by CometChatImagesBubble)', () => {
     const result = extractImageAttachments(
       mockMediaMessage({
         attachments: [
           { getUrl: () => 'https://example.com/img1.jpg', getSize: () => 100 },
-          { getUrl: () => '', getSize: () => 200 },
           { getUrl: () => 'https://example.com/img2.jpg', getSize: () => 300 },
         ],
       })
     );
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(1);
+    expect(result[0]?.url).toBe('https://example.com/img1.jpg');
+  });
+
+  it('returns empty when the first attachment has no URL', () => {
+    const result = extractImageAttachments(
+      mockMediaMessage({
+        attachments: [{ getUrl: () => '', getSize: () => 200 }],
+      })
+    );
+    expect(result).toHaveLength(0);
   });
 
   it('returns a placeholder attachment for a pending message with file metadata', () => {

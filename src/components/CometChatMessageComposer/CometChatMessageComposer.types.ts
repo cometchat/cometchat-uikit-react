@@ -36,6 +36,42 @@ export type CometChatComposerContentToDisplay =
   | 'ai'
   | 'none';
 
+// --- Multi-Attachment Staging Tray ---
+
+/** Media kind of a staged tray item, derived from the file type. */
+export type TrayItemKind = 'image' | 'video' | 'audio' | 'file';
+
+/** Upload lifecycle status of a staged tray item. */
+export type TrayItemStatus = 'uploading' | 'success' | 'failed' | 'rejected';
+
+/** A single staged file in the composer tray with its own upload status and preview. */
+export interface TrayItem {
+  /** Per-file identifier from the upload group. */
+  fileId: string;
+  /** The staged file. */
+  file: File;
+  /** Media kind derived from the file type. */
+  kind: TrayItemKind;
+  /** Upload lifecycle status. */
+  status: TrayItemStatus;
+  /** Upload progress percentage (0-100). */
+  percent: number;
+  /** SDK attachment, set once the upload succeeds. */
+  attachment?: CometChat.Attachment;
+  /** Object URL used for local preview; revoked on remove/clear. */
+  previewUrl?: string;
+  /** Error captured on failure/rejection. */
+  error?: unknown;
+}
+
+/** Composer staging-tray slice: one upload group of staged items. */
+export interface TrayState {
+  /** UIKit-generated upload-group id, or null when the tray is empty. */
+  batchId: string | null;
+  /** Staged items in attach order. */
+  items: TrayItem[];
+}
+
 // --- Attachment Config ---
 
 /** Configuration for hiding specific attachment options. */
@@ -98,7 +134,7 @@ export interface CometChatMessageComposerRootProps {
   // ==================== Edit / Reply ====================
 
   /** Message to edit (triggers edit mode). */
-  messageToEdit?: CometChat.TextMessage | null;
+  messageToEdit?: CometChat.TextMessage | CometChat.MediaMessage | null;
   /** Message to reply to (triggers reply mode). */
   messageToReply?: CometChat.BaseMessage | null;
 
@@ -110,12 +146,17 @@ export interface CometChatMessageComposerRootProps {
   hideAttachmentOptions?: CometChatAttachmentHideOptions;
   /** Whether to show attachment preview thumbnails before sending. Default: true. */
   showAttachmentPreview?: boolean;
-  /** Max number of attachments allowed. Default: 10. */
-  maxAttachments?: number;
+  /**
+   * Enable multi-attachment staging behavior. When `true` (default), selecting an
+   * attachment option stages files in a tray for a single batched send. When
+   * `false`, each attachment option reverts to legacy single-select,
+   * send-immediately behavior.
+   */
+  enableMultipleAttachments?: boolean;
+  /** Disable drag-and-drop file upload. Default: false. */
+  disableDragAndDrop?: boolean;
   /** Allowed file MIME types for attachments. */
   allowedFileTypes?: string[];
-  /** Max file size in bytes. */
-  maxFileSize?: number;
 
   // ==================== Hide Buttons ====================
 
@@ -296,7 +337,7 @@ export interface CometChatMessageComposerFooterProps {
 export interface CometChatMessageComposerContextValue {
   // --- State ---
   text: string;
-  textMessageToEdit: CometChat.TextMessage | null;
+  textMessageToEdit: CometChat.TextMessage | CometChat.MediaMessage | null;
   messageToReply: CometChat.BaseMessage | null;
   contentToDisplay: CometChatComposerContentToDisplay;
   sendState: CometChatComposerSendState;
@@ -314,10 +355,33 @@ export interface CometChatMessageComposerContextValue {
   showVoiceButton: boolean;
   layout: CometChatMessageComposerLayout;
 
+  // --- Multi-attachment tray ---
+  /** Multi-attachment staging-tray slice (one upload group of staged items). */
+  tray: TrayState;
+  /**
+   * Stage and upload the given files, creating or extending the upload group.
+   * Used by the attachment picker when `enableMultipleAttachments` is true.
+   */
+  stageAttachments: (files: File[], forcedKind?: TrayItemKind) => void;
+  /** Cancel a staged file's upload and remove it from the tray. */
+  removeAttachment: (fileId: string) => void;
+  /** Retry a failed staged file's upload. */
+  retryAttachment: (fileId: string) => void;
+  /** Release the upload group and clear the tray. */
+  clearAttachments: () => void;
+  /** Latest send-eligibility computed from the most recent upload `onComplete`. */
+  attachmentsSendable: boolean;
+  /** Resolved per-batch maximum attachment count (from SDK settings, or fallback). */
+  maxAttachmentCount: number;
+
   // --- Actions ---
   setText: (text: string) => void;
   sendMessage: (textOverride?: string) => Promise<void>;
-  sendMediaMessage: (file: File, fileType: string) => Promise<void>;
+  sendMediaMessage: (
+    file: File,
+    fileType: string,
+    options?: { isVoiceNote?: boolean }
+  ) => Promise<void>;
   editMessage: () => Promise<void>;
   insertEmoji: (emoji: string) => void;
   setContentToDisplay: (content: CometChatComposerContentToDisplay) => void;
@@ -347,9 +411,9 @@ export interface CometChatMessageComposerContextValue {
   disableMentionAll: boolean;
   mentionAllLabel: string;
   showAttachmentPreview: boolean;
-  maxAttachments: number;
+  /** Whether multi-attachment staging is enabled (default true). */
+  enableMultipleAttachments: boolean;
   allowedFileTypes?: string[];
-  maxFileSize?: number;
   attachmentOptions?: CometChatComposerAttachmentOption[];
   textFormatters?: CometChatTextFormatter[];
   // Hide button flags

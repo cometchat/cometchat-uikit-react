@@ -1,6 +1,6 @@
 {
   "name": "@cometchat/chat-uikit-react",
-  "version": "7.0.3",
+  "version": "7.1.0",
   "description": "Ready-to-use Chat UI Components for React",
   "author": "CometChat",
   "type": "module",
@@ -40,8 +40,8 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@cometchat/calls-sdk-javascript": "^5.0.0",
-    "@cometchat/chat-sdk-javascript": "^4.1.12",
+    "@cometchat/calls-sdk-javascript": "^5.0.3",
+    "@cometchat/chat-sdk-javascript": "^4.1.13",
     "@eslint/js": "^9.39.4",
     "@storybook/addon-a11y": "^10.3.5",
     "@storybook/addon-docs": "^10.4.1",
@@ -75,7 +75,8 @@
     "vitest": "^3.1.1"
   },
   "peerDependencies": {
-    "@cometchat/chat-sdk-javascript": "^4.1.12",
+    "@cometchat/calls-sdk-javascript": "^5.0.3",
+    "@cometchat/chat-sdk-javascript": "^4.1.13",
     "react": ">=18.0.0 <21.0.0",
     "react-dom": ">=18.0.0 <21.0.0"
   },

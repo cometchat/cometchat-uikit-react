@@ -69,9 +69,9 @@ describe('CometChatFilePlugin', () => {
       expect(result).toBeTruthy();
     });
 
-    it('returns the CometChatFileBubble component', () => {
+    it('renders the batch-aware CometChatFilesBubble by default (flag unset)', () => {
       const result = CometChatFilePlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.type?.displayName).toBe('CometChatFileBubble');
+      expect(result.type?.displayName).toBe('CometChatFilesBubble');
     });
 
     it('passes the message through to the bubble', () => {

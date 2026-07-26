@@ -1,6 +1,6 @@
 {
   "name": "sample-app",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,9 +15,9 @@
     "e2e:debug": "playwright test --debug"
   },
   "dependencies": {
-    "@cometchat/calls-sdk-javascript": "^5.0.0",
-    "@cometchat/chat-sdk-javascript": "^4.1.12",
-    "@cometchat/chat-uikit-react": "^7.0.3",
+    "@cometchat/calls-sdk-javascript": "^5.0.3",
+    "@cometchat/chat-sdk-javascript": "^4.1.13",
+    "@cometchat/chat-uikit-react": "^7.1.0",
     "dompurify": "3.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

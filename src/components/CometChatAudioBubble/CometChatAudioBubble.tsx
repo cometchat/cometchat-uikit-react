@@ -11,27 +11,14 @@ import { downloadWithProgress } from '../../utils/downloadWithProgress';
 import { getBubbleAlignment } from '../../utils/getBubbleAlignment';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
 import { useLocale } from '../../hooks/useLocale';
+import {
+  startExclusivePlayback,
+  stopExclusivePlayback,
+  type AudioPlaybackHandle,
+} from '../../utils/audioPlaybackController';
 import './CometChatAudioBubble.css';
 
-// --- Single player policy ---
-
-const currentAudioPlayer: {
-  instance: WaveSurfer | null;
-  setIsPlaying: ((playing: boolean) => void) | null;
-} = { instance: null, setIsPlaying: null };
-
-function pauseCurrentPlayer(): void {
-  if (currentAudioPlayer.instance) {
-    currentAudioPlayer.instance.pause();
-    currentAudioPlayer.setIsPlaying?.(false);
-    currentAudioPlayer.instance = null;
-    currentAudioPlayer.setIsPlaying = null;
-  }
-}
-
 // --- Helpers ---
-
-const COLLAPSED_MAX = 3;
 
 function formatTime(seconds: number): string {
   if (!seconds || seconds < 0 || !isFinite(seconds)) return '0:00';
@@ -61,6 +48,16 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
   const abortRef = useRef<AbortController | null>(null);
   const isPlayingRef = useRef(false);
   const IframeContext = useCometChatFrameContext();
+
+  // Stable handle for the global single-audio policy: pausing from elsewhere
+  // must also reflect the paused state in this item's own UI.
+  const playbackHandleRef = useRef<AudioPlaybackHandle>({
+    pause: () => {
+      wsRef.current?.pause();
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+    },
+  });
 
   const getCurrentDocument = useCallback(() => {
     return IframeContext.iframeDocument ?? document;
@@ -130,10 +127,7 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
       ws.seekTo(0);
       setIsPlaying(false);
       isPlayingRef.current = false;
-      if (currentAudioPlayer.instance === ws) {
-        currentAudioPlayer.instance = null;
-        currentAudioPlayer.setIsPlaying = null;
-      }
+      stopExclusivePlayback(playbackHandleRef.current);
     });
 
     ws.on('error', () => {
@@ -147,10 +141,7 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
     });
 
     return () => {
-      if (currentAudioPlayer.instance === ws) {
-        currentAudioPlayer.instance = null;
-        currentAudioPlayer.setIsPlaying = null;
-      }
+      stopExclusivePlayback(playbackHandleRef.current);
       ws.unAll();
       try {
         ws.destroy();
@@ -170,24 +161,17 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
       ws.pause();
       setIsPlaying(false);
       isPlayingRef.current = false;
-      if (currentAudioPlayer.instance === ws) {
-        currentAudioPlayer.instance = null;
-        currentAudioPlayer.setIsPlaying = null;
-      }
+      stopExclusivePlayback(playbackHandleRef.current);
     } else {
-      // Pause any other playing audio
-      if (currentAudioPlayer.instance && currentAudioPlayer.instance !== ws) {
-        pauseCurrentPlayer();
-      }
+      // Becoming the sole active player pauses whatever else was playing.
+      startExclusivePlayback(playbackHandleRef.current);
       ws.play()
         .then(() => {
           setIsPlaying(true);
           isPlayingRef.current = true;
-          currentAudioPlayer.instance = ws;
-          currentAudioPlayer.setIsPlaying = setIsPlaying;
         })
         .catch(() => {
-          /* ignore */
+          stopExclusivePlayback(playbackHandleRef.current);
         });
     }
   }, [isPlaying, isLoading, hasError]);
@@ -318,11 +302,10 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
 // --- Main component ---
 
 /**
- * CometChatAudioBubble — renders audio messages with WaveSurfer waveform,
- * play/pause, time display, download with progress, multi-audio expand/collapse,
- * and caption support.
+ * CometChatAudioBubble — renders an audio message with WaveSurfer waveform,
+ * play/pause, time display, download with progress, and caption support.
  *
- * Takes the SDK message and extracts the audio attachments and caption from it;
+ * Takes the SDK message and extracts the audio attachment and caption from it;
  * alignment and localization come from hooks, so it can be used directly (no plugin).
  */
 export const CometChatAudioBubble: React.FC<CometChatAudioBubbleProps> = ({
@@ -331,9 +314,7 @@ export const CometChatAudioBubble: React.FC<CometChatAudioBubbleProps> = ({
   textFormatters = [],
   className,
 }) => {
-  const { getLocalizedString } = useLocale();
   const loggedInUser = useLoggedInUser();
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const variant: 'incoming' | 'outgoing' =
     (alignment ?? getBubbleAlignment(message, loggedInUser)) === 'right' ? 'outgoing' : 'incoming';
@@ -342,15 +323,8 @@ export const CometChatAudioBubble: React.FC<CometChatAudioBubbleProps> = ({
   const attachments = useMemo(() => extractAudioAttachments(message), [message]);
   const caption = useMemo(() => extractAudioCaption(message), [message]);
 
-  const collapsedItems = useMemo(() => attachments.slice(0, COLLAPSED_MAX), [attachments]);
-  const remainingCount = Math.max(0, attachments.length - COLLAPSED_MAX);
-  const hasOverflow = remainingCount > 0;
-
-  const toggleExpanded = useCallback(() => {
-    setIsExpanded(prev => !prev);
-  }, []);
-
-  const visibleItems = isExpanded ? attachments : collapsedItems;
+  // Singular bubble: render only the first attachment.
+  const attachment = attachments[0];
 
   const rootClasses = [
     'cometchat-audio-bubble',
@@ -363,38 +337,7 @@ export const CometChatAudioBubble: React.FC<CometChatAudioBubbleProps> = ({
   return (
     <div className={rootClasses}>
       <div className={'cometchat-audio-bubble__container'}>
-        {visibleItems.map((att, i) => (
-          <AudioItem key={att.url || i} attachment={att} variant={variant} />
-        ))}
-
-        {/* Show more / Show less */}
-        {hasOverflow && !isExpanded && (
-          <button
-            type="button"
-            className={'cometchat-audio-bubble__toggle-control'}
-            onClick={toggleExpanded}
-            aria-label={getLocalizedString('accessibility_show_more_files').replace(
-              '{count}',
-              String(remainingCount)
-            )}
-            aria-expanded={false}
-          >
-            Show more{' '}
-            <span className={'cometchat-audio-bubble__toggle-count'}>+{remainingCount}</span>
-          </button>
-        )}
-
-        {hasOverflow && isExpanded && (
-          <button
-            type="button"
-            className={'cometchat-audio-bubble__toggle-control'}
-            onClick={toggleExpanded}
-            aria-label={getLocalizedString('text_message_show_less')}
-            aria-expanded={true}
-          >
-            Show less
-          </button>
-        )}
+        {attachment && <AudioItem attachment={attachment} variant={variant} />}
       </div>
 
       {/* Caption */}

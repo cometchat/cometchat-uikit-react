@@ -30,6 +30,7 @@ export const CometChatToast = forwardRef<HTMLDivElement, CometChatToastProps>(
       onClose,
       showCloseButton = true,
       dismissOnEscape = true,
+      variant = 'default',
       className,
       ...rest
     },
@@ -92,7 +93,13 @@ export const CometChatToast = forwardRef<HTMLDivElement, CometChatToastProps>(
 
     if (!text) return null;
 
-    const rootClass = ['cometchat-toast', className].filter(Boolean).join(' ');
+    const rootClass = [
+      'cometchat-toast',
+      variant === 'error' ? 'cometchat-toast--error' : '',
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     return (
       <div

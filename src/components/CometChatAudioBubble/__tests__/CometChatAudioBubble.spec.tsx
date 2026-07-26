@@ -134,21 +134,19 @@ describe('CometChatAudioBubble', () => {
     expect(container.firstChild).toHaveClass('custom');
   });
 
-  it('shows "Show more" when more than 3 attachments', () => {
-    render(<CometChatAudioBubble message={buildAudioMessage({ attachmentCount: 5 })} />);
-    expect(screen.getByText(/Show more/)).toBeInTheDocument();
-  });
-
-  it('does not show "Show more" for 3 or fewer attachments', () => {
+  // The singular CometChatAudioBubble renders only the first attachment;
+  it('does not show "Show more" for a single attachment', () => {
     render(<CometChatAudioBubble message={buildAudioMessage({ attachmentCount: 1 })} />);
     expect(screen.queryByText(/Show more/)).toBeNull();
   });
 
-  it('renders only 3 items when collapsed with more than 3 attachments', () => {
+  it('renders only the first attachment when the message has several', () => {
     const { container } = render(
-      <CometChatAudioBubble message={buildAudioMessage({ attachmentCount: 5 })} />
+      <CometChatAudioBubble message={buildAudioMessage({ attachmentCount: 3 })} />
     );
-    const items = container.querySelectorAll('.cometchat-audio-bubble__audio-item');
-    expect(items.length).toBe(3);
+    // Only one audio item, and never a "Show more" toggle — batch rendering is
+    // handled by CometChatAudiosBubble.
+    expect(container.querySelectorAll('.cometchat-audio-bubble__audio-item')).toHaveLength(1);
+    expect(screen.queryByText(/Show more/)).toBeNull();
   });
 });

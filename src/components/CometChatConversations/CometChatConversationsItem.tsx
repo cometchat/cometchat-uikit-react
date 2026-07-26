@@ -192,13 +192,34 @@ function getLastMessageText(
           isHtml: false,
         };
       case 'image':
-        return { senderPrefix, text: t('conversation_subtitle_image', 'Image'), isHtml: false };
       case 'video':
-        return { senderPrefix, text: t('conversation_subtitle_video', 'Video'), isHtml: false };
       case 'audio':
-        return { senderPrefix, text: t('conversation_subtitle_audio', 'Audio'), isHtml: false };
-      case 'file':
-        return { senderPrefix, text: t('conversation_subtitle_file', 'File'), isHtml: false };
+      case 'file': {
+        const mediaMsg = lastMessage as CometChat.MediaMessage;
+        const attachments =
+          typeof mediaMsg.getAttachments === 'function' ? mediaMsg.getAttachments() : [];
+        const count = Math.max(attachments.length, 1);
+        const caption =
+          typeof mediaMsg.getCaption === 'function' ? mediaMsg.getCaption() || '' : '';
+        const mediaType = type as string;
+        // Capitalized English fallback (Image/Video/Audio/File) matching the
+        // localization resources — used when the shared localize instance can't
+        // resolve the key. (Sibling branches all use capitalized fallbacks.)
+        const mediaLabelFallback = mediaType.charAt(0).toUpperCase() + mediaType.slice(1);
+        let label: string;
+        if (count === 1) {
+          label = t(`conversation_subtitle_${mediaType}`, mediaLabelFallback);
+        } else {
+          const pluralKey = `media_edit_preview_${mediaType}_plural`;
+          const plural = t(pluralKey, '');
+          label =
+            plural && plural !== pluralKey
+              ? `${String(count)} ${plural}`
+              : `${String(count)} ${t(`conversation_subtitle_${mediaType}`, mediaLabelFallback)}`;
+        }
+        const text = caption.trim() ? `${label} · ${caption.trim()}` : label;
+        return { senderPrefix, text, isHtml: false };
+      }
       default:
         return { senderPrefix, text: type, isHtml: false };
     }

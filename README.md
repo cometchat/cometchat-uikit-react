@@ -202,6 +202,43 @@ npm run e2e:cleanup
 | **CI/CD** (e2e-group-33) | Incoming messages for message-privately tests | ❌ Never |
 | **AI Agent E2E** | AI assistant chat tests | ✅ Yes |
 
+#### Optional fixtures — multi-attachment error states
+
+Two tests in `e2e/multi-attachment/multi-attachment.spec.ts` exercise the composer's
+**rejected** (non-retryable) upload states. They need inputs that are impractical to
+commit (a huge file) or that depend on dashboard config, so they **skip themselves
+unless you add a matching fixture** to `e2e/fixtures/`. The lookup is by name prefix,
+so the extension is up to you (within the limits noted below).
+
+**1. File size exceeded — `e2e-oversize.*`**
+
+Any single file larger than 100 MB (any extension) in `e2e/fixtures/`. You can generate one with:
+
+```bash
+# from sample-app/
+head -c 150000000 /dev/urandom > e2e/fixtures/e2e-oversize.txt   # ~150 MB
+```
+
+**2. File type not supported — `e2e-blocked-mime.*` + `E2E_BLOCKED_MIME_TYPE`**
+
+This test needs **both** of the following — if either is missing it is skipped:
+
+- **A fixture** named `e2e-blocked-mime.*` in `e2e/fixtures/`. Its extension must **not**
+  be `png`, `mp4`, `mp3`, or `pdf` (so it can't collide with the standard fixtures). The
+  file's bytes are what get uploaded; the extension itself doesn't matter beyond that.
+- **`E2E_BLOCKED_MIME_TYPE`** in `.env.e2e`, set to the exact MIME type you denied in the
+  dashboard (e.g. `E2E_BLOCKED_MIME_TYPE=image/svg+xml`). The test attaches this MIME to
+  the upload explicitly. This is required because Playwright can't infer a MIME for exotic
+  extensions and would send an empty one — the server then rejects with
+  `mimeType is required` (a *retryable* failure) instead of the permission-denied
+  *rejected* state the test asserts. There is no fallback: the MIME must come from this
+  env var and must match what you denied.
+
+**Where to set the restriction:** on the **Strategy group → Scope permissions → Admin**
+role. The E2E suite runs against the Strategy group and `E2E_USER_UID` is normally an
+admin/owner there, so blocking the MIME type for the Admin scope reliably applies to the
+uploads under test.
+
 #### Quick Start
 
 ```bash

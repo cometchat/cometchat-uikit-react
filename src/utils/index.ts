@@ -11,3 +11,11 @@ export {
   type CreateStreamingMessageOptions,
 } from './CometChatStreamingMessageFactory';
 export { downloadWithProgress, type DownloadProgress } from './downloadWithProgress';
+export {
+  getBatchId,
+  getAudioType,
+  isVoiceNote,
+  stampBatchMetadata,
+  type StampBatchMetadataOptions,
+} from './CometChatMetadataUtils';
+export { computeBatchPosition, getMessageBatchId, type BatchPosition } from './CometChatBatchUtils';

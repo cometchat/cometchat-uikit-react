@@ -16,16 +16,11 @@ import { CometChatCollaborativeWhiteboardPlugin } from '../collaborative-whitebo
 import { CometChatAIPlugin } from '../ai/CometChatAIPlugin';
 
 /**
- * Default core plugins. Consumers can extend by spreading this array
- * and adding additional plugins:
+ * Default core plugins.
  *
- * ```tsx
- * <CometChatProvider plugins={[...defaultPlugins, MyCustomPlugin]}>
- * ```
- *
+ * The media plugins (image, video, audio, file) render the batch-aware plural
+ * bubbles (ImagesBubble, VideosBubble, AudiosBubble/VoiceNoteBubble, FilesBubble).
  * Order matters for type+category matching — first match wins.
- * DeletePlugin is last because it's matched by the registry's deleted-message
- * fast path (getDeletedAt() check), not by type+category.
  */
 export const defaultPlugins: CometChatMessagePlugin[] = [
   CometChatTextPlugin,

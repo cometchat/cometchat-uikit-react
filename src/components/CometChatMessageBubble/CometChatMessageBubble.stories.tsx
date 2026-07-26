@@ -14,6 +14,10 @@ import { CometChatCollaborativeDocumentBubble } from '../CometChatCollaborativeD
 import { CometChatCollaborativeWhiteboardBubble } from '../CometChatCollaborativeWhiteboardBubble';
 import { CometChatImageBubble } from '../CometChatImageBubble/CometChatImageBubble';
 import { CometChatPollBubble } from '../CometChatPollBubble/CometChatPollBubble';
+import { CometChatMessageOption } from '../../plugins/plugin.types';
+import addReactionIcon from '../../assets/add_reaction_icon.svg';
+import replyIcon from '../../assets/reply.svg';
+import infoIcon from '../../assets/info_icon_fill.svg';
 
 const meta: Meta = {
   title: 'Components/Bubbles/Message Bubble',
@@ -102,7 +106,13 @@ function mockGroup(): CometChat.Group {
 }
 
 /** Container for stories. */
-function ChatContainer({ children }: { children: React.ReactNode }) {
+function ChatContainer({
+  styles,
+  children,
+}: {
+  styles?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
   return (
     <div
       style={{
@@ -114,6 +124,7 @@ function ChatContainer({ children }: { children: React.ReactNode }) {
         background: 'var(--cometchat-background-color-01, #fff)',
         borderRadius: 'var(--cometchat-radius-4, 16px)',
         border: '1px solid var(--cometchat-border-color-light, #f5f5f5)',
+        ...styles,
       }}
     >
       {children}
@@ -393,8 +404,34 @@ export const LongText = () => {
   const longText =
     'This is a very long message that should demonstrate the truncation behavior of the text bubble component. When the text content exceeds approximately four lines of text, the component should truncate the content and show a "Read more" button. Clicking the button expands the text to show the full content.';
   const group = mockGroup();
+  const options: CometChatMessageOption[] = [
+    {
+      id: 'custom',
+      title: 'no-op',
+      iconURL: addReactionIcon,
+      onClick: () => {
+        /* no-op */
+      },
+    },
+    {
+      id: 'custom',
+      title: 'no-op',
+      iconURL: replyIcon,
+      onClick: () => {
+        /* no-op */
+      },
+    },
+    {
+      id: 'custom',
+      title: 'no-op',
+      iconURL: infoIcon,
+      onClick: () => {
+        /* no-op */
+      },
+    },
+  ];
   return (
-    <ChatContainer>
+    <ChatContainer styles={{ width: 800 }}>
       <CometChatMessageBubble
         message={mockMessage({
           text: longText,
@@ -410,6 +447,7 @@ export const LongText = () => {
             textFormatters={createFormatters('right')}
           />
         }
+        options={options}
       />
       <CometChatMessageBubble
         message={mockMessage({
@@ -427,6 +465,7 @@ export const LongText = () => {
             textFormatters={createFormatters('left')}
           />
         }
+        options={options}
       />
     </ChatContainer>
   );
@@ -687,7 +726,7 @@ export const CollaborativeWhiteboardMessage = () => {
 export const LinkPreviewMessage = () => {
   const msgWithLinkPreview = {
     ...mockMessage({
-      text: 'Check out this article: https://www.cometchat.com/blog',
+      text: 'Check out this article: https://www.cometchat.com',
       sentAt: Math.floor(Date.now() / 1000),
       readAt: Math.floor(Date.now() / 1000),
     }),
@@ -697,11 +736,11 @@ export const LinkPreviewMessage = () => {
           'link-preview': {
             links: [
               {
-                url: 'https://www.cometchat.com/blog',
-                title: 'CometChat Blog — Build Better Chat Experiences',
+                url: 'https://www.cometchat.com',
+                title: 'CometChat Docs — Build Better Chat Experiences',
                 description:
                   'Learn how to build real-time chat, voice, and video features into your app with CometChat.',
-                image: 'https://www.cometchat.com/blog/og-image.png',
+                image: 'https://picsum.photos/id/3/300/200',
                 favicon: 'https://www.cometchat.com/favicon.ico',
               },
             ],
@@ -710,7 +749,7 @@ export const LinkPreviewMessage = () => {
       },
     }),
     getMentionedUsers: () => [],
-    getText: () => 'Check out this article: https://www.cometchat.com/blog',
+    getText: () => 'Check out this article: https://www.cometchat.com',
     getReactions: () => [],
   } as unknown as CometChat.BaseMessage;
 
@@ -743,13 +782,13 @@ export const LinkPreviewMessage = () => {
   } as unknown as CometChat.BaseMessage;
 
   return (
-    <ChatContainer>
+    <ChatContainer styles={{ width: 640 }}>
       <CometChatMessageBubble
         message={msgWithLinkPreview}
         alignment="right"
         contentView={
           <CometChatTextBubble
-            text="Check out this article: https://www.cometchat.com/blog"
+            text="Check out this article: https://www.cometchat.com/"
             isSentByMe={true}
             textFormatters={createFormatters('right')}
             message={msgWithLinkPreview as unknown as CometChat.TextMessage}
@@ -869,14 +908,20 @@ export const ThumbnailGenerationMessage = () => {
         alignment="right"
         hideAvatar
         hideSenderName
-        contentView={<CometChatImageBubble message={outgoing} alignment="right" />}
+        contentView={
+          // eslint-disable-next-line @typescript-eslint/no-deprecated -- story demonstrates the legacy bubble as a custom contentView
+          <CometChatImageBubble message={outgoing} alignment="right" />
+        }
       />
       <CometChatMessageBubble
         message={incoming}
         alignment="left"
         hideAvatar
         hideSenderName
-        contentView={<CometChatImageBubble message={incoming} alignment="left" />}
+        contentView={
+          // eslint-disable-next-line @typescript-eslint/no-deprecated -- story demonstrates the legacy bubble as a custom contentView
+          <CometChatImageBubble message={incoming} alignment="left" />
+        }
       />
     </ChatContainer>
   );

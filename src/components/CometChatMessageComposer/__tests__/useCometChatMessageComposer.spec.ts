@@ -38,6 +38,7 @@ function makeTextMessage(id: number, text: string) {
   return {
     getId: () => id,
     getText: () => text,
+    getType: () => 'text',
     getMetadata: () => ({}),
   } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.TextMessage;
 }
@@ -413,6 +414,186 @@ describe('useCometChatMessageComposer', () => {
         result.current.closePreview();
       });
       expect(onClosePreview).toHaveBeenCalledOnce();
+    });
+  });
+
+  // Compact composer mic <-> send swap (R8.5): the mic is visible only when there
+  // is no text AND the tray is empty. A non-empty tray hides the mic (Send takes
+  // its place); clearing the tray restores the mic because it is state-driven.
+  describe('mic/send visibility (compact composer swap)', () => {
+    type TrayItemInput = import('../CometChatMessageComposer.types').TrayItem;
+    type TrayItemStatusInput = import('../CometChatMessageComposer.types').TrayItemStatus;
+
+    function makeTrayItem(fileId: string, status: TrayItemStatusInput): TrayItemInput {
+      return {
+        fileId,
+        file: {} as File,
+        kind: 'image',
+        status,
+        percent: status === 'success' ? 100 : 0,
+      };
+    }
+
+    it('shows the mic when the tray is empty and text is empty', () => {
+      const { result } = renderHook(() => useCometChatMessageComposer({}));
+      expect(result.current.state.tray.items).toHaveLength(0);
+      expect(result.current.showVoiceButton).toBe(true);
+    });
+
+    it('hides the mic when the tray is non-empty (Send takes its place)', () => {
+      const { result } = renderHook(() => useCometChatMessageComposer({}));
+      act(() => {
+        result.current.dispatch({
+          type: 'TRAY_ADD',
+          items: [makeTrayItem('f1', 'uploading')],
+          batchId: 'batch-1',
+        });
+      });
+      expect(result.current.showVoiceButton).toBe(false);
+    });
+
+    it('keeps the mic hidden when text is present (existing behavior)', () => {
+      const { result } = renderHook(() => useCometChatMessageComposer({}));
+      act(() => {
+        result.current.setText('Hello');
+      });
+      expect(result.current.state.tray.items).toHaveLength(0);
+      expect(result.current.showVoiceButton).toBe(false);
+    });
+
+    it('restores the mic when the tray is cleared (clear-to-restore)', () => {
+      const { result } = renderHook(() => useCometChatMessageComposer({}));
+      act(() => {
+        result.current.dispatch({
+          type: 'TRAY_ADD',
+          items: [makeTrayItem('f1', 'success')],
+          batchId: 'batch-1',
+        });
+      });
+      expect(result.current.showVoiceButton).toBe(false);
+      act(() => {
+        result.current.dispatch({ type: 'TRAY_CLEAR' });
+      });
+      expect(result.current.state.tray.items).toHaveLength(0);
+      expect(result.current.showVoiceButton).toBe(true);
+    });
+
+    it('restores the mic when the last tray item is removed', () => {
+      const { result } = renderHook(() => useCometChatMessageComposer({}));
+      act(() => {
+        result.current.dispatch({
+          type: 'TRAY_ADD',
+          items: [makeTrayItem('f1', 'success')],
+          batchId: 'batch-1',
+        });
+      });
+      expect(result.current.showVoiceButton).toBe(false);
+      act(() => {
+        result.current.dispatch({ type: 'TRAY_REMOVE', fileId: 'f1' });
+      });
+      expect(result.current.showVoiceButton).toBe(true);
+    });
+
+    it('enables Send only when every tray item is success (all-or-nothing)', () => {
+      const { result } = renderHook(() => useCometChatMessageComposer({}));
+      // Mixed statuses -> Send disabled even with empty text.
+      act(() => {
+        result.current.dispatch({
+          type: 'TRAY_ADD',
+          items: [makeTrayItem('f1', 'success'), makeTrayItem('f2', 'uploading')],
+          batchId: 'batch-1',
+        });
+      });
+      expect(result.current.canSend).toBe(false);
+      // All success -> Send enabled (tray gating overrides the empty-text rule).
+      act(() => {
+        result.current.dispatch({
+          type: 'TRAY_SET_ATTACHMENT',
+          fileId: 'f2',
+          attachment: {} as import('@cometchat/chat-sdk-javascript').CometChat.Attachment,
+        });
+      });
+      expect(result.current.canSend).toBe(true);
+    });
+  });
+
+  describe('sendBatch routing (regression: attachments must send)', () => {
+    type TrayItemInput = import('../CometChatMessageComposer.types').TrayItem;
+
+    function makeSuccessItem(fileId: string): TrayItemInput {
+      return {
+        fileId,
+        file: new File([''], 'photo.jpg', { type: 'image/jpeg' }),
+        kind: 'image',
+        status: 'success',
+        percent: 100,
+        attachment: {
+          getUrl: () => 'http://cdn/photo.jpg',
+        } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.Attachment,
+      };
+    }
+
+    it('sendBatch sends media messages when tray has items and user/SDK are available', async () => {
+      // Setup SDK as initialized + logged-in
+      mockCometChat.isInitialized = vi.fn().mockReturnValue(true);
+      mockCometChat.getLoggedinUser = vi.fn().mockResolvedValue({
+        getUid: () => 'u1',
+        getName: () => 'User',
+      });
+
+      const { result } = renderHook(() =>
+        useCometChatMessageComposer({ user: { getUid: () => 'u2' } as any })
+      );
+
+      // Stage a success item into the tray.
+      act(() => {
+        result.current.dispatch({
+          type: 'TRAY_ADD',
+          items: [makeSuccessItem('f1')],
+          batchId: 'batch-send-test',
+        });
+      });
+
+      expect(result.current.state.tray.items).toHaveLength(1);
+      expect(result.current.canSend).toBe(true);
+
+      // Call sendBatch — should call SDK sendMediaMessage.
+      await act(async () => {
+        await result.current.sendBatch();
+      });
+
+      expect(mockCometChat.sendMediaMessage).toHaveBeenCalled();
+      // Tray should be cleared after send.
+      expect(result.current.state.tray.items).toHaveLength(0);
+    });
+
+    it('sendBatch does NOT call sendMessage (text-only)', async () => {
+      mockCometChat.isInitialized = vi.fn().mockReturnValue(true);
+      mockCometChat.getLoggedinUser = vi.fn().mockResolvedValue({
+        getUid: () => 'u1',
+        getName: () => 'User',
+      });
+
+      const { result } = renderHook(() =>
+        useCometChatMessageComposer({ user: { getUid: () => 'u2' } as any })
+      );
+
+      act(() => {
+        result.current.dispatch({
+          type: 'TRAY_ADD',
+          items: [makeSuccessItem('f1')],
+          batchId: 'batch-txt-test',
+        });
+        result.current.setText('caption text');
+      });
+
+      await act(async () => {
+        await result.current.sendBatch();
+      });
+
+      // sendMediaMessage is called (for the attachment), NOT sendMessage (text-only).
+      expect(mockCometChat.sendMediaMessage).toHaveBeenCalled();
+      expect(mockCometChat.sendMessage).not.toHaveBeenCalled();
     });
   });
 });

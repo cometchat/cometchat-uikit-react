@@ -338,3 +338,131 @@ export const InputEmojiSend: Story = {
     </div>
   ),
 };
+
+/**
+ * Drag and drop enabled
+ */
+export const DragAndDropOverlay: Story = {
+  render: () => (
+    <div style={CANVAS_STYLE}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <div>
+          <p style={LABEL_STYLE}>Drag and Drop Overlay (Multi-Attachment Mode)</p>
+          <CometChatMessageComposer.Root
+            placeholder="Drag files here to view overlay"
+            layout="compact"
+            enableMultipleAttachments
+            enableRichTextEditor
+          />
+        </div>
+      </div>
+    </div>
+  ),
+};
+DragAndDropOverlay.storyName = 'Drag & Drop Overlay';
+
+// ---------------------------------------------------------------------------
+// Reply & Edit Preview (media messages)
+// ---------------------------------------------------------------------------
+
+/**
+ * Reply to a media message — shows preview banner above the composer with
+ * media type icon and attachment count summary.
+ */
+export const ReplyToMediaMessage: Story = {
+  render: () => {
+    const mockMediaMessage = {
+      getId: () => 42,
+      getType: () => 'image',
+      getCategory: () => 'message',
+      getSender: () => ({
+        getUid: () => 'user-jane',
+        getName: () => 'Jane Smith',
+        getAvatar: () => '',
+        getStatus: () => 'online',
+      }),
+      getSentAt: () => Math.floor(Date.now() / 1000) - 300,
+      getDeliveredAt: () => 0,
+      getReadAt: () => 0,
+      getEditedAt: () => 0,
+      getDeletedAt: () => 0,
+      getReplyCount: () => 0,
+      getMuid: () => 'muid-reply',
+      getCaption: () => 'Beach sunset photos',
+      getText: () => 'Beach sunset photos',
+      getData: () => ({ text: 'Beach sunset photos' }),
+      getAttachments: () => [
+        { getUrl: () => 'https://picsum.photos/seed/reply1/200/200', getSize: () => 200000 },
+        { getUrl: () => 'https://picsum.photos/seed/reply2/200/200', getSize: () => 200000 },
+        { getUrl: () => 'https://picsum.photos/seed/reply3/200/200', getSize: () => 200000 },
+      ],
+      getMentionedUsers: () => [],
+      getMetadata: () => ({}),
+      getReactions: () => [],
+      getParentMessageId: () => 0,
+    } as unknown as CometChat.BaseMessage;
+
+    return (
+      <div style={CANVAS_STYLE}>
+        <p style={LABEL_STYLE}>Reply to image message (3 attachments with caption)</p>
+        <CometChatMessageComposer.Root
+          placeholder="Type your reply..."
+          layout="compact"
+          enableRichTextEditor
+          messageToReply={mockMediaMessage}
+        />
+      </div>
+    );
+  },
+};
+ReplyToMediaMessage.storyName = 'Reply to Media Message';
+
+/**
+ * Edit a media message caption — shows edit preview banner with media summary.
+ */
+export const EditMediaCaption: Story = {
+  render: () => {
+    const mockMediaMessage = {
+      getId: () => 55,
+      getType: () => 'video',
+      getCategory: () => 'message',
+      getSender: () => ({
+        getUid: () => 'me-1',
+        getName: () => 'You',
+        getAvatar: () => '',
+        getStatus: () => 'online',
+      }),
+      getSentAt: () => Math.floor(Date.now() / 1000) - 600,
+      getDeliveredAt: () => Math.floor(Date.now() / 1000) - 590,
+      getReadAt: () => Math.floor(Date.now() / 1000) - 580,
+      getEditedAt: () => 0,
+      getDeletedAt: () => 0,
+      getReplyCount: () => 0,
+      getMuid: () => 'muid-edit',
+      getCaption: () => 'Conference highlights',
+      getText: () => 'Conference highlights',
+      getData: () => ({ text: 'Conference highlights' }),
+      getAttachments: () => [
+        { getUrl: () => '#', getName: () => 'video-1.mp4', getSize: () => 5000000 },
+        { getUrl: () => '#', getName: () => 'video-2.mp4', getSize: () => 5000000 },
+      ],
+      getMentionedUsers: () => [],
+      getMetadata: () => ({}),
+      getReactions: () => [],
+      getParentMessageId: () => 0,
+    } as unknown as CometChat.MediaMessage;
+
+    return (
+      <div style={CANVAS_STYLE}>
+        <p style={LABEL_STYLE}>Edit video message caption (2 videos)</p>
+        <CometChatMessageComposer.Root
+          placeholder="Edit caption..."
+          layout="compact"
+          enableRichTextEditor
+          messageToEdit={mockMediaMessage}
+        />
+      </div>
+    );
+  },
+};
+EditMediaCaption.storyName = 'Edit Media Caption';

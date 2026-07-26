@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--cometchat-spacing-1, 4px);
-  max-width: var(--cometchat-text-bubble-max-width, 400px);
+  max-width: var(--cometchat-text-bubble-max-width, 630px);
   padding: var(--cometchat-text-bubble-padding, var(--cometchat-padding-2, 8px));
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -97,13 +97,6 @@
   outline: 2px solid var(--cometchat-primary-color, #6852d6);
   outline-offset: 2px;
   border-radius: var(--cometchat-radius-1, 4px);
-}
-
-/* --- Link Preview --- */
-
-.cometchat-text-bubble--has-link-preview {
-  width: 240px;
-  max-width: 240px;
 }
 
 .cometchat-text-bubble__link-preview-container {

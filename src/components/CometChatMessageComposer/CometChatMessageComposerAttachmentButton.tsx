@@ -1,6 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { CometChat, CometChatException } from '@cometchat/chat-sdk-javascript';
-import type { CometChatMessageComposerAttachmentButtonProps } from './CometChatMessageComposer.types';
+import type {
+  CometChatMessageComposerAttachmentButtonProps,
+  TrayItemKind,
+} from './CometChatMessageComposer.types';
 import { useCometChatMessageComposerContext } from './CometChatMessageComposer.context';
 import { CometChatPopover } from '../base/CometChatPopover';
 import type { CometChatActionSheetItemData } from '../base/CometChatActionSheet/CometChatActionSheet.types';
@@ -33,13 +36,17 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     contentToDisplay,
     setContentToDisplay,
     sendMediaMessage,
+    enableMultipleAttachments,
+    stageAttachments,
     attachmentOptions,
+    allowedFileTypes,
     user,
     group,
     parentMessageId,
     messageToReply,
     closePreview,
     onError,
+    isInEditMode,
   } = useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
   const IframeContext = useCometChatFrameContext();
@@ -59,23 +66,48 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
       const input = getCurrentDocument().createElement('input');
       input.type = 'file';
       input.accept =
-        type === 'image'
-          ? 'image/*'
-          : type === 'video'
-            ? 'video/*'
-            : type === 'audio'
-              ? 'audio/*'
-              : '*/*';
-      input.onchange = () => {
-        const file = input.files?.[0];
-        if (file) {
-          void sendMediaMessage(file, type);
-        }
-      };
+        allowedFileTypes && allowedFileTypes.length > 0
+          ? allowedFileTypes.join(',')
+          : type === 'image'
+            ? 'image/*'
+            : type === 'video'
+              ? 'video/*'
+              : type === 'audio'
+                ? 'audio/*'
+                : '*/*';
+      if (enableMultipleAttachments) {
+        // Multi-attachment: allow selecting several files and route ALL of them
+        // to the staging tray (no immediate send).
+        input.multiple = true;
+        input.onchange = () => {
+          const files = input.files ? Array.from(input.files) : [];
+          if (files.length > 0) {
+            // Force the staged kind to the chosen picker option so a file picked
+            // via "File" is always treated as a file (type 'file'), regardless of
+            // its actual MIME type — matching the legacy single-attachment behavior.
+            stageAttachments(files, type as TrayItemKind);
+          }
+        };
+      } else {
+        // Legacy: single-select, send immediately.
+        input.onchange = () => {
+          const file = input.files?.[0];
+          if (file) {
+            void sendMediaMessage(file, type);
+          }
+        };
+      }
       input.click();
       setContentToDisplay('none');
     },
-    [sendMediaMessage, setContentToDisplay, getCurrentDocument]
+    [
+      enableMultipleAttachments,
+      stageAttachments,
+      sendMediaMessage,
+      setContentToDisplay,
+      getCurrentDocument,
+      allowedFileTypes,
+    ]
   );
 
   const handleOpenPoll = useCallback(() => {
@@ -248,8 +280,12 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
       });
     }
 
+    // Polls, Collaborative Document, and Collaborative Whiteboard are extension-backed
+    // and don't support a parent message, so they're hidden in the thread composer
+    // (when a parentMessageId is present).
+
     // Polls
-    if (!hideOptions?.polls) {
+    if (!hideOptions?.polls && !parentMessageId) {
       items.push({
         id: 'polls',
         title: getLocalizedString('message_composer_polls'),
@@ -269,7 +305,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     }
 
     // Collaborative Document
-    if (!hideOptions?.collaborativeDocument) {
+    if (!hideOptions?.collaborativeDocument && !parentMessageId) {
       items.push({
         id: 'collaborative-document',
         title: getLocalizedString('messsage_composer_collaborative_document'),
@@ -289,7 +325,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     }
 
     // Collaborative Whiteboard
-    if (!hideOptions?.collaborativeWhiteboard) {
+    if (!hideOptions?.collaborativeWhiteboard && !parentMessageId) {
       items.push({
         id: 'collaborative-whiteboard',
         title: getLocalizedString('messsage_composer_collaborative_whiteboard'),
@@ -311,6 +347,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     return items;
   }, [
     hideOptions,
+    parentMessageId,
     getLocalizedString,
     handleFileSelect,
     handleOpenPoll,
@@ -324,6 +361,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     contentToDisplay === 'attachments'
       ? 'cometchat-message-composer__attachment-button--active'
       : '',
+    isInEditMode ? 'cometchat-message-composer__attachment-button--disabled' : '',
     className ?? '',
   ]
     .filter(Boolean)
@@ -342,8 +380,10 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
           <button
             type="button"
             className={btnClass}
+            disabled={isInEditMode}
             onClick={e => {
               e.stopPropagation();
+              if (isInEditMode) return;
               handleToggle();
             }}
             aria-label={getLocalizedString('ATTACHMENTS') || 'Attachments'}

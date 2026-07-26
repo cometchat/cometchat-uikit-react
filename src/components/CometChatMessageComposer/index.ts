@@ -1,5 +1,8 @@
 export { CometChatMessageComposer } from './CometChatMessageComposer';
+export { CometChatMessageComposerTray } from './CometChatMessageComposerTray';
 export { useCometChatMessageComposerContext } from './CometChatMessageComposer.context';
+export { groupAndOrderTrayItems } from './sendBatch';
+export type { TrayItemGroup } from './sendBatch';
 export type {
   CometChatMessageComposerLayout,
   CometChatComposerSendState,

@@ -9,6 +9,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { CometChatEventsContext } from '../../../context/CometChatEventsContext';
 import type { CometChatSDKEvent } from '../../../context/CometChatEvents.types';
+import { CometChatMessageStatus } from '../../../context/CometChatEvents.types';
 
 vi.mock('../CometChatMessageList.sound', () => ({
   playIncomingSound: vi.fn(),
@@ -269,6 +270,93 @@ describe('useMessageListEvents', () => {
 
     const updateReply = dispatched.find(a => a.type === 'UPDATE_REPLY_COUNT');
     expect(updateReply).toMatchObject({ parentMessageId: 5 });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Errored / rejected sends are scoped to their own list (main vs. thread)
+  // ---------------------------------------------------------------------------
+
+  it('does NOT dispatch MESSAGE_SEND_ERROR for a thread reply in the main list', () => {
+    // A media message rejected inside a thread (parentMessageId set) must not
+    // leak its error into the main list, which has no parentMessageId.
+    const { refs } = makeRefs();
+    const rejected = buildTextMessage({
+      id: 42,
+      sender: me as never,
+      receiverId: 'peer',
+      parentMessageId: 5,
+      muid: 'muid-42',
+    });
+
+    const { emit, dispatched } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({
+        type: 'ui:message/sent',
+        message: rejected as never,
+        status: CometChatMessageStatus.error,
+      });
+    });
+
+    expect(dispatched.some(a => a.type === 'MESSAGE_SEND_ERROR')).toBe(false);
+  });
+
+  it('dispatches MESSAGE_SEND_ERROR for a thread reply in its own thread list', () => {
+    const { refs } = makeRefs();
+    const rejected = buildTextMessage({
+      id: 42,
+      sender: me as never,
+      receiverId: 'peer',
+      parentMessageId: 5,
+      muid: 'muid-42',
+    });
+
+    const { emit, dispatched } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never, parentMessageId: 5 }),
+      refs
+    );
+
+    act(() => {
+      emit({
+        type: 'ui:message/sent',
+        message: rejected as never,
+        status: CometChatMessageStatus.error,
+      });
+    });
+
+    const err = dispatched.find(a => a.type === 'MESSAGE_SEND_ERROR');
+    expect(err).toMatchObject({ muid: 'muid-42' });
+  });
+
+  it('dispatches MESSAGE_SEND_ERROR for a non-thread message in the main list', () => {
+    // A normal (non-thread) errored send still surfaces in the main list, even
+    // if receiverId were cleared on failure — we only scope by parentMessageId.
+    const { refs } = makeRefs();
+    const rejected = buildTextMessage({
+      id: 43,
+      sender: me as never,
+      receiverId: 'peer',
+      muid: 'muid-43',
+    });
+
+    const { emit, dispatched } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({
+        type: 'ui:message/sent',
+        message: rejected as never,
+        status: CometChatMessageStatus.error,
+      });
+    });
+
+    const err = dispatched.find(a => a.type === 'MESSAGE_SEND_ERROR');
+    expect(err).toMatchObject({ muid: 'muid-43' });
   });
 
   // ---------------------------------------------------------------------------

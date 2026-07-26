@@ -9,16 +9,8 @@ import { sanitizeHtml } from '../../utils/sanitizeHtml';
 import './CometChatSearch.css';
 
 // File type icons
-import fileTypePdf from '../../assets/file_type_pdf.png';
-import fileTypeWord from '../../assets/file_type_word.png';
-import fileTypeTxt from '../../assets/file_type_txt.png';
-import fileTypeXlsx from '../../assets/file_type_xlsx.png';
-import fileTypePpt from '../../assets/file_type_ppt.png';
-import fileTypeZip from '../../assets/file_type_zip.png';
-import fileTypeMp3 from '../../assets/file_type_mp3.png';
-import fileTypeMov from '../../assets/file_type_mov.png';
-import fileTypeJpg from '../../assets/file_type_jpg.png';
-import fileTypeUnsupported from '../../assets/file_type_unsupported.png';
+import fileIcon from '../../assets/document-file-icon.svg';
+import './CometChatSearch.css';
 
 function getLocalizedString(key: string): string {
   const instance = CometChatLocalize.getSharedInstance();
@@ -127,7 +119,75 @@ function getMessageSubtitle(
   } else if (type === 'image' || type === 'video' || type === 'audio' || type === 'file') {
     const media = message as CometChat.MediaMessage;
     const attachments = media.getAttachments();
-    text = attachments[0]?.getName() ?? type;
+    const count = Math.max(attachments.length, 1);
+    const caption = typeof media.getCaption === 'function' ? media.getCaption() || '' : '';
+    const iconSpan = `<span class="cometchat-search__messages-subtitle-icon cometchat-search__messages-subtitle-icon--${type}"></span>`;
+
+    // Format caption with rich text if present
+    let formattedCaption = '';
+    if (caption.trim()) {
+      formattedCaption = caption;
+      formattedCaption = formattedCaption.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+      formattedCaption = formattedCaption.replace(/__([^_]+)__/g, '<u>$1</u>');
+      formattedCaption = formattedCaption.replace(/(?<!_)_([^_]+)_(?!_)/g, '<i>$1</i>');
+      formattedCaption = formattedCaption.replace(/~~([^~]+)~~/g, '<s>$1</s>');
+      formattedCaption = formattedCaption.replace(/`([^`]+)`/g, '<code>$1</code>');
+      formattedCaption = formattedCaption.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+      formattedCaption = formattedCaption.replace(/^(?:&gt;|>)\s?/gm, '');
+      const mentionedUsers =
+        (
+          message as unknown as {
+            getMentionedUsers?: () => { getUid: () => string; getName: () => string }[];
+          }
+        ).getMentionedUsers?.() ?? [];
+      const mentionMap = new Map<string, string>();
+      for (const user of mentionedUsers) {
+        mentionMap.set(user.getUid(), user.getName());
+      }
+      formattedCaption = formattedCaption.replace(/<@uid:([^>]+)>/g, (_m, uid: string) => {
+        const name = mentionMap.get(uid) ?? uid;
+        return `<span class="cometchat-mentions cometchat-mentions-other"><span>@${name}</span></span>`;
+      });
+      formattedCaption = formattedCaption.replace(/<@all:([^>]+)>/g, (_m, lbl: string) => {
+        return `<span class="cometchat-mentions cometchat-mentions-you"><span>@${lbl}</span></span>`;
+      });
+      formattedCaption = formattedCaption.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    const hasCaption = formattedCaption.length > 0;
+    const fileName = attachments[0]?.getName() ?? type;
+
+    if (count === 1 && !hasCaption) {
+      // Case 1: one attachment, no caption → just file name
+      text = `${iconSpan}${fileName}`;
+    } else if (count > 1 && !hasCaption) {
+      // Case 2: multiple attachments, no caption → "N Files"
+      const pluralKey = `media_edit_preview_${type}_plural`;
+      const plural = getLocalizedString(pluralKey);
+      const label =
+        plural !== pluralKey
+          ? `${String(count)} ${plural}`
+          : `${String(count)} ${getLocalizedString(`conversation_subtitle_${type}`)}`;
+      text = `${iconSpan}${label}`;
+    } else if (count === 1 && hasCaption) {
+      // Case 3: one attachment + caption → just caption (no file name or type label)
+      text = `${iconSpan}${formattedCaption}`;
+    } else {
+      // Case 4: multiple attachments + caption
+      if (type === 'image' || type === 'video') {
+        // Images/videos: just caption (count visible via +N overlay on trailing view)
+        text = `${iconSpan}${formattedCaption}`;
+      } else {
+        // Files/audios: "N Files · caption"
+        const pluralKey = `media_edit_preview_${type}_plural`;
+        const plural = getLocalizedString(pluralKey);
+        const label =
+          plural !== pluralKey
+            ? `${String(count)} ${plural}`
+            : `${String(count)} ${getLocalizedString(`conversation_subtitle_${type}`)}`;
+        text = `${iconSpan}${label} · ${formattedCaption}`;
+      }
+    }
   } else {
     text = type;
   }
@@ -209,12 +269,6 @@ function getTrailingViewType(message: CometChat.BaseMessage): TrailingViewType {
   return 'date';
 }
 
-function getAttachmentUrl(message: CometChat.BaseMessage): string {
-  const media = message as CometChat.MediaMessage;
-  const attachments = media.getAttachments();
-  return attachments[0]?.getUrl() ?? '';
-}
-
 function getLinkFavicon(message: CometChat.BaseMessage): string | null {
   try {
     const metadata = (message as CometChat.TextMessage).getMetadata() as
@@ -230,34 +284,8 @@ function getLinkFavicon(message: CometChat.BaseMessage): string | null {
   }
 }
 
-const FILE_TYPE_ICONS: Record<string, string> = {
-  pdf: fileTypePdf,
-  doc: fileTypeWord,
-  docx: fileTypeWord,
-  txt: fileTypeTxt,
-  xls: fileTypeXlsx,
-  xlsx: fileTypeXlsx,
-  csv: fileTypeXlsx,
-  ppt: fileTypePpt,
-  pptx: fileTypePpt,
-  zip: fileTypeZip,
-  rar: fileTypeZip,
-  mp3: fileTypeMp3,
-  wav: fileTypeMp3,
-  mp4: fileTypeMov,
-  mov: fileTypeMov,
-  jpg: fileTypeJpg,
-  jpeg: fileTypeJpg,
-  png: fileTypeJpg,
-};
-
-function getFileTypeIcon(message: CometChat.BaseMessage): string {
-  const media = message as CometChat.MediaMessage;
-  const attachments = media.getAttachments();
-  const name = attachments[0]?.getName();
-  if (!attachments.length || !name) return fileTypeUnsupported;
-  const ext = name.split('.').pop()?.toLowerCase() ?? '';
-  return FILE_TYPE_ICONS[ext] ?? fileTypeUnsupported;
+function getFileTypeIcon(): string {
+  return fileIcon;
 }
 
 // ── Component ──
@@ -456,7 +484,7 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                                   .join(' ')}
                               >
                                 <img
-                                  src={getFileTypeIcon(message)}
+                                  src={getFileTypeIcon()}
                                   className={'cometchat-search__messages-leading-view-file-icon'}
                                   alt=""
                                   loading="lazy"
@@ -521,7 +549,10 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                                       aria-label={getLocalizedString('thread_reply')}
                                     />
                                   )}
-                                  <span dangerouslySetInnerHTML={{ __html: subtitleHtml }} />
+                                  <span
+                                    className="cometchat-search__messages-list-item-subtitle-content"
+                                    dangerouslySetInnerHTML={{ __html: subtitleHtml }}
+                                  />
                                 </>
                               );
                             })()}
@@ -534,18 +565,52 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                       : (() => {
                           const trailingType = getTrailingViewType(message);
                           if (trailingType === 'image') {
+                            const media = message as CometChat.MediaMessage;
+                            const attachments = media.getAttachments();
+                            const count = attachments.length;
+                            const url = attachments[0]?.getUrl() ?? '';
+                            const overflow = count > 1 ? count - 1 : 0;
                             return (
                               <div className={'cometchat-search__messages-trailing-view'}>
-                                <img
-                                  src={getAttachmentUrl(message)}
-                                  alt={`Image from ${message.getSender().getName()}`}
-                                  loading="lazy"
-                                  decoding="async"
-                                />
+                                {url && (
+                                  <img
+                                    src={url}
+                                    alt={`Image from ${message.getSender().getName()}`}
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                )}
+                                {overflow > 0 && (
+                                  <div className={'cometchat-search__messages-trailing-overlay'}>
+                                    +{overflow}
+                                  </div>
+                                )}
                               </div>
                             );
                           }
                           if (trailingType === 'video') {
+                            const media = message as CometChat.MediaMessage;
+                            const attachments = media.getAttachments();
+                            const count = attachments.length;
+                            const overflow = count > 1 ? count - 1 : 0;
+                            // Try thumbnail from metadata
+                            let thumbnail = '';
+                            try {
+                              const meta = media.getMetadata() as Record<string, unknown> | null;
+                              const injected = meta?.['@injected'] as
+                                | Record<string, unknown>
+                                | undefined;
+                              const ext = injected?.extensions as
+                                | Record<string, unknown>
+                                | undefined;
+                              const thumbGen = ext?.['thumbnail-generation'] as
+                                | Record<string, unknown>
+                                | undefined;
+                              const thumbUrl = thumbGen?.url_medium;
+                              if (typeof thumbUrl === 'string') thumbnail = thumbUrl;
+                            } catch {
+                              /* ignore */
+                            }
                             return (
                               <div
                                 className={[
@@ -555,8 +620,16 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                                   .filter(Boolean)
                                   .join(' ')}
                               >
-                                <video src={getAttachmentUrl(message)} preload="metadata" />
-                                <div className={'cometchat-search__messages-video-play-button'} />
+                                {thumbnail ? (
+                                  <img src={thumbnail} alt="" loading="lazy" decoding="async" />
+                                ) : null}
+                                {overflow > 0 ? (
+                                  <div className={'cometchat-search__messages-trailing-overlay'}>
+                                    +{overflow}
+                                  </div>
+                                ) : (
+                                  <div className={'cometchat-search__messages-video-play-button'} />
+                                )}
                               </div>
                             );
                           }

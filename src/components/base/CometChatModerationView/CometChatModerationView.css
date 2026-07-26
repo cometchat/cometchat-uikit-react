@@ -7,9 +7,7 @@
   background: var(--cometchat-error-color-90, rgba(244, 67, 54, 0.08));
   /* Sharp top, rounded bottom — glues to the bubble body above. */
   border-radius: 0 0 var(--cometchat-radius-3, 12px) var(--cometchat-radius-3, 12px);
-  /* Cap the footer width so long text wraps inside the bubble's frame. */
   min-width: 240px;
-  max-width: 240px;
   box-sizing: border-box;
 }
 

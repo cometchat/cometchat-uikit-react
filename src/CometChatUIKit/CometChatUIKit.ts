@@ -37,6 +37,8 @@ export class CometChatUIKit {
   private static _settings: UIKitSettings | null = null;
   private static _loggedInUser: CometChat.User | null = null;
   private static _initialized = false;
+  /** Settings from the initFromSettings() (ai-agent) path; routes the Calls SDK through initFromSettings too. Null on plain init(). */
+  private static _callsInitSettings: CometChat.CometChatSettings | null = null;
   private static _callingReady = false;
   private static _loginListenerId: string | null = null;
   private static _conversationUpdateSettings: CometChat.ConversationUpdateSettings | null = null;
@@ -95,6 +97,8 @@ export class CometChatUIKit {
    */
   static async init(settings: UIKitSettings): Promise<CometChat.User | null> {
     CometChatUIKit._settings = settings;
+    // Plain init(): clear any ai-agent settings so the Calls SDK uses plain init().
+    CometChatUIKit._callsInitSettings = null;
 
     // Build SDK AppSettings from UIKitSettings
     const appSettingsBuilder = new CometChat.AppSettingsBuilder();
@@ -131,7 +135,7 @@ export class CometChatUIKit {
     if (typeof window !== 'undefined') {
       (window as unknown as Record<string, unknown>).CometChatUiKit = {
         name: '@cometchat/chat-uikit-react',
-        version: '7.0.3',
+        version: '7.1.0',
       };
     }
 
@@ -180,6 +184,9 @@ export class CometChatUIKit {
     const uiKitConfig = settings.uiKit;
     const callingEnabled = !!uiKitConfig?.callsSDK;
 
+    // Capture settings so _initCalling() routes the Calls SDK through initFromSettings (ai-agent).
+    CometChatUIKit._callsInitSettings = settings;
+
     // Build UIKitSettings so downstream code (login, calling, etc.) works
     const builder = new UIKitSettingsBuilder().setAppId(settings.appId).setRegion(settings.region);
     if (authKey) builder.setAuthKey(authKey);
@@ -196,7 +203,7 @@ export class CometChatUIKit {
       if (typeof window !== 'undefined') {
         (window as unknown as Record<string, unknown>).CometChatUiKit = {
           name: '@cometchat/chat-uikit-react',
-          version: '7.0.3',
+          version: '7.1.0',
         };
       }
 
@@ -478,12 +485,20 @@ export class CometChatUIKit {
       const settings = CometChatUIKit._settings;
       /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 
-      const callAppSetting = settings?.getCallAppSettings() ?? {
-        appId: settings?.getAppId(),
-        region: settings?.getRegion(),
-      };
+      const callsInitSettings = CometChatUIKit._callsInitSettings;
+      if (callsInitSettings && typeof callsSDK.initFromSettings === 'function') {
+        // ai-agent path: initFromSettings writes integrationSource = "ai-agent".
+        // typeof guard degrades to plain init() for older (optional peer) SDKs.
+        await callsSDK.initFromSettings(callsInitSettings);
+      } else {
+        // Plain init() path — unchanged for developers.
+        const callAppSetting = settings?.getCallAppSettings() ?? {
+          appId: settings?.getAppId(),
+          region: settings?.getRegion(),
+        };
 
-      await callsSDK.init(callAppSetting);
+        await callsSDK.init(callAppSetting);
+      }
 
       const loggedInUser = CometChatUIKit._loggedInUser;
       if (loggedInUser) {

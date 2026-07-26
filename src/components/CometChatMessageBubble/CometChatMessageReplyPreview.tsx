@@ -5,6 +5,7 @@ import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { useLocale } from '../../context/locale/LocaleContext';
 import './CometChatMessageReplyPreview.css';
 import { CometChatMarkdownFormatter } from '../../formatters/CometChatMarkdownFormatter';
+import { CometChatUrlFormatter } from '../../formatters/CometChatUrlFormatter';
 
 /**
  * Sanitizes HTML for safe rendering in the reply preview.
@@ -12,8 +13,8 @@ import { CometChatMarkdownFormatter } from '../../formatters/CometChatMarkdownFo
  */
 function sanitizePreviewHtml(html: string): string {
   return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 's', 'del', 'strike', 'code', 'a'],
-    ALLOWED_ATTR: ['href', 'target', 'rel'],
+    ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 's', 'del', 'strike', 'code', 'a', 'span'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class'],
   });
 }
 
@@ -31,35 +32,52 @@ export interface CometChatMessageReplyPreviewProps {
 }
 
 /**
- * Strip markdown formatting from text for plain-text display in reply previews.
- * Removes blockquote markers, bold/italic/underline/strikethrough syntax,
- * code fences, and link markdown — leaving only the readable content.
+ * Shared formatting pipeline for preview text (text message content or media caption).
+ * richText metadata HTML → markdown strip → mention spans → URL formatting → sanitize.
  */
-function stripMarkdownForPreview(text: string): string {
+function formatTextForPreview(text: string, message: CometChat.BaseMessage): string {
   if (!text) return '';
-  const lines = text.split('\n');
-  const processed = lines.map(line => {
-    let r = line;
-    // Strip blockquote markers: > text → text
-    r = r.replace(/^>\s?/, '');
-    // Strip code blocks: ```content``` → content
-    r = r.replace(/```([\s\S]*?)```/g, '$1');
-    // Strip inline code: `content` → content
-    r = r.replace(/`([^`]+)`/g, '$1');
-    // Strip bold: **content** → content
-    r = r.replace(/\*\*([^*]+)\*\*/g, '$1');
-    // Strip underline: __content__ or ++content++ → content
-    r = r.replace(/__([^_]+)__/g, '$1');
-    r = r.replace(/\+\+([^+]+)\+\+/g, '$1');
-    // Strip italic: _content_ → content
-    r = r.replace(/_([^_]+)_/g, '$1');
-    // Strip strikethrough: ~~content~~ → content
-    r = r.replace(/~~([^~]+)~~/g, '$1');
-    // Strip links: [text](url) → text
-    r = r.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-    return r;
+
+  // Check for rich text metadata HTML
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const metadata = message.getMetadata() as Record<string, unknown> | undefined;
+    // eslint-disable-next-line @typescript-eslint/dot-notation
+    const richText = metadata?.['richText'] as
+      | { html?: string; hasFormatting?: boolean }
+      | undefined;
+    if (richText?.html && richText.hasFormatting) {
+      const sanitized = DOMPurify.sanitize(richText.html);
+      if (sanitized) return sanitized;
+    }
+  } catch {
+    // Fall through
+  }
+
+  const markdownFormatter = new CometChatMarkdownFormatter();
+  let formatted = markdownFormatter.stripMarkdownForConversation(text);
+
+  // Resolve mentions
+  const mentionedUsers = message.getMentionedUsers();
+  if (mentionedUsers.length > 0) {
+    formatted = formatted.replace(/<@uid:(.*?)>/g, (_match: string, uid: string) => {
+      const user = mentionedUsers.find(u => u.getUid() === uid);
+      if (user) {
+        return `<span style="color: var(--cometchat-primary-color, #6852d6); font-weight: 500;">@${user.getName()}</span>`;
+      }
+      return `@${uid}`;
+    });
+  }
+
+  formatted = formatted.replace(/<@all:(.*?)>/g, (_match: string, label: string) => {
+    return `<span style="color: var(--cometchat-warning-color, #ffab00); font-weight: 500;">@${label}</span>`;
   });
-  return processed.join('\n');
+
+  // URL formatting
+  const urlFormatter = new CometChatUrlFormatter();
+  formatted = urlFormatter.format(formatted);
+
+  return DOMPurify.sanitize(formatted);
 }
 
 /**
@@ -91,81 +109,48 @@ function getSubtitleContent(
     }
   };
 
-  // Text messages — no icon, just the text (with mentions resolved)
+  // Text messages — no icon, just the text (formatted with rich text pipeline)
   if (type === 'text' && (category as string) === 'message') {
-    let text = getText() || getLocalizedString('message_deleted');
-    // Strip markdown formatting for preview display (```code```, **bold**, etc.)
-    const markdownFormatter = new CometChatMarkdownFormatter();
-    text = markdownFormatter.stripMarkdownForConversation(text);
-    // Resolve mention tokens like <@uid:xxx> to @displayName
-    try {
-      const mentionedUsers = (
-        message as unknown as {
-          getMentionedUsers?: () => { getUid: () => string; getName: () => string }[];
-        }
-      ).getMentionedUsers?.();
-      if (mentionedUsers && mentionedUsers.length > 0) {
-        text = text.replace(/<@uid:(.*?)>/g, (_match: string, uid: string) => {
-          const user = mentionedUsers.find(u => u.getUid() === uid);
-          return user ? `@${user.getName()}` : `@${uid}`;
-        });
-      }
-      // Also handle @all mentions
-      text = text.replace(/<@all:(.*?)>/g, (_match: string, label: string) => `@${label}`);
-    } catch {
-      /* ignore */
-    }
-    // Strip markdown formatting for plain text display (blockquotes, bold, italic, etc.)
-    text = stripMarkdownForPreview(text);
+    const rawText = getText() || getLocalizedString('message_deleted');
+    const text = formatTextForPreview(rawText, message);
     return { iconClass: null, text };
   }
 
   // Media messages
   if ((category as string) === 'message') {
     switch (type) {
-      case 'image': {
-        const attachments = (
-          message as unknown as { getAttachments?: () => { getName?: () => string }[] }
-        ).getAttachments?.();
-        const name = attachments?.[0]?.getName?.() ?? '';
-        const caption = getText();
-        return {
-          iconClass: 'image',
-          text: name || caption || getLocalizedString('conversation_subtitle_image') || 'Image',
-        };
-      }
-      case 'video': {
-        const attachments = (
-          message as unknown as { getAttachments?: () => { getName?: () => string }[] }
-        ).getAttachments?.();
-        const name = attachments?.[0]?.getName?.() ?? '';
-        const caption = getText();
-        return {
-          iconClass: 'video',
-          text: name || caption || getLocalizedString('conversation_subtitle_video') || 'Video',
-        };
-      }
-      case 'audio': {
-        const attachments = (
-          message as unknown as { getAttachments?: () => { getName?: () => string }[] }
-        ).getAttachments?.();
-        const name = attachments?.[0]?.getName?.() ?? '';
-        const caption = getText();
-        return {
-          iconClass: 'audio',
-          text: name || caption || getLocalizedString('conversation_subtitle_audio') || 'Audio',
-        };
-      }
+      case 'image':
+      case 'video':
+      case 'audio':
       case 'file': {
-        const attachments = (
-          message as unknown as { getAttachments?: () => { getName?: () => string }[] }
-        ).getAttachments?.();
-        const name = attachments?.[0]?.getName?.() ?? '';
-        const caption = getText();
-        return {
-          iconClass: 'file',
-          text: name || caption || getLocalizedString('conversation_subtitle_file') || 'File',
+        const mediaMsg = message as unknown as {
+          getAttachments?: () => unknown[];
+          getCaption?: () => string;
         };
+        const attachments = mediaMsg.getAttachments?.() ?? [];
+        const count = Math.max(attachments.length, 1);
+        const caption = mediaMsg.getCaption?.() ?? '';
+
+        // Build label: "N Images" or just "Image" for single
+        let label: string;
+        if (count === 1) {
+          label = getLocalizedString(`conversation_subtitle_${type}`) || type;
+        } else {
+          const pluralKey = `media_edit_preview_${type}_plural`;
+          const pluralLabel = getLocalizedString(pluralKey);
+          label =
+            pluralLabel !== pluralKey
+              ? `${String(count)} ${pluralLabel}`
+              : `${String(count)} ${getLocalizedString(`conversation_subtitle_${type}`) || type}`;
+        }
+
+        // Format caption through the rich text pipeline
+        if (caption.trim()) {
+          const formattedCaption = formatTextForPreview(caption.trim(), message);
+          const text = `${label} · ${formattedCaption}`;
+          return { iconClass: type, text };
+        }
+        return { iconClass: type, text: label };
       }
       default:
         break;

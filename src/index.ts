@@ -9,7 +9,7 @@ import './styles/index.css';
 // CometChatUIKit (main entry point)
 export { CometChatUIKit, UIKitSettingsBuilder, UIKitSettings } from './CometChatUIKit';
 export type { CometChatPresenceSubscription } from './CometChatUIKit';
-export const VERSION = '7.0.3';
+export const VERSION = '7.1.0';
 
 // Root Provider
 export { CometChatProvider } from './context/CometChatProvider';
@@ -28,6 +28,8 @@ export { CometChatLogger, LogLevel } from './utils/CometChatLogger';
 
 // Utility
 export { CometChatUIKitUtility, clone, createActionMessage } from './utils/CometChatUIKitUtility';
+export { computeBatchPosition, getMessageBatchId } from './utils/CometChatBatchUtils';
+export type { BatchPosition } from './utils/CometChatBatchUtils';
 
 // Base Components
 export { CometChatActionSheet } from './components/base/CometChatActionSheet/CometChatActionSheet';
@@ -329,19 +331,34 @@ export type {
 // Core Plugin Bubbles (self-extracting — take the SDK message directly)
 export { CometChatTextBubble } from './components/CometChatTextBubble/CometChatTextBubble';
 export type { CometChatTextBubbleProps } from './components/CometChatTextBubble/CometChatTextBubble.types';
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- re-exporting the deprecated legacy bubble for backward compatibility
 export { CometChatImageBubble } from './components/CometChatImageBubble/CometChatImageBubble';
 export type {
   CometChatImageBubbleProps,
   CometChatImageBubbleAttachment,
 } from './components/CometChatImageBubble/CometChatImageBubble.types';
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- re-exporting the deprecated legacy bubble for backward compatibility
 export { CometChatVideoBubble } from './components/CometChatVideoBubble/CometChatVideoBubble';
 export type { CometChatVideoBubbleProps } from './components/CometChatVideoBubble/CometChatVideoBubble.types';
 export { CometChatAudioBubble } from './components/CometChatAudioBubble/CometChatAudioBubble';
 export type { CometChatAudioBubbleProps } from './components/CometChatAudioBubble/CometChatAudioBubble.types';
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- re-exporting the deprecated legacy bubble for backward compatibility
 export { CometChatFileBubble } from './components/CometChatFileBubble/CometChatFileBubble';
 export type { CometChatFileBubbleProps } from './components/CometChatFileBubble/CometChatFileBubble.types';
 export { CometChatCallBubble } from './components/CometChatCallBubble/CometChatCallBubble';
 export type { CometChatCallBubbleProps } from './components/CometChatCallBubble/CometChatCallBubble.types';
+
+// Multi-attachment Bubble Components (batch-aware)
+export { CometChatImagesBubble } from './components/CometChatImagesBubble/CometChatImagesBubble';
+export type { CometChatImagesBubbleProps } from './components/CometChatImagesBubble/CometChatImagesBubble.types';
+export { CometChatVideosBubble } from './components/CometChatVideosBubble/CometChatVideosBubble';
+export type { CometChatVideosBubbleProps } from './components/CometChatVideosBubble/CometChatVideosBubble.types';
+export { CometChatAudiosBubble } from './components/CometChatAudiosBubble/CometChatAudiosBubble';
+export type { CometChatAudiosBubbleProps } from './components/CometChatAudiosBubble/CometChatAudiosBubble.types';
+export { CometChatVoiceNoteBubble } from './components/CometChatVoiceNoteBubble/CometChatVoiceNoteBubble';
+export type { CometChatVoiceNoteBubbleProps } from './components/CometChatVoiceNoteBubble/CometChatVoiceNoteBubble.types';
+export { CometChatFilesBubble } from './components/CometChatFilesBubble/CometChatFilesBubble';
+export type { CometChatFilesBubbleProps } from './components/CometChatFilesBubble/CometChatFilesBubble.types';
 
 // Action Bubbles (self-extracting) + the shared presentational primitive
 export { CometChatCallActionBubble } from './components/CometChatCallActionBubble';
@@ -521,6 +538,8 @@ export type {
 // Message Composer
 export { CometChatMessageComposer } from './components/CometChatMessageComposer';
 export { useCometChatMessageComposerContext } from './components/CometChatMessageComposer/CometChatMessageComposer.context';
+export { groupAndOrderTrayItems } from './components/CometChatMessageComposer/sendBatch';
+export type { TrayItemGroup } from './components/CometChatMessageComposer/sendBatch';
 export type {
   CometChatMessageComposerLayout,
   CometChatComposerSendState,

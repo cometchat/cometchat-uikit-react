@@ -1,0 +1,265 @@
+/* ============================================
+   Block: cometchat-audios-bubble
+   Audio cards matching the composer tray UI.
+   ============================================ */
+
+.cometchat-audios-bubble {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--cometchat-audios-bubble-max-width, 280px);
+  box-sizing: border-box;
+  --cometchat-audios-bubble__slider-color: rgba(150, 150, 150, 0.4);
+}
+
+.cometchat-audios-bubble--incoming {
+  align-items: flex-start;
+}
+
+.cometchat-audios-bubble--outgoing {
+  align-items: flex-end;
+}
+
+/* ============================================
+   Container
+   ============================================ */
+
+.cometchat-audios-bubble__container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-1, 4px);
+  width: 100%;
+}
+
+/* ============================================
+   Audio Card
+   Single item: transparent (inherits bubble bg).
+   Multiple items: each card gets individual bg.
+   Height matches tray tile (64px).
+   ============================================ */
+
+.cometchat-audios-bubble__card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 280px;
+  height: 76px;
+  box-sizing: border-box;
+  padding: 0 14px 0 8px;
+  border-radius: var(--cometchat-radius-2, 8px);
+  background: transparent;
+}
+
+.cometchat-message-bubble-outgoing
+  .cometchat-audios-bubble__container--multi
+  .cometchat-audios-bubble__card {
+  background: var(--cometchat-extended-primary-color-700, #8978df);
+}
+
+.cometchat-message-bubble-incoming
+  .cometchat-audios-bubble__container--multi
+  .cometchat-audios-bubble__card {
+  background: var(--cometchat-neutral-color-350);
+}
+
+/* ============================================
+   Play/Pause Button — 44×44, white bg, primary color triangle
+   ============================================ */
+
+.cometchat-audios-bubble__play-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-static-white, #fff);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cometchat-audios-bubble--incoming .cometchat-audios-bubble__play-btn {
+  background: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-audios-bubble__play-btn:hover {
+  opacity: 0.9;
+}
+
+/* Play/pause icon — primary color (not inverted) */
+.cometchat-audios-bubble__play-btn-icon {
+  filter: none;
+}
+
+.cometchat-audios-bubble--incoming .cometchat-audios-bubble__play-btn-icon {
+  filter: invert(1);
+}
+
+.cometchat-audios-bubble__card.cometchat-audios-bubble__card--unsupported {
+  height: 64px;
+}
+
+/* Unsupported (type-mismatched) audio card — no player, just icon + name + download. */
+.cometchat-audios-bubble__unsupported-icon-wrapper {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.cometchat-audios-bubble__unsupported-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.cometchat-audios-bubble__card--unsupported .cometchat-audios-bubble__name {
+  margin-bottom: 0;
+}
+
+/* ============================================
+   Body (filename + slider + time)
+   Gaps match tray: body gap 3px, name margin-bottom 4px, time margin-top 4px.
+   ============================================ */
+
+.cometchat-audios-bubble__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cometchat-audios-bubble__name {
+  margin-bottom: 4px;
+  font: var(--cometchat-font-body-medium, 500 14px/16.8px sans-serif);
+  color: var(--cometchat-static-white, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cometchat-message-bubble-incoming .cometchat-audios-bubble__name {
+  color: var(--cometchat-neutral-color-900, #141414);
+}
+
+/* Seek slider — track is white at 40% opacity, completed (left of thumb) is white */
+.cometchat-audios-bubble__slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  margin: 0;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: rgba(150, 150, 150, 0.4);
+  cursor: pointer;
+}
+
+.cometchat-audios-bubble--outgoing .cometchat-audios-bubble__slider {
+  --cometchat-audios-bubble__slider-color: rgba(225, 225, 225, 0.4);
+}
+
+.cometchat-audios-bubble__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-static-white, #fff);
+  border: none;
+}
+
+.cometchat-audios-bubble__slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-static-white, #fff);
+  border: none;
+}
+
+.cometchat-audios-bubble__slider::-moz-range-track {
+  background: transparent;
+}
+
+.cometchat-audios-bubble__time {
+  margin-top: 4px;
+  font: var(--cometchat-font-caption1-regular, 400 12px/14.4px sans-serif);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cometchat-message-bubble-incoming .cometchat-audios-bubble__time {
+  color: var(--cometchat-neutral-color-600, #727272);
+}
+
+/* ============================================
+   Download button — white icon
+   ============================================ */
+
+.cometchat-audios-bubble .cometchat-download-button__icon {
+  background-color: var(--cometchat-static-white, #fff);
+}
+
+.cometchat-message-bubble-incoming .cometchat-audios-bubble .cometchat-download-button__icon {
+  background-color: var(--cometchat-primary-color, #6852d6);
+}
+
+/* ============================================
+   Expand/Collapse Toggle
+   ============================================ */
+
+.cometchat-audios-bubble__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  background: var(--cometchat-extended-primary-color-700, #8978df);
+  border: none;
+  cursor: pointer;
+  font: var(--cometchat-font-body-regular, 400 14px/16.8px sans-serif);
+  color: var(--cometchat-static-white, #fff);
+  border-radius: var(--cometchat-radius-2, 8px) var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-message-bubble-incoming .cometchat-audios-bubble__toggle {
+  background: var(--cometchat-neutral-color-350);
+  color: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-audios-bubble__toggle:focus-visible {
+  outline: var(--cometchat-focus-ring-width, 2px) solid
+    var(--cometchat-focus-ring-color, var(--cometchat-primary-color, #3399ff));
+  outline-offset: var(--cometchat-focus-ring-offset, 2px);
+}
+
+/* Chevron icon inside toggle */
+.cometchat-audios-bubble__toggle-icon {
+  flex-shrink: 0;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+.cometchat-audios-bubble__toggle-icon--up {
+  transform: rotate(180deg);
+}
+
+/* ============================================
+   Caption
+   ============================================ */
+
+.cometchat-audios-bubble__caption {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  --cometchat-text-bubble-padding: 6px 4px 6px 4px;
+}
+
+.cometchat-audios-bubble .cometchat-text-bubble__link-preview-container {
+  margin-top: 0;
+  margin-inline: -2px;
+}

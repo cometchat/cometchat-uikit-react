@@ -7,7 +7,7 @@
   flex-direction: column;
   gap: var(--cometchat-spacing-1, 2px);
   width: 100%;
-  max-width: var(--cometchat-image-bubble-container-max-width, 250px);
+  max-width: var(--cometchat-image-bubble-container-max-width, 400px);
   max-height: var(--cometchat-image-bubble-single-max-height, 350px);
   position: relative;
   overflow: hidden;

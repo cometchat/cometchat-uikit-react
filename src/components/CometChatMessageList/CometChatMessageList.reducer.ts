@@ -61,6 +61,25 @@ function shouldReplace(existing: CometChat.BaseMessage, incoming: CometChat.Base
 }
 
 /**
+ * Is this message already present in the list? Matches on SDK id (confirmed
+ * messages) or muid (optimistic ones). Falsy keys are ignored so an id of 0 or
+ * an empty muid never matches everything. Used to guard append paths against
+ * adding a message that is already in state.
+ */
+function messageAlreadyPresent(
+  messages: CometChat.BaseMessage[],
+  message: CometChat.BaseMessage
+): boolean {
+  const id = message.getId();
+  const muid = message.getMuid();
+  return messages.some(m => {
+    if (id && String(m.getId()) === String(id)) return true;
+    if (muid && m.getMuid() === muid) return true;
+    return false;
+  });
+}
+
+/**
  * Pure reducer for the CometChatMessageList data layer.
  * Handles all state transitions via a discriminated union of actions.
  */
@@ -143,7 +162,13 @@ export function messageListReducer(
     // --- Send lifecycle ---
 
     case 'MESSAGE_SEND_START': {
-      const messages = state.messages.some(m => m.getMuid() === action.muid)
+      const existsByMuid = state.messages.some(m => m.getMuid() === action.muid);
+      // Not the pending copy we're updating, yet already in state (e.g. the
+      // confirmed message landed first) — skip rather than append a duplicate.
+      if (!existsByMuid && messageAlreadyPresent(state.messages, action.message)) {
+        return state;
+      }
+      const messages = existsByMuid
         ? state.messages.map(m => (m.getMuid() === action.muid ? action.message : m))
         : [...state.messages, action.message];
       const fetchState =
@@ -178,7 +203,9 @@ export function messageListReducer(
         );
         return { ...state, messages };
       }
-      // Pending message not yet in state (React batching race) — add it directly
+      // Pending message not yet in state (React batching race) — add it directly,
+      // unless it's already present under another key.
+      if (messageAlreadyPresent(state.messages, action.message)) return state;
       return { ...state, messages: [...state.messages, action.message] };
     }
 
@@ -200,6 +227,7 @@ export function messageListReducer(
     }
 
     case 'ADD_STREAMING_BUBBLE': {
+      if (messageAlreadyPresent(state.messages, action.message)) return state;
       const messages = [...state.messages, action.message];
       const fetchState = state.fetchState === 'empty' ? 'loaded' : state.fetchState;
       return { ...state, messages, fetchState };
@@ -248,6 +276,11 @@ export function messageListReducer(
           const messages = [...state.messages];
           messages[existingIndex] = action.message;
           return { ...state, messages };
+        }
+        // Also skip if it's already present under another key (e.g. muid) — don't
+        // append a duplicate.
+        if (messageAlreadyPresent(state.messages, action.message)) {
+          return state;
         }
       }
 

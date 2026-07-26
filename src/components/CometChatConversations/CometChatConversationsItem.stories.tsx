@@ -286,3 +286,265 @@ export const WithOptions: Story = {
     );
   },
 };
+
+// ============================================
+// Internal — Media Last Message Subtitles
+// ============================================
+
+function createMockMediaMessage(
+  id: number,
+  type: 'image' | 'video' | 'audio' | 'file',
+  sentAt: number,
+  attachmentCount = 1,
+  caption = '',
+  senderUid = 'sender-1',
+  senderName = 'Sender'
+) {
+  const attachments = Array.from({ length: attachmentCount }, (_, i) => ({
+    getUrl: () =>
+      `https://example.com/${type}-${String(i)}.${type === 'image' ? 'png' : type === 'video' ? 'mp4' : type === 'audio' ? 'mp3' : 'pdf'}`,
+    getName: () =>
+      `file-${String(i + 1)}.${type === 'image' ? 'png' : type === 'video' ? 'mp4' : type === 'audio' ? 'mp3' : 'pdf'}`,
+    getSize: () => 1024000,
+    getMimeType: () =>
+      type === 'image'
+        ? 'image/png'
+        : type === 'video'
+          ? 'video/mp4'
+          : type === 'audio'
+            ? 'audio/mpeg'
+            : 'application/pdf',
+    getExtension: () =>
+      type === 'image' ? 'png' : type === 'video' ? 'mp4' : type === 'audio' ? 'mp3' : 'pdf',
+  }));
+
+  return {
+    getId: () => id,
+    getType: () => type,
+    getCategory: () => 'message',
+    getSentAt: () => sentAt,
+    getSender: () => createMockUser(senderUid, senderName),
+    getDeletedAt: () => null,
+    getParentMessageId: () => null,
+    getReadAt: () => sentAt + 10,
+    getDeliveredAt: () => sentAt + 5,
+    getCaption: () => caption,
+    getData: () => ({ text: caption }),
+    getAttachments: () => attachments,
+    getMentionedUsers: () => [],
+    getMetadata: () => ({}),
+  } as unknown as CometChat.BaseMessage;
+}
+
+/** Last message is a single image — subtitle shows "Photo". */
+export const _LastMessageImage: Story = {
+  render: () => {
+    const conv = createMockConversation(
+      'conv_media_img',
+      'user',
+      createMockUser('user-img', 'Alice Johnson'),
+      createMockMediaMessage(10, 'image', now - 120),
+      0
+    );
+    return (
+      <CometChatConversationsContext.Provider value={createMockContext()}>
+        <CometChatConversationsItem conversation={conv} />
+      </CometChatConversationsContext.Provider>
+    );
+  },
+};
+_LastMessageImage.storyName = 'Last Message — Image';
+_LastMessageImage.tags = ['!autodocs'];
+
+/** Last message is multiple images — subtitle shows "3 Photos". */
+export const _LastMessageMultipleImages: Story = {
+  render: () => {
+    const conv = createMockConversation(
+      'conv_media_imgs',
+      'user',
+      createMockUser('user-imgs', 'Bob Smith'),
+      createMockMediaMessage(11, 'image', now - 180, 3),
+      1
+    );
+    return (
+      <CometChatConversationsContext.Provider value={createMockContext()}>
+        <CometChatConversationsItem conversation={conv} />
+      </CometChatConversationsContext.Provider>
+    );
+  },
+};
+_LastMessageMultipleImages.storyName = 'Last Message — 3 Images';
+_LastMessageMultipleImages.tags = ['!autodocs'];
+
+/** Last message is a video — subtitle shows "Video". */
+export const _LastMessageVideo: Story = {
+  render: () => {
+    const conv = createMockConversation(
+      'conv_media_vid',
+      'user',
+      createMockUser('user-vid', 'Carol White'),
+      createMockMediaMessage(12, 'video', now - 300),
+      0
+    );
+    return (
+      <CometChatConversationsContext.Provider value={createMockContext()}>
+        <CometChatConversationsItem conversation={conv} />
+      </CometChatConversationsContext.Provider>
+    );
+  },
+};
+_LastMessageVideo.storyName = 'Last Message — Video';
+_LastMessageVideo.tags = ['!autodocs'];
+
+/** Last message is multiple videos — subtitle shows "2 Videos". */
+export const _LastMessageMultipleVideos: Story = {
+  render: () => {
+    const conv = createMockConversation(
+      'conv_media_vids',
+      'group',
+      createMockGroup('grp-vids', 'Design Team'),
+      createMockMediaMessage(13, 'video', now - 600, 2, '', 'bob-1', 'Bob Smith'),
+      0
+    );
+    return (
+      <CometChatConversationsContext.Provider value={createMockContext()}>
+        <CometChatConversationsItem conversation={conv} />
+      </CometChatConversationsContext.Provider>
+    );
+  },
+};
+_LastMessageMultipleVideos.storyName = 'Last Message — 2 Videos (Group)';
+_LastMessageMultipleVideos.tags = ['!autodocs'];
+
+/** Last message is an audio — subtitle shows "Audio". */
+export const _LastMessageAudio: Story = {
+  render: () => {
+    const conv = createMockConversation(
+      'conv_media_aud',
+      'user',
+      createMockUser('user-aud', 'David Lee'),
+      createMockMediaMessage(14, 'audio', now - 900),
+      2
+    );
+    return (
+      <CometChatConversationsContext.Provider value={createMockContext()}>
+        <CometChatConversationsItem conversation={conv} />
+      </CometChatConversationsContext.Provider>
+    );
+  },
+};
+_LastMessageAudio.storyName = 'Last Message — Audio';
+_LastMessageAudio.tags = ['!autodocs'];
+
+/** Last message is a file — subtitle shows "File". */
+export const _LastMessageFile: Story = {
+  render: () => {
+    const conv = createMockConversation(
+      'conv_media_file',
+      'user',
+      createMockUser('user-file', 'Emma Davis'),
+      createMockMediaMessage(15, 'file', now - 1200),
+      0
+    );
+    return (
+      <CometChatConversationsContext.Provider value={createMockContext()}>
+        <CometChatConversationsItem conversation={conv} />
+      </CometChatConversationsContext.Provider>
+    );
+  },
+};
+_LastMessageFile.storyName = 'Last Message — File';
+_LastMessageFile.tags = ['!autodocs'];
+
+/** Last message is multiple files with caption. */
+export const _LastMessageFilesWithCaption: Story = {
+  render: () => {
+    const conv = createMockConversation(
+      'conv_media_files_cap',
+      'group',
+      createMockGroup('grp-files', 'Engineering'),
+      createMockMediaMessage(16, 'file', now - 1500, 4, 'Project documents', 'alice-1', 'Alice'),
+      0
+    );
+    return (
+      <CometChatConversationsContext.Provider value={createMockContext()}>
+        <CometChatConversationsItem conversation={conv} />
+      </CometChatConversationsContext.Provider>
+    );
+  },
+};
+_LastMessageFilesWithCaption.storyName = 'Last Message — 4 Files with Caption';
+_LastMessageFilesWithCaption.tags = ['!autodocs'];
+
+/** All media types side by side for comparison. */
+export const _AllMediaSubtitles: Story = {
+  render: () => {
+    const conversations = [
+      createMockConversation(
+        'c1',
+        'user',
+        createMockUser('u1', 'Single Image'),
+        createMockMediaMessage(20, 'image', now - 60),
+        0
+      ),
+      createMockConversation(
+        'c2',
+        'user',
+        createMockUser('u2', 'Multi Images'),
+        createMockMediaMessage(21, 'image', now - 120, 3, 'Beach photos'),
+        1
+      ),
+      createMockConversation(
+        'c3',
+        'user',
+        createMockUser('u3', 'Single Video'),
+        createMockMediaMessage(22, 'video', now - 180),
+        0
+      ),
+      createMockConversation(
+        'c4',
+        'user',
+        createMockUser('u4', 'Multi Videos'),
+        createMockMediaMessage(23, 'video', now - 240, 2),
+        0
+      ),
+      createMockConversation(
+        'c5',
+        'user',
+        createMockUser('u5', 'Single Audio'),
+        createMockMediaMessage(24, 'audio', now - 300),
+        0
+      ),
+      createMockConversation(
+        'c6',
+        'user',
+        createMockUser('u6', 'Multi Audios'),
+        createMockMediaMessage(25, 'audio', now - 360, 4),
+        0
+      ),
+      createMockConversation(
+        'c7',
+        'user',
+        createMockUser('u7', 'Single File'),
+        createMockMediaMessage(26, 'file', now - 420),
+        0
+      ),
+      createMockConversation(
+        'c8',
+        'user',
+        createMockUser('u8', 'Multi Files'),
+        createMockMediaMessage(27, 'file', now - 480, 5, 'Documents attached'),
+        0
+      ),
+    ];
+    return (
+      <CometChatConversationsContext.Provider value={createMockContext()}>
+        {conversations.map(conv => (
+          <CometChatConversationsItem key={conv.getConversationId()} conversation={conv} />
+        ))}
+      </CometChatConversationsContext.Provider>
+    );
+  },
+};
+_AllMediaSubtitles.storyName = 'All Media Subtitles';
+_AllMediaSubtitles.tags = ['!autodocs'];

@@ -12,6 +12,7 @@ import { useLocale } from '../../context/locale/LocaleContext';
 import { useMessageListViewScroll } from './useMessageListViewScroll';
 import { useMessageListViewDialogs } from './useMessageListViewDialogs';
 import { isDifferentDay } from './CometChatMessageList.utils';
+import { computeBatchPosition } from '../../utils/CometChatBatchUtils';
 import type { CometChatMessageListAlignment } from './CometChatMessageList.types';
 import './CometChatMessageList.css';
 
@@ -187,6 +188,7 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
               {...{ messageAlignment }}
               index={i}
               total={messages.length}
+              batchPosition={computeBatchPosition(prevMsg, msg, messages[i + 1])}
               {...(onThreadRepliesClick !== undefined && { onThreadRepliesClick })}
               {...(onAvatarClick !== undefined && { onAvatarClick })}
               onDeleteMessage={handleDeleteMessage}

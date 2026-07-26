@@ -38,6 +38,8 @@ export interface CometChatMessagePluginContext {
   group?: CometChat.Group;
   /** Bubble alignment for the current message. */
   alignment: CometChatMessageBubbleAlignment;
+  /** Batch position within a multi-attachment batch group ('first'|'middle'|'last'|'single'). */
+  batchPosition?: 'first' | 'middle' | 'last' | 'single';
   /** Current theme. */
   theme: 'light' | 'dark';
   /** Localization function. Returns the translated string for a given key. */

@@ -22,6 +22,76 @@ export const mockUser = {
   getDeactivatedAt: () => 0,
 };
 
+/**
+ * Mock of the SDK's `UploadFileRequest` (request-object upload model). Each
+ * `createUploadFileRequest()` call returns a fresh instance whose methods are
+ * `vi.fn()`s. Internal `__state` is exposed so tests can:
+ *   - grab the registered listener (`__state.globalListener`) to drive callbacks,
+ *   - control the send-gate reads (`__state.status`, `__state.attachments`).
+ */
+export type MockUploadRequest = ReturnType<typeof createMockUploadRequest>;
+
+let lastUploadRequest: MockUploadRequest | null = null;
+
+/** The most recently created mock upload request (for test assertions/driving). */
+export function getLastUploadRequest(): MockUploadRequest {
+  if (!lastUploadRequest) throw new Error('No upload request created yet');
+  return lastUploadRequest;
+}
+
+function createMockUploadRequest(receiverId: string, receiverType: string) {
+  const state = {
+    receiverId,
+    receiverType,
+    parentMessageId: undefined as string | number | undefined,
+    batchId: 'batch-mock',
+    globalListener: undefined as Record<string, (...args: unknown[]) => void> | undefined,
+    perCallListeners: [] as Record<string, (...args: unknown[]) => void>[],
+    // Send gate reads: IDLE by default, no uploaded attachments until a test sets them.
+    status: 'idle' as 'in_progress' | 'idle',
+    attachments: [] as unknown[],
+  };
+  const req = {
+    __state: state,
+    setParentMessageId: vi.fn((id: string | number) => {
+      state.parentMessageId = id;
+      return req;
+    }),
+    setBatchId: vi.fn((id: string) => {
+      state.batchId = id;
+      return req;
+    }),
+    getBatchId: vi.fn(() => state.batchId),
+    setConcurrency: vi.fn(() => req),
+    uploadAttachments: vi.fn(
+      (_files: unknown, listener?: Record<string, (...args: unknown[]) => void>) => {
+        if (listener) state.perCallListeners.push(listener);
+      }
+    ),
+    uploadAttachment: vi.fn(
+      (_id: string, _file: unknown, listener?: Record<string, (...args: unknown[]) => void>) => {
+        if (listener) state.perCallListeners.push(listener);
+      }
+    ),
+    getAttachment: vi.fn(() => null),
+    getAttachments: vi.fn(() => state.attachments),
+    getAttachmentsByType: vi.fn(() => []),
+    getAttachmentCount: vi.fn(() => state.attachments.length),
+    getStatus: vi.fn(() => state.status),
+    addUploadListener: vi.fn((l: Record<string, (...args: unknown[]) => void>) => {
+      state.globalListener = l;
+    }),
+    removeUploadListener: vi.fn(() => {
+      state.globalListener = undefined;
+    }),
+    retryAttachment: vi.fn(),
+    removeAttachment: vi.fn(),
+    clearAll: vi.fn(),
+  };
+  lastUploadRequest = req;
+  return req;
+}
+
 export const mockCometChat = {
   // Init & Auth
   init: vi.fn().mockResolvedValue(undefined),
@@ -74,6 +144,13 @@ export const mockCometChat = {
   // Reactions
   addReaction: vi.fn().mockResolvedValue({}),
   removeReaction: vi.fn().mockResolvedValue({}),
+
+  // Multi-attachment upload (request-object model)
+  createUploadFileRequest: vi.fn((receiverId: string, receiverType: string) =>
+    createMockUploadRequest(receiverId, receiverType)
+  ),
+  getMaxAttachmentCount: vi.fn().mockResolvedValue(10),
+  UploadStatus: { IN_PROGRESS: 'in_progress', IDLE: 'idle' },
 
   // Constants
   RECEIVER_TYPE: { USER: 'user', GROUP: 'group' },
@@ -207,6 +284,75 @@ export const mockCometChat = {
   ) {
     this.receiverId = receiverId;
     this.receiverType = receiverType;
+  }),
+  // UploadFileListener simply captures its callback bundle so tests can drive
+  // per-file and completion callbacks directly.
+  UploadFileListener: vi.fn().mockImplementation(function (
+    this: Record<string, unknown>,
+    callbacks: Record<string, unknown>
+  ) {
+    Object.assign(this, callbacks);
+  }),
+  MediaMessage: vi.fn().mockImplementation(function (
+    this: Record<string, unknown>,
+    receiverId: string,
+    file: unknown,
+    fileType: string,
+    receiverType: string
+  ) {
+    this.receiverId = receiverId;
+    this.file = file;
+    this.fileType = fileType;
+    this.receiverType = receiverType;
+    this.metadata = {};
+    this.muid = '';
+    this.sentAt = 0;
+    this.parentMessageId = 0;
+    this.attachments = [];
+    this.caption = '';
+    this.getReceiverType = () => receiverType;
+    this.getReceiverId = () => receiverId;
+    this.getType = () => fileType;
+    this.getId = () => this.id ?? 0;
+    this.setId = (id: number) => {
+      this.id = id;
+    };
+    this.getSender = () => ({ getUid: () => 'user-1', getName: () => 'Test User' });
+    this.setSender = (s: unknown) => {
+      this.sender = s;
+    };
+    this.setSentAt = (t: number) => {
+      this.sentAt = t;
+    };
+    this.getSentAt = () => this.sentAt ?? 0;
+    this.getMetadata = () => this.metadata ?? {};
+    this.setMetadata = (m: Record<string, unknown>) => {
+      this.metadata = m;
+    };
+    this.getMuid = () => this.muid ?? '';
+    this.setMuid = (m: string) => {
+      this.muid = m;
+    };
+    this.getParentMessageId = () => this.parentMessageId ?? 0;
+    this.setParentMessageId = (id: number) => {
+      this.parentMessageId = id;
+    };
+    this.getAttachments = () => this.attachments ?? [];
+    this.setAttachments = (a: unknown[]) => {
+      this.attachments = a;
+    };
+    this.getCaption = () => this.caption ?? '';
+    this.setCaption = (c: string) => {
+      this.caption = c;
+    };
+    this.setQuotedMessage = (m: unknown) => {
+      this.quotedMessage = m;
+    };
+    this.setQuotedMessageId = (id: number) => {
+      this.quotedMessageId = id;
+    };
+    this.getConversationId = () => `${receiverType}_${receiverId}`;
+    this.getCategory = () => 'message';
   }),
 };
 

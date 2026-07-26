@@ -38,8 +38,11 @@
 .cometchat-message-bubble__wrapper--moderation-disapproved .cometchat-message-bubble__body-wrapper,
 .cometchat-message-bubble__wrapper--moderation-disapproved .cometchat-message-bubble__body {
   min-width: 240px;
-  max-width: 240px;
   box-sizing: border-box;
+}
+
+.cometchat-message-bubble__body-bottom-view:has(.cometchat-moderation-view) {
+  max-width: 240px;
 }
 
 /* Leading view (avatar) */
@@ -151,13 +154,17 @@
 /* Body */
 .cometchat-message-bubble__body {
   display: flex;
-  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-1, 4px) 0
-    var(--cometchat-padding-1, 4px);
+  padding: var(--cometchat-padding-1, 4px);
   flex-direction: column;
   align-items: stretch;
   border-radius: var(--cometchat-radius-3, 12px);
   overflow: hidden;
   max-width: 100%;
+}
+
+.cometchat-message-bubble__body:has(.cometchat-files-bubble__container--multi),
+.cometchat-message-bubble__body:has(.cometchat-audios-bubble__container--multi) {
+  padding: 8px;
 }
 
 /* --- Message type backgrounds --- */
@@ -278,15 +285,19 @@
 }
 
 /* Negative margin for text/audio to pull status info closer */
-.cometchat-message-bubble__text-message .cometchat-message-bubble__body-content-view,
-.cometchat-message-bubble__audio-message .cometchat-message-bubble__body-content-view {
+.cometchat-message-bubble__text-message
+  .cometchat-message-bubble__body-content-view:not(:has(.cometchat-delete-bubble)),
+.cometchat-message-bubble__body:has(.cometchat-message-bubble__status-info-view)
+  .cometchat-message-bubble__body-content-view:has(.cometchat-text-bubble):not(
+    :has(.cometchat-delete-bubble)
+  ) {
   margin-bottom: calc(var(--cometchat-margin-2, 8px) * -1);
 }
 
 /* Status info view */
 .cometchat-message-bubble__body-status-info-view {
-  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-2, 8px)
-    var(--cometchat-padding-1, 4px) var(--cometchat-padding-2, 8px);
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-2, 8px) 0
+    var(--cometchat-padding-2, 8px);
 }
 
 .cometchat-message-bubble__status-info-view {
@@ -490,4 +501,31 @@
 
 .cometchat-message-bubble-wrapper--center {
   justify-content: center;
+}
+
+/* --- Batch adjacency spacing (multi-attachment) ---
+ * Tight spacing within a batch group. The first/middle items reduce their bottom
+ * padding; the middle/last items reduce their top padding — visually connecting
+ * the batch into one cohesive unit.
+ */
+.cometchat-message-bubble-wrapper--batch-first {
+  padding-bottom: var(--cometchat-spacing-half, 2px);
+}
+
+.cometchat-message-bubble-wrapper--batch-middle {
+  padding-top: var(--cometchat-spacing-half, 2px);
+  padding-bottom: var(--cometchat-spacing-half, 2px);
+}
+
+.cometchat-message-bubble-wrapper--batch-last {
+  padding-top: var(--cometchat-spacing-half, 2px);
+}
+
+div:has(> .cometchat-message-bubble-wrapper--batch-first .cometchat-message-bubble__leading-view)
+  ~ div:has(> .cometchat-message-bubble-wrapper--batch-middle)
+  .cometchat-message-bubble-wrapper--batch-middle:has(.cometchat-message-bubble-incoming),
+div:has(> .cometchat-message-bubble-wrapper--batch-first .cometchat-message-bubble__leading-view)
+  ~ div:has(> .cometchat-message-bubble-wrapper--batch-last)
+  .cometchat-message-bubble-wrapper--batch-last:has(.cometchat-message-bubble-incoming) {
+  margin-left: 40px;
 }

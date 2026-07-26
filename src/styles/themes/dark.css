@@ -18,12 +18,17 @@
     --cometchat-neutral-color-100: #1a1a1a;
     --cometchat-neutral-color-200: #272727;
     --cometchat-neutral-color-300: #383838;
+    --cometchat-neutral-color-350: #414141;
     --cometchat-neutral-color-400: #4c4c4c;
     --cometchat-neutral-color-500: #858585;
     --cometchat-neutral-color-600: #989898;
     --cometchat-neutral-color-700: #a8a8a8;
     --cometchat-neutral-color-800: #c8c8c8;
     --cometchat-neutral-color-900: #ffffff;
+
+    --cometchat-static-neutral-100: #fafafa;
+    --cometchat-static-neutral-400: #4c4c4c;
+    --cometchat-static-neutral-700: #5b5b5b;
 
     /* Alert Colors */
     --cometchat-info-color: #0d66bf;
@@ -37,6 +42,7 @@
     /* Static Colors */
     --cometchat-static-black: #141414;
     --cometchat-static-white: #ffffff;
+    --cometchat-static-white-70: rgba(255, 255, 255, 0.7);
 
     /* Background Colors */
     --cometchat-background-color-01: var(--cometchat-neutral-color-50);
@@ -100,12 +106,13 @@
     /* Overlay Backgrounds (semi-transparent scrims on top of media) */
     --cometchat-overlay-background-light: rgba(0, 0, 0, 0.4);
     --cometchat-overlay-background-heavy: rgba(0, 0, 0, 0.6);
+    --cometchat-drop-overlay-background: rgba(80, 80, 80, 0.95);
 
     /* Text Shadow */
     --cometchat-text-shadow-strong: 0 1px 3px rgba(0, 0, 0, 0.3);
 
     /* Image Bubble */
-    --cometchat-image-bubble-container-max-width: 250px;
+    --cometchat-image-bubble-container-max-width: 400px;
     --cometchat-image-bubble-container-border-radius: var(--cometchat-radius-2);
     --cometchat-image-bubble-single-max-height: 350px;
     --cometchat-image-bubble-grid-gap-mobile: var(--cometchat-spacing);

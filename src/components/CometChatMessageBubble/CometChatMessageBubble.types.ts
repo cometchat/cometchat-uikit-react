@@ -123,6 +123,8 @@ export interface CometChatMessageBubbleRendererProps {
   index: number;
   /** Total messages (for aria-setsize). */
   total: number;
+  /** Batch position within a multi-attachment batch group. */
+  batchPosition?: 'first' | 'middle' | 'last' | 'single';
 
   // --- Display controls (passed through to CometChatMessageBubble) ---
   hideAvatar?: boolean;

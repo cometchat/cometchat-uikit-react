@@ -96,11 +96,17 @@ function copyOption(context: CometChatMessagePluginContext): CometChatMessageOpt
     title: loc(context, 'message_list_option_copy', 'Copy'),
     iconURL: copyIcon,
     onClick: msg => {
-      const textMsg = msg as CometChat.TextMessage;
-      let text = textMsg.getText();
+      // For media messages, copy the caption; for text messages, copy the text.
+      let text: string;
+      const mediaMsg = msg as unknown as { getCaption?: () => string };
+      if (msg.getType() !== 'text' && typeof mediaMsg.getCaption === 'function') {
+        text = mediaMsg.getCaption() || '';
+      } else {
+        text = (msg as CometChat.TextMessage).getText();
+      }
 
       // Resolve SDK mention tokens to display names before copying
-      const mentionedUsers = textMsg.getMentionedUsers();
+      const mentionedUsers = msg.getMentionedUsers();
       if (mentionedUsers.length > 0) {
         // User mentions: <@uid:xxx> → @DisplayName
         text = text.replace(/<@uid:(.*?)>/g, (match, uid: string) => {
@@ -356,6 +362,7 @@ function filterOptions(
 
 /**
  * Returns context menu options for media messages (image, video, audio, file).
+ * Includes copy and edit options when the message has a caption.
  */
 export function getMediaMessageOptions(
   message: CometChat.BaseMessage,
@@ -365,12 +372,24 @@ export function getMediaMessageOptions(
     reactOption(context),
     replyOption(context),
     replyInThreadOption(context),
+  ];
+
+  // Add copy and edit when message has a caption (works like text copy/edit)
+  const mediaMsg = message as CometChat.MediaMessage;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard: message may not implement full MediaMessage interface
+  const caption = (mediaMsg.getCaption ? mediaMsg.getCaption() : '') || '';
+  if (caption.trim()) {
+    allOptions.push(copyOption(context));
+    allOptions.push(editOption(context));
+  }
+
+  allOptions.push(
     messageInfoOption(context),
     deleteOption(context),
     flagOption(context),
     markAsUnreadOption(context),
-    sendPrivatelyOption(context),
-  ];
+    sendPrivatelyOption(context)
+  );
   return filterOptions(allOptions, message, context);
 }
 

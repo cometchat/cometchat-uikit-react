@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- this file intentionally exercises the deprecated legacy bubble it covers */
 import { render } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
@@ -146,102 +147,7 @@ describe('CometChatVideoBubble', () => {
     expect(container.querySelector('[class*="caption"]')).toBeNull();
   });
 
-  // --- Multi-video grid (thumbnails + play overlay) ---
-
-  it('renders thumbnails (not <video>) for 2 attachments', () => {
-    const message = buildVideoMessage({
-      attachments: [makeRawAttachment(), makeRawAttachment({ url: 'https://example.com/v2.mp4' })],
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    expect(container.querySelectorAll('img[class*="thumbnail"]')).toHaveLength(2);
-    expect(container.querySelector('video')).toBeNull();
-  });
-
-  it('renders play overlay on grid tiles', () => {
-    const message = buildVideoMessage({
-      attachments: [makeRawAttachment(), makeRawAttachment({ url: 'https://example.com/v2.mp4' })],
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    expect(container.querySelectorAll('[class*="play-overlay"]')).toHaveLength(2);
-  });
-
-  it('renders 2-col grid for 2 videos', () => {
-    const message = buildVideoMessage({
-      attachments: [makeRawAttachment(), makeRawAttachment({ url: 'https://example.com/v2.mp4' })],
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    expect(container.querySelector('[class*="grid--two-col"]')).toBeTruthy();
-  });
-
-  it('renders 1+2 grid for 3 videos', () => {
-    const message = buildVideoMessage({
-      attachments: Array.from({ length: 3 }, (_, i) =>
-        makeRawAttachment({ url: `https://example.com/v${String(i)}.mp4` })
-      ),
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    expect(container.querySelector('[class*="grid--three"]')).toBeTruthy();
-  });
-
-  it('renders 2×2 grid for 4 videos', () => {
-    const message = buildVideoMessage({
-      attachments: Array.from({ length: 4 }, (_, i) =>
-        makeRawAttachment({ url: `https://example.com/v${String(i)}.mp4` })
-      ),
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    expect(container.querySelector('[class*="grid--2x2"]')).toBeTruthy();
-  });
-
-  it('renders overflow indicator for >4 videos', () => {
-    const message = buildVideoMessage({
-      attachments: Array.from({ length: 6 }, (_, i) =>
-        makeRawAttachment({ url: `https://example.com/v${String(i)}.mp4` })
-      ),
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    expect(container.querySelector('[class*="overflow-tile"]')).toBeTruthy();
-    expect(container.querySelector('[class*="overflow-text"]')?.textContent).toContain('+2');
-  });
-
-  // --- Accessibility ---
-
-  it('grid tile has role="button" and tabindex', () => {
-    const message = buildVideoMessage({
-      attachments: [makeRawAttachment(), makeRawAttachment({ url: 'https://example.com/v2.mp4' })],
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    const wrapper = container.querySelector('[class*="video-wrapper"]');
-    expect(wrapper?.getAttribute('role')).toBe('button');
-    expect(wrapper?.getAttribute('tabindex')).toBe('0');
-  });
-
-  it('grid tile has aria-label', () => {
-    const message = buildVideoMessage({
-      attachments: [makeRawAttachment(), makeRawAttachment({ url: 'https://example.com/v2.mp4' })],
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    const wrapper = container.querySelector('[class*="video-wrapper"]');
-    expect(wrapper?.getAttribute('aria-label')).toContain('Play video');
-  });
-
-  it('play overlay is aria-hidden', () => {
-    const message = buildVideoMessage({
-      attachments: [makeRawAttachment(), makeRawAttachment({ url: 'https://example.com/v2.mp4' })],
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    const overlay = container.querySelector('[class*="play-overlay"]');
-    expect(overlay?.getAttribute('aria-hidden')).toBe('true');
-  });
-
-  it('overflow text is aria-hidden', () => {
-    const message = buildVideoMessage({
-      attachments: Array.from({ length: 6 }, (_, i) =>
-        makeRawAttachment({ url: `https://example.com/v${String(i)}.mp4` })
-      ),
-    });
-    const { container } = render(<CometChatVideoBubble message={message} alignment="right" />);
-    const text = container.querySelector('[class*="overflow-text"]');
-    expect(text?.getAttribute('aria-hidden')).toBe('true');
-  });
+  // Multi-video grid, play overlays, overflow, and grid-tile accessibility moved
+  // to the batch-aware CometChatVideosBubble (see its spec). The singular bubble
+  // renders one video as an inline <video> element.
 });

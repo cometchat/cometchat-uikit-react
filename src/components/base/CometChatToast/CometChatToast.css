@@ -21,6 +21,12 @@
   animation: cometchat-toast-slide-up 0.3s ease-out;
 }
 
+/* Error variant — red background for failures / validation errors */
+.cometchat-toast--error {
+  background: var(--cometchat-error-color, #f44649);
+  color: var(--cometchat-static-white, #fff);
+}
+
 @keyframes cometchat-toast-slide-up {
   from {
     opacity: 0;
@@ -95,9 +101,6 @@
   .cometchat-toast {
     min-width: 200px;
     max-width: calc(100vw - 32px);
-    left: 16px;
-    right: 16px;
-    transform: none;
   }
 
   @keyframes cometchat-toast-slide-up {

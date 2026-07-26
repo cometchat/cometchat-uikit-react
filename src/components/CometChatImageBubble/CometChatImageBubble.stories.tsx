@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- this file intentionally exercises the deprecated legacy bubble it covers */
 import React from 'react';
 import type { Meta } from '@storybook/react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';

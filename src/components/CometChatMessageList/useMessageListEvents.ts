@@ -521,6 +521,23 @@ export function useMessageListEvents(
           }
 
           if (event.status === CometChatMessageStatus.error) {
+            // Scope the errored/rejected message to the list it belongs to so a
+            // thread-level rejection doesn't leak into the main list (and vice
+            // versa). We check ONLY the thread scoping here — mirroring
+            // isMessageForConversation()'s parent logic — and deliberately skip
+            // its receiver matching, because the SDK may clear receiverId on
+            // failure, which would wrongly reject a valid same-conversation error.
+            // parentMessageId, unlike receiverId, is set by the composer before
+            // publishing and is not cleared on failure.
+            const msgParentId = msg.getParentMessageId() || 0;
+            if (parentMessageId) {
+              // Thread list: accept only its own thread's messages.
+              if (msgParentId !== parentMessageId) break;
+            } else if (msgParentId && !(opts.isAgentChat ?? false)) {
+              // Main list: reject thread replies (agent chat shows them inline).
+              break;
+            }
+
             const errorMuid = msg.getMuid() || '';
             if (errorMuid) {
               dispatch({

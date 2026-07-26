@@ -13,6 +13,7 @@ import {
   isMessageModerated,
   isPermissionDeniedError,
   isMessagePendingModeration,
+  getReceiptStatus,
 } from '../../utils/MessageReceiptUtils';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
 import type {
@@ -43,6 +44,7 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
   messageAlignment = 1, // 1 = standard (incoming left, outgoing right)
   index,
   total,
+  batchPosition,
   onAvatarClick,
   onThreadRepliesClick,
   onDeleteMessage,
@@ -100,6 +102,7 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
       loggedInUser,
       group,
       alignment,
+      batchPosition,
       theme,
       getLocalizedString,
       onDeleteMessage,
@@ -131,6 +134,7 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
       loggedInUser,
       group,
       alignment,
+      batchPosition,
       theme,
       getLocalizedString,
       onDeleteMessage,
@@ -313,6 +317,27 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
 
   const hideAvatar = hideAvatarProp;
 
+  // --- Batch chrome overrides (R6.2, R6.3, R6.4) ---
+  // When a message is part of a multi-attachment batch, suppress certain visual
+  // elements based on its position within the batch group:
+  // - first: show avatar + sender name; suppress statusInfo
+  // - middle: hide avatar, suppress sender name + statusInfo
+  // - last: hide avatar, suppress sender name; show statusInfo
+  // - single: no overrides (default behavior)
+  const batchHideAvatar =
+    batchPosition === 'middle' || batchPosition === 'last' ? true : hideAvatar;
+  const batchHeaderView =
+    batchPosition === 'middle' || batchPosition === 'last' ? null : pluginHeaderView;
+  // Deleted messages ("This message was deleted") keep the timestamp but hide
+  // the receipt icon.
+  const isDeleted = Boolean(message.getDeletedAt());
+  // An errored message (RBAC/moderation failure) must surface its status even when
+  // it sits mid-batch — otherwise the failure is invisible.
+  const hasError = !isDeleted && getReceiptStatus(message) === 'error';
+  const isBatchStatusSuppressed =
+    (batchPosition === 'first' || batchPosition === 'middle') && !hasError;
+  const batchStatusInfoView = isBatchStatusSuppressed ? null : pluginStatusInfoView;
+
   return (
     <CometChatMessageBubble
       message={message}
@@ -320,16 +345,16 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
       contentView={contentView}
       group={group}
       options={options}
-      hideAvatar={hideAvatar}
+      hideAvatar={batchHideAvatar}
       forceShowAvatar={isAgentChat}
       hideTimestamp={hideTimestamp}
       hideThreadView={effectiveHideThreadView}
-      hideReceipts={hideReceipts}
+      hideReceipts={Boolean(hideReceipts) || isDeleted}
       disableInteraction={disableInteraction}
       quickOptionsCount={effectiveQuickOptionsCount}
       leadingView={pluginLeadingView}
-      headerView={pluginHeaderView}
-      statusInfoView={pluginStatusInfoView}
+      headerView={batchHeaderView}
+      statusInfoView={batchStatusInfoView}
       footerView={pluginFooterView}
       bottomView={pluginBottomView}
       replyView={pluginReplyView}

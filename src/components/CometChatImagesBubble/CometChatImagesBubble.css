@@ -1,0 +1,324 @@
+/* ============================================
+   Block: cometchat-images-bubble
+   Batch-aware replacement for cometchat-image-bubble.
+   ============================================ */
+
+.cometchat-images-bubble {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--cometchat-images-bubble-container-max-width, 400px);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   Modifiers: Alignment Variants
+   ============================================ */
+
+.cometchat-images-bubble--incoming {
+  align-items: flex-start;
+}
+
+.cometchat-images-bubble--outgoing {
+  align-items: flex-end;
+}
+
+/* ============================================
+   Element: Container
+   ============================================ */
+
+.cometchat-images-bubble__container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(
+    --cometchat-images-bubble-container-border-radius,
+    var(--cometchat-radius-2, 8px)
+  );
+  overflow: hidden;
+}
+
+/* ============================================
+   Single image — intrinsic sizing
+   ============================================ */
+
+.cometchat-images-bubble--single .cometchat-images-bubble__image-wrapper {
+  aspect-ratio: auto;
+  height: 100%;
+  border-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-images-bubble--single .cometchat-images-bubble__image {
+  object-fit: cover;
+  max-height: var(--cometchat-images-bubble-single-max-height, 350px);
+  min-width: 200px;
+  min-height: 198px;
+}
+
+/* ============================================
+   Element: Grid (shared)
+   ============================================ */
+
+.cometchat-images-bubble__grid {
+  display: grid;
+  gap: var(--cometchat-spacing-1, 2px);
+  width: 100%;
+}
+
+/* ============================================
+   2-image grid: side by side
+   ============================================ */
+
+.cometchat-images-bubble__grid--two-col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ============================================
+   3-image grid: 1 on top (full width), 2 below (half each)
+   ============================================ */
+
+.cometchat-images-bubble__grid--three {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.cometchat-images-bubble__grid--three > :first-child {
+  grid-row: 1 / 3;
+  aspect-ratio: auto;
+  height: 100%;
+}
+
+/* ============================================
+   2x2 grid for 4 images
+   ============================================ */
+
+.cometchat-images-bubble__grid--2x2 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* ============================================
+   Overflow grid for >4 images (3 + overflow tile)
+   ============================================ */
+
+.cometchat-images-bubble__grid--overflow {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* ============================================
+   Element: Image Wrapper
+   ============================================ */
+
+.cometchat-images-bubble__image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--cometchat-radius-2, 8px);
+  cursor: pointer;
+  background: var(--cometchat-neutral-color-300, #dcdcdc);
+  transition: opacity 0.2s ease;
+}
+
+.cometchat-images-bubble:not(.cometchat-images-bubble--single)
+  .cometchat-images-bubble__image-wrapper,
+.cometchat-images-bubble:not(.cometchat-images-bubble--single)
+  .cometchat-images-bubble__overflow-tile {
+  min-height: 198px;
+}
+
+.cometchat-images-bubble__image-wrapper:hover {
+  cursor: pointer;
+}
+
+.cometchat-images-bubble__image-wrapper:focus {
+  outline: none;
+}
+
+.cometchat-images-bubble__image-wrapper:focus-visible {
+  outline: var(--cometchat-focus-ring-width, 2px) var(--cometchat-focus-ring-style, solid)
+    var(--cometchat-focus-ring-color, var(--cometchat-primary-color, #3399ff));
+  outline-offset: var(--cometchat-focus-ring-offset, 2px);
+}
+
+.cometchat-images-bubble__image-wrapper:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 var(--cometchat-focus-ring-width, 2px)
+    var(--cometchat-focus-ring-color-inverse, var(--cometchat-static-white, #fff));
+  pointer-events: none;
+}
+
+/* ============================================
+   Element: Image
+   ============================================ */
+
+.cometchat-images-bubble__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  max-height: 400px;
+}
+
+/* ============================================
+   Element: Placeholder (optimistic/loading state)
+   ============================================ */
+
+.cometchat-images-bubble__placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cometchat-background-color-02, #f5f5f5);
+  border-radius: var(--cometchat-radius-2, 8px);
+}
+
+.cometchat-images-bubble__placeholder::after {
+  content: '';
+  width: 48px;
+  height: 48px;
+  background: var(--cometchat-neutral-color-400, #c4c4c4);
+  -webkit-mask: url('../../assets/photo.svg') center center / contain no-repeat;
+  mask: url('../../assets/photo.svg') center center / contain no-repeat;
+}
+
+/* Unsupported / broken image tile — replaces the grey photo placeholder icon. */
+.cometchat-images-bubble__placeholder.cometchat-images-bubble__unsupported::after {
+  content: none;
+}
+
+.cometchat-images-bubble__unsupported {
+  cursor: pointer;
+}
+
+.cometchat-images-bubble__unsupported-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+/* ============================================
+   Element: Overflow Tile
+   ============================================ */
+
+.cometchat-images-bubble__overflow-tile {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--cometchat-radius-2, 8px);
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 0.2s ease;
+}
+
+.cometchat-images-bubble__overflow-tile:hover {
+  opacity: 0.9;
+}
+
+.cometchat-images-bubble__overflow-tile:focus {
+  outline: none;
+}
+
+.cometchat-images-bubble__overflow-tile:focus-visible {
+  outline: var(--cometchat-focus-ring-width, 2px) var(--cometchat-focus-ring-style, solid)
+    var(--cometchat-focus-ring-color, var(--cometchat-primary-color, #3399ff));
+  outline-offset: var(--cometchat-focus-ring-offset, 2px);
+}
+
+.cometchat-images-bubble__overflow-tile:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 var(--cometchat-focus-ring-width, 2px)
+    var(--cometchat-focus-ring-color-inverse, var(--cometchat-static-white, #fff));
+  pointer-events: none;
+}
+
+/* ============================================
+   Element: Overflow Overlay
+   ============================================ */
+
+.cometchat-images-bubble__overflow-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cometchat-radius-2, 8px);
+  background: var(
+    --cometchat-images-bubble-overflow-overlay-background,
+    var(--cometchat-overlay-background-light, rgba(0, 0, 0, 0.4))
+  );
+  backdrop-filter: blur(2px);
+  transition: background-color 0.2s ease;
+}
+
+.cometchat-images-bubble__overflow-tile:hover .cometchat-images-bubble__overflow-overlay {
+  background: var(
+    --cometchat-images-bubble-overflow-overlay-background-hover,
+    var(--cometchat-overlay-background-light, rgba(0, 0, 0, 0.5))
+  );
+}
+
+/* ============================================
+   Element: Overflow Text
+   ============================================ */
+
+.cometchat-images-bubble__overflow-text {
+  font: var(--cometchat-font-heading1-bold, bold 24px/32px sans-serif);
+  color: var(--cometchat-static-white, #fff);
+  text-shadow: var(--cometchat-text-shadow-strong, 0 1px 3px rgba(0, 0, 0, 0.3));
+}
+
+/* ============================================
+   Element: Caption
+   ============================================ */
+
+.cometchat-images-bubble__caption {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* Override text bubble padding so caption sits flush with image edges */
+  --cometchat-text-bubble-padding: 6px 4px 6px 4px;
+}
+
+.cometchat-images-bubble .cometchat-text-bubble__link-preview-container {
+  margin-top: 0;
+  margin-inline: -2px;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 768px) {
+  .cometchat-images-bubble__overflow-text {
+    font: var(--cometchat-font-heading2-bold, bold 20px/28px sans-serif);
+  }
+}
+
+@media (max-width: 480px) {
+  .cometchat-images-bubble__grid {
+    gap: var(--cometchat-images-bubble-grid-gap-mobile, var(--cometchat-spacing, 2px));
+  }
+
+  .cometchat-images-bubble__overflow-text {
+    font: var(--cometchat-font-heading3-bold, bold 16px/24px sans-serif);
+  }
+}

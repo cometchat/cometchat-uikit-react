@@ -1,4 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+/* eslint-disable @typescript-eslint/no-deprecated -- this file intentionally exercises the deprecated legacy bubble it covers */
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatFileBubble } from '../CometChatFileBubble';
@@ -219,27 +220,9 @@ describe('CometChatFileBubble', () => {
     expect(container.querySelector('[class*="caption"]')).toBeNull();
   });
 
-  // --- Multi-file expand/collapse ---
-
-  it('shows "Show more +N" for files beyond 3', () => {
-    const files = Array.from({ length: 5 }, (_, i) =>
-      makeFile({ name: `file-${String(i)}.pdf`, url: `#${String(i)}` })
-    );
-    render(<CometChatFileBubble message={makeMessage(files)} alignment="right" />);
-    expect(screen.getByText('Show more')).toBeInTheDocument();
-    expect(screen.getByText('+2')).toBeInTheDocument();
-  });
-
-  it('shows 3 files in collapsed view', () => {
-    const files = Array.from({ length: 5 }, (_, i) =>
-      makeFile({ name: `file-${String(i)}.pdf`, url: `#${String(i)}` })
-    );
-    const { container } = render(
-      <CometChatFileBubble message={makeMessage(files)} alignment="right" />
-    );
-    const items = container.querySelectorAll('[class*="file-item"]');
-    expect(items).toHaveLength(3);
-  });
+  // Multi-file "Show more"/collapse/expand moved to the batch-aware
+  // CometChatFilesBubble (see its spec). The singular bubble renders one file,
+  // so there is never a toggle — asserted below.
 
   it('does not show toggle for 3 or fewer files', () => {
     const files = [
@@ -254,31 +237,6 @@ describe('CometChatFileBubble', () => {
   it('does not show toggle for single file', () => {
     render(<CometChatFileBubble message={makeMessage()} alignment="right" />);
     expect(screen.queryByText('Show more')).toBeNull();
-  });
-
-  it('expands to show all files on click', () => {
-    const files = Array.from({ length: 5 }, (_, i) =>
-      makeFile({ name: `file-${String(i)}.pdf`, url: `#${String(i)}` })
-    );
-    render(<CometChatFileBubble message={makeMessage(files)} alignment="right" />);
-
-    fireEvent.click(screen.getByText('Show more'));
-    expect(screen.getByText('file-3.pdf')).toBeInTheDocument();
-    expect(screen.getByText('file-4.pdf')).toBeInTheDocument();
-    expect(screen.getByText('Show less')).toBeInTheDocument();
-  });
-
-  it('collapses back on "Show less" click', () => {
-    const files = Array.from({ length: 5 }, (_, i) =>
-      makeFile({ name: `file-${String(i)}.pdf`, url: `#${String(i)}` })
-    );
-    render(<CometChatFileBubble message={makeMessage(files)} alignment="right" />);
-
-    fireEvent.click(screen.getByText('Show more'));
-    expect(screen.getByText('file-4.pdf')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('Show less'));
-    expect(screen.queryByText('file-4.pdf')).toBeNull();
   });
 
   // --- Accessibility ---
@@ -299,25 +257,6 @@ describe('CometChatFileBubble', () => {
     if (link) {
       expect(link.getAttribute('aria-label')).toContain('Download');
     }
-  });
-
-  it('expand toggle has aria-expanded="false"', () => {
-    const files = Array.from({ length: 5 }, (_, i) =>
-      makeFile({ name: `file-${String(i)}.pdf`, url: `#${String(i)}` })
-    );
-    render(<CometChatFileBubble message={makeMessage(files)} alignment="right" />);
-    const btn = screen.getByText('Show more');
-    expect(btn.closest('button')?.getAttribute('aria-expanded')).toBe('false');
-  });
-
-  it('collapse toggle has aria-expanded="true"', () => {
-    const files = Array.from({ length: 5 }, (_, i) =>
-      makeFile({ name: `file-${String(i)}.pdf`, url: `#${String(i)}` })
-    );
-    render(<CometChatFileBubble message={makeMessage(files)} alignment="right" />);
-    fireEvent.click(screen.getByText('Show more'));
-    const btn = screen.getByText('Show less');
-    expect(btn.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('file icon is aria-hidden', () => {

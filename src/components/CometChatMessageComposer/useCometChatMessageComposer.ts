@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useId, useReducer, useRef } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import * as ComposerManager from './CometChatMessageComposerManager';
-import { composerReducer, initialComposerState } from './CometChatMessageComposer.reducer';
+import {
+  composerReducer,
+  initialComposerState,
+  selectCanSend,
+} from './CometChatMessageComposer.reducer';
 import type { CometChatComposerContentToDisplay } from './CometChatMessageComposer.types';
+import { useMediaUploadManager } from './useMediaUploadManager';
+import { sendBatch as sendBatchFn } from './sendBatch';
+import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
 import { usePublishEvent } from '../../context/CometChatEventsContext';
 import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import type { CometChatEvent } from '../../context/CometChatEvents.types';
@@ -18,7 +25,7 @@ export interface CometChatUseCometChatMessageComposerOptions {
   initialText?: string;
   /** Controlled text value. When provided, the hook syncs its text state to this value. */
   text?: string;
-  messageToEdit?: CometChat.TextMessage | null;
+  messageToEdit?: CometChat.TextMessage | CometChat.MediaMessage | null;
   messageToReply?: CometChat.BaseMessage | null;
   disableTypingEvents?: boolean;
   disableSoundForMessage?: boolean;
@@ -79,9 +86,33 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
     text: initialText ?? '',
   });
 
+  const receiverId = user?.getUid() ?? group?.getGuid() ?? '';
+  const receiverType = user ? CometChat.RECEIVER_TYPE.USER : CometChat.RECEIVER_TYPE.GROUP;
+
+  // Multi-attachment upload manager — drives the SDK upload request + maps its
+  // listener callbacks onto tray dispatches. Exposed on the hook (and later context)
+  // so the picker/tray/send-pipeline can stage, remove, retry, and clear files.
+  // Receiver id/type are required by the SDK's presign endpoint (access control).
+  const mediaUploadManager = useMediaUploadManager({
+    dispatch,
+    tray: state.tray,
+    receiverId,
+    receiverType,
+    parentMessageId,
+  });
+  // Stable handle (the manager memoizes it) so sendBatch can capture the active
+  // upload request without depending on the whole manager object.
+  const getActiveUploadRequest = mediaUploadManager.getActiveRequest;
+
   const instanceId = useId();
   const publish = usePublishEvent();
   const IframeContext = useCometChatFrameContext();
+
+  // Live mirror of "the tray has staged attachments".
+  // Used to block entering edit mode while attachments are staged.
+  const trayHasItemsRef = useRef(false);
+  trayHasItemsRef.current = state.tray.items.length > 0;
+
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLDivElement>(null);
   const isSendingRef = useRef(false);
@@ -93,9 +124,6 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
   const getCurrentWindow = useCallback(() => {
     return IframeContext.iframeWindow ?? window;
   }, [IframeContext.iframeWindow]);
-
-  const receiverId = user?.getUid() ?? group?.getGuid() ?? '';
-  const receiverType = user ? CometChat.RECEIVER_TYPE.USER : CometChat.RECEIVER_TYPE.GROUP;
 
   // --- Reset composer when conversation changes ---
   const prevReceiverIdRef = useRef(receiverId);
@@ -110,6 +138,8 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
   // --- Sync edit/reply from props ---
   useEffect(() => {
     if (messageToEdit !== undefined) {
+      // Don't open edit mode while attachments are staged in the tray.
+      if (messageToEdit && trayHasItemsRef.current) return;
       dispatch({ type: 'SET_EDIT_MESSAGE', message: messageToEdit ?? null });
       if (messageToEdit) {
         publish({
@@ -378,7 +408,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
 
   // --- Send media message ---
   const sendMediaMessage = useCallback(
-    async (file: File, fileType: string) => {
+    async (file: File, fileType: string, options?: { isVoiceNote?: boolean }) => {
       if (!receiverId) return;
       if (!isSdkInitialized()) return;
 
@@ -421,6 +451,10 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           fileName: file.name,
           fileType: file.type,
           fileSize: file.size,
+          ...(options?.isVoiceNote && {
+            [CometChatUIKitConstants.MetadataKeys.audioType]:
+              CometChatUIKitConstants.AudioType.voiceNote,
+          }),
         });
         // Set sender
         try {
@@ -515,6 +549,77 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
     ]
   );
 
+  // --- Send batch (multi-attachment fan-out) ---
+  // `captionOverride` / `richTextHtml` mirror sendMessage(): the caption travels
+  // with the attachments (stamped on the last message of the batch). When rich
+  // text is enabled, the editor HTML is converted to markdown for the caption.
+  const sendBatch = useCallback(
+    async (captionOverride?: string, richTextHtml?: string) => {
+      if (!receiverId || !isSdkInitialized()) return;
+      const { tray, messageToReply: replyMessage, text } = state;
+      if (!tray.batchId || tray.items.length === 0) return;
+
+      // Snapshot everything the send needs BEFORE clearing, so the composer can be
+      // cleared optimistically (no lag waiting for all sends to complete).
+      const itemsSnapshot = tray.items;
+      const batchId = tray.batchId;
+      const rawCaption = captionOverride ?? text;
+      // Capture the exact upload request for THIS batch before the optimistic
+      // clear. Releasing this instance (not a batchId) in the finally means a new
+      // batch started mid-send builds its own request and is never clobbered.
+      const uploadRequest = getActiveUploadRequest();
+
+      // Clear the composer immediately — the optimistic bubbles are published by
+      // sendBatchFn, so nothing is lost and the input feels instant.
+      dispatch({ type: 'TRAY_CLEAR' });
+      dispatch({ type: 'SET_TEXT', text: '' });
+      dispatch({ type: 'SET_REPLY_MESSAGE', message: null });
+      dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
+      endTyping();
+
+      let caption = rawCaption;
+      if (richTextHtml) {
+        const { CometChatRichTextFormatter } =
+          await import('../../formatters/CometChatRichTextFormatter');
+        const formatter = new CometChatRichTextFormatter();
+        caption = formatter.format(richTextHtml);
+      }
+
+      try {
+        await sendBatchFn({
+          items: itemsSnapshot,
+          batchId,
+          caption,
+          receiverId,
+          receiverType,
+          parentMessageId,
+          messageToReply: replyMessage,
+          publish: publish as (event: Record<string, unknown>) => void,
+          onSendButtonClick,
+        });
+      } finally {
+        // Release this batch's upload request after sends complete (success or
+        // failure): aborts anything in flight and frees the retained bytes.
+        try {
+          uploadRequest?.clearAll();
+        } catch {
+          /* non-fatal */
+        }
+      }
+    },
+    [
+      state,
+      receiverId,
+      receiverType,
+      parentMessageId,
+      onSendButtonClick,
+      endTyping,
+      isSdkInitialized,
+      publish,
+      getActiveUploadRequest,
+    ]
+  );
+
   const editMessage = useCallback(
     async (richTextHtml?: string) => {
       if (!state.textMessageToEdit) return;
@@ -548,11 +653,23 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       clearMentionedUsers?.();
 
       try {
-        const message = await ComposerManager.editTextMessage(
-          messageToEdit.getId(),
-          trimmedText,
-          mentionedUsersForSend
-        );
+        // Determine if this is a media message (caption edit) or a text message edit
+        const isMediaEdit = messageToEdit.getType() !== CometChat.MESSAGE_TYPE.TEXT;
+        let message: CometChat.BaseMessage;
+
+        if (isMediaEdit) {
+          message = await ComposerManager.editMediaCaption(
+            messageToEdit.getId(),
+            trimmedText,
+            mentionedUsersForSend
+          );
+        } else {
+          message = await ComposerManager.editTextMessage(
+            messageToEdit.getId(),
+            trimmedText,
+            mentionedUsersForSend
+          );
+        }
 
         if (onSendButtonClick) {
           onSendButtonClick(message, 'edit');
@@ -656,14 +773,29 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
   // that has no visible text yet — still counts as having content.
   // In edit mode, the text must differ from the original message text OR formatting must have changed.
   const isInEditMode = state.textMessageToEdit !== null;
-  const canSend =
-    (state.text.length > 0 || state.isRecording) &&
-    state.sendState !== 'sending' &&
-    (!isInEditMode ||
-      state.text !== (state.textMessageToEdit?.getText() ?? '') ||
-      state.isEditDirty);
+  // When the staging tray holds items, send gating switches to the all-or-nothing
+  // attachment rule (every item must be `success`) — see design 1.5 / R8.5. This
+  // is a pure function of tray state so it updates on every dispatch (add, status
+  // change, remove, clear), driving the compact composer's mic <-> send swap.
+  const trayHasItems = state.tray.items.length > 0;
+  const canSend = trayHasItems
+    ? selectCanSend(state.tray) && state.sendState !== 'sending'
+    : (state.text.length > 0 || state.isRecording) &&
+      state.sendState !== 'sending' &&
+      (!isInEditMode ||
+        state.text !==
+          (state.textMessageToEdit
+            ? state.textMessageToEdit.getType() === 'text' && 'getText' in state.textMessageToEdit
+              ? state.textMessageToEdit.getText()
+              : (state.textMessageToEdit as CometChat.MediaMessage).getCaption() || ''
+            : '') ||
+        state.isEditDirty);
   const isInReplyMode = state.messageToReply !== null;
-  const showVoiceButton = state.text.length === 0;
+  // Compact composer mic <-> send swap (R8.5): the mic is visible only when there
+  // is no text AND the tray is empty. A non-empty tray hides the mic so Send takes
+  // its place; clearing the tray (send or remove-all) restores the mic because this
+  // is state-driven and re-renders on TRAY_* dispatches.
+  const showVoiceButton = state.text.length === 0 && !trayHasItems;
 
   // --- SDK listeners ---
   useEffect(() => {
@@ -706,6 +838,8 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       switch (event.type) {
         case 'ui:compose/edit': {
           if (event.status !== CometChatMessageStatus.inprogress) break;
+          // Don't open edit mode while attachments are staged in the tray.
+          if (trayHasItemsRef.current) break;
           // Thread-scoping: match parentMessageId (same logic as reply)
           const editEventParentId = event.parentMessageId;
           if (parentMessageId) {
@@ -718,6 +852,13 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           const msg = event.message;
           if (msg.getType() === CometChat.MESSAGE_TYPE.TEXT) {
             dispatch({ type: 'SET_EDIT_MESSAGE', message: msg as CometChat.TextMessage });
+          } else {
+            // Media messages with a caption are editable (caption only)
+            const mediaMsg = msg as CometChat.MediaMessage;
+            const caption = mediaMsg.getCaption() || '';
+            if (caption.trim()) {
+              dispatch({ type: 'SET_EDIT_MESSAGE', message: mediaMsg });
+            }
           }
           break;
         }
@@ -777,9 +918,11 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
     isInEditMode,
     isInReplyMode,
     showVoiceButton,
+    mediaUploadManager,
     setText,
     sendMessage,
     sendMediaMessage,
+    sendBatch,
     editMessage,
     insertEmoji,
     setContentToDisplay,

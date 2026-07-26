@@ -22,6 +22,8 @@ export interface MessageItemProps {
   messageAlignment?: number;
   index: number;
   total: number;
+  /** Batch position within a multi-attachment batch group. */
+  batchPosition?: 'first' | 'middle' | 'last' | 'single';
   onThreadRepliesClick?: (message: CometChat.BaseMessage) => void;
   onAvatarClick?: (user: CometChat.User) => void;
   onDeleteMessage?: (message: CometChat.BaseMessage) => void;
@@ -60,6 +62,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   messageAlignment,
   index,
   total,
+  batchPosition,
   onThreadRepliesClick,
   onAvatarClick,
   onDeleteMessage,
@@ -103,13 +106,20 @@ const MessageItem: React.FC<MessageItemProps> = ({
           : ('left' as const);
 
   return (
-    <CometChatMessageBubbleWrapper alignment={alignment}>
+    <CometChatMessageBubbleWrapper
+      alignment={alignment}
+      {...(batchPosition &&
+        batchPosition !== 'single' && {
+          className: `cometchat-message-bubble-wrapper--batch-${batchPosition}`,
+        })}
+    >
       <CometChatMessageBubbleRenderer
         message={message}
         {...(group !== undefined && { group })}
         {...(messageAlignment !== undefined && { messageAlignment })}
         index={index}
         total={total}
+        {...(batchPosition !== undefined && { batchPosition })}
         {...(onThreadRepliesClick !== undefined && { onThreadRepliesClick })}
         {...(onAvatarClick !== undefined && { onAvatarClick })}
         {...(onDeleteMessage !== undefined && { onDeleteMessage })}

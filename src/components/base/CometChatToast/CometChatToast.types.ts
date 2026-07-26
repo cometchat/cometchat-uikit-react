@@ -4,6 +4,8 @@ import type { HTMLAttributes } from 'react';
 export interface CometChatToastProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
   /** The message text to display in the toast. Renders nothing when empty. */
   text: string;
+  /** Visual variant. `error` renders a red toast for failures/validation. Default: `default`. */
+  variant?: 'default' | 'error';
   /**
    * Duration in milliseconds before auto-dismiss.
    * - Default: `3000`

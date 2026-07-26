@@ -70,6 +70,21 @@ describe('CometChatMessageBubbleRenderer', () => {
     expect(screen.getByTestId('delete-bubble')).toBeInTheDocument();
   });
 
+  it('keeps the timestamp but hides the receipt for deleted messages', () => {
+    // Outgoing (sender === logged-in user) so a receipt would otherwise render.
+    const msg = buildDeletedMessage({
+      sender: buildUser({ uid: 'me' }),
+    }) as unknown as CometChat.BaseMessage;
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={1} />
+    );
+    expect(screen.getByTestId('delete-bubble')).toBeInTheDocument();
+    // Timestamp still shown...
+    expect(container.querySelector('time')).toBeTruthy();
+    // ...but no receipt icon.
+    expect(container.querySelector('[class*="cometchat-receipts"]')).toBeNull();
+  });
+
   it('renders fallback for unknown message type', () => {
     const msg = {
       getId: () => 1,
@@ -134,6 +149,31 @@ describe('CometChatMessageBubbleRenderer', () => {
     // In left-aligned mode, even outgoing messages should be left
     const wrapper = container.querySelector('[class*="incoming"]');
     expect(wrapper).toBeInTheDocument();
+  });
+
+  it('suppresses the status info view for a non-errored first-batch message', () => {
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'me' }), // outgoing → a receipt would otherwise show
+    }) as unknown as CometChat.BaseMessage;
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={2} batchPosition="first" />
+    );
+    expect(container.querySelector('[class*="cometchat-receipts"]')).toBeNull();
+    expect(container.querySelector('time')).toBeNull();
+  });
+
+  it('surfaces the whole status info view for an errored message even mid-batch', () => {
+    // An RBAC/send failure sets _ccError; getReceiptStatus() → 'error'.
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'me' }),
+    }) as unknown as CometChat.BaseMessage;
+    (msg as unknown as { _ccError: unknown })._ccError = { code: 'ERR_X', message: 'failed' };
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={2} batchPosition="first" />
+    );
+    // Not suppressed: the error receipt (and timestamp) render despite first position.
+    expect(container.querySelector('[class*="cometchat-receipts-error"]')).toBeTruthy();
+    expect(container.querySelector('time')).toBeTruthy();
   });
 
   it('sets aria-posinset and aria-setsize', () => {

@@ -214,6 +214,53 @@ describe('messageListReducer', () => {
     expect(state.messages[0]).toBe(errored);
   });
 
+  it('MESSAGE_SEND_ERROR does not append a duplicate already present by id', () => {
+    const existing = buildTextMessage({
+      id: 5,
+      muid: 'muid-a',
+      text: 'hi',
+    }) as unknown as CometChat.BaseMessage;
+    // Same SDK id, but a muid that matches nothing in state — must not be appended.
+    const errored = buildTextMessage({
+      id: 5,
+      muid: 'muid-b',
+      text: 'hi',
+    }) as unknown as CometChat.BaseMessage;
+    (errored as unknown as { error: unknown }).error = { code: 'ERR_PERMISSION_DENIED' };
+    const prev: CometChatMessageListState = {
+      ...initialMessageListState,
+      messages: [existing],
+    };
+    const state = messageListReducer(prev, {
+      type: 'MESSAGE_SEND_ERROR',
+      muid: 'muid-b',
+      message: errored,
+      error: 'Send failed',
+    });
+    expect(state).toBe(prev); // unchanged — the append was skipped
+    expect(state.messages).toHaveLength(1);
+  });
+
+  it('ADD_STREAMING_BUBBLE skips a message already present in state', () => {
+    const bubble = buildTextMessage({ id: 7, muid: 'muid-7' }) as unknown as CometChat.BaseMessage;
+    const prev: CometChatMessageListState = {
+      ...initialMessageListState,
+      messages: [bubble],
+    };
+    const state = messageListReducer(prev, { type: 'ADD_STREAMING_BUBBLE', message: bubble });
+    expect(state).toBe(prev);
+    expect(state.messages).toHaveLength(1);
+  });
+
+  it('ADD_STREAMING_BUBBLE appends a genuinely new bubble', () => {
+    const prev: CometChatMessageListState = {
+      ...initialMessageListState,
+      messages: [msg(1)],
+    };
+    const state = messageListReducer(prev, { type: 'ADD_STREAMING_BUBBLE', message: msg(2) });
+    expect(state.messages).toHaveLength(2);
+  });
+
   // --- REAL-TIME ---
   it('MESSAGE_RECEIVED appends new message', () => {
     const prev: CometChatMessageListState = {

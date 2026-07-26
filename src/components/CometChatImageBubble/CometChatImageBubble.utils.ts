@@ -18,17 +18,17 @@ export function extractImageAttachments(
       | undefined;
 
     if (attachments && attachments.length > 0) {
-      const result: CometChatImageBubbleAttachment[] = [];
-      for (const att of attachments) {
-        const url = att.getUrl();
-        if (url.length > 0) {
-          const entry: CometChatImageBubbleAttachment = { url };
-          const size = att.getSize();
-          if (size) entry.size = size;
-          result.push(entry);
-        }
+      // Only use the first attachment — multi-attachment rendering is handled by CometChatImagesBubble
+      const att = attachments[0];
+      if (!att) return [];
+      const url = att.getUrl();
+      if (url.length > 0) {
+        const entry: CometChatImageBubbleAttachment = { url };
+        const size = att.getSize();
+        if (size) entry.size = size;
+        return [entry];
       }
-      return result;
+      return [];
     }
 
     // Pending (optimistic) message — no attachments yet, show placeholder

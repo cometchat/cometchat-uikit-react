@@ -135,9 +135,21 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
   },
 }));
 
+const mockCallsInit = vi.fn();
+const mockCallsInitFromSettings = vi.fn();
+const mockCallsLoginWithAuthToken = vi.fn();
+const mockLoadCallsSDK = vi.fn();
+
+const mockCallsSDK = {
+  init: (...args: unknown[]) => mockCallsInit(...args),
+  initFromSettings: (...args: unknown[]) => mockCallsInitFromSettings(...args),
+  loginWithAuthToken: (...args: unknown[]) => mockCallsLoginWithAuthToken(...args),
+};
+
 vi.mock('../CometChatCalls', () => ({
+  // Kept null so _initCalling() resolves the SDK via loadCallsSDK() (the ESM path).
   CometChatUIKitCalls: null,
-  loadCallsSDK: vi.fn().mockResolvedValue(null),
+  loadCallsSDK: (...args: unknown[]) => mockLoadCallsSDK(...args),
 }));
 
 vi.mock('../../resources/CometChatLocalize/CometChatLocalize', () => {
@@ -172,6 +184,10 @@ describe('CometChatUIKit', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetConversationUpdateSettings.mockResolvedValue(null);
+    mockLoadCallsSDK.mockResolvedValue(mockCallsSDK);
+    mockCallsInit.mockResolvedValue(undefined);
+    mockCallsInitFromSettings.mockResolvedValue(undefined);
+    mockCallsLoginWithAuthToken.mockResolvedValue(undefined);
   });
 
   describe('init', () => {
@@ -230,6 +246,53 @@ describe('CometChatUIKit', () => {
 
       expect(mockSetSource).toHaveBeenCalledWith('uikit-v7', 'web', 'reactjs');
     });
+
+    it('routes the Calls SDK through plain init() for developers (not ai-agent)', async () => {
+      const mockUser = { getUid: () => 'user1', getAuthToken: () => 'tok' };
+      mockInit.mockResolvedValue(true);
+      mockGetLoggedinUser.mockResolvedValue(mockUser);
+
+      const settings = new UIKitSettingsBuilder()
+        .setAppId('test-app-id')
+        .setRegion('us')
+        .setAuthKey('test-auth-key')
+        .setCallingEnabled(true)
+        .build();
+      await CometChatUIKit.init(settings);
+
+      expect(mockCallsInit).toHaveBeenCalledWith({ appId: 'test-app-id', region: 'us' });
+      expect(mockCallsInitFromSettings).not.toHaveBeenCalled();
+    });
+
+    it('routes the Calls SDK through plain init() even after a prior ai-agent init', async () => {
+      // A prior initFromSettings() run captures ai-agent settings; a subsequent
+      // plain init() must clear them so developers keep plain Calls-SDK init.
+      mockInitFromSettings.mockResolvedValue(true);
+      mockInit.mockResolvedValue(true);
+      const mockUser = { getUid: () => 'user1', getAuthToken: () => 'tok' };
+      mockGetLoggedinUser.mockResolvedValue(mockUser);
+
+      await CometChatUIKit.initFromSettings({
+        appId: 'test-app-id',
+        region: 'us',
+        credentials: { authKey: 'test-auth-key' },
+        uiKit: { callsSDK: true },
+      } as unknown as CometChat.CometChatSettings);
+
+      mockCallsInit.mockClear();
+      mockCallsInitFromSettings.mockClear();
+
+      const settings = new UIKitSettingsBuilder()
+        .setAppId('test-app-id')
+        .setRegion('us')
+        .setAuthKey('test-auth-key')
+        .setCallingEnabled(true)
+        .build();
+      await CometChatUIKit.init(settings);
+
+      expect(mockCallsInit).toHaveBeenCalledWith({ appId: 'test-app-id', region: 'us' });
+      expect(mockCallsInitFromSettings).not.toHaveBeenCalled();
+    });
   });
 
   describe('initFromSettings', () => {
@@ -263,8 +326,42 @@ describe('CometChatUIKit', () => {
 
       expect((window as unknown as Record<string, unknown>).CometChatUiKit).toEqual({
         name: '@cometchat/chat-uikit-react',
-        version: '7.0.3',
+        version: '7.1.0',
       });
+    });
+
+    it('routes the Calls SDK through initFromSettings (ai-agent) when calling is enabled', async () => {
+      const callsSettings = {
+        appId: 'test-app-id',
+        region: 'us',
+        credentials: { authKey: 'test-auth-key' },
+        uiKit: { callsSDK: true },
+      } as unknown as CometChat.CometChatSettings;
+
+      const mockUser = { getUid: () => 'user1', getAuthToken: () => 'tok' };
+      mockInitFromSettings.mockResolvedValue(true);
+      mockGetLoggedinUser.mockResolvedValue(mockUser);
+
+      await CometChatUIKit.initFromSettings(callsSettings);
+
+      // _postLogin() (and thus Calls SDK init) runs fire-and-forget on the
+      // initFromSettings path, so wait for the async routing to settle.
+      await vi.waitFor(() => {
+        expect(mockCallsInitFromSettings).toHaveBeenCalledWith(callsSettings);
+      });
+      expect(mockCallsInit).not.toHaveBeenCalled();
+      expect(mockCallsLoginWithAuthToken).toHaveBeenCalledWith('tok');
+    });
+
+    it('does not initialize the Calls SDK when calling is not enabled', async () => {
+      const mockUser = { getUid: () => 'user1', getAuthToken: () => 'tok' };
+      mockInitFromSettings.mockResolvedValue(true);
+      mockGetLoggedinUser.mockResolvedValue(mockUser);
+
+      await CometChatUIKit.initFromSettings(ssrSettings);
+
+      expect(mockCallsInitFromSettings).not.toHaveBeenCalled();
+      expect(mockCallsInit).not.toHaveBeenCalled();
     });
   });
 

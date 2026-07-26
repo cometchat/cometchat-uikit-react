@@ -1,0 +1,20 @@
+<svg width="184" height="184" viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sheet fanned left (background-color-03) -->
+  <g transform="rotate(-11 23 38) translate(-3 0)">
+    <svg x="10" y="5" width="26" height="33" viewBox="0 0 64 80" overflow="visible">
+      <path d="M4 8C4 3.58 7.58 0 12 0H52C56.42 0 60 3.58 60 8V72C60 76.42 56.42 80 52 80H12C7.58 80 4 76.42 4 72V8Z" fill="#F1F1F1" stroke="#E4E4E4" stroke-width="1"/>
+    </svg>
+  </g>
+  <!-- Sheet fanned right (background-color-02) -->
+  <g transform="rotate(9 23 38) translate(3 0)">
+    <svg x="10" y="5" width="26" height="33" viewBox="0 0 64 80" overflow="visible">
+      <path d="M4 8C4 3.58 7.58 0 12 0H52C56.42 0 60 3.58 60 8V72C60 76.42 56.42 80 52 80H12C7.58 80 4 76.42 4 72V8Z" fill="#F7F7F7" stroke="#E4E4E4" stroke-width="1"/>
+    </svg>
+  </g>
+  <!-- Front document (primary #6852D6) with folded corner + FILE label -->
+  <svg x="3" y="3" width="40" height="40" viewBox="0 0 80 80" overflow="visible">
+    <path d="M50.332 6.6665L66.999 23.3335V11.9595C66.9991 11.9728 67 11.9862 67 11.9995V67.9995C67 70.9449 64.6124 73.3333 61.667 73.3335H18.333C15.3876 73.3333 13 70.9449 13 67.9995V11.9995C13.0002 9.05425 15.3877 6.66668 18.333 6.6665H50.332Z" fill="#6852D6"/>
+    <path d="M55.6667 23.332L67 23.332L50.3333 6.66536L50.3333 17.9987C50.3333 20.9442 52.7212 23.332 55.6667 23.332Z" fill="#ACA0E8"/>
+    <text x="40" y="59" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF">FILE</text>
+  </svg>
+</svg>
