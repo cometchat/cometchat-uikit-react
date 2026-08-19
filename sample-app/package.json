@@ -18,9 +18,12 @@
     "@cometchat/calls-sdk-javascript": "^5.0.0",
     "@cometchat/chat-sdk-javascript": "^4.1.12",
     "@cometchat/chat-uikit-react": "^7.0.3",
-    "dompurify": "3.4.13",
+    "dompurify": "^3.4.13",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "overrides": {
+    "dompurify": "^3.4.13"
   },
   "devDependencies": {
     "@playwright/test": "1.59.1",
