@@ -18,7 +18,7 @@
     "@cometchat/calls-sdk-javascript": "^5.0.0",
     "@cometchat/chat-sdk-javascript": "^4.1.12",
     "@cometchat/chat-uikit-react": "^7.0.3",
-    "dompurify": "3.3.1",
+    "dompurify": "3.4.13",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -27,10 +27,10 @@
     "@types/node": "^25.5.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^4.4.1",
+    "@vitejs/plugin-react": "^6.0.5",
     "dotenv": "^16.4.0",
     "tsx": "^4.19.0",
     "typescript": "~5.7.0",
-    "vite": "^6.3.1"
+    "vite": "^8.2.1"
   }
 }
