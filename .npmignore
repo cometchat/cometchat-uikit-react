@@ -7,3 +7,5 @@ webpack.config.js
 sample-app
 package-lock.json
 .DS_Store
+*.tgz
+.claude

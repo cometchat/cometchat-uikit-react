@@ -457,17 +457,17 @@ function stateReducer(state: State, action: Action): State {
       if (messageReceipt && typeof messageReceipt.getMessageId === 'function') {
         targetMessageId = messageReceipt.getMessageId();
       }
+      // Matched purely on the message id so that group conversations are covered too.
+      // Group receipts arrive as `deliveredToAll`/`readByAll` and carry the same message id.
       const targetIdx = conversationList.findIndex((conv) => {
-        if (conv.getConversationWith() instanceof CometChat.User) {
-          const lastMessage = conv.getLastMessage();
-          if (
-            isAMessage(lastMessage) &&
-            String(lastMessage.getId()) === targetMessageId
-          ) {
-            return updateReadAt
-              ? !lastMessage.getReadAt()
-              : !lastMessage.getDeliveredAt();
-          }
+        const lastMessage = conv.getLastMessage();
+        if (
+          isAMessage(lastMessage) &&
+          String(lastMessage.getId()) === targetMessageId
+        ) {
+          return updateReadAt
+            ? !lastMessage.getReadAt()
+            : !lastMessage.getDeliveredAt();
         }
         return false;
       });
