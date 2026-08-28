@@ -42,7 +42,7 @@ import { CometChatEditPreview } from "../BaseComponents/CometChatEditPreview/Com
 import { CometChatActionSheet } from "../BaseComponents/CometChatActionSheet/CometChatActionSheet";
 import { CometChatEmojiKeyboard } from "../BaseComponents/CometChatEmojiKeyboard/CometChatEmojiKeyboard";
 import { ComposerId } from '../../utils/MessagesDataSource';
-import { decodeHTML, isSafari, processFileForAudio, isMobileDevice, shouldShowCustomMimeTypes, sanitizeHtmlStringToFragment } from '../../utils/util';
+import { maskComposerEntities, restoreComposerEntities, isSafari, processFileForAudio, isMobileDevice, shouldShowCustomMimeTypes, sanitizeHtmlStringToFragment } from '../../utils/util';
 import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
 import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
@@ -1407,12 +1407,14 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
   const handleSendButtonClick = useCallback(
     async (textToDispatch: string): Promise<void> => {
       try {
-        let text = textToDispatch;
-        if (textFormatterArray && textFormatterArray.length) {
-          for (let i = 0; i < textFormatterArray.length; i++) {
-            text = textFormatterArray[i].getOriginalText(text);
-          }
-        }
+        // Swap the placeholders parked by maskComposerEntities back for the real characters.
+        // This is the last step before the text becomes a CometChat.TextMessage, so every
+        // formatter that re-parses the string as HTML has already run.
+        let text = restoreComposerEntities(textToDispatch);
+        // NOTE: the formatter chain is deliberately NOT applied here. Both callers
+        // (onSendclick, and onTextInputEnter via the Enter key handler) already ran it on the
+        // text they pass in. Running it twice re-parsed already-converted plain text as HTML
+        // and silently dropped most of the message.
         if (
           (text = text.trim()).length === 0 ||
           text.replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim().length === 0 ||
@@ -1770,7 +1772,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
           if (rawHtml && richTextFormatter) {
             rawHtml = richTextFormatter.trimRichTextWhitespace(rawHtml);
           }
-          let textToDispatch = rawHtml ? decodeHTML(rawHtml) : undefined;
+          let textToDispatch = rawHtml ? maskComposerEntities(rawHtml) : undefined;
           if (textFormatterArray && textFormatterArray.length) {
             for (let i = 0; i < textFormatterArray.length; i++) {
               textToDispatch =
@@ -2454,7 +2456,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
         if (rawHtml && richTextFormatter) {
           rawHtml = richTextFormatter.trimRichTextWhitespace(rawHtml);
         }
-        let textToDispatch = rawHtml ? decodeHTML(rawHtml) : undefined;
+        let textToDispatch = rawHtml ? maskComposerEntities(rawHtml) : undefined;
         if (textFormatterArray && textFormatterArray.length) {
           for (let i = 0; i < textFormatterArray.length; i++) {
             textToDispatch =
@@ -2523,7 +2525,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
                 range.current.collapse(true);
                 sel.current.removeAllRanges();
                 sel.current.addRange(range.current);
-                let textToDispatch = ceInput.innerHTML?.trim() === "<br>" ? undefined : decodeHTML(ceInput.innerHTML!);
+                let textToDispatch = ceInput.innerHTML?.trim() === "<br>" ? undefined : ceInput.innerHTML!;
                 if (ceInput.innerHTML?.trim() === "<br>") {
                   ceInput.innerHTML = "";
                 }
@@ -2590,7 +2592,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
             range.current.collapse(true);
             sel.current.removeAllRanges();
             sel.current.addRange(range.current);
-            let textToDispatch = contentEditable?.innerHTML?.trim() === "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML!);
+            let textToDispatch = contentEditable?.innerHTML?.trim() === "<br>" ? undefined : contentEditable?.innerHTML!;
             if (contentEditable?.innerHTML?.trim() === "<br>") {
               contentEditable.innerHTML = "";
             }
@@ -2812,7 +2814,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
           }
         }
 
-        let textToDispatch = contentEditable?.innerHTML?.trim() === "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML);
+        let textToDispatch = contentEditable?.innerHTML?.trim() === "<br>" ? undefined : contentEditable?.innerHTML;
         if (contentEditable?.innerHTML?.trim() === "<br>") {
           contentEditable.innerHTML = "";
         }
@@ -4229,7 +4231,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
     // Use the same formatting pipeline as createTextWrapper in MessagesDataSource.getMessagePreviewSubtitle
     const messageText = messageToBeEdited.getText();
     const finalTextFormatters = ChatConfigurator.getDataSource().getAllTextFormatters({});
-    const markdownText = CometChatUIKitUtility.convertFormattingHtmlToMarkdown(messageText);
+    const markdownText = CometChatUIKitUtility.convertSupportedHtmlToMarkdown(messageText);
     let formattedText: string | void = CometChatUIKitUtility.sanitizeText(markdownText);
     finalTextFormatters.forEach((formatter) => {
       formatter.setMessage(messageToBeEdited);
@@ -4473,7 +4475,7 @@ export function CometChatCompactMessageComposer(props: MessageComposerProps) {
           let textToDispatch =
             contentEditable?.innerHTML?.trim() === "<br>"
               ? undefined
-              : decodeHTML(contentEditable?.innerHTML!);
+              : contentEditable?.innerHTML!;
 
           if (textFormatterArray && textFormatterArray.length) {
             for (let i = 0; i < textFormatterArray.length; i++) {

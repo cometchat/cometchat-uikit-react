@@ -16,7 +16,7 @@ export const useCometChatTextBubble = (props: { textFormatters: Array<CometChatT
         try {
             // Use safe fragment parser instead of innerHTML to prevent XSS
             // innerHTML would execute event handlers (e.g. onerror) during parsing
-            const finalFragment = sanitizeHtmlStringToFragment(text, textFormatters);
+            const finalFragment = sanitizeHtmlStringToFragment(text, textFormatters, { decodeEntities: false });
 
             textElement.textContent = "";
             textElement.appendChild(finalFragment);

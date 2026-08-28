@@ -188,7 +188,14 @@ export function useCometChatMessageComposer(args: Args) {
                       // Note: plaintext-only restricts user input but programmatic
                       // innerHTML still works for displaying formatted mention spans.
                       if (inputEl) {
-                        let finalText: string | void = object.message.getText();
+                        // Message text is untrusted and ends up in innerHTML below, so it
+                        // goes through the same two steps the bubble uses: convert the tags
+                        // we support, neutralise everything else. Without this a message
+                        // containing "<a nice day>" was parsed as an anchor and vanished,
+                        // and an "<img onerror=...>" would have run on opening the editor.
+                        let finalText: string | void = CometChatUIKitUtility.sanitizeText(
+                          CometChatUIKitUtility.convertSupportedHtmlToMarkdown(object.message.getText())
+                        );
                         if (textFormatterArray && textFormatterArray.length) {
                           for (let i = 0; i < textFormatterArray.length; i++) {
                             if (textFormatterArray[i] instanceof CometChatMentionsFormatter) {

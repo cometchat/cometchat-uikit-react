@@ -57,8 +57,8 @@ const CometChatTextBubble = (props: TextBubbleProps) => {
     }, [text, textFormatters, setTextState]);
     useEffect(() => {
         if (textRef.current) {
-            const markdownText = CometChatUIKitUtility.convertFormattingHtmlToMarkdown(text);
-            let finalText = CometChatUIKitUtility.sanitizeText(markdownText);
+            const markdownText = CometChatUIKitUtility.convertSupportedHtmlToMarkdown(text);
+            let finalText = CometChatUIKitUtility.sanitizeTextForBubble(markdownText);
 
             if (textFormatters && textFormatters.length) {
                 for (let i = 0; i < textFormatters.length; i++) {

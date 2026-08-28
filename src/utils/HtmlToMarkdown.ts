@@ -332,7 +332,11 @@ function processChildNode(node: Node, depth: number = 0): string {
       // Paragraphs and divs - add newline after
       case "P":
       case "DIV":
-        return innerContent + "\n";
+        // Leading, not trailing. A contentEditable keeps its first line as a bare text node
+        // and wraps only the lines after it ("one<div>two</div><div>three</div>"), so a
+        // trailing newline never separated line one from line two - they ran together.
+        // cleanMarkdown() trims the leading newline when the block starts the message.
+        return "\n" + innerContent;
 
       // Spans - check for formatting classes
       case "SPAN": {

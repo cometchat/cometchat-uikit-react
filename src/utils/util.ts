@@ -5,6 +5,8 @@ import { CometChatUIKitLoginListener } from "../CometChatUIKit/CometChatUIKitLog
 import { CometChatUIKitConstants } from "../constants/CometChatUIKitConstants";
 import { CometChatUIKitUtility } from "../CometChatUIKit/CometChatUIKitUtility";
 import { CometChatTextFormatter } from "../formatters";
+import { normalizeLinkUrl } from "./UrlSafety";
+import { restoreMaskedTagDelimiters } from "./TagMask";
 interface MediaPlayer {
 video?:HTMLVideoElement | null,
 mediaRecorder?:MediaRecorder | null
@@ -224,13 +226,64 @@ export function formatDateFromTimestamp(timestamp:number) {
      window.dispatchEvent(new CustomEvent('overlayclick'));
 }
 
-export const decodeHTML = (input: string): string =>  {
-  // Decode HTML entities while preserving HTML tags
-  // Use a temporary div to parse and re-serialize the HTML
-  // This decodes entities like &amp; to & while keeping tags intact
-  const div = document.createElement("div");
-  div.innerHTML = input;
-  return div.innerHTML;
+/**
+ * Placeholders used to hold the composer's escaped characters while the text travels
+ * through the formatter chain. Private Use Area, one codepoint per entity.
+ */
+const ENTITY_TO_PLACEHOLDER: Record<string, string> = {
+  "&amp;": "\ue000",
+  "&lt;": "\ue001",
+  "&gt;": "\ue002",
+  "&quot;": "\ue003",
+  "&#39;": "\ue004",
+  "&nbsp;": "\ue005",
+};
+
+const PLACEHOLDER_TO_CHAR: Record<string, string> = {
+  "\ue000": "&",
+  "\ue001": "<",
+  "\ue002": ">",
+  "\ue003": "\"",
+  "\ue004": "'",
+  "\ue005": "\u00a0",
+};
+
+const PLACEHOLDER_RANGE = /[\ue000-\ue005]/g;
+const SERIALIZER_ENTITIES = /&(?:amp|lt|gt|quot|#39|nbsp);/g;
+
+/**
+ * Masks the entities the DOM serializer introduced when the composer was read.
+ *
+ * Reading `contentEditable.innerHTML` escapes text nodes, so a typed ">" comes back as
+ * "&gt;". Sending that verbatim is ENG-38062. Decoding it here instead is not an option
+ * either: several steps downstream re-parse the string as HTML (`convertHtmlToMarkdown`,
+ * and `CometChatUrlsFormatter` whenever the text contains "<a"), and a decoded "<two" is
+ * indistinguishable from real composer markup like "<div>" - the message gets mangled.
+ *
+ * So the escaped characters are parked on placeholders instead. Real markup is made of
+ * literal "<" and ">" characters and is left alone, which means the parsers downstream see
+ * only genuine tags and the typed text passes through them as inert characters.
+ * `restoreComposerEntities` swaps the placeholders for the real characters once the last
+ * formatter has run. Each character is therefore converted exactly once, so a literally
+ * typed "&gt;" (serialized to "&amp;gt;") survives as "&gt;" rather than collapsing to ">".
+ *
+ * Pre-existing placeholder codepoints in the input are dropped so restoring cannot invent
+ * characters the user never typed.
+ */
+export const maskComposerEntities = (html: string): string => {
+  if (!html) return html;
+  return html
+    .replace(PLACEHOLDER_RANGE, "")
+    .replace(SERIALIZER_ENTITIES, (entity) => ENTITY_TO_PLACEHOLDER[entity] ?? entity);
+}
+
+/**
+ * Restores the characters parked by `maskComposerEntities`. Must run after the whole
+ * formatter chain and before the text reaches `CometChat.TextMessage`.
+ */
+export const restoreComposerEntities = (text: string): string => {
+  if (!text) return text;
+  return text.replace(PLACEHOLDER_RANGE, (ph) => PLACEHOLDER_TO_CHAR[ph] ?? "");
 }
 
 const getAttr = (tag: string, name: string): string | null => {
@@ -271,20 +324,31 @@ const getTagName = (tok: string): string => {
   return m ? m[1].toLowerCase() : "";
 };
 
-// Copy safe attributes (style, class, contenteditable, data-*) from tag string to element
+// Copy safe attributes (style, class, contenteditable, data-*) from tag string to element.
+// Attribute values are un-masked too: a URL like "?a=1&b=2" has had its "&" masked upstream
+// by sanitizeTextForBubble, and restoring only text nodes would leave the placeholder in
+// the href.
 const copyAttrs = (tok: string, el: HTMLElement) => {
-  const style = getAttr(tok, "style");
+  const getAttrValue = (name: string): string | null => {
+    const value = getAttr(tok, name);
+    return value === null ? null : restoreMaskedTagDelimiters(value);
+  };
+
+  const style = getAttrValue("style");
   if (style) el.setAttribute("style", style);
 
-  const cls = getAttr(tok, "class");
+  const cls = getAttrValue("class");
   if (cls) el.className = cls;
 
-  const ce = getAttr(tok, "contenteditable");
+  const ce = getAttrValue("contenteditable");
   if (ce !== null) el.setAttribute("contenteditable", ce);
 
   // For <a> tags, preserve href
   if (el.tagName.toLowerCase() === "a") {
-    const href = getAttr(tok, "href");
+    // Scheme-checked: message text is untrusted, and an unchecked href turns a
+    // "javascript:" URL into a live clickable script. Unsafe URLs are dropped, which
+    // leaves the link text visible but inert.
+    const href = normalizeLinkUrl(getAttrValue("href"));
     if (href) el.setAttribute("href", href);
     el.setAttribute("target", "_blank");
     el.setAttribute("rel", "noopener noreferrer");
@@ -292,14 +356,22 @@ const copyAttrs = (tok: string, el: HTMLElement) => {
 
   // For <ol> tags, preserve start attribute for numbering continuity
   if (el.tagName.toLowerCase() === "ol") {
-    const start = getAttr(tok, "start");
+    const start = getAttrValue("start");
     if (start) el.setAttribute("start", start);
   }
 
-  for (const [k, v] of getDataAttrs(tok)) el.setAttribute(k, v);
+  for (const [k, v] of getDataAttrs(tok)) el.setAttribute(k, restoreMaskedTagDelimiters(v));
 };
 
-export const sanitizeHtmlStringToFragment = (html: string, textFormatterArray?: CometChatTextFormatter[]): DocumentFragment => {
+export const sanitizeHtmlStringToFragment = (
+  html: string,
+  textFormatterArray?: CometChatTextFormatter[],
+  options?: { decodeEntities?: boolean }
+): DocumentFragment => {
+  // Callers that pre-escaped their tags to entities still need them decoded here. The
+  // bubble masks instead (see sanitizeTextForBubble) and opts out, so entities left in the
+  // message text render as the characters the sender actually typed.
+  const shouldDecodeEntities = options?.decodeEntities ?? true;
   const frag = document.createDocumentFragment();
   const stack: HTMLElement[] = [];
 
@@ -321,8 +393,10 @@ export const sanitizeHtmlStringToFragment = (html: string, textFormatterArray?: 
     const tok = m[0];
 
     if (!tok.startsWith("<")) {
-      // plain text — decode HTML entities so escaped characters render correctly
-      append(document.createTextNode(decodeEntities(tok)));
+      // plain text — restore any masked tag delimiters, and decode entities only when the
+      // caller escaped its own tags that way
+      const raw = shouldDecodeEntities ? decodeEntities(tok) : tok;
+      append(document.createTextNode(restoreMaskedTagDelimiters(raw)));
       continue;
     }
 

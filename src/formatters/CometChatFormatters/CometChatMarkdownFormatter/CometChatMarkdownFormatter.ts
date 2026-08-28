@@ -1,4 +1,5 @@
 import { CometChatTextFormatter } from "../CometChatTextFormatter";
+import { normalizeLinkUrl, encodeUrlForAttribute } from "../../../utils/UrlSafety";
 import { MentionsTargetElement } from "../../../Enums/Enums";
 
 /**
@@ -335,10 +336,14 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
    * Format links: [text](url) → <a href="url">text</a>
    */
   private formatLinks(text: string): string {
-    return text.replace(
-      /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-    );
+    return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, url: string) => {
+      const href = normalizeLinkUrl(url);
+      // Blocked scheme - keep the visible label and drop the link entirely. Showing the raw
+      // "[label](url)" markdown instead would leak the hostile URL into the bubble, and an
+      // anchor with a dead href would still look clickable.
+      if (!href) return label;
+      return `<a href="${encodeUrlForAttribute(href)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    });
   }
 
   /**
@@ -359,9 +364,11 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
       };
 
       for (const line of lines) {
-        // Match both literal > and HTML-entity-encoded &gt; (SDK may encode the >)
-        if (/^>\s?/.test(line) || /^&gt;\s?/.test(line)) {
-          blockquoteGroup.push(line.replace(/^(?:&gt;|>)\s?/, ''));
+        // Only a literal ">" starts a blockquote. "&gt;" used to be matched here as well,
+        // to cover text the composer had entity-escaped on the way out - that escaping is
+        // gone now, so a "&gt;" in a message is text the sender actually typed.
+        if (/^>\s?/.test(line)) {
+          blockquoteGroup.push(line.replace(/^>\s?/, ''));
         } else {
           flushGroup();
           result.push(line);
@@ -948,7 +955,7 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
           r = r.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
 
           // Strip blockquotes: > text → text
-          r = r.replace(/^(?:&gt;|>)\s?/, '');
+          r = r.replace(/^>\s?/, '');
 
           return r;
         });

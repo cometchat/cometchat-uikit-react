@@ -9,6 +9,8 @@
  * - Use execCommand for formatting operations
  * - Support keyboard shortcuts for common formatting
  */
+
+import { normalizeLinkUrl } from "./UrlSafety";
 import { emojiToShortcode, shortcodeToEmoji } from './EmojiShortcodeUtils';
 
 export type FormatType = 
@@ -541,10 +543,16 @@ export function createRichTextFormatter(
    * Insert a link at the current selection
    */
   const insertLink = (
-    url: string,
+    rawUrl: string,
     displayText: string | undefined,
     containerElement: HTMLElement
   ): void => {
+    // Blocked schemes (javascript:, data:, ...) never become an anchor. The composer and
+    // the bubble share normalizeLinkUrl so the two cannot disagree about what is linkable.
+    const url = normalizeLinkUrl(rawUrl);
+    if (!url) {
+      return;
+    }
     containerElement.focus();
     if (!isSelectionInsideContainer(containerElement)) {
       return;

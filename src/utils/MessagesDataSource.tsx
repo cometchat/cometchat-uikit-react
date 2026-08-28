@@ -1867,7 +1867,7 @@ getMessagePreviewSubtitle(
 
     const createTextWrapper = (text: string) => {
       const finalTextFormatters = textFormatters || ChatConfigurator.getDataSource().getAllTextFormatters({});
-      const markdownText = CometChatUIKitUtility.convertFormattingHtmlToMarkdown(text);
+      const markdownText = CometChatUIKitUtility.convertSupportedHtmlToMarkdown(text);
       let formattedText = CometChatUIKitUtility.sanitizeText(markdownText);
       finalTextFormatters.forEach((formatter)=>{
         formatter.setMessage(message);

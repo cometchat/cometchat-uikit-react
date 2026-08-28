@@ -290,6 +290,9 @@ export class CometChatUrlsFormatter extends CometChatTextFormatter {
 
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = inputText;
+    // Re-serializing escapes &, < and > in text, so the input is returned untouched unless
+    // a URL was actually linkified.
+    let didLinkify = false;
 
     const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null);
     const textNodes: Text[] = [];
@@ -347,12 +350,13 @@ export class CometChatUrlsFormatter extends CometChatTextFormatter {
             }
           }
           tNode.parentNode?.replaceChild(fragment, tNode);
+          didLinkify = true;
           break;
         }
       }
     }
 
-    return tempDiv.innerHTML;
+    return didLinkify ? tempDiv.innerHTML : inputText;
   }
 
   registerEventListeners(element: HTMLElement, classList: DOMTokenList) {

@@ -1,4 +1,5 @@
 import { BaseMessage, CometChat } from "@cometchat/chat-sdk-javascript";
+import { maskTagDelimiters, maskLiteralCharacters } from "../utils/TagMask";
 
 interface metadataType {
   metadata: {
@@ -201,205 +202,79 @@ export class CometChatUIKitUtility {
   };
 
   /**
-   * Convert known rich-text HTML formatting tags to markdown.
-   * This handles messages that arrive with raw HTML (from other platforms or older clients)
-   * so they can be processed by the markdown formatter on the bubble side.
-   * Also handles HTML-entity-escaped tags (e.g., &lt;i&gt;text&lt;/i&gt;).
-   * Only converts recognized formatting tags; unknown/dangerous HTML is left for sanitizeText.
+   * Converts the HTML we support into markdown, and leaves everything else alone.
+   *
+   * Messages carry HTML for two reasons: older v6 composers encoded line breaks as `<br>`
+   * and `<div>` wrappers, and users type or paste formatting tags. Both are handled, but
+   * only for a fixed set of well-formed tags - the ones this kit can also produce.
+   *
+   * Deliberately regex-based rather than a DOM parse. The previous implementation parsed the
+   * whole message with `innerHTML`, so a single stray "<" anywhere in the text was read as
+   * markup and swallowed the rest: "<a nice day>" became an empty link and
+   * "hello<div><two</div>" lost everything after "hello". Targeted replacement can only
+   * affect a complete, matched tag pair, so unmatched text survives exactly as typed.
+   *
+   * `<a>` becomes `[label](url)` rather than an anchor, so the link takes the normal
+   * markdown path where `normalizeLinkUrl` blocks dangerous schemes.
+   *
+   * `<u>` is intentionally absent: it is already our underline syntax and is preserved
+   * downstream rather than converted.
    */
-  static convertFormattingHtmlToMarkdown(text: string): string {
+  static convertSupportedHtmlToMarkdown(text: string): string {
     if (!text || typeof text !== 'string') return text;
 
-    // First, decode HTML entities for formatting tags so they can be detected
-    // Convert &lt;i&gt; back to <i> etc., but only for known formatting tags
-    let decoded = text;
-    const entityPattern = /&lt;(\/?)(b|strong|i|em|u|s|strike|del|code|pre|blockquote|a|ol|ul|li)((?:\s[^&]*)?)&gt;/gi;
-    if (entityPattern.test(text)) {
-      decoded = text.replace(/&lt;(\/?)(b|strong|i|em|u|s|strike|del|code|pre|blockquote|a|ol|ul|li)((?:\s[^&]*)?)&gt;/gi,
-        '<$1$2$3>');
-    }
+    // \b and the attribute alternative keep "<divLMAO>", "<bLAH>" and "<pre>" from being
+    // mistaken for "<div>", "<b>" and "<p>".
+    // [^>]* rather than (?:\s[^>]*)? so self-closing forms like "<br/>" still match; \b is
+    // what actually guards the tag name, so "<divLMAO>" still does not.
+    const SUPPORTED =
+      /<\s*\/?\s*(?:br|div|p|b|strong|i|em|s|strike|del|code|pre|blockquote|ol|ul|li|a)\b[^>]*>/i;
+    if (!SUPPORTED.test(text)) return text;
 
-    // Quick check: does the text contain any HTML formatting tags?
-    const formattingTagPattern = /<\/?(b|strong|i|em|u|s|strike|del|code|pre|blockquote|a|ol|ul|li|p|div)[\s>]/i;
-    if (!formattingTagPattern.test(decoded)) return text;
+    const pair = (tags: string) =>
+      new RegExp(`<(?:${tags})(?:\\s[^>]*)?>([\\s\\S]*?)<\\/(?:${tags})\\s*>`, 'gi');
 
-    // Preserve mention tokens (<@uid:...> and <@all:...>) before DOM parsing
-    // The browser's HTML parser would strip/mangle these pseudo-tags
-    const mentionPlaceholders: string[] = [];
-    decoded = decoded.replace(/<@(uid|all):[^>]+>/g, (match) => {
-      const idx = mentionPlaceholders.length;
-      mentionPlaceholders.push(match);
-      return `\u200B__MENTION_${idx}__\u200B`;
+    let result = text;
+
+    // Code first: its contents must not pick up the inline markers below.
+    result = result.replace(
+      /<pre(?:\s[^>]*)?>\s*<code(?:\s[^>]*)?>([\s\S]*?)<\/code\s*>\s*<\/pre\s*>/gi,
+      '```$1```'
+    );
+    result = result.replace(pair('code'), '`$1`');
+
+    result = result.replace(pair('b|strong'), '**$1**');
+    result = result.replace(pair('i|em'), '_$1_');
+    result = result.replace(pair('s|strike|del'), '~~$1~~');
+
+    // Links become markdown so normalizeLinkUrl gets to vet the URL.
+    result = result.replace(
+      /<a(?:\s[^>]*)?\shref\s*=\s*"([^"]*)"(?:\s[^>]*)?>([\s\S]*?)<\/a\s*>/gi,
+      (_match, url: string, label: string) => `[${label}](${url})`
+    );
+
+    result = result.replace(pair('ol'), (_match, items: string) => {
+      let index = 0;
+      return items.replace(/<li(?:\s[^>]*)?>([\s\S]*?)<\/li\s*>/gi, (_li, item: string) => {
+        index += 1;
+        return `\n${index}. ${item}`;
+      });
     });
+    result = result.replace(pair('ul'), (_match, items: string) =>
+      items.replace(/<li(?:\s[^>]*)?>([\s\S]*?)<\/li\s*>/gi, (_li, item: string) => `\n• ${item}`)
+    );
 
-    // Use a temporary DOM element to parse and convert
-    const container = document.createElement('div');
-    container.innerHTML = decoded;
+    result = result.replace(pair('blockquote'), (_match, quoted: string) =>
+      quoted.split('\n').map((line) => `\n> ${line}`).join('')
+    );
 
-    const processNode = (node: Node, depth: number = 0): string => {
-      let result = '';
-      for (let i = 0; i < node.childNodes.length; i++) {
-        const child = node.childNodes[i];
-        if (child.nodeType === Node.TEXT_NODE) {
-          result += child.textContent || '';
-        } else if (child.nodeType === Node.ELEMENT_NODE) {
-          const el = child as HTMLElement;
-          const tag = el.tagName.toUpperCase();
-          const inner = processNode(el, depth);
+    // Structural line breaks last, so newlines the conversions introduced are preserved.
+    result = result
+      .replace(/<\s*br\b[^>]*>/gi, '\n')
+      .replace(/<\s*(?:div|p)\b[^>]*>/gi, '\n')
+      .replace(/<\s*\/\s*(?:div|p)\s*>/gi, '');
 
-          // Helper: wrap inline markers per-line to avoid markers spanning
-          // across block boundaries (e.g. <b>text<div>text</div></b>)
-          const wrapPerLine = (content: string, open: string, close?: string): string => {
-            const cl = close ?? open;
-            if (!content.includes('\n')) return `${open}${content}${cl}`;
-            return content.split('\n').map(l => l.trim() === '' ? l : `${open}${l}${cl}`).join('\n');
-          };
-
-          switch (tag) {
-            case 'B': case 'STRONG':
-              if (el.querySelector('pre')) { result += inner; }
-              else { result += wrapPerLine(inner, '**'); }
-              break;
-            case 'I': case 'EM':
-              if (el.querySelector('pre')) { result += inner; }
-              else { result += wrapPerLine(inner, '_'); }
-              break;
-            case 'U':
-              if (el.querySelector('pre')) { result += inner; }
-              else { result += wrapPerLine(inner, '<u>', '</u>'); }
-              break;
-            case 'S': case 'STRIKE': case 'DEL':
-              if (el.querySelector('pre')) { result += inner; }
-              else { result += wrapPerLine(inner, '~~'); }
-              break;
-            case 'PRE': {
-              const codeEl = el.querySelector('code') || el;
-              const extractCode = (node: Node): string => {
-                let out = '';
-                for (let ci = 0; ci < node.childNodes.length; ci++) {
-                  const ch = node.childNodes[ci];
-                  if (ch.nodeType === Node.TEXT_NODE) {
-                    out += ch.textContent || '';
-                  } else if (ch.nodeType === Node.ELEMENT_NODE) {
-                    const chEl = ch as HTMLElement;
-                    const chTag = chEl.tagName.toUpperCase();
-                    if (chTag === 'BR') {
-                      out += '\n';
-                    } else if (chTag === 'DIV' || chTag === 'P') {
-                      if (out.length > 0 && !out.endsWith('\n')) out += '\n';
-                      out += extractCode(chEl);
-                    } else {
-                      out += extractCode(chEl);
-                    }
-                  }
-                }
-                return out;
-              };
-              result += `\`\`\`${extractCode(codeEl)}\`\`\``; break;
-            }
-            case 'CODE':
-              if (el.parentElement?.tagName === 'PRE') { result += inner; }
-              else if (inner.includes('\n')) {
-                result += inner.split('\n').map((l: string) => l.trim() ? `\`${l}\`` : '').join('\n');
-              }
-              else { result += `\`${inner}\``; }
-              break;
-            case 'BLOCKQUOTE': {
-              const bqLines = inner.split('\n');
-              while (bqLines.length > 0 && bqLines[bqLines.length - 1].trim() === '') {
-                bqLines.pop();
-              }
-              result += bqLines.map((l: string) => `> ${l}`).join('\n'); break;
-            }
-            case 'A': {
-              const href = el.getAttribute('href') || '';
-              result += `[${inner || href}](${href})`; break;
-            }
-            case 'OL': {
-              // Respect the start attribute to maintain numbering continuity
-              const startAttr = el.getAttribute('start');
-              let idx = startAttr ? parseInt(startAttr, 10) : 1;
-              if (isNaN(idx)) idx = 1;
-              const indent = '    '.repeat(depth);
-              for (let j = 0; j < el.children.length; j++) {
-                if (el.children[j].tagName === 'LI') {
-                  const li = el.children[j];
-                  let textContent = '';
-                  let nestedListContent = '';
-                  for (let k = 0; k < li.childNodes.length; k++) {
-                    const liChild = li.childNodes[k];
-                    if (liChild.nodeType === Node.ELEMENT_NODE) {
-                      const liChildTag = (liChild as HTMLElement).tagName.toUpperCase();
-                      if (liChildTag === 'OL' || liChildTag === 'UL') {
-                        nestedListContent += processNode(liChild, depth + 1);
-                      } else {
-                        textContent += processNode(liChild, depth);
-                      }
-                    } else {
-                      textContent += liChild.textContent || '';
-                    }
-                  }
-                  const trimmed = textContent.replace(/\n/g, '').trim();
-                  if (trimmed) {
-                    result += `${indent}${idx}. ${textContent}\n`; idx++;
-                  }
-                  if (nestedListContent) {
-                    result += nestedListContent;
-                  }
-                }
-              }
-              break;
-            }
-            case 'UL': {
-              const indent = '    '.repeat(depth);
-              for (let j = 0; j < el.children.length; j++) {
-                if (el.children[j].tagName === 'LI') {
-                  const li = el.children[j];
-                  let textContent = '';
-                  let nestedListContent = '';
-                  for (let k = 0; k < li.childNodes.length; k++) {
-                    const liChild = li.childNodes[k];
-                    if (liChild.nodeType === Node.ELEMENT_NODE) {
-                      const liChildTag = (liChild as HTMLElement).tagName.toUpperCase();
-                      if (liChildTag === 'OL' || liChildTag === 'UL') {
-                        nestedListContent += processNode(liChild, depth + 1);
-                      } else {
-                        textContent += processNode(liChild, depth);
-                      }
-                    } else {
-                      textContent += liChild.textContent || '';
-                    }
-                  }
-                  const trimmed = textContent.replace(/\n/g, '').trim();
-                  if (trimmed) {
-                    result += `${indent}• ${textContent}\n`;
-                  }
-                  if (nestedListContent) {
-                    result += nestedListContent;
-                  }
-                }
-              }
-              break;
-            }
-            case 'LI': result += inner; break;
-            case 'BR': result += '\n'; break;
-            case 'DIV': case 'P': result += inner + '\n'; break;
-            case 'SPAN': result += inner; break;
-            default: result += inner; break;
-          }
-        }
-      }
-      return result;
-    };
-
-    let result = processNode(container).trim();
-
-    // Restore mention tokens that were preserved before DOM parsing
-    result = result.replace(/\u200B__MENTION_(\d+)__\u200B/g, (_, idx) => {
-      return mentionPlaceholders[parseInt(idx, 10)];
-    });
-
-    return result;
+    return result.replace(/\n{3,}/g, '\n\n').replace(/^\n+/, '');
   }
 
   /**
@@ -407,6 +282,44 @@ export class CometChatUIKitUtility {
    * @param text The text string that may contain HTML and mentions
    * @returns Sanitized string with dangerous HTML escaped but mentions preserved
    */
+  /**
+   * Bubble-side variant of `sanitizeText`.
+   *
+   * Neutralises the same tags, but parks the delimiters on placeholders instead of writing
+   * `&lt;`/`&gt;`, and masks literal `<`, `>` and `&` for the same reason.
+   * `sanitizeHtmlStringToFragment` restores them when it builds the text nodes, so
+   * characters and entities that were part of the message survive exactly as the sender
+   * typed them - a literal "&gt;" stays "&gt;" instead of rendering as ">".
+   *
+   * `sanitizeText` is unchanged for the callers that feed `dangerouslySetInnerHTML`
+   * (message previews, search results), which need the entity form.
+   */
+  static sanitizeTextForBubble(text: string): string {
+    if (!text || typeof text !== 'string') return text;
+
+    // <u>...</u> is our underline syntax and <@uid:...> is a mention token; both are real
+    // markup that later stages consume. Everything else that looks like a tag, and every
+    // stray <, > or &, is literal content and gets masked.
+    const token = /(<\/?u>)|(<@[^>]*>)|(<[^>]*>)|([&<>])/g;
+
+    return text
+      .split('\n')
+      .map((line) => {
+        // A leading ">" is the blockquote marker the markdown formatter looks for, so it
+        // has to stay a real character.
+        const marker = /^(\s*>\s?)/.exec(line);
+        const prefix = marker ? marker[1] : '';
+        const rest = line.slice(prefix.length);
+
+        return prefix + rest.replace(token, (match, underline, mention, tag, literal) => {
+          if (underline || mention) return match;
+          if (tag) return maskTagDelimiters(match);
+          return maskLiteralCharacters(literal);
+        });
+      })
+      .join('\n');
+  }
+
   static sanitizeText(text: string): string {
     if (!text || typeof text !== 'string') return text;
 

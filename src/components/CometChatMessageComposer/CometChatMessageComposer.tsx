@@ -39,7 +39,7 @@ import { CometChatEditPreview } from "../BaseComponents/CometChatEditPreview/Com
 import { CometChatActionSheet } from "../BaseComponents/CometChatActionSheet/CometChatActionSheet";
 import { CometChatEmojiKeyboard } from "../BaseComponents/CometChatEmojiKeyboard/CometChatEmojiKeyboard";
 import { ComposerId } from '../../utils/MessagesDataSource';
-import { decodeHTML, getThemeVariable, shouldShowCustomMimeTypes, isMobileDevice, isSafari, processFileForAudio, sanitizeHtmlStringToFragment } from '../../utils/util';
+import { maskComposerEntities, restoreComposerEntities, getThemeVariable, shouldShowCustomMimeTypes, isMobileDevice, isSafari, processFileForAudio, sanitizeHtmlStringToFragment } from '../../utils/util';
 import { CometChatMessageEvents } from '../../events/CometChatMessageEvents';
 import { CometChatUIEvents } from '../../events/CometChatUIEvents';
 import { CometChatSoundManager } from "../../resources/CometChatSoundManager/CometChatSoundManager";
@@ -822,7 +822,7 @@ try {
         }
       }
 
-      let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML);
+      let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : contentEditable?.innerHTML;
       if (contentEditable?.innerHTML?.trim() == "<br>") {
         contentEditable.innerHTML = "";
       }
@@ -1224,13 +1224,14 @@ try {
     async (textToDispatch: string): Promise<void> => {
       try {
         
-      let text = textToDispatch;
-      if (textFormatterArray && textFormatterArray.length) {
-        for (let i = 0; i < textFormatterArray.length; i++) {
-          text =
-            textFormatterArray[i].getOriginalText(text);
-        }
-      }
+      // Swap the placeholders parked by maskComposerEntities back for the real characters.
+      // This is the last step before the text becomes a CometChat.TextMessage, so every
+      // formatter that re-parses the string as HTML has already run.
+      let text = restoreComposerEntities(textToDispatch);
+      // NOTE: the formatter chain is deliberately NOT applied here. Both callers
+      // (onSendclick, and onTextInputEnter via the Enter key handler) already ran it on the
+      // text they pass in. Running it twice re-parsed already-converted plain text as HTML
+      // and silently dropped most of the message.
       if (
         (text = text.trim()).length === 0 ||
         (state.textMessageToEdit !== null &&
@@ -1692,7 +1693,7 @@ try {
       if (rawHtml && richTextFormatter) {
         rawHtml = richTextFormatter.trimRichTextWhitespace(rawHtml);
       }
-      let textToDispatch = rawHtml ? decodeHTML(rawHtml) : undefined;
+      let textToDispatch = rawHtml ? maskComposerEntities(rawHtml) : undefined;
       // Convert HTML from contenteditable to markdown via formatters before sending
       if (textFormatterArray && textFormatterArray.length) {
         for (let i = 0; i < textFormatterArray.length; i++) {
@@ -2372,7 +2373,7 @@ try {
           if (rawHtml && richTextFormatter) {
             rawHtml = richTextFormatter.trimRichTextWhitespace(rawHtml);
           }
-          let textToDispatch = rawHtml ? decodeHTML(rawHtml) : undefined;
+          let textToDispatch = rawHtml ? maskComposerEntities(rawHtml) : undefined;
           // Convert HTML from contenteditable to markdown via formatters before sending
           if (textFormatterArray && textFormatterArray.length) {
             for (let i = 0; i < textFormatterArray.length; i++) {
@@ -2584,7 +2585,7 @@ try {
             range.current.collapse(true);
             sel.current.removeAllRanges();
             sel.current.addRange(range.current);
-            let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : decodeHTML(contentEditable?.innerHTML!);
+            let textToDispatch = contentEditable?.innerHTML?.trim() == "<br>" ? undefined : contentEditable?.innerHTML!;
             if (contentEditable?.innerHTML?.trim() == "<br>") {
               contentEditable.innerHTML = "";
             }
@@ -2637,7 +2638,7 @@ try {
           let textToDispatch =
             contentEditable?.innerHTML?.trim() == "<br>"
               ? undefined
-              : decodeHTML(contentEditable?.innerHTML!);
+              : contentEditable?.innerHTML!;
 
           if (textFormatterArray && textFormatterArray.length) {
             for (let i = 0; i < textFormatterArray.length; i++) {

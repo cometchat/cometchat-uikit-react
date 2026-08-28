@@ -102,7 +102,7 @@ export class ConversationUtils {
       case CometChatUIKitConstants.MessageTypes.text: {
         if (this.additionalParams) {
           const lastMessage = (messageObject as CometChat.TextMessage)?.getText() || ""
-          const markdownMessage = CometChatUIKitUtility.convertFormattingHtmlToMarkdown(lastMessage);
+          const markdownMessage = CometChatUIKitUtility.convertSupportedHtmlToMarkdown(lastMessage);
           message = CometChatUIKitUtility.sanitizeText(markdownMessage);
         } else {
           message = (messageObject as CometChat.TextMessage).getText() || ""
@@ -270,7 +270,7 @@ export class ConversationUtils {
           }
           
           const markdownMessage =
-            CometChatUIKitUtility.convertFormattingHtmlToMarkdown(
+            CometChatUIKitUtility.convertSupportedHtmlToMarkdown(
               lastMessageText,
             );
           message = CometChatUIKitUtility.sanitizeText(markdownMessage);

@@ -498,7 +498,7 @@ export function useCometChatSearchMessagesList(props: UseCometChatSearchMessages
       let text = (message as CometChat.TextMessage).getText();
 
       let finalText: string;
-      const markdownText = CometChatUIKitUtility.convertFormattingHtmlToMarkdown(text);
+      const markdownText = CometChatUIKitUtility.convertSupportedHtmlToMarkdown(text);
       finalText = CometChatUIKitUtility.sanitizeText(markdownText);
 
       let formatters = textFormatters ?? ChatConfigurator.getDataSource().getAllTextFormatters({ mentionsTargetElement: MentionsTargetElement.conversation });
