@@ -6,6 +6,8 @@ import { CometChatMessageListScrollToBottom } from './CometChatMessageListScroll
 import { CometChatMessageListFloatingDate } from './CometChatMessageListFloatingDate';
 import MessageItem from './CometChatMessageListMessageItem';
 import { CometChatConfirmDialog } from '../base/CometChatConfirmDialog/CometChatConfirmDialog';
+import { usePinSaveActions } from '../../hooks/usePinSaveActions';
+import { CometChatPinSaveConfirmDialog } from '../base/CometChatPinSaveConfirmDialog';
 import { CometChatFlagMessageDialog } from '../CometChatFlagMessageDialog/CometChatFlagMessageDialog';
 import { CometChatToast } from '../base/CometChatToast/CometChatToast';
 import { useLocale } from '../../context/locale/LocaleContext';
@@ -120,7 +122,7 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
 
   // --- Dialog/overlay state (delete, flag, emoji picker, message info, toast) ---
   const {
-    toastText,
+    toast,
     showToast,
     hideToast,
     deleteTarget,
@@ -148,6 +150,12 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
     reactToMessage,
     goToMessage,
     getLocalizedString,
+  });
+
+  // --- Pin / Save actions (optimistic → SDK → toast → revert on error) ---
+  const pinSave = usePinSaveActions({
+    loggedInUserUid: loggedInUser.getUid(),
+    showToast,
   });
 
   // --- Build message list with date separators ---
@@ -207,10 +215,17 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
               })}
               onReplyPreviewClick={handleReplyPreviewClick}
               onMessageInfo={handleMessageInfo}
+              onPinMessage={pinSave.requestPin}
+              onUnpinMessage={pinSave.requestUnpin}
+              onSaveMessage={pinSave.requestSave}
+              onUnsaveMessage={pinSave.requestUnsave}
               showToast={showToast}
               disableTruncation={disableTruncation}
               hideModerationView={hideModerationView}
               isAgentChat={isAgentChat}
+              {...(listOptions.textFormatters !== undefined && {
+                textFormatters: listOptions.textFormatters,
+              })}
               hideAvatar={listOptions.hideAvatar}
               quickOptionsCount={listOptions.quickOptionsCount}
               hideReplyOption={listOptions.hideReplyOption}
@@ -223,7 +238,12 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
               hideFlagMessageOption={listOptions.hideFlagMessageOption}
               hideMessagePrivatelyOption={listOptions.hideMessagePrivatelyOption}
               hideTranslateMessageOption={listOptions.hideTranslateMessageOption}
+              hideThreadSubscriptionOption={listOptions.hideThreadSubscriptionOption}
               showMarkAsUnreadOption={listOptions.showMarkAsUnreadOption}
+              hidePinMessageOption={listOptions.hidePinMessageOption}
+              hideUnpinMessageOption={listOptions.hideUnpinMessageOption}
+              hideSaveMessageOption={listOptions.hideSaveMessageOption}
+              hideUnsaveMessageOption={listOptions.hideUnsaveMessageOption}
               {...(listOptions.messageSentAtDateTimeFormat !== undefined && {
                 messageSentAtDateTimeFormat: listOptions.messageSentAtDateTimeFormat,
               })}
@@ -351,6 +371,15 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
         </CometChatConfirmDialog.Root>
       )}
 
+      {pinSave.confirmState && (
+        <CometChatPinSaveConfirmDialog
+          action={pinSave.confirmState.action}
+          onConfirm={pinSave.confirm}
+          onCancel={pinSave.cancel}
+          isBusy={pinSave.isBusy}
+        />
+      )}
+
       {/* Flag message dialog */}
       {flagTarget && (
         <CometChatFlagMessageDialog.Root
@@ -367,7 +396,14 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
       )}
 
       {/* Toast notification */}
-      {toastText && <CometChatToast text={toastText} onClose={hideToast} showCloseButton={false} />}
+      {toast.text && (
+        <CometChatToast
+          text={toast.text}
+          variant={toast.variant}
+          onClose={hideToast}
+          showCloseButton={false}
+        />
+      )}
 
       {/* Emoji picker popover for reactions */}
       {reactTarget && (
@@ -403,6 +439,9 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
               <LazyCometChatMessageInformation
                 message={messageInfoTarget}
                 onClose={handleMessageInfoClose}
+                {...(listOptions.textFormatters !== undefined && {
+                  textFormatters: listOptions.textFormatters,
+                })}
               />
             </Suspense>
           </div>

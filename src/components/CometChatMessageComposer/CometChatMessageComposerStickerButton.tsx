@@ -101,6 +101,8 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
             message: sentMessage,
             status: CometChatMessageStatus.success,
           });
+          // Case 4 (own flag + parent mirror) is handled centrally by the message
+          // list's ui:message/sent handler — no per-send-site work needed here.
           if (messageToReply) {
             closePreview();
           }

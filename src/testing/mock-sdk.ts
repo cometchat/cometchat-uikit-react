@@ -114,6 +114,26 @@ export const mockCometChat = {
   markAsRead: vi.fn().mockResolvedValue(undefined),
   markAsDelivered: vi.fn().mockResolvedValue(undefined),
 
+  // Pin / Save
+  //
+  // The flag readers must be stubbed even though `resolvePinSaveFeatures` swallows
+  // rejections: the real implementations read the app-settings blob, which does not
+  // exist in a test, and the SDK rejects from an internal promise our try/catch
+  // never sees — surfacing as an unhandled rejection that fails the whole file.
+  // Default OFF so a spec opts in explicitly, matching the production default.
+  isPinMessageEnabled: vi.fn().mockResolvedValue(false),
+  isSaveMessageEnabled: vi.fn().mockResolvedValue(false),
+  isPinConversationEnabled: vi.fn().mockResolvedValue(false),
+  pinMessage: vi.fn().mockResolvedValue({}),
+  unpinMessage: vi.fn().mockResolvedValue({}),
+  saveMessage: vi.fn().mockResolvedValue({}),
+  unsaveMessage: vi.fn().mockResolvedValue({}),
+  pinConversation: vi.fn().mockResolvedValue({}),
+  unpinConversation: vi.fn().mockResolvedValue({}),
+  getPinnedMessagesLimit: vi.fn().mockResolvedValue(null),
+  getSavedMessagesLimit: vi.fn().mockResolvedValue(null),
+  getPinnedConversationsLimit: vi.fn().mockResolvedValue(null),
+
   // Listeners
   addMessageListener: vi.fn(),
   removeMessageListener: vi.fn(),
@@ -124,6 +144,8 @@ export const mockCometChat = {
   addCallListener: vi.fn(),
   removeCallListener: vi.fn(),
   addConnectionListener: vi.fn(),
+  addConversationListener: vi.fn(),
+  removeConversationListener: vi.fn(),
   removeConnectionListener: vi.fn(),
 
   // Typing
@@ -260,6 +282,10 @@ export const mockCometChat = {
     this.setParentMessageId = (id: number) => {
       this.parentMessageId = id;
     };
+    this.isThreadSubscribed = () => this.threadSubscribed === true;
+    this.setThreadSubscribed = (v: unknown) => {
+      this.threadSubscribed = v === true;
+    };
     this.getMentionedUsers = () => this.mentionedUsers ?? [];
     this.setMentionedUsers = (users: unknown[]) => {
       this.mentionedUsers = users;
@@ -336,6 +362,10 @@ export const mockCometChat = {
     this.getParentMessageId = () => this.parentMessageId ?? 0;
     this.setParentMessageId = (id: number) => {
       this.parentMessageId = id;
+    };
+    this.isThreadSubscribed = () => this.threadSubscribed === true;
+    this.setThreadSubscribed = (v: unknown) => {
+      this.threadSubscribed = v === true;
     };
     this.getAttachments = () => this.attachments ?? [];
     this.setAttachments = (a: unknown[]) => {

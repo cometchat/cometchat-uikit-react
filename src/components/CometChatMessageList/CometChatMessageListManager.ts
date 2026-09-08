@@ -55,7 +55,9 @@ export class CometChatMessageListManager {
     if (opts.parentMessageId) {
       builder.setParentMessageId(opts.parentMessageId);
       builder.hideReplies(false);
-      builder.withParent(true);
+      // Only agent chat wants the parent in the reply list; in an ordinary
+      // thread it would render twice — once in the header, once as message one.
+      builder.withParent(opts.isAgentChat === true);
     } else {
       builder.hideReplies(true);
     }

@@ -8,8 +8,8 @@
   position: relative;
   gap: 0px;
   flex-shrink: 0;
-  background: var(--cometchat-background-color-01, #FFF);
-  border-left: 1px solid var(--cometchat-border-color-light, #F5F5F5);
+  background: var(--cometchat-background-color-01, #fff);
+  border-left: 1px solid var(--cometchat-border-color-light, #f5f5f5);
 }
 
 .side-component-wrapper__content {
@@ -27,8 +27,8 @@
   justify-content: space-between;
   width: 100%;
   align-self: stretch;
-  border-bottom: 1px solid var(--cometchat-border-color-light, #F5F5F5);
-  background: var(--cometchat-background-color-01, #FFF);
+  border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
 }
 
 .side-component-header__text {
@@ -39,7 +39,7 @@
 }
 
 .side-component-header__icon {
-  -webkit-mask: url("../../assets/close.svg") center center no-repeat;
+  -webkit-mask: url('../../assets/close.svg') center center no-repeat;
   -webkit-mask-size: contain;
   background: var(--cometchat-icon-color-primary, #141414);
   cursor: pointer;
@@ -48,7 +48,7 @@
 }
 
 .side-component-header__icon:hover {
-  background: var(--cometchat-icon-color-highlight, #6852D6);
+  background: var(--cometchat-icon-color-highlight, #6852d6);
 }
 
 .side-component-content {
@@ -61,7 +61,7 @@
   flex-shrink: 0;
   align-self: stretch;
   overflow: auto;
-  background: var(--cometchat-background-color-01, #FFF);
+  background: var(--cometchat-background-color-01, #fff);
 }
 
 .side-component-content::-webkit-scrollbar,
@@ -127,8 +127,8 @@
 
 .side-component-content__action {
   width: 100%;
-  border-top: 1px solid var(--cometchat-border-color-light, #F5F5F5);
-  border-bottom: 1px solid var(--cometchat-border-color-light, #F5F5F5);
+  border-top: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
 }
 
 .side-component-content__action-item {
@@ -159,12 +159,12 @@
 }
 
 .side-component-content__action-item-text {
-  color: var(--cometchat-error-color, #F44649);
+  color: var(--cometchat-error-color, #f44649);
   font: var(--cometchat-font-heading4-regular, 400 16px Roboto);
 }
 
 .side-component-content__action-item-text--default {
-  color: var(--cometchat-text-color-highlight, #6852D6);
+  color: var(--cometchat-text-color-highlight, #6852d6);
   font: var(--cometchat-font-heading4-regular, 400 16px Roboto);
 }
 
@@ -208,8 +208,8 @@
   gap: 0px;
   flex: 1 0 0;
   border-radius: var(--cometchat-radius-max, 1000px);
-  border: 1px solid var(--cometchat-border-color-light, #F5F5F5);
-  background: var(--cometchat-background-color-03, #F5F5F5);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-03, #f5f5f5);
 }
 
 .side-component-group-tabs__tab {
@@ -225,8 +225,8 @@
 }
 
 .side-component-group-tabs__tab-active {
-  border: 1px solid var(--cometchat-border-color-light, #F5F5F5);
-  background: var(--cometchat-background-color-01, #FFF);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
 }
 
 .side-component-group-tabs__tab-text {
@@ -235,7 +235,7 @@
 }
 
 .side-component-group-tabs__tab-text-active {
-  color: var(--cometchat-text-color-highlight, #6852D6);
+  color: var(--cometchat-text-color-highlight, #6852d6);
 }
 
 .side-component-group-members .cometchat-list-item__leading-view,
@@ -268,10 +268,19 @@
 }
 
 @media (max-width: 768px) {
+  /* Full-screen takeover. `inset: 0` is load-bearing: a fixed element with auto
+     offsets sits at its STATIC position — here, past the right edge of the
+     full-width messages area — so the panel landed offscreen and the message
+     header underneath stayed visible and clickable.
+
+     z-index matches the app's other full-screen overlays (.saved-messages-wrapper)
+     so it also covers the header's context-menu layer, which sits at 1000. */
   .side-component-wrapper {
     min-width: 100vw;
-    height: 100vh;
     position: fixed;
-    z-index: 4;
+    inset: 0;
+    height: 100vh;
+    max-width: none;
+    z-index: 1001;
   }
 }

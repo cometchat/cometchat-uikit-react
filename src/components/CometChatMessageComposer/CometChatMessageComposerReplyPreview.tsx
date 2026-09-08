@@ -6,6 +6,7 @@ import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { CometChatUrlFormatter } from '../../formatters/CometChatUrlFormatter';
 import { CometChatMarkdownFormatter } from '../../formatters/CometChatMarkdownFormatter';
+import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
 import DOMPurify from 'dompurify';
 import './CometChatMessageComposer.css';
 
@@ -25,7 +26,8 @@ import fileIcon from '../../assets/conversations_file-message.svg';
 export const CometChatMessageComposerReplyPreview: React.FC<
   CometChatMessageComposerReplyPreviewProps
 > = ({ className }) => {
-  const { isInReplyMode, messageToReply, closePreview } = useCometChatMessageComposerContext();
+  const { isInReplyMode, messageToReply, closePreview, textFormatters } =
+    useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
 
   /**
@@ -58,6 +60,26 @@ export const CometChatMessageComposerReplyPreview: React.FC<
 
     const markdownFormatter = new CometChatMarkdownFormatter();
     let formatted = markdownFormatter.stripMarkdownForConversation(text);
+
+    // Custom display formatters (color/hashtag, etc.) run on the mention-TOKEN text FIRST — before
+    // mentions become inline-styled spans below. Otherwise a consumer's naive regex (e.g. a hashtag
+    // formatter matching ` #hex`) would match the `#6852d6` fallback inside a mention span's style
+    // attribute and shatter the markup (`…#6852d6); font-weight: 500;">@Name`).
+    // Belt-and-suspenders: swap mention tokens (<@uid:…>, <@all:…>) for sentinels so NO custom
+    // formatter — however its regex is written — can touch a token, then restore before resolving
+    // to spans. Mirrors the SDK-mention protection the edit-seed uses around markdown conversion.
+    const mentionTokens: string[] = [];
+    formatted = formatted.replace(/<@(?:uid|all):[^>]*>/g, match => {
+      const idx = mentionTokens.length;
+      mentionTokens.push(match);
+      return `\x00CCMENTION${String(idx)}\x00`;
+    });
+    formatted = applyDisplayFormatters(formatted, textFormatters);
+    formatted = formatted.replace(
+      // eslint-disable-next-line no-control-regex
+      /\x00CCMENTION(\d+)\x00/g,
+      (_m, idx: string) => mentionTokens[parseInt(idx, 10)] ?? ''
+    );
 
     const mentionedUsers = message.getMentionedUsers();
     if (mentionedUsers.length > 0) {
@@ -142,6 +164,8 @@ export const CometChatMessageComposerReplyPreview: React.FC<
     // Text messages
     const text = (messageToReply as CometChat.TextMessage).getText();
     return formatText(text, messageToReply);
+    // `formatText` is a per-render local; listing it would recompute every render and defeat the memo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messageToReply, getLocalizedString]);
 
   // Media message summary (icon + count + label)
@@ -185,6 +209,8 @@ export const CometChatMessageComposerReplyPreview: React.FC<
     if (!['image', 'video', 'audio', 'file'].includes(type)) return '';
     const caption = (messageToReply as CometChat.MediaMessage).getCaption() || '';
     return formatText(caption, messageToReply);
+    // `formatText` is a per-render local; listing it would recompute every render and defeat the memo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messageToReply]);
 
   if (!isInReplyMode || !messageToReply) return null;

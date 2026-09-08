@@ -2,6 +2,7 @@ import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { ReactNode } from 'react';
 import type { CometChatFetchState } from '../../types';
 import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
+import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 
 // ---------------------------------------------------------------------------
 // Message List Alignment
@@ -30,7 +31,7 @@ export interface CometChatMessageListManagerOptions {
   group?: CometChat.Group;
   /** Optional custom MessagesRequestBuilder (overrides default builder). */
   builder?: CometChat.MessagesRequestBuilder;
-  /** Parent message ID for thread mode. */
+  /** Parent message ID for thread mode (the derived id the manager scopes to). */
   parentMessageId?: number;
   /** Message types to include in the request. */
   messageTypes?: string[];
@@ -38,6 +39,12 @@ export interface CometChatMessageListManagerOptions {
   messageCategories?: string[];
   /** Page size for fetch requests. Defaults to 30. */
   limit?: number;
+  /**
+   * Agent chat renders its cards as thread replies and needs the parent message
+   * returned alongside them. Ordinary threads must not include it — the parent
+   * is already rendered by the thread header.
+   */
+  isAgentChat?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -178,6 +185,19 @@ export type CometChatMessageListAction =
     }
   | { type: 'MESSAGE_EDITED'; message: CometChat.BaseMessage }
   | { type: 'MESSAGE_DELETED'; message: CometChat.BaseMessage }
+  /**
+   * Pin/save state changed for a message already in the list.
+   *
+   * Deliberately field-scoped rather than a wholesale replace. `pinnedAt`/`pinnedBy`
+   * are global and broadcast to every member, while `savedAt` is per-viewer — so a
+   * pin broadcast frame is not expected to carry the receiving user's own save
+   * state. Replacing wholesale would silently wipe their saved indicator.
+   */
+  | {
+      type: 'MESSAGE_PIN_SAVE_UPDATE';
+      message: CometChat.BaseMessage;
+      scope: 'pin' | 'save';
+    }
   // Remove the streaming bubble placeholder (run_started fake message) when AI response arrives
   | { type: 'REMOVE_STREAMING_BUBBLE' }
   | { type: 'ADD_STREAMING_BUBBLE'; message: CometChat.BaseMessage }
@@ -269,7 +289,16 @@ export interface CometChatUseMessageListOptions {
    * Optional custom ReactionsRequestBuilder.
    */
   reactionsRequestBuilder?: CometChat.ReactionsRequestBuilder;
-  /** Parent message ID for thread mode. */
+  /**
+   * The thread's parent message, for thread mode. Preferred over
+   * {@link parentMessageId}; the id is derived from it.
+   */
+  parentMessage?: CometChat.BaseMessage;
+  /**
+   * Parent message ID for thread mode.
+   * @deprecated Pass {@link parentMessage} instead — the id is derived from it.
+   * Still honoured when `parentMessage` is absent, for backward compatibility.
+   */
   parentMessageId?: number;
   /** Scroll to last read message instead of bottom on open. */
   startFromUnreadMessages?: boolean;
@@ -315,6 +344,18 @@ export interface CometChatUseMessageListOptions {
   // --- Message context-menu option toggles (per-instance) ---
   hideReplyOption?: boolean;
   hideReplyInThreadOption?: boolean;
+  /**
+   * Hide the thread-subscription option ("Notify me about replies" /
+   * "Stop reply notifications") in the message context menu.
+   *
+   * The option is shown on every message type in **group** chats only — it
+   * never appears in a 1:1 chat, whatever this flag says. Invoked on a thread
+   * reply it acts on that reply's parent, since a subscription is always
+   * rooted at the thread's parent message.
+   *
+   * @default false
+   */
+  hideThreadSubscriptionOption?: boolean;
   hideEditMessageOption?: boolean;
   hideDeleteMessageOption?: boolean;
   hideCopyMessageOption?: boolean;
@@ -325,6 +366,14 @@ export interface CometChatUseMessageListOptions {
   hideTranslateMessageOption?: boolean;
   /** Show the "Mark as Unread" option. Defaults to false (opt-in). */
   showMarkAsUnreadOption?: boolean;
+  /** Hide the "Pin message" option. */
+  hidePinMessageOption?: boolean;
+  /** Hide the "Unpin message" option. */
+  hideUnpinMessageOption?: boolean;
+  /** Hide the "Save message" option. */
+  hideSaveMessageOption?: boolean;
+  /** Hide the "Unsave message" option. */
+  hideUnsaveMessageOption?: boolean;
 
   // --- Date formatting (CalendarObject-shaped) ---
   /** Date format for in-list day separators ("Today", "Yesterday", etc.). */
@@ -369,6 +418,8 @@ export interface CometChatUseMessageListOptions {
   hideModerationView?: boolean;
   /** Whether this is an AI agent chat (suppresses moderation UI). */
   isAgentChat?: boolean;
+  /** Custom display formatters merged into text/caption bubbles. */
+  textFormatters?: CometChatTextFormatter[];
   /**
    * Replace the entire bubble rendering for each message.
    * When provided, the default BubbleRenderer is skipped entirely.
@@ -448,6 +499,7 @@ export interface CometChatMessageListOptions {
   // --- Message context-menu option toggles ---
   hideReplyOption: boolean;
   hideReplyInThreadOption: boolean;
+  hideThreadSubscriptionOption: boolean;
   hideEditMessageOption: boolean;
   hideDeleteMessageOption: boolean;
   hideCopyMessageOption: boolean;
@@ -457,6 +509,10 @@ export interface CometChatMessageListOptions {
   hideMessagePrivatelyOption: boolean;
   hideTranslateMessageOption: boolean;
   showMarkAsUnreadOption: boolean;
+  hidePinMessageOption: boolean;
+  hideUnpinMessageOption: boolean;
+  hideSaveMessageOption: boolean;
+  hideUnsaveMessageOption: boolean;
 
   // --- Date formatting (optional — bubble / separator / sticky / info fall back to sensible defaults) ---
   separatorDateTimeFormat: CometChatDateFormatConfig | undefined;
@@ -485,6 +541,7 @@ export interface CometChatMessageListOptions {
   disableTruncation: boolean;
   hideModerationView: boolean;
   isAgentChat: boolean;
+  textFormatters?: CometChatTextFormatter[];
 
   // --- Bubble customization ---
   bubbleView:

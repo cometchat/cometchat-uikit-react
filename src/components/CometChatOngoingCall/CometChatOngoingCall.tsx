@@ -143,7 +143,7 @@ export const CometChatOngoingCall: React.FC<CometChatOngoingCallProps> = ({
     registerEventListeners();
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    callsSDK.generateToken(sessionID).then(
+    callsSDK.generateToken(sessionID, loggedInUser.getAuthToken()).then(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (res: any) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access

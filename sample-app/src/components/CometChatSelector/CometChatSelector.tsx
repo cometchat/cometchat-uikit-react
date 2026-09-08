@@ -11,6 +11,7 @@ import {
 import userIcon from '../../assets/user.svg';
 import startChatIcon from '../../assets/start_chat.svg';
 import logoutIcon from '../../assets/logout.svg';
+import saveIcon from '../../assets/save.svg';
 import './CometChatSelector.css';
 
 interface SelectorProps {
@@ -25,6 +26,7 @@ interface SelectorProps {
   onNewChatClicked?: () => void;
   onCreateGroupClicked?: () => void;
   onSearchClicked?: () => void;
+  onSavedMessagesClicked?: () => void;
 }
 
 export const CometChatSelector = (props: SelectorProps) => {
@@ -37,6 +39,7 @@ export const CometChatSelector = (props: SelectorProps) => {
     onNewChatClicked,
     onCreateGroupClicked,
     onSearchClicked,
+    onSavedMessagesClicked,
   } = props;
 
   const { getLocalizedString } = useLocale();
@@ -56,6 +59,14 @@ export const CometChatSelector = (props: SelectorProps) => {
         iconURL: startChatIcon,
         onClick: () => {
           onNewChatClicked?.();
+        },
+      },
+      {
+        id: 'saved-messages',
+        title: getLocalizedString('selector_option_saved_messages'),
+        iconURL: saveIcon,
+        onClick: () => {
+          onSavedMessagesClicked?.();
         },
       },
       {

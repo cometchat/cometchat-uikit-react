@@ -42,7 +42,7 @@
   --cometchat-tooltip-arrow-left: calc(100% - 16px);
 }
 
-/* Down-pointing arrow at the tile. */
+/* Down-pointing arrow at the tile (tooltip above the anchor). */
 .cometchat-tooltip::after {
   content: '';
   position: absolute;
@@ -51,4 +51,12 @@
   transform: translateX(-50%);
   border: 4px solid transparent;
   border-top-color: var(--cometchat-tooltip-bg);
+}
+
+/* Up-pointing arrow when the tooltip sits below the anchor. */
+.cometchat-tooltip--bottom::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--cometchat-tooltip-bg);
 }

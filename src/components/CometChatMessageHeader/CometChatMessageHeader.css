@@ -32,6 +32,11 @@
   gap: var(--cometchat-message-header-gap, 8px);
 }
 
+.cometchat-message-header [class*='cometchat-context-menu__trigger'] {
+  background: transparent;
+  box-shadow: none;
+}
+
 /* ==================== Back Button ==================== */
 .cometchat-message-header__back-button-wrapper {
   display: flex;

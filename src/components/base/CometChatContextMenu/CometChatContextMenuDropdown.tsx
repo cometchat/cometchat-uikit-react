@@ -205,7 +205,10 @@ export const CometChatContextMenuDropdown: React.FC<CometChatContextMenuDropdown
     if (!dropdownRef.current) return [];
     return Array.from(
       dropdownRef.current.querySelectorAll<HTMLElement>('button[role="menuitem"]:not(:disabled)')
-    );
+      // Items inside an open fly-out belong to that submenu's own arrow-key
+      // handling. Without this, ArrowDown from the parent list would walk into
+      // the submenu's children and the two levels would fight over focus.
+    ).filter(el => !el.closest('.cometchat-context-menu__submenu-panel'));
   }, []);
 
   const handleKeyDown = useCallback(

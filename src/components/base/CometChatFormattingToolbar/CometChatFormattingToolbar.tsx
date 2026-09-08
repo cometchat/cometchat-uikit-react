@@ -35,6 +35,7 @@ export const CometChatFormattingToolbar: React.FC<CometChatFormattingToolbarProp
   onOrderedList,
   onBulletList,
   onLink,
+  trailingContent,
   className,
 }) => {
   const { getLocalizedString } = useLocale();
@@ -207,6 +208,12 @@ export const CometChatFormattingToolbar: React.FC<CometChatFormattingToolbarProp
           </button>
         );
       })}
+      {trailingContent != null && trailingContent !== false && (
+        <>
+          <div className={'cometchat-formatting-toolbar__separator'} aria-hidden="true" />
+          {trailingContent}
+        </>
+      )}
     </div>
   );
 };

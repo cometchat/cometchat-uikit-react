@@ -463,41 +463,6 @@
   display: none;
 }
 
-/* Delete button */
-.cometchat-conversations__item-delete-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  border-radius: var(--cometchat-border-radius-1, 4px);
-}
-
-.cometchat-conversations__item-delete-button:hover {
-  background: transparent;
-}
-
-.cometchat-conversations__item-delete-button:focus-visible {
-  outline: 2px solid var(--cometchat-primary-color, #3399ff);
-  outline-offset: 2px;
-}
-
-/* Delete icon */
-.cometchat-conversations__item-delete-icon {
-  display: block;
-  width: 24px;
-  height: 24px;
-  -webkit-mask: url('../../assets/delete_icon.svg') center center no-repeat;
-  mask: url('../../assets/delete_icon.svg') center center no-repeat;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  background: var(--cometchat-error-color, #f44649);
-}
-
 /* Item options menu (context menu, shown inside menu-view on hover) */
 .cometchat-conversations__item-options {
   display: flex;
@@ -599,8 +564,8 @@
 }
 
 .cometchat-conversations__empty-state-icon {
-  width: 100px;
-  height: 68px;
+  width: 120px;
+  height: 120px;
   margin-bottom: 12px;
   opacity: 0.6;
   color: var(--cometchat-text-color-secondary, #727272);
@@ -630,8 +595,8 @@
 }
 
 .cometchat-conversations__error-state-icon {
-  width: 100px;
-  height: 68px;
+  width: 120px;
+  height: 120px;
   margin-bottom: 12px;
   opacity: 0.6;
 }
@@ -647,29 +612,10 @@
   font-size: var(--cometchat-font-body-regular, 14px);
   color: var(--cometchat-text-color-secondary, #727272);
 }
-/* Delete confirmation dialog — scoped to conversations container */
-.cometchat-conversations__delete-dialog-backdrop {
-  background: rgba(0, 0, 0, 0.5);
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--cometchat-border-radius-3, 8px);
-}
-
-/* Remove the confirm dialog's own fixed backdrop when inside conversations */
-.cometchat-conversations__delete-dialog {
-  position: static !important;
-  inset: unset !important;
-  background: none !important;
-  z-index: unset !important;
-  width: 320px;
-}
+/* The delete confirmation dialog uses CometChatConfirmDialog's own body-portalled,
+   fixed full-screen backdrop (see CometChatConversationsRoot) — no conversations-
+   scoped backdrop or position override, which would drop the portalled dialog
+   behind the app. */
 
 /* Group type indicator (private/password) */
 .cometchat-conversations__item-group-type {
@@ -716,4 +662,83 @@
   mask: url('../../assets/lock.svg') center center no-repeat;
   -webkit-mask-size: contain;
   mask-size: contain;
+}
+
+/* Pin indicator — sits beside the timestamp in the trailing view. Masked so it
+   takes the theme's accent colour in both light and dark. */
+/*
+ * Trailing view stacks: timestamp on top, then unread badge + pin glyph beside
+ * each other underneath.
+ *
+ *      <timestamp>
+ *   <unread> <pin>
+ */
+.cometchat-conversations__item-trailing-badges {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--cometchat-spacing-1, 4px);
+}
+
+.cometchat-conversations__item-pin-indicator {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: inline-flex;
+  background: var(--cometchat-icon-color-secondary, #a1a1a1);
+  -webkit-mask: url('../../assets/pinned.svg') center center / contain no-repeat;
+  mask: url('../../assets/pinned.svg') center center / contain no-repeat;
+}
+
+/* --- Row menu: Delete reads as destructive --- */
+
+/* The menu greys its icons with a filter; this one supplies its own colour. */
+.cometchat-conversations__item-delete-option .cometchat-context-menu__dropdown-item-icon,
+.cometchat-conversations__item-delete-option .cometchat-context-menu__top-menu-item-icon {
+  filter: none;
+}
+
+.cometchat-conversations .cometchat-context-menu__dropdown-item-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.cometchat-conversations__item-delete-glyph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--cometchat-error-color, #f44649);
+  -webkit-mask: url('../../assets/delete_icon.svg') center center / contain no-repeat;
+  mask: url('../../assets/delete_icon.svg') center center / contain no-repeat;
+}
+
+.cometchat-conversations__item-delete-option .cometchat-context-menu__dropdown-item-title {
+  color: var(--cometchat-error-color, #f44649);
+}
+
+/*
+ * A lone row option renders as a bare icon, matching the standalone delete button
+ * this menu replaced: full-size glyph, no pill, no shadow.
+ *
+ * Scoped to the conversation row on purpose — the pill container is correct
+ * everywhere else it is used (message bubble quick actions), where icons sit over
+ * content and need their own surface. Here the icon sits on the row background.
+ */
+.cometchat-conversations__item-options .cometchat-context-menu__top-menu-item {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: var(--cometchat-radius-1, 4px);
+}
+
+/* The row itself highlights on hover; the icon did not, and should not now. */
+.cometchat-conversations__item-options .cometchat-context-menu__top-menu-item:hover:not(:disabled) {
+  background: transparent;
+}
+
+.cometchat-conversations__item-options .cometchat-context-menu__top-menu-item-icon {
+  width: 24px;
+  height: 24px;
 }

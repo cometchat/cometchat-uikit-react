@@ -41,7 +41,7 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  min-width: 280px;
+  min-width: var(--cometchat-file-bubble-card-min-width, 280px);
   height: 64px;
   box-sizing: border-box;
   padding: 0 14px 0 10px;

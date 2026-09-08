@@ -40,8 +40,9 @@ import {
   insertMention,
   getTextWithMentionFormat,
   getUniqueMentionUids,
-  checkMentionTrigger,
+  checkTriggers,
 } from './mentions';
+import type { TriggerRegistration } from './mentions';
 import { escapeUserHtml } from '../sanitizeHtml';
 
 export class RichTextEditor {
@@ -104,6 +105,16 @@ export class RichTextEditor {
   }
 
   // ===== Public: Content =====
+
+  /**
+   * Re-emit the current content + recompute format-state. Call after an EXTERNAL/imperative DOM edit
+   * (e.g. an imperative formatter's `formatText`) so the composer's derived state stays in sync. This is
+   * what a formatter's `setReRender` callback is wired to.
+   */
+  refresh(): void {
+    this.updateFormatState();
+    this.emitUpdate();
+  }
 
   /** Get the document to use for DOM operations. Falls back to global `document`. */
   getDocument(): Document {
@@ -308,6 +319,19 @@ export class RichTextEditor {
     return linkGetCurrentLinkText(this.ctx);
   }
 
+  /** The built-in mention (`@`) trigger, from config. */
+  private collectTriggers(): TriggerRegistration[] {
+    const triggers: TriggerRegistration[] = [];
+    if (this.config.onMentionStart) {
+      triggers.push({
+        char: '@',
+        onStart: this.config.onMentionStart,
+        onEnd: this.config.onMentionEnd,
+      });
+    }
+    return triggers;
+  }
+
   // ===== Public: Selection =====
 
   getSelectedText(): string {
@@ -432,9 +456,9 @@ export class RichTextEditor {
         this.findAncestor(anchorNode, 'PRE') !== null
       : false;
     if (!insideCode) {
-      checkMentionTrigger(this.config.onMentionStart, this.config.onMentionEnd, this.getWindow());
+      checkTriggers(this.collectTriggers(), this.getWindow());
     } else {
-      // Inside code — close any open mention panel
+      // Inside code — close any open mention/trigger panel
       this.config.onMentionEnd?.();
     }
     if (
@@ -949,7 +973,12 @@ export class RichTextEditor {
 
     // §15 — Paste with markdown: convert markdown in pasted plain text
     if (pastedText && !isUrl) {
-      const html = data.getData('text/html');
+      let html = data.getData('text/html');
+      // Custom text-formatter round-trip (in): serialize a consumer's formatter spans (color, etc.)
+      // to storable tokens BEFORE the sanitizer unwraps them. Re-rendered post-sanitize below.
+      if (html && this.config.preprocessPastedHtml) {
+        html = this.config.preprocessPastedHtml(html);
+      }
       // Only intercept plain-text pastes (no HTML source) to convert markdown
       if (!html) {
         e.preventDefault();
@@ -982,7 +1011,12 @@ export class RichTextEditor {
         return;
       }
 
-      const cleanedHtml = this.sanitizePastedHtml(html);
+      let cleanedHtml = this.sanitizePastedHtml(html);
+      // Custom text-formatter round-trip (out): re-render the tokens preserved above back into
+      // display spans (via the consumer's `getFormattedText`), so pasted custom formatting survives.
+      if (cleanedHtml && this.config.postprocessPastedHtml) {
+        cleanedHtml = this.config.postprocessPastedHtml(cleanedHtml);
+      }
       if (cleanedHtml) {
         this.getDocument().execCommand('insertHTML', false, cleanedHtml);
       } else {

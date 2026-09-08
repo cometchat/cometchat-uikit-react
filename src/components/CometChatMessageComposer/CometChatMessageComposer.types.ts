@@ -223,6 +223,13 @@ export interface CometChatMessageComposerRootProps {
   sendButtonView?: ReactNode;
   /** Custom ReactNode for additional buttons rendered in the actions area before the send button. */
   auxiliaryButtonView?: ReactNode;
+  /**
+   * Custom view rendered at the trailing end of the rich-text formatting toolbar, after the built-in
+   * buttons and an automatically-inserted separator. Pass a single node; wrap multiple buttons in
+   * one element. Intended for buttons that drive a custom formatter from `textFormatters`.
+   * Only shown when the rich-text editor and its toolbar are enabled.
+   */
+  toolbarTrailingView?: ReactNode;
   /** Custom ReactNode for the header area above the input (replaces edit/reply preview + validation). */
   headerView?: ReactNode;
   /** Whether to show the scrollbar on the input area. Default: false. */
@@ -432,6 +439,7 @@ export interface CometChatMessageComposerContextValue {
   voiceRecordingButtonIconView?: ReactNode;
   emojiButtonIconView?: ReactNode;
   auxiliaryButtonView?: ReactNode;
+  toolbarTrailingView?: ReactNode;
   headerView?: ReactNode;
   showScrollbar?: boolean;
   onError?: ((error: CometChat.CometChatException) => void) | null;

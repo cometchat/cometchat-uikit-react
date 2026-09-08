@@ -49,7 +49,6 @@ function mockContext(alignment: 'left' | 'right' | 'center' = 'right') {
     loggedInUser: { getUid: () => 'user-1', getName: () => 'Me' } as any,
     alignment,
     theme: 'light' as const,
-    getTextFormatters: () => [],
   };
 }
 

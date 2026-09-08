@@ -4,6 +4,7 @@ import type {
   CometChatMessageBubbleAlignment,
   CometChatMessageOption,
 } from '../../plugins/plugin.types';
+import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 import { CometChatDateFormatConfig } from '../base/CometChatDate';
 
 /** Props for CometChatMessageBubble. */
@@ -13,6 +14,10 @@ export interface CometChatMessageBubbleProps {
   message: CometChat.BaseMessage;
   /** Bubble alignment: 'left' (incoming), 'right' (outgoing), 'center' (action). */
   alignment: CometChatMessageBubbleAlignment;
+  /**
+   * Force the bubble's colour scheme independently of `alignment`.
+   */
+  bubbleVariant?: 'incoming' | 'outgoing';
   /** The inner content rendered by the plugin's renderBubble(). Required. */
   contentView: ReactNode;
   /** Group context — enables avatar and sender name for group conversations. */
@@ -138,6 +143,12 @@ export interface CometChatMessageBubbleRendererProps {
   hideReplyOption?: boolean;
   /** Hide the "Reply in Thread" option in the message context menu. */
   hideReplyInThreadOption?: boolean;
+  /**
+   * Hide the thread-subscription option ("Notify me about replies" /
+   * "Stop reply notifications") in the message context menu.
+   * The option is group-chat only regardless of this flag.
+   */
+  hideThreadSubscriptionOption?: boolean;
   /** Hide the "Edit" option in the message context menu. */
   hideEditMessageOption?: boolean;
   /** Hide the "Delete" option in the message context menu. */
@@ -159,6 +170,35 @@ export interface CometChatMessageBubbleRendererProps {
    * Mirrors prop.
    */
   showMarkAsUnreadOption?: boolean;
+  /** Hide the "Pin message" option. */
+  hidePinMessageOption?: boolean;
+  /** Hide the "Unpin message" option. */
+  hideUnpinMessageOption?: boolean;
+  /** Hide the "Save message" option. */
+  hideSaveMessageOption?: boolean;
+  /** Hide the "Unsave message" option. */
+  hideUnsaveMessageOption?: boolean;
+  /**
+   * How pin/save options are presented. `'nested'` groups them under an
+   * "Organize ▸" fly-out (main message list); `'flat'` surfaces them top-level
+   * (thread column and the Pinned/Saved panels, which are too narrow to fly out).
+   * Defaults to `'nested'`.
+   */
+  optionsLayout?: 'nested' | 'flat';
+  /** Force show the avatar even for outgoing / 1-1 messages. */
+  forceShowAvatar?: boolean;
+  /** Override the header (sender name) slot. Pass null to suppress. */
+  headerView?: ((message: CometChat.BaseMessage) => ReactNode) | null;
+
+  /**
+   * Force the bubble's colour scheme independently of `alignment`.
+   *
+   * Normally the two move together — right-aligned means outgoing means brand
+   * colour. Surfaces that align every row the same way (the Pinned panel) still
+   * need a sender-derived colour, so this splits layout from palette. Omit to
+   * derive from alignment, which is the behaviour everywhere else.
+   */
+  bubbleVariant?: 'incoming' | 'outgoing';
 
   /** Override the date format for the timestamp shown beside the bubble. */
   messageSentAtDateTimeFormat?: import('../base/CometChatDate/CometChatDate.types').CometChatDateFormatConfig;
@@ -173,6 +213,8 @@ export interface CometChatMessageBubbleRendererProps {
    * Whether this conversation is an AI agent chat.
    */
   isAgentChat?: boolean;
+  /** Custom display formatters merged into text/caption bubbles. */
+  textFormatters?: CometChatTextFormatter[];
 
   // --- Callbacks ---
   onAvatarClick?: (user: CometChat.User) => void;
@@ -183,6 +225,14 @@ export interface CometChatMessageBubbleRendererProps {
   onFlagMessage?: (message: CometChat.BaseMessage) => void;
   /** Called when the mark-as-unread option is selected. */
   onMarkAsUnread?: (message: CometChat.BaseMessage) => void;
+  /** Called when the pin option is selected. Confirms, then pins conversation-wide. */
+  onPinMessage?: (message: CometChat.BaseMessage) => void;
+  /** Called when the unpin option is selected. */
+  onUnpinMessage?: (message: CometChat.BaseMessage) => void;
+  /** Called when the save option is selected. Private to the logged-in user. */
+  onSaveMessage?: (message: CometChat.BaseMessage) => void;
+  /** Called when the unsave option is selected. */
+  onUnsaveMessage?: (message: CometChat.BaseMessage) => void;
   /** Called when the edit option is selected. Sets message in edit mode in composer. */
   onEditMessage?: (message: CometChat.BaseMessage) => void;
   /** Called when the reply option is selected. Sets message as reply-to in composer. */

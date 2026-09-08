@@ -55,6 +55,10 @@ export interface CometChatMessageHeaderContextValue {
   onSearchOptionClicked?: () => void;
   /** Callback when the conversation summary button is clicked. */
   onSummaryClick?: () => void;
+  /** Callback when the "Pinned Messages" option is selected. */
+  onPinnedMessagesClicked?: () => void;
+  /** Whether the "Pinned Messages" option is hidden. */
+  hidePinnedMessagesOption?: boolean;
   /** Number of messages to include in summary generation (default: 1000). */
   summaryGenerationMessageCount: number;
 }
@@ -73,6 +77,11 @@ export interface CometChatMessageHeaderRootProps {
   hideBackButton?: boolean;
   /** Whether to show the search option. Default: true. */
   showSearchOption?: boolean;
+  /**
+   * Hide the "Pinned Messages" option in the overflow menu. Default: false.
+   * Also hidden automatically when the Pin Message feature flag is off.
+   */
+  hidePinnedMessagesOption?: boolean;
   /** Whether to show the AI conversation summary button. Default: false. */
   showConversationSummaryButton?: boolean;
   /**
@@ -106,6 +115,8 @@ export interface CometChatMessageHeaderRootProps {
   onSearchOptionClicked?: () => void;
   /** Callback when the conversation summary button is clicked. */
   onSummaryClick?: () => void;
+  /** Callback when the "Pinned Messages" option is selected. */
+  onPinnedMessagesClicked?: () => void;
   /** Callback when the voice call button is clicked. Overrides default call initiation. */
   onVoiceCallClick?: (entity: CometChat.User | CometChat.Group) => void;
   /** Callback when the video call button is clicked. Overrides default call initiation. */

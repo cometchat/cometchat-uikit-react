@@ -55,6 +55,8 @@ function mockMessage(overrides: {
   editedAt?: number;
   deletedAt?: number;
   replyCount?: number;
+  pinnedAt?: number;
+  savedAt?: number;
 }): CometChat.BaseMessage {
   const {
     text = 'Hello!',
@@ -69,6 +71,8 @@ function mockMessage(overrides: {
     editedAt = 0,
     deletedAt = 0,
     replyCount = 0,
+    pinnedAt,
+    savedAt,
   } = overrides;
 
   return {
@@ -93,6 +97,13 @@ function mockMessage(overrides: {
     getMetadata: () => ({}),
     getReceiverType: () => 'user',
     getReactions: () => [],
+    // Pin/save state drives the status-info indicators.
+    getPinnedAt: () => pinnedAt,
+    getPinnedBy: () => (pinnedAt !== undefined ? 'admin' : undefined),
+    getSavedAt: () => savedAt,
+    isPinned: () => pinnedAt !== undefined,
+    isSaved: () => savedAt !== undefined,
+    isSystemPinned: () => false,
   } as unknown as CometChat.BaseMessage;
 }
 
@@ -1036,6 +1047,91 @@ export const PollMessage = () => {
               }) as unknown as CometChat.CustomMessage
             }
             alignment="left"
+          />
+        }
+      />
+    </ChatContainer>
+  );
+};
+
+/** Pinned indicator — a pin glyph appears in the status-info area. */
+export const PinnedIndicator = () => {
+  const group = mockGroup();
+  const msg = mockMessage({
+    text: 'Read the release checklist before Friday.',
+    senderName: 'Alex Kim',
+    senderUid: 'user-alex',
+    sentAt: Math.floor(Date.now() / 1000),
+    pinnedAt: Math.floor(Date.now() / 1000),
+  });
+  return (
+    <ChatContainer>
+      <CometChatMessageBubble
+        message={msg}
+        alignment="left"
+        group={group}
+        contentView={
+          <CometChatTextBubble
+            text="Read the release checklist before Friday."
+            isSentByMe={false}
+            textFormatters={createFormatters('left')}
+          />
+        }
+      />
+    </ChatContainer>
+  );
+};
+
+/** Saved indicator — a bookmark glyph appears in the status-info area. */
+export const SavedIndicator = () => {
+  const group = mockGroup();
+  const msg = mockMessage({
+    text: 'The API key is in the shared vault.',
+    senderName: 'Alice Johnson',
+    senderUid: 'alice-johnson',
+    sentAt: Math.floor(Date.now() / 1000),
+    savedAt: Math.floor(Date.now() / 1000),
+  });
+  return (
+    <ChatContainer>
+      <CometChatMessageBubble
+        message={msg}
+        alignment="left"
+        group={group}
+        contentView={
+          <CometChatTextBubble
+            text="The API key is in the shared vault."
+            isSentByMe={false}
+            textFormatters={createFormatters('left')}
+          />
+        }
+      />
+    </ChatContainer>
+  );
+};
+
+/** Pinned and saved — a message can carry both indicators at once. */
+export const PinnedAndSaved = () => {
+  const group = mockGroup();
+  const msg = mockMessage({
+    text: 'Standup moves to 10:30 next week.',
+    senderName: 'Jane Smith',
+    senderUid: 'user-jane',
+    sentAt: Math.floor(Date.now() / 1000),
+    pinnedAt: Math.floor(Date.now() / 1000),
+    savedAt: Math.floor(Date.now() / 1000),
+  });
+  return (
+    <ChatContainer>
+      <CometChatMessageBubble
+        message={msg}
+        alignment="left"
+        group={group}
+        contentView={
+          <CometChatTextBubble
+            text="Standup moves to 10:30 next week."
+            isSentByMe={false}
+            textFormatters={createFormatters('left')}
           />
         }
       />

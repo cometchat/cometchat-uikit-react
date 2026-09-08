@@ -7,6 +7,7 @@ import {
   selectCanSend,
 } from './CometChatMessageComposer.reducer';
 import type { CometChatComposerContentToDisplay } from './CometChatMessageComposer.types';
+import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 import { useMediaUploadManager } from './useMediaUploadManager';
 import { sendBatch as sendBatchFn } from './sendBatch';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
@@ -15,6 +16,7 @@ import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import type { CometChatEvent } from '../../context/CometChatEvents.types';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
+import { writeThreadSubscribed } from '../../utils/CometChatThreadSubscription';
 
 const TYPING_TIMEOUT_MS = 500;
 
@@ -51,6 +53,11 @@ export interface CometChatUseCometChatMessageComposerOptions {
   getMentionedUsers?: () => { uid: string; name: string }[];
   /** Clear the mentioned users list after send (from mentions hook). */
   clearMentionedUsers?: () => void;
+  /**
+   * Returns input-capable custom formatters, consulted by the send bridge to serialize
+   * their custom marks/entities to stored tokens.
+   */
+  getInputFormatters?: () => CometChatTextFormatter[];
 }
 
 /**
@@ -79,6 +86,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
     onMentionSelected,
     getMentionedUsers,
     clearMentionedUsers,
+    getInputFormatters,
   } = options;
 
   const [state, dispatch] = useReducer(composerReducer, {
@@ -252,7 +260,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       if (richTextHtml) {
         const { CometChatRichTextFormatter } =
           await import('../../formatters/CometChatRichTextFormatter');
-        const formatter = new CometChatRichTextFormatter();
+        const formatter = new CometChatRichTextFormatter(getInputFormatters?.() ?? []);
         textToSend = formatter.format(richTextHtml);
       }
       const trimmedText = textToSend.trim();
@@ -298,6 +306,11 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
         textMessage.setSentAt(Math.floor(Date.now() / 1000));
         if (parentMessageId) {
           textMessage.setParentMessageId(parentMessageId);
+          // Case 4 — a threaded send subscribes the sender. Stamp the OPTIMISTIC
+          // message too, so its own bubble seeds subscribed from the first render
+          // rather than relying on the post-send mirror reaching a not-yet-mounted
+          // bubble. The confirmed message and surfaces are handled after the ack.
+          writeThreadSubscribed(textMessage, true);
         }
         // Set sender from logged-in user cache
         try {
@@ -361,6 +374,13 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
             parentMessageId: parentMessageId ?? null,
           });
         }
+        // Case 4 — sending a reply in a thread subscribes the sender. Stamp the
+        // confirmed message's own flag (a socket echo would read false). The
+        // cross-surface mirror is now fired centrally by the message list's
+        // ui:message/sent handler, so it is NOT done here.
+        if (parentMessageId) {
+          writeThreadSubscribed(confirmedMessage, true);
+        }
         clearMentionedUsers?.();
         isSendingRef.current = false;
       } catch (error) {
@@ -390,6 +410,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       }
     },
     [
+      getInputFormatters,
       state.text,
       state.messageToReply,
       receiverId,
@@ -445,6 +466,9 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
         mediaMessage.setSentAt(Math.floor(Date.now() / 1000));
         if (parentMessageId) {
           mediaMessage.setParentMessageId(parentMessageId);
+          // Case 4 — stamp the optimistic message so its own bubble seeds subscribed
+          // from the first render (see the text path for the rationale).
+          writeThreadSubscribed(mediaMessage, true);
         }
         mediaMessage.setMetadata({
           file,
@@ -507,6 +531,11 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
             status: CometChatMessageStatus.success,
             parentMessageId: parentMessageId ?? null,
           });
+        }
+        // Case 4 — a threaded media reply subscribes the sender; stamp the confirmed
+        // message's own flag. The mirror is centralized in the message list handler.
+        if (parentMessageId) {
+          writeThreadSubscribed(confirmedMessage, true);
         }
       } catch (error) {
         // Attach error directly to the message (v6 pattern: message.setMetadata({ ...meta, error }))
@@ -581,7 +610,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       if (richTextHtml) {
         const { CometChatRichTextFormatter } =
           await import('../../formatters/CometChatRichTextFormatter');
-        const formatter = new CometChatRichTextFormatter();
+        const formatter = new CometChatRichTextFormatter(getInputFormatters?.() ?? []);
         caption = formatter.format(richTextHtml);
       }
 
@@ -597,6 +626,9 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           publish: publish as (event: Record<string, unknown>) => void,
           onSendButtonClick,
         });
+        // Case 4 — a threaded attachment batch subscribes the sender. Each batch
+        // message's own flag is stamped in sendBatch; the cross-surface mirror is
+        // fired centrally by the message list's ui:message/sent handler.
       } finally {
         // Release this batch's upload request after sends complete (success or
         // failure): aborts anything in flight and frees the retained bytes.
@@ -608,6 +640,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       }
     },
     [
+      getInputFormatters,
       state,
       receiverId,
       receiverType,
@@ -629,7 +662,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       if (richTextHtml) {
         const { CometChatRichTextFormatter } =
           await import('../../formatters/CometChatRichTextFormatter');
-        const formatter = new CometChatRichTextFormatter();
+        const formatter = new CometChatRichTextFormatter(getInputFormatters?.() ?? []);
         textToSend = formatter.format(richTextHtml);
       }
       const trimmedText = textToSend.trim();
@@ -692,6 +725,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       }
     },
     [
+      getInputFormatters,
       state.textMessageToEdit,
       state.text,
       onSendButtonClick,

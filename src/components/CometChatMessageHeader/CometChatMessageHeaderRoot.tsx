@@ -7,6 +7,7 @@ import { CometChatMessageHeaderContext } from './CometChatMessageHeader.context'
 import { useCometChatMessageHeader } from './useCometChatMessageHeader';
 import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import { usePublishEvent } from '../../hooks/usePublishEvent';
+import { usePinSaveFeatures } from '../../hooks/usePinSaveFeatures';
 import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { CometChatMessageHeaderBackButton } from './CometChatMessageHeaderBackButton';
 import { CometChatMessageHeaderAvatar } from './CometChatMessageHeaderAvatar';
@@ -45,6 +46,8 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
   onItemClick,
   onSearchOptionClicked,
   onSummaryClick,
+  onPinnedMessagesClicked,
+  hidePinnedMessagesOption = false,
   onVoiceCallClick,
   onVideoCallClick,
   onError,
@@ -64,6 +67,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
 
   const publish = usePublishEvent();
 
+  const { pinMessage: isPinEnabled } = usePinSaveFeatures();
   const onSummaryClickRef = useRef(onSummaryClick);
   onSummaryClickRef.current = onSummaryClick;
 
@@ -168,6 +172,8 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
       onItemClick,
       onSearchOptionClicked,
       onSummaryClick: effectiveSummaryClick,
+      onPinnedMessagesClicked,
+      hidePinnedMessagesOption,
       summaryGenerationMessageCount,
     }),
     [
@@ -184,6 +190,8 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
       onItemClick,
       onSearchOptionClicked,
       effectiveSummaryClick,
+      onPinnedMessagesClicked,
+      hidePinnedMessagesOption,
       summaryGenerationMessageCount,
     ]
   );
@@ -197,8 +205,15 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
   const effectiveHideVoiceCall = hideVoiceCallButton || !callingEnabled;
   const effectiveHideVideoCall = hideVideoCallButton || !callingEnabled;
   const showCallButtons = !effectiveHideVoiceCall || !effectiveHideVideoCall;
-  const showOverflowMenu = showSearchOption && showConversationSummaryButton;
-  const showSearchOnly = showSearchOption && !showConversationSummaryButton;
+  // The overflow menu previously appeared only when search AND summary were both
+  // enabled. Pinned Messages is a third entry, so it must also be able to promote
+  // a lone search button into the menu — otherwise the option is unreachable in
+  // any app that doesn't also enable the summary button.
+  const pinnedMenuAvailable =
+    isPinEnabled && !hidePinnedMessagesOption && Boolean(onPinnedMessagesClicked);
+  const showOverflowMenu =
+    showSearchOption && (showConversationSummaryButton || pinnedMenuAvailable);
+  const showSearchOnly = showSearchOption && !showConversationSummaryButton && !pinnedMenuAvailable;
   const showSummaryOnly = showConversationSummaryButton && !showSearchOption;
 
   return (

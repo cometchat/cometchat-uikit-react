@@ -189,6 +189,52 @@ describe('sendBatch', () => {
       }
     });
 
+    it('stamps threadSubscribed on each confirmed message when threaded (Case 4)', async () => {
+      const publish = vi.fn();
+      const items = [makeTrayItem('f1', 'image'), makeTrayItem('f2', 'file')];
+
+      await sendBatch({
+        items,
+        batchId: 'batch-sub',
+        caption: '',
+        receiverId: 'group-1',
+        receiverType: 'group',
+        parentMessageId: 42,
+        publish,
+      });
+
+      // Every batch reply carries the sender's subscription, same as text/media.
+      const confirmed = publish.mock.calls
+        .map(([e]: [Record<string, unknown>]) => e)
+        .filter(e => e.type === 'ui:message/sent' && e.status === 'success')
+        .map(e => e.message as { isThreadSubscribed: () => boolean });
+      expect(confirmed.length).toBe(2);
+      for (const msg of confirmed) {
+        expect(msg.isThreadSubscribed()).toBe(true);
+      }
+    });
+
+    it('does NOT stamp threadSubscribed on a non-threaded batch', async () => {
+      const publish = vi.fn();
+      const items = [makeTrayItem('f1', 'image')];
+
+      await sendBatch({
+        items,
+        batchId: 'batch-nosub',
+        caption: '',
+        receiverId: 'user-2',
+        receiverType: 'user',
+        publish,
+      });
+
+      const confirmed = publish.mock.calls
+        .map(([e]: [Record<string, unknown>]) => e)
+        .filter(e => e.type === 'ui:message/sent' && e.status === 'success')
+        .map(e => e.message as { isThreadSubscribed: () => boolean });
+      expect(confirmed.length).toBe(1);
+      expect(confirmed[0]?.isThreadSubscribed()).toBe(false);
+    });
+
     it('sets quotedMessage and quotedMessageId on the FIRST message only when messageToReply is provided', async () => {
       const publish = vi.fn();
       const replyMsg = makeBaseMessage(99);

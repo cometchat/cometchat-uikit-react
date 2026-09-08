@@ -40,6 +40,15 @@ export type CometChatSDKEvent =
   | { type: 'message/edited'; message: CometChat.BaseMessage }
   | { type: 'message/deleted'; message: CometChat.BaseMessage }
   | { type: 'message/moderated'; message: CometChat.BaseMessage }
+  // --- Pin / Save ---
+  // Each carries the FULL decorated message, so `isPinned()` / `isSaved()` are ready
+  // to read — no getMessageDetails round-trip. Pin events are broadcast to every
+  // member of the conversation; save events are private to the acting user's own
+  // devices. Handlers must be idempotent: set state from the message, never toggle.
+  | { type: 'message/pinned'; message: CometChat.BaseMessage }
+  | { type: 'message/unpinned'; message: CometChat.BaseMessage }
+  | { type: 'message/saved'; message: CometChat.BaseMessage }
+  | { type: 'message/unsaved'; message: CometChat.BaseMessage }
   // --- Receipts ---
   | { type: 'receipt/delivered'; receipt: CometChat.MessageReceipt }
   | { type: 'receipt/read'; receipt: CometChat.MessageReceipt }
@@ -109,6 +118,12 @@ export type CometChatSDKEvent =
   | { type: 'call/rejected'; call: CometChat.Call }
   | { type: 'call/cancelled'; call: CometChat.Call }
   | { type: 'call/ended'; call: CometChat.Call }
+  // --- Conversation pin ---
+  // Fires for the logged-in user's own pins (synced from their other devices) and
+  // for admin-global pins, which arrive for everyone. Carries the full
+  // Conversation, so `isPinned()` / `isSystemPinned()` are ready to read.
+  | { type: 'conversation/pinned'; conversation: CometChat.Conversation }
+  | { type: 'conversation/unpinned'; conversation: CometChat.Conversation }
   // --- Connection ---
   | { type: 'connection/connected' }
   | { type: 'connection/disconnected' };
@@ -135,9 +150,31 @@ export type CometChatUIEvent =
     }
   | { type: 'ui:message/deleted'; message: CometChat.BaseMessage }
   | { type: 'ui:message/read'; message: CometChat.BaseMessage }
+  // --- Pin / Save (optimistic, fired locally on SDK success before the socket echo) ---
+  // The SDK also delivers an authoritative `message/pinned` etc. shortly after — and for
+  // save, the acting device receives its own echo (the SDK bypasses its self-session
+  // suppression guard for save). Both paths are idempotent by design.
+  | { type: 'ui:message/pin-changed'; message: CometChat.BaseMessage; pinned: boolean }
+  | { type: 'ui:message/save-changed'; message: CometChat.BaseMessage; saved: boolean }
+  /**
+   * This user's own reaction. The SDK does not echo your own reaction back over
+   * the socket, so without this every other surface showing the same message
+   * (Pinned, threads) would keep a stale chip set until it re-fetched.
+   */
+  | {
+      type: 'ui:message/reaction-changed';
+      messageId: number;
+      reactions: CometChat.ReactionCount[];
+    }
   // --- Conversation state (from message list) ---
   | { type: 'ui:conversation/read'; conversationId: string }
   | { type: 'ui:conversation/updated'; conversation: CometChat.Conversation }
+  /** This tab's own optimistic pin flip, before the socket confirms it. */
+  | {
+      type: 'ui:conversation/pin-changed';
+      conversation: CometChat.Conversation;
+      pinned: boolean;
+    }
   // --- Active chat (from message list on first load) ---
   | {
       type: 'ui:active-chat/changed';
@@ -208,6 +245,10 @@ export type CometChatUIEvent =
   // --- Thread (from message list / thread panel) ---
   | { type: 'ui:thread/opened'; parentMessage: CometChat.BaseMessage }
   | { type: 'ui:thread/closed' }
+  // The single cross-surface channel for thread subscription. Carries a manual
+  // flip (and its revert on failure) and the Case 3/4 auto-subscribe mirrors, so
+  // the message option and the thread-header bell agree without a refetch.
+  | { type: 'ui:thread/subscription-changed'; parentMessageId: number; subscribed: boolean }
   // --- Call actions (from incoming/outgoing call components) ---
   | { type: 'ui:call/outgoing'; call: CometChat.Call }
   | { type: 'ui:call/rejected'; call: CometChat.Call }
@@ -230,7 +271,12 @@ export type CometChatUIEvent =
   | {
       type: 'ui:panel/hide';
       position: 'messageListFooter' | 'messageListHeader';
-    };
+    }
+  // --- Pin / Save surfaces (kit → app; the app owns placement) ---
+  // Pinned Messages is per-conversation and opens from the message-header overflow menu.
+  // Saved Messages is user-level and opens from the app's own chrome.
+  | { type: 'ui:panel/pinned-messages'; open: boolean }
+  | { type: 'ui:panel/saved-messages'; open: boolean };
 
 // ---------------------------------------------------------------------------
 // Combined Event Type

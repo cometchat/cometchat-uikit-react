@@ -5,6 +5,7 @@ import { threadHeaderReducer, createInitialState } from './CometChatThreadHeader
 import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import type { CometChatEvent } from '../../context/CometChatEvents.types';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
+import { carryThreadSubscribed } from '../../utils/CometChatThreadSubscription';
 
 export interface UseCometChatThreadHeaderOptions {
   /** The parent message of the thread. */
@@ -50,6 +51,11 @@ export function useCometChatThreadHeader(
   // Track the current parent message (updates on edit)
   const [currentParentMessage, setCurrentParentMessage] =
     useState<CometChat.BaseMessage>(parentMessage);
+
+  // Mirror for reading inside event callbacks without re-subscribing them on
+  // every parent change — used to carry the subscription flag across an edit.
+  const currentParentMessageRef = useRef(currentParentMessage);
+  currentParentMessageRef.current = currentParentMessage;
 
   // Track parentMessage ID for reset detection
   const prevParentIdRef = useRef<number>(parentMessage.getId());
@@ -138,12 +144,15 @@ export function useCometChatThreadHeader(
       if (event.type === 'ui:compose/edit' && event.status === CometChatMessageStatus.success) {
         const msg = event.message;
         if (msg.getId() === parentMessage.getId()) {
+          // An edit payload doesn't re-send threadSubscribed; keep the current flag.
+          carryThreadSubscribed(currentParentMessageRef.current, msg);
           setCurrentParentMessage(msg);
         }
       }
       if (event.type === 'message/edited') {
         const msg = event.message;
         if (msg.getId() === parentMessage.getId()) {
+          carryThreadSubscribed(currentParentMessageRef.current, msg);
           setCurrentParentMessage(msg);
         }
       }

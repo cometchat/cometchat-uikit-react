@@ -54,7 +54,7 @@ vi.mock('../CometChatMessageComposerMentionsList', () => ({
 }));
 
 vi.mock('../../base/CometChatFormattingToolbar/CometChatFormattingToolbar', () => ({
-  CometChatFormattingToolbar: () => (
+  CometChatFormattingToolbar: ({ trailingContent }: { trailingContent?: React.ReactNode }) => (
     <div data-testid="formatting-toolbar">
       <button type="button" aria-label="Bold">
         B
@@ -62,6 +62,7 @@ vi.mock('../../base/CometChatFormattingToolbar/CometChatFormattingToolbar', () =
       <button type="button" aria-label="Italic">
         I
       </button>
+      {trailingContent}
     </div>
   ),
 }));
@@ -278,6 +279,22 @@ describe('CometChatMessageComposerRoot', () => {
         wrapper,
       });
       expect(screen.queryByTestId('formatting-toolbar')).not.toBeInTheDocument();
+    });
+
+    it('threads toolbarTrailingView into the formatting toolbar', () => {
+      render(
+        <CometChatMessageComposerRoot
+          enableRichTextEditor
+          toolbarTrailingView={
+            <button type="button" data-testid="trailing-btn">
+              C
+            </button>
+          }
+        />,
+        { wrapper }
+      );
+      const toolbar = screen.getByTestId('formatting-toolbar');
+      expect(toolbar).toContainElement(screen.getByTestId('trailing-btn'));
     });
   });
 

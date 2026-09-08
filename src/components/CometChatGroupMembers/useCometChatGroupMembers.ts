@@ -38,6 +38,13 @@ export function useCometChatGroupMembers(
   const [state, dispatch] = useReducer(groupMembersReducer, initialGroupMembersState);
   const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(null);
   const [loggedInUserScope, setLoggedInUserScope] = useState<string | null>(null);
+  /**
+   * Mirror of `loggedInUser` for the group listener.
+   *
+   * The listener registers once per group and must not re-register when the
+   * user resolves — tearing down and re-attaching it would drop events
+   */
+  const loggedInUserRef = useRef<CometChat.User | null>(null);
   const [memberToChangeScope, setMemberToChangeScope] = useState<CometChat.GroupMember | null>(
     null
   );
@@ -206,6 +213,10 @@ export function useCometChatGroupMembers(
     [initializeAndFetch]
   );
 
+  useEffect(() => {
+    loggedInUserRef.current = loggedInUser;
+  }, [loggedInUser]);
+
   // --- Group member listener ---
   useEffect(() => {
     const listenerId = `CometChatGroupMembers_group_${instanceId}`;
@@ -242,7 +253,7 @@ export function useCometChatGroupMembers(
         if (changedGroup.getGuid() !== guid) return;
         dispatch({ type: 'UPDATE_MEMBER_SCOPE', uid: changedUser.getUid(), scope: newScope });
         // If the logged-in user's scope was changed, update permissions in real-time
-        if (changedUser.getUid() === loggedInUser?.getUid()) {
+        if (changedUser.getUid() === loggedInUserRef.current?.getUid()) {
           setLoggedInUserScope(newScope);
         }
       },

@@ -43,7 +43,9 @@ export function useCometChatMessageList(
     group,
     loggedInUser: loggedInUserProp,
     messagesRequestBuilder,
-    parentMessageId,
+    parentMessage,
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- still honoured for back-compat when parentMessage is absent
+    parentMessageId: parentMessageIdProp,
     startFromUnreadMessages = false,
     goToMessageId,
     messageTypes: messageTypesProp,
@@ -53,6 +55,7 @@ export function useCometChatMessageList(
     scrollToBottomOnNewMessages = false,
     hideReceipts = false,
     isAgentChat = false,
+    textFormatters,
     onError,
     onActiveChatChanged,
     onMessageDeleted,
@@ -60,8 +63,20 @@ export function useCometChatMessageList(
     onConversationUpdated,
   } = options;
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const loggedInUser = (loggedInUserProp ?? CometChatUIKit.getLoggedInUser())!;
+  // `parentMessage` is the preferred thread input; the deprecated `parentMessageId`
+  // is still honoured when it is absent. Everything downstream keeps using the
+  // derived id, so no other call site changes.
+  const parentMessageId = parentMessage?.getId() ?? parentMessageIdProp;
+
+  // The list only mounts inside an authenticated session, so a user is expected
+  // either from the prop or the UIKit store. Narrow up front and fail loud rather
+  // than assert — guarding before any hook keeps the hook order stable.
+  const loggedInUser = loggedInUserProp ?? CometChatUIKit.getLoggedInUser();
+  if (!loggedInUser) {
+    throw new Error(
+      'useCometChatMessageList requires a logged-in user; use it inside an authenticated session.'
+    );
+  }
 
   // --- Default types/categories from the active plugin registry ---
   const defaultMessageTypes = useDefaultMessageTypes();
@@ -148,6 +163,7 @@ export function useCometChatMessageList(
       group,
       loggedInUser,
       messagesRequestBuilder,
+      parentMessage,
       parentMessageId,
       messageTypes,
       messageCategories,
@@ -191,6 +207,7 @@ export function useCometChatMessageList(
       messageCategories,
       onError,
       onConversationMarkedAsRead,
+      isAgentChat,
     },
     refs,
     dispatch
@@ -219,6 +236,7 @@ export function useCometChatMessageList(
     quickOptionsCount = 2,
     hideReplyOption = false,
     hideReplyInThreadOption: hideReplyInThreadOptionProp = false,
+    hideThreadSubscriptionOption = false,
     hideEditMessageOption = false,
     hideDeleteMessageOption = false,
     hideCopyMessageOption = false,
@@ -228,6 +246,10 @@ export function useCometChatMessageList(
     hideMessagePrivatelyOption = false,
     hideTranslateMessageOption = false,
     showMarkAsUnreadOption: showMarkAsUnreadOptionProp = false,
+    hidePinMessageOption = false,
+    hideUnpinMessageOption = false,
+    hideSaveMessageOption = false,
+    hideUnsaveMessageOption = false,
     separatorDateTimeFormat,
     stickyDateTimeFormat,
     messageSentAtDateTimeFormat,
@@ -264,6 +286,7 @@ export function useCometChatMessageList(
       quickOptionsCount,
       hideReplyOption,
       hideReplyInThreadOption,
+      hideThreadSubscriptionOption,
       hideEditMessageOption,
       hideDeleteMessageOption,
       hideCopyMessageOption,
@@ -273,6 +296,10 @@ export function useCometChatMessageList(
       hideMessagePrivatelyOption,
       hideTranslateMessageOption,
       showMarkAsUnreadOption,
+      hidePinMessageOption,
+      hideUnpinMessageOption,
+      hideSaveMessageOption,
+      hideUnsaveMessageOption,
       separatorDateTimeFormat,
       stickyDateTimeFormat,
       messageSentAtDateTimeFormat,
@@ -291,6 +318,7 @@ export function useCometChatMessageList(
       disableTruncation,
       hideModerationView,
       isAgentChat,
+      textFormatters,
       bubbleView,
       showSmartReplies,
       smartRepliesKeywords,
@@ -305,6 +333,7 @@ export function useCometChatMessageList(
       quickOptionsCount,
       hideReplyOption,
       hideReplyInThreadOption,
+      hideThreadSubscriptionOption,
       hideEditMessageOption,
       hideDeleteMessageOption,
       hideCopyMessageOption,
@@ -314,6 +343,10 @@ export function useCometChatMessageList(
       hideMessagePrivatelyOption,
       hideTranslateMessageOption,
       showMarkAsUnreadOption,
+      hidePinMessageOption,
+      hideUnpinMessageOption,
+      hideSaveMessageOption,
+      hideUnsaveMessageOption,
       separatorDateTimeFormat,
       stickyDateTimeFormat,
       messageSentAtDateTimeFormat,
@@ -332,6 +365,7 @@ export function useCometChatMessageList(
       disableTruncation,
       hideModerationView,
       isAgentChat,
+      textFormatters,
       bubbleView,
       showSmartReplies,
       smartRepliesKeywords,

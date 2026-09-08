@@ -24,8 +24,8 @@ export const CometChatUsersErrorState: React.FC<CometChatUsersErrorStateProps> =
             <img
               src={listErrorIcon}
               alt=""
-              width={100}
-              height={68}
+              width={120}
+              height={120}
               loading="lazy"
               decoding="async"
             />

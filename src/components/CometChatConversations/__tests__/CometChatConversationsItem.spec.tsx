@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatConversationsContext } from '../CometChatConversations.context';
+import { resolvePinSaveFeatures, resetPinSaveFeatures } from '../../../utils/pinSaveFeatures';
 import type { CometChatConversationsContextValue } from '../CometChatConversations.types';
 
 // Mock IntersectionObserver
@@ -178,6 +180,14 @@ function createMockContext(
     handleItemClick: vi.fn(),
     deleteConversation: vi.fn(),
     setConversationToBeDeleted: vi.fn(),
+    pinConversation: vi.fn(),
+    unpinConversation: vi.fn(),
+    pinToastText: '',
+    pinToastVariant: 'default' as const,
+    clearPinToast: vi.fn(),
+    pinConfirmState: null,
+    confirmPinAction: vi.fn(),
+    cancelPinAction: vi.fn(),
     ...overrides,
   };
 }
@@ -196,6 +206,42 @@ function renderWithContext(
       </CometChatConversationsContext.Provider>
     ),
   };
+}
+
+/**
+ * The options a row currently offers, however they are presented.
+ *
+ * A lone option renders as a bare icon button; two or more collapse behind a
+ * "more" trigger. Tests care which actions exist, not which shape they took.
+ */
+function rowOptionLabels(container: HTMLElement): string[] {
+  const trigger = container.querySelector<HTMLElement>('.cometchat-context-menu__trigger');
+  if (trigger) {
+    fireEvent.click(trigger);
+    return Array.from(
+      container.querySelectorAll('.cometchat-context-menu__dropdown-item-title')
+    ).map(el => el.textContent ?? '');
+  }
+  return Array.from(container.querySelectorAll('.cometchat-context-menu__top-menu-item')).map(
+    el => el.getAttribute('aria-label') ?? ''
+  );
+}
+
+/** Click a row option by label, whatever shape it took. */
+function clickRowOption(container: HTMLElement, label: string): void {
+  const trigger = container.querySelector<HTMLElement>('.cometchat-context-menu__trigger');
+  if (trigger) {
+    fireEvent.click(trigger);
+    const match = Array.from(
+      container.querySelectorAll<HTMLElement>('.cometchat-context-menu__dropdown-item')
+    ).find(el => el.textContent?.includes(label));
+    if (match) fireEvent.click(match);
+    return;
+  }
+  const icon = Array.from(
+    container.querySelectorAll<HTMLElement>('.cometchat-context-menu__top-menu-item')
+  ).find(el => el.getAttribute('aria-label') === label);
+  if (icon) fireEvent.click(icon);
 }
 
 // --- Tests ---
@@ -464,25 +510,25 @@ describe('CometChatConversationsItem', () => {
   });
 
   // 23. Shows delete button on hover (via CSS class)
-  it('shows delete button on hover (via CSS class)', () => {
+  it('shows the row menu on hover (via CSS class)', () => {
+    // Delete used to be a standalone button; it now lives in a dropdown alongside
+    // Pin/Unpin, so the menu — not the button — is what the row exposes.
     const conv = createMockConversation();
     const { container } = renderWithContext(conv);
 
     const menuView = container.querySelector('[class*="cometchat-conversations__item-menu-view"]');
     expect(menuView).toBeInTheDocument();
-
-    const deleteButton = screen.getByRole('button', { name: 'Delete conversation' });
-    expect(deleteButton).toBeInTheDocument();
+    expect(
+      container.querySelector('[class*="cometchat-conversations__item-options"]')
+    ).toBeTruthy();
   });
 
   // 24. Calls setConversationToBeDeleted when delete button clicked
-  it('calls setConversationToBeDeleted when delete button clicked', () => {
+  it('calls setConversationToBeDeleted from the menu', () => {
     const conv = createMockConversation();
-    const { ctx } = renderWithContext(conv);
+    const { ctx, container } = renderWithContext(conv);
 
-    const deleteButton = screen.getByRole('button', { name: 'Delete conversation' });
-    fireEvent.click(deleteButton);
-
+    clickRowOption(container, 'Delete conversation');
     expect(ctx.setConversationToBeDeleted).toHaveBeenCalledWith(conv);
   });
 
@@ -508,11 +554,42 @@ describe('CometChatConversationsItem', () => {
 });
 
 describe('CometChatConversationsItem — hideDeleteButton', () => {
+  // These assert how Delete interacts with the OTHER menu entry, so the pin
+  // feature has to be on; with it off there would be nothing else in the menu.
+  beforeEach(async () => {
+    resetPinSaveFeatures();
+    vi.spyOn(CometChat, 'isPinMessageEnabled').mockResolvedValue(true);
+    vi.spyOn(CometChat, 'isSaveMessageEnabled').mockResolvedValue(true);
+    vi.spyOn(CometChat, 'isPinConversationEnabled').mockResolvedValue(true);
+    await resolvePinSaveFeatures();
+  });
+
+  afterEach(() => {
+    resetPinSaveFeatures();
+  });
+
   it('hides the delete button when hideDeleteButton is true', () => {
+    // BEHAVIOUR CHANGE: this used to remove the menu entirely, because Delete was
+    // the only action in it. Pin/Unpin now shares that menu, so hiding Delete
+    // leaves the menu in place with Pin only. Use `hidePinConversation` as well to
+    // get the old "no menu at all" result — asserted below.
     const conv = createMockConversation();
     const { container } = renderWithContext(conv, {}, { hideDeleteButton: true });
 
     expect(screen.queryByRole('button', { name: 'Delete conversation' })).not.toBeInTheDocument();
+    expect(
+      container.querySelector('[class*="cometchat-conversations__item-menu-view"]')
+    ).toBeInTheDocument();
+  });
+
+  it('removes the menu entirely when both delete and pin are hidden', () => {
+    const conv = createMockConversation();
+    const { container } = renderWithContext(
+      conv,
+      { hidePinConversation: true },
+      { hideDeleteButton: true }
+    );
+
     const menuView = container.querySelector('[class*="cometchat-conversations__item-menu-view"]');
     expect(menuView).not.toBeInTheDocument();
   });
@@ -567,5 +644,182 @@ describe('CometChatConversationsItem — context-optional (standalone usage)', (
 
     expect(screen.queryByTestId('checkbox')).not.toBeInTheDocument();
     expect(screen.queryByTestId('radio')).not.toBeInTheDocument();
+  });
+});
+
+describe('CometChatConversationsItem — pin conversation', () => {
+  // The option is plan-gated. Resolve the flag on before every case so these
+  // exercise the UI rather than the gate; the gate has its own test below.
+  beforeEach(async () => {
+    resetPinSaveFeatures();
+    vi.spyOn(CometChat, 'isPinMessageEnabled').mockResolvedValue(true);
+    vi.spyOn(CometChat, 'isSaveMessageEnabled').mockResolvedValue(true);
+    vi.spyOn(CometChat, 'isPinConversationEnabled').mockResolvedValue(true);
+    await resolvePinSaveFeatures();
+  });
+
+  afterEach(() => {
+    resetPinSaveFeatures();
+  });
+
+  /** Overlay pin attributes onto the shared conversation fixture. */
+  function withPin(conv: CometChat.Conversation, pin: 'global' | 'user' | 'none') {
+    Object.assign(conv, {
+      getPinnedAt: () => (pin === 'none' ? undefined : 100),
+      getPinnedBy: () => (pin === 'global' ? 'app_system' : pin === 'user' ? 'me' : undefined),
+      isPinned: () => pin !== 'none',
+      isSystemPinned: () => pin === 'global',
+    });
+    return conv;
+  }
+
+  function openMenu(container: HTMLElement) {
+    const trigger = container.querySelector<HTMLElement>('.cometchat-context-menu__trigger');
+    expect(trigger).toBeTruthy();
+    fireEvent.click(trigger!);
+  }
+
+  it('shows a pin indicator on a pinned conversation', () => {
+    const conv = withPin(createMockConversation(), 'user');
+    const { container } = renderWithContext(conv);
+    expect(container.querySelector('.cometchat-conversations__item-pin-indicator')).toBeTruthy();
+  });
+
+  it('shows the same indicator for an admin-global pin', () => {
+    // One glyph for both tiers — they differ by available actions, not by icon.
+    const conv = withPin(createMockConversation(), 'global');
+    const { container } = renderWithContext(conv);
+    expect(container.querySelector('.cometchat-conversations__item-pin-indicator')).toBeTruthy();
+  });
+
+  it('shows no indicator when unpinned', () => {
+    const conv = withPin(createMockConversation(), 'none');
+    const { container } = renderWithContext(conv);
+    expect(container.querySelector('.cometchat-conversations__item-pin-indicator')).toBeNull();
+  });
+
+  it('offers Pin on an unpinned conversation', () => {
+    const conv = withPin(createMockConversation(), 'none');
+    const { container, ctx } = renderWithContext(conv);
+    openMenu(container);
+    fireEvent.click(screen.getByText('Pin conversation'));
+    expect(ctx.pinConversation).toHaveBeenCalledWith(conv);
+  });
+
+  it('offers Unpin on a user-pinned conversation', () => {
+    const conv = withPin(createMockConversation(), 'user');
+    const { container, ctx } = renderWithContext(conv);
+    openMenu(container);
+    fireEvent.click(screen.getByText('Unpin conversation'));
+    expect(ctx.unpinConversation).toHaveBeenCalledWith(conv);
+  });
+
+  it('offers no unpin on an admin-global pin, but keeps Delete', () => {
+    // The server rejects unpinning a global pin. Delete stays: it clears the
+    // conversation while the row remains, like a freshly admin-pinned chat.
+    const conv = withPin(createMockConversation(), 'global');
+    const { container } = renderWithContext(conv);
+    expect(rowOptionLabels(container)).toEqual(['Delete conversation']);
+  });
+
+  it('drops Pin/Unpin when hidePinConversation is set', () => {
+    const conv = withPin(createMockConversation(), 'none');
+    const { container } = renderWithContext(conv, { hidePinConversation: true });
+    expect(rowOptionLabels(container)).toEqual(['Delete conversation']);
+  });
+
+  it('keeps Pin available when delete is hidden', () => {
+    const conv = withPin(createMockConversation(), 'none');
+    const { container } = renderWithContext(conv, { hideDeleteConversation: true });
+    expect(rowOptionLabels(container)).toEqual(['Pin conversation']);
+  });
+});
+
+describe('CometChatConversationsItem — pin conversation feature gate', () => {
+  afterEach(() => {
+    resetPinSaveFeatures();
+  });
+
+  it('offers no Pin option when the plan flag is off', async () => {
+    resetPinSaveFeatures();
+    vi.spyOn(CometChat, 'isPinMessageEnabled').mockResolvedValue(true);
+    vi.spyOn(CometChat, 'isSaveMessageEnabled').mockResolvedValue(true);
+    vi.spyOn(CometChat, 'isPinConversationEnabled').mockResolvedValue(false);
+    await resolvePinSaveFeatures();
+
+    const conv = createMockConversation();
+    const { container } = renderWithContext(conv);
+
+    // Delete is unaffected — it is not plan-gated.
+    expect(rowOptionLabels(container)).toEqual(['Delete conversation']);
+  });
+
+  it('offers no Pin option before the flag has resolved', () => {
+    // Resolution is async. Until it lands the gate reads false, so the option is
+    // withheld rather than flashing in and out.
+    resetPinSaveFeatures();
+    const conv = createMockConversation();
+    const { container } = renderWithContext(conv);
+
+    expect(rowOptionLabels(container)).not.toContain('Pin conversation');
+  });
+});
+
+describe('CometChatConversationsItem — menu presentation', () => {
+  afterEach(() => {
+    resetPinSaveFeatures();
+  });
+
+  async function withPinEnabled(enabled: boolean) {
+    resetPinSaveFeatures();
+    vi.spyOn(CometChat, 'isPinMessageEnabled').mockResolvedValue(true);
+    vi.spyOn(CometChat, 'isSaveMessageEnabled').mockResolvedValue(true);
+    vi.spyOn(CometChat, 'isPinConversationEnabled').mockResolvedValue(enabled);
+    await resolvePinSaveFeatures();
+  }
+
+  it('shows a lone option as a bare icon, not behind a "more" trigger', async () => {
+    // With Pin Conversation off, Delete is the only action — the row should look
+    // as it did before pinning existed: one icon on hover, one click.
+    await withPinEnabled(false);
+    const conv = createMockConversation();
+    const { container } = renderWithContext(conv);
+
+    expect(container.querySelector('.cometchat-context-menu__trigger')).toBeNull();
+    const topItems = container.querySelectorAll('.cometchat-context-menu__top-menu-item');
+    expect(topItems).toHaveLength(1);
+    expect(topItems[0]).toHaveAttribute('aria-label', 'Delete conversation');
+  });
+
+  it('acts directly when the lone option is clicked — no menu to open', async () => {
+    await withPinEnabled(false);
+    const conv = createMockConversation();
+    const { container, ctx } = renderWithContext(conv);
+
+    fireEvent.click(
+      container.querySelector<HTMLElement>('.cometchat-context-menu__top-menu-item')!
+    );
+    expect(ctx.setConversationToBeDeleted).toHaveBeenCalledWith(conv);
+  });
+
+  it('collapses into a "more" trigger once there are two options', async () => {
+    await withPinEnabled(true);
+    const conv = createMockConversation();
+    const { container } = renderWithContext(conv);
+
+    expect(container.querySelector('.cometchat-context-menu__trigger')).toBeTruthy();
+    expect(container.querySelectorAll('.cometchat-context-menu__top-menu-item')).toHaveLength(0);
+  });
+
+  it('gives both menu entries an icon', async () => {
+    await withPinEnabled(true);
+    const conv = createMockConversation();
+    const { container } = renderWithContext(conv);
+
+    fireEvent.click(container.querySelector<HTMLElement>('.cometchat-context-menu__trigger')!);
+    const icons = container.querySelectorAll('.cometchat-context-menu__dropdown-item-icon');
+    expect(icons).toHaveLength(2);
+    // Delete supplies its own colour rather than the menu's grey filter.
+    expect(container.querySelector('.cometchat-conversations__item-delete-glyph')).toBeTruthy();
   });
 });

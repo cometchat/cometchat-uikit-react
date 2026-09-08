@@ -317,6 +317,11 @@ test.describe('Full App Journey', () => {
     await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
     await page.waitForTimeout(2000);
 
+    // Baseline BEFORE creating anything — the bubble arrives over the socket
+    // while the attachment menu is still being driven, so a count taken after
+    // the click already includes it.
+    const docCountBefore = await page.locator('.cometchat-collaborative-bubble--document').count();
+
     const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
     await expect(attachBtn).toBeVisible({ timeout: 5_000 });
     await attachBtn.click();
@@ -333,24 +338,13 @@ test.describe('Full App Journey', () => {
     await docOption.click();
     await page.waitForTimeout(3000);
 
-    // Collaborative bubble (document type) should appear (reload fallback)
-    const docCountBefore = await page.locator('.cometchat-collaborative-bubble--document').count();
-
-    // Wait for real-time delivery first
-    await page.waitForTimeout(5_000);
-    let docCountAfter = await page.locator('.cometchat-collaborative-bubble--document').count();
-
-    // If count didn't increase (websocket didn't deliver), reload to fetch from server
-    if (docCountAfter <= docCountBefore) {
-      await page.reload();
-      await page.waitForSelector('.cometchat-conversations__item', { timeout: 30_000 });
-      await openStrategyChatFromConversations(page);
-      await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
-      docCountAfter = await page.locator('.cometchat-collaborative-bubble--document').count();
-    }
-
-    // Verify count increased (not matching an old bubble)
-    expect(docCountAfter).toBeGreaterThan(docCountBefore);
+    // The new bubble arrives in realtime — assert that directly rather than
+    // reloading, so a broken socket fails the test instead of being papered over.
+    await expect
+      .poll(() => page.locator('.cometchat-collaborative-bubble--document').count(), {
+        timeout: 15_000,
+      })
+      .toBeGreaterThan(docCountBefore);
 
     // Bubble should have an "Open" button
     const openBtn = page.locator('.cometchat-collaborative-bubble--document .cometchat-collaborative-bubble__button').last();
@@ -368,6 +362,11 @@ test.describe('Full App Journey', () => {
     await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
     await page.waitForTimeout(2000);
 
+    // Baseline BEFORE creating anything — the bubble arrives over the socket
+    // while the attachment menu is still being driven, so a count taken after
+    // the click already includes it.
+    const wbCountBefore = await page.locator('.cometchat-collaborative-bubble--whiteboard').count();
+
     const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
     await expect(attachBtn).toBeVisible({ timeout: 5_000 });
     await attachBtn.click();
@@ -384,24 +383,13 @@ test.describe('Full App Journey', () => {
     await wbOption.click();
     await page.waitForTimeout(3000);
 
-    // Collaborative bubble (whiteboard type) should appear (reload fallback)
-    const wbCountBefore = await page.locator('.cometchat-collaborative-bubble--whiteboard').count();
-
-    // Wait for real-time delivery first
-    await page.waitForTimeout(5_000);
-    let wbCountAfter = await page.locator('.cometchat-collaborative-bubble--whiteboard').count();
-
-    // If count didn't increase (websocket didn't deliver), reload to fetch from server
-    if (wbCountAfter <= wbCountBefore) {
-      await page.reload();
-      await page.waitForSelector('.cometchat-conversations__item', { timeout: 30_000 });
-      await openStrategyChatFromConversations(page);
-      await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
-      wbCountAfter = await page.locator('.cometchat-collaborative-bubble--whiteboard').count();
-    }
-
-    // Verify count increased (not matching an old bubble)
-    expect(wbCountAfter).toBeGreaterThan(wbCountBefore);
+    // The new bubble arrives in realtime — assert that directly rather than
+    // reloading, so a broken socket fails the test instead of being papered over.
+    await expect
+      .poll(() => page.locator('.cometchat-collaborative-bubble--whiteboard').count(), {
+        timeout: 15_000,
+      })
+      .toBeGreaterThan(wbCountBefore);
 
     // Bubble should have an "Open" button
     const openBtn = page.locator('.cometchat-collaborative-bubble--whiteboard .cometchat-collaborative-bubble__button').last();

@@ -7,8 +7,9 @@ import type {
 } from '../../plugin.types';
 import type { CometChatTextFormatter } from '../../../formatters/CometChatTextFormatter';
 import { CometChatMentionsFormatter } from '../../../formatters/CometChatMentionsFormatter';
-import { CometChatUrlFormatter } from '../../../formatters/CometChatUrlFormatter';
 import { CometChatMarkdownFormatter } from '../../../formatters/CometChatMarkdownFormatter';
+import { mergeFormatters } from '../../../formatters/mergeFormatters';
+import { createDefaultTextFormatters } from '../shared/defaultTextFormatters';
 import { CometChatTextBubble } from '../../../components/CometChatTextBubble/CometChatTextBubble';
 import { getTextMessageOptions } from '../shared/CometChatMessageOptions';
 import { CometChatUIKitConstants } from '../../../constants/CometChatUIKitConstants';
@@ -32,7 +33,10 @@ export const CometChatTextPlugin: CometChatMessagePlugin = {
     // The bubble extracts the text (getText()) and configures mention formatting
     // from the message itself. The plugin only supplies the formatter instances,
     // alignment, and truncation flag.
-    const formatters = this.getTextFormatters ? this.getTextFormatters() : [];
+    const own = this.getTextFormatters ? this.getTextFormatters() : [];
+    // Merge the plugin's own formatters (markdown/mentions/url) with any custom display
+    // formatters supplied at the MessageList level.
+    const formatters = mergeFormatters(own, context.textFormatters ?? []);
 
     return React.createElement(CometChatTextBubble, {
       message: message as CometChat.TextMessage,
@@ -71,10 +75,6 @@ export const CometChatTextPlugin: CometChatMessagePlugin = {
   },
 
   getTextFormatters(): CometChatTextFormatter[] {
-    return [
-      new CometChatMarkdownFormatter(),
-      new CometChatMentionsFormatter(),
-      new CometChatUrlFormatter(),
-    ];
+    return createDefaultTextFormatters();
   },
 };

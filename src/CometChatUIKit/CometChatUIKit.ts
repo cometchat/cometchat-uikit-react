@@ -4,6 +4,11 @@ import { CometChatUIKitCalls, loadCallsSDK } from './CometChatCalls';
 import { CometChatLocalize } from '../resources/CometChatLocalize/CometChatLocalize';
 import type { CometChatEvent } from '../context/CometChatEvents.types';
 import { CometChatMessageStatus } from '../context/CometChatEvents.types';
+// Imported from the specific module, not the `../utils` barrel: the barrel pulls
+// in CometChatUIKitConstants (via the streaming factory), which widens this
+// module's graph and breaks consumers that stub the SDK.
+import { resetPinSaveFeatures, resolvePinSaveFeatures } from '../utils/pinSaveFeatures';
+import { resetPinSaveLimits, resolvePinSaveLimits } from '../utils/pinSaveLimits';
 
 /**
  * CometChatUIKit — static facade for initializing and interacting with the UIKit.
@@ -135,7 +140,7 @@ export class CometChatUIKit {
     if (typeof window !== 'undefined') {
       (window as unknown as Record<string, unknown>).CometChatUiKit = {
         name: '@cometchat/chat-uikit-react',
-        version: '7.1.0',
+        version: '7.2.0',
       };
     }
 
@@ -203,7 +208,7 @@ export class CometChatUIKit {
       if (typeof window !== 'undefined') {
         (window as unknown as Record<string, unknown>).CometChatUiKit = {
           name: '@cometchat/chat-uikit-react',
-          version: '7.1.0',
+          version: '7.2.0',
         };
       }
 
@@ -288,6 +293,9 @@ export class CometChatUIKit {
     await CometChat.logout();
     CometChatUIKit._loggedInUser = null;
     CometChatUIKit._callingReady = false;
+    // Drop the pin/save flags and caps with the session.
+    resetPinSaveFeatures();
+    resetPinSaveLimits();
     // Remove login listener
     if (CometChatUIKit._loginListenerId) {
       CometChat.removeLoginListener(CometChatUIKit._loginListenerId);
@@ -437,6 +445,21 @@ export class CometChatUIKit {
 
   /** Post-login initialization: calls SDK, conversation settings, login listener. */
   private static async _postLogin(): Promise<void> {
+    // Resolve the pin/save feature flags and caps here — the ONLY place they're
+    // warmed. They read the app-settings blob, and on a cold cache the SDK fetches
+    // /v3/settings, which needs an auth token; doing this pre-login (at init) fired
+    // that request without a token and failed it, hiding the features until a
+    // refresh. By _postLogin the token exists, so the fetch succeeds; on a warm
+    // cache (e.g. refresh while logged in) it's a local read. reset() first so a
+    // prior session's values can't linger; the epoch guard in those modules keeps a
+    // late reset from being clobbered. Fire-and-forget — consumers re-render via
+    // usePinSaveFeatures once it lands. Runs on every entry point: fresh login,
+    // auth-token login, and existing-session restore during init() (i.e. refresh).
+    resetPinSaveFeatures();
+    resetPinSaveLimits();
+    void resolvePinSaveFeatures();
+    void resolvePinSaveLimits();
+
     // Fetch conversation update settings from dashboard
     try {
       CometChatUIKit._conversationUpdateSettings = await CometChat.getConversationUpdateSettings();
@@ -498,14 +521,6 @@ export class CometChatUIKit {
         };
 
         await callsSDK.init(callAppSetting);
-      }
-
-      const loggedInUser = CometChatUIKit._loggedInUser;
-      if (loggedInUser) {
-        const authToken = loggedInUser.getAuthToken();
-        if (authToken) {
-          await callsSDK.loginWithAuthToken(authToken);
-        }
       }
 
       CometChatUIKit._callingReady = true;

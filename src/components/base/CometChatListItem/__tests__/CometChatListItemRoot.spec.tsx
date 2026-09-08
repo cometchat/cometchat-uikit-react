@@ -424,3 +424,48 @@ describe('CometChatListItemRoot', () => {
     expect(root).not.toHaveAttribute('id');
   });
 });
+
+describe('CometChatListItemRoot — the nested-interactive guard', () => {
+  it('still fires when the row sits inside a tabIndex={-1} container', () => {
+    // A focus-trapped panel sets tabIndex={-1} on its root. That is "focusable
+    // programmatically", not a control — but the guard used to match it via
+    // `closest('[tabindex]')` and swallow every click on every row inside.
+    const onItemClick = vi.fn();
+    render(
+      <div role="dialog" tabIndex={-1}>
+        <CometChatListItem.Root id="row" onItemClick={onItemClick}>
+          <CometChatListItem.Title>Row title</CometChatListItem.Title>
+        </CometChatListItem.Root>
+      </div>
+    );
+    fireEvent.click(screen.getByText('Row title'));
+    expect(onItemClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores an interactive ancestor above the row', () => {
+    // An ancestor is not "nested". Only controls inside the row suppress the click.
+    const onItemClick = vi.fn();
+    render(
+      <a href="#somewhere">
+        <CometChatListItem.Root id="row" onItemClick={onItemClick}>
+          <CometChatListItem.Title>Row title</CometChatListItem.Title>
+        </CometChatListItem.Root>
+      </a>
+    );
+    fireEvent.click(screen.getByText('Row title'));
+    expect(onItemClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('still suppresses a click on a control inside the row', () => {
+    const onItemClick = vi.fn();
+    render(
+      <CometChatListItem.Root id="row" onItemClick={onItemClick}>
+        <CometChatListItem.Title>
+          <button type="button">Act</button>
+        </CometChatListItem.Title>
+      </CometChatListItem.Root>
+    );
+    fireEvent.click(screen.getByText('Act'));
+    expect(onItemClick).not.toHaveBeenCalled();
+  });
+});

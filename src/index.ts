@@ -9,7 +9,7 @@ import './styles/index.css';
 // CometChatUIKit (main entry point)
 export { CometChatUIKit, UIKitSettingsBuilder, UIKitSettings } from './CometChatUIKit';
 export type { CometChatPresenceSubscription } from './CometChatUIKit';
-export const VERSION = '7.1.0';
+export const VERSION = '7.2.0';
 
 // Root Provider
 export { CometChatProvider } from './context/CometChatProvider';
@@ -86,6 +86,7 @@ export { CometChatAvatar } from './components/base/CometChatAvatar/CometChatAvat
 
 // Context Menu
 export { CometChatContextMenu } from './components/base/CometChatContextMenu/CometChatContextMenu';
+export type { CometChatContextMenuProps } from './components/base/CometChatContextMenu/CometChatContextMenu';
 export { useCometChatContextMenuContext } from './components/base/CometChatContextMenu/CometChatContextMenu.context';
 export type {
   CometChatContextMenuItemData,
@@ -95,6 +96,8 @@ export type {
   CometChatContextMenuTriggerProps,
   CometChatContextMenuDropdownProps,
   CometChatContextMenuContextValue,
+  CometChatContextMenuSubmenuProps,
+  CometChatContextMenuSubmenuDirection,
 } from './components/base/CometChatContextMenu/CometChatContextMenu.types';
 export { useCometChatAvatarContext } from './components/base/CometChatAvatar/CometChatAvatar.context';
 export { getInitials } from './components/base/CometChatAvatar/CometChatAvatar.utils';
@@ -250,8 +253,36 @@ export type {
 // Unified Events (SDK + UI)
 export { useCometChatEvents } from './hooks/useCometChatEvents';
 export { usePublishEvent } from './hooks/usePublishEvent';
+export { useThreadSubscription, useThreadSubscriptionState } from './hooks/useThreadSubscription';
+export type { UseThreadSubscriptionResult } from './hooks/useThreadSubscription';
 export { CometChatMessageStatus } from './context/CometChatEvents.types';
 export type { CometChatEvent, CometChatUIEvent } from './context/CometChatEvents.types';
+
+// Pin & Save Message
+export { usePinSaveFeatures } from './hooks/usePinSaveFeatures';
+export {
+  isPinned,
+  isSaved,
+  isSystemPinned,
+  getPinnedBy,
+  isPinSaveEligible,
+  isThreadReply,
+  readLimitFromError,
+  isLimitError,
+  isPermissionError,
+} from './utils/pinSaveUtils';
+export {
+  resolvePinSaveFeatures,
+  getPinSaveFeatures,
+  resetPinSaveFeatures,
+  type PinSaveFeatures,
+} from './utils/pinSaveFeatures';
+export {
+  resolvePinSaveLimits,
+  getPinSaveLimits,
+  resetPinSaveLimits,
+  type PinSaveLimits,
+} from './utils/pinSaveLimits';
 
 // Message List
 export { CometChatMessageList } from './components/CometChatMessageList';
@@ -372,6 +403,20 @@ export type { CometChatActionBubbleProps } from './components/base/CometChatActi
 export { CometChatDeleteBubble } from './components/base/CometChatDeleteBubble/CometChatDeleteBubble';
 export type { CometChatDeleteBubbleProps } from './components/base/CometChatDeleteBubble/CometChatDeleteBubble.types';
 
+// Remaining base/presentational primitives
+export * from './components/base/CometChatPopover';
+export * from './components/base/CometChatTooltip';
+export * from './components/base/CometChatToast';
+export * from './components/base/CometChatListItem';
+export * from './components/base/CometChatTypingIndicator';
+export * from './components/base/CometChatFormattingToolbar';
+export * from './components/base/CometChatDownloadButton';
+export * from './components/base/CometChatEmojiKeyboard';
+export * from './components/base/CometChatMediaRecorder';
+export * from './components/base/CometChatThreadView';
+export * from './components/base/CometChatLinkDialog';
+export * from './components/base/CometChatLinkPopover';
+
 // Extension Plugin Bubbles (for direct usage in sample app / custom renderers)
 export { CometChatPollsPlugin } from './plugins/polls/CometChatPollsPlugin';
 export { CometChatStickersPlugin } from './plugins/stickers/CometChatStickersPlugin';
@@ -406,6 +451,7 @@ export type {
   CometChatThreadHeaderTitleProps,
   CometChatThreadHeaderSenderNameProps,
   CometChatThreadHeaderCloseButtonProps,
+  CometChatThreadHeaderSubscriptionToggleProps,
   CometChatThreadHeaderParentBubbleProps,
   CometChatThreadHeaderReplyCountProps,
   CometChatThreadHeaderContextValue,
@@ -569,10 +615,44 @@ export {
   CometChatRichTextFormatter,
 } from './formatters';
 export type { CometChatMentionData } from './formatters';
+// Display helpers — apply custom formatters / build a one-line message preview on custom surfaces,
+// the same way the built-in list/subtitle surfaces do.
+export { applyDisplayFormatters } from './formatters/applyDisplayFormatters';
+// The kit's default display formatter set (markdown → mentions → URLs). Use this to match
+// the built-in bubbles on a custom surface; returns fresh (stateful) instances per call.
+export { createDefaultTextFormatters } from './plugins/core/shared/defaultTextFormatters';
+export { getMessageSubtitle } from './utils/messageSubtitle';
+export type { MessageSubtitleOptions } from './utils/messageSubtitle';
 
 // Sound Manager
 export { CometChatSoundManager } from './resources/CometChatSoundManager/CometChatSoundManager';
 export type { CometChatSoundType } from './resources/CometChatSoundManager/CometChatSoundManager';
+
+// Pinned & Saved Messages
+export { CometChatPinnedMessages } from './components/CometChatPinnedMessages';
+export { useCometChatPinnedMessages } from './components/CometChatPinnedMessages';
+export { useCometChatPinnedMessagesContext } from './components/CometChatPinnedMessages';
+export type {
+  CometChatPinnedMessagesProps,
+  CometChatPinnedMessagesRootProps,
+  CometChatPinnedMessagesListProps,
+  CometChatPinnedMessagesItemProps,
+  CometChatPinnedMessagesSlotProps,
+  CometChatPinnedMessagesContextValue,
+  CometChatPinnedMessagesState,
+} from './components/CometChatPinnedMessages';
+
+export { CometChatSavedMessages } from './components/CometChatSavedMessages';
+export { useCometChatSavedMessages } from './components/CometChatSavedMessages';
+export { useCometChatSavedMessagesContext } from './components/CometChatSavedMessages';
+export type {
+  CometChatSavedMessagesProps,
+  CometChatSavedMessagesRootProps,
+  CometChatSavedMessagesListProps,
+  CometChatSavedMessagesSlotProps,
+  CometChatSavedMessagesContextValue,
+  CometChatSavedMessagesState,
+} from './components/CometChatSavedMessages';
 
 // Search
 export { CometChatSearch } from './components/CometChatSearch';

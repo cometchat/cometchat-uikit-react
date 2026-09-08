@@ -88,8 +88,8 @@ describe('CometChatConfirmDialogContent', () => {
   // --- Custom className ---
 
   it('applies custom className to content container', () => {
-    const { container } = renderContent({ className: 'my-content' });
-    const contentEl = container.querySelector('.my-content');
+    const { baseElement } = renderContent({ className: 'my-content' });
+    const contentEl = baseElement.querySelector('.my-content');
     expect(contentEl).toBeTruthy();
   });
 

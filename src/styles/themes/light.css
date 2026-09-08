@@ -228,12 +228,15 @@
     --cometchat-video-bubble-single-max-height: 350px;
     --cometchat-video-bubble-single-min-width: 200px;
     --cometchat-video-bubble-single-min-height: 112px;
+    --cometchat-video-bubble-single-thumbnail-max-width: 400px;
     --cometchat-video-bubble-play-overlay-size: 48px;
 
     --cometchat-audio-bubble-min-width: 240px;
     --cometchat-audio-bubble-max-width: 240px;
+    --cometchat-audio-bubble-card-min-width: 280px;
 
     --cometchat-file-bubble-min-width: 240px;
     --cometchat-file-bubble-max-width: 240px;
+    --cometchat-file-bubble-card-min-width: 280px;
   }
 }

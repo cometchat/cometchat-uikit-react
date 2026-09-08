@@ -23,6 +23,7 @@ import { CometChatToast } from '../base/CometChatToast/CometChatToast';
 import { useRichTextEditor } from '../../utils/RichTextEditor/useRichTextEditor';
 import { convertMarkdownToHtml } from '../../utils/RichTextEditor/RichTextEditor';
 import { applyListStyles, fixOrderedListContinuation } from '../../utils/RichTextEditor/formats';
+import { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 import { useCometChatMentions } from './useCometChatMentions';
 import { useLocale } from '../../context/locale/LocaleContext';
 import sendFillIcon from '../../assets/send_fill.svg';
@@ -147,6 +148,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
   emojiButtonIconView,
   sendButtonView,
   auxiliaryButtonView,
+  toolbarTrailingView,
   headerView,
   showScrollbar = false,
   onTextChange,
@@ -179,7 +181,13 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     return IframeContext.iframeWindow ?? window;
   }, [IframeContext.iframeWindow]);
 
+  // Input-capable custom formatters: consulted by the send bridge and
+  // registered with the editor. Held in a ref so the getter passed to the hook stays stable.
+  const inputFormattersRef = useRef<CometChatTextFormatter[]>([]);
+  inputFormattersRef.current = textFormatters ?? [];
+
   const hook = useCometChatMessageComposer({
+    getInputFormatters: () => inputFormattersRef.current,
     ...(user !== undefined && { user }),
     ...(group !== undefined && { group }),
     ...(parentMessageId !== undefined && { parentMessageId }),
@@ -348,12 +356,77 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     },
     // Enter sends message, Shift+Enter inserts newline (when enterKeyBehavior is 'send')
     ...(enterKeyBehavior === 'send' ? { onEnterPress: handleEnterPress } : {}),
+    // Custom text-formatter paste round-trip: on an HTML paste, serialize each formatter's display
+    // spans (e.g. color) back to its storable tokens BEFORE the editor's sanitizer unwraps unknown
+    // spans, then re-render those tokens to spans AFTER sanitize — the same round-trip bubbles use.
+    // Identity when no formatters are configured.
+    preprocessPastedHtml: (html: string): string => {
+      let out = html;
+      for (const formatter of inputFormattersRef.current) {
+        try {
+          out = formatter.getOriginalText(out);
+        } catch {
+          /* a misbehaving formatter must not break paste */
+        }
+      }
+      return out;
+    },
+    postprocessPastedHtml: (html: string): string => {
+      let out = html;
+      for (const formatter of [...inputFormattersRef.current].sort(
+        (a, b) => a.priority - b.priority
+      )) {
+        try {
+          out = formatter.getFormattedText(out);
+        } catch {
+          /* a misbehaving formatter must not break paste */
+        }
+      }
+      return out;
+    },
   });
 
   // Keep the richTextEditorElRef in sync with the actual editor ref
   useEffect(() => {
     richTextEditorElRef.current = richText.editorRef.current;
   });
+
+  // Bind imperative custom formatters to the editor: hand each the live input
+  // reference, a re-render hook, and its one-time setup. Keystrokes are fanned out below.
+  useEffect(() => {
+    if (!richText.editor) return;
+    const editor = richText.editor;
+    const editorEl = richText.editorRef.current;
+    for (const formatter of inputFormattersRef.current) {
+      formatter.setInputElementReference(editorEl);
+      formatter.setReRender(() => {
+        editor.refresh();
+      });
+      formatter.initializeComposerTracking();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [richText.editor, textFormatters]);
+
+  // Fan keystrokes to imperative formatters AFTER the engine's own input handling, so a
+  // formatter can rescan/reformat the live DOM. Programmatic edits here don't re-fire
+  // `input`, so there's no loop with the editor's own handlers.
+  useEffect(() => {
+    const editorEl = richText.editorRef.current;
+    if (!editorEl) return;
+    const handleKeyUp = (e: KeyboardEvent) => {
+      for (const formatter of inputFormattersRef.current) formatter.onKeyUp(e);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      for (const formatter of inputFormattersRef.current) formatter.onKeyDown(e);
+    };
+    editorEl.addEventListener('keyup', handleKeyUp);
+    editorEl.addEventListener('keydown', handleKeyDown);
+    return () => {
+      editorEl.removeEventListener('keyup', handleKeyUp);
+      editorEl.removeEventListener('keydown', handleKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [richText.editor]);
 
   // Expose the editor's clear() to handleEnterPress (defined before richText).
   richTextClearRef.current = richText.clear;
@@ -510,10 +583,28 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
         return text;
       };
 
+      // Render custom formatters' STORED markup (e.g. color's `{color:#…}…{/color}` tokens) into
+      // display HTML when seeding the editor — the same transform the bubble uses. Without this the
+      // seed shows raw tokens, because imperative `formatText()` (live pen/caret scan) below only
+      // re-wraps plain patterns (like `#tag`), not a formatter's serialized tokens. Priority order
+      // mirrors the display pipeline (lower priority first).
+      const renderCustomFormatters = (html: string): string => {
+        const ordered = [...inputFormattersRef.current].sort((a, b) => a.priority - b.priority);
+        let out = html;
+        for (const formatter of ordered) {
+          try {
+            out = formatter.getFormattedText(out);
+          } catch {
+            /* a formatter's display transform must not break edit-seed */
+          }
+        }
+        return out;
+      };
+
       if (htmlContent && richText.editorRef.current) {
         // Set rich text HTML directly on the editor DOM (mentions already resolved in HTML)
         // But still resolve mentions if present in the HTML
-        const resolvedHtml = resolveMentions(htmlContent);
+        const resolvedHtml = renderCustomFormatters(resolveMentions(htmlContent));
         richText.editorRef.current.innerHTML = resolvedHtml;
       } else if (editText) {
         // No rich text metadata — convert markdown to HTML for the rich text editor.
@@ -539,8 +630,10 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
           }
         );
 
-        // Resolve mentions to styled spans
-        const resolvedHtml = resolveMentions(formattedHtml);
+        // Resolve mentions to styled spans, then render custom formatters' stored markup (color
+        // tokens, etc.) to display HTML. Imperative formatters additionally re-wrap plain patterns
+        // below via `formatText`.
+        const resolvedHtml = renderCustomFormatters(resolveMentions(formattedHtml));
         if (richText.editorRef.current) {
           richText.editorRef.current.innerHTML = resolvedHtml;
         }
@@ -549,6 +642,14 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       // Capture the initial editor HTML for dirty-detection (formatting-only changes)
       // Must be captured BEFORE focus to avoid race with onUpdate callback.
       if (richText.editorRef.current) {
+        // Re-wrap imperative formatting in the seeded content so stored plain text
+        // (e.g. "#tag", stripped on send) shows formatted immediately — not only after a keystroke.
+        // Gated on a `formatText` OVERRIDE: the base default would flatten other formatting.
+        for (const formatter of inputFormattersRef.current) {
+          if (formatter.formatText !== CometChatTextFormatter.prototype.formatText) {
+            formatter.formatText();
+          }
+        }
         // Apply list styles to ensure nested lists show correct markers (a. i. etc.)
         applyListStyles(richText.editorRef.current);
         fixOrderedListContinuation(richText.editorRef.current);
@@ -926,6 +1027,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       ...(voiceRecordingButtonIconView !== undefined && { voiceRecordingButtonIconView }),
       ...(emojiButtonIconView !== undefined && { emojiButtonIconView }),
       ...(auxiliaryButtonView !== undefined && { auxiliaryButtonView }),
+      ...(toolbarTrailingView !== undefined && { toolbarTrailingView }),
       ...(headerView !== undefined && { headerView }),
       showScrollbar,
       ...(onError !== undefined && { onError }),
@@ -990,6 +1092,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       emojiButtonIconView,
       sendButtonView,
       auxiliaryButtonView,
+      toolbarTrailingView,
       headerView,
       showScrollbar,
       onError,
@@ -1046,6 +1149,9 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
           onOrderedList={richText.toggleOrderedList}
           onBulletList={richText.toggleBulletList}
           onLink={handleLinkClick}
+          {...(toolbarTrailingView !== undefined && {
+            trailingContent: toolbarTrailingView,
+          })}
         />
       )}
       {/* Multi-attachment staging tray — rendered above the input area. Self-hides

@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { loginToApp, openBobChat } from '../helpers';
+import { loginToApp, openBobChat, selectGroupByName } from '../helpers';
 
 /**
  * E2E Tests — CometChatMessageHeader (React)
@@ -106,14 +106,9 @@ test.describe('CometChatMessageHeader', () => {
   // ==================== Group Header ====================
 
   test('group conversation shows member count in subtitle', async () => {
-    // Open a group chat via Groups tab
-    const groupsTab = page.locator('.cometchat-tab-component__tab:has-text("Groups")').first();
-    await groupsTab.click();
-    await page.waitForSelector('.cometchat-groups__item', { timeout: 30_000 });
-
-    const designTeam = page.locator('.cometchat-groups__item').filter({ hasText: 'Design Team' }).first();
-    await expect(designTeam).toBeVisible({ timeout: 5_000 });
-    await designTeam.click();
+    // Open a group chat via Groups tab (falls back to search when the group is
+    // past the first page of the list).
+    await selectGroupByName(page, 'Design Team');
 
     await page.waitForSelector('.cometchat-message-header', { timeout: 15_000 });
 

@@ -6,6 +6,9 @@ import { CometChatMessageBubble } from './CometChatMessageBubble';
 import { CometChatMessageReplyPreview } from './CometChatMessageReplyPreview';
 import { CometChatModerationView } from '../base/CometChatModerationView';
 import { usePluginRegistry } from '../../hooks/usePluginRegistry';
+import { useThreadSubscriptionState } from '../../hooks/useThreadSubscription';
+import { usePinSaveFeatures } from '../../hooks/usePinSaveFeatures';
+import { isPinned, isSaved } from '../../utils/pinSaveUtils';
 import { useTheme } from '../../context/ThemeContext';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { usePublishEvent } from '../../context/CometChatEventsContext';
@@ -67,6 +70,7 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
   quickOptionsCount,
   hideReplyOption = false,
   hideReplyInThreadOption = false,
+  hideThreadSubscriptionOption = false,
   hideEditMessageOption = false,
   hideDeleteMessageOption = false,
   hideCopyMessageOption = false,
@@ -76,16 +80,42 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
   hideMessagePrivatelyOption = false,
   hideTranslateMessageOption = false,
   showMarkAsUnreadOption = false,
+  hidePinMessageOption = false,
+  hideUnpinMessageOption = false,
+  hideSaveMessageOption = false,
+  hideUnsaveMessageOption = false,
+  optionsLayout = 'nested',
+  forceShowAvatar: forceShowAvatarProp,
+  headerView: headerViewProp,
+  bubbleVariant,
+  onPinMessage,
+  onUnpinMessage,
+  onSaveMessage,
+  onUnsaveMessage,
   messageSentAtDateTimeFormat,
   hideModerationView = false,
   isAgentChat = false,
+  textFormatters,
 }) => {
+  // A bubble only renders inside an authenticated surface (message list, pinned/
+  // saved panels), all of which mount after login. Read and narrow up front — the
+  // rest of the renderer (alignment, moderation, plugin context) needs a real user,
+  // and failing loud here beats a downstream `undefined.getUid()`. Guarding before
+  // any hook keeps the hook order stable. Mirrors how usePluginRegistry throws.
+  const loggedInUser = CometChatUIKit.getLoggedInUser();
+  if (!loggedInUser) {
+    throw new Error(
+      'CometChatMessageBubbleRenderer requires a logged-in user; render it inside an authenticated session.'
+    );
+  }
+
   const registry = usePluginRegistry();
+  // Subscribing here (rather than reading the module cache inside the option
+  // factory) is what makes a late flag resolution recompute the memoized options.
+  const pinSaveFeatures = usePinSaveFeatures();
   const { theme } = useTheme();
   const { getLocalizedString } = useLocale();
   const publish = usePublishEvent();
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const loggedInUser = CometChatUIKit.getLoggedInUser()!;
 
   const alignment: CometChatMessageBubbleAlignment = useMemo(() => {
     const category = message.getCategory() as string;
@@ -95,13 +125,35 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
     return isSentByMe ? 'right' : 'left';
   }, [message, messageAlignment, loggedInUser]);
 
+  /**
+   * The alignment plugins see, which drives their *palette* — every core plugin
+   * decides its incoming/outgoing look from `context.alignment === 'right'`.
+   *
+   * When `bubbleVariant` forces a palette apart from layout (the Pinned panel
+   * left-aligns every row but keeps outgoing colours), plugins have to follow the
+   * variant, not the position. Without this the container turns purple while the
+   * text and the audio play button stay grey.
+   *
+   * Layout still uses `alignment` — only the palette is redirected.
+   */
+  const paletteAlignment: CometChatMessageBubbleAlignment = useMemo(() => {
+    if (bubbleVariant === 'outgoing') return 'right';
+    if (bubbleVariant === 'incoming') return 'left';
+    return alignment;
+  }, [bubbleVariant, alignment]);
+
   const plugin = useMemo(() => registry.findPlugin(message), [registry, message]);
+
+  // Thread subscription applies in both 1:1 and group conversations, so every
+  // bubble tracks its own state. The hook reads the flag off the message itself
+  // and re-seeds when a re-fetch swaps the object.
+  const isThreadSubscribed = useThreadSubscriptionState(message);
 
   const pluginContext: CometChatMessagePluginContext = useMemo(
     () => ({
       loggedInUser,
       group,
-      alignment,
+      alignment: paletteAlignment,
       batchPosition,
       theme,
       getLocalizedString,
@@ -113,13 +165,20 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
       onReplyMessage,
       onReactToMessage,
       onMessageInfo,
+      onPinMessage,
+      onUnpinMessage,
+      onSaveMessage,
+      onUnsaveMessage,
       showToast,
       disableTruncation,
       publish,
+      textFormatters,
+      // The kit's default formatter set, for plugins rendering text/captions.
       getTextFormatters: () => registry.getTextFormatters(),
       // Option visibility toggles
       hideReplyOption,
       hideReplyInThreadOption,
+      hideThreadSubscriptionOption,
       hideEditMessageOption,
       hideDeleteMessageOption,
       hideCopyMessageOption,
@@ -129,11 +188,17 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
       hideMessagePrivatelyOption,
       hideTranslateMessageOption,
       showMarkAsUnreadOption,
+      hidePinMessageOption,
+      hideUnpinMessageOption,
+      hideSaveMessageOption,
+      hideUnsaveMessageOption,
+      optionsLayout,
+      pinSaveFeatures,
     }),
     [
       loggedInUser,
       group,
-      alignment,
+      paletteAlignment,
       batchPosition,
       theme,
       getLocalizedString,
@@ -145,12 +210,18 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
       onReplyMessage,
       onReactToMessage,
       onMessageInfo,
+      onPinMessage,
+      onUnpinMessage,
+      onSaveMessage,
+      onUnsaveMessage,
       showToast,
       disableTruncation,
       publish,
+      textFormatters,
       registry,
       hideReplyOption,
       hideReplyInThreadOption,
+      hideThreadSubscriptionOption,
       hideEditMessageOption,
       hideDeleteMessageOption,
       hideCopyMessageOption,
@@ -160,7 +231,27 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
       hideMessagePrivatelyOption,
       hideTranslateMessageOption,
       showMarkAsUnreadOption,
+      hidePinMessageOption,
+      hideUnpinMessageOption,
+      hideSaveMessageOption,
+      hideUnsaveMessageOption,
+      optionsLayout,
+      pinSaveFeatures,
     ]
+  );
+
+  /**
+   * The context the option list is built from.
+   *
+   * Deliberately separate from `pluginContext`: every reply in a thread resolves
+   * to the same parent id, so one follow/unfollow flips `isThreadSubscribed` for
+   * every bubble in the panel. Folding it into `pluginContext` would rebuild
+   * `contentView` — re-running `plugin.renderBubble` for all of them — even
+   * though the flag only ever changes a context-menu label.
+   */
+  const optionsContext = useMemo<CometChatMessagePluginContext>(
+    () => ({ ...pluginContext, isThreadSubscribed }),
+    [pluginContext, isThreadSubscribed]
   );
 
   const contentView = useMemo(() => {
@@ -185,7 +276,7 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
       return [];
     }
 
-    let base = plugin?.getOptions ? plugin.getOptions(message, pluginContext) : [];
+    let base = plugin?.getOptions ? plugin.getOptions(message, optionsContext) : [];
 
     if (isBlocked) {
       const allowedIds = new Set<string>([
@@ -196,7 +287,7 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
     }
 
     return base;
-  }, [plugin, message, pluginContext, isBlocked]);
+  }, [plugin, message, optionsContext, isBlocked]);
 
   // --- View slot resolution ---
   // For each slot: check plugin first. If plugin provides a view, pass it.
@@ -295,14 +386,24 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
     return (
       <CometChatMessageReplyPreview
         quotedMessage={quotedMessage}
-        alignment={alignment === 'right' ? 'right' : 'left'}
+        // Palette, not position — matches the bubble it sits inside.
+        alignment={paletteAlignment === 'right' ? 'right' : 'left'}
         onClick={() => onReplyPreviewClick?.(quotedMessage)}
         isModerated={isBlocked}
+        {...(pluginContext.textFormatters !== undefined && {
+          textFormatters: pluginContext.textFormatters,
+        })}
       />
     );
-  }, [plugin, message, pluginContext, alignment, onReplyPreviewClick, isBlocked]);
+  }, [plugin, message, pluginContext, paletteAlignment, onReplyPreviewClick, isBlocked]);
 
-  const effectiveHideThreadView = Boolean(hideThreadView) || isBlocked || isAgentChat;
+  // Deleted messages keep the timestamp but hide the
+  // receipt icon and the thread footer. Without the isDeleted gate here, a message
+  // deleted in realtime keeps its non-zero replyCount and would still render the
+  // "N replies" footer under the tombstone.
+  const isDeleted = Boolean(message.getDeletedAt());
+
+  const effectiveHideThreadView = Boolean(hideThreadView) || isBlocked || isAgentChat || isDeleted;
 
   const effectiveQuickOptionsCount = isBlocked
     ? MODERATED_MESSAGE_QUICK_OPTIONS_COUNT
@@ -328,14 +429,18 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
     batchPosition === 'middle' || batchPosition === 'last' ? true : hideAvatar;
   const batchHeaderView =
     batchPosition === 'middle' || batchPosition === 'last' ? null : pluginHeaderView;
-  // Deleted messages ("This message was deleted") keep the timestamp but hide
-  // the receipt icon.
-  const isDeleted = Boolean(message.getDeletedAt());
   // An errored message (RBAC/moderation failure) must surface its status even when
   // it sits mid-batch — otherwise the failure is invisible.
   const hasError = !isDeleted && getReceiptStatus(message) === 'error';
+  // A pinned or saved attachment must surface its indicator even mid-batch —
+  // otherwise the only place the state is visible is a row that batching hides.
+  // Attachments in one batch are pinned/saved independently, so a batch can show
+  // the meta row on some children and not others.
+  const hasPinOrSaveIndicator = isPinned(message) || isSaved(message);
   const isBatchStatusSuppressed =
-    (batchPosition === 'first' || batchPosition === 'middle') && !hasError;
+    (batchPosition === 'first' || batchPosition === 'middle') &&
+    !hasError &&
+    !hasPinOrSaveIndicator;
   const batchStatusInfoView = isBatchStatusSuppressed ? null : pluginStatusInfoView;
 
   return (
@@ -346,14 +451,15 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
       group={group}
       options={options}
       hideAvatar={batchHideAvatar}
-      forceShowAvatar={isAgentChat}
+      forceShowAvatar={forceShowAvatarProp ?? isAgentChat}
+      {...(bubbleVariant !== undefined && { bubbleVariant })}
       hideTimestamp={hideTimestamp}
       hideThreadView={effectiveHideThreadView}
       hideReceipts={Boolean(hideReceipts) || isDeleted}
       disableInteraction={disableInteraction}
       quickOptionsCount={effectiveQuickOptionsCount}
       leadingView={pluginLeadingView}
-      headerView={batchHeaderView}
+      headerView={headerViewProp !== undefined ? headerViewProp : batchHeaderView}
       statusInfoView={batchStatusInfoView}
       footerView={pluginFooterView}
       bottomView={pluginBottomView}

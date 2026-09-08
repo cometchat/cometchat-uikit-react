@@ -6,6 +6,8 @@ import { useLocale } from '../../context/locale/LocaleContext';
 import './CometChatMessageReplyPreview.css';
 import { CometChatMarkdownFormatter } from '../../formatters/CometChatMarkdownFormatter';
 import { CometChatUrlFormatter } from '../../formatters/CometChatUrlFormatter';
+import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
+import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 
 /**
  * Sanitizes HTML for safe rendering in the reply preview.
@@ -29,19 +31,34 @@ export interface CometChatMessageReplyPreviewProps {
   isModerated?: boolean;
   /** Optional className. */
   className?: string;
+  /**
+   * Custom display formatters (e.g. colors, custom mentions) applied to the quoted
+   * text. Needed because the quoted-message reference usually lacks the sender's
+   * richText metadata, so the preview builds from the raw text — which still carries
+   * the formatters' stored tokens (e.g. `{color:…}`) that only these can render.
+   */
+  textFormatters?: CometChatTextFormatter[];
 }
 
 /**
  * Shared formatting pipeline for preview text (text message content or media caption).
  * richText metadata HTML → markdown strip → mention spans → URL formatting → sanitize.
  */
-function formatTextForPreview(text: string, message: CometChat.BaseMessage): string {
+function formatTextForPreview(
+  text: string,
+  message: CometChat.BaseMessage,
+  textFormatters?: CometChatTextFormatter[]
+): string {
   if (!text) return '';
 
   // Check for rich text metadata HTML
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const metadata = message.getMetadata() as Record<string, unknown> | undefined;
+    // `getMetadata` lives on the message subclasses, not on `BaseMessage`, so it
+    // is reached through an optional call rather than the declared type.
+    const metadata = (message as unknown as { getMetadata?: () => unknown }).getMetadata?.() as
+      | Record<string, unknown>
+      | null
+      | undefined;
     // eslint-disable-next-line @typescript-eslint/dot-notation
     const richText = metadata?.['richText'] as
       | { html?: string; hasFormatting?: boolean }
@@ -56,6 +73,26 @@ function formatTextForPreview(text: string, message: CometChat.BaseMessage): str
 
   const markdownFormatter = new CometChatMarkdownFormatter();
   let formatted = markdownFormatter.stripMarkdownForConversation(text);
+
+  // Custom display formatters (color/hashtag, etc.) run on the mention-TOKEN text FIRST
+  // — before mentions become inline hex-styled spans below — with tokens swapped for
+  // sentinels so no custom formatter's regex can touch them. Otherwise e.g. a hashtag
+  // formatter matching `#hex` would hit the `#6852d6` fallback inside a mention span's
+  // style attribute and shatter the markup (`…#6852d6); font-weight: 500;">@Name`).
+  // (Applied only on this raw-text path; the richText.html branch above already carries
+  // rendered spans.) Mirrors CometChatMessageComposerReplyPreview.
+  const mentionTokens: string[] = [];
+  formatted = formatted.replace(/<@(?:uid|all):[^>]*>/g, match => {
+    const idx = mentionTokens.length;
+    mentionTokens.push(match);
+    return `\x00CCMENTION${String(idx)}\x00`;
+  });
+  formatted = applyDisplayFormatters(formatted, textFormatters);
+  formatted = formatted.replace(
+    // eslint-disable-next-line no-control-regex
+    /\x00CCMENTION(\d+)\x00/g,
+    (_m, idx: string) => mentionTokens[parseInt(idx, 10)] ?? ''
+  );
 
   // Resolve mentions
   const mentionedUsers = message.getMentionedUsers();
@@ -85,7 +122,8 @@ function formatTextForPreview(text: string, message: CometChat.BaseMessage): str
  */
 function getSubtitleContent(
   message: CometChat.BaseMessage,
-  getLocalizedString: (key: string) => string
+  getLocalizedString: (key: string) => string,
+  textFormatters?: CometChatTextFormatter[]
 ): { iconClass: string | null; text: string } {
   const type = message.getType();
   const category = message.getCategory();
@@ -112,7 +150,7 @@ function getSubtitleContent(
   // Text messages — no icon, just the text (formatted with rich text pipeline)
   if (type === 'text' && (category as string) === 'message') {
     const rawText = getText() || getLocalizedString('message_deleted');
-    const text = formatTextForPreview(rawText, message);
+    const text = formatTextForPreview(rawText, message, textFormatters);
     return { iconClass: null, text };
   }
 
@@ -146,7 +184,7 @@ function getSubtitleContent(
 
         // Format caption through the rich text pipeline
         if (caption.trim()) {
-          const formattedCaption = formatTextForPreview(caption.trim(), message);
+          const formattedCaption = formatTextForPreview(caption.trim(), message, textFormatters);
           const text = `${label} · ${formattedCaption}`;
           return { iconClass: type, text };
         }
@@ -229,6 +267,7 @@ export const CometChatMessageReplyPreview: React.FC<CometChatMessageReplyPreview
   onClick,
   isModerated = false,
   className,
+  textFormatters,
 }) => {
   const { getLocalizedString } = useLocale();
   const previewRef = useRef<HTMLDivElement>(null);
@@ -325,7 +364,7 @@ export const CometChatMessageReplyPreview: React.FC<CometChatMessageReplyPreview
   }
 
   // Normal state
-  const { iconClass, text } = getSubtitleContent(quotedMessage, getLocalizedString);
+  const { iconClass, text } = getSubtitleContent(quotedMessage, getLocalizedString, textFormatters);
 
   return (
     <div

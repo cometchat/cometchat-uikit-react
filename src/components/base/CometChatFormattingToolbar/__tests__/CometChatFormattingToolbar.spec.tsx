@@ -140,6 +140,56 @@ describe('CometChatFormattingToolbar', () => {
     });
   });
 
+  describe('trailingContent (custom trailing view)', () => {
+    it('renders no extra separator or node when absent (parity with built-in toolbar)', () => {
+      const { container } = render(<CometChatFormattingToolbar {...defaultProps} />);
+      // Only the 2 built-in group separators — none added for a trailing view.
+      expect(container.querySelectorAll('.cometchat-formatting-toolbar__separator')).toHaveLength(
+        2
+      );
+      expect(screen.queryByTestId('trailing')).not.toBeInTheDocument();
+    });
+
+    it('renders exactly one extra separator then the content, as the last children', () => {
+      const { container } = render(
+        <CometChatFormattingToolbar
+          {...defaultProps}
+          trailingContent={
+            <button type="button" data-testid="trailing">
+              C
+            </button>
+          }
+        />
+      );
+      // One additional separator beyond the 2 built-in group dividers.
+      expect(container.querySelectorAll('.cometchat-formatting-toolbar__separator')).toHaveLength(
+        3
+      );
+
+      const toolbar = screen.getByRole('toolbar');
+      const trailing = screen.getByTestId('trailing');
+      // The trailing node is the LAST child of the toolbar…
+      expect(toolbar.lastElementChild).toBe(trailing);
+      // …immediately preceded by a separator.
+      expect(trailing.previousElementSibling).toHaveClass(
+        'cometchat-formatting-toolbar__separator'
+      );
+    });
+
+    it('renders nothing extra for a null/false trailingContent', () => {
+      const { container, rerender } = render(
+        <CometChatFormattingToolbar {...defaultProps} trailingContent={null} />
+      );
+      expect(container.querySelectorAll('.cometchat-formatting-toolbar__separator')).toHaveLength(
+        2
+      );
+      rerender(<CometChatFormattingToolbar {...defaultProps} trailingContent={false} />);
+      expect(container.querySelectorAll('.cometchat-formatting-toolbar__separator')).toHaveLength(
+        2
+      );
+    });
+  });
+
   it('each button has an aria-label', () => {
     render(<CometChatFormattingToolbar {...defaultProps} />);
     const buttons = screen.getAllByRole('button');

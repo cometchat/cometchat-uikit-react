@@ -86,6 +86,9 @@ interface MockTextMessageOptions {
   replyCount?: number;
   muid?: string;
   parentMessageId?: number;
+  /** Seed for the thread-subscription flag; mutable via setThreadSubscribed(). */
+  threadSubscribed?: boolean;
+  mentionedUsers?: ReturnType<typeof buildUser>[];
 }
 
 export function buildTextMessage(overrides: MockTextMessageOptions = {}) {
@@ -101,6 +104,10 @@ export function buildTextMessage(overrides: MockTextMessageOptions = {}) {
   const replyCount = overrides.replyCount ?? 0;
   const muid = overrides.muid ?? `muid-${String(id)}`;
   const parentMessageId = overrides.parentMessageId ?? 0;
+  const mentionedUsers = overrides.mentionedUsers ?? [];
+  // Mutable so setThreadSubscribed() behaves like the SDK: anything other than
+  // `true` normalises to `false`, and isThreadSubscribed() reflects the write.
+  let threadSubscribed = overrides.threadSubscribed ?? false;
 
   return {
     getId: () => id,
@@ -123,7 +130,11 @@ export function buildTextMessage(overrides: MockTextMessageOptions = {}) {
     getMuid: () => muid,
     getParentMessageId: () => parentMessageId,
     getReplyCount: () => replyCount,
-    getMentionedUsers: () => [],
+    getMentionedUsers: () => mentionedUsers,
+    isThreadSubscribed: () => threadSubscribed,
+    setThreadSubscribed: (value: unknown) => {
+      threadSubscribed = value === true;
+    },
     getConversationId: () => `${receiverType}_${receiverId}`,
   };
 }

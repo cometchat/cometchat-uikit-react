@@ -4,6 +4,7 @@ import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { CometChatMessageBubbleRenderer } from '../CometChatMessageBubble/CometChatMessageBubbleRenderer';
 import { CometChatMessageBubbleWrapper } from '../CometChatMessageBubble/CometChatMessageBubbleWrapper';
 import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
+import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 
 /**
  * A single message row.
@@ -40,10 +41,13 @@ export interface MessageItemProps {
   disableTruncation?: boolean;
   hideModerationView?: boolean;
   isAgentChat?: boolean;
+  textFormatters?: CometChatTextFormatter[];
   hideAvatar?: boolean;
   quickOptionsCount?: number;
   hideReplyOption?: boolean;
   hideReplyInThreadOption?: boolean;
+  /** Hide the thread-subscription option. Group chats only regardless. */
+  hideThreadSubscriptionOption?: boolean;
   hideEditMessageOption?: boolean;
   hideDeleteMessageOption?: boolean;
   hideCopyMessageOption?: boolean;
@@ -53,6 +57,15 @@ export interface MessageItemProps {
   hideMessagePrivatelyOption?: boolean;
   hideTranslateMessageOption?: boolean;
   showMarkAsUnreadOption?: boolean;
+  hidePinMessageOption?: boolean;
+  hideUnpinMessageOption?: boolean;
+  hideSaveMessageOption?: boolean;
+  hideUnsaveMessageOption?: boolean;
+  optionsLayout?: 'nested' | 'flat';
+  onPinMessage?: (message: CometChat.BaseMessage) => void;
+  onUnpinMessage?: (message: CometChat.BaseMessage) => void;
+  onSaveMessage?: (message: CometChat.BaseMessage) => void;
+  onUnsaveMessage?: (message: CometChat.BaseMessage) => void;
   messageSentAtDateTimeFormat?: CometChatDateFormatConfig;
 }
 
@@ -79,10 +92,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
   disableTruncation,
   hideModerationView,
   isAgentChat,
+  textFormatters,
   hideAvatar,
   quickOptionsCount,
   hideReplyOption,
   hideReplyInThreadOption,
+  hideThreadSubscriptionOption,
   hideEditMessageOption,
   hideDeleteMessageOption,
   hideCopyMessageOption,
@@ -92,6 +107,15 @@ const MessageItem: React.FC<MessageItemProps> = ({
   hideMessagePrivatelyOption,
   hideTranslateMessageOption,
   showMarkAsUnreadOption,
+  hidePinMessageOption,
+  hideUnpinMessageOption,
+  hideSaveMessageOption,
+  hideUnsaveMessageOption,
+  optionsLayout,
+  onPinMessage,
+  onUnpinMessage,
+  onSaveMessage,
+  onUnsaveMessage,
   messageSentAtDateTimeFormat,
 }) => {
   const loggedInUser = CometChatUIKit.getLoggedInUser();
@@ -138,6 +162,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         {...(quickOptionsCount !== undefined && { quickOptionsCount })}
         {...(hideReplyOption !== undefined && { hideReplyOption })}
         {...(hideReplyInThreadOption !== undefined && { hideReplyInThreadOption })}
+        {...(hideThreadSubscriptionOption !== undefined && { hideThreadSubscriptionOption })}
         {...(hideEditMessageOption !== undefined && { hideEditMessageOption })}
         {...(hideDeleteMessageOption !== undefined && { hideDeleteMessageOption })}
         {...(hideCopyMessageOption !== undefined && { hideCopyMessageOption })}
@@ -147,9 +172,19 @@ const MessageItem: React.FC<MessageItemProps> = ({
         {...(hideMessagePrivatelyOption !== undefined && { hideMessagePrivatelyOption })}
         {...(hideTranslateMessageOption !== undefined && { hideTranslateMessageOption })}
         {...(showMarkAsUnreadOption !== undefined && { showMarkAsUnreadOption })}
+        {...(hidePinMessageOption !== undefined && { hidePinMessageOption })}
+        {...(hideUnpinMessageOption !== undefined && { hideUnpinMessageOption })}
+        {...(hideSaveMessageOption !== undefined && { hideSaveMessageOption })}
+        {...(hideUnsaveMessageOption !== undefined && { hideUnsaveMessageOption })}
+        {...(optionsLayout !== undefined && { optionsLayout })}
+        {...(onPinMessage !== undefined && { onPinMessage })}
+        {...(onUnpinMessage !== undefined && { onUnpinMessage })}
+        {...(onSaveMessage !== undefined && { onSaveMessage })}
+        {...(onUnsaveMessage !== undefined && { onUnsaveMessage })}
         {...(messageSentAtDateTimeFormat !== undefined && { messageSentAtDateTimeFormat })}
         {...(hideModerationView !== undefined && { hideModerationView })}
         {...(isAgentChat !== undefined && { isAgentChat })}
+        {...(textFormatters !== undefined && { textFormatters })}
       />
     </CometChatMessageBubbleWrapper>
   );

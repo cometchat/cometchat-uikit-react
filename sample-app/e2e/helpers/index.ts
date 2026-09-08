@@ -11,7 +11,7 @@ export {
   AGENTIC_GROUP_2_NAME,
 } from './seed';
 export type { AgenticConfig } from './seed';
-export { openBobChat, openDesignTeamChat, openStrategyChat, openStrategyChatFromConversations, openCICDChat, openAIAgentChat } from './navigation';
+export { selectGroupByName, openBobChat, openDesignTeamChat, openStrategyChat, openStrategyChatFromConversations, openCICDChat, openAIAgentChat } from './navigation';
 export {
   AGENT_BUBBLE,
   getUserName,

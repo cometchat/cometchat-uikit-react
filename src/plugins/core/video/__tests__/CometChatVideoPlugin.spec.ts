@@ -103,11 +103,15 @@ describe('CometChatVideoPlugin', () => {
       expect(result.props.alignment).toBe('left');
     });
 
-    it('forwards text formatters from context', () => {
-      const formatters = [{ id: 'mentions' }] as any;
-      const context = { ...mockContext(), getTextFormatters: () => formatters };
+    it('merges its own default formatters with context.textFormatters for captions', () => {
+      const custom = { id: 'color', priority: 60 } as any;
+      const context = { ...mockContext(), textFormatters: [custom] };
       const result = CometChatVideoPlugin.renderBubble(mockMediaMessage(), context) as any;
-      expect(result.props.textFormatters).toBe(formatters);
+      const ids = result.props.textFormatters.map((f: any) => f.id);
+      expect(ids).toContain('color'); // custom merged in
+      expect(ids).toEqual(
+        expect.arrayContaining(['markdown-formatter', 'mentions-formatter', 'url-formatter'])
+      ); // plugin's own defaults present
     });
 
     it('does not pass extracted-data props (attachments/variant/caption/senderName)', () => {

@@ -10,6 +10,52 @@ import { Page, expect } from '@playwright/test';
  * - AI Agent E2E: optional AI agent chat
  */
 
+/**
+ * Select a group by name from the Groups tab.
+ *
+ * The list is paginated (30 per page), so as the test app accumulates groups a
+ * target eventually falls off the first page and no amount of waiting reveals
+ * it. When the direct hit misses, this falls back to the search bar, which
+ * filters server-side and finds the group wherever it sits.
+ *
+ * The search box is cleared afterwards so the Groups tab is left unfiltered for
+ * whatever runs next.
+ */
+export async function selectGroupByName(page: Page, name: string): Promise<void> {
+  const groupsTab = page.locator('.cometchat-tab-component__tab:has-text("Groups")').first();
+  await groupsTab.click();
+  await page.waitForSelector('.cometchat-groups__item', { timeout: 30_000 });
+
+  const groupItem = () => page.locator('.cometchat-groups__item').filter({ hasText: name }).first();
+
+  // Fast path — the group is on the currently loaded page of the list.
+  if (await groupItem().isVisible({ timeout: 5_000 }).catch(() => false)) {
+    await groupItem().click();
+    return;
+  }
+
+  // Fallback — filter by name instead of paging through the whole list.
+  const searchInput = page
+    .locator('.cometchat-groups__search-bar input, .cometchat-groups input[type="text"]')
+    .first();
+  await expect(
+    searchInput,
+    `"${name}" is not on the first page of the Groups list, and no search bar was found to fall back to`
+  ).toBeVisible({ timeout: 5_000 });
+
+  await searchInput.fill(name);
+  await page.waitForTimeout(1500); // 300 ms debounce + the fetch it triggers
+
+  await expect(groupItem(), `Group "${name}" not found, even via search`).toBeVisible({
+    timeout: 10_000,
+  });
+  await groupItem().click();
+
+  // Leave the list unfiltered for the next helper that uses this tab.
+  await searchInput.fill('').catch(() => undefined);
+  await page.waitForTimeout(500);
+}
+
 /** Open Bob Smith's 1:1 chat via Users tab */
 export async function openBobChat(page: Page): Promise<void> {
   const usersTab = page.locator('.cometchat-tab-component__tab:has-text("Users")').first();
@@ -27,13 +73,7 @@ export async function openBobChat(page: Page): Promise<void> {
 
 /** Open Design Team group chat via Groups tab */
 export async function openDesignTeamChat(page: Page): Promise<void> {
-  const groupsTab = page.locator('.cometchat-tab-component__tab:has-text("Groups")').first();
-  await groupsTab.click();
-  await page.waitForSelector('.cometchat-groups__item', { timeout: 30_000 });
-
-  const designTeam = page.locator('.cometchat-groups__item').filter({ hasText: 'Design Team' }).first();
-  await expect(designTeam).toBeVisible({ timeout: 5_000 });
-  await designTeam.click();
+  await selectGroupByName(page, 'Design Team');
 
   await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
   await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
@@ -42,13 +82,7 @@ export async function openDesignTeamChat(page: Page): Promise<void> {
 
 /** Open Strategy group chat via Groups tab */
 export async function openStrategyChat(page: Page): Promise<void> {
-  const groupsTab = page.locator('.cometchat-tab-component__tab:has-text("Groups")').first();
-  await groupsTab.click();
-  await page.waitForSelector('.cometchat-groups__item', { timeout: 30_000 });
-
-  const strategy = page.locator('.cometchat-groups__item').filter({ hasText: 'Strategy' }).first();
-  await expect(strategy).toBeVisible({ timeout: 5_000 });
-  await strategy.click();
+  await selectGroupByName(page, 'Strategy');
 
   await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
   await page.waitForTimeout(2000);
@@ -60,9 +94,18 @@ export async function openStrategyChatFromConversations(page: Page): Promise<voi
   await chatsTab.click();
   await page.waitForSelector('.cometchat-conversations__item', { timeout: 30_000 });
 
-  const strategy = page.locator('.cometchat-conversations__item').filter({ hasText: 'Strategy' }).first();
-  await expect(strategy).toBeVisible({ timeout: 5_000 });
-  await strategy.click();
+  const strategy = page
+    .locator('.cometchat-conversations__item')
+    .filter({ hasText: 'Strategy' })
+    .first();
+
+  // The seed posts to Strategy so it sits at the top, but a busy app can push it
+  // off the loaded page — fall back to opening it from the Groups tab.
+  if (await strategy.isVisible({ timeout: 5_000 }).catch(() => false)) {
+    await strategy.click();
+  } else {
+    await selectGroupByName(page, 'Strategy');
+  }
 
   await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
   await page.waitForTimeout(2000);
@@ -70,13 +113,7 @@ export async function openStrategyChatFromConversations(page: Page): Promise<voi
 
 /** Open CI/CD group chat via Groups tab (has incoming messages for message-privately tests) */
 export async function openCICDChat(page: Page): Promise<void> {
-  const groupsTab = page.locator('.cometchat-tab-component__tab:has-text("Groups")').first();
-  await groupsTab.click();
-  await page.waitForSelector('.cometchat-groups__item', { timeout: 30_000 });
-
-  const cicdGroup = page.locator('.cometchat-groups__item').filter({ hasText: 'CI/CD' }).first();
-  await expect(cicdGroup).toBeVisible({ timeout: 5_000 });
-  await cicdGroup.click();
+  await selectGroupByName(page, 'CI/CD');
 
   await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
   await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
@@ -89,7 +126,15 @@ export async function openAIAgentChat(page: Page): Promise<boolean> {
   await chatsTab.click();
   await page.waitForSelector('.cometchat-conversations__item', { timeout: 30_000 });
 
-  const aiAgent = page.locator('.cometchat-conversations__item').filter({ hasText: 'AI Agent E2E' }).first();
+  // Match the conversation's title exactly. `hasText` on the whole item is a
+  // case-insensitive substring match over the subtitle too, so a conversation
+  // whose last message merely mentions the agent would win instead.
+  const aiAgent = page
+    .locator('.cometchat-conversations__item')
+    .filter({
+      has: page.locator('.cometchat-conversations__item-title', { hasText: /^AI Agent E2E$/ }),
+    })
+    .first();
   const found = await aiAgent.isVisible({ timeout: 5_000 }).catch(() => false);
   if (!found) return false;
 

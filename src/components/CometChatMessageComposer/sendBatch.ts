@@ -11,6 +11,7 @@ import { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { TrayItem, TrayItemKind } from './CometChatMessageComposer.types';
 import { stampBatchMetadata, getBatchId } from '../../utils/CometChatMetadataUtils';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
+import { writeThreadSubscribed } from '../../utils/CometChatThreadSubscription';
 
 /** A group of tray items sharing the same media kind. */
 export interface TrayItemGroup {
@@ -160,6 +161,9 @@ export async function sendBatch(options: SendBatchOptions): Promise<void> {
     // Threading: parentMessageId.
     if (parentMessageId) {
       msg.setParentMessageId(parentMessageId);
+      // Case 4 — stamp the optimistic message so its own bubble seeds subscribed
+      // from the first render (the confirmed message is re-stamped below).
+      writeThreadSubscribed(msg, true);
     }
 
     // Reply: quoted message + quotedMessageId on the FIRST message of the batch
@@ -200,6 +204,12 @@ export async function sendBatch(options: SendBatchOptions): Promise<void> {
       // - batchId metadata + caption: if lost, batch grouping and the batch caption break.
       if (parentMessageId && confirmedMessage.getParentMessageId() !== parentMessageId) {
         confirmedMessage.setParentMessageId(parentMessageId);
+      }
+      // A threaded reply subscribes the sender (Case 4). Stamp the confirmed
+      // message so its own flag isn't left false — the same fix the text/media
+      // send paths apply. Purely local; no server write.
+      if (parentMessageId) {
+        writeThreadSubscribed(confirmedMessage, true);
       }
       if (getBatchId(confirmedMessage) !== batchId) {
         stampBatchMetadata(confirmedMessage, { batchId, caption: captionForThisMsg });

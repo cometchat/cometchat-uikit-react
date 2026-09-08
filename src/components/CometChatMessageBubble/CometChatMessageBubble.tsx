@@ -8,6 +8,8 @@ import { CometChatDate } from '../base/CometChatDate';
 import { CometChatThreadView } from '../base/CometChatThreadView';
 import { CometChatContextMenu } from '../base/CometChatContextMenu/CometChatContextMenu';
 import type { CometChatContextMenuItemData } from '../base/CometChatContextMenu/CometChatContextMenu.types';
+import type { CometChatMessageOption } from '../../plugins/plugin.types';
+import { isPinned, isSaved } from '../../utils/pinSaveUtils';
 import './CometChatMessageBubble.css';
 
 import statusSent from '../../assets/status_sent.svg';
@@ -21,6 +23,7 @@ import {
   isPermissionDeniedError,
 } from '../../utils/MessageReceiptUtils';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { localizeWithFallback } from '../../utils/localizeWithFallback';
 
 /**
  * Message types whose content is user-editable (text body or media caption).
@@ -80,6 +83,7 @@ function getBubbleTypeClass(type: string, category: string): string {
 export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   message,
   alignment,
+  bubbleVariant,
   contentView,
   group,
   options = [],
@@ -161,6 +165,10 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   const isOutgoing = alignment === 'right';
   const isIncoming = alignment === 'left';
   const isAction = alignment === 'center';
+  // Palette can be forced apart from layout — see `bubbleVariant`. Falls back to
+  // alignment, so every existing caller is unaffected.
+  const usesOutgoingPalette = bubbleVariant ? bubbleVariant === 'outgoing' : isOutgoing;
+  const usesIncomingPalette = bubbleVariant ? bubbleVariant === 'incoming' : isIncoming;
 
   const sender = message.getSender();
   const messageType = message.getType();
@@ -176,6 +184,13 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   const replyCount = message.getReplyCount();
   const sentAt = message.getSentAt();
 
+  // Presence of the attribute IS the boolean — never compare against 0.
+  const isPinnedMessage = isPinned(message);
+  const isSavedMessage = isSaved(message);
+
+  const locBubble = (key: string, fallback: string): string =>
+    localizeWithFallback(getLocalizedString, key, fallback);
+
   const receiptState = showError ? ('error' as const) : getReceiptStatus(message);
 
   // forceShowAvatar used in agent chat to show AI avatar in 1:1 mode
@@ -184,6 +199,15 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
 
   const shouldShowSenderName = isIncoming && group != null && !hideSenderName;
   const shouldShowReceipts = isOutgoing && !effectiveHideReceipts && !isAction;
+
+  /**
+   * Does anything follow the pin/save indicators in the status row?
+   *
+   * Decides whether an indicator gets a trailing separator. Without it a bubble
+   * with `hideTimestamp`, no edit marker and no receipt rendered a bullet with
+   * nothing after it.
+   */
+  const hasTrailingStatusContent = isEdited || (!hideTimestamp && sentAt > 0) || shouldShowReceipts;
 
   // handleThreadClick needs to be defined before the effective view computations
   const handleThreadClick = useCallback(() => {
@@ -289,7 +313,7 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   const optionsVisible = toggleOptionsVisibility ?? isHovering;
 
   const contextMenuItems: CometChatContextMenuItemData[] = useMemo(() => {
-    return options.map(opt => {
+    const toMenuItem = (opt: CometChatMessageOption): CometChatContextMenuItemData => {
       const item: CometChatContextMenuItemData = {
         id: opt.id,
         title: opt.title,
@@ -301,8 +325,14 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
       if (opt.iconURL) {
         item.iconURL = opt.iconURL;
       }
+      // Carry nested options through ("Organize ▸"). Dropping this silently
+      // renders the parent as an inert row — no chevron, no fly-out.
+      if (opt.submenu && opt.submenu.length > 0) {
+        item.submenu = opt.submenu.map(toMenuItem);
+      }
       return item;
-    });
+    };
+    return options.map(toMenuItem);
   }, [options, message, onOptionClick]);
 
   const handleAvatarClick = useCallback(() => {
@@ -346,12 +376,12 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
 
   const bubbleClasses = [
     'cometchat-message-bubble',
-    isIncoming ? 'cometchat-message-bubble-incoming' : '',
-    isOutgoing ? 'cometchat-message-bubble-outgoing' : '',
+    usesIncomingPalette && !isAction ? 'cometchat-message-bubble-incoming' : '',
+    usesOutgoingPalette && !isAction ? 'cometchat-message-bubble-outgoing' : '',
     isAction ? 'cometchat-message-bubble-action' : '',
     // Plain global class names (non-hashed) so external CSS (e.g. AI chat overrides) can target them
-    isIncoming ? 'cometchat-message-bubble-incoming' : '',
-    isOutgoing ? 'cometchat-message-bubble-outgoing' : '',
+    usesIncomingPalette && !isAction ? 'cometchat-message-bubble-incoming' : '',
+    usesOutgoingPalette && !isAction ? 'cometchat-message-bubble-outgoing' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -456,6 +486,9 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
                 items={contextMenuItems}
                 topMenuSize={quickOptionsCount ?? 2}
                 placement={isOutgoing ? 'left' : 'right'}
+                // submenuDirection is left at its default ('end'): fly out to the
+                // right for every bubble, and let the submenu flip itself when
+                // that side would overflow.
                 disableBackgroundInteraction
                 useParentContainer
                 onDropdownClose={handleDropdownClose}
@@ -503,6 +536,46 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
                     statusInfoView(message)
                   ) : (
                     <div className={'cometchat-message-bubble__status-info-view'}>
+                      {isSavedMessage && (
+                        <>
+                          <span
+                            className={
+                              'cometchat-message-bubble__status-info-view-indicator cometchat-message-bubble__status-info-view-indicator--saved'
+                            }
+                            role="img"
+                            aria-label={locBubble('accessibility_message_saved', 'Saved')}
+                          />
+                          {/* Separators sit BETWEEN parts, never after the last
+                              one. */}
+                          {(isPinnedMessage || hasTrailingStatusContent) && (
+                            <span
+                              className={'cometchat-message-bubble__status-info-view-separator'}
+                              aria-hidden="true"
+                            >
+                              •
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {isPinnedMessage && (
+                        <>
+                          <span
+                            className={
+                              'cometchat-message-bubble__status-info-view-indicator cometchat-message-bubble__status-info-view-indicator--pinned'
+                            }
+                            role="img"
+                            aria-label={locBubble('accessibility_message_pinned', 'Pinned')}
+                          />
+                          {hasTrailingStatusContent && (
+                            <span
+                              className={'cometchat-message-bubble__status-info-view-separator'}
+                              aria-hidden="true"
+                            >
+                              •
+                            </span>
+                          )}
+                        </>
+                      )}
                       {isEdited && (
                         <span className={'cometchat-message-bubble__status-info-view-helper-text'}>
                           {getLocalizedString('message_list_action_edited')}

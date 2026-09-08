@@ -1,0 +1,248 @@
+.cometchat-saved-messages {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--cometchat-background-color-01, #fff);
+}
+
+/* Header — "Saved Messages" + close. Deliberately no count: this is a browsing
+   surface, not a queue to work through. */
+.cometchat-saved-messages__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cometchat-padding-2, 8px);
+  padding: var(--cometchat-padding-4, 16px);
+  border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  flex-shrink: 0;
+}
+
+.cometchat-saved-messages__header-title {
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-heading3-bold, 700 16px Roboto);
+}
+
+.cometchat-saved-messages__header-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Masked, not an <img>: the icon has to take the theme's colour, and a raw SVG
+   would stay black in dark mode. */
+.cometchat-saved-messages__header-close-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: var(--cometchat-icon-color-primary, #141414);
+  -webkit-mask: url('../../assets/close.svg') center center / contain no-repeat;
+  mask: url('../../assets/close.svg') center center / contain no-repeat;
+}
+
+.cometchat-saved-messages__header-close:hover .cometchat-saved-messages__header-close-icon {
+  background: var(--cometchat-icon-color-highlight, #6852d6);
+}
+
+/* List — conversation-style rows, built on CometChatListItem. */
+.cometchat-saved-messages__list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  /* Scroll without a visible bar, matching the other lists in the kit. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex: 1;
+}
+
+.cometchat-saved-messages .cometchat-list-item__title-container {
+  --cometchat-list-item-title-container-gap: 4px;
+}
+
+/*
+ * Subtitle reads "{sender}: {preview}". There is deliberately no unread/bold
+ * state here — saved messages carry no read semantics, and this surface is
+ * read-only.
+ */
+.cometchat-saved-messages__item-subtitle {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-1, 4px);
+  min-width: 0;
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+}
+
+.cometchat-saved-messages__item-sender {
+  flex-shrink: 0;
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+/*
+ * Holds sanitized HTML from the shared preview builder: rich text plus a leading
+ * media-type icon. Flex so the icon sits inline with the text; truncation lives
+ * on the subtitle above, which is the element with a bounded width.
+ */
+.cometchat-saved-messages__item-preview {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cometchat-saved-messages__item-thread-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/*
+ * Media-type icons. Masked so they take the theme's icon colour, matching the
+ * conversation list and search results.
+ */
+.cometchat-saved-messages__item-subtitle-icon {
+  height: 16px;
+  width: 16px;
+  display: inline-flex;
+  flex-shrink: 0;
+  background: var(--cometchat-icon-color-secondary, #a1a1a1);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.cometchat-saved-messages__item-subtitle-icon--image {
+  -webkit-mask: url('../../assets/conversations_image-message.svg') center center no-repeat;
+  mask: url('../../assets/conversations_image-message.svg') center center no-repeat;
+}
+
+.cometchat-saved-messages__item-subtitle-icon--video {
+  -webkit-mask: url('../../assets/conversations_video-message.svg') center center no-repeat;
+  mask: url('../../assets/conversations_video-message.svg') center center no-repeat;
+}
+
+.cometchat-saved-messages__item-subtitle-icon--audio {
+  -webkit-mask: url('../../assets/conversations_audio-message.svg') center center no-repeat;
+  mask: url('../../assets/conversations_audio-message.svg') center center no-repeat;
+}
+
+.cometchat-saved-messages__item-subtitle-icon--file {
+  -webkit-mask: url('../../assets/conversations_file-message.svg') center center no-repeat;
+  mask: url('../../assets/conversations_file-message.svg') center center no-repeat;
+}
+
+/* Unsave is the only row action. */
+.cometchat-saved-messages__item-unsave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: var(--cometchat-padding-1, 4px);
+  border-radius: var(--cometchat-radius-1, 4px);
+}
+
+.cometchat-saved-messages__item-unsave:hover {
+  background: var(--cometchat-background-color-03, #f5f5f5);
+}
+
+.cometchat-saved-messages__item-unsave:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: -2px;
+}
+
+/* Masked for the same reason as the close icon — theme-driven colour. */
+.cometchat-saved-messages__item-unsave-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: var(--cometchat-icon-color-primary, #141414);
+  -webkit-mask: url('../../assets/unsave.svg') center center / contain no-repeat;
+  mask: url('../../assets/unsave.svg') center center / contain no-repeat;
+}
+
+.cometchat-saved-messages__item-unsave:hover .cometchat-saved-messages__item-unsave-icon {
+  background: var(--cometchat-icon-color-highlight, #6852d6);
+}
+
+/* States */
+.cometchat-saved-messages__error-icon {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.cometchat-saved-messages__error-title {
+  font-size: var(--cometchat-font-heading4-bold, 16px);
+  font-weight: 600;
+  color: var(--cometchat-text-color-primary, #141414);
+  margin-bottom: 4px;
+}
+
+.cometchat-saved-messages__error-subtitle {
+  font-size: var(--cometchat-font-body-regular, 14px);
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+.cometchat-saved-messages__empty,
+.cometchat-saved-messages__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--cometchat-padding-5, 20px);
+  text-align: center;
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+}
+
+/* Masked so the glyph reads as a neutral grey in both themes. */
+.cometchat-saved-messages__empty-icon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: var(--cometchat-margin-4, 16px);
+  background: var(--cometchat-icon-color-disabled, #dcdcdc);
+  -webkit-mask: url('../../assets/saved.svg') center center / contain no-repeat;
+  mask: url('../../assets/saved.svg') center center / contain no-repeat;
+}
+
+.cometchat-saved-messages__empty-title {
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-heading4-bold, 700 16px Roboto);
+  margin-bottom: var(--cometchat-margin-1, 4px);
+}
+
+.cometchat-saved-messages__empty-subtitle {
+  max-width: 280px;
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+}
+
+/* The skeleton fills the panel rather than sitting in a short strip at the top. */
+.cometchat-saved-messages__shimmer {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cometchat-saved-messages__list::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Infinite-scroll sentinel. Zero-height and inert: the IntersectionObserver
+ * watches it with a rootMargin, so the next page starts loading before the user
+ * reaches the end.
+ */
+.cometchat-saved-messages__sentinel {
+  height: 1px;
+  flex-shrink: 0;
+}

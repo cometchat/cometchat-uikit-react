@@ -11,6 +11,7 @@ import {
   updateQuotedMessageReferences,
 } from './CometChatMessageList.utils';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
+import { carryThreadSubscribed } from '../../utils/CometChatThreadSubscription';
 
 export { initialMessageListState };
 
@@ -315,9 +316,39 @@ export function messageListReducer(
     case 'MESSAGE_EDITED': {
       let messages = state.messages.map(m => {
         if (String(m.getId()) !== String(action.message.getId())) return m;
-        return shouldReplace(m, action.message) ? action.message : m;
+        if (!shouldReplace(m, action.message)) return m;
+        // An edit payload doesn't re-send threadSubscribed; keep the optimistic flag.
+        carryThreadSubscribed(m, action.message);
+        return action.message;
       });
       messages = updateQuotedMessageReferences(messages, action.message);
+      return { ...state, messages };
+    }
+
+    case 'MESSAGE_PIN_SAVE_UPDATE': {
+      const incoming = action.message;
+      const targetId = String(incoming.getId());
+      const index = state.messages.findIndex(m => String(m.getId()) === targetId);
+
+      // Not loaded in this window — nothing to reconcile.
+      if (index === -1) return state;
+
+      const existing = state.messages[index];
+      if (!existing) return state;
+
+      // Clone so React sees a new reference — the optimistic path mutates the very
+      // object held in state, which alone would never trigger a re-render.
+      const next = cloneMessage(existing);
+
+      if (action.scope === 'pin') {
+        next.setPinnedAt(incoming.getPinnedAt());
+        next.setPinnedBy(incoming.getPinnedBy());
+      } else {
+        next.setSavedAt(incoming.getSavedAt());
+      }
+
+      const messages = [...state.messages];
+      messages[index] = next;
       return { ...state, messages };
     }
 
@@ -335,6 +366,9 @@ export function messageListReducer(
       const msgMuid = action.message.getMuid() || '';
       const messages = state.messages.map(m => {
         if (m.getId() === msgId || (msgMuid && m.getMuid() === msgMuid)) {
+          // A moderation payload doesn't re-send threadSubscribed; keep the
+          // optimistic Case-2 flag so a just-sent message stays subscribed.
+          carryThreadSubscribed(m, action.message);
           return action.message;
         }
         return m;

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
+import { CometChatTextFormatter } from '../../../../formatters/CometChatTextFormatter';
 
 // Hoist mocks so vi.mock factory can reference them
 const { mockGetTextMessageOptions } = vi.hoisted(() => ({
@@ -192,6 +193,30 @@ describe('CometChatTextPlugin', () => {
 
       expect(Array.isArray(element.props.textFormatters)).toBe(true);
       expect(element.props.textFormatters.length).toBeGreaterThan(0);
+    });
+
+    it('merges context.textFormatters (custom display formats) with the plugin defaults', () => {
+      class CustomFormatter extends CometChatTextFormatter {
+        readonly id = 'test-custom';
+        override priority = 50;
+        getRegex(): RegExp {
+          return /x/g;
+        }
+        format(text: string): string {
+          this.formattedText = text;
+          return text;
+        }
+      }
+      const message = createMockTextMessage();
+      const context = createMockContext({ textFormatters: [new CustomFormatter()] });
+
+      const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
+      const ids = (element.props.textFormatters as { id: string }[]).map(f => f.id);
+
+      expect(ids).toContain('test-custom'); // custom formatter present
+      expect(ids).toContain('markdown-formatter'); // plugin defaults still present
+      expect(ids).toContain('mentions-formatter');
+      expect(ids).toContain('url-formatter');
     });
 
     it('passes the message object to the bubble', () => {

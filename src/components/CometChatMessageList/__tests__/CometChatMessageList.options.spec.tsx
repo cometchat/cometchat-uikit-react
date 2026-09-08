@@ -38,13 +38,10 @@ vi.stubGlobal(
 );
 
 // Mock the SDK's MessageCategory enum used in the View
-vi.mock('@cometchat/chat-sdk-javascript', () => ({
-  CometChat: {
-    MessageCategory: { ACTION: 'action' },
-    CATEGORY_ACTION: 'action',
-  },
-  MessageCategory: { ACTION: 'action' },
-}));
+// The SDK is loaded for real. It was previously stubbed down to MessageCategory,
+// but the options module now reaches CometChatUIKitConstants, which needs the full
+// constant set (moderation statuses, scopes, message types). A partial stub makes
+// that module's static initializer throw at import time.
 
 vi.mock('../../CometChatMessageBubble/CometChatMessageBubbleRenderer', () => ({
   CometChatMessageBubbleRenderer: (props: Record<string, any>) => (

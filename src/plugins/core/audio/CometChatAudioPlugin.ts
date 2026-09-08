@@ -12,6 +12,9 @@ import { CometChatVoiceNoteBubble } from '../../../components/CometChatVoiceNote
 import { isVoiceNote } from '../../../utils/CometChatMetadataUtils';
 import { getMediaMessageOptions } from '../shared/CometChatMessageOptions';
 import { formatCaptionForPreview } from '../shared/formatCaptionForPreview';
+import type { CometChatTextFormatter } from '../../../formatters/CometChatTextFormatter';
+import { mergeFormatters } from '../../../formatters/mergeFormatters';
+import { createDefaultTextFormatters } from '../shared/defaultTextFormatters';
 import { CometChatUIKitConstants } from '../../../constants/CometChatUIKitConstants';
 
 /**
@@ -36,7 +39,10 @@ export const CometChatAudioPlugin: CometChatMessagePlugin = {
 
   renderBubble(message: CometChat.BaseMessage, context: CometChatMessagePluginContext) {
     const alignment = context.alignment === 'right' ? 'right' : 'left';
-    const textFormatters = context.getTextFormatters?.() ?? [];
+    const textFormatters = mergeFormatters(
+      this.getTextFormatters?.() ?? [],
+      context.textFormatters ?? []
+    );
 
     // Voice note vs attached audio file.
     if (isVoiceNote(message)) {
@@ -54,6 +60,10 @@ export const CometChatAudioPlugin: CometChatMessagePlugin = {
       textFormatters,
     };
     return React.createElement(CometChatAudiosBubble, props);
+  },
+
+  getTextFormatters(): CometChatTextFormatter[] {
+    return createDefaultTextFormatters();
   },
 
   getOptions(

@@ -107,6 +107,7 @@ export function useMessageListInit(
     if (group) managerOpts.group = group;
     if (messagesRequestBuilder) managerOpts.builder = messagesRequestBuilder;
     if (parentMessageId) managerOpts.parentMessageId = parentMessageId;
+    if (isAgentChat) managerOpts.isAgentChat = true;
 
     const manager = new CometChatMessageListManager(managerOpts);
     refs.managerRef.current = manager;

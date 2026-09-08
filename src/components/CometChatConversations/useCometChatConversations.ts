@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useId, useReducer, useRef, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatConversationsManager } from './CometChatConversationsManager';
+import { usePinConversationActions } from '../../hooks/usePinConversationActions';
 import { conversationsReducer, initialConversationsState } from './CometChatConversations.reducer';
 import { CometChatSoundManager } from '../../resources/CometChatSoundManager/CometChatSoundManager';
 import type {
@@ -42,6 +43,25 @@ export function useCometChatConversations(
   const instanceId = useId();
   const anchorIndexRef = useRef<number | null>(null);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
+  /**
+   * `id` increments on every raise so that two identical toasts in a row — pin one
+   * conversation, pin another — are distinguishable. Keyed on it, the toast
+   * remounts and restarts its dismiss timer instead of silently reusing the first
+   * one's remaining time.
+   */
+  const [pinToast, setPinToast] = useState<{
+    id: number;
+    text: string;
+    variant: 'default' | 'error';
+  }>({ id: 0, text: '', variant: 'default' });
+  const showPinToast = useCallback((text: string, variant: 'default' | 'error' = 'default') => {
+    setPinToast(previous => ({ id: previous.id + 1, text, variant }));
+  }, []);
+  const clearPinToast = useCallback(() => {
+    setPinToast(previous => ({ ...previous, text: '' }));
+  }, []);
+  const pinActions = usePinConversationActions({ showToast: showPinToast });
+
   const [conversationToBeDeleted, setConversationToBeDeleted] =
     useState<CometChat.Conversation | null>(null);
   const publish = usePublishEvent();
@@ -635,5 +655,15 @@ export function useCometChatConversations(
     deleteConversation,
     setConversationToBeDeleted,
     conversationToBeDeleted,
+    pinConversation: pinActions.requestPin,
+    unpinConversation: pinActions.requestUnpin,
+    pinConfirmState: pinActions.confirmState,
+    confirmPinAction: pinActions.confirm,
+    cancelPinAction: pinActions.cancel,
+    pinIsBusy: pinActions.isBusy,
+    pinToastText: pinToast.text,
+    pinToastId: pinToast.id,
+    pinToastVariant: pinToast.variant,
+    clearPinToast,
   };
 }

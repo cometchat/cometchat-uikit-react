@@ -43,7 +43,7 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  min-width: 280px;
+  min-width: var(--cometchat-audio-bubble-card-min-width, 280px);
   height: 76px;
   box-sizing: border-box;
   padding: 0 14px 0 8px;

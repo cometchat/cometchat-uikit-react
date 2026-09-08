@@ -141,6 +141,7 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
     });
 
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       stopExclusivePlayback(playbackHandleRef.current);
       ws.unAll();
       try {

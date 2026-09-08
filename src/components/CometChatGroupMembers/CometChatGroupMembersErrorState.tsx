@@ -19,8 +19,8 @@ export const CometChatGroupMembersErrorState: React.FC<CometChatGroupMembersErro
             <img
               src={listErrorIcon}
               alt=""
-              width={100}
-              height={100}
+              width={120}
+              height={120}
               loading="lazy"
               decoding="async"
             />

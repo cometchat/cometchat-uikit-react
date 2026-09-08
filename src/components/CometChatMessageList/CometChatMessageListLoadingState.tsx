@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ReactNode } from 'react';
 import { useCometChatMessageListContext } from './CometChatMessageList.context';
+import { CometChatMessageListShimmer } from './CometChatMessageListShimmer';
 import './CometChatMessageList.css';
 import { useLocale } from '../../context/locale/LocaleContext';
 
@@ -8,28 +9,12 @@ export interface CometChatMessageListLoadingStateProps {
   children?: ReactNode;
 }
 
-function ShimmerBubble({ align }: { align: 'start' | 'end' }) {
-  return (
-    <div className={'cometchat-message-list__shimmer-body'} style={{ alignSelf: `flex-${align}` }}>
-      {align === 'start' && <div className={'cometchat-message-list__shimmer-item-header'} />}
-      <div className={'cometchat-message-list__shimmer-item'} />
-    </div>
-  );
-}
-
-function ShimmerDate() {
-  return (
-    <div className={'cometchat-message-list__shimmer-header'}>
-      <div className={'cometchat-message-list__shimmer-item'} />
-    </div>
-  );
-}
-
 /**
  * CometChatMessageListLoadingState — shimmer skeleton matching real message layout.
  *
  * Context-aware: reads `isLoading` from the MessageList context and renders
- * nothing when the list is not in the loading state.
+ * nothing when the list is not in the loading state. The skeleton itself lives in
+ * {@link CometChatMessageListShimmer}, so surfaces without this context can use it.
  */
 export const CometChatMessageListLoadingState: React.FC<CometChatMessageListLoadingStateProps> = ({
   children,
@@ -44,23 +29,7 @@ export const CometChatMessageListLoadingState: React.FC<CometChatMessageListLoad
   }
 
   return (
-    <div
-      className={'cometchat-message-list__shimmer'}
-      role="status"
-      aria-label={getLocalizedString('accessibility_loading_messages')}
-    >
-      <ShimmerDate />
-      <ShimmerBubble align="end" />
-      <ShimmerBubble align="start" />
-      <ShimmerBubble align="end" />
-      <ShimmerBubble align="start" />
-      <ShimmerDate />
-      <ShimmerBubble align="end" />
-      <ShimmerBubble align="start" />
-      <ShimmerBubble align="end" />
-      <ShimmerBubble align="start" />
-      <ShimmerBubble align="end" />
-    </div>
+    <CometChatMessageListShimmer ariaLabel={getLocalizedString('accessibility_loading_messages')} />
   );
 };
 

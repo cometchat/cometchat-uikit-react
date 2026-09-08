@@ -9,4 +9,6 @@ export type {
   CometChatContextMenuTriggerProps,
   CometChatContextMenuDropdownProps,
   CometChatContextMenuContextValue,
+  CometChatContextMenuSubmenuProps,
+  CometChatContextMenuSubmenuDirection,
 } from './CometChatContextMenu.types';

@@ -4,6 +4,7 @@ import type { CometChatMessageComposerEditPreviewProps } from './CometChatMessag
 import { useCometChatMessageComposerContext } from './CometChatMessageComposer.context';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { CometChatMarkdownFormatter } from '../../formatters/CometChatMarkdownFormatter';
+import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
 import { CometChatUrlFormatter } from '../../formatters/CometChatUrlFormatter';
 import DOMPurify from 'dompurify';
 import './CometChatMessageComposer.css';
@@ -65,7 +66,8 @@ function getMediaSummaryParts(
 export const CometChatMessageComposerEditPreview: React.FC<
   CometChatMessageComposerEditPreviewProps
 > = ({ className }) => {
-  const { isInEditMode, textMessageToEdit, closePreview } = useCometChatMessageComposerContext();
+  const { isInEditMode, textMessageToEdit, closePreview, textFormatters } =
+    useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
 
   const isMediaEdit = useMemo(() => {
@@ -106,7 +108,25 @@ export const CometChatMessageComposerEditPreview: React.FC<
     const markdownFormatter = new CometChatMarkdownFormatter();
     const strippedText = markdownFormatter.stripMarkdownForConversation(text);
 
-    let formatted = strippedText;
+    // Custom display formatters (color/hashtag, etc.) run on the mention-TOKEN text FIRST — before
+    // mentions become inline-styled spans below. Otherwise a consumer's naive regex (e.g. a hashtag
+    // formatter matching ` #hex`) would match the `#6852d6` fallback inside a mention span's style
+    // attribute and shatter the markup (`…#6852d6); font-weight: 500;">@Name`).
+    // Belt-and-suspenders: swap mention tokens (<@uid:…>, <@all:…>) for sentinels so NO custom
+    // formatter — however its regex is written — can touch a token, then restore before resolving
+    // to spans. Mirrors the SDK-mention protection the edit-seed uses around markdown conversion.
+    const mentionTokens: string[] = [];
+    const protectedText = strippedText.replace(/<@(?:uid|all):[^>]*>/g, match => {
+      const idx = mentionTokens.length;
+      mentionTokens.push(match);
+      return `\x00CCMENTION${String(idx)}\x00`;
+    });
+    let formatted = applyDisplayFormatters(protectedText, textFormatters);
+    formatted = formatted.replace(
+      // eslint-disable-next-line no-control-regex
+      /\x00CCMENTION(\d+)\x00/g,
+      (_m, idx: string) => mentionTokens[parseInt(idx, 10)] ?? ''
+    );
     const mentionedUsers = textMessageToEdit.getMentionedUsers();
 
     if (mentionedUsers.length > 0) {

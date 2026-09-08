@@ -9,6 +9,9 @@ import type { CometChatFilesBubbleProps } from '../../../components/CometChatFil
 import { CometChatFilesBubble } from '../../../components/CometChatFilesBubble/CometChatFilesBubble';
 import { getMediaMessageOptions } from '../shared/CometChatMessageOptions';
 import { formatCaptionForPreview } from '../shared/formatCaptionForPreview';
+import type { CometChatTextFormatter } from '../../../formatters/CometChatTextFormatter';
+import { mergeFormatters } from '../../../formatters/mergeFormatters';
+import { createDefaultTextFormatters } from '../shared/defaultTextFormatters';
 import { CometChatUIKitConstants } from '../../../constants/CometChatUIKitConstants';
 
 /**
@@ -30,7 +33,10 @@ export const CometChatFilePlugin: CometChatMessagePlugin = {
 
   renderBubble(message: CometChat.BaseMessage, context: CometChatMessagePluginContext) {
     const alignment = context.alignment === 'right' ? 'right' : 'left';
-    const textFormatters = context.getTextFormatters?.() ?? [];
+    const textFormatters = mergeFormatters(
+      this.getTextFormatters?.() ?? [],
+      context.textFormatters ?? []
+    );
 
     const props: CometChatFilesBubbleProps = {
       message: message as CometChat.MediaMessage,
@@ -38,6 +44,10 @@ export const CometChatFilePlugin: CometChatMessagePlugin = {
       textFormatters,
     };
     return React.createElement(CometChatFilesBubble, props);
+  },
+
+  getTextFormatters(): CometChatTextFormatter[] {
+    return createDefaultTextFormatters();
   },
 
   getOptions(

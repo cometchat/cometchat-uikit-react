@@ -8,6 +8,196 @@ function msg(id: number, sentAt = Date.now()): CometChat.BaseMessage {
   return buildTextMessage({ id, sentAt }) as unknown as CometChat.BaseMessage;
 }
 
+/**
+ * A message shaped like the SDK's: data as own fields, accessors reading `this`.
+ * That shape matters here — cloneMessage copies own properties, so closure-backed
+ * fakes would share state between clone and original and hide mutation bugs.
+ */
+function pinSaveMsg(
+  id: number,
+  attrs: { pinnedAt?: number; pinnedBy?: string; savedAt?: number } = {}
+): CometChat.BaseMessage {
+  return {
+    id,
+    pinnedAt: attrs.pinnedAt,
+    pinnedBy: attrs.pinnedBy,
+    savedAt: attrs.savedAt,
+    getId(this: Record<string, unknown>) {
+      return this.id;
+    },
+    getPinnedAt(this: Record<string, unknown>) {
+      return this.pinnedAt;
+    },
+    setPinnedAt(this: Record<string, unknown>, v: number | undefined) {
+      this.pinnedAt = v;
+    },
+    getPinnedBy(this: Record<string, unknown>) {
+      return this.pinnedBy;
+    },
+    setPinnedBy(this: Record<string, unknown>, v: string | undefined) {
+      this.pinnedBy = v;
+    },
+    getSavedAt(this: Record<string, unknown>) {
+      return this.savedAt;
+    },
+    setSavedAt(this: Record<string, unknown>, v: number | undefined) {
+      this.savedAt = v;
+    },
+  } as unknown as CometChat.BaseMessage;
+}
+
+describe('messageListReducer — MESSAGE_PIN_SAVE_UPDATE', () => {
+  it('applies pin attributes from the incoming frame', () => {
+    const state = { ...initialMessageListState, messages: [pinSaveMsg(1)] };
+    const incoming = pinSaveMsg(1, { pinnedAt: 999, pinnedBy: 'admin' });
+
+    const next = messageListReducer(state, {
+      type: 'MESSAGE_PIN_SAVE_UPDATE',
+      message: incoming,
+      scope: 'pin',
+    });
+
+    expect(next.messages[0]?.getPinnedAt()).toBe(999);
+    expect(next.messages[0]?.getPinnedBy()).toBe('admin');
+  });
+
+  it('a PIN broadcast must not wipe the viewer’s own savedAt', () => {
+    // pinnedAt/pinnedBy are global; savedAt is per-viewer. A pin broadcast frame
+    // is not expected to carry this user's save state, so a wholesale replace
+    // would silently drop their saved indicator.
+    const state = { ...initialMessageListState, messages: [pinSaveMsg(1, { savedAt: 555 })] };
+    const incoming = pinSaveMsg(1, { pinnedAt: 999, pinnedBy: 'admin' }); // no savedAt
+
+    const next = messageListReducer(state, {
+      type: 'MESSAGE_PIN_SAVE_UPDATE',
+      message: incoming,
+      scope: 'pin',
+    });
+
+    expect(next.messages[0]?.getSavedAt()).toBe(555);
+    expect(next.messages[0]?.getPinnedAt()).toBe(999);
+  });
+
+  it('a SAVE event must not clear an existing pin', () => {
+    const state = {
+      ...initialMessageListState,
+      messages: [pinSaveMsg(1, { pinnedAt: 111, pinnedBy: 'admin' })],
+    };
+    const incoming = pinSaveMsg(1, { savedAt: 777 });
+
+    const next = messageListReducer(state, {
+      type: 'MESSAGE_PIN_SAVE_UPDATE',
+      message: incoming,
+      scope: 'save',
+    });
+
+    expect(next.messages[0]?.getSavedAt()).toBe(777);
+    expect(next.messages[0]?.getPinnedAt()).toBe(111);
+    expect(next.messages[0]?.getPinnedBy()).toBe('admin');
+  });
+
+  it('unpin CLEARS the attributes rather than zeroing them', () => {
+    const state = {
+      ...initialMessageListState,
+      messages: [pinSaveMsg(1, { pinnedAt: 111, pinnedBy: 'admin' })],
+    };
+    const incoming = pinSaveMsg(1); // cleared frame
+
+    const next = messageListReducer(state, {
+      type: 'MESSAGE_PIN_SAVE_UPDATE',
+      message: incoming,
+      scope: 'pin',
+    });
+
+    expect(next.messages[0]?.getPinnedAt()).toBeUndefined();
+    expect(next.messages[0]?.getPinnedBy()).toBeUndefined();
+  });
+
+  it('produces a new message reference so React re-renders', () => {
+    const original = pinSaveMsg(1);
+    const state = { ...initialMessageListState, messages: [original] };
+
+    const next = messageListReducer(state, {
+      type: 'MESSAGE_PIN_SAVE_UPDATE',
+      message: pinSaveMsg(1, { pinnedAt: 1 }),
+      scope: 'pin',
+    });
+
+    expect(next.messages[0]).not.toBe(original);
+    expect(next.messages).not.toBe(state.messages);
+  });
+
+  it('does not mutate the message still held in the previous state', () => {
+    // The optimistic path mutates the live object; the reducer must not compound
+    // that by writing through to the old state during reconciliation.
+    const original = pinSaveMsg(1);
+    const state = { ...initialMessageListState, messages: [original] };
+
+    messageListReducer(state, {
+      type: 'MESSAGE_PIN_SAVE_UPDATE',
+      message: pinSaveMsg(1, { pinnedAt: 42, pinnedBy: 'admin' }),
+      scope: 'pin',
+    });
+
+    expect(original.getPinnedAt()).toBeUndefined();
+  });
+
+  it('leaves state untouched when the message is not in the loaded window', () => {
+    const state = { ...initialMessageListState, messages: [pinSaveMsg(1)] };
+
+    const next = messageListReducer(state, {
+      type: 'MESSAGE_PIN_SAVE_UPDATE',
+      message: pinSaveMsg(999, { pinnedAt: 1 }),
+      scope: 'pin',
+    });
+
+    expect(next).toBe(state);
+  });
+
+  it('is idempotent — applying the same frame twice changes nothing further', () => {
+    const state = { ...initialMessageListState, messages: [pinSaveMsg(1)] };
+    const incoming = pinSaveMsg(1, { pinnedAt: 999, pinnedBy: 'admin' });
+
+    const once = messageListReducer(state, {
+      type: 'MESSAGE_PIN_SAVE_UPDATE',
+      message: incoming,
+      scope: 'pin',
+    });
+    const twice = messageListReducer(once, {
+      type: 'MESSAGE_PIN_SAVE_UPDATE',
+      message: incoming,
+      scope: 'pin',
+    });
+
+    expect(twice.messages[0]?.getPinnedAt()).toBe(999);
+    expect(twice.messages[0]?.getPinnedBy()).toBe('admin');
+  });
+});
+
+describe('messageListReducer — MESSAGE_MODERATED preserves the thread-subscription flag', () => {
+  const subMsg = (id: number, threadSubscribed: boolean): CometChat.BaseMessage =>
+    buildTextMessage({ id, threadSubscribed }) as unknown as CometChat.BaseMessage;
+
+  it('keeps an optimistic subscription when a moderation frame (no flag) replaces the message', () => {
+    const state = { ...initialMessageListState, messages: [subMsg(1, true)] };
+    // The moderation payload arrives without threadSubscribed (a socket frame does not carry it).
+    const moderated = subMsg(1, false);
+
+    const next = messageListReducer(state, { type: 'MESSAGE_MODERATED', message: moderated });
+
+    expect(next.messages[0]?.isThreadSubscribed()).toBe(true);
+  });
+
+  it('does not resurrect a deliberate unsubscribe', () => {
+    const state = { ...initialMessageListState, messages: [subMsg(1, false)] };
+    const moderated = subMsg(1, false);
+
+    const next = messageListReducer(state, { type: 'MESSAGE_MODERATED', message: moderated });
+
+    expect(next.messages[0]?.isThreadSubscribed()).toBe(false);
+  });
+});
+
 describe('messageListReducer', () => {
   // --- Initial state ---
   it('has correct initial state', () => {

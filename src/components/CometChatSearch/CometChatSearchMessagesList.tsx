@@ -6,6 +6,8 @@ import { CometChatLocalize } from '../../resources/CometChatLocalize/CometChatLo
 import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import type { CometChatSearchMessagesListProps } from './CometChatSearch.types';
 import { sanitizeHtml } from '../../utils/sanitizeHtml';
+import { getMessageSubtitle as buildMessageSubtitle } from '../../utils/messageSubtitle';
+import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
 import './CometChatSearch.css';
 
 // File type icons
@@ -31,179 +33,24 @@ function getMessageTitle(message: CometChat.BaseMessage, uid?: string, guid?: st
   return receiver.getName();
 }
 
+/**
+ * Thin adapter over the shared preview builder. Search prepends the sender only
+ * for unscoped results — inside a single conversation the sender is already the
+ * list title.
+ */
 function getMessageSubtitle(
   message: CometChat.BaseMessage,
   loggedInUserId: string | undefined,
   uid?: string,
   guid?: string
 ): string {
-  const type = message.getType();
-  let text = '';
-
-  if (type === 'text') {
-    const textMsg = message as CometChat.TextMessage;
-    // Check for rich text HTML in metadata (sent by rich text editor)
-    try {
-      const metadata = textMsg.getMetadata() as Record<string, unknown> | undefined;
-      // eslint-disable-next-line @typescript-eslint/dot-notation
-      const richText = metadata?.['richText'] as
-        | { html?: string; hasFormatting?: boolean }
-        | undefined;
-      if (richText?.html && richText.hasFormatting) {
-        text = richText.html;
-      } else {
-        text = textMsg.getText();
-      }
-    } catch {
-      text = textMsg.getText();
-    }
-
-    // Step 1: Convert HTML formatting tags to markdown equivalents
-    // <b>text</b> → **text**, <i>text</i> → _text_, <u>text</u> preserved, <s>text</s> → ~~text~~
-    text = text.replace(/<b>([\s\S]*?)<\/b>/gi, '**$1**');
-    text = text.replace(/<strong>([\s\S]*?)<\/strong>/gi, '**$1**');
-    text = text.replace(/<i>([\s\S]*?)<\/i>/gi, '_$1_');
-    text = text.replace(/<em>([\s\S]*?)<\/em>/gi, '_$1_');
-    text = text.replace(/<s>([\s\S]*?)<\/s>/gi, '~~$1~~');
-    text = text.replace(/<strike>([\s\S]*?)<\/strike>/gi, '~~$1~~');
-    text = text.replace(/<del>([\s\S]*?)<\/del>/gi, '~~$1~~');
-
-    // Step 2: escape (don't drop) remaining HTML tags so payloads render as inert text;
-    // preserve mention pseudo-tags and <u>. Output is also sanitized at the render sink.
-    text = text.replace(/<[^>]*>/g, match => {
-      const inner = match.slice(1, -1).trim();
-      if (/^\/?u$/i.test(inner)) return match; // preserve <u> and </u>
-      if (inner.startsWith('@')) return match; // preserve <@uid:...> mentions
-      return match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    });
-
-    // Step 3: Convert markdown to HTML for display
-    // Bold: **text** → <b>text</b>
-    text = text.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-    // Underline: __text__ or <u>text</u> (already preserved)
-    text = text.replace(/__([^_]+)__/g, '<u>$1</u>');
-    // Italic: _text_ → <i>text</i>
-    text = text.replace(/(?<!_)_([^_]+)_(?!_)/g, '<i>$1</i>');
-    // Strikethrough: ~~text~~ → <s>text</s>
-    text = text.replace(/~~([^~]+)~~/g, '<s>$1</s>');
-    // Inline code: `text` → <code>text</code>
-    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-    // Strip links: [text](url) → text
-    text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-    // Strip blockquotes: > text → text
-    text = text.replace(/^(?:&gt;|>)\s?/gm, '');
-
-    // Step 4: Mentions <@uid:xxx> → styled @displayName, <@all:label> → styled @label
-    const mentionedUsers =
-      (
-        message as unknown as {
-          getMentionedUsers?: () => { getUid: () => string; getName: () => string }[];
-        }
-      ).getMentionedUsers?.() ?? [];
-    const mentionMap = new Map<string, string>();
-    for (const user of mentionedUsers) {
-      mentionMap.set(user.getUid(), user.getName());
-    }
-    text = text.replace(/<@uid:([^>]+)>/g, (_match, uid: string) => {
-      const name = mentionMap.get(uid);
-      const displayName = name ?? uid;
-      return `<span class="cometchat-mentions cometchat-mentions-other"><span>@${displayName}</span></span>`;
-    });
-    text = text.replace(/<@all:([^>]+)>/g, (_match, label: string) => {
-      return `<span class="cometchat-mentions cometchat-mentions-you"><span>@${label}</span></span>`;
-    });
-
-    // Step 5: Collapse whitespace and newlines
-    text = text.replace(/\n/g, ' ');
-    text = text.replace(/\s+/g, ' ').trim();
-  } else if (type === 'image' || type === 'video' || type === 'audio' || type === 'file') {
-    const media = message as CometChat.MediaMessage;
-    const attachments = media.getAttachments();
-    const count = Math.max(attachments.length, 1);
-    const caption = typeof media.getCaption === 'function' ? media.getCaption() || '' : '';
-    const iconSpan = `<span class="cometchat-search__messages-subtitle-icon cometchat-search__messages-subtitle-icon--${type}"></span>`;
-
-    // Format caption with rich text if present
-    let formattedCaption = '';
-    if (caption.trim()) {
-      formattedCaption = caption;
-      formattedCaption = formattedCaption.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-      formattedCaption = formattedCaption.replace(/__([^_]+)__/g, '<u>$1</u>');
-      formattedCaption = formattedCaption.replace(/(?<!_)_([^_]+)_(?!_)/g, '<i>$1</i>');
-      formattedCaption = formattedCaption.replace(/~~([^~]+)~~/g, '<s>$1</s>');
-      formattedCaption = formattedCaption.replace(/`([^`]+)`/g, '<code>$1</code>');
-      formattedCaption = formattedCaption.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-      formattedCaption = formattedCaption.replace(/^(?:&gt;|>)\s?/gm, '');
-      const mentionedUsers =
-        (
-          message as unknown as {
-            getMentionedUsers?: () => { getUid: () => string; getName: () => string }[];
-          }
-        ).getMentionedUsers?.() ?? [];
-      const mentionMap = new Map<string, string>();
-      for (const user of mentionedUsers) {
-        mentionMap.set(user.getUid(), user.getName());
-      }
-      formattedCaption = formattedCaption.replace(/<@uid:([^>]+)>/g, (_m, uid: string) => {
-        const name = mentionMap.get(uid) ?? uid;
-        return `<span class="cometchat-mentions cometchat-mentions-other"><span>@${name}</span></span>`;
-      });
-      formattedCaption = formattedCaption.replace(/<@all:([^>]+)>/g, (_m, lbl: string) => {
-        return `<span class="cometchat-mentions cometchat-mentions-you"><span>@${lbl}</span></span>`;
-      });
-      formattedCaption = formattedCaption.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-
-    const hasCaption = formattedCaption.length > 0;
-    const fileName = attachments[0]?.getName() ?? type;
-
-    if (count === 1 && !hasCaption) {
-      // Case 1: one attachment, no caption → just file name
-      text = `${iconSpan}${fileName}`;
-    } else if (count > 1 && !hasCaption) {
-      // Case 2: multiple attachments, no caption → "N Files"
-      const pluralKey = `media_edit_preview_${type}_plural`;
-      const plural = getLocalizedString(pluralKey);
-      const label =
-        plural !== pluralKey
-          ? `${String(count)} ${plural}`
-          : `${String(count)} ${getLocalizedString(`conversation_subtitle_${type}`)}`;
-      text = `${iconSpan}${label}`;
-    } else if (count === 1 && hasCaption) {
-      // Case 3: one attachment + caption → just caption (no file name or type label)
-      text = `${iconSpan}${formattedCaption}`;
-    } else {
-      // Case 4: multiple attachments + caption
-      if (type === 'image' || type === 'video') {
-        // Images/videos: just caption (count visible via +N overlay on trailing view)
-        text = `${iconSpan}${formattedCaption}`;
-      } else {
-        // Files/audios: "N Files · caption"
-        const pluralKey = `media_edit_preview_${type}_plural`;
-        const plural = getLocalizedString(pluralKey);
-        const label =
-          plural !== pluralKey
-            ? `${String(count)} ${plural}`
-            : `${String(count)} ${getLocalizedString(`conversation_subtitle_${type}`)}`;
-        text = `${iconSpan}${label} · ${formattedCaption}`;
-      }
-    }
-  } else {
-    text = type;
-  }
-
-  // Prepend sender name for non-scoped search
-  if (!uid && !guid) {
-    const sender = message.getSender();
-    const isMe = sender.getUid() === loggedInUserId;
-    const localizedYou = getLocalizedString('search_message_subtitle_you');
-    const senderName = isMe ? localizedYou : sender.getName();
-    if (senderName) {
-      text = `${senderName}: ${text}`;
-    }
-  }
-
-  return text;
+  return buildMessageSubtitle(message, {
+    loggedInUserId,
+    iconClassPrefix: 'cometchat-search__messages-subtitle-icon',
+    includeSenderPrefix: !uid && !guid,
+    youLabel: getLocalizedString('search_message_subtitle_you'),
+    t: getLocalizedString,
+  });
 }
 
 function shouldShowDateSeparator(messages: CometChat.BaseMessage[], index: number): boolean {
@@ -534,11 +381,14 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                           : (() => {
                               const hasThread = !!message.getParentMessageId();
                               const subtitleHtml = sanitizeHtml(
-                                getMessageSubtitle(
-                                  message,
-                                  CometChatUIKit.getLoggedInUser()?.getUid(),
-                                  ctx.uid,
-                                  ctx.guid
+                                applyDisplayFormatters(
+                                  getMessageSubtitle(
+                                    message,
+                                    CometChatUIKit.getLoggedInUser()?.getUid(),
+                                    ctx.uid,
+                                    ctx.guid
+                                  ),
+                                  ctx.textFormatters
                                 )
                               );
                               return (

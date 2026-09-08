@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+// Value import resolves to the vi.mock below — used to attach feature-flag stubs.
+import { CometChat as CometChatSDK } from '@cometchat/chat-sdk-javascript';
 
 const mockInit = vi.fn();
 const mockInitFromSettings = vi.fn();
@@ -326,7 +328,7 @@ describe('CometChatUIKit', () => {
 
       expect((window as unknown as Record<string, unknown>).CometChatUiKit).toEqual({
         name: '@cometchat/chat-uikit-react',
-        version: '7.1.0',
+        version: '7.2.0',
       });
     });
 
@@ -386,6 +388,49 @@ describe('CometChatUIKit', () => {
 
       expect(mockLogin).not.toHaveBeenCalled();
       expect(result).toBe(mockUser);
+    });
+
+    // First-login regression: pin/save flags must be resolved by _postLogin() —
+    // after login, once the auth token exists and the app-settings blob is
+    // readable. (They are deliberately NOT warmed at init(), which runs pre-login
+    // and would fetch /v3/settings without a token.) Before login the flags read
+    // false; after login they must reflect the real (enabled) value.
+    it('resolves pin/save flags in _postLogin so features appear on first login', async () => {
+      const { getPinSaveFeatures, resetPinSaveFeatures } =
+        await import('../../utils/pinSaveFeatures');
+      resetPinSaveFeatures();
+
+      const sdk = CometChatSDK as unknown as Record<string, unknown>;
+      // Cold first login: flags read false until login makes app settings available.
+      let settingsReady = false;
+      sdk.isPinMessageEnabled = vi.fn(() => Promise.resolve(settingsReady));
+      sdk.isSaveMessageEnabled = vi.fn(() => Promise.resolve(settingsReady));
+      sdk.isPinConversationEnabled = vi.fn(() => Promise.resolve(settingsReady));
+
+      const mockUser = { getUid: () => 'user1', getAuthToken: () => 'tok' };
+      mockGetLoggedinUser.mockResolvedValue(null);
+      mockLogin.mockImplementation(() => {
+        settingsReady = true; // the SDK login fetches + persists app settings
+        return Promise.resolve(mockUser);
+      });
+
+      try {
+        await CometChatUIKit.init(buildTestSettings()); // does NOT warm pre-login
+        await CometChatUIKit.login('user1'); // _postLogin resolves → true
+
+        await vi.waitFor(() => {
+          expect(getPinSaveFeatures()).toEqual({
+            pinMessage: true,
+            saveMessage: true,
+            pinConversation: true,
+          });
+        });
+      } finally {
+        delete sdk.isPinMessageEnabled;
+        delete sdk.isSaveMessageEnabled;
+        delete sdk.isPinConversationEnabled;
+        resetPinSaveFeatures();
+      }
     });
   });
 

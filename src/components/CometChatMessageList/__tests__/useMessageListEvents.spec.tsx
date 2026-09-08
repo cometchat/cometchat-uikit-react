@@ -61,8 +61,13 @@ type Emit = (event: CometChatSDKEvent) => void;
 function setup(
   options: Parameters<typeof useMessageListEvents>[0],
   refs: MessageListRefs
-): { emit: Emit; dispatched: CometChatMessageListAction[] } {
+): {
+  emit: Emit;
+  dispatched: CometChatMessageListAction[];
+  publish: ReturnType<typeof vi.fn>;
+} {
   const handlers = new Set<(event: CometChatSDKEvent) => void>();
+  const publish = vi.fn();
   const bridge = {
     subscribe: (handler: (event: CometChatSDKEvent) => void) => {
       handlers.add(handler);
@@ -70,9 +75,7 @@ function setup(
         handlers.delete(handler);
       };
     },
-    publish: () => {
-      /* noop in tests */
-    },
+    publish,
   };
 
   const dispatched: CometChatMessageListAction[] = [];
@@ -91,7 +94,7 @@ function setup(
     }
   );
 
-  return { emit, dispatched };
+  return { emit, dispatched, publish };
 }
 
 function baseOptions(
@@ -102,6 +105,7 @@ function baseOptions(
     group: undefined,
     loggedInUser: buildUser({ uid: 'me' }) as never,
     messagesRequestBuilder: undefined,
+    parentMessage: undefined,
     parentMessageId: undefined,
     messageTypes: ['text'],
     messageCategories: ['message'],
@@ -247,6 +251,85 @@ describe('useMessageListEvents', () => {
     expect(manager.markConversationAsRead).toHaveBeenCalled();
   });
 
+  // ---------------------------------------------------------------------------
+  // Case 2 — the author is auto-subscribed to their own message's thread by default
+  // ---------------------------------------------------------------------------
+
+  it('stamps a same-device send subscribed (ui:message/sent), even top-level', () => {
+    const { refs } = makeRefs({
+      ...initialMessageListState,
+      hasReachedLatest: true,
+      isAtBottom: true,
+    });
+    // Top-level own message with NO parentMessageId, threadSubscribed defaults to false.
+    const msg = buildTextMessage({
+      id: 20,
+      sender: me as never,
+      receiverId: 'peer',
+      muid: 'muid-20',
+    });
+    expect(msg.isThreadSubscribed()).toBe(false);
+
+    const { emit, dispatched } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({
+        type: 'ui:message/sent',
+        message: msg as never,
+        status: CometChatMessageStatus.inprogress,
+      });
+    });
+
+    expect(msg.isThreadSubscribed()).toBe(true);
+    expect(dispatched.some(a => a.type === 'MESSAGE_SEND_START')).toBe(true);
+  });
+
+  it('stamps an own message arriving over the socket from another device', () => {
+    const { refs } = makeRefs({
+      ...initialMessageListState,
+      hasReachedLatest: true,
+      isAtBottom: true,
+    });
+    // From the logged-in user, new id (not tracked) → own-from-elsewhere path.
+    const msg = Object.assign(
+      buildTextMessage({ id: 21, sender: me as never, receiverId: 'peer' }),
+      { setReadAt: vi.fn() }
+    );
+    expect(msg.isThreadSubscribed()).toBe(false);
+
+    const { emit } = setup(baseOptions({ user: user as never, loggedInUser: me as never }), refs);
+
+    act(() => {
+      emit({ type: 'message/text-received', message: msg as never });
+    });
+
+    expect(msg.isThreadSubscribed()).toBe(true);
+  });
+
+  it('does NOT stamp a socket message from someone else', () => {
+    const { refs } = makeRefs({
+      ...initialMessageListState,
+      hasReachedLatest: true,
+      isAtBottom: true,
+    });
+    const msg = Object.assign(
+      buildTextMessage({ id: 22, sender: peer as never, receiverId: 'peer' }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit } = setup(baseOptions({ user: user as never, loggedInUser: me as never }), refs);
+
+    act(() => {
+      emit({ type: 'message/text-received', message: msg as never });
+    });
+
+    // Untrusted socket flag stays as-is — the server/fetch decides for others.
+    expect(msg.isThreadSubscribed()).toBe(false);
+  });
+
   it('dispatches UPDATE_REPLY_COUNT for thread replies in non-thread mode', () => {
     const { refs } = makeRefs();
     const threadReply = Object.assign(
@@ -270,6 +353,339 @@ describe('useMessageListEvents', () => {
 
     const updateReply = dispatched.find(a => a.type === 'UPDATE_REPLY_COUNT');
     expect(updateReply).toMatchObject({ parentMessageId: 5 });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Case 3 — an incoming reply that @mentions me mirrors a subscribe
+  // ---------------------------------------------------------------------------
+
+  const mirrorEvent = {
+    type: 'ui:thread/subscription-changed',
+    parentMessageId: 5,
+    subscribed: true,
+  };
+
+  it('mirrors a subscribe when an incoming reply from someone else @mentions me', () => {
+    const { refs } = makeRefs();
+    const reply = Object.assign(
+      buildTextMessage({
+        id: 99,
+        sender: peer as never,
+        receiverId: 'peer',
+        parentMessageId: 5,
+        mentionedUsers: [me as never],
+      }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit, publish } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({ type: 'message/text-received', message: reply as never });
+    });
+
+    expect(publish).toHaveBeenCalledWith(mirrorEvent);
+  });
+
+  it('does NOT mirror a reply that does not mention me', () => {
+    const { refs } = makeRefs();
+    const reply = Object.assign(
+      buildTextMessage({ id: 99, sender: peer as never, receiverId: 'peer', parentMessageId: 5 }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit, publish, dispatched } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({ type: 'message/text-received', message: reply as never });
+    });
+
+    // The reply is still counted, it just doesn't auto-subscribe me.
+    expect(dispatched.some(a => a.type === 'UPDATE_REPLY_COUNT')).toBe(true);
+    expect(publish).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'ui:thread/subscription-changed' })
+    );
+  });
+
+  it('mirrors on my own reply arriving from another device (Case 4b), even in the main list', () => {
+    // Panel closed (no parentMessage): the reply isn't displayed, but authoring it
+    // still subscribes me to the parent, so the flip must mirror to mounted surfaces.
+    const { refs } = makeRefs();
+    const reply = Object.assign(
+      buildTextMessage({ id: 99, sender: me as never, receiverId: 'peer', parentMessageId: 5 }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit, publish } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({ type: 'message/text-received', message: reply as never });
+    });
+
+    expect(publish).toHaveBeenCalledWith(mirrorEvent);
+  });
+
+  it('mirrors a same-device threaded send on success (ui:message/sent), panel closed', () => {
+    const { refs } = makeRefs({
+      ...initialMessageListState,
+      hasReachedLatest: true,
+      isAtBottom: true,
+    });
+    const reply = buildTextMessage({
+      id: 30,
+      sender: me as never,
+      receiverId: 'peer',
+      parentMessageId: 5,
+      muid: 'muid-30',
+    });
+
+    const { emit, publish } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({
+        type: 'ui:message/sent',
+        message: reply as never,
+        status: CometChatMessageStatus.success,
+      });
+    });
+
+    expect(publish).toHaveBeenCalledWith(mirrorEvent);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Edit-mention — an edited reply that @mentions me subscribes me
+  // ---------------------------------------------------------------------------
+
+  it('subscribes me when a thread reply is edited to mention me (edit-mention)', () => {
+    const { refs } = makeRefs();
+    const edited = Object.assign(
+      buildTextMessage({
+        id: 40,
+        sender: peer as never,
+        receiverId: 'peer',
+        parentMessageId: 5,
+        mentionedUsers: [me as never],
+      }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit, publish } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({ type: 'message/edited', message: edited as never });
+    });
+
+    expect(publish).toHaveBeenCalledWith(mirrorEvent);
+  });
+
+  it('does NOT re-subscribe when I edit my own reply without a mention', () => {
+    const { refs } = makeRefs();
+    const edited = Object.assign(
+      buildTextMessage({ id: 41, sender: me as never, receiverId: 'peer', parentMessageId: 5 }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit, publish } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({ type: 'message/edited', message: edited as never });
+    });
+
+    expect(publish).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'ui:thread/subscription-changed' })
+    );
+  });
+
+  it('does NOT subscribe on a top-level message edited to mention me', () => {
+    const { refs } = makeRefs();
+    const edited = Object.assign(
+      // No parentMessageId — a top-level mention never subscribes.
+      buildTextMessage({
+        id: 42,
+        sender: peer as never,
+        receiverId: 'peer',
+        mentionedUsers: [me as never],
+      }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit, publish } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({ type: 'message/edited', message: edited as never });
+    });
+
+    expect(publish).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'ui:thread/subscription-changed' })
+    );
+  });
+
+  it('subscribes me when I edit my OWN reply to mention me (ui:compose/edit, same device)', () => {
+    // My own edit publishes ui:compose/edit, not message/edited.
+    const { refs } = makeRefs();
+    const edited = buildTextMessage({
+      id: 43,
+      sender: me as never,
+      receiverId: 'peer',
+      parentMessageId: 5,
+      mentionedUsers: [me as never],
+    });
+
+    const { emit, publish } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({
+        type: 'ui:compose/edit',
+        message: edited as never,
+        status: CometChatMessageStatus.success,
+      });
+    });
+
+    expect(publish).toHaveBeenCalledWith(mirrorEvent);
+  });
+
+  it('does NOT re-subscribe when I edit my OWN reply without a mention (ui:compose/edit)', () => {
+    const { refs } = makeRefs();
+    const edited = buildTextMessage({
+      id: 44,
+      sender: me as never,
+      receiverId: 'peer',
+      parentMessageId: 5,
+    });
+
+    const { emit, publish } = setup(
+      baseOptions({ user: user as never, loggedInUser: me as never }),
+      refs
+    );
+
+    act(() => {
+      emit({
+        type: 'ui:compose/edit',
+        message: edited as never,
+        status: CometChatMessageStatus.success,
+      });
+    });
+
+    expect(publish).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'ui:thread/subscription-changed' })
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // Thread view — an appended reply is stamped from the parent (socket reads false)
+  // ---------------------------------------------------------------------------
+
+  it('stamps an appended reply from a FOLLOWED parent in a thread view', () => {
+    const parent = buildTextMessage({ id: 5, threadSubscribed: true });
+    const { refs } = makeRefs();
+    const reply = Object.assign(
+      buildTextMessage({ id: 99, sender: peer as never, receiverId: 'peer', parentMessageId: 5 }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit, dispatched } = setup(
+      baseOptions({
+        user: user as never,
+        loggedInUser: me as never,
+        parentMessageId: 5,
+        parentMessage: parent as never,
+      }),
+      refs
+    );
+
+    act(() => {
+      emit({ type: 'message/text-received', message: reply as never });
+    });
+
+    // It was appended (thread view) and carries the thread's followed state.
+    expect(dispatched.some(a => a.type === 'MESSAGE_RECEIVED')).toBe(true);
+    expect(reply.isThreadSubscribed()).toBe(true);
+  });
+
+  it('stamps an appended reply from an UNFOLLOWED parent as not-following', () => {
+    const parent = buildTextMessage({ id: 5, threadSubscribed: false });
+    const { refs } = makeRefs();
+    const reply = Object.assign(
+      buildTextMessage({ id: 99, sender: peer as never, receiverId: 'peer', parentMessageId: 5 }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit } = setup(
+      baseOptions({
+        user: user as never,
+        loggedInUser: me as never,
+        parentMessageId: 5,
+        parentMessage: parent as never,
+      }),
+      refs
+    );
+
+    act(() => {
+      emit({ type: 'message/text-received', message: reply as never });
+    });
+
+    expect(reply.isThreadSubscribed()).toBe(false);
+  });
+
+  it('an arriving mention in a thread view stamps the reply, the parent, and mirrors', () => {
+    const parent = buildTextMessage({ id: 5, threadSubscribed: false });
+    const { refs } = makeRefs();
+    const reply = Object.assign(
+      buildTextMessage({
+        id: 99,
+        sender: peer as never,
+        receiverId: 'peer',
+        parentMessageId: 5,
+        mentionedUsers: [me as never],
+      }),
+      { setReadAt: vi.fn() }
+    );
+
+    const { emit, publish } = setup(
+      baseOptions({
+        user: user as never,
+        loggedInUser: me as never,
+        parentMessageId: 5,
+        parentMessage: parent as never,
+      }),
+      refs
+    );
+
+    act(() => {
+      emit({ type: 'message/text-received', message: reply as never });
+    });
+
+    expect(reply.isThreadSubscribed()).toBe(true);
+    expect(parent.isThreadSubscribed()).toBe(true);
+    expect(publish).toHaveBeenCalledWith({
+      type: 'ui:thread/subscription-changed',
+      parentMessageId: 5,
+      subscribed: true,
+    });
   });
 
   // ---------------------------------------------------------------------------

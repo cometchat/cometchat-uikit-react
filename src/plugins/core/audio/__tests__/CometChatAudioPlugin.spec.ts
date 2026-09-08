@@ -109,11 +109,15 @@ describe('CometChatAudioPlugin', () => {
       expect(result.props.alignment).toBe('left');
     });
 
-    it('forwards text formatters for caption rendering', () => {
-      const formatters = [{ id: 'mentions' }] as any;
-      const ctx = { ...mockContext(), getTextFormatters: () => formatters };
+    it('merges its own default formatters with context.textFormatters for captions', () => {
+      const custom = { id: 'color', priority: 60 } as any;
+      const ctx = { ...mockContext(), textFormatters: [custom] };
       const result = CometChatAudioPlugin.renderBubble(mockMediaMessage(), ctx) as any;
-      expect(result.props.textFormatters).toBe(formatters);
+      const ids = result.props.textFormatters.map((f: any) => f.id);
+      expect(ids).toContain('color');
+      expect(ids).toEqual(
+        expect.arrayContaining(['markdown-formatter', 'mentions-formatter', 'url-formatter'])
+      );
     });
 
     it('does not extract message-derived data itself', () => {

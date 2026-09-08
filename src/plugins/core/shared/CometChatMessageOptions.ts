@@ -2,8 +2,15 @@ import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatMessageOption, CometChatMessagePluginContext } from '../../plugin.types';
 import { CometChatMarkdownFormatter } from '../../../formatters/CometChatMarkdownFormatter';
 import { escapeUserHtml, sanitizeHtml } from '../../../utils/sanitizeHtml';
+import { applyDisplayFormatters } from '../../../formatters/applyDisplayFormatters';
 import { CometChatMessageStatus } from '../../../context/CometChatEvents.types';
 import { translateMessage } from '../../../utils/CometChatTranslationUtils';
+import {
+  getSubscriptionTargetId,
+  readThreadSubscribed,
+  isThreadSubscriptionSupported,
+  toggleThreadSubscription,
+} from '../../../utils/CometChatThreadSubscription';
 
 // --- Icons ---
 import addReactionIcon from '../../../assets/add_reaction_icon.svg';
@@ -17,6 +24,15 @@ import flagIcon from '../../../assets/warning_neutral.svg';
 import sendPrivatelyIcon from '../../../assets/send_message_privately.svg';
 import markUnreadIcon from '../../../assets/mark_unread.svg';
 import translateIcon from '../../../assets/translate.svg';
+import bellIcon from '../../../assets/bell.svg';
+import bellCrossedIcon from '../../../assets/bell_crossed.svg';
+import organizeIcon from '../../../assets/organize.svg';
+import pinIcon from '../../../assets/pin.svg';
+import unpinIcon from '../../../assets/unpin.svg';
+import saveIcon from '../../../assets/save.svg';
+import unsaveIcon from '../../../assets/unsave.svg';
+import { isPinned, isPinSaveEligible, isSaved } from '../../../utils/pinSaveUtils';
+import { getPinSaveFeatures } from '../../../utils/pinSaveFeatures';
 
 // --- Option ID constants ---
 
@@ -24,6 +40,7 @@ export const MESSAGE_OPTION_IDS = {
   react: 'react',
   reply: 'reply',
   replyInThread: 'reply-in-thread',
+  threadSubscription: 'thread-subscription',
   copy: 'copy',
   edit: 'edit',
   delete: 'delete',
@@ -32,6 +49,11 @@ export const MESSAGE_OPTION_IDS = {
   sendPrivately: 'send-privately',
   markAsUnread: 'mark-as-unread',
   translate: 'translate',
+  organize: 'organize',
+  pinMessage: 'pin-message',
+  unpinMessage: 'unpin-message',
+  saveMessage: 'save-message',
+  unsaveMessage: 'unsave-message',
 } as const;
 
 // --- Helpers ---
@@ -90,6 +112,45 @@ function replyInThreadOption(context: CometChatMessagePluginContext): CometChatM
   };
 }
 
+/**
+ * Follow / unfollow the thread this message belongs to.
+ *
+ * Action-labelled: the title and the icon describe what the tap will do, so
+ * they read inverted against the state — a followed thread offers "stop".
+ *
+ * Allowed on a message with no replies yet (that is the point — you hear about
+ * replies that arrive later), and on a reply, where it acts on the reply's
+ * parent. A subscription is always rooted at the thread's parent message.
+ */
+function threadSubscriptionOption(
+  message: CometChat.BaseMessage,
+  context: CometChatMessagePluginContext
+): CometChatMessageOption {
+  // Prefer the message list's reactive value; fall back to the message's own
+  // flag for a caller building options outside the list. Both resolve to the
+  // same source of truth — the reactive value just reflects an optimistic flip
+  // one render sooner (see `isThreadSubscribed` on the plugin context).
+  const subscribed = context.isThreadSubscribed ?? readThreadSubscribed(message);
+
+  return {
+    id: MESSAGE_OPTION_IDS.threadSubscription,
+    title: subscribed
+      ? loc(context, 'thread_subscription_unsubscribe', 'Unsubscribe from thread')
+      : loc(context, 'thread_subscription_subscribe', 'Subscribe to thread'),
+    iconURL: subscribed ? bellCrossedIcon : bellIcon,
+    onClick: msg => {
+      void toggleThreadSubscription({
+        parentMessageId: getSubscriptionTargetId(msg),
+        // The same value the user just saw, not a fresh store read.
+        subscribe: !subscribed,
+        publish: context.publish,
+        showToast: context.showToast,
+        getLocalizedString: context.getLocalizedString,
+      });
+    },
+  };
+}
+
 function copyOption(context: CometChatMessagePluginContext): CometChatMessageOption {
   return {
     id: MESSAGE_OPTION_IDS.copy,
@@ -121,11 +182,26 @@ function copyOption(context: CometChatMessagePluginContext): CometChatMessageOpt
 
       // SECURITY: escape raw HTML before formatting + sanitize, else the clipboard
       // text/html carries a live payload that executes on paste.
+      // Custom display formatters run on top of the built-in markdown so a
+      // copied custom format keeps its styling when pasted into a rich editor.
       const markdownFormatter = new CometChatMarkdownFormatter();
-      const htmlContent = sanitizeHtml(markdownFormatter.format(escapeUserHtml(text)));
+      const htmlContent = sanitizeHtml(
+        applyDisplayFormatters(
+          markdownFormatter.format(escapeUserHtml(text)),
+          context.textFormatters
+        )
+      );
 
-      // Strip markdown formatting for the text/plain clipboard blob
-      const plainText = stripMarkdownFormatting(text);
+      // Strip markdown for the text/plain blob, then flatten any custom-format tokens to
+      // their visible text (so the clipboard's plain text isn't littered with raw tokens).
+      let plainText = stripMarkdownFormatting(text);
+      if (context.textFormatters?.length && typeof document !== 'undefined') {
+        const tmp = document.createElement('div');
+        // SECURITY: escape before this innerHTML write, exactly as the text/html
+        // branch above does.
+        tmp.innerHTML = applyDisplayFormatters(escapeUserHtml(plainText), context.textFormatters);
+        plainText = tmp.textContent ?? plainText;
+      }
 
       // Write both HTML and plain text to clipboard via ClipboardItem API
       // This allows the composer to paste formatted content when text/html is available
@@ -266,6 +342,119 @@ function translateOption(context: CometChatMessagePluginContext): CometChatMessa
   };
 }
 
+function pinMessageOption(context: CometChatMessagePluginContext): CometChatMessageOption {
+  return {
+    id: MESSAGE_OPTION_IDS.pinMessage,
+    title: loc(context, 'message_list_option_pin_message', 'Pin message'),
+    iconURL: pinIcon,
+    onClick: message => {
+      context.onPinMessage?.(message);
+    },
+  };
+}
+
+function unpinMessageOption(context: CometChatMessagePluginContext): CometChatMessageOption {
+  return {
+    id: MESSAGE_OPTION_IDS.unpinMessage,
+    title: loc(context, 'message_list_option_unpin_message', 'Unpin message'),
+    iconURL: unpinIcon,
+    onClick: message => {
+      context.onUnpinMessage?.(message);
+    },
+  };
+}
+
+function saveMessageOption(context: CometChatMessagePluginContext): CometChatMessageOption {
+  return {
+    id: MESSAGE_OPTION_IDS.saveMessage,
+    title: loc(context, 'message_list_option_save_message', 'Save message'),
+    iconURL: saveIcon,
+    onClick: message => {
+      context.onSaveMessage?.(message);
+    },
+  };
+}
+
+function unsaveMessageOption(context: CometChatMessagePluginContext): CometChatMessageOption {
+  return {
+    id: MESSAGE_OPTION_IDS.unsaveMessage,
+    title: loc(context, 'message_list_option_unsave_message', 'Unsave message'),
+    iconURL: unsaveIcon,
+    onClick: message => {
+      context.onUnsaveMessage?.(message);
+    },
+  };
+}
+
+/**
+ * Build the pin/save options for a message, already reduced to what this user may
+ * actually do here.
+ *
+ * Pin/Unpin and Save/Unsave are mutually exclusive per message — the current state
+ * decides which of each pair is offered.
+ */
+function buildPinSaveOptions(
+  message: CometChat.BaseMessage,
+  context: CometChatMessagePluginContext
+): CometChatMessageOption[] {
+  if (!isPinSaveEligible(message, context.loggedInUser.getUid())) return [];
+
+  // Prefer the value the renderer passed down — it re-renders when resolution
+  // lands. The module cache is the fallback for non-React callers.
+  const features = context.pinSaveFeatures ?? getPinSaveFeatures();
+  const options: CometChatMessageOption[] = [];
+
+  if (features.pinMessage) {
+    if (isPinned(message)) {
+      if (!context.hideUnpinMessageOption) options.push(unpinMessageOption(context));
+    } else {
+      if (!context.hidePinMessageOption) options.push(pinMessageOption(context));
+    }
+  }
+
+  // Save is private to the acting user — no role gate, ever.
+  if (features.saveMessage) {
+    if (isSaved(message)) {
+      if (!context.hideUnsaveMessageOption) options.push(unsaveMessageOption(context));
+    } else {
+      if (!context.hideSaveMessageOption) options.push(saveMessageOption(context));
+    }
+  }
+
+  return options;
+}
+
+/**
+ * Wrap pin/save under an "Organize ▸" fly-out, or return them flat.
+ *
+ * - `'nested'` (main message list) — room for a submenu.
+ * - `'flat'` (thread column, Pinned/Saved panels) — ~400px wide, nowhere to fly out to.
+ *
+ * A single surviving option is ALWAYS returned flat: an "Organize ▸" that opens to
+ * reveal one item is worse than no submenu at all.
+ */
+function organizeOptions(
+  message: CometChat.BaseMessage,
+  context: CometChatMessagePluginContext
+): CometChatMessageOption[] {
+  const pinSave = buildPinSaveOptions(message, context);
+  if (pinSave.length === 0) return [];
+  if (context.optionsLayout === 'flat' || pinSave.length === 1) return pinSave;
+
+  return [
+    {
+      id: MESSAGE_OPTION_IDS.organize,
+      title: loc(context, 'message_list_option_organize', 'Organize'),
+      iconURL: organizeIcon,
+      // The row is a disclosure, not an action — the submenu handles selection.
+      onClick: () => {
+        /* no-op */
+      },
+      submenu: pinSave,
+    },
+  ];
+}
+
 // --- Filter options based on context ---
 
 /**
@@ -325,6 +514,12 @@ function filterOptions(
       case MESSAGE_OPTION_IDS.replyInThread:
         if (context.hideReplyInThreadOption) return false;
         break;
+      case MESSAGE_OPTION_IDS.threadSubscription:
+        // Deliberately not gated on `isThread` the way "Reply in Thread" is:
+        // inside a thread the option still applies, to the parent.
+        if (context.hideThreadSubscriptionOption) return false;
+        if (!isThreadSubscriptionSupported()) return false;
+        break;
       case MESSAGE_OPTION_IDS.edit:
         if (context.hideEditMessageOption) return false;
         break;
@@ -372,6 +567,7 @@ export function getMediaMessageOptions(
     reactOption(context),
     replyOption(context),
     replyInThreadOption(context),
+    threadSubscriptionOption(message, context),
   ];
 
   // Add copy and edit when message has a caption (works like text copy/edit)
@@ -382,6 +578,9 @@ export function getMediaMessageOptions(
     allOptions.push(copyOption(context));
     allOptions.push(editOption(context));
   }
+
+  // Organize sits directly after the Copy/Edit block (Figma: expanded_options).
+  allOptions.push(...organizeOptions(message, context));
 
   allOptions.push(
     messageInfoOption(context),
@@ -405,8 +604,11 @@ export function getTextMessageOptions(
     reactOption(context),
     replyOption(context),
     replyInThreadOption(context),
+    threadSubscriptionOption(message, context),
     copyOption(context),
     editOption(context),
+    // Organize sits after Edit, before Translate (Figma: expanded_options).
+    ...organizeOptions(message, context),
     translateOption(context),
     messageInfoOption(context),
     deleteOption(context),

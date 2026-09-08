@@ -5,6 +5,9 @@ import './CometChatTooltip.css';
 /** Which third of the tooltip the arrow sits under. */
 export type CometChatTooltipArrowVariant = 'left' | 'middle' | 'right';
 
+/** Which side of the anchor the tooltip sits on. */
+export type CometChatTooltipPlacement = 'top' | 'bottom';
+
 export interface CometChatTooltipProps {
   /**
    * Element the tooltip points at. Its bounding rect drives the position, so the
@@ -20,7 +23,12 @@ export interface CometChatTooltipProps {
   boundsEl?: HTMLElement | null;
   /** Tooltip contents. */
   children: React.ReactNode;
-  /** Vertical gap between the anchor's top edge and the tooltip's bottom (px). */
+  /**
+   * Which side of the anchor to sit on. Defaults to `top`. Use `bottom` for an
+   * anchor near the top of its container, where a tooltip above would be clipped.
+   */
+  placement?: CometChatTooltipPlacement;
+  /** Vertical gap between the anchor and the tooltip (px). */
   gap?: number;
   /** Minimum inset kept from the bounds' left/right edges (px). */
   boundsPadding?: number;
@@ -63,6 +71,7 @@ export const CometChatTooltip: React.FC<CometChatTooltipProps> = ({
   anchorEl,
   boundsEl,
   children,
+  placement: side = 'top',
   gap = 12,
   boundsPadding = 8,
   className,
@@ -102,13 +111,16 @@ export const CometChatTooltip: React.FC<CometChatTooltipProps> = ({
     const variant: CometChatTooltipArrowVariant =
       arrowLeft <= tipW / 3 ? 'left' : arrowLeft >= (tipW * 2) / 3 ? 'right' : 'middle';
 
-    setPlacement({ top: anchor.top - gap - tipH, left, arrowLeft, variant });
-  }, [anchorEl, boundsEl, gap, boundsPadding, children]);
+    const top = side === 'bottom' ? anchor.bottom + gap : anchor.top - gap - tipH;
+
+    setPlacement({ top, left, arrowLeft, variant });
+  }, [anchorEl, boundsEl, side, gap, boundsPadding, children]);
 
   if (!anchorEl) return null;
 
   const boxClass = [
     'cometchat-tooltip',
+    `cometchat-tooltip--${side}`,
     placement ? `cometchat-tooltip--arrow-${placement.variant}` : '',
     className ?? '',
   ]
