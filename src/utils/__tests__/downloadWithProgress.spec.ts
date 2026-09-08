@@ -60,9 +60,9 @@ describe('downloadWithProgress', () => {
     mockCreateElement.mockReturnValue(linkElement);
 
     const onProgress = vi.fn();
-    await downloadWithProgress('http://example.com/file.zip', 'file.zip', onProgress);
+    await downloadWithProgress('https://example.com/file.zip', 'file.zip', onProgress);
 
-    expect(mockFetch).toHaveBeenCalledWith('http://example.com/file.zip', {});
+    expect(mockFetch).toHaveBeenCalledWith('https://example.com/file.zip', {});
     expect(onProgress).toHaveBeenCalledWith(100);
     expect(linkElement.click).toHaveBeenCalled();
     expect(linkElement.download).toBe('file.zip');
@@ -92,13 +92,13 @@ describe('downloadWithProgress', () => {
     mockCreateElement.mockReturnValue(linkElement);
 
     await downloadWithProgress(
-      'http://example.com/file.zip',
+      'https://example.com/file.zip',
       'file.zip',
       vi.fn(),
       controller.signal
     );
 
-    expect(mockFetch).toHaveBeenCalledWith('http://example.com/file.zip', {
+    expect(mockFetch).toHaveBeenCalledWith('https://example.com/file.zip', {
       signal: controller.signal,
     });
   });
@@ -115,9 +115,9 @@ describe('downloadWithProgress', () => {
     mockCreateElement.mockReturnValue(linkElement);
 
     const onProgress = vi.fn();
-    await downloadWithProgress('http://example.com/file.zip', 'file.zip', onProgress);
+    await downloadWithProgress('https://example.com/file.zip', 'file.zip', onProgress);
 
-    expect(linkElement.href).toBe('http://example.com/file.zip');
+    expect(linkElement.href).toBe('https://example.com/file.zip');
     expect(linkElement.download).toBe('file.zip');
     expect(linkElement.click).toHaveBeenCalled();
     expect(onProgress).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe('downloadWithProgress', () => {
     mockFetch.mockRejectedValue(abortError);
 
     const onProgress = vi.fn();
-    await downloadWithProgress('http://example.com/file.zip', 'file.zip', onProgress);
+    await downloadWithProgress('https://example.com/file.zip', 'file.zip', onProgress);
 
     expect(mockWindowOpen).not.toHaveBeenCalled();
     expect(onProgress).not.toHaveBeenCalled();
@@ -139,10 +139,10 @@ describe('downloadWithProgress', () => {
     mockFetch.mockRejectedValue(new Error('Network error'));
 
     const onProgress = vi.fn();
-    await downloadWithProgress('http://example.com/file.zip', 'file.zip', onProgress);
+    await downloadWithProgress('https://example.com/file.zip', 'file.zip', onProgress);
 
     expect(mockWindowOpen).toHaveBeenCalledWith(
-      'http://example.com/file.zip',
+      'https://example.com/file.zip',
       '_blank',
       'noopener,noreferrer'
     );
@@ -168,7 +168,7 @@ describe('downloadWithProgress', () => {
     mockCreateElement.mockReturnValue(linkElement);
 
     const onProgress = vi.fn();
-    await downloadWithProgress('http://example.com/file.zip', 'file.zip', onProgress);
+    await downloadWithProgress('https://example.com/file.zip', 'file.zip', onProgress);
 
     // When content-length is 0, progress is not reported
     expect(onProgress).not.toHaveBeenCalled();
@@ -198,7 +198,7 @@ describe('downloadWithProgress', () => {
     mockCreateElement.mockReturnValue(linkElement);
 
     const onProgress = vi.fn();
-    await downloadWithProgress('http://example.com/file.zip', 'file.zip', onProgress);
+    await downloadWithProgress('https://example.com/file.zip', 'file.zip', onProgress);
 
     // First chunk: 3/7 = 42%
     expect(onProgress).toHaveBeenCalledWith(42);
@@ -214,12 +214,19 @@ describe('downloadWithProgress', () => {
       headers: { get: () => null },
     });
 
-    await downloadWithProgress('http://example.com/file.zip', 'file.zip', vi.fn());
+    await downloadWithProgress('https://example.com/file.zip', 'file.zip', vi.fn());
 
     expect(mockWindowOpen).toHaveBeenCalledWith(
-      'http://example.com/file.zip',
+      'https://example.com/file.zip',
       '_blank',
       'noopener,noreferrer'
     );
+  });
+
+  it('should block unsafe download URLs', async () => {
+    await downloadWithProgress('javascript:alert(1)', 'file.zip', vi.fn());
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockWindowOpen).not.toHaveBeenCalled();
   });
 });

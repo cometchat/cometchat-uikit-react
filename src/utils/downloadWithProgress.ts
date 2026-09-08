@@ -9,6 +9,19 @@ export interface DownloadProgress {
   isDownloading: boolean;
 }
 
+function isAllowedDownloadUrl(url: string): boolean {
+  try {
+    const base =
+      typeof window !== 'undefined' ? window.location.href : 'https://localhost.invalid';
+    const parsed = new URL(url, base);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'blob:') return true;
+    if (parsed.protocol !== 'http:') return false;
+    return ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export async function downloadWithProgress(
   url: string,
   fileName: string,
@@ -16,6 +29,10 @@ export async function downloadWithProgress(
   signal?: AbortSignal
 ): Promise<void> {
   try {
+    if (!isAllowedDownloadUrl(url)) {
+      throw new Error('Blocked unsafe download URL');
+    }
+
     const response = await fetch(url, signal ? { signal } : {});
 
     if (!response.ok) {
@@ -60,6 +77,8 @@ export async function downloadWithProgress(
       return;
     }
     // Fallback: open in new tab
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (isAllowedDownloadUrl(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   }
 }
