@@ -3,7 +3,7 @@ import { CometChatSoundManager } from '../CometChatSoundManager';
 
 describe('CometChatSoundManager', () => {
   const originalAudio = globalThis.Audio;
-  const originalNavigator = window.navigator;
+  const originalUserActivation = window.navigator.userActivation;
   let firstAudio: { pause: ReturnType<typeof vi.fn>; currentTime: number; loop: boolean } | null = null;
   let secondAudio: { pause: ReturnType<typeof vi.fn>; currentTime: number; loop: boolean } | null = null;
   let audioCount = 0;
@@ -13,15 +13,12 @@ describe('CometChatSoundManager', () => {
     firstAudio = null;
     secondAudio = null;
 
-    Object.defineProperty(window, 'navigator', {
+    Object.defineProperty(window.navigator, 'userActivation', {
       configurable: true,
-      value: {
-        ...originalNavigator,
-        userActivation: { isActive: true, hasBeenActive: true },
-      },
+      value: { isActive: true, hasBeenActive: true },
     });
 
-    globalThis.Audio = vi.fn(() => {
+    function MockAudio() {
       audioCount += 1;
       const audio = {
         pause: vi.fn(),
@@ -32,15 +29,17 @@ describe('CometChatSoundManager', () => {
       if (audioCount === 1) firstAudio = audio;
       if (audioCount === 2) secondAudio = audio;
       return audio as unknown as HTMLAudioElement;
-    }) as unknown as typeof Audio;
+    }
+
+    globalThis.Audio = MockAudio as unknown as typeof Audio;
   });
 
   afterEach(() => {
     CometChatSoundManager.pause();
     globalThis.Audio = originalAudio;
-    Object.defineProperty(window, 'navigator', {
+    Object.defineProperty(window.navigator, 'userActivation', {
       configurable: true,
-      value: originalNavigator,
+      value: originalUserActivation,
     });
     vi.restoreAllMocks();
   });

@@ -300,7 +300,7 @@ describe('CometChatMessageComposerRoot', () => {
         <CometChatMessageComposerRoot
           enableRichTextEditor
           messageToEdit={messageToEdit}
-          group={{} as any}
+          group={{ getGuid: () => 'group-1' } as any}
         />,
         { wrapper }
       );

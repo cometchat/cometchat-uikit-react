@@ -3,9 +3,15 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
 
-const mockGetNotificationFeedUnreadCount = vi.fn();
-const mockAddNotificationFeedListener = vi.fn();
-const mockRemoveNotificationFeedListener = vi.fn();
+const {
+  mockGetNotificationFeedUnreadCount,
+  mockAddNotificationFeedListener,
+  mockRemoveNotificationFeedListener,
+} = vi.hoisted(() => ({
+  mockGetNotificationFeedUnreadCount: vi.fn(),
+  mockAddNotificationFeedListener: vi.fn(),
+  mockRemoveNotificationFeedListener: vi.fn(),
+}));
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
   CometChat: {
