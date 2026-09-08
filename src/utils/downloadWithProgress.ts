@@ -18,6 +18,10 @@ export async function downloadWithProgress(
   try {
     const response = await fetch(url, signal ? { signal } : {});
 
+    if (!response.ok) {
+      throw new Error(`Download failed with status ${String(response.status)}`);
+    }
+
     if (!response.body) {
       // Fallback: browser doesn't support ReadableStream
       const link = document.createElement('a');

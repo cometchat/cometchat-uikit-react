@@ -101,40 +101,42 @@ vi.mock('../useCometChatMentions', () => ({
   }),
 }));
 
+const mockRichTextEditor = {
+  editorRef: { current: null as HTMLDivElement | null },
+  formatState: {
+    bold: false,
+    italic: false,
+    underline: false,
+    strikethrough: false,
+    code: false,
+    codeBlock: false,
+    blockquote: false,
+    orderedList: false,
+    bulletList: false,
+    link: false,
+  },
+  toggleBold: vi.fn(),
+  toggleItalic: vi.fn(),
+  toggleUnderline: vi.fn(),
+  toggleStrikethrough: vi.fn(),
+  toggleInlineCode: vi.fn(),
+  toggleCodeBlock: vi.fn(),
+  toggleBlockquote: vi.fn(),
+  toggleOrderedList: vi.fn(),
+  toggleBulletList: vi.fn(),
+  setLink: vi.fn(),
+  insertMention: vi.fn(),
+  insertPlainText: vi.fn(),
+  clear: vi.fn(),
+  focus: vi.fn(),
+  saveSelection: vi.fn().mockReturnValue(null),
+  restoreSelection: vi.fn(),
+  getCurrentLink: vi.fn().mockReturnValue(null),
+  getCurrentLinkText: vi.fn().mockReturnValue(null),
+};
+
 vi.mock('../../../utils/RichTextEditor/useRichTextEditor', () => ({
-  useRichTextEditor: () => ({
-    editorRef: { current: null },
-    formatState: {
-      bold: false,
-      italic: false,
-      underline: false,
-      strikethrough: false,
-      code: false,
-      codeBlock: false,
-      blockquote: false,
-      orderedList: false,
-      bulletList: false,
-      link: false,
-    },
-    toggleBold: vi.fn(),
-    toggleItalic: vi.fn(),
-    toggleUnderline: vi.fn(),
-    toggleStrikethrough: vi.fn(),
-    toggleInlineCode: vi.fn(),
-    toggleCodeBlock: vi.fn(),
-    toggleBlockquote: vi.fn(),
-    toggleOrderedList: vi.fn(),
-    toggleBulletList: vi.fn(),
-    setLink: vi.fn(),
-    insertMention: vi.fn(),
-    insertPlainText: vi.fn(),
-    clear: vi.fn(),
-    focus: vi.fn(),
-    saveSelection: vi.fn().mockReturnValue(null),
-    restoreSelection: vi.fn(),
-    getCurrentLink: vi.fn().mockReturnValue(null),
-    getCurrentLinkText: vi.fn().mockReturnValue(null),
-  }),
+  useRichTextEditor: () => mockRichTextEditor,
 }));
 
 import { LocaleProvider } from '../../../context/locale/LocaleProvider';
@@ -148,6 +150,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe('CometChatMessageComposerRoot', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRichTextEditor.editorRef.current = document.createElement('div');
     mockCometChat.isInitialized = vi.fn().mockReturnValue(false);
     mockCometChat.getLoggedinUser = vi.fn().mockResolvedValue(null);
   });
@@ -278,6 +281,36 @@ describe('CometChatMessageComposerRoot', () => {
         wrapper,
       });
       expect(screen.queryByTestId('formatting-toolbar')).not.toBeInTheDocument();
+    });
+
+    it('escapes malicious mentioned-user labels before writing edit-mode HTML', async () => {
+      const messageToEdit = {
+        getId: () => 1,
+        getText: () => 'Hello <@uid:evil>',
+        getMetadata: () => undefined,
+        getMentionedUsers: () => [
+          {
+            getUid: () => 'evil',
+            getName: () => '</span><img src=x onerror=alert(1)>',
+          },
+        ],
+      } as any;
+
+      render(
+        <CometChatMessageComposerRoot
+          enableRichTextEditor
+          messageToEdit={messageToEdit}
+          group={{} as any}
+        />,
+        { wrapper }
+      );
+
+      await waitFor(() => {
+        expect(mockRichTextEditor.editorRef.current?.innerHTML).toContain(
+          '&lt;img src=x onerror=alert(1)&gt;'
+        );
+      });
+      expect(mockRichTextEditor.editorRef.current?.innerHTML).not.toContain('<img');
     });
   });
 

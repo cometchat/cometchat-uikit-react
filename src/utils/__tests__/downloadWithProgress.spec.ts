@@ -46,7 +46,9 @@ describe('downloadWithProgress', () => {
     };
 
     const mockResponse = {
+      ok: true,
       body: mockBody,
+      status: 200,
       headers: {
         get: vi.fn().mockReturnValue('5'),
       },
@@ -80,7 +82,9 @@ describe('downloadWithProgress', () => {
     };
 
     mockFetch.mockResolvedValue({
+      ok: true,
       body: { getReader: () => mockReader },
+      status: 200,
       headers: { get: () => '2' },
     });
 
@@ -101,7 +105,9 @@ describe('downloadWithProgress', () => {
 
   it('should fallback to link download when response.body is null', async () => {
     mockFetch.mockResolvedValue({
+      ok: true,
       body: null,
+      status: 200,
       headers: { get: () => null },
     });
 
@@ -152,7 +158,9 @@ describe('downloadWithProgress', () => {
     };
 
     mockFetch.mockResolvedValue({
+      ok: true,
       body: { getReader: () => mockReader },
+      status: 200,
       headers: { get: () => '0' },
     });
 
@@ -180,7 +188,9 @@ describe('downloadWithProgress', () => {
     };
 
     mockFetch.mockResolvedValue({
+      ok: true,
       body: { getReader: () => mockReader },
+      status: 200,
       headers: { get: () => '7' },
     });
 
@@ -194,5 +204,22 @@ describe('downloadWithProgress', () => {
     expect(onProgress).toHaveBeenCalledWith(42);
     // Second chunk: 7/7 = 100%
     expect(onProgress).toHaveBeenCalledWith(100);
+  });
+
+  it('should fallback to window.open for non-ok responses', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 404,
+      body: null,
+      headers: { get: () => null },
+    });
+
+    await downloadWithProgress('http://example.com/file.zip', 'file.zip', vi.fn());
+
+    expect(mockWindowOpen).toHaveBeenCalledWith(
+      'http://example.com/file.zip',
+      '_blank',
+      'noopener,noreferrer'
+    );
   });
 });

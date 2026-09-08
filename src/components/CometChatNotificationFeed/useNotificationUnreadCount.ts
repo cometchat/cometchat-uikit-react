@@ -4,7 +4,7 @@ import type { NotificationFeedItem } from './CometChatNotificationFeed.types';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 
 export interface UseNotificationUnreadCountOptions {
-  /** Filter count by category */
+  /** Category-specific unread counts are not currently supported by the SDK. */
   category?: string;
   /** Polling interval in ms. Default: 30000 */
   pollingInterval?: number;
@@ -21,34 +21,53 @@ export interface UseNotificationUnreadCountResult {
  * regardless of how many components subscribe.
  */
 class UnreadCountStore {
+  private static readonly DEFAULT_POLLING_INTERVAL = 30000;
   private count = 0;
   private isLoading = true;
   private listeners = new Set<() => void>();
+  private listenerOptions = new Map<() => void, UseNotificationUnreadCountOptions | undefined>();
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
   private listenerId = `unread_count_shared_${String(Date.now())}`;
   private subscriberCount = 0;
   private isFetching = false;
-  private currentWindow: Window =
-    typeof window !== 'undefined' ? window : (undefined as unknown as Window);
+  private currentWindow: Window | null = typeof window !== 'undefined' ? window : null;
+  private warnedUnsupportedCategory = false;
 
-  subscribe(onStoreChange: () => void, win?: Window): () => void {
+  subscribe(
+    onStoreChange: () => void,
+    options?: UseNotificationUnreadCountOptions,
+    win?: Window | null
+  ): () => void {
     this.listeners.add(onStoreChange);
+    this.listenerOptions.set(onStoreChange, options);
     this.subscriberCount++;
 
     if (win) {
       this.currentWindow = win;
     }
 
+    if (options?.category && !this.warnedUnsupportedCategory) {
+      this.warnedUnsupportedCategory = true;
+      console.warn(
+        '[useNotificationUnreadCount] category filtering is not supported by the current SDK unread-count API.'
+      );
+    }
+
     if (this.subscriberCount === 1) {
       this.start();
+    } else {
+      this.restartPolling();
     }
 
     return () => {
       this.listeners.delete(onStoreChange);
+      this.listenerOptions.delete(onStoreChange);
       this.subscriberCount--;
 
       if (this.subscriberCount === 0) {
         this.stop();
+      } else {
+        this.restartPolling();
       }
     };
   }
@@ -59,6 +78,20 @@ class UnreadCountStore {
 
   getIsLoading(): boolean {
     return this.isLoading;
+  }
+
+  private getPollingIntervalMs(): number {
+    let interval = UnreadCountStore.DEFAULT_POLLING_INTERVAL;
+    for (const options of this.listenerOptions.values()) {
+      if (
+        typeof options?.pollingInterval === 'number' &&
+        Number.isFinite(options.pollingInterval) &&
+        options.pollingInterval > 0
+      ) {
+        interval = Math.min(interval, options.pollingInterval);
+      }
+    }
+    return interval;
   }
 
   async fetchCount(): Promise<void> {
@@ -92,7 +125,7 @@ class UnreadCountStore {
     // Single polling interval
     this.pollingInterval = setInterval(() => {
       void this.fetchCount();
-    }, 30000);
+    }, this.getPollingIntervalMs());
 
     // Single real-time listener
     try {
@@ -116,7 +149,7 @@ class UnreadCountStore {
     }
 
     // Single focus handler
-    this.currentWindow.addEventListener('focus', this.handleFocus);
+    this.currentWindow?.addEventListener('focus', this.handleFocus);
   }
 
   private stop() {
@@ -135,7 +168,15 @@ class UnreadCountStore {
       // Ignore cleanup errors
     }
 
-    this.currentWindow.removeEventListener('focus', this.handleFocus);
+    this.currentWindow?.removeEventListener('focus', this.handleFocus);
+  }
+
+  private restartPolling() {
+    if (!this.pollingInterval) return;
+    clearInterval(this.pollingInterval);
+    this.pollingInterval = setInterval(() => {
+      void this.fetchCount();
+    }, this.getPollingIntervalMs());
   }
 
   private handleFocus = () => {
@@ -157,19 +198,19 @@ const sharedStore = new UnreadCountStore();
  * Uses a shared singleton — multiple components share one polling interval and listener.
  */
 export function useNotificationUnreadCount(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _options?: UseNotificationUnreadCountOptions
+  options?: UseNotificationUnreadCountOptions
 ): UseNotificationUnreadCountResult {
   const [, forceRender] = useState(0);
   const IframeContext = useCometChatFrameContext();
-  const currentWindow = IframeContext.iframeWindow ?? window;
+  const currentWindow =
+    IframeContext.iframeWindow ?? (typeof window !== 'undefined' ? window : null);
 
   useEffect(() => {
     const unsubscribe = sharedStore.subscribe(() => {
       forceRender(n => n + 1);
-    }, currentWindow);
+    }, options, currentWindow);
     return unsubscribe;
-  }, [currentWindow]);
+  }, [currentWindow, options]);
 
   const refresh = useCallback(async () => {
     await sharedStore.fetchCount();
