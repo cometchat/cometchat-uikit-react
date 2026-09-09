@@ -11,12 +11,16 @@ export interface DownloadProgress {
 
 function isAllowedDownloadUrl(url: string): boolean {
   try {
-    const base =
-      typeof window !== 'undefined' ? window.location.href : 'https://localhost.invalid';
-    const parsed = new URL(url, base);
-    if (parsed.protocol === 'https:' || parsed.protocol === 'blob:') return true;
+    if (typeof window === 'undefined') return false;
+
+    const parsed = new URL(url, window.location.href);
+    const isSameOrigin = parsed.origin === window.location.origin;
+
+    if (parsed.protocol === 'https:') return true;
+    if (parsed.protocol === 'blob:') return parsed.origin === window.location.origin;
     if (parsed.protocol !== 'http:') return false;
-    return ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
+
+    return isSameOrigin || ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname);
   } catch {
     return false;
   }
