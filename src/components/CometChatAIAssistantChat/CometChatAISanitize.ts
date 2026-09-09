@@ -8,6 +8,8 @@
 
 import DOMPurify from 'dompurify';
 
+let hasRegisteredAIAnchorHook = false;
+
 /** Tags allowed in AI-generated HTML content. */
 export const AI_ALLOWED_TAGS = [
   'span',
@@ -64,6 +66,17 @@ export const AI_ALLOWED_ATTR = [
  */
 export function sanitizeAIHtml(html: string): string {
   if (!html) return '';
+
+  if (!hasRegisteredAIAnchorHook) {
+    DOMPurify.addHook('afterSanitizeAttributes', node => {
+      if (node.tagName === 'A') {
+        node.setAttribute('target', '_blank');
+        node.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
+    hasRegisteredAIAnchorHook = true;
+  }
+
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: AI_ALLOWED_TAGS,
     ALLOWED_ATTR: AI_ALLOWED_ATTR,

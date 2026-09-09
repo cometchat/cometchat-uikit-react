@@ -26,9 +26,29 @@ import { applyListStyles, fixOrderedListContinuation } from '../../utils/RichTex
 import { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 import { useCometChatMentions } from './useCometChatMentions';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 import sendFillIcon from '../../assets/send_fill.svg';
 import uploadIcon from '../../assets/upload-icon.svg';
 import './CometChatMessageComposer.css';
+
+function escapeMentionValue(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildMentionSpan(params: {
+  uid: string;
+  label: string;
+  className: string;
+  mentionType: 'other' | 'channel';
+}): string {
+  const { uid, label, className, mentionType } = params;
+  return `<span contenteditable="false" class="${className}" data-uid="${escapeMentionValue(uid)}" data-mention-type="${mentionType}">@${escapeMentionValue(label)}</span>`;
+}
 
 /**
  * ComposerValidationError — inline error banner for file validation errors.
@@ -546,12 +566,24 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
             text = text.replace(/<@uid:(.*?)>/g, (_match: string, uid: string) => {
               const user = mentionedUsers.find(u => u.getUid() === uid);
               const name = user ? user.getName() : uid;
-              return `<span contenteditable="false" class="cometchat-mention cometchat-mentions cometchat-mentions-other" data-uid="${uid}" data-mention-type="other">@${name}</span>`;
+              return buildMentionSpan({
+                uid,
+                label: name,
+                className:
+                  'cometchat-mention cometchat-mentions cometchat-mentions-other',
+                mentionType: 'other',
+              });
             });
           }
           // Handle @all/channel mentions: <@all:label>
           text = text.replace(/<@all:(.*?)>/g, (_match: string, label: string) => {
-            return `<span contenteditable="false" class="cometchat-mention cometchat-mention--self cometchat-mentions cometchat-mentions-you" data-uid="all" data-mention-type="channel">@${label}</span>`;
+            return buildMentionSpan({
+              uid: 'all',
+              label,
+              className:
+                'cometchat-mention cometchat-mention--self cometchat-mentions cometchat-mentions-you',
+              mentionType: 'channel',
+            });
           });
 
           // Fallback: if no SDK tokens were found but mentionedUsers exist,
@@ -565,7 +597,13 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
               const nameRegex = new RegExp(`@${escapedName}(?!\\w)`, 'g');
               text = text.replace(
                 nameRegex,
-                `<span contenteditable="false" class="cometchat-mention cometchat-mentions cometchat-mentions-other" data-uid="${uid}" data-mention-type="other">@${name}</span>`
+                buildMentionSpan({
+                  uid,
+                  label: name,
+                  className:
+                    'cometchat-mention cometchat-mentions cometchat-mentions-other',
+                  mentionType: 'other',
+                })
               );
             }
           }
@@ -574,13 +612,19 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
           if (!text.includes('data-uid="all"') && /(?<!\w)@all(?!\w)/.test(text)) {
             text = text.replace(
               /(?<!\w)@all(?!\w)/g,
-              '<span contenteditable="false" class="cometchat-mention cometchat-mention--self cometchat-mentions cometchat-mentions-you" data-uid="all" data-mention-type="channel">@all</span>'
+              buildMentionSpan({
+                uid: 'all',
+                label: 'all',
+                className:
+                  'cometchat-mention cometchat-mention--self cometchat-mentions cometchat-mentions-you',
+                mentionType: 'channel',
+              })
             );
           }
         } catch {
           /* ignore */
         }
-        return text;
+        return sanitizeHtml(text);
       };
 
       // Render custom formatters' STORED markup (e.g. color's `{color:#…}…{/color}` tokens) into

@@ -10,6 +10,21 @@ export interface DownloadProgress {
   isDownloading: boolean;
 }
 
+function isAllowedDownloadUrl(url: string): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+
+    const parsed = new URL(url, window.location.href);
+    const isSameOrigin = parsed.origin === window.location.origin;
+
+    if (parsed.protocol === 'https:') return true;
+    if (parsed.protocol === 'blob:') return parsed.origin === window.location.origin;
+    if (parsed.protocol !== 'http:') return false;
+
+    return isSameOrigin || ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname);
+  } catch {
+    return false;
+  }
 /** Common MIME type → file extension, used when the download name lacks one. */
 const MIME_EXTENSION: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -86,9 +101,16 @@ export async function downloadWithProgress(
   signal?: AbortSignal
 ): Promise<void> {
   try {
+    if (!isAllowedDownloadUrl(url)) {
+      throw new Error('Blocked unsafe download URL');
+    }
+
     const response = await fetch(url, signal ? { signal } : {});
 
     if (!response.ok) {
+      throw new Error(`Download failed with status ${String(response.status)}`);
+    }
+
       throw new Error(`HTTP ${String(response.status)}`);
     }
 
@@ -128,6 +150,8 @@ export async function downloadWithProgress(
       // Download was cancelled — do nothing
       return;
     }
+    // Fallback: open in new tab
+    if (isAllowedDownloadUrl(url)) {
     // Fallback: try fetching as blob without signal/streaming.
     try {
       const resp = await fetch(url);
