@@ -42,8 +42,15 @@ class UnreadCountStore {
     this.listenerOptions.set(onStoreChange, options);
     this.subscriberCount++;
 
-    if (win) {
+    if (win && win !== this.currentWindow) {
+      const prevWindow = this.currentWindow;
       this.currentWindow = win;
+
+      // If we're already started (i.e., this isn't the first subscriber), move the focus listener.
+      if (prevWindow && this.subscriberCount > 1) {
+        prevWindow.removeEventListener('focus', this.handleFocus);
+        win.addEventListener('focus', this.handleFocus);
+      }
     }
 
     if (options?.category && !this.warnedUnsupportedCategory) {
