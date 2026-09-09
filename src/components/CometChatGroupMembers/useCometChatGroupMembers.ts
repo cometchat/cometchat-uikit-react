@@ -47,6 +47,7 @@ export function useCometChatGroupMembers(
 
   const guid = group.getGuid();
   const publish = usePublishEvent();
+  const loggedInUserUid = loggedInUser?.getUid() ?? null;
 
   // Track member count in a ref so successive kicks/bans always use the latest value,
   // even if the parent hasn't re-rendered with an updated group prop.
@@ -242,14 +243,14 @@ export function useCometChatGroupMembers(
         if (changedGroup.getGuid() !== guid) return;
         dispatch({ type: 'UPDATE_MEMBER_SCOPE', uid: changedUser.getUid(), scope: newScope });
         // If the logged-in user's scope was changed, update permissions in real-time
-        if (changedUser.getUid() === loggedInUser?.getUid()) {
+        if (changedUser.getUid() === loggedInUserUid) {
           setLoggedInUserScope(newScope);
         }
       },
     });
 
     return cleanup;
-  }, [instanceId, guid]);
+  }, [instanceId, guid, loggedInUserUid]);
 
   // --- User status listener ---
   useEffect(() => {

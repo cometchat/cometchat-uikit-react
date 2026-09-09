@@ -50,6 +50,8 @@ export class CometChatSoundManager {
     if (!CometChatSoundManager.hasInteracted()) return;
     if (typeof Audio === 'undefined') return; // SSR guard
 
+    CometChatSoundManager.pause();
+
     const url = customSoundUrl ?? DEFAULT_SOUNDS[sound];
     const audio = new Audio(url);
     audio.currentTime = 0;

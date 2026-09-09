@@ -84,6 +84,11 @@
       "optional": true
     }
   },
+  "overrides": {
+    "@babel/core": "7.29.7",
+    "browserslist": "4.28.9",
+    "esbuild": "0.28.2"
+  },
   "homepage": "https://www.cometchat.com",
   "repository": "https://github.com/cometchat/cometchat-uikit-react/tree/v7",
   "main": "dist/index.cjs",

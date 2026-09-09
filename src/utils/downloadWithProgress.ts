@@ -9,6 +9,23 @@ export interface DownloadProgress {
   isDownloading: boolean;
 }
 
+function isAllowedDownloadUrl(url: string): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+
+    const parsed = new URL(url, window.location.href);
+    const isSameOrigin = parsed.origin === window.location.origin;
+
+    if (parsed.protocol === 'https:') return true;
+    if (parsed.protocol === 'blob:') return parsed.origin === window.location.origin;
+    if (parsed.protocol !== 'http:') return false;
+
+    return isSameOrigin || ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export async function downloadWithProgress(
   url: string,
   fileName: string,
@@ -16,7 +33,15 @@ export async function downloadWithProgress(
   signal?: AbortSignal
 ): Promise<void> {
   try {
+    if (!isAllowedDownloadUrl(url)) {
+      throw new Error('Blocked unsafe download URL');
+    }
+
     const response = await fetch(url, signal ? { signal } : {});
+
+    if (!response.ok) {
+      throw new Error(`Download failed with status ${String(response.status)}`);
+    }
 
     if (!response.body) {
       // Fallback: browser doesn't support ReadableStream
@@ -56,6 +81,8 @@ export async function downloadWithProgress(
       return;
     }
     // Fallback: open in new tab
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (isAllowedDownloadUrl(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   }
 }
