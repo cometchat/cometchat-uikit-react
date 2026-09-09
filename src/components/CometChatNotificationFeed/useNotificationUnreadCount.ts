@@ -217,7 +217,7 @@ export function useNotificationUnreadCount(
       forceRender(n => n + 1);
     }, options, currentWindow);
     return unsubscribe;
-  }, [currentWindow, options]);
+  }, [currentWindow, options?.pollingInterval, options?.category]);
 
   const refresh = useCallback(async () => {
     await sharedStore.fetchCount();
