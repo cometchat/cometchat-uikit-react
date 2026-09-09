@@ -1,12 +1,17 @@
 import React from 'react';
 import type { CometChatContextMenuItemProps } from './CometChatContextMenu.types';
 import { useCometChatContextMenuContext } from './CometChatContextMenu.context';
+import { CometChatContextMenuSubmenu } from './CometChatContextMenuSubmenu';
 import './CometChatContextMenu.css';
 
 /**
  * A single menu item rendered as a button.
  * - `variant="icon"`: icon-only button for the top row.
  * - `variant="full"`: icon + title for the dropdown.
+ *
+ * An item carrying a non-empty `submenu` renders as a fly-out disclosure row
+ * instead — see CometChatContextMenuSubmenu. Submenus only exist in the dropdown,
+ * so an icon-variant item ignores them.
  */
 export const CometChatContextMenuItem: React.FC<CometChatContextMenuItemProps> = ({
   item,
@@ -14,6 +19,10 @@ export const CometChatContextMenuItem: React.FC<CometChatContextMenuItemProps> =
   className,
 }) => {
   const { onOptionClicked, close } = useCometChatContextMenuContext();
+
+  if (variant !== 'icon' && item.submenu && item.submenu.length > 0) {
+    return <CometChatContextMenuSubmenu item={item} {...(className ? { className } : {})} />;
+  }
 
   const handleClick = () => {
     if (item.disabled) return;

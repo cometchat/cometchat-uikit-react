@@ -16,35 +16,32 @@ export function extractVideoAttachments(
     const rawAttachments: unknown = message.getAttachments();
 
     if (Array.isArray(rawAttachments) && rawAttachments.length > 0) {
-      const attachments = (rawAttachments as unknown[])
-        .filter(
-          (att): att is Record<string, unknown> =>
-            att != null &&
-            typeof att === 'object' &&
-            typeof (att as Record<string, unknown>).url === 'string'
-        )
-        .map(att => {
-          const metadata = (
-            typeof att.metadata === 'object' && att.metadata != null ? att.metadata : {}
-          ) as Record<string, unknown>;
-          const result: CometChatVideoBubbleAttachment = {
-            url: att.url as string,
-          };
-          if (typeof att.thumbnail === 'string') result.thumbnail = att.thumbnail;
-          if (typeof metadata.duration === 'number') result.duration = metadata.duration;
-          if (typeof metadata.width === 'number') result.width = metadata.width;
-          if (typeof metadata.height === 'number') result.height = metadata.height;
-          if (typeof metadata.size === 'number') result.size = metadata.size;
-          if (typeof metadata.mimeType === 'string') result.mimeType = metadata.mimeType;
-          return result;
-        })
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        .filter((att): att is CometChatVideoBubbleAttachment => att != null);
+      // Only use the first attachment — multi-attachment rendering is handled by CometChatVideosBubble
+      const firstRaw = (rawAttachments as unknown[]).find(
+        (att): att is Record<string, unknown> =>
+          att != null &&
+          typeof att === 'object' &&
+          typeof (att as Record<string, unknown>).url === 'string'
+      );
 
-      if (attachments.length > 0) {
-        const firstAttachment = attachments[0];
+      if (firstRaw) {
+        const metadata = (
+          typeof firstRaw.metadata === 'object' && firstRaw.metadata != null
+            ? firstRaw.metadata
+            : {}
+        ) as Record<string, unknown>;
+        const result: CometChatVideoBubbleAttachment = {
+          url: firstRaw.url as string,
+        };
+        if (typeof firstRaw.thumbnail === 'string') result.thumbnail = firstRaw.thumbnail;
+        if (typeof metadata.duration === 'number') result.duration = metadata.duration;
+        if (typeof metadata.width === 'number') result.width = metadata.width;
+        if (typeof metadata.height === 'number') result.height = metadata.height;
+        if (typeof metadata.size === 'number') result.size = metadata.size;
+        if (typeof metadata.mimeType === 'string') result.mimeType = metadata.mimeType;
+
         // Fallback: check @injected metadata for thumbnail-generation extension
-        if (firstAttachment && firstAttachment.thumbnail === undefined) {
+        if (result.thumbnail === undefined) {
           try {
             const msgMetadata = message.getMetadata() as Record<string, unknown> | null;
             if (msgMetadata) {
@@ -53,14 +50,15 @@ export function extractVideoAttachments(
               const thumbGen = ext?.['thumbnail-generation'] as Record<string, unknown> | undefined;
               const thumbUrl = thumbGen?.url_medium;
               if (typeof thumbUrl === 'string') {
-                firstAttachment.thumbnail = thumbUrl;
+                result.thumbnail = thumbUrl;
               }
             }
           } catch {
             // ignore — thumbnail is optional
           }
         }
-        return attachments;
+
+        return [result];
       }
     }
 

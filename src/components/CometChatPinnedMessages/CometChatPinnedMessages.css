@@ -1,0 +1,268 @@
+.cometchat-pinned-messages {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--cometchat-background-color-01, #fff);
+}
+
+/* Header — "Pinned Messages" + close. */
+.cometchat-pinned-messages__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cometchat-padding-2, 8px);
+  padding: var(--cometchat-padding-4, 16px);
+  border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  flex-shrink: 0;
+}
+
+.cometchat-pinned-messages__header-title {
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-heading3-bold, 700 16px Roboto);
+}
+
+.cometchat-pinned-messages__header-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Masked, not an <img>: the icon has to take the theme's colour, and a raw SVG
+   would stay black in dark mode. */
+.cometchat-pinned-messages__header-close-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: var(--cometchat-icon-color-primary, #141414);
+  -webkit-mask: url('../../assets/close.svg') center center / contain no-repeat;
+  mask: url('../../assets/close.svg') center center / contain no-repeat;
+}
+
+.cometchat-pinned-messages__header-close:hover .cometchat-pinned-messages__header-close-icon {
+  background: var(--cometchat-icon-color-highlight, #6852d6);
+}
+
+/* List */
+.cometchat-pinned-messages__list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  /* Scroll without a visible bar, matching the other lists in the kit. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* The panel is narrow and fixed-width — content clips rather than scrolling
+     sideways. A wide bubble (long link, code block, big attachment) must not be
+     able to introduce a horizontal scrollbar. */
+  overflow-x: hidden;
+  flex: 1;
+  padding-block: var(--cometchat-padding-2, 8px);
+}
+
+/*
+ * The whole row is the hit target and the hover surface — full-bleed, like the
+ * highlight the main message list paints when you jump to a message. Padding
+ * lives on the row (not the list) so the hover reaches both edges.
+ */
+.cometchat-pinned-messages__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-1, 4px);
+  cursor: pointer;
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-1, 4px);
+  transition: background-color 120ms ease-out;
+  /* Without this a flex item refuses to shrink below its content's intrinsic
+     width, so the row — not the list — would be what overflows. */
+  min-width: 0;
+
+  --cometchat-video-bubble-single-thumbnail-max-width: auto;
+  --cometchat-audio-bubble-card-min-width: auto;
+  --cometchat-file-bubble-card-min-width: auto;
+}
+
+.cometchat-pinned-messages__item:hover {
+  background: var(--cometchat-extended-primary-color-100, rgba(104, 82, 214, 0.1));
+}
+
+.cometchat-pinned-messages__item:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: -2px;
+}
+
+.cometchat-pinned-messages__item .cometchat-message-bubble {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/*
+ * Every row reads left-to-right regardless of sender, so the bubble wrapper must
+ * not right-align an outgoing message. The bubble keeps its own colour — that is
+ * driven by `bubbleVariant`, not by alignment.
+ */
+.cometchat-pinned-messages__item .cometchat-message-bubble__wrapper {
+  justify-content: flex-start;
+  padding-inline: var(--cometchat-padding-1, 4px);
+}
+
+/*
+ * `.cometchat-message-bubble-outgoing` bundles two things: the outgoing palette
+ * (which we want) and outgoing *layout* — right-shunted via `margin-left: auto`
+ * and `align-items: flex-end` (which we don't). Undo only the layout half, so an
+ * own message sits beside its avatar with the "You · time" header on the left,
+ * while keeping every colour rule the class carries.
+ */
+.cometchat-pinned-messages__item .cometchat-message-bubble-outgoing {
+  align-items: flex-start;
+  margin-left: 0;
+  margin-inline-start: 0;
+}
+
+/*
+ * Same reasoning for the options menu: outgoing normally flips it to the leading
+ * side (order: 1) because the bubble hugs the right edge. Left-aligned rows need
+ * it trailing the bubble, exactly where an incoming bubble puts it.
+ */
+.cometchat-pinned-messages__item
+  .cometchat-message-bubble-outgoing
+  .cometchat-message-bubble__options {
+  order: 3;
+}
+
+.cometchat-pinned-messages__item .cometchat-message-bubble__options {
+  flex-shrink: 0;
+}
+
+/* Row header: "{name} · {time}" — replaces the message list's day dividers. */
+.cometchat-pinned-messages__row-header {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-1, 4px);
+  padding-block-end: var(--cometchat-padding-1, 4px);
+  --cometchat-date-padding: 0;
+  --cometchat-date-color: var(--cometchat-text-color-secondary, #727272);
+}
+
+.cometchat-pinned-messages__row-header-name {
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-body-medium, 500 14px Roboto);
+}
+
+.cometchat-pinned-messages__row-header-dot {
+  color: var(--cometchat-text-color-secondary, #727272);
+  line-height: 1;
+}
+
+.cometchat-pinned-messages__row-header .cometchat-date__text {
+  padding-top: 1.5px;
+}
+
+/* States */
+.cometchat-pinned-messages__error-icon {
+  height: 120px;
+  width: 120px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.cometchat-pinned-messages__error-title {
+  font-size: var(--cometchat-font-heading4-bold, 16px);
+  font-weight: 600;
+  color: var(--cometchat-text-color-primary, #141414);
+  margin-bottom: 4px;
+}
+
+.cometchat-pinned-messages__error-subtitle {
+  font-size: var(--cometchat-font-body-regular, 14px);
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+.cometchat-pinned-messages__empty,
+.cometchat-pinned-messages__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--cometchat-padding-5, 20px);
+  text-align: center;
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+}
+
+/* Masked so the glyph reads as a neutral grey in both themes. */
+.cometchat-pinned-messages__empty-icon {
+  width: 120px;
+  height: 120px;
+  margin-bottom: var(--cometchat-margin-4, 16px);
+  background: var(--cometchat-icon-color-disabled, #dcdcdc);
+  -webkit-mask: url('../../assets/pinned.svg') center center / contain no-repeat;
+  mask: url('../../assets/pinned.svg') center center / contain no-repeat;
+  transform: rotate(30deg);
+}
+
+.cometchat-pinned-messages__empty-title {
+  color: var(--cometchat-text-color-primary, #141414);
+  font: var(--cometchat-font-heading3-bold, 700 18px Roboto);
+  margin-bottom: var(--cometchat-margin-1, 4px);
+}
+
+.cometchat-pinned-messages__empty-subtitle {
+  max-width: 280px;
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+}
+
+/* The skeleton fills the panel rather than sitting in a short strip at the top. */
+.cometchat-pinned-messages__shimmer {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Message Information overlay — mirrors the message list's, so the panel looks
+   the same wherever Info is opened from. Fixed, not scoped to the narrow column.
+
+   z-index must clear the context-menu band (999-1001). Another item despite being 
+   position: static can be a FLEX ITEM — z-index applies to flex items as if they 
+   were relative — so it paints into the root stacking context and would otherwise 
+   sit on top of this overlay, undimmed. */
+.cometchat-pinned-messages__message-info-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cometchat-overlay-background-heavy, rgba(0, 0, 0, 0.6));
+}
+
+.cometchat-pinned-messages__message-info-panel {
+  width: 420px;
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: var(--cometchat-radius-5, 20px);
+  background: var(--cometchat-background-color-01, #fff);
+  box-shadow:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  overflow: hidden;
+}
+
+.cometchat-pinned-messages__list::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Infinite-scroll sentinel. Zero-height and inert: the IntersectionObserver
+ * watches it with a rootMargin, so the next page starts loading before the user
+ * reaches the end.
+ */
+.cometchat-pinned-messages__sentinel {
+  height: 1px;
+  flex-shrink: 0;
+}

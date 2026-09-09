@@ -44,6 +44,13 @@ export interface UseRichTextEditorOptions {
    * Return `true` to indicate the event was handled (editor skips its own handling).
    */
   onKeyDown?: (e: KeyboardEvent) => boolean;
+  /**
+   * Custom text-formatter paste round-trip. `preprocessPastedHtml` runs on the RAW clipboard HTML
+   * (serialize formatter spans → storable tokens, before the sanitizer); `postprocessPastedHtml`
+   * runs on the sanitized HTML (re-render tokens → display spans). See RichTextEditor config.
+   */
+  preprocessPastedHtml?: (html: string) => string;
+  postprocessPastedHtml?: (html: string) => string;
 }
 
 export interface UseRichTextEditorReturn {
@@ -106,6 +113,8 @@ export function useRichTextEditor(options: UseRichTextEditorOptions = {}): UseRi
     onBlur,
     onEnterPress,
     onKeyDown,
+    preprocessPastedHtml,
+    postprocessPastedHtml,
   } = options;
 
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -130,6 +139,8 @@ export function useRichTextEditor(options: UseRichTextEditorOptions = {}): UseRi
     onBlur,
     onEnterPress,
     onKeyDown,
+    preprocessPastedHtml,
+    postprocessPastedHtml,
   });
   callbacksRef.current = {
     onUpdate,
@@ -140,6 +151,8 @@ export function useRichTextEditor(options: UseRichTextEditorOptions = {}): UseRi
     onBlur,
     onEnterPress,
     onKeyDown,
+    preprocessPastedHtml,
+    postprocessPastedHtml,
   };
 
   // Create/destroy editor when element mounts or enabled changes
@@ -184,6 +197,10 @@ export function useRichTextEditor(options: UseRichTextEditorOptions = {}): UseRi
       onKeyDown: (e: KeyboardEvent) => {
         return callbacksRef.current.onKeyDown?.(e) ?? false;
       },
+      preprocessPastedHtml: (html: string) =>
+        callbacksRef.current.preprocessPastedHtml?.(html) ?? html,
+      postprocessPastedHtml: (html: string) =>
+        callbacksRef.current.postprocessPastedHtml?.(html) ?? html,
     };
 
     const instance = new RichTextEditor(el, config);

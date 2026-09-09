@@ -8,6 +8,8 @@ import { CometChatConversationsEmptyState } from './CometChatConversationsEmptyS
 import { CometChatConversationsErrorState } from './CometChatConversationsErrorState';
 import { CometChatConversationsLoadingState } from './CometChatConversationsLoadingState';
 import { CometChatConfirmDialog } from '../base/CometChatConfirmDialog/CometChatConfirmDialog';
+import { CometChatToast } from '../base/CometChatToast';
+import { CometChatPinSaveConfirmDialog } from '../base/CometChatPinSaveConfirmDialog';
 import type {
   CometChatConversationsRootProps,
   CometChatConversationsContextValue,
@@ -42,8 +44,10 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
   onEmpty,
   onSearchBarClicked,
   hideDeleteConversation = false,
+  hidePinConversation = false,
   showSearchBar = true,
   searchView,
+  textFormatters,
   children,
 }) => {
   const { getLocalizedString } = useLocale();
@@ -80,7 +84,9 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
       options,
       onSearchBarClicked,
       hideDeleteConversation,
+      hidePinConversation,
       showSearchBar,
+      textFormatters,
     }),
     [
       hookReturn,
@@ -93,7 +99,9 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
       options,
       onSearchBarClicked,
       hideDeleteConversation,
+      hidePinConversation,
       showSearchBar,
+      textFormatters,
     ]
   );
 
@@ -133,45 +141,48 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
           </>
         )}
 
-        {/* Delete confirmation dialog — covers entire conversations area */}
+        {/* Delete confirmation dialog. Rendered directly so it uses the confirm
+            dialog's own body-portalled, fixed full-screen backdrop and overlays
+            the whole app (over the chat) — same as the pin/save dialog below.
+            Do NOT wrap it in a locally-positioned backdrop: the dialog portals to
+            <body>, so a `position: absolute/static` wrapper drops it behind the UI. */}
         {hookReturn.conversationToBeDeleted && (
-          <div
-            className={'cometchat-conversations__delete-dialog-backdrop'}
-            onClick={handleDeleteCancel}
-            onKeyDown={e => {
-              if (e.key === 'Escape') handleDeleteCancel();
-            }}
-            role="presentation"
-          >
-            <div
-              onClick={e => {
-                e.stopPropagation();
-              }}
-              onKeyDown={e => {
-                e.stopPropagation();
-              }}
-              role="presentation"
-            >
-              <CometChatConfirmDialog.Root
-                isOpen={true}
-                onClose={handleDeleteCancel}
-                variant="danger"
-                className={'cometchat-conversations__delete-dialog'}
-              >
-                <CometChatConfirmDialog.Icon />
-                <CometChatConfirmDialog.Content
-                  title={getLocalizedString('conversation_delete_title')}
-                  messageText={getLocalizedString('conversation_delete_subtitle')}
-                />
-                <CometChatConfirmDialog.Actions
-                  cancelButtonText={getLocalizedString('conversation_delete_confirm_no')}
-                  confirmButtonText={getLocalizedString('conversation_delete_confirm_yes')}
-                  onConfirm={handleDeleteConfirm}
-                  onCancel={handleDeleteCancel}
-                />
-              </CometChatConfirmDialog.Root>
-            </div>
-          </div>
+          <CometChatConfirmDialog.Root isOpen={true} onClose={handleDeleteCancel} variant="danger">
+            <CometChatConfirmDialog.Icon />
+            <CometChatConfirmDialog.Content
+              title={getLocalizedString('conversation_delete_title')}
+              messageText={getLocalizedString('conversation_delete_subtitle')}
+            />
+            <CometChatConfirmDialog.Actions
+              cancelButtonText={getLocalizedString('conversation_delete_confirm_no')}
+              confirmButtonText={getLocalizedString('conversation_delete_confirm_yes')}
+              onConfirm={handleDeleteConfirm}
+              onCancel={handleDeleteCancel}
+            />
+          </CometChatConfirmDialog.Root>
+        )}
+
+        {contextValue.pinConfirmState && (
+          <CometChatPinSaveConfirmDialog
+            action={contextValue.pinConfirmState.action}
+            onConfirm={contextValue.confirmPinAction}
+            onCancel={contextValue.cancelPinAction}
+            isBusy={contextValue.pinIsBusy}
+          />
+        )}
+
+        {/* Pin/unpin acknowledgement. Lives here rather than in the row so it
+            survives the row being re-ordered out from under it. Keyed on the
+            toast id so a repeat of the same text remounts and restarts its
+            dismiss timer rather than reusing the previous one's. */}
+        {contextValue.pinToastText && (
+          <CometChatToast
+            key={contextValue.pinToastId}
+            text={contextValue.pinToastText}
+            variant={contextValue.pinToastVariant}
+            onClose={contextValue.clearPinToast}
+            showCloseButton={false}
+          />
         )}
       </div>
     </CometChatConversationsContext.Provider>

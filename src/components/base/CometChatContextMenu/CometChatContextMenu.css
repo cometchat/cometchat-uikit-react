@@ -200,6 +200,71 @@
   text-align: start;
 }
 
+/* --- Submenu (nested fly-out, e.g. "Organize ▸") --- */
+
+/*
+ * Wrapper owns the hover-intent region: the row plus its fly-out.
+ * A real box (not display: contents) so mouseenter/mouseleave resolve reliably.
+ */
+.cometchat-context-menu__submenu {
+  display: block;
+  width: 100%;
+}
+
+/* The disclosure row. Chevron is pushed to the inline end. */
+.cometchat-context-menu__submenu-row {
+  justify-content: space-between;
+}
+
+.cometchat-context-menu__submenu-row--open {
+  background: var(--cometchat-white-hover, rgba(0, 0, 0, 0.04));
+}
+
+/* Chevron sits after the title and mirrors under RTL. */
+.cometchat-context-menu__submenu-chevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  color: var(--cometchat-icon-color-secondary, #a1a1a1);
+  filter: brightness(0) saturate(100%) invert(65%) sepia(0%) saturate(0%) hue-rotate(0deg)
+    brightness(95%) contrast(90%);
+}
+
+[dir='rtl'] .cometchat-context-menu__submenu-chevron {
+  transform: scaleX(-1);
+}
+
+/*
+ * Fly-out panel. `fixed` so it escapes overflow: hidden ancestors, and above the
+ * parent dropdown's z-index. Coordinates are computed in JS — see
+ * CometChatContextMenuSubmenu.tsx — because the side flips on viewport overflow.
+ */
+.cometchat-context-menu__submenu-panel {
+  position: fixed;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 160px;
+  width: max-content;
+  max-width: 280px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--cometchat-radius-2, 8px);
+  border: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  background: var(--cometchat-background-color-01, #fff);
+  box-shadow:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cometchat-context-menu__submenu-panel {
+    animation: contextMenuFadeIn 150ms ease-out;
+  }
+}
+
 /* Overlay — blocks background scroll and interaction when dropdown is open */
 .cometchat-context-menu__overlay {
   position: fixed;

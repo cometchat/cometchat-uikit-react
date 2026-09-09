@@ -6,19 +6,13 @@ import { CometChatLocalize } from '../../resources/CometChatLocalize/CometChatLo
 import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import type { CometChatSearchMessagesListProps } from './CometChatSearch.types';
 import { sanitizeHtml } from '../../utils/sanitizeHtml';
+import { getMessageSubtitle as buildMessageSubtitle } from '../../utils/messageSubtitle';
+import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
 import './CometChatSearch.css';
 
 // File type icons
-import fileTypePdf from '../../assets/file_type_pdf.png';
-import fileTypeWord from '../../assets/file_type_word.png';
-import fileTypeTxt from '../../assets/file_type_txt.png';
-import fileTypeXlsx from '../../assets/file_type_xlsx.png';
-import fileTypePpt from '../../assets/file_type_ppt.png';
-import fileTypeZip from '../../assets/file_type_zip.png';
-import fileTypeMp3 from '../../assets/file_type_mp3.png';
-import fileTypeMov from '../../assets/file_type_mov.png';
-import fileTypeJpg from '../../assets/file_type_jpg.png';
-import fileTypeUnsupported from '../../assets/file_type_unsupported.png';
+import fileIcon from '../../assets/document-file-icon.svg';
+import './CometChatSearch.css';
 
 function getLocalizedString(key: string): string {
   const instance = CometChatLocalize.getSharedInstance();
@@ -39,111 +33,24 @@ function getMessageTitle(message: CometChat.BaseMessage, uid?: string, guid?: st
   return receiver.getName();
 }
 
+/**
+ * Thin adapter over the shared preview builder. Search prepends the sender only
+ * for unscoped results — inside a single conversation the sender is already the
+ * list title.
+ */
 function getMessageSubtitle(
   message: CometChat.BaseMessage,
   loggedInUserId: string | undefined,
   uid?: string,
   guid?: string
 ): string {
-  const type = message.getType();
-  let text = '';
-
-  if (type === 'text') {
-    const textMsg = message as CometChat.TextMessage;
-    // Check for rich text HTML in metadata (sent by rich text editor)
-    try {
-      const metadata = textMsg.getMetadata() as Record<string, unknown> | undefined;
-      // eslint-disable-next-line @typescript-eslint/dot-notation
-      const richText = metadata?.['richText'] as
-        | { html?: string; hasFormatting?: boolean }
-        | undefined;
-      if (richText?.html && richText.hasFormatting) {
-        text = richText.html;
-      } else {
-        text = textMsg.getText();
-      }
-    } catch {
-      text = textMsg.getText();
-    }
-
-    // Step 1: Convert HTML formatting tags to markdown equivalents
-    // <b>text</b> → **text**, <i>text</i> → _text_, <u>text</u> preserved, <s>text</s> → ~~text~~
-    text = text.replace(/<b>([\s\S]*?)<\/b>/gi, '**$1**');
-    text = text.replace(/<strong>([\s\S]*?)<\/strong>/gi, '**$1**');
-    text = text.replace(/<i>([\s\S]*?)<\/i>/gi, '_$1_');
-    text = text.replace(/<em>([\s\S]*?)<\/em>/gi, '_$1_');
-    text = text.replace(/<s>([\s\S]*?)<\/s>/gi, '~~$1~~');
-    text = text.replace(/<strike>([\s\S]*?)<\/strike>/gi, '~~$1~~');
-    text = text.replace(/<del>([\s\S]*?)<\/del>/gi, '~~$1~~');
-
-    // Step 2: escape (don't drop) remaining HTML tags so payloads render as inert text;
-    // preserve mention pseudo-tags and <u>. Output is also sanitized at the render sink.
-    text = text.replace(/<[^>]*>/g, match => {
-      const inner = match.slice(1, -1).trim();
-      if (/^\/?u$/i.test(inner)) return match; // preserve <u> and </u>
-      if (inner.startsWith('@')) return match; // preserve <@uid:...> mentions
-      return match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    });
-
-    // Step 3: Convert markdown to HTML for display
-    // Bold: **text** → <b>text</b>
-    text = text.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-    // Underline: __text__ or <u>text</u> (already preserved)
-    text = text.replace(/__([^_]+)__/g, '<u>$1</u>');
-    // Italic: _text_ → <i>text</i>
-    text = text.replace(/(?<!_)_([^_]+)_(?!_)/g, '<i>$1</i>');
-    // Strikethrough: ~~text~~ → <s>text</s>
-    text = text.replace(/~~([^~]+)~~/g, '<s>$1</s>');
-    // Inline code: `text` → <code>text</code>
-    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-    // Strip links: [text](url) → text
-    text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-    // Strip blockquotes: > text → text
-    text = text.replace(/^(?:&gt;|>)\s?/gm, '');
-
-    // Step 4: Mentions <@uid:xxx> → styled @displayName, <@all:label> → styled @label
-    const mentionedUsers =
-      (
-        message as unknown as {
-          getMentionedUsers?: () => { getUid: () => string; getName: () => string }[];
-        }
-      ).getMentionedUsers?.() ?? [];
-    const mentionMap = new Map<string, string>();
-    for (const user of mentionedUsers) {
-      mentionMap.set(user.getUid(), user.getName());
-    }
-    text = text.replace(/<@uid:([^>]+)>/g, (_match, uid: string) => {
-      const name = mentionMap.get(uid);
-      const displayName = name ?? uid;
-      return `<span class="cometchat-mentions cometchat-mentions-other"><span>@${displayName}</span></span>`;
-    });
-    text = text.replace(/<@all:([^>]+)>/g, (_match, label: string) => {
-      return `<span class="cometchat-mentions cometchat-mentions-you"><span>@${label}</span></span>`;
-    });
-
-    // Step 5: Collapse whitespace and newlines
-    text = text.replace(/\n/g, ' ');
-    text = text.replace(/\s+/g, ' ').trim();
-  } else if (type === 'image' || type === 'video' || type === 'audio' || type === 'file') {
-    const media = message as CometChat.MediaMessage;
-    const attachments = media.getAttachments();
-    text = attachments[0]?.getName() ?? type;
-  } else {
-    text = type;
-  }
-
-  // Prepend sender name for non-scoped search
-  if (!uid && !guid) {
-    const sender = message.getSender();
-    const isMe = sender.getUid() === loggedInUserId;
-    const localizedYou = getLocalizedString('search_message_subtitle_you');
-    const senderName = isMe ? localizedYou : sender.getName();
-    if (senderName) {
-      text = `${senderName}: ${text}`;
-    }
-  }
-
-  return text;
+  return buildMessageSubtitle(message, {
+    loggedInUserId,
+    iconClassPrefix: 'cometchat-search__messages-subtitle-icon',
+    includeSenderPrefix: !uid && !guid,
+    youLabel: getLocalizedString('search_message_subtitle_you'),
+    t: getLocalizedString,
+  });
 }
 
 function shouldShowDateSeparator(messages: CometChat.BaseMessage[], index: number): boolean {
@@ -209,12 +116,6 @@ function getTrailingViewType(message: CometChat.BaseMessage): TrailingViewType {
   return 'date';
 }
 
-function getAttachmentUrl(message: CometChat.BaseMessage): string {
-  const media = message as CometChat.MediaMessage;
-  const attachments = media.getAttachments();
-  return attachments[0]?.getUrl() ?? '';
-}
-
 function getLinkFavicon(message: CometChat.BaseMessage): string | null {
   try {
     const metadata = (message as CometChat.TextMessage).getMetadata() as
@@ -230,34 +131,8 @@ function getLinkFavicon(message: CometChat.BaseMessage): string | null {
   }
 }
 
-const FILE_TYPE_ICONS: Record<string, string> = {
-  pdf: fileTypePdf,
-  doc: fileTypeWord,
-  docx: fileTypeWord,
-  txt: fileTypeTxt,
-  xls: fileTypeXlsx,
-  xlsx: fileTypeXlsx,
-  csv: fileTypeXlsx,
-  ppt: fileTypePpt,
-  pptx: fileTypePpt,
-  zip: fileTypeZip,
-  rar: fileTypeZip,
-  mp3: fileTypeMp3,
-  wav: fileTypeMp3,
-  mp4: fileTypeMov,
-  mov: fileTypeMov,
-  jpg: fileTypeJpg,
-  jpeg: fileTypeJpg,
-  png: fileTypeJpg,
-};
-
-function getFileTypeIcon(message: CometChat.BaseMessage): string {
-  const media = message as CometChat.MediaMessage;
-  const attachments = media.getAttachments();
-  const name = attachments[0]?.getName();
-  if (!attachments.length || !name) return fileTypeUnsupported;
-  const ext = name.split('.').pop()?.toLowerCase() ?? '';
-  return FILE_TYPE_ICONS[ext] ?? fileTypeUnsupported;
+function getFileTypeIcon(): string {
+  return fileIcon;
 }
 
 // ── Component ──
@@ -456,7 +331,7 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                                   .join(' ')}
                               >
                                 <img
-                                  src={getFileTypeIcon(message)}
+                                  src={getFileTypeIcon()}
                                   className={'cometchat-search__messages-leading-view-file-icon'}
                                   alt=""
                                   loading="lazy"
@@ -506,11 +381,14 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                           : (() => {
                               const hasThread = !!message.getParentMessageId();
                               const subtitleHtml = sanitizeHtml(
-                                getMessageSubtitle(
-                                  message,
-                                  CometChatUIKit.getLoggedInUser()?.getUid(),
-                                  ctx.uid,
-                                  ctx.guid
+                                applyDisplayFormatters(
+                                  getMessageSubtitle(
+                                    message,
+                                    CometChatUIKit.getLoggedInUser()?.getUid(),
+                                    ctx.uid,
+                                    ctx.guid
+                                  ),
+                                  ctx.textFormatters
                                 )
                               );
                               return (
@@ -521,7 +399,10 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                                       aria-label={getLocalizedString('thread_reply')}
                                     />
                                   )}
-                                  <span dangerouslySetInnerHTML={{ __html: subtitleHtml }} />
+                                  <span
+                                    className="cometchat-search__messages-list-item-subtitle-content"
+                                    dangerouslySetInnerHTML={{ __html: subtitleHtml }}
+                                  />
                                 </>
                               );
                             })()}
@@ -534,18 +415,52 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                       : (() => {
                           const trailingType = getTrailingViewType(message);
                           if (trailingType === 'image') {
+                            const media = message as CometChat.MediaMessage;
+                            const attachments = media.getAttachments();
+                            const count = attachments.length;
+                            const url = attachments[0]?.getUrl() ?? '';
+                            const overflow = count > 1 ? count - 1 : 0;
                             return (
                               <div className={'cometchat-search__messages-trailing-view'}>
-                                <img
-                                  src={getAttachmentUrl(message)}
-                                  alt={`Image from ${message.getSender().getName()}`}
-                                  loading="lazy"
-                                  decoding="async"
-                                />
+                                {url && (
+                                  <img
+                                    src={url}
+                                    alt={`Image from ${message.getSender().getName()}`}
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                )}
+                                {overflow > 0 && (
+                                  <div className={'cometchat-search__messages-trailing-overlay'}>
+                                    +{overflow}
+                                  </div>
+                                )}
                               </div>
                             );
                           }
                           if (trailingType === 'video') {
+                            const media = message as CometChat.MediaMessage;
+                            const attachments = media.getAttachments();
+                            const count = attachments.length;
+                            const overflow = count > 1 ? count - 1 : 0;
+                            // Try thumbnail from metadata
+                            let thumbnail = '';
+                            try {
+                              const meta = media.getMetadata() as Record<string, unknown> | null;
+                              const injected = meta?.['@injected'] as
+                                | Record<string, unknown>
+                                | undefined;
+                              const ext = injected?.extensions as
+                                | Record<string, unknown>
+                                | undefined;
+                              const thumbGen = ext?.['thumbnail-generation'] as
+                                | Record<string, unknown>
+                                | undefined;
+                              const thumbUrl = thumbGen?.url_medium;
+                              if (typeof thumbUrl === 'string') thumbnail = thumbUrl;
+                            } catch {
+                              /* ignore */
+                            }
                             return (
                               <div
                                 className={[
@@ -555,8 +470,16 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                                   .filter(Boolean)
                                   .join(' ')}
                               >
-                                <video src={getAttachmentUrl(message)} preload="metadata" />
-                                <div className={'cometchat-search__messages-video-play-button'} />
+                                {thumbnail ? (
+                                  <img src={thumbnail} alt="" loading="lazy" decoding="async" />
+                                ) : null}
+                                {overflow > 0 ? (
+                                  <div className={'cometchat-search__messages-trailing-overlay'}>
+                                    +{overflow}
+                                  </div>
+                                ) : (
+                                  <div className={'cometchat-search__messages-video-play-button'} />
+                                )}
                               </div>
                             );
                           }

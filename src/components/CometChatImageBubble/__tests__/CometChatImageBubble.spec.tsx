@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- this file intentionally exercises the deprecated legacy bubble it covers */
 import { render } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
@@ -246,55 +247,8 @@ describe('CometChatImageBubble', () => {
     expect(container.querySelector('[class*="caption"]')).toBeTruthy();
   });
 
-  // --- Grid layouts ---
-
-  it('renders 2 images in a 2-col grid', () => {
-    const { container } = render(
-      <CometChatImageBubble
-        message={buildImageMessage({
-          urls: ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
-        })}
-        alignment="right"
-      />
-    );
-    expect(container.querySelector('[class*="grid--two-col"]')).toBeTruthy();
-    expect(container.querySelectorAll('img[src]')).toHaveLength(2);
-  });
-
-  it('renders 3 images in a 1+2 grid', () => {
-    const { container } = render(
-      <CometChatImageBubble
-        message={buildImageMessage({
-          urls: [
-            'https://example.com/img1.jpg',
-            'https://example.com/img2.jpg',
-            'https://example.com/img3.jpg',
-          ],
-        })}
-        alignment="right"
-      />
-    );
-    expect(container.querySelector('[class*="grid--three"]')).toBeTruthy();
-    expect(container.querySelectorAll('img[src]')).toHaveLength(3);
-  });
-
-  it('renders 4 images in a 2×2 grid', () => {
-    const urls = Array.from({ length: 4 }, (_, i) => `https://example.com/img${String(i)}.jpg`);
-    const { container } = render(
-      <CometChatImageBubble message={buildImageMessage({ urls })} alignment="right" />
-    );
-    expect(container.querySelector('[class*="grid--2x2"]')).toBeTruthy();
-    expect(container.querySelectorAll('img[src]')).toHaveLength(4);
-  });
-
-  it('renders overflow indicator for >4 images', () => {
-    const urls = Array.from({ length: 6 }, (_, i) => `https://example.com/img${String(i)}.jpg`);
-    const { container } = render(
-      <CometChatImageBubble message={buildImageMessage({ urls })} alignment="right" />
-    );
-    expect(container.querySelector('[class*="overflow-tile"]')).toBeTruthy();
-    expect(container.querySelector('[class*="overflow-text"]')?.textContent).toContain('+2');
-  });
+  // Grid / overflow layouts moved to the batch-aware CometChatImagesBubble
+  // (see CometChatImagesBubble spec). The singular bubble renders one image.
 
   // --- Accessibility ---
 
@@ -321,14 +275,5 @@ describe('CometChatImageBubble', () => {
     );
     const wrapper = container.querySelector('[class*="image-wrapper"]');
     expect(wrapper?.getAttribute('tabindex')).toBe('-1');
-  });
-
-  it('overflow text is aria-hidden', () => {
-    const urls = Array.from({ length: 6 }, (_, i) => `https://example.com/img${String(i)}.jpg`);
-    const { container } = render(
-      <CometChatImageBubble message={buildImageMessage({ urls })} alignment="right" />
-    );
-    const text = container.querySelector('[class*="overflow-text"]');
-    expect(text?.getAttribute('aria-hidden')).toBe('true');
   });
 });

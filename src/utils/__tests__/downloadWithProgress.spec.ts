@@ -56,7 +56,11 @@ describe('downloadWithProgress', () => {
 
     mockFetch.mockResolvedValue(mockResponse);
 
-    const linkElement = { href: '', download: '', click: vi.fn() };
+    // Real anchor — saveBlob appends/removes it from the DOM, so a plain object
+    // would throw in appendChild. The createElement spy calls through here (no
+    // mockReturnValue set yet), then we route saveBlob's createElement to it.
+    const linkElement = document.createElement('a');
+    const clickSpy = vi.spyOn(linkElement, 'click').mockImplementation(() => undefined);
     mockCreateElement.mockReturnValue(linkElement);
 
     const onProgress = vi.fn();
@@ -64,7 +68,7 @@ describe('downloadWithProgress', () => {
 
     expect(mockFetch).toHaveBeenCalledWith('https://example.com/file.zip', {});
     expect(onProgress).toHaveBeenCalledWith(100);
-    expect(linkElement.click).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
     expect(linkElement.download).toBe('file.zip');
     expect(mockCreateObjectURL).toHaveBeenCalled();
     expect(mockRevokeObjectURL).toHaveBeenCalled();
@@ -103,23 +107,28 @@ describe('downloadWithProgress', () => {
     });
   });
 
-  it('should fallback to link download when response.body is null', async () => {
+  it('should fallback to blob download when response.body is null', async () => {
+    // No ReadableStream body — the impl reads the whole response as a blob and
+    // saves that via an object URL (not a direct anchor to the source URL).
     mockFetch.mockResolvedValue({
       ok: true,
       body: null,
       status: 200,
       headers: { get: () => null },
+      blob: () => Promise.resolve(new Blob(['x'])),
     });
 
-    const linkElement = { href: '', download: '', click: vi.fn() };
+    const linkElement = document.createElement('a');
+    const clickSpy = vi.spyOn(linkElement, 'click').mockImplementation(() => undefined);
     mockCreateElement.mockReturnValue(linkElement);
 
     const onProgress = vi.fn();
     await downloadWithProgress('https://example.com/file.zip', 'file.zip', onProgress);
 
     expect(linkElement.href).toBe('https://example.com/file.zip');
+    expect(linkElement.href).toBe('blob:http://localhost/fake');
     expect(linkElement.download).toBe('file.zip');
-    expect(linkElement.click).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
     expect(onProgress).not.toHaveBeenCalled();
   });
 
@@ -164,7 +173,8 @@ describe('downloadWithProgress', () => {
       headers: { get: () => '0' },
     });
 
-    const linkElement = { href: '', download: '', click: vi.fn() };
+    const linkElement = document.createElement('a');
+    const clickSpy = vi.spyOn(linkElement, 'click').mockImplementation(() => undefined);
     mockCreateElement.mockReturnValue(linkElement);
 
     const onProgress = vi.fn();
@@ -172,7 +182,7 @@ describe('downloadWithProgress', () => {
 
     // When content-length is 0, progress is not reported
     expect(onProgress).not.toHaveBeenCalled();
-    expect(linkElement.click).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
   });
 
   it('should report incremental progress for multi-chunk downloads', async () => {

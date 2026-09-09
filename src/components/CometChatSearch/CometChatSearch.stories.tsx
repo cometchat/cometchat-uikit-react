@@ -1,839 +1,583 @@
 /**
  * CometChatSearch Storybook Stories
  *
- * Every story uses a context mock so no SDK calls are made.
- * The actual component UI (header, filter bar, results, states) is rendered
- * by injecting CometChatSearchContext directly — same pattern as CometChatReactionList.
+ * These stories render the **real** `CometChatSearch` component — header, filter
+ * bar, result sections, message/conversation rows, and empty/loading/error states
+ * are all produced by the actual component, not re-implemented here.
  *
- * Stories:
- *  - Default          — initial "Start Your Search" state, interactive input + filters
- *  - WithActiveFilter — one filter chip pre-selected (Unread)
- *  - LoadingState     — shimmer placeholders in both sections
- *  - EmptyState       — unified "No Results" view (both scopes empty)
- *  - ErrorState       — unified error view (both scopes errored)
- *  - ConversationsResults — loaded conversation results
- *  - MessagesResults      — loaded message results
- *  - BothResults          — conversations + messages side by side
- *  - ConversationsOnly    — searchIn=["conversations"]
- *  - MessagesOnly         — searchIn=["messages"]
- *  - NoBackButton         — hideBackButton=true
- *  - CustomInitialView    — custom initialView slot
- *  - CustomEmptyView      — custom emptyView slot
+ * How the data is mocked
+ * ----------------------
+ * `CometChatSearch` fetches results through two managers that ultimately call
+ * `builder.build().fetchPrevious()` (messages) and `builder.build().fetchNext()`
+ * (conversations). The component exposes public `messagesRequestBuilder` /
+ * `conversationsRequestBuilder` props that are threaded straight into those
+ * managers. We pass **fake builders** whose `.build()` returns a request that
+ * filters a small **static corpus** by the exact query the component built
+ * (keyword, attachment types, links, unread, group) — mirroring a real backend
+ * instead of fabricating keyword-specific text on the fly.
+ *
+ * So there is a fixed set of conversations and messages. Type any of the
+ * advertised keywords (names like "Nancy", "Design", or words like "project")
+ * to see the real search narrow the results.
+ *
+ * The only other setup is stubbing the SDK login/listener calls the search hooks
+ * make on mount — Storybook has no live SDK — so the real component can run.
  *
  * @module components/CometChatSearch
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
+
 import { CometChatSearch } from './CometChatSearch';
-import { CometChatSearchContext } from './CometChatSearch.context';
-import type {
-  CometChatSearchContextValue,
-  CometChatSearchFilter,
-  CometChatSearchScope,
-} from './CometChatSearch.types';
-import type { CometChat } from '@cometchat/chat-sdk-javascript';
-import { CometChatConversationsItem } from '../CometChatConversations/CometChatConversationsItem';
-import { CometChatConversationsContext } from '../CometChatConversations/CometChatConversations.context';
-import type { CometChatConversationsContextValue } from '../CometChatConversations/CometChatConversations.types';
-import {
-  getAvailableFilters,
-  getVisibleFilters,
-  toggleFilter,
-  shouldRenderConversations,
-  shouldRenderMessages,
-} from './CometChatSearchFilterUtils';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import './CometChatSearch.css';
 
 // ============================================================
-// Mock data helpers
+// SDK harness — let the real component run without a live SDK
 // ============================================================
 
-function mockUser(uid: string, name: string, avatar?: string) {
+const LOGGED_IN_USER = mockUser('me', 'You');
+
+// The real search hooks call CometChat.getLoggedinUser() and attach
+// message/user/group listeners on mount. None of that works without CometChat.init(),
+// so stub them to harmless no-ops. Conversation/message items also resolve the
+// logged-in user via CometChatUIKit — seed the cached value.
+(() => {
+  const CC = CometChat as unknown as Record<string, unknown>;
+  CC.getLoggedinUser = () => Promise.resolve(LOGGED_IN_USER);
+  const noopListener = () => undefined;
+  CC.addMessageListener = noopListener;
+  CC.removeMessageListener = noopListener;
+  CC.addUserListener = noopListener;
+  CC.removeUserListener = noopListener;
+  CC.addGroupListener = noopListener;
+  CC.removeGroupListener = noopListener;
+
+  (CometChatUIKit as unknown as { _loggedInUser: CometChat.User | null })._loggedInUser =
+    LOGGED_IN_USER;
+})();
+
+// ============================================================
+// SDK-shaped mock builders
+// ============================================================
+
+function mockUser(uid: string, name: string, avatar?: string): CometChat.User {
   return {
     getUid: () => uid,
     getName: () => name,
     getAvatar: () => avatar ?? `https://i.pravatar.cc/150?u=${uid}`,
     getStatus: () => 'online',
+    getRole: () => 'default',
   } as unknown as CometChat.User;
 }
 
-function mockGroup(guid: string, name: string) {
+function mockGroup(guid: string, name: string): CometChat.Group {
   return {
     getGuid: () => guid,
     getName: () => name,
     getIcon: () => `https://i.pravatar.cc/150?u=${guid}`,
     getType: () => 'public',
-    getMembersCount: () => 5,
+    getMembersCount: () => 8,
   } as unknown as CometChat.Group;
 }
 
-// ── Sender / receiver pools (matches Angular mock-services.ts) ──
-
-const SENDERS = [
-  { uid: 'sender-0', name: 'Andrew Joseph' },
-  { uid: 'sender-1', name: 'Nancy Grace' },
-  { uid: 'sender-2', name: 'George Alan' },
-  { uid: 'sender-3', name: 'Carol White' },
-  { uid: 'sender-4', name: 'David Lee' },
-];
-
-const RECEIVERS = [
-  { uid: 'recv-0', name: 'Andrew Joseph' },
-  { uid: 'recv-1', name: 'Nancy Grace' },
-  { uid: 'recv-2', name: 'George Alan' },
-  { uid: 'recv-3', name: 'Design Team', isGroup: true },
-  { uid: 'recv-4', name: 'Engineering', isGroup: true },
-];
-
-// ── Dynamic mock generators (keyword-aware, filter-aware) ──
-
-/**
- * Generate mock conversations based on keyword and active filters.
- * Mirrors Angular's MockSearchConversationsService.search().
- */
-function generateMockConversations(
-  keyword: string,
-  activeFilters: CometChatSearchFilter[]
-): CometChat.Conversation[] {
-  const kw = keyword || 'hello';
-  const groupsOnly = activeFilters.includes('groups');
-  const unreadOnly = activeFilters.includes('unread');
-
-  const templates = [
-    `Hey, ${kw} — are you free for a call?`,
-    `I was just thinking about ${kw}`,
-    `Did you see the ${kw} update?`,
-    `Re: ${kw} — looks good to me`,
-    `Quick question about ${kw}`,
-  ];
-  const names = ['Alice Johnson', 'Nancy Grace', 'Design Team', 'George Alan', 'Engineering'];
-
-  return Array.from({ length: 5 }, (_, i) => {
-    const isGroup = groupsOnly ? true : i >= 3;
-    const unread = unreadOnly ? (i + 1) * 2 : i === 0 ? 3 : i === 2 ? 1 : 0;
-    const id = `conv-${String(i)}`;
-    const convWith = isGroup ? mockGroup(id, names[i]!) : mockUser(id, names[i]!);
-    const sentAt = Math.floor(Date.now() / 1000) - i * 3600;
-    return {
-      getConversationId: () => id,
-      getConversationType: () => (isGroup ? 'group' : 'user'),
-      getConversationWith: () => convWith,
-      getLastMessage: () => ({
-        getType: () => 'text',
-        getCategory: () => 'message',
-        getText: () => templates[i]!,
-        getSentAt: () => sentAt,
-        getDeletedAt: () => null,
-        getSender: () =>
-          mockUser(SENDERS[i % SENDERS.length]!.uid, SENDERS[i % SENDERS.length]!.name),
-        getDeliveredAt: () => sentAt,
-        getReadAt: () => null,
-        getId: () => i + 1,
-      }),
-      getUnreadMessageCount: () => unread,
-    } as unknown as CometChat.Conversation;
-  });
+/** Discriminate the mock union — only groups carry a getGuid() method. */
+function isGroup(entity: CometChat.User | CometChat.Group): entity is CometChat.Group {
+  return typeof (entity as { getGuid?: unknown }).getGuid === 'function';
 }
 
-/**
- * Generate mock messages based on keyword and active filters.
- * Mirrors Angular's MockSearchMessagesService.search().
- */
-function generateMockMessages(
-  keyword: string,
-  activeFilters: CometChatSearchFilter[]
-): CometChat.BaseMessage[] {
-  const kw = keyword || 'hello';
-
-  // Determine message type from active filter
-  type MsgType = 'text' | 'image' | 'video' | 'audio' | 'file' | 'link' | 'mixed';
-  let msgType: MsgType = 'text';
-  if (activeFilters.includes('messages')) msgType = 'mixed';
-  else if (activeFilters.includes('photos')) msgType = 'image';
-  else if (activeFilters.includes('videos')) msgType = 'video';
-  else if (activeFilters.includes('files')) msgType = 'file';
-  else if (activeFilters.includes('audio')) msgType = 'audio';
-  else if (activeFilters.includes('links')) msgType = 'link';
-
-  const count = msgType === 'mixed' ? 8 : 5;
-  const mixedTypes = ['text', 'text', 'image', 'text', 'file', 'audio', 'text', 'video'] as const;
-
-  const textTemplates = [
-    `Hey, ${kw} — are you available for a quick call?`,
-    `I just pushed the ${kw} changes to the repo`,
-    `${kw} screenshot attached`,
-    `Let me know when you review the ${kw} PR`,
-    `${kw} document shared`,
-    `${kw} voice note`,
-    `The ${kw} design looks great, shipping it tomorrow`,
-    `${kw} recording`,
-  ];
-  const linkTemplates = [
-    `Check out this ${kw} link: https://example.com/${kw}`,
-    `Here's the ${kw} docs: https://docs.example.com/${kw}`,
-    `Found this about ${kw}: https://blog.example.com/${kw}-guide`,
-    `${kw} reference: https://wiki.example.com/${kw}`,
-    `See https://example.com/${kw}-overview for details`,
-  ];
-
-  return Array.from({ length: count }, (_, i) => {
-    const type: 'text' | 'image' | 'video' | 'audio' | 'file' =
-      msgType === 'mixed' ? mixedTypes[i]! : msgType === 'link' ? 'text' : msgType;
-
-    const sender = SENDERS[i % SENDERS.length]!;
-    const receiver = RECEIVERS[(i + 1) % RECEIVERS.length]!;
-    const sentAt = Math.floor(Date.now() / 1000) - i * 3600;
-
-    const base = {
-      getId: () => 100 + i,
-      getType: () => type,
-      getCategory: () => 'message',
-      getSentAt: () => sentAt,
-      getSender: () => mockUser(sender.uid, sender.name),
-      getReceiver: () =>
-        receiver.isGroup
-          ? mockGroup(receiver.uid, receiver.name)
-          : mockUser(receiver.uid, receiver.name),
-      getDeletedAt: () => null,
-      getMetadata: () => (msgType === 'link' ? { hasLinks: true } : null),
-    };
-
-    if (type === 'text') {
-      return {
-        ...base,
-        getText: () =>
-          msgType === 'link'
-            ? linkTemplates[i % linkTemplates.length]!
-            : textTemplates[i % textTemplates.length]!,
-        getAttachments: () => [],
-      } as unknown as CometChat.BaseMessage;
-    }
-
-    // Media messages
-    const fileNames: Record<string, string> = {
-      image: 'screenshot.png',
-      video: 'recording.mp4',
-      audio: 'voice-note.mp3',
-      file: `document-${String(i + 1)}.pdf`,
-    };
-    const fileUrls: Record<string, string> = {
-      image: `https://picsum.photos/seed/${kw}${String(i)}/200/150`,
-      video: `https://picsum.photos/seed/video${kw}${String(i)}/200/150`,
-      audio: '',
-      file: '',
-    };
-
-    return {
-      ...base,
-      getAttachments: () => [
-        {
-          getName: () => fileNames[type] ?? type,
-          getUrl: () => fileUrls[type] ?? '',
-        },
-      ],
-    } as unknown as CometChat.BaseMessage;
-  });
+function idOf(entity: CometChat.User | CometChat.Group): string {
+  return isGroup(entity) ? entity.getGuid() : entity.getUid();
 }
 
-// ============================================================
-// SearchShell — fully interactive, mirrors Angular exactly
-// ============================================================
-
-const FILTER_LABELS: Record<CometChatSearchFilter, string> = {
-  audio: 'Audio',
-  files: 'Documents',
-  groups: 'Groups',
-  links: 'Links',
-  messages: 'Messages',
-  conversations: 'Conversations',
-  photos: 'Photos',
-  unread: 'Unread',
-  videos: 'Videos',
-};
-
-const DEFAULT_SEARCH_FILTERS: CometChatSearchFilter[] = [
-  'audio',
-  'files',
-  'groups',
-  'photos',
-  'videos',
-  'links',
-  'unread',
-];
-
-/**
- * SearchShell — fully interactive search UI for storybook.
- *
- * Mirrors Angular's CometChatSearchComponent exactly:
- * - 500ms debounce: searchValue updates immediately, searchText after debounce
- * - Filter toggle uses real getVisibleFilters / shouldRenderConversations / shouldRenderMessages
- * - Conversation filters (Unread, Groups) show results immediately without text input
- * - When a conversation filter is active, only conversation filters remain visible
- * - Message filters (Photos, Videos, etc.) show message results
- */
-const SearchShell: React.FC<{
-  ctx?: Partial<CometChatSearchContextValue>;
-  searchIn?: CometChatSearchScope[];
-  searchFilters?: CometChatSearchFilter[];
-  initialSearchFilter?: CometChatSearchFilter;
-  defaultSearchText?: string;
-}> = ({
-  ctx: ctxOverrides = {},
-  searchIn = [],
-  searchFilters = DEFAULT_SEARCH_FILTERS,
-  initialSearchFilter,
-  defaultSearchText = '',
-}) => {
-  const [searchValue, setSearchValue] = useState(defaultSearchText);
-  const [searchText, setSearchText] = useState(defaultSearchText);
-  const [activeFilters, setActiveFilters] = useState<CometChatSearchFilter[]>(
-    initialSearchFilter ? [initialSearchFilter] : []
-  );
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Focus input on mount (matches Angular's setTimeout focus)
-  useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 100);
-    return () => clearTimeout(t);
-  }, []);
-
-  const handleInput = (value: string) => {
-    setSearchValue(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setSearchText(value.trim()), 500);
-  };
-
-  const handleClear = () => {
-    setSearchValue('');
-    setSearchText('');
-    setActiveFilters([]);
-    inputRef.current?.focus();
-  };
-
-  const handleToggleFilter = (filterId: CometChatSearchFilter) => {
-    setActiveFilters(prev => toggleFilter(prev, filterId));
-  };
-
-  // Compute derived state using the real filter utils — identical to Angular
-  const available = getAvailableFilters(searchIn, searchFilters);
-  const visibleFilters = getVisibleFilters(
-    available,
-    activeFilters,
-    undefined,
-    undefined,
-    searchIn
-  );
-  const showConversations = shouldRenderConversations(searchText, activeFilters, searchIn);
-  const showMessages = shouldRenderMessages(searchText, activeFilters, searchIn);
-  const showInitialView = searchText.trim() === '' && activeFilters.length === 0;
-  const bothScopesActive = showConversations && showMessages;
-
-  const liveCtx: CometChatSearchContextValue = {
-    searchValue,
-    searchText,
-    activeFilters,
-    visibleFilters,
-    showInitialView,
-    showConversations,
-    showMessages,
-    bothScopesActive,
-    hideConversationsSection: false,
-    hideMessagesSection: false,
-    showUnifiedEmpty: false,
-    showUnifiedError: false,
-    conversationsState: 'loaded',
-    messagesState: 'loaded',
-    searchIn,
-    searchFilters,
-    uid: undefined,
-    guid: undefined,
-    hideBackButton: false,
-    hideUserStatus: false,
-    hideGroupType: false,
-    hideReceipts: false,
-    textFormatters: [],
-    conversationsRequestBuilder: undefined,
-    messagesRequestBuilder: undefined,
-    initialView: undefined,
-    loadingView: undefined,
-    emptyView: undefined,
-    errorView: undefined,
-    conversationItemView: undefined,
-    conversationLeadingView: undefined,
-    conversationTitleView: undefined,
-    conversationSubtitleView: undefined,
-    conversationTrailingView: undefined,
-    messageItemView: undefined,
-    messageLeadingView: undefined,
-    messageTitleView: undefined,
-    messageSubtitleView: undefined,
-    messageTrailingView: undefined,
-    setSearchValue: handleInput,
-    clearSearch: handleClear,
-    toggleFilter: handleToggleFilter,
-    isFilterActive: (id: CometChatSearchFilter) => activeFilters.includes(id),
-    getFilterLabel: (id: CometChatSearchFilter) => FILTER_LABELS[id],
-    handleBackClick: () => {},
-    handleConversationClick: () => {},
-    handleMessageClick: () => {},
-    handleConversationsStateChange: () => {},
-    handleMessagesStateChange: () => {},
-    handleError: () => {},
-    // Story-level overrides (callbacks, hideBackButton, custom views, etc.)
-    ...ctxOverrides,
-  };
-
-  return (
-    <CometChatSearchContext.Provider value={liveCtx}>
-      <div
-        className={['cometchat', 'cometchat-search'].filter(Boolean).join(' ')}
-        role="search"
-        aria-label="Search"
-      >
-        {/* Header */}
-        <div className={'cometchat-search__header'}>
-          {!liveCtx.hideBackButton && (
-            <button
-              type="button"
-              className={'cometchat-search__back-button'}
-              aria-label="Back"
-              onClick={liveCtx.handleBackClick}
-            >
-              <span className={'cometchat-search__back-button-icon'} aria-hidden="true" />
-            </button>
-          )}
-          <div className={'cometchat-search__search-bar'}>
-            <div className={'cometchat-search__input'}>
-              <input
-                ref={inputRef}
-                type="text"
-                role="searchbox"
-                value={searchValue}
-                onChange={e => handleInput(e.target.value)}
-                placeholder="Search"
-                aria-label="Search"
-                data-testid="search-input"
-              />
-              {(searchValue || activeFilters.length > 0) && (
-                <button
-                  type="button"
-                  className={'cometchat-search__input-clear-button'}
-                  aria-label="Clear search"
-                  onClick={handleClear}
-                >
-                  <span
-                    className={'cometchat-search__input-clear-button-icon'}
-                    aria-hidden="true"
-                  />
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Filter bar */}
-        <div className={'cometchat-search__body'}>
-          <div
-            className={'cometchat-search__body-filters'}
-            role="toolbar"
-            aria-label="Search filters"
-          >
-            {visibleFilters.map(filterId => {
-              const isActive = activeFilters.includes(filterId);
-              return (
-                <button
-                  key={filterId}
-                  type="button"
-                  className={[
-                    'cometchat-search__body-filter',
-                    isActive ? 'cometchat-search__body-filter--active' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  aria-pressed={isActive}
-                  data-testid={`search-filter-${filterId}`}
-                  onClick={() => handleToggleFilter(filterId)}
-                >
-                  <span
-                    className={[
-                      'cometchat-search__body-filter-icon',
-                      `cometchat-search__body-filter-icon--${filterId}`,
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    aria-hidden="true"
-                  />
-                  {FILTER_LABELS[filterId]}
-                  {isActive && (
-                    <span
-                      className={'cometchat-search__body-filter-close-icon'}
-                      aria-hidden="true"
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Results area */}
-        {showInitialView ? (
-          (liveCtx.initialView ?? (
-            <div className={'cometchat-search__initial-view'}>
-              <div className={'cometchat-search__initial-view-icon'} aria-hidden="true" />
-              <span className={'cometchat-search__initial-view-title'}>Start Your Search</span>
-              <span className={'cometchat-search__initial-view-subtitle'}>
-                Search for conversations or messages by typing a keyword above.
-              </span>
-            </div>
-          ))
-        ) : (
-          <div className={'cometchat-search__results'}>
-            {showConversations && !liveCtx.hideConversationsSection && (
-              <ConversationsSection ctx={liveCtx} />
-            )}
-            {showMessages && !liveCtx.hideMessagesSection && <MessagesSection ctx={liveCtx} />}
-            {liveCtx.showUnifiedEmpty &&
-              (liveCtx.emptyView ?? (
-                <div className={'cometchat-search__empty-view'} aria-live="assertive">
-                  <div className={'cometchat-search__empty-view-icon'} aria-hidden="true" />
-                  <div className={'cometchat-search__empty-view-body'}>
-                    <div className={'cometchat-search__empty-view-body-title'}>No Results</div>
-                    <div className={'cometchat-search__empty-view-body-description'}>
-                      We couldn&apos;t find any matches. Please try a different search keyword.
-                    </div>
-                  </div>
-                </div>
-              ))}
-            {liveCtx.showUnifiedError &&
-              (liveCtx.errorView ?? (
-                <div className={'cometchat-search__error-view'} aria-live="assertive">
-                  <div className={'cometchat-search__error-view-icon'} aria-hidden="true" />
-                  <div className={'cometchat-search__error-view-body'}>
-                    <div className={'cometchat-search__error-view-body-title'}>OOPS!</div>
-                    <div className={'cometchat-search__error-view-body-description'}>
-                      Looks like something went wrong
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
-        )}
-      </div>
-    </CometChatSearchContext.Provider>
-  );
-};
-
-// ── Conversations section (mock, no SDK) ──
-
-/**
- * Minimal conversations context for the storybook mock.
- * Provides just enough for CometChatConversationsItem to render correctly.
- */
-function createConversationsCtx(loggedInUserId = 'me'): CometChatConversationsContextValue {
+/** SDK-shaped Attachment: real bubbles/items read via getUrl()/getName() methods. */
+function mockAttachment(url: string, name: string, mimeType: string): CometChat.Attachment {
   return {
-    conversations: [],
-    fetchState: 'loaded',
-    hasMore: false,
-    error: null,
-    selectedConversationIds: [],
-    selectedConversationsMap: new Map(),
-    activeConversationId: null,
-    searchText: '',
-    typingIndicatorMap: new Map(),
-    selectionMode: 'none',
-    hideUserStatus: false,
-    hideUnreadCount: false,
-    hideReceipts: false,
-    hideGroupType: false,
-    loggedInUserId,
-    options: undefined,
-    conversationToBeDeleted: null,
-    hideDeleteConversation: false,
-    showSearchBar: true,
-    fetchNext: async () => {},
-    setSearchText: () => {},
-    selectConversation: () => {},
-    deselectConversation: () => {},
-    selectRange: () => {},
-    deselectRange: () => {},
-    clearSelection: () => {},
-    setActiveConversation: () => {},
-    handleItemClick: () => {},
-    deleteConversation: async () => {},
-    setConversationToBeDeleted: () => {},
-  };
+    getUrl: () => url,
+    getName: () => name,
+    getMimeType: () => mimeType,
+    getExtension: () => (name.includes('.') ? name.split('.').pop()! : ''),
+    getSize: () => 0,
+  } as unknown as CometChat.Attachment;
 }
 
-const ConversationsSection: React.FC<{ ctx: CometChatSearchContextValue }> = ({ ctx }) => {
-  // Generate keyword-aware conversations matching Angular's MockSearchConversationsService
-  const conversations = generateMockConversations(ctx.searchText, ctx.activeFilters);
-  const fetchState = conversations.length === 0 ? 'empty' : ctx.conversationsState;
-  const convCtx = createConversationsCtx();
+type MockMessageType = 'text' | 'image' | 'video' | 'audio' | 'file';
 
-  return (
-    <div className={'cometchat-search__conversations'} role="region" aria-label="Conversations">
-      <h3 className={'cometchat-search__conversations-header'}>Conversations</h3>
+interface MockMessageOptions {
+  id: number;
+  type: MockMessageType;
+  sender: CometChat.User;
+  receiver: CometChat.User | CometChat.Group;
+  sentAt: number;
+  text?: string;
+  caption?: string;
+  attachment?: CometChat.Attachment;
+  /** Extra metadata (e.g. link-preview / thumbnail-generation @injected data). */
+  metadata?: Record<string, unknown>;
+}
 
-      {fetchState === 'loading' && <ShimmerList />}
+function mockMessage(opts: MockMessageOptions): CometChat.BaseMessage {
+  const {
+    id,
+    type,
+    sender,
+    receiver,
+    sentAt,
+    text = '',
+    caption = '',
+    attachment,
+    metadata = {},
+  } = opts;
 
-      {fetchState === 'empty' && !ctx.bothScopesActive && <SectionEmpty />}
+  return {
+    getId: () => id,
+    getMuid: () => `muid-${String(id)}`,
+    getType: () => type,
+    getCategory: () => 'message',
+    getSender: () => sender,
+    getReceiver: () => receiver,
+    getReceiverType: () => (isGroup(receiver) ? 'group' : 'user'),
+    getReceiverId: () => idOf(receiver),
+    getConversationId: () => `${sender.getUid()}_${idOf(receiver)}`,
+    getSentAt: () => sentAt,
+    getDeliveredAt: () => sentAt,
+    getReadAt: () => sentAt,
+    getEditedAt: () => 0,
+    getDeletedAt: () => null,
+    getParentMessageId: () => 0,
+    getReplyCount: () => 0,
+    // text
+    getText: () => text,
+    getMentionedUsers: () => [],
+    // media
+    getAttachments: () => (attachment ? [attachment] : []),
+    getUrl: () => (attachment ? attachment.getUrl() : undefined),
+    getCaption: () => caption,
+    getData: () => ({ text: caption || text, entities: {} }),
+    // generic
+    getMetadata: () => metadata,
+    getReactions: () => [],
+  } as unknown as CometChat.BaseMessage;
+}
 
-      {fetchState === 'error' && !ctx.bothScopesActive && <SectionError />}
+interface MockConversationOptions {
+  with: CometChat.User | CometChat.Group;
+  lastMessage: CometChat.BaseMessage;
+  unreadCount?: number;
+}
 
-      {(fetchState === 'loaded' || fetchState === 'idle') && (
-        <CometChatConversationsContext.Provider value={convCtx}>
-          <div className={'cometchat-search__conversations-list'} role="list">
-            {conversations.map(conv => (
-              <div
-                key={conv.getConversationId()}
-                className={'cometchat-search__conversations-list-item'}
-                role="listitem"
-                tabIndex={0}
-                onClick={() =>
-                  ctx.handleConversationClick({ conversation: conv, searchKeyword: ctx.searchText })
-                }
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    ctx.handleConversationClick({
-                      conversation: conv,
-                      searchKeyword: ctx.searchText,
-                    });
-                  }
-                }}
-              >
-                <CometChatConversationsItem conversation={conv} />
-              </div>
-            ))}
-          </div>
-        </CometChatConversationsContext.Provider>
-      )}
-    </div>
-  );
-};
+function mockConversation(opts: MockConversationOptions): CometChat.Conversation {
+  const { with: convWith, lastMessage, unreadCount = 0 } = opts;
+  return {
+    getConversationId: () => `conv_${idOf(convWith)}`,
+    getConversationType: () => (isGroup(convWith) ? 'group' : 'user'),
+    getConversationWith: () => convWith,
+    getLastMessage: () => lastMessage,
+    getUnreadMessageCount: () => unreadCount,
+    setUnreadMessageCount: () => undefined,
+    getUpdatedAt: () => lastMessage.getSentAt(),
+  } as unknown as CometChat.Conversation;
+}
 
-// ── Messages section (mock, no SDK) ──
+// ============================================================
+// Static corpus — one fixed dataset, filtered by keyword/filter
+// ============================================================
 
-const MessagesSection: React.FC<{ ctx: CometChatSearchContextValue }> = ({ ctx }) => {
-  // Generate keyword-aware messages matching Angular's MockSearchMessagesService
-  const messages = generateMockMessages(ctx.searchText, ctx.activeFilters);
-  const fetchState = ctx.messagesState;
+// Advertised search terms live in these names / message texts.
+const ANDREW = mockUser('user-andrew', 'Andrew Joseph');
+const NANCY = mockUser('user-nancy', 'Nancy Grace');
+const GEORGE = mockUser('user-george', 'George Alan');
+const CAROL = mockUser('user-carol', 'Carol White');
+const DAVID = mockUser('user-david', 'David Lee');
+const DESIGN_TEAM = mockGroup('group-design', 'Design Team');
+const ENGINEERING = mockGroup('group-eng', 'Engineering');
 
-  return (
-    <div className={'cometchat-search__messages'} role="region" aria-label="Messages">
-      <h3 className={'cometchat-search__messages-header'}>Messages</h3>
+const HOUR = 3600;
+const now = Math.floor(Date.now() / 1000);
 
-      {fetchState === 'loading' && <ShimmerList />}
+const IMG = (i: number) => `https://picsum.photos/seed/search-img-${String(i)}/240/180`;
+const VIDEO_THUMB = (i: number) => `https://picsum.photos/seed/search-vid-${String(i)}/240/180`;
+const videoMetadata = (i: number): Record<string, unknown> => ({
+  '@injected': { extensions: { 'thumbnail-generation': { url_medium: VIDEO_THUMB(i) } } },
+});
+const linkMetadata: Record<string, unknown> = { hasLinks: true };
 
-      {fetchState === 'empty' && !ctx.bothScopesActive && <SectionEmpty />}
+/** The fixed message corpus. Real search filters this by keyword + type. */
+const MESSAGES: CometChat.BaseMessage[] = [
+  mockMessage({
+    id: 201,
+    type: 'text',
+    sender: NANCY,
+    receiver: LOGGED_IN_USER,
+    sentAt: now - 2 * HOUR,
+    text: 'Hey, are you free for a quick call about the project?',
+  }),
+  mockMessage({
+    id: 202,
+    type: 'text',
+    sender: LOGGED_IN_USER,
+    receiver: NANCY,
+    sentAt: now - 2 * HOUR + 300,
+    text: 'Sure — I just pushed the project changes to the repo.',
+  }),
+  mockMessage({
+    id: 203,
+    type: 'image',
+    sender: GEORGE,
+    receiver: DESIGN_TEAM,
+    sentAt: now - 5 * HOUR,
+    caption: 'New homepage design mockup',
+    attachment: mockAttachment(IMG(1), 'homepage-design.png', 'image/png'),
+  }),
+  mockMessage({
+    id: 204,
+    type: 'image',
+    sender: CAROL,
+    receiver: DESIGN_TEAM,
+    sentAt: now - 5 * HOUR + 120,
+    caption: 'Design system color tokens',
+    attachment: mockAttachment(IMG(2), 'color-tokens.png', 'image/png'),
+  }),
+  mockMessage({
+    id: 205,
+    type: 'video',
+    sender: ANDREW,
+    receiver: ENGINEERING,
+    sentAt: now - 8 * HOUR,
+    caption: 'Screen recording of the project demo',
+    attachment: mockAttachment(
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      'project-demo.mp4',
+      'video/mp4'
+    ),
+    metadata: videoMetadata(1),
+  }),
+  mockMessage({
+    id: 206,
+    type: 'video',
+    sender: DAVID,
+    receiver: LOGGED_IN_USER,
+    sentAt: now - 9 * HOUR,
+    caption: 'Design walkthrough recording',
+    attachment: mockAttachment(
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      'design-walkthrough.mp4',
+      'video/mp4'
+    ),
+    metadata: videoMetadata(2),
+  }),
+  mockMessage({
+    id: 207,
+    type: 'audio',
+    sender: NANCY,
+    receiver: LOGGED_IN_USER,
+    sentAt: now - 11 * HOUR,
+    caption: 'voice note about the project timeline',
+    attachment: mockAttachment(
+      'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
+      'voice-note.mp3',
+      'audio/mpeg'
+    ),
+  }),
+  mockMessage({
+    id: 208,
+    type: 'file',
+    sender: GEORGE,
+    receiver: LOGGED_IN_USER,
+    sentAt: now - 26 * HOUR,
+    caption: 'project-report.pdf',
+    attachment: mockAttachment(
+      'https://example.com/project-report.pdf',
+      'project-report.pdf',
+      'application/pdf'
+    ),
+  }),
+  mockMessage({
+    id: 209,
+    type: 'file',
+    sender: CAROL,
+    receiver: DESIGN_TEAM,
+    sentAt: now - 30 * HOUR,
+    caption: 'design-spec.pdf',
+    attachment: mockAttachment(
+      'https://example.com/design-spec.pdf',
+      'design-spec.pdf',
+      'application/pdf'
+    ),
+  }),
+  mockMessage({
+    id: 210,
+    type: 'text',
+    sender: ANDREW,
+    receiver: LOGGED_IN_USER,
+    sentAt: now - 40 * HOUR,
+    text: 'Check out the project docs: https://docs.example.com/project',
+    metadata: linkMetadata,
+  }),
+  mockMessage({
+    id: 211,
+    type: 'text',
+    sender: GEORGE,
+    receiver: ENGINEERING,
+    sentAt: now - 50 * HOUR,
+    text: 'Design reference here: https://example.com/design-guide',
+    metadata: linkMetadata,
+  }),
+  mockMessage({
+    id: 212,
+    type: 'text',
+    sender: NANCY,
+    receiver: LOGGED_IN_USER,
+    sentAt: now - 60 * HOUR,
+    text: 'Let me know when you review the design PR.',
+  }),
+];
 
-      {fetchState === 'error' && !ctx.bothScopesActive && <SectionError />}
+/** The fixed conversation corpus. Real search filters this by keyword / unread / group. */
+const CONVERSATIONS: CometChat.Conversation[] = [
+  mockConversation({
+    with: NANCY,
+    unreadCount: 3,
+    lastMessage: mockMessage({
+      id: 301,
+      type: 'text',
+      sender: NANCY,
+      receiver: LOGGED_IN_USER,
+      sentAt: now - 1 * HOUR,
+      text: 'Are you free to sync on the project this afternoon?',
+    }),
+  }),
+  mockConversation({
+    with: DESIGN_TEAM,
+    unreadCount: 5,
+    lastMessage: mockMessage({
+      id: 302,
+      type: 'text',
+      sender: GEORGE,
+      receiver: DESIGN_TEAM,
+      sentAt: now - 3 * HOUR,
+      text: 'Uploaded the latest design files 🔥',
+    }),
+  }),
+  mockConversation({
+    with: ANDREW,
+    unreadCount: 0,
+    lastMessage: mockMessage({
+      id: 303,
+      type: 'text',
+      sender: LOGGED_IN_USER,
+      receiver: ANDREW,
+      sentAt: now - 6 * HOUR,
+      text: "I'll push the project PR this afternoon.",
+    }),
+  }),
+  mockConversation({
+    with: ENGINEERING,
+    unreadCount: 2,
+    lastMessage: mockMessage({
+      id: 304,
+      type: 'text',
+      sender: DAVID,
+      receiver: ENGINEERING,
+      sentAt: now - 12 * HOUR,
+      text: 'Project build is green again.',
+    }),
+  }),
+  mockConversation({
+    with: GEORGE,
+    unreadCount: 0,
+    lastMessage: mockMessage({
+      id: 305,
+      type: 'text',
+      sender: GEORGE,
+      receiver: LOGGED_IN_USER,
+      sentAt: now - 20 * HOUR,
+      text: 'Sounds good — design review tomorrow then.',
+    }),
+  }),
+  mockConversation({
+    with: CAROL,
+    unreadCount: 1,
+    lastMessage: mockMessage({
+      id: 306,
+      type: 'text',
+      sender: CAROL,
+      receiver: LOGGED_IN_USER,
+      sentAt: now - 28 * HOUR,
+      text: 'Shared the design spec with you.',
+    }),
+  }),
+];
 
-      {(fetchState === 'loaded' || fetchState === 'idle') && (
-        <div className={'cometchat-search__messages-list'} role="list">
-          {messages.map((message, index) => {
-            const showSep =
-              index === 0 ||
-              (() => {
-                const cur = new Date(message.getSentAt() * 1000);
-                const prev = new Date(messages[index - 1]!.getSentAt() * 1000);
-                return (
-                  cur.getMonth() !== prev.getMonth() || cur.getFullYear() !== prev.getFullYear()
-                );
-              })();
-            return (
-              <React.Fragment key={message.getId()}>
-                {showSep && (
-                  <div className={'cometchat-search__messages-date-separator'}>
-                    {new Date(message.getSentAt() * 1000).toLocaleDateString('en-US', {
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </div>
-                )}
-                <MessageRow message={message} ctx={ctx} />
-              </React.Fragment>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
+// ============================================================
+// Fake request builders — filter the corpus by the built query
+// ============================================================
 
-const MessageRow: React.FC<{
-  message: CometChat.BaseMessage;
-  ctx: CometChatSearchContextValue;
-}> = ({ message, ctx }) => {
-  const type = message.getType();
-  const sender = message.getSender();
-  const receiver = message.getReceiver();
-  const title = (receiver as CometChat.User | CometChat.Group).getName();
-  const sentAt = message.getSentAt();
-  const date = new Date(sentAt * 1000);
-  const day = date.getDate();
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+function nameOf(entity: CometChat.User | CometChat.Group): string {
+  return entity.getName();
+}
+
+/** getMetadata lives on subtypes, not BaseMessage — read it through a narrow shape. */
+function metadataOf(m: CometChat.BaseMessage): Record<string, unknown> | null {
+  return (m as unknown as { getMetadata: () => Record<string, unknown> | null }).getMetadata();
+}
+
+function messageSearchText(m: CometChat.BaseMessage): string {
+  const parts = [
+    m.getSender().getName(),
+    nameOf(m.getReceiver() as CometChat.User | CometChat.Group),
+    (m as CometChat.TextMessage).getText(),
+    (m as CometChat.MediaMessage).getCaption(),
   ];
-  const monthIndex = date.getMonth();
-  const month = monthIndex < months.length ? months[monthIndex] : undefined;
-  let hours = date.getHours();
-  const mins = date.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'pm' : 'am';
-  hours = hours % 12 || 12;
-  const timeStr = `${String(day)} ${month ?? ''}, ${hours.toString().padStart(2, '0')}:${mins} ${ampm}`;
+  return parts.join(' ').toLowerCase();
+}
 
-  let subtitle = '';
-  if (type === 'text') {
-    subtitle = `${sender.getName()}: ${(message as CometChat.TextMessage).getText()}`;
-  } else if (type === 'image') {
-    subtitle = `${sender.getName()}: screenshot.png`;
-  } else if (type === 'audio') {
-    subtitle = `${sender.getName()}: voice-note.mp3`;
-  } else if (type === 'video') {
-    subtitle = `${sender.getName()}: recording.mp4`;
-  } else if (type === 'file') {
-    const attachments = (message as any).getAttachments?.() ?? [];
+function attachmentTypeToMsgType(t: unknown): MockMessageType | null {
+  const s = String(t).toLowerCase();
+  if (s.includes('image')) return 'image';
+  if (s.includes('video')) return 'video';
+  if (s.includes('audio')) return 'audio';
+  if (s.includes('file')) return 'file';
+  return null;
+}
 
-    const fileName: string =
-      attachments.length > 0 ? String((attachments[0] as any).getName()) : 'document.pdf';
-    subtitle = `${sender.getName()}: ${fileName}`;
-  }
+/**
+ * Fake `MessagesRequestBuilder`. The manager reuses one builder across every
+ * search, calling the chainable setters and then `.build()` each time. So the
+ * accumulated query is reset at the start of each search (`hideDeletedMessages`
+ * is always called first) and the "already served" flag lives inside each
+ * `.build()` — one per search — not on the shared builder.
+ */
+function fakeMessagesRequestBuilder(): CometChat.MessagesRequestBuilder {
+  let keyword = '';
+  let types: MockMessageType[] = [];
+  let hasLinksFlag = false;
 
-  return (
-    <div
-      className={'cometchat-search__messages-list-item'}
-      role="listitem"
-      tabIndex={0}
-      onClick={() => ctx.handleMessageClick({ message, searchKeyword: ctx.searchText })}
-      onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          ctx.handleMessageClick({ message, searchKeyword: ctx.searchText });
-        }
-      }}
-    >
-      {/* Leading view — avatar for text/file, audio icon for audio, nothing for image/video */}
-      {type === 'audio' ? (
-        <div
-          className={[
-            'cometchat-search__messages-leading-view',
-            'cometchat-search__messages-leading-view--audio',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-        >
-          <div className={'cometchat-search__messages-leading-view-icon'} />
-        </div>
-      ) : type === 'image' || type === 'video' ? null : (
-        <div className={'cometchat-search__messages-leading-view'}>
-          <img
-            src={`https://i.pravatar.cc/150?u=${(message.getReceiver() as CometChat.User | CometChat.Group).getName()}`}
-            alt={(message.getReceiver() as CometChat.User | CometChat.Group).getName()}
-            width={48}
-            height={48}
-            loading="lazy"
-            decoding="async"
-            style={{ borderRadius: '50%', objectFit: 'cover', width: '100%', height: '100%' }}
-          />
-        </div>
-      )}
+  const builder = {
+    // Called first on every search — use it to reset the accumulated query.
+    hideDeletedMessages: () => {
+      keyword = '';
+      types = [];
+      hasLinksFlag = false;
+      return builder;
+    },
+    setLimit: () => builder,
+    setSearchKeyword: (k: string) => {
+      keyword = k;
+      return builder;
+    },
+    setUID: () => builder,
+    setGUID: () => builder,
+    hasLinks: (v: boolean) => {
+      hasLinksFlag = v;
+      return builder;
+    },
+    setAttachmentTypes: (t: unknown[]) => {
+      types = t.map(x => attachmentTypeToMsgType(x)).filter(Boolean) as MockMessageType[];
+      return builder;
+    },
+    build: () => {
+      // Snapshot this search's query; pagination state is per-request.
+      const q = { keyword, types, hasLinks: hasLinksFlag };
+      let served = false;
+      return {
+        fetchPrevious: () => {
+          if (served) return Promise.resolve([]);
+          served = true;
+          const kw = q.keyword.trim().toLowerCase();
+          const results = MESSAGES.filter(m => {
+            if (q.hasLinks) {
+              const md = metadataOf(m);
+              if (!md?.hasLinks) return false;
+            } else if (q.types.length > 0) {
+              if (!q.types.includes(m.getType() as MockMessageType)) return false;
+            }
+            if (kw && !messageSearchText(m).includes(kw)) return false;
+            return true;
+          });
+          // Ascending by sentAt; the manager reverses to newest-first.
+          return Promise.resolve([...results].sort((a, b) => a.getSentAt() - b.getSentAt()));
+        },
+      };
+    },
+  };
 
-      {/* Body */}
-      <div className={'cometchat-search__messages-list-item-body'}>
-        <div className={'cometchat-search__messages-list-item-title'}>{title}</div>
-        <div className={'cometchat-search__messages-list-item-subtitle'}>{subtitle}</div>
-      </div>
+  return builder as unknown as CometChat.MessagesRequestBuilder;
+}
 
-      {/* Trailing view */}
-      {type === 'image' ? (
-        <div className={'cometchat-search__messages-trailing-view'}>
-          <img
-            src="https://picsum.photos/seed/search/200/150"
-            alt={`Image from ${sender.getName()}`}
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
-      ) : type === 'video' ? (
-        <div className={'cometchat-search__messages-trailing-view'}>
-          <img
-            src="https://picsum.photos/seed/video-search/200/150"
-            alt={`Video from ${sender.getName()}`}
-            loading="lazy"
-            decoding="async"
-          />
-          <div className={'cometchat-search__messages-trailing-view-play-icon'} />
-        </div>
-      ) : (
-        <div className={'cometchat-search__messages-trailing-view--date'}>{timeStr}</div>
-      )}
-    </div>
-  );
-};
+/**
+ * Fake `ConversationsRequestBuilder`. `.build().fetchNext()` returns the corpus
+ * filtered by keyword / unread / group, paginated by the requested limit so the
+ * real "See More" pagination is exercised.
+ */
+function fakeConversationsRequestBuilder(): CometChat.ConversationsRequestBuilder {
+  let keyword = '';
+  let unread = false;
+  let groupOnly = false;
+  let limit = 30;
 
-// ── Shared state sub-components ──
+  const builder = {
+    // Called first on every search — use it to reset the accumulated query.
+    setLimit: (n: number) => {
+      limit = n;
+      keyword = '';
+      unread = false;
+      groupOnly = false;
+      return builder;
+    },
+    setSearchKeyword: (k: string) => {
+      keyword = k;
+      return builder;
+    },
+    setUnread: (v: boolean) => {
+      unread = v;
+      return builder;
+    },
+    setConversationType: (t: string) => {
+      groupOnly = t === 'group';
+      return builder;
+    },
+    build: () => {
+      // Snapshot this search's query; the pagination cursor is per-request.
+      const q = { keyword, unread, groupOnly };
+      const pageLimit = limit;
+      let cursor = 0;
+      return {
+        fetchNext: () => {
+          const kw = q.keyword.trim().toLowerCase();
+          const all = CONVERSATIONS.filter(c => {
+            if (q.groupOnly && c.getConversationType() !== 'group') return false;
+            if (q.unread && c.getUnreadMessageCount() <= 0) return false;
+            if (kw) {
+              const name = nameOf(
+                c.getConversationWith() as CometChat.User | CometChat.Group
+              ).toLowerCase();
+              const last = (c.getLastMessage() as CometChat.TextMessage).getText();
+              if (!name.includes(kw) && !last.toLowerCase().includes(kw)) return false;
+            }
+            return true;
+          });
+          const page = all.slice(cursor, cursor + pageLimit);
+          cursor += page.length;
+          return Promise.resolve(page);
+        },
+      };
+    },
+  };
 
-const ShimmerList: React.FC = () => (
-  <div className={'cometchat-search__shimmer'} aria-live="polite">
-    {[1, 2, 3].map(i => (
-      <div key={i} className={'cometchat-search__shimmer-item'}>
-        <div className={'cometchat-search__shimmer-item-avatar'} />
-        <div className={'cometchat-search__shimmer-item-body'}>
-          <div className={'cometchat-search__shimmer-item-body-title-wrapper'}>
-            <div className={'cometchat-search__shimmer-item-body-title'} />
-            <div className={'cometchat-search__shimmer-item-body-tail'} />
-          </div>
-          <div className={'cometchat-search__shimmer-item-body-subtitle'} />
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-const SectionEmpty: React.FC = () => (
-  <div className={'cometchat-search__section-empty-view'} aria-live="assertive">
-    <div className={'cometchat-search__section-empty-view-icon'} />
-    <div className={'cometchat-search__section-state-body'}>
-      <div className={'cometchat-search__section-state-title'}>No Results</div>
-      <div className={'cometchat-search__section-state-description'}>
-        We couldn&apos;t find any matches.
-      </div>
-    </div>
-  </div>
-);
-
-const SectionError: React.FC = () => (
-  <div className={'cometchat-search__section-error-view'} aria-live="assertive">
-    <div className={'cometchat-search__section-error-view-icon'} />
-    <div className={'cometchat-search__section-state-body'}>
-      <div className={'cometchat-search__section-state-title'}>OOPS!</div>
-      <div className={'cometchat-search__section-state-description'}>
-        Looks like something went wrong
-      </div>
-    </div>
-  </div>
-);
+  return builder as unknown as CometChat.ConversationsRequestBuilder;
+}
 
 // ============================================================
 // Meta
 // ============================================================
 
-const meta: Meta = {
+const SEARCHABLE_HINT =
+  'Type a name (Nancy, George, Design Team, Engineering) or a word (project, design) to filter the fixed result set.';
+
+const meta: Meta<typeof CometChatSearch> = {
   title: 'Components/CometChatSearch',
   component: CometChatSearch,
   tags: ['autodocs'],
@@ -841,7 +585,9 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          'Global search component for finding conversations and messages across all chats.',
+          'Global search for finding conversations and messages across all chats. ' +
+          'These stories drive the real component against a fixed mock corpus. ' +
+          SEARCHABLE_HINT,
       },
     },
     layout: 'centered',
@@ -853,302 +599,128 @@ const meta: Meta = {
     hideReceipts: false,
   },
   argTypes: {
-    hideBackButton: {
-      control: 'boolean',
-      description: 'Hide the back button in the search header',
-    },
-    hideUserStatus: {
-      control: 'boolean',
-      description: 'Hide user online/offline status indicator in search results',
-    },
-    hideGroupType: {
-      control: 'boolean',
-      description: 'Hide the group type badge in search results',
-    },
-    hideReceipts: {
-      control: 'boolean',
-      description: 'Hide message read receipts in conversation results',
-    },
-    onBackClick: {
-      action: 'onBackClick',
-      description: 'Called when the back button is clicked',
-    },
-    onConversationClick: {
-      action: 'onConversationClick',
-      description: 'Called when a conversation result is clicked',
-    },
-    onMessageClick: {
-      action: 'onMessageClick',
-      description: 'Called when a message result is clicked',
-    },
+    hideBackButton: { control: 'boolean', description: 'Hide the back button in the header' },
+    hideUserStatus: { control: 'boolean', description: 'Hide user online/offline status' },
+    hideGroupType: { control: 'boolean', description: 'Hide the group type badge' },
+    hideReceipts: { control: 'boolean', description: 'Hide message read receipts' },
   },
+  // Every story renders the real component with the fake corpus builders wired in.
+  render: args => (
+    <CometChatSearch
+      {...args}
+      messagesRequestBuilder={fakeMessagesRequestBuilder()}
+      conversationsRequestBuilder={fakeConversationsRequestBuilder()}
+    />
+  ),
   decorators: [
     (Story: React.ComponentType) => (
-      <div
-        style={{
-          width: 360,
-          height: 640,
-          border: '1px solid #e0e0e0',
-          borderRadius: 8,
-          overflow: 'hidden',
-        }}
-      >
-        <Story />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: 360 }}>
+        <div
+          style={{
+            width: 360,
+            height: 640,
+            border: '1px solid #e0e0e0',
+            borderRadius: 8,
+            overflow: 'hidden',
+          }}
+        >
+          <Story />
+        </div>
+        <div
+          style={{
+            fontSize: 12,
+            lineHeight: 1.5,
+            color: '#6b7280',
+            padding: '8px 12px',
+            background: '#f8f8fb',
+            border: '1px solid #ececf1',
+            borderRadius: 8,
+          }}
+        >
+          <strong style={{ color: '#4b5563' }}>Try searching</strong> a name — <code>Nancy</code>,{' '}
+          <code>George</code>, <code>Andrew</code>, <code>Carol</code>, <code>David</code>,{' '}
+          <code>Design Team</code>, <code>Engineering</code> — or a word: <code>project</code>,{' '}
+          <code>design</code>. Results come from a fixed mock corpus.
+        </div>
       </div>
     ),
   ],
 };
 export default meta;
-type Story = StoryObj;
+type Story = StoryObj<typeof CometChatSearch>;
 
 // ============================================================
-// Story components (hooks must live in named components)
+// Stories
 // ============================================================
 
-/** Interactive initial state — type in the input and toggle filters. */
-const DefaultStory: React.FC<{
-  hideBackButton?: boolean;
-  hideUserStatus?: boolean;
-  hideGroupType?: boolean;
-  hideReceipts?: boolean;
-}> = ({
-  hideBackButton = false,
-  hideUserStatus = false,
-  hideGroupType = false,
-  hideReceipts = false,
-}) => {
-  const [log, setLog] = useState<string[]>([]);
-  return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        <SearchShell
-          ctx={{
-            hideBackButton,
-            hideUserStatus,
-            hideGroupType,
-            hideReceipts,
-            handleBackClick: () => setLog(p => [...p, 'Back clicked']),
-            handleConversationClick: ({ conversation }) =>
-              setLog(p => [
-                ...p,
-                `Opened: ${(conversation.getConversationWith() as CometChat.User).getName()}`,
-              ]),
-            handleMessageClick: ({ message }) =>
-              setLog(p => [...p, `Message #${String(message.getId())} clicked`]),
-          }}
-        />
-      </div>
-      {log.length > 0 && (
-        <div
-          style={{
-            padding: '6px 12px',
-            fontSize: 11,
-            background: '#f5f5f5',
-            borderTop: '1px solid #e0e0e0',
-            maxHeight: 60,
-            overflow: 'auto',
-          }}
-        >
-          {log.slice(-3).map((l, i) => (
-            <div key={i} style={{ color: '#555' }}>
-              {l}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+/** Initial state — type an advertised keyword to see the real search filter the corpus. */
+export const Default: Story = {
+  parameters: {
+    docs: { description: { story: `Start empty. ${SEARCHABLE_HINT}` } },
+  },
 };
 
-/** Unread filter pre-selected — shows conversations immediately without text input. */
-const WithActiveFilterStory: React.FC = () => <SearchShell initialSearchFilter="unread" />;
+/** Unread filter pre-selected — shows unread conversations immediately, no text needed. */
+export const WithActiveFilter: Story = {
+  args: { initialSearchFilter: 'unread' },
+};
 
-/** Loading — shimmer in both sections. */
-const LoadingStory: React.FC = () => (
-  <SearchShell
-    defaultSearchText="project"
-    ctx={{ conversationsState: 'loading', messagesState: 'loading' }}
-  />
-);
+/** Loaded conversation + message results for the keyword "project". */
+export const BothResults: Story = {
+  args: { defaultSearchText: 'project' },
+};
 
-/** Empty — unified "No Results" view. */
-const EmptyStory: React.FC = () => (
-  <SearchShell
-    defaultSearchText="xyznotfound"
-    ctx={{
-      hideConversationsSection: true,
-      hideMessagesSection: true,
-      showUnifiedEmpty: true,
-      conversationsState: 'empty',
-      messagesState: 'empty',
-    }}
-  />
-);
+/** Conversation results only (searchIn=["conversations"]). Try "Nancy" or "Design". */
+export const ConversationsOnly: Story = {
+  args: { searchIn: ['conversations'], defaultSearchText: 'design' },
+};
 
-/** Error — unified error view. */
-const ErrorStory: React.FC = () => (
-  <SearchShell
-    defaultSearchText="project"
-    ctx={{
-      hideConversationsSection: true,
-      hideMessagesSection: true,
-      showUnifiedError: true,
-      conversationsState: 'error',
-      messagesState: 'error',
-    }}
-  />
-);
+/** Message results only (searchIn=["messages"]). Try "project" or "design". */
+export const MessagesOnly: Story = {
+  args: { searchIn: ['messages'], defaultSearchText: 'project' },
+};
 
-/** Conversations results — 3 conversation rows loaded. */
-const ConversationsResultsStory: React.FC = () => (
-  <SearchShell defaultSearchText="alice" searchIn={['conversations']} />
-);
+/** Photos filter — only image messages from the corpus. */
+export const PhotosFilter: Story = {
+  args: { searchIn: ['messages'], initialSearchFilter: 'photos' },
+};
 
-/** Messages results — 4 message rows with different types. */
-const MessagesResultsStory: React.FC = () => (
-  <SearchShell defaultSearchText="project" searchIn={['messages']} />
-);
+/** Videos filter — only video messages (with real thumbnails + play affordance). */
+export const VideosFilter: Story = {
+  args: { searchIn: ['messages'], initialSearchFilter: 'videos' },
+};
 
-/** Both results — conversations + messages sections together. */
-const BothResultsStory: React.FC = () => <SearchShell defaultSearchText="project" />;
-
-/** Conversations only scope — messages section never shown. */
-const ConversationsOnlyStory: React.FC = () => (
-  <SearchShell defaultSearchText="alice" searchIn={['conversations']} />
-);
-
-/** Messages only scope — conversations section never shown. */
-const MessagesOnlyStory: React.FC = () => (
-  <SearchShell defaultSearchText="project" searchIn={['messages']} />
-);
+/** Empty state — a keyword that matches nothing in the corpus. */
+export const EmptyState: Story = {
+  args: { defaultSearchText: 'zzz-no-such-thing' },
+};
 
 /** No back button. */
-const NoBackButtonStory: React.FC = () => <SearchShell ctx={{ hideBackButton: true }} />;
-
-/** Custom initialView slot. */
-const CustomInitialViewStory: React.FC = () => (
-  <SearchShell
-    ctx={{
-      initialView: (
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            padding: 24,
-          }}
-        >
-          <div style={{ fontSize: 48 }}>🔍</div>
-          <div style={{ fontWeight: 700, fontSize: 18 }}>Find anything</div>
-          <div style={{ color: '#888', fontSize: 14, textAlign: 'center' }}>
-            Search across all your conversations and messages
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            {(['Photos', 'Videos', 'Files'] as const).map(label => (
-              <span
-                key={label}
-                style={{
-                  background: '#f0edff',
-                  color: '#6852d6',
-                  borderRadius: 12,
-                  padding: '4px 10px',
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        </div>
-      ),
-    }}
-  />
-);
-
-/** Custom emptyView slot. */
-const CustomEmptyViewStory: React.FC = () => (
-  <SearchShell
-    defaultSearchText="xyznotfound"
-    ctx={{
-      hideConversationsSection: true,
-      hideMessagesSection: true,
-      showUnifiedEmpty: true,
-      conversationsState: 'empty',
-      messagesState: 'empty',
-      emptyView: (
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 12,
-            padding: 24,
-          }}
-        >
-          <div style={{ fontSize: 64 }}>😕</div>
-          <div style={{ fontWeight: 700, fontSize: 18 }}>Nothing here</div>
-          <div style={{ color: '#888', fontSize: 14, textAlign: 'center' }}>
-            Try searching with different keywords or check your filters.
-          </div>
-        </div>
-      ),
-    }}
-  />
-);
-
-// ============================================================
-// Story exports
-// ============================================================
-
-/** Initial state — type in the input to see results appear. */
-export const Default: Story = {
-  render: args => (
-    <DefaultStory
-      hideBackButton={args.hideBackButton}
-      hideUserStatus={args.hideUserStatus}
-      hideGroupType={args.hideGroupType}
-      hideReceipts={args.hideReceipts}
-    />
-  ),
+export const NoBackButton: Story = {
+  args: { hideBackButton: true, defaultSearchText: 'project' },
 };
 
-/** Unread filter chip pre-selected. */
-export const WithActiveFilter: Story = { render: () => <WithActiveFilterStory /> };
-
-/** Shimmer loading placeholders in both sections. */
-export const LoadingState: Story = { render: () => <LoadingStory /> };
-
-/** Unified "No Results" view when both scopes return empty. */
-export const EmptyState: Story = { render: () => <EmptyStory /> };
-
-/** Unified error view when both scopes fail. */
-export const ErrorState: Story = { render: () => <ErrorStory /> };
-
-/** Loaded conversation results — 3 rows with avatar, name, last message, unread badge. */
-export const ConversationsResults: Story = { render: () => <ConversationsResultsStory /> };
-
-/** Loaded message results — text, image, and audio rows with date separators. */
-export const MessagesResults: Story = { render: () => <MessagesResultsStory /> };
-
-/** Both conversations and messages sections loaded simultaneously. */
-export const BothResults: Story = { render: () => <BothResultsStory /> };
-
-/** searchIn=["conversations"] — only conversation results, message filters hidden. */
-export const ConversationsOnly: Story = { render: () => <ConversationsOnlyStory /> };
-
-/** searchIn=["messages"] — only message results, conversation filters hidden. */
-export const MessagesOnly: Story = { render: () => <MessagesOnlyStory /> };
-
-/** hideBackButton=true — back arrow removed from header. */
-export const NoBackButton: Story = { render: () => <NoBackButtonStory /> };
 /** Custom initialView slot — replaces the default "Start Your Search" prompt. */
-export const CustomInitialView: Story = { render: () => <CustomInitialViewStory /> };
-
-/** Custom emptyView slot — replaces the default "No Results" view. */
-export const CustomEmptyView: Story = { render: () => <CustomEmptyViewStory /> };
+export const CustomInitialView: Story = {
+  args: {
+    initialView: (
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          padding: 24,
+        }}
+      >
+        <div style={{ fontSize: 48 }}>🔍</div>
+        <div style={{ fontWeight: 700, fontSize: 18 }}>Find anything</div>
+        <div style={{ color: '#888', fontSize: 14, textAlign: 'center' }}>
+          Search across all your conversations and messages
+        </div>
+      </div>
+    ),
+  },
+};

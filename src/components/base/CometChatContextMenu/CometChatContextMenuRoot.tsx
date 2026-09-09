@@ -29,6 +29,7 @@ export const CometChatContextMenuRoot: React.FC<CometChatContextMenuRootProps> =
   useParentContainer = false,
   useParentHeight = false,
   forceStaticPlacement = false,
+  submenuDirection = 'end',
   children,
   className,
 }) => {
@@ -83,6 +84,7 @@ export const CometChatContextMenuRoot: React.FC<CometChatContextMenuRootProps> =
       useParentHeight,
       forceStaticPlacement,
       disableBackgroundInteraction,
+      submenuDirection,
     }),
     [
       isOpen,
@@ -95,6 +97,7 @@ export const CometChatContextMenuRoot: React.FC<CometChatContextMenuRootProps> =
       useParentHeight,
       forceStaticPlacement,
       disableBackgroundInteraction,
+      submenuDirection,
     ]
   );
 

@@ -4,6 +4,7 @@
  * BEM Structure:
  * - Block: .cometchat-thread-header
  * - Elements: __top-bar, __content, __title, __sender-name,
+ *             __subscription-wrapper, __subscription-button, __subscription-icon,
  *             __close-button-wrapper, __close-button, __close-button-icon,
  *             __bubble-wrapper, __bubble-fallback,
  *             __reply-count, __reply-count-text, __reply-count-divider
@@ -62,6 +63,81 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ==================== Subscription Toggle Section ==================== */
+.cometchat-thread-header__subscription-wrapper {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cometchat-thread-header__subscription-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cometchat-thread-header-subscription-button-width, 32px);
+  height: var(--cometchat-thread-header-subscription-button-height, 32px);
+  padding: var(--cometchat-thread-header-subscription-button-padding, 0);
+  margin: var(--cometchat-thread-header-subscription-button-margin, 0);
+  border: var(--cometchat-thread-header-subscription-button-border, none);
+  border-radius: var(
+    --cometchat-thread-header-subscription-button-border-radius,
+    var(--cometchat-radius-max, 1000px)
+  );
+  background: var(--cometchat-thread-header-subscription-button-background, transparent);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cometchat-thread-header__subscription-button:hover {
+  background: var(
+    --cometchat-thread-header-subscription-button-background-hover,
+    var(--cometchat-background-color-04)
+  );
+}
+
+.cometchat-thread-header__subscription-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #3399ff);
+  outline-offset: 2px;
+}
+
+.cometchat-thread-header__subscription-button:active {
+  background: var(
+    --cometchat-thread-header-subscription-button-background-active,
+    var(--cometchat-background-color-03)
+  );
+}
+
+.cometchat-thread-header__subscription-icon {
+  display: block;
+  width: var(--cometchat-thread-header-subscription-icon-width, 20px);
+  height: var(--cometchat-thread-header-subscription-icon-height, 20px);
+  background-color: var(
+    --cometchat-thread-header-subscription-icon-color,
+    var(--cometchat-icon-color-primary)
+  );
+}
+
+/* Following — a plain bell. The mask shorthand resets mask-size, so it is
+   re-declared after it in each modifier rather than on the base class. */
+.cometchat-thread-header__subscription-icon--on {
+  -webkit-mask: url('../../assets/bell.svg') center center no-repeat;
+  mask: url('../../assets/bell.svg') center center no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+/* Not following — the bell is struck through. */
+.cometchat-thread-header__subscription-icon--off {
+  -webkit-mask: url('../../assets/bell_crossed.svg') center center no-repeat;
+  mask: url('../../assets/bell_crossed.svg') center center no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  background-color: var(
+    --cometchat-thread-header-subscription-icon-color-off,
+    var(--cometchat-icon-color-secondary)
+  );
 }
 
 /* ==================== Close Button Section ==================== */

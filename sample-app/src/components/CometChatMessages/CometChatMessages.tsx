@@ -10,6 +10,7 @@ interface MessagesViewProps {
   onHeaderClicked?: () => void;
   onThreadRepliesClick?: (message: CometChat.BaseMessage) => void;
   onSearchClicked?: () => void;
+  onPinnedMessagesClicked?: () => void;
   showComposer?: boolean;
   onBack?: () => void;
   goToMessageId?: string;
@@ -22,6 +23,7 @@ export const CometChatMessages = (props: MessagesViewProps) => {
     onHeaderClicked = () => {},
     onThreadRepliesClick = () => {},
     onSearchClicked,
+    onPinnedMessagesClicked,
     showComposer = true,
     onBack = () => {},
     goToMessageId,
@@ -75,6 +77,7 @@ export const CometChatMessages = (props: MessagesViewProps) => {
           hideBackButton={!isMobile}
           onItemClick={onHeaderClicked}
           onSearchOptionClicked={onSearchClicked}
+          onPinnedMessagesClicked={onPinnedMessagesClicked}
           showSearchOption={true}
         />
       </div>

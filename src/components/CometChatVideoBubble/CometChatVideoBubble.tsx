@@ -58,6 +58,10 @@ function toViewerAttachments(
  *
  * Single video: inline <video> with native controls + poster thumbnail.
  * Multi-video: thumbnail <img> + play overlay per tile, click opens fullscreen viewer.
+ *
+ * @deprecated Use {@link CometChatVideosBubble} instead. This legacy
+ * single-attachment bubble is retained for backward compatibility and is no
+ * longer the default renderer for video messages.
  */
 export const CometChatVideoBubble: React.FC<CometChatVideoBubbleProps> = ({
   message,
@@ -360,4 +364,5 @@ export const CometChatVideoBubble: React.FC<CometChatVideoBubbleProps> = ({
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- setting displayName on the deprecated component itself
 CometChatVideoBubble.displayName = 'CometChatVideoBubble';

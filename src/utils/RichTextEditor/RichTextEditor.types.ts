@@ -69,6 +69,16 @@ export interface CometChatRichTextEditorConfig {
    * Return `true` to indicate the event was handled (editor skips its own handling).
    */
   onKeyDown?: (e: KeyboardEvent) => boolean;
+  /**
+   * Custom text-formatter paste round-trip (§paste). On an HTML paste, the editor calls
+   * `preprocessPastedHtml` with the RAW clipboard HTML so a consumer can serialize its formatters'
+   * display spans back to storable tokens (via each formatter's `getOriginalText`) — surviving the
+   * editor's aggressive paste sanitizer, which otherwise unwraps unknown spans. After sanitizing,
+   * the editor calls `postprocessPastedHtml` so the consumer can re-render those tokens to display
+   * spans (via `getFormattedText`), exactly like the message bubble. Both default to identity.
+   */
+  preprocessPastedHtml?: (html: string) => string;
+  postprocessPastedHtml?: (html: string) => string;
 }
 
 /** History entry for undo/redo. */

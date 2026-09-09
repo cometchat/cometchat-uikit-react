@@ -15,7 +15,7 @@ export const TEST_USERS = {
  * 3. Waits for home screen (conversations visible)
  */
 export async function loginToApp(page: Page, uid?: string): Promise<void> {
-  const userUid = uid ?? process.env.E2E_USER_UID ?? TEST_USERS.primary;
+  const userUid = uid ?? TEST_USERS.primary;
   const appId = process.env.COMETCHAT_APP_ID!;
   const authKey = process.env.COMETCHAT_AUTH_KEY!;
   const region = process.env.COMETCHAT_REGION ?? 'us';
@@ -56,5 +56,22 @@ export async function loginToApp(page: Page, uid?: string): Promise<void> {
   await page.locator('.cometchat-login__submit-button').click();
 
   // Wait for home screen (conversations visible)
+  await page.waitForSelector('.cometchat-conversations', { timeout: 60_000 });
+
+  // Reload so the chat websocket is authenticated. DO NOT REMOVE — without it
+  // realtime is silently dead for the whole session.
+  //
+  // The SDK opens the socket during init() because autoEstablishSocketConnection
+  // defaults to true. In a fresh browser context that happens before anyone is
+  // logged in, and the socket's auth step is a no-op when getLoggedinUser()
+  // resolves to null — so no auth frame is ever sent. Logging in afterwards does
+  // not fix it: the post-login re-auth is skipped when the transport is already
+  // CONNECTED. The socket then stays open but unauthenticated, and every frame
+  // comes back {"error":"Unauthorized"}.
+  //
+  // Reloading re-runs init() with the session now persisted, so getLoggedinUser()
+  // resolves and the socket authenticates. Manual testing never hits this because
+  // it reuses a stored session; a fresh Playwright context hits it every run.
+  await page.reload();
   await page.waitForSelector('.cometchat-conversations', { timeout: 60_000 });
 }

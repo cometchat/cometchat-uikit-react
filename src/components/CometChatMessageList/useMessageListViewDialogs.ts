@@ -24,8 +24,9 @@ export interface UseMessageListViewDialogsOptions {
 
 export interface UseMessageListViewDialogsReturn {
   // Toast
-  toastText: string;
-  showToast: (text: string) => void;
+  /** Current toast text (empty when hidden) and its visual variant (`error` renders it red). */
+  toast: { text: string; variant: 'default' | 'error' };
+  showToast: (text: string, variant?: 'default' | 'error') => void;
   hideToast: () => void;
   // Delete
   deleteTarget: CometChat.BaseMessage | null;
@@ -83,12 +84,15 @@ export function useMessageListViewDialogs(
   }, [IframeContext.iframeDocument]);
 
   // --- Toast state ---
-  const [toastText, setToastText] = useState('');
-  const showToast = useCallback((text: string) => {
-    setToastText(text);
+  const [toast, setToast] = useState<{ text: string; variant: 'default' | 'error' }>({
+    text: '',
+    variant: 'default',
+  });
+  const showToast = useCallback((text: string, variant: 'default' | 'error' = 'default') => {
+    setToast({ text, variant });
   }, []);
   const hideToast = useCallback(() => {
-    setToastText('');
+    setToast({ text: '', variant: 'default' });
   }, []);
 
   // --- Delete confirm dialog state ---
@@ -100,8 +104,8 @@ export function useMessageListViewDialogs(
     if (!deleteTarget) return;
     await deleteMessage(deleteTarget.getId());
     setDeleteTarget(null);
-    setToastText(getLocalizedString('message_list_message_deleted'));
-  }, [deleteTarget, deleteMessage, getLocalizedString]);
+    showToast(getLocalizedString('message_list_message_deleted'));
+  }, [deleteTarget, deleteMessage, getLocalizedString, showToast]);
   const handleDeleteCancel = useCallback(() => {
     setDeleteTarget(null);
   }, []);
@@ -123,13 +127,13 @@ export function useMessageListViewDialogs(
           params.remark = remark;
         }
         await CometChat.flagMessage(messageId, params);
-        setToastText(getLocalizedString('flag_message_reported'));
+        showToast(getLocalizedString('flag_message_reported'));
         return true;
       } catch {
         return false;
       }
     },
-    [getLocalizedString]
+    [getLocalizedString, showToast]
   );
 
   // --- Mark as unread handler ---
@@ -243,7 +247,7 @@ export function useMessageListViewDialogs(
   );
 
   return {
-    toastText,
+    toast,
     showToast,
     hideToast,
     deleteTarget,

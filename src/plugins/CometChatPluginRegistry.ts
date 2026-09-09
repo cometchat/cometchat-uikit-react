@@ -1,6 +1,7 @@
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatMessagePlugin } from './plugin.types';
 import type { CometChatTextFormatter } from '../formatters/CometChatTextFormatter';
+import { createDefaultTextFormatters } from './core/shared/defaultTextFormatters';
 
 /**
  * Immutable registry of message plugins.
@@ -80,16 +81,19 @@ export class CometChatPluginRegistry {
   }
 
   /**
-   * Get text formatters from the text plugin (or the first plugin that provides them).
-   * Used by media plugins for caption rendering and by conversations/search for subtitles.
+   * The kit's default display formatters (markdown → mentions → URLs).
+   *
+   * A convenience for consumers rendering message text outside a plugin — custom
+   * bubbles, subtitles, previews — who want the same baseline the built-in bubbles
+   * use. The kit itself does not call this: each plugin owns its own set via
+   * `getTextFormatters()` and merges it with `context.textFormatters` at render time.
+   *
+   * Returns the canonical set rather than polling the registered plugins.
+   *
+   * FRESH instances per call — formatters are stateful, so memoize the result rather
+   * than calling this inside a render body.
    */
   getTextFormatters(): CometChatTextFormatter[] {
-    for (const plugin of this.plugins) {
-      if (plugin.getTextFormatters) {
-        const formatters = plugin.getTextFormatters();
-        if (formatters.length > 0) return formatters;
-      }
-    }
-    return [];
+    return createDefaultTextFormatters();
   }
 }

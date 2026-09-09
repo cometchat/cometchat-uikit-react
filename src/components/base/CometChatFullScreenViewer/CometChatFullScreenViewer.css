@@ -210,6 +210,7 @@
 
 /* ── Video ── */
 .cometchat-fullscreen-viewer__video-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -230,6 +231,18 @@
 .cometchat-fullscreen-viewer__body-video:focus {
   outline: 2px solid var(--cometchat-primary-color, #6852d6);
   outline-offset: 2px;
+}
+
+/* Keep the player hidden and out of layout until the media is confirmed a real
+   video, so an invalid file never flashes a player and the unsupported state
+   (rendered alongside the still-mounted <video>) stays centered. Loading the
+   resource is unaffected by size/visibility, so metadata still resolves. */
+.cometchat-fullscreen-viewer__body-video--loading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ── Audio ── */
@@ -468,6 +481,50 @@
   text-align: center;
 }
 
+/* ── Unsupported / no-preview state ── */
+.cometchat-fullscreen-viewer__unsupported-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cometchat-spacing-2, 8px);
+  padding: var(--cometchat-padding-8, 32px) var(--cometchat-padding-6, 24px);
+  border-radius: var(--cometchat-radius-3, 12px);
+  text-align: center;
+}
+
+.cometchat-fullscreen-viewer__unsupported-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: color-mix(in srgb, var(--cometchat-static-white, #4c4c4c) 10%, transparent);
+  margin-bottom: var(--cometchat-spacing-2, 8px);
+}
+
+.cometchat-fullscreen-viewer__unsupported-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.cometchat-fullscreen-viewer__unsupported-title {
+  color: var(--cometchat-static-white, #fff);
+  font: var(--cometchat-font-heading4-medium, 500 18px Roboto);
+}
+
+.cometchat-fullscreen-viewer__unsupported-subtitle {
+  color: var(--cometchat-static-white-70, rgba(255, 255, 255, 0.7));
+  font: var(--cometchat-font-body-regular, 400 14px Roboto);
+}
+
+/* Download button in the unsupported state. */
+.cometchat-fullscreen-viewer__unsupported-download {
+  align-self: stretch;
+  margin-top: var(--cometchat-spacing-4, 16px);
+}
+
 /* ── Progress ── */
 .cometchat-fullscreen-viewer__body-download-progress {
   position: relative;
@@ -559,6 +616,10 @@
   .cometchat-fullscreen-viewer__download-action-icon {
     width: 16px;
     height: 16px;
+  }
+
+  .cometchat-fullscreen-viewer__unsupported-download {
+    width: auto;
   }
 }
 

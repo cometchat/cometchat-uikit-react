@@ -1,5 +1,21 @@
 import { test, expect, Page } from '@playwright/test';
 import { loginToApp } from '../helpers';
+import {
+  STRATEGY_GROUP,
+  PRIMARY_UID,
+  SECONDARY_UID,
+  PIN_CONVERSATION_OPTION,
+  adminPinConversations,
+  userUnpinGroupConversation,
+  resolveGroupGuid,
+  sendMessageToGroup,
+  openChatsTab,
+  openConversationRowMenu,
+  pinConversationUI,
+  conversationItem,
+  conversationPinIndicator,
+  conversationTitles,
+} from '../helpers/pinSave';
 
 /**
  * E2E Tests — CometChatConversations (React)
@@ -75,16 +91,29 @@ test.describe('CometChatConversations', () => {
     await expect(dateElement).toBeVisible({ timeout: 5_000 });
   });
 
-  // ==================== Delete Button on Hover ====================
+  // ==================== Row Actions on Hover ====================
 
-  test('hover on conversation shows delete button', async () => {
-    const firstItem = page.locator('.cometchat-conversations__item').first();
+  test('hover on conversation reveals the row actions', async () => {
+    // Skip the AI Agent chat — its row renders differently — and take the first
+    // ordinary conversation.
+    const firstItem = page
+      .locator('.cometchat-conversations__item')
+      .filter({
+        hasNot: page.locator('.cometchat-conversations__item-title', { hasText: /^AI Agent E2E$/ }),
+      })
+      .first();
     await expect(firstItem).toBeVisible();
     await firstItem.hover();
     await page.waitForTimeout(300);
 
-    const deleteBtn = firstItem.locator('.cometchat-conversations__item-delete-button');
-    await expect(deleteBtn).toBeVisible({ timeout: 3_000 });
+    // With conversation-pin enabled the row's actions live under `__item-options`
+    // (a Pin/Delete context menu). When delete is the only available action — e.g.
+    // a system-pinned row that can't be unpinned — it collapses to a lone delete
+    // button, which also lives under `__item-options`. Assert the container either
+    // way rather than the old delete-button-only selector.
+    await expect(firstItem.locator('.cometchat-conversations__item-options')).toBeVisible({
+      timeout: 3_000,
+    });
   });
 
   // ==================== Keyboard Navigation ====================
@@ -209,5 +238,98 @@ test.describe('CometChatConversations', () => {
 
     const unreadBadge = strategyItem.locator('.cometchat-conversations__item-unread-badge');
     await expect(unreadBadge).toBeVisible({ timeout: 5_000 });
+  });
+});
+
+/**
+ * Pin conversation.
+ *
+ * Independent tests. Each starts from a fixed baseline seeded over REST *before*
+ * login so the first load reflects it: Strategy is system/admin-pinned (the
+ * persistent top anchor — never undone), and the Engineering group (the only
+ * chat we pin from the UI) starts unpinned. System pins outrank user pins, so
+ * once Engineering is pinned the order from the top is: Strategy (system) →
+ * Engineering (user) → everything else by recency.
+ *
+ * The row we pin must be VISIBLE in the list first — search results don't expose
+ * row actions — so each test sends Engineering a message to bump it into view
+ * before pinning. (Bob is left alone; it is a read-only fixture.)
+ */
+test.describe('Pin conversation', () => {
+  let engineeringGuid = '';
+
+  const expectTitleAt = async (page: Page, index: number, title: string) => {
+    await expect
+      .poll(async () => (await conversationTitles(page))[index] ?? '', { timeout: 15_000 })
+      .toBe(title);
+  };
+
+  /** Send Engineering a message so its row shows up in the conversation list. */
+  const revealEngineering = async (page: Page) => {
+    await sendMessageToGroup({
+      guid: engineeringGuid,
+      as: PRIMARY_UID,
+      text: `Eng bump [${Date.now()}]`,
+    });
+    await expect(conversationItem(page, 'Engineering')).toBeVisible({ timeout: 15_000 });
+  };
+
+  test.beforeEach(async ({ page }) => {
+    engineeringGuid = await resolveGroupGuid('Engineering');
+    await adminPinConversations([{ guid: STRATEGY_GROUP }]);
+    await userUnpinGroupConversation(engineeringGuid, PRIMARY_UID);
+    await loginToApp(page);
+    await openChatsTab(page);
+  });
+
+  test('offers "Pin conversation" in the Engineering row menu', async ({ page }) => {
+    await revealEngineering(page);
+    await page.waitForTimeout(5000);
+
+    await openConversationRowMenu(page, 'Engineering');
+    // Exact match — "Pin conversation" is a substring of "Unpin conversation".
+    await expect(
+      page.getByRole('menuitem', { name: PIN_CONVERSATION_OPTION, exact: true }).first()
+    ).toBeVisible({ timeout: 5_000 });
+    await page.keyboard.press('Escape');
+  });
+
+  test('a pinned chat sorts above a more-recently-active unpinned chat', async ({ page }) => {
+    // Make Engineering visible (top of the unpinned section) and pin it.
+    await revealEngineering(page);
+
+    // A more-recent message elsewhere must NOT outrank the pinned Engineering.
+    const cicd = await resolveGroupGuid('CI/CD');
+    await sendMessageToGroup({ guid: cicd, as: SECONDARY_UID, text: `CICD bump [${Date.now()}]` });
+
+    await page.waitForTimeout(5000);
+
+    await pinConversationUI(page, 'Engineering');
+    await expect(conversationPinIndicator(conversationItem(page, 'Engineering'))).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await expectTitleAt(page, 0, 'Strategy');
+    await expectTitleAt(page, 1, 'Engineering');
+  });
+
+  test('a new message in another group does not jump above the pinned chats', async ({ page }) => {
+    await revealEngineering(page);
+    await pinConversationUI(page, 'Engineering');
+    await expectTitleAt(page, 1, 'Engineering');
+
+    // A fresh message in the Testing group tops the *unpinned* section only.
+    const testing = await resolveGroupGuid('Testing');
+    await sendMessageToGroup({ guid: testing, as: SECONDARY_UID, text: `Testing bump [${Date.now()}]` });
+    await page.waitForTimeout(5000);
+
+    // Pinned rows are unmoved; Testing lands below them.
+    await expectTitleAt(page, 0, 'Strategy');
+    await expectTitleAt(page, 1, 'Engineering');
+    await expect
+      .poll(async () => (await conversationTitles(page)).findIndex(t => t === 'Testing'), {
+        timeout: 15_000,
+      })
+      .toBeGreaterThan(1);
   });
 });

@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { selectGroupByName } from './navigation';
 
 /**
  * Browser-side helpers for the agentic group chat tests (ENG-36495).
@@ -64,13 +65,7 @@ export async function getUserName(uid: string): Promise<string | null> {
 
 /** Open a group chat from the Groups tab by its display name. */
 export async function openGroupByName(page: Page, name: string): Promise<void> {
-  const groupsTab = page.locator('.cometchat-tab-component__tab:has-text("Groups")').first();
-  await groupsTab.click();
-  await page.waitForSelector('.cometchat-groups__item', { timeout: 30_000 });
-
-  const group = page.locator('.cometchat-groups__item').filter({ hasText: name }).first();
-  await expect(group).toBeVisible({ timeout: 10_000 });
-  await group.click();
+  await selectGroupByName(page, name);
 
   await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
   await page.waitForSelector('.cometchat-message-composer', { timeout: 15_000 });

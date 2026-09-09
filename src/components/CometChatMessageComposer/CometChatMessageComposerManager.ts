@@ -69,6 +69,27 @@ export async function editTextMessage(
 }
 
 /**
+ * Edit a media message's caption.
+ * Creates a MediaMessage with the updated caption and calls editMessage.
+ */
+export async function editMediaCaption(
+  messageId: number,
+  caption: string,
+  mentionedUsers?: { uid: string; name: string }[]
+): Promise<CometChat.BaseMessage> {
+  // The SDK's editMessage accepts any BaseMessage subclass. We create a
+  // MediaMessage shell with the id and new caption set.
+  const mediaMessage = new CometChat.MediaMessage('', null, '', '');
+  mediaMessage.setId(messageId);
+  mediaMessage.setCaption(caption);
+  if (mentionedUsers && mentionedUsers.length > 0) {
+    const userObjects = mentionedUsers.map(u => new CometChat.User({ uid: u.uid, name: u.name }));
+    mediaMessage.setMentionedUsers(userObjects);
+  }
+  return CometChat.editMessage(mediaMessage);
+}
+
+/**
  * Start typing indicator.
  */
 export function startTypingIndicator(receiverId: string, receiverType: string): void {

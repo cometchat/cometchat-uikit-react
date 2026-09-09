@@ -28,18 +28,27 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
   readonly id = 'rich-text-formatter';
   override priority = 200;
 
-  getRegex(): RegExp {
+  /**
+   * Input-capable custom formatters consulted to serialize their marks/entities to
+   * stored tokens on send. Empty for plain rich-text conversion.
+   */
+  private readonly inputFormatters: CometChatTextFormatter[];
+
+  constructor(inputFormatters: CometChatTextFormatter[] = []) {
+    super();
+    this.inputFormatters = inputFormatters;
+  }
+
+  override getRegex(): RegExp {
     return /<(b|strong|i|em|u|s|strike|del|code|pre|blockquote|a|ol|ul|li|br|div|p)[^>]*>/i;
   }
 
-  /**
-   * Only format if the input contains HTML tags that need conversion.
-   */
+  /** Only format if the input contains HTML tags that need conversion. */
   override shouldFormat(text: string): boolean {
     return this.getRegex().test(text);
   }
 
-  format(text: string): string {
+  override format(text: string): string {
     if (!text) {
       this.originalText = '';
       this.formattedText = '';
@@ -48,14 +57,22 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
 
     this.originalText = text;
 
+    // Strip each custom formatter's own markup back to storable text before markdown
+    // conversion — e.g. `<span class="hashtag">#tag</span>` → `#tag`. A formatter with no
+    // `regexToReplaceFormatting` is a no-op here.
+    let working = text;
+    for (const formatter of this.inputFormatters) {
+      working = formatter.getOriginalText(working);
+    }
+
     // If no HTML tags, pass through
-    if (!this.shouldFormat(text)) {
-      this.formattedText = text;
-      return text;
+    if (!this.shouldFormat(working)) {
+      this.formattedText = working;
+      return working;
     }
 
     // Use DOM parsing to convert HTML → markdown
-    const markdown = this.htmlToMarkdown(text);
+    const markdown = this.htmlToMarkdown(working);
     this.formattedText = this.cleanMarkdown(markdown);
     return this.formattedText;
   }
@@ -91,6 +108,7 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
     }
 
     const element = node as HTMLElement;
+
     const tagName = element.tagName.toUpperCase();
     const innerContent = this.processNode(element, depth);
 

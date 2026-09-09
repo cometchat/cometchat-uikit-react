@@ -12,6 +12,54 @@ const __dirname = path.dirname(__filename);
  * Tests the message composer component. Requires opening a conversation first.
  */
 
+/**
+ * Stage a single attachment via the action sheet and send it.
+ *
+ * The composer runs with `enableMultipleAttachments` (default), so picking a file
+ * routes it to the staging tray rather than sending immediately. We wait for the
+ * tray + upload to finish, then click send. The message list then renders the
+ * batch-aware plural bubbles (ImagesBubble/VideosBubble/AudiosBubble/FilesBubble).
+ */
+async function stageAndSendAttachment(page: Page, optionLabel: string, filePath: string) {
+  const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
+  await expect(attachBtn).toBeVisible({ timeout: 5_000 });
+  await attachBtn.click();
+  await page.waitForTimeout(1000);
+
+  const optionsList = page.locator('.cometchat-message-composer__attachment-list').first();
+  await expect(optionsList).toBeVisible({ timeout: 5_000 });
+
+  const option = optionsList
+    .locator('.cometchat-message-composer__attachment-option')
+    .filter({
+      has: page.locator(
+        `.cometchat-message-composer__attachment-option-title:has-text("${optionLabel}")`
+      ),
+    })
+    .first();
+  await expect(option).toBeVisible({ timeout: 3_000 });
+
+  const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 5_000 });
+  await option.click();
+  const fileChooser = await fileChooserPromise;
+  await fileChooser.setFiles(filePath);
+
+  // The file stages to the tray; wait for it to appear and for uploads to finish.
+  const tray = page.locator('.cometchat-message-composer__tray').first();
+  await expect(tray).toBeVisible({ timeout: 10_000 });
+  await expect(tray.locator('.cometchat-message-composer__tray-progress')).toHaveCount(0, {
+    timeout: 60_000,
+  });
+
+  // Send the staged attachment.
+  const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
+  await expect(sendBtn).toBeVisible({ timeout: 5_000 });
+  await sendBtn.click();
+
+  // Tray clears once sent.
+  await expect(tray).not.toBeVisible({ timeout: 15_000 });
+}
+
 test.describe('CometChatMessageComposer', () => {
   let page: Page;
 
@@ -169,34 +217,17 @@ test.describe('CometChatMessageComposer', () => {
 
   test('send image attachment via action sheet', async () => {
     // Count existing image bubbles before sending
-    const imageBubblesBefore = await page.locator('.cometchat-image-bubble').count();
+    const imageBubblesBefore = await page.locator('.cometchat-images-bubble').count();
 
-    // Click the attachment button
-    const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
-    await expect(attachBtn).toBeVisible({ timeout: 5_000 });
-    await attachBtn.click();
-    await page.waitForTimeout(1000);
-
-    // Attachment options list should open
-    const optionsList = page.locator('.cometchat-message-composer__attachment-list').first();
-    await expect(optionsList).toBeVisible({ timeout: 5_000 });
-
-    // Click the "Image" option — it programmatically creates a file input
-    const imageOption = optionsList.locator('.cometchat-message-composer__attachment-option').filter({
-      has: page.locator('.cometchat-message-composer__attachment-option-title:has-text("Image")'),
-    }).first();
-    await expect(imageOption).toBeVisible({ timeout: 3_000 });
-
-    const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 5_000 });
-    await imageOption.click();
-    const fileChooser = await fileChooserPromise;
-
-    const testImagePath = path.resolve(__dirname, '../fixtures/test-image.png');
-    await fileChooser.setFiles(testImagePath);
+    await stageAndSendAttachment(
+      page,
+      'Image',
+      path.resolve(__dirname, '../fixtures/test-image.png')
+    );
 
     // A NEW image bubble should appear (count increased)
     await expect(async () => {
-      const count = await page.locator('.cometchat-image-bubble').count();
+      const count = await page.locator('.cometchat-images-bubble').count();
       expect(count).toBeGreaterThan(imageBubblesBefore);
     }).toPass({ timeout: 15_000 });
   });
@@ -205,34 +236,17 @@ test.describe('CometChatMessageComposer', () => {
 
   test('send file attachment via action sheet', async () => {
     // Count existing file bubbles before sending
-    const fileBubblesBefore = await page.locator('.cometchat-file-bubble').count();
+    const fileBubblesBefore = await page.locator('.cometchat-files-bubble').count();
 
-    // Click the attachment button
-    const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
-    await expect(attachBtn).toBeVisible({ timeout: 5_000 });
-    await attachBtn.click();
-    await page.waitForTimeout(1000);
-
-    // Attachment options list should open
-    const optionsList = page.locator('.cometchat-message-composer__attachment-list').first();
-    await expect(optionsList).toBeVisible({ timeout: 5_000 });
-
-    // Click the "File" option
-    const fileOption = optionsList.locator('.cometchat-message-composer__attachment-option').filter({
-      has: page.locator('.cometchat-message-composer__attachment-option-title:has-text("File")'),
-    }).first();
-    await expect(fileOption).toBeVisible({ timeout: 3_000 });
-
-    const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 5_000 });
-    await fileOption.click();
-    const fileChooser = await fileChooserPromise;
-
-    const testFilePath = path.resolve(__dirname, '../fixtures/test-file.pdf');
-    await fileChooser.setFiles(testFilePath);
+    await stageAndSendAttachment(
+      page,
+      'File',
+      path.resolve(__dirname, '../fixtures/test-file.pdf')
+    );
 
     // A NEW file bubble should appear (count increased)
     await expect(async () => {
-      const count = await page.locator('.cometchat-file-bubble').count();
+      const count = await page.locator('.cometchat-files-bubble').count();
       expect(count).toBeGreaterThan(fileBubblesBefore);
     }).toPass({ timeout: 15_000 });
   });
@@ -241,32 +255,18 @@ test.describe('CometChatMessageComposer', () => {
 
   test('clicking sent image opens full-screen viewer', async () => {
     // Count existing image bubbles before sending
-    const imageBubblesBefore = await page.locator('.cometchat-image-bubble').count();
+    const imageBubblesBefore = await page.locator('.cometchat-images-bubble').count();
 
     // Send an image first
-    const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
-    await expect(attachBtn).toBeVisible({ timeout: 5_000 });
-    await attachBtn.click();
-    await page.waitForTimeout(1000);
-
-    const optionsList = page.locator('.cometchat-message-composer__attachment-list').first();
-    await expect(optionsList).toBeVisible({ timeout: 5_000 });
-
-    const imageOption = optionsList.locator('.cometchat-message-composer__attachment-option').filter({
-      has: page.locator('.cometchat-message-composer__attachment-option-title:has-text("Image")'),
-    }).first();
-    await expect(imageOption).toBeVisible({ timeout: 3_000 });
-
-    const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 5_000 });
-    await imageOption.click();
-    const fileChooser = await fileChooserPromise;
-
-    const testImagePath = path.resolve(__dirname, '../fixtures/test-image.png');
-    await fileChooser.setFiles(testImagePath);
+    await stageAndSendAttachment(
+      page,
+      'Image',
+      path.resolve(__dirname, '../fixtures/test-image.png')
+    );
 
     // Wait for a NEW image bubble (count increased)
     await expect(async () => {
-      const count = await page.locator('.cometchat-image-bubble').count();
+      const count = await page.locator('.cometchat-images-bubble').count();
       expect(count).toBeGreaterThan(imageBubblesBefore);
     }).toPass({ timeout: 15_000 });
 
@@ -274,8 +274,8 @@ test.describe('CometChatMessageComposer', () => {
     await page.waitForTimeout(7500);
 
     // Click the LAST image bubble (the one we just sent)
-    const imageBubble = page.locator('.cometchat-image-bubble').last();
-    const imageWrapper = imageBubble.locator('.cometchat-image-bubble__image-wrapper').first();
+    const imageBubble = page.locator('.cometchat-images-bubble').last();
+    const imageWrapper = imageBubble.locator('.cometchat-images-bubble__image-wrapper').first();
     await expect(imageWrapper).toBeVisible({ timeout: 5_000 });
     await imageWrapper.click();
     await page.waitForTimeout(1000);
@@ -327,31 +327,17 @@ test.describe('CometChatMessageComposer', () => {
 
   test('send video attachment via action sheet', async () => {
     // Count existing video bubbles before sending
-    const videoBubblesBefore = await page.locator('.cometchat-video-bubble').count();
+    const videoBubblesBefore = await page.locator('.cometchat-videos-bubble').count();
 
-    const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
-    await expect(attachBtn).toBeVisible({ timeout: 5_000 });
-    await attachBtn.click();
-    await page.waitForTimeout(1000);
-
-    const optionsList = page.locator('.cometchat-message-composer__attachment-list').first();
-    await expect(optionsList).toBeVisible({ timeout: 5_000 });
-
-    const videoOption = optionsList.locator('.cometchat-message-composer__attachment-option').filter({
-      has: page.locator('.cometchat-message-composer__attachment-option-title:has-text("Video")'),
-    }).first();
-    await expect(videoOption).toBeVisible({ timeout: 3_000 });
-
-    const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 5_000 });
-    await videoOption.click();
-    const fileChooser = await fileChooserPromise;
-
-    const testVideoPath = path.resolve(__dirname, '../fixtures/test-video.mp4');
-    await fileChooser.setFiles(testVideoPath);
+    await stageAndSendAttachment(
+      page,
+      'Video',
+      path.resolve(__dirname, '../fixtures/test-video.mp4')
+    );
 
     // A NEW video bubble should appear (count increased)
     await expect(async () => {
-      const count = await page.locator('.cometchat-video-bubble').count();
+      const count = await page.locator('.cometchat-videos-bubble').count();
       expect(count).toBeGreaterThan(videoBubblesBefore);
     }).toPass({ timeout: 15_000 });
   });
@@ -360,31 +346,17 @@ test.describe('CometChatMessageComposer', () => {
 
   test('send audio attachment via action sheet', async () => {
     // Count existing audio bubbles before sending
-    const audioBubblesBefore = await page.locator('.cometchat-audio-bubble').count();
+    const audioBubblesBefore = await page.locator('.cometchat-audios-bubble').count();
 
-    const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
-    await expect(attachBtn).toBeVisible({ timeout: 5_000 });
-    await attachBtn.click();
-    await page.waitForTimeout(1000);
-
-    const optionsList = page.locator('.cometchat-message-composer__attachment-list').first();
-    await expect(optionsList).toBeVisible({ timeout: 5_000 });
-
-    const audioOption = optionsList.locator('.cometchat-message-composer__attachment-option').filter({
-      has: page.locator('.cometchat-message-composer__attachment-option-title:has-text("Audio")'),
-    }).first();
-    await expect(audioOption).toBeVisible({ timeout: 3_000 });
-
-    const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 5_000 });
-    await audioOption.click();
-    const fileChooser = await fileChooserPromise;
-
-    const testAudioPath = path.resolve(__dirname, '../fixtures/test-audio.mp3');
-    await fileChooser.setFiles(testAudioPath);
+    await stageAndSendAttachment(
+      page,
+      'Audio',
+      path.resolve(__dirname, '../fixtures/test-audio.mp3')
+    );
 
     // A NEW audio bubble should appear (count increased)
     await expect(async () => {
-      const count = await page.locator('.cometchat-audio-bubble').count();
+      const count = await page.locator('.cometchat-audios-bubble').count();
       expect(count).toBeGreaterThan(audioBubblesBefore);
     }).toPass({ timeout: 15_000 });
   });
@@ -393,10 +365,10 @@ test.describe('CometChatMessageComposer', () => {
 
   test('audio bubble has play button', async () => {
     // There should be an audio bubble from the previous test or existing messages
-    const audioBubble = page.locator('.cometchat-audio-bubble').last();
+    const audioBubble = page.locator('.cometchat-audios-bubble').last();
     await expect(audioBubble).toBeVisible({ timeout: 15_000 });
 
-    const playBtn = audioBubble.locator('.cometchat-audio-bubble__play-button').first();
+    const playBtn = audioBubble.locator('.cometchat-audios-bubble__play-btn').first();
     await expect(playBtn).toBeVisible({ timeout: 5_000 });
   });
 });

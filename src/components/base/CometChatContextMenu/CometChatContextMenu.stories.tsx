@@ -75,15 +75,6 @@ function StoryWrapper({ children }: { children: React.ReactNode }) {
 const meta: Meta = {
   title: 'Components/Misc/Context Menu',
   tags: ['autodocs'],
-  args: {
-    isOpen: true,
-  },
-  argTypes: {
-    isOpen: {
-      control: 'boolean',
-      description: 'Whether the context menu dropdown is open by default.',
-    },
-  },
   parameters: {
     layout: 'none',
     docs: {
@@ -96,13 +87,12 @@ const meta: Meta = {
 export default meta;
 
 export const Default = {
-  render: (args: { isOpen: boolean }) => (
+  render: () => (
     <StoryWrapper>
       <CometChatContextMenu.Root
         items={sampleItems}
         topMenuSize={2}
         placement="bottom"
-        defaultOpen={args.isOpen}
         onOptionClicked={item => alert(item.title)}
       />
     </StoryWrapper>
@@ -111,26 +101,21 @@ export const Default = {
 
 /** All items in top row (no dropdown). */
 export const AllTopRow = {
-  render: (args: { isOpen: boolean }) => (
+  render: () => (
     <StoryWrapper>
-      <CometChatContextMenu.Root
-        items={sampleItems.slice(0, 3)}
-        topMenuSize={5}
-        defaultOpen={args.isOpen}
-      />
+      <CometChatContextMenu.Root items={sampleItems.slice(0, 3)} topMenuSize={5} />
     </StoryWrapper>
   ),
 };
 
 /** All items in dropdown (topMenuSize=0). */
 export const AllDropdown = {
-  render: (args: { isOpen: boolean }) => (
+  render: () => (
     <StoryWrapper>
       <CometChatContextMenu.Root
         items={sampleItems}
         topMenuSize={0}
         placement="bottom"
-        defaultOpen={args.isOpen}
         onOptionClicked={item => alert(item.title)}
       />
     </StoryWrapper>
@@ -138,7 +123,7 @@ export const AllDropdown = {
 };
 
 /** With disabled items. */
-function WithDisabledItemsDemo(args: { isOpen: boolean }) {
+function WithDisabledItemsDemo() {
   const items: CometChatContextMenuItemData[] = [
     { ...sampleItems[0]!, id: 'react' },
     { ...sampleItems[1]!, id: 'reply', disabled: true },
@@ -154,7 +139,6 @@ function WithDisabledItemsDemo(args: { isOpen: boolean }) {
         items={items}
         topMenuSize={2}
         placement="bottom"
-        defaultOpen={args.isOpen}
         onOptionClicked={item => alert(item.title)}
       />
     </StoryWrapper>
@@ -162,12 +146,12 @@ function WithDisabledItemsDemo(args: { isOpen: boolean }) {
 }
 
 export const WithDisabledItems = {
-  render: (args: { isOpen: boolean }) => <WithDisabledItemsDemo {...args} />,
+  render: () => <WithDisabledItemsDemo />,
 };
 
 /** Custom positioning — all placements in one view with dropdowns open. */
 export const CustomPositioning = {
-  render: (args: { isOpen: boolean }) => (
+  render: () => (
     <div
       style={{
         display: 'flex',
@@ -196,7 +180,6 @@ export const CustomPositioning = {
             topMenuSize={2}
             placement={placement}
             forceStaticPlacement
-            defaultOpen={args.isOpen}
             onOptionClicked={item => alert(item.title)}
           />
         </div>
@@ -207,9 +190,9 @@ export const CustomPositioning = {
 
 /** With custom trigger content. */
 export const CustomTrigger = {
-  render: (args: { isOpen: boolean }) => (
+  render: () => (
     <StoryWrapper>
-      <CometChatContextMenu.Root placement="bottom" defaultOpen={args.isOpen}>
+      <CometChatContextMenu.Root placement="bottom">
         <CometChatContextMenu.Item item={sampleItems[0]!} variant="icon" />
         <CometChatContextMenu.Trigger tooltip="Show more">
           <span style={{ fontSize: 14, padding: '0 4px' }}>⋯</span>
@@ -226,7 +209,7 @@ export const CustomTrigger = {
 
 /** Many items (20+). */
 export const ManyItems = {
-  render: (args: { isOpen: boolean }) => (
+  render: () => (
     <StoryWrapper>
       <CometChatContextMenu.Root
         items={Array.from({ length: 20 }, (_, i) => ({
@@ -237,7 +220,6 @@ export const ManyItems = {
         }))}
         topMenuSize={2}
         placement="bottom"
-        defaultOpen={args.isOpen}
         onOptionClicked={item => alert(item.title)}
       />
     </StoryWrapper>

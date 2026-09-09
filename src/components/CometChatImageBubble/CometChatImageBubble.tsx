@@ -122,6 +122,10 @@ function ImageTile({
  *
  * This is the inner content component. The outer wrapper (avatar, sender name,
  * timestamp, receipts, thread view) is handled by CometChatMessageBubble.
+ *
+ * @deprecated Use {@link CometChatImagesBubble} instead. This legacy
+ * single-attachment bubble is retained for backward compatibility and is no
+ * longer the default renderer for image messages.
  */
 export const CometChatImageBubble: React.FC<CometChatImageBubbleProps> = ({
   message,
@@ -381,4 +385,5 @@ export const CometChatImageBubble: React.FC<CometChatImageBubbleProps> = ({
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- setting displayName on the deprecated component itself
 CometChatImageBubble.displayName = 'CometChatImageBubble';

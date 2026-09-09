@@ -99,16 +99,16 @@ export function useMessageListActions(
         // Only extract the reactions from the SDK response — the reducer will
         // apply them to the existing message in state, preserving all other
         // fields (quotedMessage, metadata, etc.).
-        dispatch({
-          type: 'REACTION_UPDATE',
-          messageId,
-          reactions: updatedMessage.getReactions(),
-        });
+        const reactions = updatedMessage.getReactions();
+        dispatch({ type: 'REACTION_UPDATE', messageId, reactions });
+        // The socket does not echo our own reaction back, so tell the other
+        // surfaces showing this message ourselves.
+        publish({ type: 'ui:message/reaction-changed', messageId, reactions });
       } catch (error) {
         onError?.(error as CometChat.CometChatException);
       }
     },
-    [onError, refs.stateRef, dispatch]
+    [onError, refs.stateRef, dispatch, publish]
   );
 
   return {

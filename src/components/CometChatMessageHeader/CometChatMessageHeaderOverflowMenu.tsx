@@ -4,6 +4,8 @@ import { useCometChatMessageHeaderContext } from './CometChatMessageHeader.conte
 import { CometChatContextMenu } from '../base/CometChatContextMenu';
 import searchIcon from '../../assets/search.svg';
 import conversationSummaryIcon from '../../assets/ai_conversation_summary.svg';
+import pinIcon from '../../assets/pin.svg';
+import { usePinSaveFeatures } from '../../hooks/usePinSaveFeatures';
 import './CometChatMessageHeader.css';
 import { useLocale } from '../../context/locale/LocaleContext';
 
@@ -18,10 +20,16 @@ export const CometChatMessageHeaderOverflowMenu: React.FC<
   CometChatMessageHeaderOverflowMenuProps
 > = ({ className }) => {
   const { getLocalizedString } = useLocale();
-  const { onSearchOptionClicked, onSummaryClick } = useCometChatMessageHeaderContext();
+  const {
+    onSearchOptionClicked,
+    onSummaryClick,
+    onPinnedMessagesClicked,
+    hidePinnedMessagesOption,
+  } = useCometChatMessageHeaderContext();
+  const { pinMessage: isPinEnabled } = usePinSaveFeatures();
 
-  const menuItems = useMemo(
-    () => [
+  const menuItems = useMemo(() => {
+    const items = [
       {
         id: 'search',
         title: getLocalizedString('search_title'),
@@ -30,17 +38,40 @@ export const CometChatMessageHeaderOverflowMenu: React.FC<
           onSearchOptionClicked?.();
         },
       },
-      {
-        id: 'summary',
-        title: getLocalizedString('ai_conversation_summary_title'),
-        iconURL: conversationSummaryIcon,
+    ];
+
+    // Immediately after Search, per the spec. Hidden when the feature flag is
+    // off or the host has no handler for it.
+    if (isPinEnabled && !hidePinnedMessagesOption && onPinnedMessagesClicked) {
+      const label = getLocalizedString('message_header_option_pinned_messages');
+      items.push({
+        id: 'pinned-messages',
+        title: label === 'message_header_option_pinned_messages' ? 'Pinned Messages' : label,
+        iconURL: pinIcon,
         onClick: () => {
-          onSummaryClick?.();
+          onPinnedMessagesClicked();
         },
+      });
+    }
+
+    items.push({
+      id: 'summary',
+      title: getLocalizedString('ai_conversation_summary_title'),
+      iconURL: conversationSummaryIcon,
+      onClick: () => {
+        onSummaryClick?.();
       },
-    ],
-    [onSearchOptionClicked, onSummaryClick, getLocalizedString]
-  );
+    });
+
+    return items;
+  }, [
+    onSearchOptionClicked,
+    onSummaryClick,
+    onPinnedMessagesClicked,
+    hidePinnedMessagesOption,
+    isPinEnabled,
+    getLocalizedString,
+  ]);
 
   const handleOptionClick = useCallback((item: { id: string; onClick?: () => void }) => {
     item.onClick?.();

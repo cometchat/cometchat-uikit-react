@@ -27,9 +27,9 @@ function mockContext(): CometChatMessagePluginContext {
 }
 
 describe('CometChatCardBubblePlugin', () => {
-  it('is a category-only wildcard plugin (card category, empty types)', () => {
+  it('registers the card type explicitly, not as a category-only wildcard', () => {
     expect(CometChatCardBubblePlugin.id).toBe('card');
-    expect(CometChatCardBubblePlugin.messageTypes).toEqual([]);
+    expect(CometChatCardBubblePlugin.messageTypes).toEqual(['card']);
     expect(CometChatCardBubblePlugin.messageCategories).toEqual(['card']);
   });
 

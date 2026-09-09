@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { loginToApp, openBobChat } from '../helpers';
+import { loginToApp, openBobChat, openStrategyChat } from '../helpers';
 
 /**
  * E2E Tests — Message Actions (React)
@@ -270,15 +270,9 @@ test.describe('Message Actions (Mutable)', () => {
     await loginToApp(page);
     await page.waitForSelector('.cometchat-conversations__item', { timeout: 30_000 });
 
-    // Open Strategy group via Groups tab
-    const groupsTab = page.locator('.cometchat-tab-component__tab:has-text("Groups")').first();
-    await groupsTab.click();
-    await page.waitForSelector('.cometchat-groups__item', { timeout: 30_000 });
-    const strategy = page.locator('.cometchat-groups__item').filter({ hasText: 'Strategy' }).first();
-    await expect(strategy).toBeVisible({ timeout: 5_000 });
-    await strategy.click();
-    await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
-    await page.waitForTimeout(2000);
+    // Open Strategy group via Groups tab (falls back to search when the group is
+    // past the first page of the list).
+    await openStrategyChat(page);
   });
 
   /** Helper: send a message and wait for it to appear */

@@ -92,6 +92,10 @@ function formatFileSize(bytes: number): string {
  *
  * Collapsed: shows up to 3 files + "Show more +N" on the right.
  * Expanded: shows all files + "Show less" on the right.
+ *
+ * @deprecated Use {@link CometChatFilesBubble} instead. This legacy
+ * single-attachment bubble is retained for backward compatibility and is no
+ * longer the default renderer for file messages.
  */
 export const CometChatFileBubble: React.FC<CometChatFileBubbleProps> = ({
   message,
@@ -222,4 +226,5 @@ export const CometChatFileBubble: React.FC<CometChatFileBubbleProps> = ({
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- setting displayName on the deprecated component itself
 CometChatFileBubble.displayName = 'CometChatFileBubble';

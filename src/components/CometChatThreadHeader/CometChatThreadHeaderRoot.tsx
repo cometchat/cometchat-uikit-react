@@ -53,9 +53,12 @@ export const CometChatThreadHeaderRoot: React.FC<CometChatThreadHeaderRootProps>
   onError,
   hideDate = false,
   hideReplyCount = false,
+  hideThreadSubscriptionToggle = false,
+  onThreadSubscriptionChange,
   separatorDateTimeFormat,
   messageSentAtDateTimeFormat,
   showScrollbar = false,
+  textFormatters,
   className,
   children,
 }) => {
@@ -89,9 +92,12 @@ export const CometChatThreadHeaderRoot: React.FC<CometChatThreadHeaderRootProps>
       onSubtitleClicked,
       hideDate,
       hideReplyCount,
+      hideThreadSubscriptionToggle,
+      onThreadSubscriptionChange,
       separatorDateTimeFormat,
       messageSentAtDateTimeFormat,
       showScrollbar,
+      textFormatters,
     }),
     [
       currentParentMessage,
@@ -101,9 +107,12 @@ export const CometChatThreadHeaderRoot: React.FC<CometChatThreadHeaderRootProps>
       onSubtitleClicked,
       hideDate,
       hideReplyCount,
+      hideThreadSubscriptionToggle,
+      onThreadSubscriptionChange,
       separatorDateTimeFormat,
       messageSentAtDateTimeFormat,
       showScrollbar,
+      textFormatters,
     ]
   );
 

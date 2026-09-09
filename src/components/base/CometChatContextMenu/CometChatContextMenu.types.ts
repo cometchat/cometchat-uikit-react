@@ -19,7 +19,25 @@ export interface CometChatContextMenuItemData {
   disabled?: boolean;
   /** Optional custom className. */
   className?: string;
+  /**
+   * Nested items, rendered as a hover fly-out submenu.
+   * One level only — a nested item's own `submenu` is ignored.
+   *
+   * When present, the row opens the fly-out instead of firing `onClick`.
+   */
+  submenu?: CometChatContextMenuItemData[];
 }
+
+/**
+ * Which way a submenu fly-out opens, in logical terms so RTL is handled for free.
+ * - `'end'` — toward the inline end (right in LTR, left in RTL)
+ * - `'start'` — toward the inline start (left in LTR, right in RTL)
+ *
+ * Message bubbles pass `'end'` for incoming (left-aligned) and `'start'` for
+ * outgoing (right-aligned), so the fly-out always opens away from the bubble.
+ * Overridden automatically when the chosen side would overflow.
+ */
+export type CometChatContextMenuSubmenuDirection = 'start' | 'end';
 
 /** Props for CometChatContextMenuRoot. */
 export interface CometChatContextMenuRootProps {
@@ -59,9 +77,22 @@ export interface CometChatContextMenuRootProps {
    * When true, disables dynamic flip/reposition logic for the dropdown.
    */
   forceStaticPlacement?: boolean;
+  /**
+   * Which way submenu fly-outs open. Defaults to `'end'`.
+   * Automatically flipped when the chosen side would overflow.
+   */
+  submenuDirection?: CometChatContextMenuSubmenuDirection;
   /** Children for fully custom rendering (overrides items-based rendering). */
   children?: ReactNode;
   /** Optional custom className for the root container. */
+  className?: string;
+}
+
+/** Props for CometChatContextMenuSubmenu. */
+export interface CometChatContextMenuSubmenuProps {
+  /** The parent item — must carry a non-empty `submenu`. */
+  item: CometChatContextMenuItemData;
+  /** Optional custom className. */
   className?: string;
 }
 
@@ -135,4 +166,6 @@ export interface CometChatContextMenuContextValue {
   forceStaticPlacement?: boolean;
   /** Block background scroll/interaction when dropdown is open. */
   disableBackgroundInteraction?: boolean;
+  /** Which way submenu fly-outs open. Defaults to `'end'`. */
+  submenuDirection?: CometChatContextMenuSubmenuDirection;
 }

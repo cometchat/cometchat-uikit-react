@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import {
   CometChatThreadHeader,
@@ -30,7 +30,7 @@ interface CometChatThreadPanelProps {
 /**
  * CometChatThreadPanel — right-panel component that shows thread replies.
  *
- * Composes: ThreadHeader + MessageList(parentMessageId) + Composer(parentMessageId)
+ * Composes: ThreadHeader + MessageList(parentMessage) + Composer(parentMessageId)
  * Handles blocked user state: hides composer when user is blocked.
  */
 export const CometChatThreadPanel = ({
@@ -84,7 +84,7 @@ export const CometChatThreadPanel = ({
           user={user}
           group={group}
           loggedInUser={loggedInUser}
-          parentMessageId={parentMessageId}
+          parentMessage={parentMessage}
           goToMessageId={goToMessageId}
           className='cometchat-thread-panel__message-list'
         />

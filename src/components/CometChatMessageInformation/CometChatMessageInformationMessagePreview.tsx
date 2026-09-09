@@ -20,7 +20,7 @@ import './CometChatMessageInformation.css';
 export const CometChatMessageInformationMessagePreview: React.FC<
   CometChatMessageInformationMessagePreviewProps
 > = ({ className }) => {
-  const { message, showScrollbar } = useCometChatMessageInformationContext();
+  const { message, showScrollbar, textFormatters } = useCometChatMessageInformationContext();
   const { getLocalizedString } = useLocale();
 
   // Try to get plugin registry — may be null in Storybook
@@ -39,6 +39,9 @@ export const CometChatMessageInformationMessagePreview: React.FC<
       alignment: 'right', // Always show as outgoing in the info panel
       theme: 'light',
       getLocalizedString,
+      // Same custom formatters the message list uses, so the previewed bubble renders
+      // custom formats instead of falling back to the plugin defaults only.
+      ...(textFormatters.length > 0 && { textFormatters }),
     };
 
     try {
@@ -46,7 +49,7 @@ export const CometChatMessageInformationMessagePreview: React.FC<
     } catch {
       return null;
     }
-  }, [registry, message, getLocalizedString]);
+  }, [registry, message, getLocalizedString, textFormatters]);
 
   const sectionClass = [
     'cometchat-message-information__message-preview',

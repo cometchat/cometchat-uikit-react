@@ -3,6 +3,7 @@ import { CometChatContextMenuRoot } from './CometChatContextMenuRoot';
 import { CometChatContextMenuItem } from './CometChatContextMenuItem';
 import { CometChatContextMenuTrigger } from './CometChatContextMenuTrigger';
 import { CometChatContextMenuDropdown } from './CometChatContextMenuDropdown';
+import { CometChatContextMenuSubmenu } from './CometChatContextMenuSubmenu';
 import type { CometChatContextMenuRootProps } from './CometChatContextMenu.types';
 
 /**
@@ -43,4 +44,7 @@ export const CometChatContextMenu = Object.assign(CometChatContextMenuComponent,
   Item: CometChatContextMenuItem,
   Trigger: CometChatContextMenuTrigger,
   Dropdown: CometChatContextMenuDropdown,
+  // Rarely needed directly — `Item` delegates here automatically when the item
+  // carries a `submenu`. Exposed for fully custom compound usage.
+  Submenu: CometChatContextMenuSubmenu,
 });

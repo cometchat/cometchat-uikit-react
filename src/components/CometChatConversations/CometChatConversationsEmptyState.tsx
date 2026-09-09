@@ -24,8 +24,8 @@ export const CometChatConversationsEmptyState: React.FC<CometChatConversationsEm
             <img
               src={conversationsEmptyIcon}
               alt=""
-              width={100}
-              height={68}
+              width={120}
+              height={120}
               loading="lazy"
               decoding="async"
             />

@@ -1,0 +1,463 @@
+/* CometChatMessageComposerTray — staging-tray tiles shown above the composer input.
+ *
+ * One horizontally-scrollable row (no visible scrollbar) of uniform-height tiles:
+ * square thumbnails for image/video, equal-height cards for file/audio.
+ */
+
+:root {
+  --cometchat-tray-tile-size: 64px;
+}
+
+.cometchat-message-composer__tray {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 0;
+}
+
+.cometchat-message-composer__tray-list {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  /* Top padding gives the 50%-outside remove button room so it isn't clipped. */
+  padding: 12px 12px 4px;
+  list-style: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+}
+
+.cometchat-message-composer__tray-list::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+
+/* --- Tile (shared) --- */
+
+.cometchat-message-composer__tray-tile {
+  position: relative;
+  flex: 0 0 auto;
+  height: var(--cometchat-tray-tile-size);
+  box-sizing: border-box;
+  /* Tile itself must NOT clip — the remove button overflows the corner. */
+  overflow: visible;
+}
+
+/* Media tiles are square. */
+.cometchat-message-composer__tray-tile--image,
+.cometchat-message-composer__tray-tile--video {
+  width: var(--cometchat-tray-tile-size);
+}
+
+/* --- Error / failure state --- */
+
+/* A failed (retryable) or rejected (hard error) item gets an error-colored border
+ * around its visible box: the rounded thumbnail for media, the card for file/audio.
+ * box-sizing keeps the media tile at its fixed size (the border eats inward). */
+.cometchat-message-composer__tray-tile--failed .cometchat-message-composer__tray-thumbnail,
+.cometchat-message-composer__tray-tile--rejected .cometchat-message-composer__tray-thumbnail {
+  box-sizing: border-box;
+  border: 1.5px solid var(--cometchat-error-color, #f44649);
+}
+
+.cometchat-message-composer__tray-tile--failed .cometchat-message-composer__tray-card,
+.cometchat-message-composer__tray-tile--rejected .cometchat-message-composer__tray-card {
+  border-color: var(--cometchat-error-color, #f44649);
+}
+
+/* --- Thumbnail (image/video) --- */
+
+.cometchat-message-composer__tray-thumbnail {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--cometchat-radius-3, 8px);
+  overflow: hidden;
+  background-color: var(--cometchat-neutral-color-300, #dcdcdc);
+}
+
+.cometchat-message-composer__tray-thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Corrupted image that can't be decoded: show a blank tile (white in light theme,
+   black in dark) instead of the browser's broken-image glyph. */
+.cometchat-message-composer__tray-thumbnail--blank {
+  background-color: var(--cometchat-background-color-01, #ffffff);
+}
+
+.cometchat-message-composer__tray-thumbnail--interactive {
+  cursor: pointer;
+}
+
+.cometchat-message-composer__tray-thumbnail--interactive:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}
+
+/* Video play affordance — centered, no border. */
+.cometchat-message-composer__tray-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: rgba(0, 0, 0, 0.45);
+
+  background: rgba(127, 127, 127, 0.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.cometchat-message-composer__tray-play img {
+  filter: brightness(0) invert(1);
+}
+
+/* Video duration badge */
+.cometchat-message-composer__tray-duration {
+  position: absolute;
+  bottom: 2px;
+  left: 4px;
+  padding: 1px 4px;
+  border-radius: var(--cometchat-radius-1, 4px);
+  background: rgba(0, 0, 0, 0.5);
+  font: var(--cometchat-font-caption2-medium, 500 10px/12px sans-serif);
+  color: var(--cometchat-static-neutral-100, #f5f5f5);
+  pointer-events: none;
+}
+
+/* --- File / audio cards --- */
+
+.cometchat-message-composer__tray-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  box-sizing: border-box;
+  width: 200px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--cometchat-neutral-color-300);
+  border-radius: var(--cometchat-radius-3, 8px);
+  background: var(--cometchat-background-color-03, #fafafa);
+}
+
+/* File-type icon (PDF/DOC/etc.) — also anchors the status overlay. */
+.cometchat-message-composer__tray-card-icon {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--cometchat-radius-2, 6px);
+}
+
+.cometchat-message-composer__tray-card-icon img.cometchat-message-composer__tray-card-icon--file {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.cometchat-message-composer__tray-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cometchat-message-composer__tray-filename {
+  font: var(--cometchat-font-body-medium, 500 14px/17px sans-serif);
+  color: var(--cometchat-text-color-primary, #141414);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cometchat-message-composer__tray-card-meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font: var(--cometchat-font-caption1-regular, 400 12px/16px sans-serif);
+  color: var(--cometchat-text-color-secondary, #727272);
+  text-transform: uppercase;
+}
+
+/* Inline "Upload Failed" / "Tap to retry" status line, in the error color.
+ * File card: next to the extension label. Audio card: in place of slider + time. */
+.cometchat-message-composer__tray-status-text {
+  color: var(--cometchat-error-color, #f44649);
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dot separator between the extension label and the status text (file card only). */
+.cometchat-message-composer__tray-card-meta .cometchat-message-composer__tray-status-text::before {
+  content: '·';
+  margin: 0 4px;
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+/* Audio status replaces two rows (slider + time), so match the time's caption font. */
+.cometchat-message-composer__tray-status-text--audio {
+  font: var(--cometchat-font-caption1-regular, 400 11px/14px sans-serif);
+}
+
+/* --- Audio card (image-2 style: round play button + slider + duration) --- */
+
+.cometchat-message-composer__tray-card--audio {
+  width: 200px;
+  gap: 10px;
+  padding: 0 14px 0 8px;
+}
+
+/* Positioned wrapper so the status overlay (with its retry button) can sit over
+ * the play button as a SIBLING — never nested inside it (a disabled button would
+ * otherwise swallow the retry click). Sized to the button by inline-flex. */
+.cometchat-message-composer__tray-audio-btn-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
+.cometchat-message-composer__tray-audio-btn {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-primary-color, #6852d6);
+}
+
+.cometchat-message-composer__tray-audio-btn
+  img.cometchat-message-composer__tray-audio-btn--play-icon {
+  filter: brightness(0) invert(1);
+}
+
+.cometchat-message-composer__tray-audio-btn {
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cometchat-message-composer__tray-audio-btn:disabled {
+  cursor: default;
+}
+
+/* Body: filename (top) · seek slider (middle) · current/total time (bottom). */
+.cometchat-message-composer__tray-audio-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cometchat-message-composer__tray-audio-body:has(.cometchat-message-composer__tray-status-text) {
+  gap: 1px;
+}
+
+.cometchat-message-composer__tray-audio-name {
+  margin-bottom: 4px;
+  font: var(--cometchat-font-caption1-medium, 500 12px/16px sans-serif);
+  color: var(--cometchat-text-color-primary, #141414);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Seek slider */
+.cometchat-message-composer__tray-audio-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  margin: 0;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-neutral-color-300, #dcdcdc);
+  cursor: pointer;
+}
+
+.cometchat-message-composer__tray-audio-slider:disabled {
+  cursor: default;
+}
+
+.cometchat-message-composer__tray-audio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-static-white, #fff);
+  border: none;
+}
+
+.cometchat-message-composer__tray-audio-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-primary-color, #6852d6);
+  border: none;
+}
+
+/* Let the inline played/remaining gradient show through in Firefox. */
+.cometchat-message-composer__tray-audio-slider::-moz-range-track {
+  background: transparent;
+}
+
+.cometchat-message-composer__tray-audio-time {
+  margin-top: 4px;
+  font: var(--cometchat-font-caption2-regular, 400 11px/14px sans-serif);
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+/* --- Status overlay (progress ring / retry / rejected) --- */
+
+/* Scrim behind the loader/retry/error so it stays visible over any content.
+ * Fills its anchor: the whole image/video thumbnail, or a card's icon/audio circle. */
+.cometchat-message-composer__tray-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+/* File icon: cover the icon box. */
+.cometchat-message-composer__tray-card-icon .cometchat-message-composer__tray-overlay {
+  border-radius: var(--cometchat-radius-2, 8px);
+}
+
+/* Audio: cover the round play button fully. The overlay is a sibling of the
+ * button inside the wrapper, so anchor on the wrapper (not the button). */
+.cometchat-message-composer__tray-audio-btn-wrap .cometchat-message-composer__tray-overlay {
+  border-radius: var(--cometchat-radius-max, 1000px);
+}
+
+.cometchat-message-composer__tray-progress {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cometchat-message-composer__tray-progress svg {
+  transform: rotate(-90deg);
+}
+
+.cometchat-message-composer__tray-progress-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 3;
+}
+
+.cometchat-message-composer__tray-progress-indicator {
+  fill: none;
+  stroke: var(--cometchat-static-white, #fff);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.2s ease;
+}
+
+/* Queued / not-yet-started upload: spin a short arc continuously instead of
+   showing an empty ring. */
+.cometchat-message-composer__tray-progress--indeterminate svg {
+  animation: cometchat-message-composer__tray-progress-spin 0.9s linear infinite;
+}
+
+.cometchat-message-composer__tray-progress--indeterminate
+  .cometchat-message-composer__tray-progress-indicator {
+  transition: none;
+}
+
+@keyframes cometchat-message-composer__tray-progress-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cometchat-message-composer__tray-progress--indeterminate svg {
+    animation: none;
+  }
+}
+
+.cometchat-message-composer__tray-retry-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--cometchat-radius-max, 1000px);
+}
+
+.cometchat-message-composer__tray-rejected-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: red;
+  border-radius: 50%;
+}
+
+/* --- Remove control — 50% outside the top-right corner, white border. --- */
+
+.cometchat-message-composer__tray-remove-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2;
+  border: 3px solid var(--cometchat-background-color-01, #fff);
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-static-neutral-700, #a1a1a1);
+  /* Shown only while hovering the tile (or when keyboard-focused). */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+}
+
+.cometchat-message-composer__tray-tile:hover .cometchat-message-composer__tray-remove-button,
+.cometchat-message-composer__tray-remove-button:focus-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cometchat-message-composer__tray-remove-button img {
+  filter: brightness(0) invert(1);
+}
+
+.cometchat-message-composer__tray-remove-button:hover {
+  background: var(--cometchat-static-neutral-400, #727272);
+}
+
+.cometchat-message-composer__tray-remove-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}

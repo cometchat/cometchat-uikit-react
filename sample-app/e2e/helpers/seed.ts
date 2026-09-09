@@ -49,9 +49,9 @@ export const AGENTIC_GROUP_2_NAME = 'AI Squad E2E';
 
 /** Human members of the agentic groups (auto-created if missing). */
 const AGENTIC_HUMAN_USERS: { uid: string; name: string }[] = [
-  { uid: 'cometchat-uid-1', name: 'Agentic User One' },
-  { uid: 'cometchat-uid-2', name: 'Agentic User Two' },
-  { uid: 'cometchat-uid-3', name: 'Agentic User Three' },
+  { uid: 'e2e-user-1', name: 'Alice Johnson' },
+  { uid: 'e2e-user-3', name: 'Charlie Brown' },
+  { uid: 'e2e-user-4', name: 'Diana Prince' },
 ];
 
 export interface AgenticConfig {
@@ -87,7 +87,7 @@ export function getAgenticConfig(): AgenticConfig {
     group2Id: process.env.AGENTIC_GROUP_2_ID?.trim() || 'e2e-agentic-group-2',
     group1Name: AGENTIC_GROUP_1_NAME,
     group2Name: AGENTIC_GROUP_2_NAME,
-    loginUid: process.env.E2E_AGENTIC_USER_UID?.trim() || AGENTIC_HUMAN_USERS[0].uid,
+    loginUid: AGENTIC_HUMAN_USERS[0].uid,
     humanUids: AGENTIC_HUMAN_USERS.map(u => u.uid),
   };
 }

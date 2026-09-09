@@ -1,27 +1,106 @@
 import React, { useMemo } from 'react';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatMessageComposerReplyPreviewProps } from './CometChatMessageComposer.types';
 import { useCometChatMessageComposerContext } from './CometChatMessageComposer.context';
 import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { CometChatUrlFormatter } from '../../formatters/CometChatUrlFormatter';
 import { CometChatMarkdownFormatter } from '../../formatters/CometChatMarkdownFormatter';
+import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
 import DOMPurify from 'dompurify';
 import './CometChatMessageComposer.css';
+
+// Icons (same SVGs used in conversation subtitle and edit preview)
+import imageIcon from '../../assets/conversations_image-message.svg';
+import videoIcon from '../../assets/conversations_video-message.svg';
+import audioIcon from '../../assets/conversations_audio-message.svg';
+import fileIcon from '../../assets/conversations_file-message.svg';
 
 /**
  * CometChatMessageComposerReplyPreview — reply mode preview banner.
  *
- * - Uses the cometchat-message-preview pattern (background, left border accent)
  * - Title row: sender name in primary color
- * - Subtitle row: message content rendered as formatted HTML (rich text + mentions)
- *   or media type label (Image, Video, Audio, File) for non-text messages
- * - Close button: absolute positioned top-right with close icon mask
+ * - Subtitle row: formatted text/caption or media summary with icon
+ * - Close button
  */
 export const CometChatMessageComposerReplyPreview: React.FC<
   CometChatMessageComposerReplyPreviewProps
 > = ({ className }) => {
-  const { isInReplyMode, messageToReply, closePreview } = useCometChatMessageComposerContext();
+  const { isInReplyMode, messageToReply, closePreview, textFormatters } =
+    useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
+
+  /**
+   * Shared formatting pipeline for any raw text (message text or media caption).
+   * richText metadata HTML → markdown strip → mentions → URLs → sanitize.
+   */
+  const formatText = (text: string, messageToReply: CometChat.BaseMessage): string => {
+    if (!text) return '';
+
+    const message = messageToReply as unknown as {
+      getText: () => string;
+      getMentionedUsers: () => { getUid: () => string; getName: () => string }[];
+      getMetadata: () => Record<string, unknown> | undefined;
+    };
+
+    // Check for rich text metadata HTML
+    try {
+      const metadata = message.getMetadata();
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      const richText = metadata?.['richText'] as
+        | { html?: string; hasFormatting?: boolean }
+        | undefined;
+      if (richText?.html && richText.hasFormatting) {
+        const sanitized = DOMPurify.sanitize(richText.html);
+        if (sanitized) return sanitized;
+      }
+    } catch {
+      // Fall through
+    }
+
+    const markdownFormatter = new CometChatMarkdownFormatter();
+    let formatted = markdownFormatter.stripMarkdownForConversation(text);
+
+    // Custom display formatters (color/hashtag, etc.) run on the mention-TOKEN text FIRST — before
+    // mentions become inline-styled spans below. Otherwise a consumer's naive regex (e.g. a hashtag
+    // formatter matching ` #hex`) would match the `#6852d6` fallback inside a mention span's style
+    // attribute and shatter the markup (`…#6852d6); font-weight: 500;">@Name`).
+    // Belt-and-suspenders: swap mention tokens (<@uid:…>, <@all:…>) for sentinels so NO custom
+    // formatter — however its regex is written — can touch a token, then restore before resolving
+    // to spans. Mirrors the SDK-mention protection the edit-seed uses around markdown conversion.
+    const mentionTokens: string[] = [];
+    formatted = formatted.replace(/<@(?:uid|all):[^>]*>/g, match => {
+      const idx = mentionTokens.length;
+      mentionTokens.push(match);
+      return `\x00CCMENTION${String(idx)}\x00`;
+    });
+    formatted = applyDisplayFormatters(formatted, textFormatters);
+    formatted = formatted.replace(
+      // eslint-disable-next-line no-control-regex
+      /\x00CCMENTION(\d+)\x00/g,
+      (_m, idx: string) => mentionTokens[parseInt(idx, 10)] ?? ''
+    );
+
+    const mentionedUsers = message.getMentionedUsers();
+    if (mentionedUsers.length > 0) {
+      formatted = formatted.replace(/<@uid:(.*?)>/g, (_match, uid: string) => {
+        const user = mentionedUsers.find(u => u.getUid() === uid);
+        if (user) {
+          return `<span style="color: var(--cometchat-primary-color, #6852d6); font-weight: 500;">@${user.getName()}</span>`;
+        }
+        return '';
+      });
+    }
+
+    formatted = formatted.replace(/<@all:(.*?)>/g, (_match, label: string) => {
+      return `<span class="cometchat-mentions-you" style="color: var(--cometchat-warning-color, #ffab00); background: rgba(255, 171, 0, 0.2); font-weight: 500;">@${label}</span>`;
+    });
+
+    const urlFormatter = new CometChatUrlFormatter();
+    formatted = urlFormatter.format(formatted);
+
+    return DOMPurify.sanitize(formatted);
+  };
 
   // Format the reply preview subtitle
   const formattedSubtitle = useMemo(() => {
@@ -29,21 +108,17 @@ export const CometChatMessageComposerReplyPreview: React.FC<
 
     const messageType = messageToReply.getType();
 
-    // Non-text messages: return localized type label
+    // Media messages (image/video/audio/file) are handled via JSX below
+    if (['image', 'video', 'audio', 'file'].includes(messageType)) {
+      return null;
+    }
+
+    // Non-text, non-media messages: return localized type label
     if (messageType !== 'text') {
       switch (messageType) {
-        case 'image':
-          return getLocalizedString('conversation_subtitle_image');
-        case 'video':
-          return getLocalizedString('conversation_subtitle_video');
-        case 'audio':
-          return getLocalizedString('conversation_subtitle_audio');
-        case 'file':
-          return getLocalizedString('conversation_subtitle_file');
         case 'extension_sticker':
           return getLocalizedString('conversation_subtitle_sticker') || 'Sticker';
         case 'extension_poll': {
-          // Try to get poll question from custom data
           try {
             const customData = (
               messageToReply as unknown as { getCustomData?: () => Record<string, unknown> }
@@ -67,7 +142,6 @@ export const CometChatMessageComposerReplyPreview: React.FC<
             'Collaborative Document'
           );
         default: {
-          // For unknown custom types, try getConversationText or customData.text
           try {
             const customMsg = messageToReply as unknown as {
               getConversationText?: () => string;
@@ -87,62 +161,58 @@ export const CometChatMessageComposerReplyPreview: React.FC<
       }
     }
 
-    // Text messages: format with rich text and mentions
-    const textMessage = messageToReply as unknown as {
-      getText: () => string;
-      getMentionedUsers: () => { getUid: () => string; getName: () => string }[];
-      getMetadata: () => Record<string, unknown> | undefined;
-    };
-    const text = textMessage.getText();
-    if (!text) return '';
-
-    // Check for rich text metadata HTML (same as Angular's approach)
-    try {
-      const metadata = textMessage.getMetadata();
-      // eslint-disable-next-line @typescript-eslint/dot-notation -- dynamic key access for metadata
-      const richText = metadata?.['richText'] as
-        | { html?: string; hasFormatting?: boolean }
-        | undefined;
-      if (richText?.html && richText.hasFormatting) {
-        const sanitized = DOMPurify.sanitize(richText.html);
-        if (sanitized) return sanitized;
-      }
-    } catch {
-      // Fall through to formatter-based approach
-    }
-
-    // Strip markdown formatting for preview (```code```, **bold**, etc. → rendered HTML)
-    const markdownFormatter = new CometChatMarkdownFormatter();
-    const strippedText = markdownFormatter.stripMarkdownForConversation(text);
-
-    // Escape HTML entities in stripped text (XSS prevention)
-    // Note: stripMarkdownForConversation already converts some markdown to HTML tags
-    // (bold, italic, code), so we sanitize via DOMPurify instead of escaping
-    let formatted = strippedText;
-    const mentionedUsers = textMessage.getMentionedUsers();
-
-    if (mentionedUsers.length > 0) {
-      // Replace SDK mention tokens with styled spans
-      formatted = formatted.replace(/<@uid:(.*?)>/g, (_match, uid: string) => {
-        const user = mentionedUsers.find(u => u.getUid() === uid);
-        if (user) {
-          return `<span style="color: var(--cometchat-primary-color, #6852d6); font-weight: 500;">@${user.getName()}</span>`;
-        }
-        return '';
-      });
-    }
-
-    // Channel mentions (@all) — resolve regardless of mentionedUsers array
-    formatted = formatted.replace(/<@all:(.*?)>/g, (_match, label: string) => {
-      return `<span class="cometchat-mentions-you" style="color: var(--cometchat-warning-color, #ffab00); background: rgba(255, 171, 0, 0.2); font-weight: 500;">@${label}</span>`;
-    });
-
-    // Apply URL formatting
-    const urlFormatter = new CometChatUrlFormatter();
-    formatted = urlFormatter.format(formatted);
-
-    return DOMPurify.sanitize(formatted);
+    // Text messages
+    const text = (messageToReply as CometChat.TextMessage).getText();
+    return formatText(text, messageToReply);
+    // `formatText` is a per-render local; listing it would recompute every render and defeat the memo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messageToReply, getLocalizedString]);
+
+  // Media message summary (icon + count + label)
+  const mediaSummary = useMemo(() => {
+    if (!messageToReply) return null;
+    const type = messageToReply.getType();
+    if (!['image', 'video', 'audio', 'file'].includes(type)) return null;
+
+    const mediaMsg = messageToReply as CometChat.MediaMessage;
+    const attachments =
+      typeof mediaMsg.getAttachments === 'function' ? mediaMsg.getAttachments() : [];
+    const count = Math.max(attachments.length, 1);
+
+    const iconMap: Record<string, string> = {
+      image: imageIcon,
+      video: videoIcon,
+      audio: audioIcon,
+      file: fileIcon,
+    };
+    const icon = iconMap[type] ?? fileIcon;
+
+    let label: string;
+    if (count === 1) {
+      label = getLocalizedString(`conversation_subtitle_${type}`);
+    } else {
+      const pluralKey = `media_edit_preview_${type}_plural`;
+      const pluralLabel = getLocalizedString(pluralKey);
+      label =
+        pluralLabel !== pluralKey
+          ? `${String(count)} ${pluralLabel}`
+          : `${String(count)} ${getLocalizedString(`conversation_subtitle_${type}`)}`;
+    }
+
+    return { icon, label };
+  }, [messageToReply, getLocalizedString]);
+
+  // Formatted caption for media messages — uses the shared formatText pipeline
+  const formattedMediaCaption = useMemo(() => {
+    if (!messageToReply) return '';
+    const type = messageToReply.getType();
+    if (!['image', 'video', 'audio', 'file'].includes(type)) return '';
+    const caption = (messageToReply as CometChat.MediaMessage).getCaption() || '';
+    return formatText(caption, messageToReply);
+    // `formatText` is a per-render local; listing it would recompute every render and defeat the memo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messageToReply]);
+
   if (!isInReplyMode || !messageToReply) return null;
 
   const sender = messageToReply.getSender();
@@ -159,17 +229,44 @@ export const CometChatMessageComposerReplyPreview: React.FC<
   return (
     <div className={rootClass} role="status" aria-live="polite">
       <div className={'cometchat-message-composer__reply-preview-content'}>
-        {/* Title row: sender name in primary color (matches Angular message-preview title) */}
+        {/* Title row: sender name */}
         <div className={'cometchat-message-composer__reply-preview-title'}>
           <span className={'cometchat-message-composer__reply-preview-sender'}>{senderName}</span>
         </div>
-        {/* Subtitle row — rendered as HTML for rich text support */}
-        <div
-          className={'cometchat-message-composer__reply-preview-subtitle'}
-          dangerouslySetInnerHTML={{ __html: formattedSubtitle }}
-        />
+        {/* Subtitle row */}
+        {mediaSummary ? (
+          <div
+            className={
+              'cometchat-message-composer__reply-preview-subtitle cometchat-message-composer__reply-preview-subtitle--media'
+            }
+          >
+            <img
+              src={mediaSummary.icon}
+              alt=""
+              className={'cometchat-message-composer__reply-preview-media-icon'}
+              aria-hidden="true"
+            />
+            <span className={'cometchat-message-composer__reply-preview-media-label'}>
+              {mediaSummary.label}
+            </span>
+            {formattedMediaCaption && (
+              <>
+                <span className={'cometchat-message-composer__reply-preview-separator'}>·</span>
+                <span
+                  className={'cometchat-message-composer__reply-preview-caption'}
+                  dangerouslySetInnerHTML={{ __html: formattedMediaCaption }}
+                />
+              </>
+            )}
+          </div>
+        ) : (
+          <div
+            className={'cometchat-message-composer__reply-preview-subtitle'}
+            dangerouslySetInnerHTML={{ __html: formattedSubtitle ?? '' }}
+          />
+        )}
       </div>
-      {/* Close button — matches Angular's mask-based icon */}
+      {/* Close button */}
       <button
         type="button"
         className={'cometchat-message-composer__reply-preview-close'}

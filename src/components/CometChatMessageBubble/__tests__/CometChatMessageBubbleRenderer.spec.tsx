@@ -70,6 +70,21 @@ describe('CometChatMessageBubbleRenderer', () => {
     expect(screen.getByTestId('delete-bubble')).toBeInTheDocument();
   });
 
+  it('keeps the timestamp but hides the receipt for deleted messages', () => {
+    // Outgoing (sender === logged-in user) so a receipt would otherwise render.
+    const msg = buildDeletedMessage({
+      sender: buildUser({ uid: 'me' }),
+    }) as unknown as CometChat.BaseMessage;
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={1} />
+    );
+    expect(screen.getByTestId('delete-bubble')).toBeInTheDocument();
+    // Timestamp still shown...
+    expect(container.querySelector('time')).toBeTruthy();
+    // ...but no receipt icon.
+    expect(container.querySelector('[class*="cometchat-receipts"]')).toBeNull();
+  });
+
   it('renders fallback for unknown message type', () => {
     const msg = {
       getId: () => 1,
@@ -136,6 +151,108 @@ describe('CometChatMessageBubbleRenderer', () => {
     expect(wrapper).toBeInTheDocument();
   });
 
+  it('suppresses the status info view for a non-errored first-batch message', () => {
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'me' }), // outgoing → a receipt would otherwise show
+    }) as unknown as CometChat.BaseMessage;
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={2} batchPosition="first" />
+    );
+    expect(container.querySelector('[class*="cometchat-receipts"]')).toBeNull();
+    expect(container.querySelector('time')).toBeNull();
+  });
+
+  it('surfaces the whole status info view for an errored message even mid-batch', () => {
+    // An RBAC/send failure sets _ccError; getReceiptStatus() → 'error'.
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'me' }),
+    }) as unknown as CometChat.BaseMessage;
+    (msg as unknown as { _ccError: unknown })._ccError = { code: 'ERR_X', message: 'failed' };
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={2} batchPosition="first" />
+    );
+    // Not suppressed: the error receipt (and timestamp) render despite first position.
+    expect(container.querySelector('[class*="cometchat-receipts-error"]')).toBeTruthy();
+    expect(container.querySelector('time')).toBeTruthy();
+  });
+
+  it('surfaces the status info view for a PINNED message even mid-batch', () => {
+    // Batching normally hides the meta row on first/middle attachments, but that
+    // is the only place the pin indicator lives — suppressing it would make the
+    // state invisible on exactly the messages a user pinned.
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'me' }),
+    }) as unknown as CometChat.BaseMessage;
+    Object.assign(msg, {
+      getPinnedAt: () => 1735689600,
+      isPinned: () => true,
+      getSavedAt: () => undefined,
+      isSaved: () => false,
+    });
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={2} batchPosition="middle" />
+    );
+    expect(container.querySelector('[class*="status-info-view-indicator--pinned"]')).toBeTruthy();
+  });
+
+  it('surfaces the status info view for a SAVED message even mid-batch', () => {
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'me' }),
+    }) as unknown as CometChat.BaseMessage;
+    Object.assign(msg, {
+      getPinnedAt: () => undefined,
+      isPinned: () => false,
+      getSavedAt: () => 1735689600,
+      isSaved: () => true,
+    });
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={2} batchPosition="first" />
+    );
+    expect(container.querySelector('[class*="status-info-view-indicator--saved"]')).toBeTruthy();
+  });
+
+  it('still suppresses mid-batch when the message is neither pinned nor saved', () => {
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'me' }),
+    }) as unknown as CometChat.BaseMessage;
+    Object.assign(msg, {
+      getPinnedAt: () => undefined,
+      isPinned: () => false,
+      getSavedAt: () => undefined,
+      isSaved: () => false,
+    });
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={2} batchPosition="middle" />
+    );
+    expect(container.querySelector('time')).toBeNull();
+    expect(container.querySelector('[class*="status-info-view-indicator"]')).toBeNull();
+  });
+
+  it('shows the thread footer for a message with replies', () => {
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'other' }),
+      replyCount: 3,
+    }) as unknown as CometChat.BaseMessage;
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={1} />
+    );
+    expect(container.querySelector('[class*="cometchat-thread-view"]')).toBeTruthy();
+  });
+
+  it('hides the thread footer on a deleted message even with a non-zero reply count', () => {
+    // A message deleted in realtime keeps its replyCount; the tombstone must not
+    // still render the "N replies" footer.
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'other' }),
+      replyCount: 3,
+    }) as unknown as CometChat.BaseMessage;
+    Object.assign(msg, { getDeletedAt: () => Math.floor(Date.now() / 1000) });
+    const { container } = renderWithProviders(
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={1} />
+    );
+    expect(container.querySelector('[class*="cometchat-thread-view"]')).toBeNull();
+  });
+
   it('sets aria-posinset and aria-setsize', () => {
     const msg = buildTextMessage({
       sender: buildUser({ uid: 'other' }),
@@ -144,5 +261,90 @@ describe('CometChatMessageBubbleRenderer', () => {
     const article = screen.getByRole('article');
     expect(article).toHaveAttribute('aria-posinset', '3');
     expect(article).toHaveAttribute('aria-setsize', '10');
+  });
+});
+
+/**
+ * Every core plugin derives its own palette from `context.alignment === 'right'`
+ * — that is how a text bubble picks white-on-purple and an audio bubble picks
+ * its play-button colours. So when `bubbleVariant` forces a palette apart from
+ * layout, the plugins have to follow the variant, or the container turns purple
+ * while its contents stay styled for an incoming bubble.
+ */
+describe('CometChatMessageBubbleRenderer — palette vs layout', () => {
+  /** Records the alignment the plugin was handed. */
+  function alignmentProbe() {
+    const seen: string[] = [];
+    const probePlugin: CometChatMessagePlugin = {
+      id: 'text',
+      messageTypes: ['text'],
+      messageCategories: ['message'],
+      renderBubble: (_m, context) => {
+        seen.push(context.alignment);
+        return React.createElement('span', { 'data-testid': 'text-bubble' }, 'Text');
+      },
+    };
+    return { seen, registry: new CometChatPluginRegistry([probePlugin]) };
+  }
+
+  function renderWith(registryOverride: CometChatPluginRegistry, ui: React.ReactElement) {
+    return render(
+      <CometChatPluginRegistryContext.Provider value={registryOverride}>
+        <CometChatThemeContext.Provider value={{ theme: 'light' as const, setTheme: vi.fn() }}>
+          {ui}
+        </CometChatThemeContext.Provider>
+      </CometChatPluginRegistryContext.Provider>
+    );
+  }
+
+  it('hands plugins the outgoing palette even when the row is laid out left', () => {
+    const { seen, registry: probeRegistry } = alignmentProbe();
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'other' }),
+    }) as unknown as CometChat.BaseMessage;
+    renderWith(
+      probeRegistry,
+      <CometChatMessageBubbleRenderer
+        message={msg}
+        index={0}
+        total={1}
+        messageAlignment={0}
+        bubbleVariant="outgoing"
+      />
+    );
+    expect(seen).toContain('right');
+  });
+
+  it('still lays the bubble out on the left', () => {
+    const { registry: probeRegistry } = alignmentProbe();
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'other' }),
+    }) as unknown as CometChat.BaseMessage;
+    const { container } = renderWith(
+      probeRegistry,
+      <CometChatMessageBubbleRenderer
+        message={msg}
+        index={0}
+        total={1}
+        messageAlignment={0}
+        bubbleVariant="outgoing"
+      />
+    );
+    // Layout follows alignment…
+    expect(container.querySelector('.cometchat-message-bubble__wrapper--outgoing')).toBeNull();
+    // …while the palette follows the variant.
+    expect(container.querySelector('.cometchat-message-bubble-outgoing')).toBeTruthy();
+  });
+
+  it('falls back to alignment when no variant is given', () => {
+    const { seen, registry: probeRegistry } = alignmentProbe();
+    const msg = buildTextMessage({
+      sender: buildUser({ uid: 'me' }),
+    }) as unknown as CometChat.BaseMessage;
+    renderWith(
+      probeRegistry,
+      <CometChatMessageBubbleRenderer message={msg} index={0} total={1} messageAlignment={0} />
+    );
+    expect(seen).toContain('left');
   });
 });

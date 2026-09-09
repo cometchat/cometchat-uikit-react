@@ -12,19 +12,23 @@ import { CometChatMessageComposerStickerButton } from './CometChatMessageCompose
 import { CometChatMessageComposerEditPreview } from './CometChatMessageComposerEditPreview';
 import { CometChatMessageComposerReplyPreview } from './CometChatMessageComposerReplyPreview';
 import { CometChatMessageComposerMentionsList } from './CometChatMessageComposerMentionsList';
+import { CometChatMessageComposerTray } from './CometChatMessageComposerTray';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { CometChatFormattingToolbar } from '../base/CometChatFormattingToolbar/CometChatFormattingToolbar';
 import { CometChatLinkDialog } from '../base/CometChatLinkDialog/CometChatLinkDialog';
 import { CometChatLinkPopover } from '../base/CometChatLinkPopover/CometChatLinkPopover';
 import { CometChatMediaRecorder } from '../base/CometChatMediaRecorder/CometChatMediaRecorder';
 import { useCometChatMediaRecorderContext } from '../base/CometChatMediaRecorder/CometChatMediaRecorder.context';
+import { CometChatToast } from '../base/CometChatToast/CometChatToast';
 import { useRichTextEditor } from '../../utils/RichTextEditor/useRichTextEditor';
 import { convertMarkdownToHtml } from '../../utils/RichTextEditor/RichTextEditor';
 import { applyListStyles, fixOrderedListContinuation } from '../../utils/RichTextEditor/formats';
+import { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 import { useCometChatMentions } from './useCometChatMentions';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { sanitizeHtml } from '../../utils/sanitizeHtml';
 import sendFillIcon from '../../assets/send_fill.svg';
+import uploadIcon from '../../assets/upload-icon.svg';
 import './CometChatMessageComposer.css';
 
 function escapeMentionValue(value: string): string {
@@ -48,34 +52,33 @@ function buildMentionSpan(params: {
 
 /**
  * ComposerValidationError — inline error banner for file validation errors.
- * Auto-dismisses after 5 seconds. Shows localized error text.
+ * Auto-dismisses after 4 seconds. Shows localized error text.
  */
 const ComposerValidationError: React.FC<{
   textKey: string | null;
+  maxCount: number;
   onDismiss: () => void;
-}> = ({ textKey, onDismiss }) => {
+}> = ({ textKey, maxCount, onDismiss }) => {
   const { getLocalizedString } = useLocale();
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      onDismiss();
-    }, 5000);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [onDismiss]);
+  // Try to use the key as a localization key; fall back to raw text.
+  let displayText = textKey ? getLocalizedString(textKey) || textKey : '';
+  // The count-exceeded message carries the dynamic per-batch max from settings.
+  if (textKey === 'attachment_count_exceeded') {
+    displayText = displayText.replace('{count}', String(maxCount));
+  }
 
-  // Try to use the key as a localization key; fall back to raw text
-  const displayText = textKey ? getLocalizedString(textKey) || textKey : '';
+  if (!displayText) return null;
 
+  // Reuse the shared toast (error/red variant) instead of a bespoke banner.
   return (
-    <div
-      className={'cometchat-message-composer__validation-error'}
-      role="alert"
-      aria-live="assertive"
-    >
-      <span className={'cometchat-message-composer__validation-error-text'}>{displayText}</span>
-    </div>
+    <CometChatToast
+      text={displayText}
+      variant="error"
+      duration={4000}
+      showCloseButton={false}
+      onClose={onDismiss}
+    />
   );
 };
 
@@ -155,9 +158,9 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
   mentionsGroupMembersRequestBuilder,
   disableSoundForMessage,
   customSoundForMessage,
-  maxAttachments = 10,
+  enableMultipleAttachments = true,
+  disableDragAndDrop = false,
   allowedFileTypes,
-  maxFileSize,
   disableAutoFocusOnMobile = true,
   liveReactionIcon,
   attachmentButtonIconView,
@@ -165,6 +168,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
   emojiButtonIconView,
   sendButtonView,
   auxiliaryButtonView,
+  toolbarTrailingView,
   headerView,
   showScrollbar = false,
   onTextChange,
@@ -197,7 +201,13 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     return IframeContext.iframeWindow ?? window;
   }, [IframeContext.iframeWindow]);
 
+  // Input-capable custom formatters: consulted by the send bridge and
+  // registered with the editor. Held in a ref so the getter passed to the hook stays stable.
+  const inputFormattersRef = useRef<CometChatTextFormatter[]>([]);
+  inputFormattersRef.current = textFormatters ?? [];
+
   const hook = useCometChatMessageComposer({
+    getInputFormatters: () => inputFormattersRef.current,
     ...(user !== undefined && { user }),
     ...(group !== undefined && { group }),
     ...(parentMessageId !== undefined && { parentMessageId }),
@@ -223,6 +233,13 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
   // Ref to access the rich text editor DOM element for Enter key text sync.
   // This breaks the circular dependency between handleEnterPress and richText.
   const richTextEditorElRef = useRef<HTMLDivElement | null>(null);
+
+  // Ref to the editor's clear() so handleEnterPress can clear immediately without
+  // referencing `richText` (which is created after handleEnterPress — same
+  // circular dependency the DOM ref above avoids).
+  const richTextClearRef = useRef<() => void>(() => {
+    /* no-op until richText is created */
+  });
 
   // Ref to store the initial editor HTML when entering edit mode.
   // Used to detect formatting-only changes that don't alter plaintext.
@@ -274,14 +291,44 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       }
       return;
     }
+
+    // When files are staged, Enter fans out into the batch (with any composer
+    // text as the caption) — matching the Send button. This also lets Enter send
+    // media with no caption; with an empty composer and no tray, nothing happens.
+    const trayHasItems = hook.state.tray.items.length > 0;
+    if (trayHasItems) {
+      // Mirror the Send button's disabled gating: with a non-empty tray, canSend
+      // holds only when every item is `success` and no send is in flight. Block
+      // Enter otherwise so a batch can't be sent while items are still
+      // uploading/failed/rejected.
+      if (!hook.canSend) return;
+      if (enableRichTextEditor && richTextEditorElRef.current) {
+        const currentHtml = richTextEditorElRef.current.innerHTML;
+        void hook.sendBatch(undefined, currentHtml);
+        richTextClearRef.current();
+      } else {
+        void hook.sendBatch();
+      }
+      return;
+    }
+
     if (enableRichTextEditor && richTextEditorElRef.current) {
       const currentHtml = richTextEditorElRef.current.innerHTML;
       void hook.sendMessage(undefined, currentHtml);
+      richTextClearRef.current();
     } else {
       void hook.sendMessage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only depend on specific hook properties
-  }, [hook.isInEditMode, hook.canSend, hook.editMessage, hook.sendMessage, enableRichTextEditor]);
+  }, [
+    hook.isInEditMode,
+    hook.canSend,
+    hook.state.tray.items.length,
+    hook.editMessage,
+    hook.sendMessage,
+    hook.sendBatch,
+    enableRichTextEditor,
+  ]);
 
   // Mention callbacks are stored in a ref to break the circular dependency
   // between richText (needs mention callbacks) and mentions (needs richText.insertMention).
@@ -329,12 +376,80 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     },
     // Enter sends message, Shift+Enter inserts newline (when enterKeyBehavior is 'send')
     ...(enterKeyBehavior === 'send' ? { onEnterPress: handleEnterPress } : {}),
+    // Custom text-formatter paste round-trip: on an HTML paste, serialize each formatter's display
+    // spans (e.g. color) back to its storable tokens BEFORE the editor's sanitizer unwraps unknown
+    // spans, then re-render those tokens to spans AFTER sanitize — the same round-trip bubbles use.
+    // Identity when no formatters are configured.
+    preprocessPastedHtml: (html: string): string => {
+      let out = html;
+      for (const formatter of inputFormattersRef.current) {
+        try {
+          out = formatter.getOriginalText(out);
+        } catch {
+          /* a misbehaving formatter must not break paste */
+        }
+      }
+      return out;
+    },
+    postprocessPastedHtml: (html: string): string => {
+      let out = html;
+      for (const formatter of [...inputFormattersRef.current].sort(
+        (a, b) => a.priority - b.priority
+      )) {
+        try {
+          out = formatter.getFormattedText(out);
+        } catch {
+          /* a misbehaving formatter must not break paste */
+        }
+      }
+      return out;
+    },
   });
 
   // Keep the richTextEditorElRef in sync with the actual editor ref
   useEffect(() => {
     richTextEditorElRef.current = richText.editorRef.current;
   });
+
+  // Bind imperative custom formatters to the editor: hand each the live input
+  // reference, a re-render hook, and its one-time setup. Keystrokes are fanned out below.
+  useEffect(() => {
+    if (!richText.editor) return;
+    const editor = richText.editor;
+    const editorEl = richText.editorRef.current;
+    for (const formatter of inputFormattersRef.current) {
+      formatter.setInputElementReference(editorEl);
+      formatter.setReRender(() => {
+        editor.refresh();
+      });
+      formatter.initializeComposerTracking();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [richText.editor, textFormatters]);
+
+  // Fan keystrokes to imperative formatters AFTER the engine's own input handling, so a
+  // formatter can rescan/reformat the live DOM. Programmatic edits here don't re-fire
+  // `input`, so there's no loop with the editor's own handlers.
+  useEffect(() => {
+    const editorEl = richText.editorRef.current;
+    if (!editorEl) return;
+    const handleKeyUp = (e: KeyboardEvent) => {
+      for (const formatter of inputFormattersRef.current) formatter.onKeyUp(e);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      for (const formatter of inputFormattersRef.current) formatter.onKeyDown(e);
+    };
+    editorEl.addEventListener('keyup', handleKeyUp);
+    editorEl.addEventListener('keydown', handleKeyDown);
+    return () => {
+      editorEl.removeEventListener('keyup', handleKeyUp);
+      editorEl.removeEventListener('keydown', handleKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [richText.editor]);
+
+  // Expose the editor's clear() to handleEnterPress (defined before richText).
+  richTextClearRef.current = richText.clear;
 
   // Update the editor link click ref now that richText is available
   // This breaks the circular dependency: handleEditorLinkClick → richText → handleEditorLinkClick
@@ -420,7 +535,10 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     const isEnteringEdit = !prevEdit && currentEdit;
     const isSwitchingEdit = prevEdit && currentEdit && prevEdit.getId() !== currentEdit.getId();
     if ((isEnteringEdit || isSwitchingEdit) && enableRichTextEditor) {
-      const editText = currentEdit.getText() || '';
+      const editText =
+        currentEdit.getType() === 'text' && 'getText' in currentEdit
+          ? currentEdit.getText()
+          : (currentEdit as CometChat.MediaMessage).getCaption() || '';
       // Check for rich text HTML metadata
       let htmlContent: string | null = null;
       try {
@@ -441,14 +559,10 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       // so that getTextWithMentionFormat and the RichTextFormatter can identify them.
       const resolveMentions = (text: string): string => {
         try {
-          const mentionedUsers = (
-            currentEdit as unknown as {
-              getMentionedUsers?: () => { getUid: () => string; getName: () => string }[];
-            }
-          ).getMentionedUsers?.();
+          const mentionedUsers = currentEdit.getMentionedUsers();
 
           // Handle SDK mention tokens: <@uid:xxx>
-          if (mentionedUsers && mentionedUsers.length > 0) {
+          if (mentionedUsers.length > 0) {
             text = text.replace(/<@uid:(.*?)>/g, (_match: string, uid: string) => {
               const user = mentionedUsers.find(u => u.getUid() === uid);
               const name = user ? user.getName() : uid;
@@ -474,7 +588,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
 
           // Fallback: if no SDK tokens were found but mentionedUsers exist,
           // match plain @name patterns against the mentioned users list.
-          if (mentionedUsers && mentionedUsers.length > 0 && !text.includes('data-uid=')) {
+          if (mentionedUsers.length > 0 && !text.includes('data-uid=')) {
             for (const user of mentionedUsers) {
               const name = user.getName();
               const uid = user.getUid();
@@ -513,10 +627,28 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
         return sanitizeHtml(text);
       };
 
+      // Render custom formatters' STORED markup (e.g. color's `{color:#…}…{/color}` tokens) into
+      // display HTML when seeding the editor — the same transform the bubble uses. Without this the
+      // seed shows raw tokens, because imperative `formatText()` (live pen/caret scan) below only
+      // re-wraps plain patterns (like `#tag`), not a formatter's serialized tokens. Priority order
+      // mirrors the display pipeline (lower priority first).
+      const renderCustomFormatters = (html: string): string => {
+        const ordered = [...inputFormattersRef.current].sort((a, b) => a.priority - b.priority);
+        let out = html;
+        for (const formatter of ordered) {
+          try {
+            out = formatter.getFormattedText(out);
+          } catch {
+            /* a formatter's display transform must not break edit-seed */
+          }
+        }
+        return out;
+      };
+
       if (htmlContent && richText.editorRef.current) {
         // Set rich text HTML directly on the editor DOM (mentions already resolved in HTML)
         // But still resolve mentions if present in the HTML
-        const resolvedHtml = resolveMentions(htmlContent);
+        const resolvedHtml = renderCustomFormatters(resolveMentions(htmlContent));
         richText.editorRef.current.innerHTML = resolvedHtml;
       } else if (editText) {
         // No rich text metadata — convert markdown to HTML for the rich text editor.
@@ -542,8 +674,10 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
           }
         );
 
-        // Resolve mentions to styled spans
-        const resolvedHtml = resolveMentions(formattedHtml);
+        // Resolve mentions to styled spans, then render custom formatters' stored markup (color
+        // tokens, etc.) to display HTML. Imperative formatters additionally re-wrap plain patterns
+        // below via `formatText`.
+        const resolvedHtml = renderCustomFormatters(resolveMentions(formattedHtml));
         if (richText.editorRef.current) {
           richText.editorRef.current.innerHTML = resolvedHtml;
         }
@@ -552,6 +686,14 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       // Capture the initial editor HTML for dirty-detection (formatting-only changes)
       // Must be captured BEFORE focus to avoid race with onUpdate callback.
       if (richText.editorRef.current) {
+        // Re-wrap imperative formatting in the seeded content so stored plain text
+        // (e.g. "#tag", stripped on send) shows formatted immediately — not only after a keystroke.
+        // Gated on a `formatText` OVERRIDE: the base default would flatten other formatting.
+        for (const formatter of inputFormattersRef.current) {
+          if (formatter.formatText !== CometChatTextFormatter.prototype.formatText) {
+            formatter.formatText();
+          }
+        }
         // Apply list styles to ensure nested lists show correct markers (a. i. etc.)
         applyListStyles(richText.editorRef.current);
         fixOrderedListContinuation(richText.editorRef.current);
@@ -616,12 +758,8 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
 
     if (!prevEdit && currentEdit) {
       try {
-        const existingMentionedUsers = (
-          currentEdit as unknown as {
-            getMentionedUsers?: () => { getUid: () => string; getName: () => string }[];
-          }
-        ).getMentionedUsers?.();
-        if (existingMentionedUsers && existingMentionedUsers.length > 0) {
+        const existingMentionedUsers = currentEdit.getMentionedUsers();
+        if (existingMentionedUsers.length > 0) {
           mentions.seedMentionedUsers(
             existingMentionedUsers.map(u => ({ uid: u.getUid(), name: u.getName() }))
           );
@@ -811,8 +949,21 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
   // In rich text mode, passes raw HTML to the hook which converts it to markdown
   const handleSendMessage = useCallback(
     (textOverride?: string) => {
+      // When files are staged in the tray, a send fans out into the batch
+      // (one MediaMessage per media type sharing a batchId). The composer text,
+      // if any, rides along as the caption on the last message of the batch.
+      const trayHasItems = hook.state.tray.items.length > 0;
+
       let sendPromise: Promise<void>;
-      if (textOverride !== undefined) {
+      if (trayHasItems) {
+        if (textOverride !== undefined) {
+          sendPromise = hook.sendBatch(textOverride);
+        } else if (enableRichTextEditor && richTextEditorElRef.current) {
+          sendPromise = hook.sendBatch(undefined, richTextEditorElRef.current.innerHTML);
+        } else {
+          sendPromise = hook.sendBatch();
+        }
+      } else if (textOverride !== undefined) {
         sendPromise = hook.sendMessage(textOverride);
       } else if (enableRichTextEditor && richTextEditorElRef.current) {
         const currentHtml = richTextEditorElRef.current.innerHTML;
@@ -820,10 +971,10 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       } else {
         sendPromise = hook.sendMessage();
       }
+      // Clear the rich text editor immediately (not after the send resolves) so
+      // the composer feels instant. The HTML was already captured above.
       if (enableRichTextEditor) {
-        void sendPromise.then(() => {
-          richText.clear();
-        });
+        richText.clear();
       }
       return sendPromise;
     },
@@ -873,6 +1024,15 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       startTyping: hook.startTyping,
       endTyping: hook.endTyping,
 
+      // Multi-attachment tray + upload manager
+      tray: hook.state.tray,
+      stageAttachments: hook.mediaUploadManager.startUpload,
+      removeAttachment: hook.mediaUploadManager.removeItem,
+      retryAttachment: hook.mediaUploadManager.retryItem,
+      clearAttachments: hook.mediaUploadManager.clear,
+      attachmentsSendable: hook.mediaUploadManager.sendable,
+      maxAttachmentCount: hook.mediaUploadManager.maxAttachmentCount,
+
       // Refs
       inputRef: hook.inputRef,
       richTextEditorRef: richText.editorRef,
@@ -891,9 +1051,8 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       disableMentionAll,
       mentionAllLabel,
       showAttachmentPreview,
-      maxAttachments,
+      enableMultipleAttachments,
       ...(allowedFileTypes !== undefined && { allowedFileTypes }),
-      ...(maxFileSize !== undefined && { maxFileSize }),
       ...(attachmentOptions !== undefined && { attachmentOptions }),
       ...(textFormatters !== undefined && { textFormatters }),
       // Hide button flags
@@ -912,6 +1071,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       ...(voiceRecordingButtonIconView !== undefined && { voiceRecordingButtonIconView }),
       ...(emojiButtonIconView !== undefined && { emojiButtonIconView }),
       ...(auxiliaryButtonView !== undefined && { auxiliaryButtonView }),
+      ...(toolbarTrailingView !== undefined && { toolbarTrailingView }),
       ...(headerView !== undefined && { headerView }),
       showScrollbar,
       ...(onError !== undefined && { onError }),
@@ -928,6 +1088,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       hook.isInEditMode,
       hook.isInReplyMode,
       hook.showVoiceButton,
+      hook.mediaUploadManager,
       hook.setText,
       handleSendMessage,
       hook.sendMediaMessage,
@@ -956,9 +1117,8 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       disableMentionAll,
       mentionAllLabel,
       showAttachmentPreview,
-      maxAttachments,
+      enableMultipleAttachments,
       allowedFileTypes,
-      maxFileSize,
       attachmentOptions,
       textFormatters,
       hideAttachmentButton,
@@ -976,6 +1136,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       emojiButtonIconView,
       sendButtonView,
       auxiliaryButtonView,
+      toolbarTrailingView,
       headerView,
       showScrollbar,
       onError,
@@ -1032,8 +1193,14 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
           onOrderedList={richText.toggleOrderedList}
           onBulletList={richText.toggleBulletList}
           onLink={handleLinkClick}
+          {...(toolbarTrailingView !== undefined && {
+            trailingContent: toolbarTrailingView,
+          })}
         />
       )}
+      {/* Multi-attachment staging tray — rendered above the input area. Self-hides
+          when multi-attachment is disabled or the tray is empty. */}
+      <CometChatMessageComposerTray />
       <div
         className={['cometchat-message-composer__body', 'cometchat-message-composer__body'].join(
           ' '
@@ -1140,7 +1307,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
                 const file = new File([blob], 'voice-recording.wav', {
                   type: blob.type || 'audio/webm',
                 });
-                void hook.sendMediaMessage(file, 'audio');
+                void hook.sendMediaMessage(file, 'audio', { isVoiceNote: true });
               }}
               onError={err => {
                 onError?.(err);
@@ -1162,20 +1329,141 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     </>
   );
 
+  // --- Drag & drop ---
+  // Staging respects the per-batch count limit (startUpload trims + toasts).
+  // A depth counter avoids flicker as drag events bubble across child elements.
+  const dragDepthRef = useRef(0);
+
+  const dragHasFiles = (e: React.DragEvent): boolean =>
+    Array.from(e.dataTransfer.types).includes('Files');
+
+  const handleComposerDragEnter = (e: React.DragEvent) => {
+    // Attachments can't be added while editing a message.
+    if (disableDragAndDrop || hook.isInEditMode || !dragHasFiles(e)) return;
+    e.preventDefault();
+    dragDepthRef.current += 1;
+    if (!hook.state.isDraggingOver) hook.setDragging(true);
+  };
+
+  const handleComposerDragOver = (e: React.DragEvent) => {
+    if (!dragHasFiles(e)) return;
+    e.preventDefault();
+    if (disableDragAndDrop || hook.isInEditMode) return;
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleComposerDragLeave = () => {
+    if (disableDragAndDrop || hook.isInEditMode) return;
+    dragDepthRef.current -= 1;
+    if (dragDepthRef.current <= 0) {
+      dragDepthRef.current = 0;
+      hook.setDragging(false);
+    }
+  };
+
+  const handleComposerDrop = (e: React.DragEvent) => {
+    const files = Array.from(e.dataTransfer.files);
+    if (disableDragAndDrop || hook.isInEditMode) {
+      // Feature off / editing: still cancel the browser default for a file drop so
+      // it can't navigate the page away, but don't stage anything.
+      if (files.length > 0) e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    dragDepthRef.current = 0;
+    hook.setDragging(false);
+    if (files.length === 0) return;
+
+    if (enableMultipleAttachments) {
+      hook.mediaUploadManager.startUpload(files);
+    } else {
+      // Legacy single-send: send the first dropped file immediately.
+      const file = files[0];
+      if (!file) return;
+      const primary = (file.type || '').split('/')[0];
+      const type =
+        primary === 'image'
+          ? 'image'
+          : primary === 'video'
+            ? 'video'
+            : primary === 'audio'
+              ? 'audio'
+              : 'file';
+      void hook.sendMediaMessage(file, type);
+    }
+  };
+
+  // --- Paste media (multi-attachment & legacy single-send) ---
+  const handleComposerPaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+
+    const files: File[] = [];
+    for (const item of items) {
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) files.push(file);
+      }
+    }
+    if (files.length === 0) return;
+
+    // Prevent default only when we have media to handle (don't block text paste).
+    e.preventDefault();
+
+    if (enableMultipleAttachments) {
+      hook.mediaUploadManager.startUpload(files);
+    } else {
+      // Legacy single-send: send the first pasted file immediately.
+      const file = files[0];
+      if (!file) return;
+      const primary = (file.type || '').split('/')[0];
+      const type =
+        primary === 'image'
+          ? 'image'
+          : primary === 'video'
+            ? 'video'
+            : primary === 'audio'
+              ? 'audio'
+              : 'file';
+      void hook.sendMediaMessage(file, type);
+    }
+  };
+
   return (
     <CometChatMessageComposerContext.Provider value={contextValue}>
-      {/* Validation error banner — rendered above the composer */}
-      {hook.state.showValidationError && !hideError && (
-        <ComposerValidationError
-          textKey={hook.state.validationErrorText}
-          onDismiss={hook.dismissValidationError}
-        />
-      )}
-      <div className={rootClass}>
+      <div
+        className={rootClass}
+        onPaste={handleComposerPaste}
+        onDragEnter={handleComposerDragEnter}
+        onDragOver={handleComposerDragOver}
+        onDragLeave={handleComposerDragLeave}
+        onDrop={handleComposerDrop}
+      >
+        {/* Validation error toast — positioned above the composer */}
+        {hook.state.showValidationError && !hideError && (
+          <ComposerValidationError
+            textKey={hook.state.validationErrorText}
+            maxCount={hook.mediaUploadManager.maxAttachmentCount}
+            onDismiss={hook.dismissValidationError}
+          />
+        )}
         {children ? (
           <div className={'cometchat-message-composer__body'}>{children}</div>
         ) : (
           defaultChildren
+        )}
+        {/* Drag & drop overlay — shown only while dragging files over the composer. */}
+        {!disableDragAndDrop && hook.state.isDraggingOver && (
+          <div className={'cometchat-message-composer__drop-overlay'} aria-hidden="true">
+            <img
+              src={uploadIcon}
+              alt=""
+              className={'cometchat-message-composer__drop-overlay-icon'}
+              draggable={false}
+            />
+            <span className={'cometchat-message-composer__drop-overlay-text'}>
+              {getLocalizedStringComposer('message_composer_drop_files_here')}
+            </span>
+          </div>
         )}
         {/* Link Popover — inside the composer div for correct absolute positioning */}
         {linkPopoverState.open && (

@@ -12,6 +12,12 @@ import { CometChatDate } from '../base/CometChatDate';
 import { CometChatRadioButton } from '../base/CometChatRadioButton/CometChatRadioButton';
 import { useOptionalConversationsContext } from './CometChatConversations.context';
 import { sanitizeHtml } from '../../utils/sanitizeHtml';
+import { localizeSharedWithFallback } from '../../utils/localizeWithFallback';
+import { isConversationPinned, isConversationSystemPinned } from './CometChatConversations.utils';
+import { usePinSaveFeatures } from '../../hooks/usePinSaveFeatures';
+import pinIcon from '../../assets/pin.svg';
+import unpinIcon from '../../assets/unpin.svg';
+import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
 import './CometChatConversations.css';
 import type { CometChatConversationsItemProps } from './CometChatConversations.types';
 
@@ -192,13 +198,34 @@ function getLastMessageText(
           isHtml: false,
         };
       case 'image':
-        return { senderPrefix, text: t('conversation_subtitle_image', 'Image'), isHtml: false };
       case 'video':
-        return { senderPrefix, text: t('conversation_subtitle_video', 'Video'), isHtml: false };
       case 'audio':
-        return { senderPrefix, text: t('conversation_subtitle_audio', 'Audio'), isHtml: false };
-      case 'file':
-        return { senderPrefix, text: t('conversation_subtitle_file', 'File'), isHtml: false };
+      case 'file': {
+        const mediaMsg = lastMessage as CometChat.MediaMessage;
+        const attachments =
+          typeof mediaMsg.getAttachments === 'function' ? mediaMsg.getAttachments() : [];
+        const count = Math.max(attachments.length, 1);
+        const caption =
+          typeof mediaMsg.getCaption === 'function' ? mediaMsg.getCaption() || '' : '';
+        const mediaType = type as string;
+        // Capitalized English fallback (Image/Video/Audio/File) matching the
+        // localization resources — used when the shared localize instance can't
+        // resolve the key. (Sibling branches all use capitalized fallbacks.)
+        const mediaLabelFallback = mediaType.charAt(0).toUpperCase() + mediaType.slice(1);
+        let label: string;
+        if (count === 1) {
+          label = t(`conversation_subtitle_${mediaType}`, mediaLabelFallback);
+        } else {
+          const pluralKey = `media_edit_preview_${mediaType}_plural`;
+          const plural = t(pluralKey, '');
+          label =
+            plural && plural !== pluralKey
+              ? `${String(count)} ${plural}`
+              : `${String(count)} ${t(`conversation_subtitle_${mediaType}`, mediaLabelFallback)}`;
+        }
+        const text = caption.trim() ? `${label} · ${caption.trim()}` : label;
+        return { senderPrefix, text, isHtml: false };
+      }
       default:
         return { senderPrefix, text: type, isHtml: false };
     }
@@ -513,14 +540,6 @@ function CometChatConversationsItemInner({
       ? ((convWith as CometChat.Group).getType?.() ?? '')
       : '';
 
-  const handleDeleteClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      ctx?.setConversationToBeDeleted(conversation);
-    },
-    [ctx, conversation]
-  );
-
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       ctx?.handleItemClick(conversation, { shiftKey: e.shiftKey });
@@ -558,7 +577,83 @@ function CometChatConversationsItemInner({
     .filter(Boolean)
     .join(' ');
 
+  // Plan-level gate. Resolves async, so this re-renders once it lands; until then
+  // it reads false and the option simply is not offered.
+  const pinFeatures = usePinSaveFeatures();
+
   const [isItemHovered, setIsItemHovered] = useState(false);
+
+  /**
+   * Default row menu: Pin/Unpin and Delete.
+   *
+   * Replaces the old standalone delete button — the design puts both actions
+   * behind one dropdown. A consumer-supplied `options` still wins outright.
+   *
+   * An admin-global pin offers no Unpin (the server rejects it), but keeps
+   * Delete: deleting clears the conversation while the row stays, the same as a
+   * freshly admin-pinned chat with no history.
+   */
+  // `?? fallback` was unreachable here: the localizer returns the KEY on a miss,
+  // never null, so a missing string rendered as `conversation_option_pin`.
+  const t = localizeSharedWithFallback;
+
+  const defaultMenuItems: CometChatContextMenuItemData[] = [];
+  const pinHandlers = ctx?.pinConversation && ctx.unpinConversation;
+  if (
+    pinFeatures.pinConversation &&
+    pinHandlers &&
+    !ctx?.hidePinConversation &&
+    !isConversationSystemPinned(conversation)
+  ) {
+    defaultMenuItems.push(
+      isConversationPinned(conversation)
+        ? {
+            id: 'unpin-conversation',
+            title: t('conversation_option_unpin', 'Unpin conversation'),
+            iconURL: unpinIcon,
+            onClick: () => {
+              ctx?.unpinConversation?.(conversation);
+            },
+          }
+        : {
+            id: 'pin-conversation',
+            title: t('conversation_option_pin', 'Pin conversation'),
+            iconURL: pinIcon,
+            onClick: () => {
+              ctx?.pinConversation?.(conversation);
+            },
+          }
+    );
+  }
+  if (!effectiveHideDeleteButton) {
+    // Retain delete icon class names when it's the lone option
+    const isLoneDefaultOption = defaultMenuItems.length === 0;
+    defaultMenuItems.push({
+      id: 'delete-conversation',
+      title: t('conversation_delete_icon_hover', 'Delete conversation'),
+      // A masked span rather than `iconURL`: the menu renders an <img> and greys
+      // it with a filter, and Delete has to read as destructive in both themes.
+      icon: (
+        <span
+          className={[
+            'cometchat-conversations__item-delete-glyph',
+            isLoneDefaultOption ? 'cometchat-conversations__item-delete-icon' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        />
+      ),
+      className: [
+        'cometchat-conversations__item-delete-option',
+        isLoneDefaultOption ? 'cometchat-conversations__item-delete-button' : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
+      onClick: () => {
+        ctx?.setConversationToBeDeleted(conversation);
+      },
+    });
+  }
 
   return (
     <div
@@ -706,7 +801,9 @@ function CometChatConversationsItemInner({
                     .filter(Boolean)
                     .join(' ')}
                   dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(lastMessageResult.text),
+                    __html: sanitizeHtml(
+                      applyDisplayFormatters(lastMessageResult.text, ctx?.textFormatters)
+                    ),
                   }}
                 />
               </>
@@ -734,35 +831,57 @@ function CometChatConversationsItemInner({
                 }}
               />
             )}
-            {!hideUnread && unreadCount > 0 && (
-              <span
-                className={'cometchat-conversations__item-unread-badge'}
-                aria-label={(
-                  CometChatLocalize.getSharedInstance()?.t('accessibility_unread_messages') ??
-                  '{count} unread messages'
-                ).replace('{count}', String(unreadCount))}
-              >
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
+            {/* Second row, under the timestamp: unread badge then pin glyph. */}
+            <div className={'cometchat-conversations__item-trailing-badges'}>
+              {!hideUnread && unreadCount > 0 && (
+                <span
+                  className={'cometchat-conversations__item-unread-badge'}
+                  aria-label={(
+                    CometChatLocalize.getSharedInstance()?.t('accessibility_unread_messages') ??
+                    '{count} unread messages'
+                  ).replace('{count}', String(unreadCount))}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+              {/* One glyph for both tiers — an admin-global pin is distinguished
+                  by the absence of an unpin action, not by its icon. */}
+              {isConversationPinned(conversation) && (
+                <span
+                  className={'cometchat-conversations__item-pin-indicator'}
+                  role="img"
+                  aria-label={
+                    CometChatLocalize.getSharedInstance()?.t('accessibility_conversation_pinned') ??
+                    'Pinned'
+                  }
+                />
+              )}
+            </div>
           </div>
-          {(options || !effectiveHideDeleteButton) && (
+          {(options || defaultMenuItems.length > 0) && (
             <div className={'cometchat-conversations__item-menu-view'}>
-              {!effectiveHideDeleteButton && (
-                <button
-                  type="button"
-                  className={'cometchat-conversations__item-delete-button'}
-                  onClick={handleDeleteClick}
+              {!options && defaultMenuItems.length > 0 && (
+                <div
+                  className={'cometchat-conversations__item-options'}
+                  onClick={e => {
+                    e.stopPropagation();
+                  }}
                   onKeyDown={e => {
                     e.stopPropagation();
                   }}
-                  aria-label={
-                    CometChatLocalize.getSharedInstance()?.t('conversation_delete_icon_hover') ??
-                    'Delete conversation'
-                  }
+                  role="presentation"
                 >
-                  <span className={'cometchat-conversations__item-delete-icon'} />
-                </button>
+                  <CometChatContextMenu
+                    key={isItemHovered ? 'hovered' : 'not-hovered'}
+                    items={defaultMenuItems}
+                    // A lone option is shown as a bare icon rather than hidden
+                    // behind a "more" affordance — one click instead of two, and
+                    // it keeps the pre-pin look (delete-on-hover) for apps
+                    // without Pin Conversation.
+                    topMenuSize={defaultMenuItems.length === 1 ? 1 : 0}
+                    placement="left"
+                  />
+                </div>
               )}
               {options && (
                 <div

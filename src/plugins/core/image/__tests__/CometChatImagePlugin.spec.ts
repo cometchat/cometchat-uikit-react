@@ -49,7 +49,6 @@ function mockContext(alignment: 'left' | 'right' | 'center' = 'right') {
     loggedInUser: { getUid: () => 'user-1', getName: () => 'Me' } as any,
     alignment,
     theme: 'light' as const,
-    getTextFormatters: () => [],
   };
 }
 
@@ -72,9 +71,9 @@ describe('CometChatImagePlugin', () => {
       expect(result).toBeTruthy();
     });
 
-    it('returns element with correct type (CometChatImageBubble)', () => {
+    it('renders the batch-aware CometChatImagesBubble', () => {
       const result = CometChatImagePlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.type?.displayName).toBe('CometChatImageBubble');
+      expect(result.type?.displayName).toBe('CometChatImagesBubble');
     });
 
     // The bubble self-extracts attachments/caption/sender from the message now;

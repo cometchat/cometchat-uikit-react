@@ -14,6 +14,10 @@ import { CometChatCollaborativeDocumentBubble } from '../CometChatCollaborativeD
 import { CometChatCollaborativeWhiteboardBubble } from '../CometChatCollaborativeWhiteboardBubble';
 import { CometChatImageBubble } from '../CometChatImageBubble/CometChatImageBubble';
 import { CometChatPollBubble } from '../CometChatPollBubble/CometChatPollBubble';
+import { CometChatMessageOption } from '../../plugins/plugin.types';
+import addReactionIcon from '../../assets/add_reaction_icon.svg';
+import replyIcon from '../../assets/reply.svg';
+import infoIcon from '../../assets/info_icon_fill.svg';
 
 const meta: Meta = {
   title: 'Components/Bubbles/Message Bubble',
@@ -51,6 +55,8 @@ function mockMessage(overrides: {
   editedAt?: number;
   deletedAt?: number;
   replyCount?: number;
+  pinnedAt?: number;
+  savedAt?: number;
 }): CometChat.BaseMessage {
   const {
     text = 'Hello!',
@@ -65,6 +71,8 @@ function mockMessage(overrides: {
     editedAt = 0,
     deletedAt = 0,
     replyCount = 0,
+    pinnedAt,
+    savedAt,
   } = overrides;
 
   return {
@@ -89,6 +97,13 @@ function mockMessage(overrides: {
     getMetadata: () => ({}),
     getReceiverType: () => 'user',
     getReactions: () => [],
+    // Pin/save state drives the status-info indicators.
+    getPinnedAt: () => pinnedAt,
+    getPinnedBy: () => (pinnedAt !== undefined ? 'admin' : undefined),
+    getSavedAt: () => savedAt,
+    isPinned: () => pinnedAt !== undefined,
+    isSaved: () => savedAt !== undefined,
+    isSystemPinned: () => false,
   } as unknown as CometChat.BaseMessage;
 }
 
@@ -102,7 +117,13 @@ function mockGroup(): CometChat.Group {
 }
 
 /** Container for stories. */
-function ChatContainer({ children }: { children: React.ReactNode }) {
+function ChatContainer({
+  styles,
+  children,
+}: {
+  styles?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
   return (
     <div
       style={{
@@ -114,6 +135,7 @@ function ChatContainer({ children }: { children: React.ReactNode }) {
         background: 'var(--cometchat-background-color-01, #fff)',
         borderRadius: 'var(--cometchat-radius-4, 16px)',
         border: '1px solid var(--cometchat-border-color-light, #f5f5f5)',
+        ...styles,
       }}
     >
       {children}
@@ -393,8 +415,34 @@ export const LongText = () => {
   const longText =
     'This is a very long message that should demonstrate the truncation behavior of the text bubble component. When the text content exceeds approximately four lines of text, the component should truncate the content and show a "Read more" button. Clicking the button expands the text to show the full content.';
   const group = mockGroup();
+  const options: CometChatMessageOption[] = [
+    {
+      id: 'custom',
+      title: 'no-op',
+      iconURL: addReactionIcon,
+      onClick: () => {
+        /* no-op */
+      },
+    },
+    {
+      id: 'custom',
+      title: 'no-op',
+      iconURL: replyIcon,
+      onClick: () => {
+        /* no-op */
+      },
+    },
+    {
+      id: 'custom',
+      title: 'no-op',
+      iconURL: infoIcon,
+      onClick: () => {
+        /* no-op */
+      },
+    },
+  ];
   return (
-    <ChatContainer>
+    <ChatContainer styles={{ width: 800 }}>
       <CometChatMessageBubble
         message={mockMessage({
           text: longText,
@@ -410,6 +458,7 @@ export const LongText = () => {
             textFormatters={createFormatters('right')}
           />
         }
+        options={options}
       />
       <CometChatMessageBubble
         message={mockMessage({
@@ -427,6 +476,7 @@ export const LongText = () => {
             textFormatters={createFormatters('left')}
           />
         }
+        options={options}
       />
     </ChatContainer>
   );
@@ -687,7 +737,7 @@ export const CollaborativeWhiteboardMessage = () => {
 export const LinkPreviewMessage = () => {
   const msgWithLinkPreview = {
     ...mockMessage({
-      text: 'Check out this article: https://www.cometchat.com/blog',
+      text: 'Check out this article: https://www.cometchat.com',
       sentAt: Math.floor(Date.now() / 1000),
       readAt: Math.floor(Date.now() / 1000),
     }),
@@ -697,11 +747,11 @@ export const LinkPreviewMessage = () => {
           'link-preview': {
             links: [
               {
-                url: 'https://www.cometchat.com/blog',
-                title: 'CometChat Blog — Build Better Chat Experiences',
+                url: 'https://www.cometchat.com',
+                title: 'CometChat Docs — Build Better Chat Experiences',
                 description:
                   'Learn how to build real-time chat, voice, and video features into your app with CometChat.',
-                image: 'https://www.cometchat.com/blog/og-image.png',
+                image: 'https://picsum.photos/id/3/300/200',
                 favicon: 'https://www.cometchat.com/favicon.ico',
               },
             ],
@@ -710,7 +760,7 @@ export const LinkPreviewMessage = () => {
       },
     }),
     getMentionedUsers: () => [],
-    getText: () => 'Check out this article: https://www.cometchat.com/blog',
+    getText: () => 'Check out this article: https://www.cometchat.com',
     getReactions: () => [],
   } as unknown as CometChat.BaseMessage;
 
@@ -743,13 +793,13 @@ export const LinkPreviewMessage = () => {
   } as unknown as CometChat.BaseMessage;
 
   return (
-    <ChatContainer>
+    <ChatContainer styles={{ width: 640 }}>
       <CometChatMessageBubble
         message={msgWithLinkPreview}
         alignment="right"
         contentView={
           <CometChatTextBubble
-            text="Check out this article: https://www.cometchat.com/blog"
+            text="Check out this article: https://www.cometchat.com/"
             isSentByMe={true}
             textFormatters={createFormatters('right')}
             message={msgWithLinkPreview as unknown as CometChat.TextMessage}
@@ -869,14 +919,20 @@ export const ThumbnailGenerationMessage = () => {
         alignment="right"
         hideAvatar
         hideSenderName
-        contentView={<CometChatImageBubble message={outgoing} alignment="right" />}
+        contentView={
+          // eslint-disable-next-line @typescript-eslint/no-deprecated -- story demonstrates the legacy bubble as a custom contentView
+          <CometChatImageBubble message={outgoing} alignment="right" />
+        }
       />
       <CometChatMessageBubble
         message={incoming}
         alignment="left"
         hideAvatar
         hideSenderName
-        contentView={<CometChatImageBubble message={incoming} alignment="left" />}
+        contentView={
+          // eslint-disable-next-line @typescript-eslint/no-deprecated -- story demonstrates the legacy bubble as a custom contentView
+          <CometChatImageBubble message={incoming} alignment="left" />
+        }
       />
     </ChatContainer>
   );
@@ -991,6 +1047,91 @@ export const PollMessage = () => {
               }) as unknown as CometChat.CustomMessage
             }
             alignment="left"
+          />
+        }
+      />
+    </ChatContainer>
+  );
+};
+
+/** Pinned indicator — a pin glyph appears in the status-info area. */
+export const PinnedIndicator = () => {
+  const group = mockGroup();
+  const msg = mockMessage({
+    text: 'Read the release checklist before Friday.',
+    senderName: 'Alex Kim',
+    senderUid: 'user-alex',
+    sentAt: Math.floor(Date.now() / 1000),
+    pinnedAt: Math.floor(Date.now() / 1000),
+  });
+  return (
+    <ChatContainer>
+      <CometChatMessageBubble
+        message={msg}
+        alignment="left"
+        group={group}
+        contentView={
+          <CometChatTextBubble
+            text="Read the release checklist before Friday."
+            isSentByMe={false}
+            textFormatters={createFormatters('left')}
+          />
+        }
+      />
+    </ChatContainer>
+  );
+};
+
+/** Saved indicator — a bookmark glyph appears in the status-info area. */
+export const SavedIndicator = () => {
+  const group = mockGroup();
+  const msg = mockMessage({
+    text: 'The API key is in the shared vault.',
+    senderName: 'Alice Johnson',
+    senderUid: 'alice-johnson',
+    sentAt: Math.floor(Date.now() / 1000),
+    savedAt: Math.floor(Date.now() / 1000),
+  });
+  return (
+    <ChatContainer>
+      <CometChatMessageBubble
+        message={msg}
+        alignment="left"
+        group={group}
+        contentView={
+          <CometChatTextBubble
+            text="The API key is in the shared vault."
+            isSentByMe={false}
+            textFormatters={createFormatters('left')}
+          />
+        }
+      />
+    </ChatContainer>
+  );
+};
+
+/** Pinned and saved — a message can carry both indicators at once. */
+export const PinnedAndSaved = () => {
+  const group = mockGroup();
+  const msg = mockMessage({
+    text: 'Standup moves to 10:30 next week.',
+    senderName: 'Jane Smith',
+    senderUid: 'user-jane',
+    sentAt: Math.floor(Date.now() / 1000),
+    pinnedAt: Math.floor(Date.now() / 1000),
+    savedAt: Math.floor(Date.now() / 1000),
+  });
+  return (
+    <ChatContainer>
+      <CometChatMessageBubble
+        message={msg}
+        alignment="left"
+        group={group}
+        contentView={
+          <CometChatTextBubble
+            text="Standup moves to 10:30 next week."
+            isSentByMe={false}
+            textFormatters={createFormatters('left')}
           />
         }
       />

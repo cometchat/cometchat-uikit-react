@@ -63,6 +63,17 @@ describe('CometChatUrlFormatter', () => {
     expect(anchorCount).toBe(1);
   });
 
+  it('protects existing <a> tags whose text contains nested inline markup (color/bold)', () => {
+    // A markdown link whose label was already turned into a colored span by an earlier formatter.
+    const input =
+      '<a href="https://www.google.com" target="_blank" rel="noopener noreferrer" class="cometchat-link"><span style="color:#e11">link</span></a>';
+    const result = formatter.format(input);
+    // The href URL must NOT be re-linkified into the attribute — exactly one anchor, intact.
+    expect((result.match(/<a /g) ?? []).length).toBe(1);
+    expect(result).toBe(input);
+    expect(result).not.toContain('href="<a');
+  });
+
   it('protects markdown links from double-processing', () => {
     const input = 'See [Example](https://example.com) here';
     const result = formatter.format(input);

@@ -61,7 +61,7 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
     this.messageBubbleAlignment = alignment;
   }
 
-  getRegex(): RegExp {
+  override getRegex(): RegExp {
     return /@(\w+)/g;
   }
 
@@ -75,7 +75,7 @@ export class CometChatMentionsFormatter extends CometChatTextFormatter {
   /**
    * Format plain text @mentions by matching against the user list.
    */
-  format(text: string): string {
+  override format(text: string): string {
     if (!text) {
       this.originalText = '';
       this.formattedText = '';

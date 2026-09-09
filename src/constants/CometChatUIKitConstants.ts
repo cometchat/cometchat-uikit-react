@@ -192,4 +192,37 @@ export class CometChatUIKitConstants {
     card: CometChat.AI_ASSISTANT_EVENTS.CARD,
     card_end: CometChat.AI_ASSISTANT_EVENTS.CARD_END,
   });
+
+  /**
+   * UIKit-owned message metadata keys for the multi-attachments feature.
+   * `batchId` is the render-time grouping key shared across all messages produced
+   * by one send; `audioType` disambiguates an attached audio file from a recorded
+   * voice note.
+   */
+  static MetadataKeys = Object.freeze({
+    batchId: 'batchId',
+    audioType: 'audioType',
+  });
+
+  /**
+   * Values for the `audioType` metadata key. A recorded voice note is explicitly
+   * tagged `voice_note`. Any audio message WITHOUT this tag (attached audio files,
+   * and legacy/plain audio) renders as a normal audio bubble — absence never means
+   * voice note.
+   */
+  static AudioType = Object.freeze({
+    voiceNote: 'voice_note',
+  });
+
+  /**
+   * Media upload error codes surfaced by the SDK at runtime. These codes are not
+   * present in the SDK typings, so the UIKit references them through this typed
+   * constant and checks `error?.code === MediaUploadErrorCodes.FILE_COUNT_EXCEEDED`.
+   */
+  static MediaUploadErrorCodes = Object.freeze({
+    FILE_COUNT_EXCEEDED: 'ERR_FILE_COUNT_EXCEEDED',
+    FILE_SIZE_EXCEEDED: 'ERR_FILE_SIZE_EXCEEDED',
+    PERMISSION_DENIED: 'ERR_PERMISSION_DENIED',
+    BAD_REQUEST: 'ERR_BAD_REQUEST',
+  });
 }

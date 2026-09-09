@@ -98,11 +98,6 @@ vi.mock('../useCometChatMessageList', () => ({
       hideModerationView: false,
       isAgentChat: false,
       bubbleView: undefined,
-      leadingBubbleView: undefined,
-      headerBubbleView: undefined,
-      statusInfoBubbleView: undefined,
-      footerBubbleView: undefined,
-      threadBubbleView: undefined,
     },
   }),
 }));

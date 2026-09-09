@@ -15,6 +15,7 @@ const {
   mockGetConversation,
   mockMarkMessageAsUnread,
   mockBuild,
+  mockWithParent,
 } = vi.hoisted(() => ({
   mockFetchPrevious: vi.fn().mockResolvedValue([]),
   mockFetchNext: vi.fn().mockResolvedValue([]),
@@ -28,6 +29,7 @@ const {
   mockGetConversation: vi.fn().mockResolvedValue({}),
   mockMarkMessageAsUnread: vi.fn().mockResolvedValue({}),
   mockBuild: vi.fn(),
+  mockWithParent: vi.fn(),
 }));
 
 vi.mock('@cometchat/chat-sdk-javascript', () => {
@@ -40,6 +42,8 @@ vi.mock('@cometchat/chat-sdk-javascript', () => {
     setCategories: vi.fn().mockReturnThis(),
     setMessageId: vi.fn().mockReturnThis(),
     hideReplies: vi.fn().mockReturnThis(),
+    hideDeletedMessages: vi.fn().mockReturnThis(),
+    withParent: mockWithParent.mockReturnThis(),
     build: mockBuild.mockReturnValue({
       fetchPrevious: mockFetchPrevious,
       fetchNext: mockFetchNext,
@@ -73,6 +77,31 @@ import { CometChatMessageListManager } from '../CometChatMessageListManager';
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+describe('CometChatMessageListManager — withParent', () => {
+  const user = buildUser({ uid: 'user-1' });
+
+  it('does NOT request the parent in an ordinary thread', () => {
+    // Regression: the parent is rendered by the thread header, so including it
+    // in the reply list showed the same message twice.
+    new CometChatMessageListManager({ user: user as never, parentMessageId: 42 });
+    expect(mockWithParent).toHaveBeenCalledWith(false);
+  });
+
+  it('DOES request the parent in agent chat, where cards are thread replies', () => {
+    new CometChatMessageListManager({
+      user: user as never,
+      parentMessageId: 42,
+      isAgentChat: true,
+    });
+    expect(mockWithParent).toHaveBeenCalledWith(true);
+  });
+
+  it('does not touch withParent outside a thread', () => {
+    new CometChatMessageListManager({ user: user as never });
+    expect(mockWithParent).not.toHaveBeenCalled();
+  });
 });
 
 describe('CometChatMessageListManager', () => {

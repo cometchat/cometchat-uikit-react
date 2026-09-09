@@ -12,6 +12,7 @@ import { CometChatTabs, type TabItem } from '../CometChatSelector/CometChatTabs'
 import { CometChatSelector } from '../CometChatSelector/CometChatSelector';
 import { CometChatMessages } from '../CometChatMessages/CometChatMessages';
 import { CometChatEmptyStateView } from '../CometChatMessages/CometChatEmptyStateView';
+import { CometChatPinnedMessages, CometChatSavedMessages } from '@cometchat/chat-uikit-react';
 import { CometChatSideComponent } from '../CometChatDetails/CometChatSideComponent';
 import { CometChatThreadPanel } from '../CometChatThreadPanel/CometChatThreadPanel';
 import { CometChatNewChatView } from '../CometChatNewChat/CometChatNewChatView';
@@ -52,6 +53,8 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
     type: 'user',
   });
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [showSavedMessages, setShowSavedMessages] = useState(false);
+  const [showPinnedMessages, setShowPinnedMessages] = useState(false);
   const [showScopedSearch, setShowScopedSearch] = useState(false);
   const [isFreshChat, setIsFreshChat] = useState(false);
   const [joinGroupInfo, setJoinGroupInfo] = useState<{ visible: boolean; group?: CometChat.Group }>({
@@ -271,6 +274,8 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
     setSelectedCallLog(undefined);
     setShowGlobalSearch(false);
     setShowScopedSearch(false);
+    setShowSavedMessages(false);
+    setShowPinnedMessages(false);
     setActiveTab(tabItem.id);
   };
 
@@ -283,6 +288,7 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
     setAppState({ type: 'updateThreadedMessage', payload: undefined });
     setShowScopedSearch(false);
     setShowNewChat(false);
+    setShowPinnedMessages(false);
 
     if (type === 'updateSelectedItem') {
       setAppState({ type: 'updateSelectedItem', payload: e as CometChat.Conversation });
@@ -366,9 +372,12 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
   };
 
   const onHeaderClicked = () => {
-    // Mutual exclusion: opening details closes thread and scoped search
+    // Mutual exclusion: opening details closes thread, scoped search, and the
+    // pinned panel — the details panel is suppressed while pins are open, so
+    // leaving it open would swallow the click.
     setAppState({ type: 'updateThreadedMessage', payload: undefined });
     setShowScopedSearch(false);
+    setShowPinnedMessages(false);
     if (messageUser) {
       setSidePanel({ visible: true, type: 'user' });
     } else if (messageGroup) {
@@ -413,34 +422,54 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
     setSelectedItem(conversation);
   };
 
-  const onSearchMessageClick = async (event: CometChatSearchMessageClickEvent) => {
-    const message = event.message;
 
-    try {
-      const conversation =
-        await CometChat.CometChatHelper.getConversationFromMessage(message);
+  /**
+   * Jump to a message from any list surface — search results, Pinned, Saved.
+  */
+  const navigateToMessage = async (message: CometChat.BaseMessage) => {
+    // Caveat: for a group this rebuilds the peer from the receiver object embedded
+    // in the message JSON, so `getMembersCount()` reflects whatever that payload
+    // carried. The header reads that number directly, so it can render stale.
+    const conversation = await CometChat.CometChatHelper.getConversationFromMessage(message);
 
-      if (!conversation) return;
+    if (!conversation) return;
 
-      setAppState({ type: 'updateSelectedItem', payload: conversation });
-      setSelectedItem(conversation);
-      setSidePanel({ visible: false, type: 'user' });
+    setAppState({ type: 'updateSelectedItem', payload: conversation });
+    setSelectedItem(conversation);
+    setSidePanel({ visible: false, type: 'user' });
 
-      if (message.getParentMessageId()) {
-        const parentMsg = await CometChat.getMessageDetails(
-          String(message.getParentMessageId())
-        );
-        if (parentMsg) {
-          setAppState({ type: 'updateThreadSearchMessage', payload: message });
-          setAppState({ type: 'updateThreadedMessage', payload: parentMsg });
-          setAppState({ type: 'updateThreadGoToMessageId', payload: message.getId() });
-          setAppState({ type: 'updateGoToMessageId', payload: String(message.getId()) });
-        }
-      } else {
-        setAppState({ type: 'updateThreadSearchMessage', payload: undefined });
-        setAppState({ type: 'updateThreadedMessage', payload: undefined });
+    const parentMessageId = message.getParentMessageId();
+    if (parentMessageId) {
+      const parentMsg = await CometChat.getMessageDetails(String(parentMessageId));
+      if (parentMsg) {
+        // `threadSearchMessage` is what promotes the thread to the full view
+        // instead of docking it beside the conversation.
+        setAppState({ type: 'updateThreadSearchMessage', payload: message });
+        setAppState({ type: 'updateThreadedMessage', payload: parentMsg });
+        setAppState({ type: 'updateThreadGoToMessageId', payload: message.getId() });
         setAppState({ type: 'updateGoToMessageId', payload: String(message.getId()) });
       }
+      return;
+    }
+
+    setAppState({ type: 'updateThreadSearchMessage', payload: undefined });
+    setAppState({ type: 'updateThreadedMessage', payload: undefined });
+    setAppState({ type: 'updateGoToMessageId', payload: String(message.getId()) });
+  };
+
+  /** Navigate from the Pinned or Saved panel. */
+  const goToMessageFromPanel = async (message: CometChat.BaseMessage) => {
+    try {
+      setShowScopedSearch(false);
+      await navigateToMessage(message);
+    } catch (error) {
+      console.error('Error navigating to message:', error);
+    }
+  };
+
+  const onSearchMessageClick = async (event: CometChatSearchMessageClickEvent) => {
+    try {
+      await navigateToMessage(event.message);
     } catch (error) {
       console.error('Error navigating to search result:', error);
     }
@@ -469,6 +498,18 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
 
       {showSidebar && (
         <div className="conversations-wrapper">
+          {showSavedMessages && (
+            <div className="saved-messages-wrapper">
+              <CometChatSavedMessages
+                onClose={() => setShowSavedMessages(false)}
+                onItemClick={(message) => {
+                  // Keep the panel open — it behaves like the conversation list,
+                  // so selecting a row just loads that chat beside it.
+                  void goToMessageFromPanel(message);
+                }}
+              />
+            </div>
+          )}
           <div className="selector-wrapper">
             <CometChatSelector
               activeTab={activeTab}
@@ -479,6 +520,14 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
               onNewChatClicked={() => setShowNewChat(true)}
               onCreateGroupClicked={() => setShowCreateGroup(true)}
               onSearchClicked={() => setShowGlobalSearch(true)}
+              onSavedMessagesClicked={() => {
+                // User-level surface: it takes over the whole messages area and
+                // collapses the right panel, like the other full-area views.
+                setSidePanel({ visible: false, type: 'user' });
+                setShowScopedSearch(false);
+                setAppState({ type: 'updateThreadedMessage', payload: undefined });
+                setShowSavedMessages(true);
+              }}
             />
           </div>
           {showGlobalSearch && (
@@ -491,12 +540,14 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
               />
             </div>
           )}
+          {!showSavedMessages && (
           <CometChatTabs onTabClicked={onTabClicked} activeTab={activeTab} tabNames={{
             chats: getLocalizedString('chats'),
             calls: getLocalizedString('calls'),
             users: getLocalizedString('users'),
             groups: getLocalizedString('groups'),
           }} />
+          )}
         </div>
       )}
 
@@ -561,11 +612,19 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
               onSearchClicked={() => {
                 setAppState({ type: 'updateThreadedMessage', payload: undefined });
                 setSidePanel({ visible: false, type: 'user' });
+                setShowPinnedMessages(false);
                 setShowScopedSearch(true);
+              }}
+              onPinnedMessagesClicked={() => {
+                setAppState({ type: 'updateThreadedMessage', payload: undefined });
+                setSidePanel({ visible: false, type: 'user' });
+                setShowScopedSearch(false);
+                setShowPinnedMessages(true);
               }}
               onThreadRepliesClick={(message) => {
                 setSidePanel({ visible: false, type: 'user' });
                 setShowScopedSearch(false);
+                setShowPinnedMessages(false);
                 setAppState({ type: 'updateThreadSearchMessage', payload: undefined });
                 setAppState({ type: 'updateThreadedMessage', payload: message });
               }}
@@ -610,6 +669,22 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
         </div>
       )}
 
+      {showPinnedMessages && !appState.threadedMessage && hasActiveChat && (
+        <div className="side-component-wrapper">
+          <CometChatPinnedMessages
+            user={messageUser}
+            group={messageGroup}
+            onClose={() => setShowPinnedMessages(false)}
+            onItemClick={(message) => {
+              // Jump the main list to the pinned message; a thread reply opens
+              // its thread full-width, the same as from search. The panel stays
+              // open for non-thread jumps.
+              void goToMessageFromPanel(message);
+            }}
+          />
+        </div>
+      )}
+
       {showScopedSearch && !appState.threadedMessage && hasActiveChat && (
         <div className="side-component-wrapper">
           <CometChatSearch
@@ -645,7 +720,7 @@ export const CometChatHome = ({ loggedInUser, onLogout }: CometChatHomeProps) =>
         </div>
       )}
 
-      {sidePanel.visible && !appState.threadedMessage && !showScopedSearch && (
+      {sidePanel.visible && !appState.threadedMessage && !showScopedSearch && !showPinnedMessages && (
         <CometChatSideComponent
           type={sidePanel.type}
           user={messageUser}

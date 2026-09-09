@@ -25,11 +25,11 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
   readonly id = 'markdown-formatter';
   override priority = 10;
 
-  getRegex(): RegExp {
+  override getRegex(): RegExp {
     return /(\*\*|__|~~|`|>|\[.*?\]\(.*?\)|(?:\d+|[a-z]|[ivxlcdm]+)\.\s|[•-]\s)/g;
   }
 
-  format(text: string): string {
+  override format(text: string): string {
     if (!text) {
       this.originalText = '';
       this.formattedText = '';

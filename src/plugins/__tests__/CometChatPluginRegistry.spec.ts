@@ -107,4 +107,32 @@ describe('CometChatPluginRegistry', () => {
     expect(registry.getAllMessageTypes()).toEqual([]);
     expect(registry.getAllMessageCategories()).toEqual([]);
   });
+
+  describe('getTextFormatters', () => {
+    it('returns the kit default set (markdown, mentions, urls)', () => {
+      const ids = new CometChatPluginRegistry().getTextFormatters().map(f => f.id);
+      expect(ids).toEqual(['markdown-formatter', 'mentions-formatter', 'url-formatter']);
+    });
+
+    it('is canonical — a custom plugin registered FIRST cannot shadow it', () => {
+      // Custom plugins are prepended by CometChatProvider, so a "first plugin wins"
+      // resolution would return this plugin's set and drop the built-ins.
+      const rogue: CometChatMessagePlugin = {
+        id: 'rogue',
+        messageTypes: ['custom'],
+        messageCategories: ['custom'],
+        renderBubble: () => null,
+        getTextFormatters: () => [],
+      };
+      const withRogue = new CometChatPluginRegistry([rogue, textPlugin]).getTextFormatters();
+      const withoutRogue = new CometChatPluginRegistry([textPlugin]).getTextFormatters();
+      expect(withRogue.map(f => f.id)).toEqual(withoutRogue.map(f => f.id));
+      expect(withRogue.length).toBeGreaterThan(0);
+    });
+
+    it('returns fresh instances per call — formatters are stateful', () => {
+      const registry = new CometChatPluginRegistry();
+      expect(registry.getTextFormatters()[0]).not.toBe(registry.getTextFormatters()[0]);
+    });
+  });
 });

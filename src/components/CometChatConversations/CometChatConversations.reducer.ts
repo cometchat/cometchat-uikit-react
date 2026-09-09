@@ -3,6 +3,14 @@ import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatFetchState } from '../../types';
 import { CometChatUIKitUtility } from '../../utils/CometChatUIKitUtility';
 import { CometChatConversationsManager } from './CometChatConversationsManager';
+import {
+  carryConversationPinForward,
+  insertRespectingPinTiers,
+  isConversationPinned,
+  placeForNewActivity,
+  repositionForPinChange,
+  sortByPinTier,
+} from './CometChatConversations.utils';
 
 // ==================== State ====================
 
@@ -36,6 +44,8 @@ export type CometChatConversationsAction =
   | { type: 'UPDATE_CONVERSATION'; conversation: CometChat.Conversation }
   | { type: 'REMOVE_CONVERSATION'; conversationId: string }
   | { type: 'MOVE_TO_TOP'; conversation: CometChat.Conversation }
+  /** Pin state changed — re-band the conversation, or ignore it if not listed. */
+  | { type: 'CONVERSATION_PIN_CHANGED'; conversation: CometChat.Conversation }
   | { type: 'ADD_CONVERSATION'; conversation: CometChat.Conversation }
   | { type: 'RESET_UNREAD_COUNT'; conversationId: string }
   | {
@@ -84,7 +94,9 @@ export function conversationsReducer(
     }
 
     case 'FETCH_SUCCESS': {
-      const merged = [...state.conversations, ...action.conversations];
+      // The server pin-orders each page, but a realtime insert between pages can
+      // still leave the merged list out of band order — re-assert it.
+      const merged = sortByPinTier([...state.conversations, ...action.conversations]);
       const fetchState: CometChatFetchState = merged.length === 0 ? 'empty' : 'loaded';
       return {
         ...state,
@@ -129,11 +141,29 @@ export function conversationsReducer(
     }
 
     case 'MOVE_TO_TOP': {
-      const convId = action.conversation.getConversationId();
-      const existing = state.conversations.filter(c => c.getConversationId() !== convId);
+      // Top of its OWN tier, not of the list: a message in an unpinned chat must
+      // not jump above the pinned block.
+      //
+      // The incoming conversation is often rebuilt from a message and carries no
+      // pin state, so it has to be taken from the listed row or a pinned chat
+      // would fall out of its tier on every new message. Carried onto a CLONE
+      // rather than onto `action.conversation`: a reducer that writes to its own
+      // action is not replayable, and StrictMode invokes this twice.
+      //
+      // Only clones when there is something to carry — a message in an unpinned
+      // chat, which is the overwhelming majority, takes the payload untouched.
+      const existing = state.conversations.find(
+        c => c.getConversationId() === action.conversation.getConversationId()
+      );
+      let incoming = action.conversation;
+      if (existing && isConversationPinned(existing) && !isConversationPinned(incoming)) {
+        incoming = CometChatUIKitUtility.clone(incoming);
+        carryConversationPinForward(existing, incoming);
+      }
+
       return {
         ...state,
-        conversations: [action.conversation, ...existing],
+        conversations: placeForNewActivity(state.conversations, incoming),
         fetchState: 'loaded',
       };
     }
@@ -143,10 +173,31 @@ export function conversationsReducer(
       // Don't add if already exists
       const alreadyExists = state.conversations.some(c => c.getConversationId() === convId);
       if (alreadyExists) return state;
+      // A brand-new conversation is unpinned, so it lands below every pin.
       return {
         ...state,
-        conversations: [action.conversation, ...state.conversations],
+        conversations: insertRespectingPinTiers(state.conversations, action.conversation),
         fetchState: 'loaded',
+      };
+    }
+
+    case 'CONVERSATION_PIN_CHANGED': {
+      const convId = action.conversation.getConversationId();
+      const existing = state.conversations.find(c => c.getConversationId() === convId);
+      // Not on this page — the next fetch will place it correctly. Inserting here
+      // would surface a conversation the user has not scrolled to.
+      if (!existing) return state;
+
+      // Carry the new pin attributes onto the listed object rather than swapping
+      // it wholesale: the event payload is a Conversation built by the server and
+      // may not carry the unread count or last message this row is showing.
+      const merged = CometChatUIKitUtility.clone(existing);
+      merged.setPinnedAt(action.conversation.getPinnedAt());
+      merged.setPinnedBy(action.conversation.getPinnedBy());
+
+      return {
+        ...state,
+        conversations: repositionForPinChange(state.conversations, merged),
       };
     }
 
@@ -186,7 +237,7 @@ export function conversationsReducer(
 
       return {
         ...state,
-        conversations: [newConv, ...state.conversations.filter((_conv, i) => i !== targetIdx)],
+        conversations: placeForNewActivity(state.conversations, newConv),
       };
     }
 

@@ -64,6 +64,7 @@ export const CometChatThreadHeaderParentBubble: React.FC<
     separatorDateTimeFormat,
     messageSentAtDateTimeFormat: messageSentAtDateTimeFormatCtx,
     showScrollbar,
+    textFormatters,
   } = useCometChatThreadHeaderContext();
   const loggedInUser = useLoggedInUser();
   const { getLocalizedString } = useLocale();
@@ -98,12 +99,13 @@ export const CometChatThreadHeaderParentBubble: React.FC<
         theme: 'light',
         disableInteraction: true,
         getLocalizedString,
+        ...(textFormatters !== undefined && { textFormatters }),
       });
     } catch (error) {
       console.error('CometChatThreadHeaderParentBubble: plugin.renderBubble failed', error);
       return null;
     }
-  }, [registry, parentMessage, alignment, loggedInUser, getLocalizedString]);
+  }, [registry, parentMessage, alignment, loggedInUser, getLocalizedString, textFormatters]);
 
   const wrapperClasses = [
     'cometchat-thread-header__bubble-wrapper',

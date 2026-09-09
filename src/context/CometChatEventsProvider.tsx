@@ -92,6 +92,20 @@ export const CometChatEventsProvider: React.FC<CometChatEventsProviderProps> = (
         onMessageModerated: (msg: CometChat.BaseMessage) => {
           emit({ type: 'message/moderated', message: msg });
         },
+        // Pin is broadcast to every member; save is private to the acting user's own
+        // devices. All four carry the full decorated message.
+        onMessagePinned: (msg: CometChat.BaseMessage) => {
+          emit({ type: 'message/pinned', message: msg });
+        },
+        onMessageUnpinned: (msg: CometChat.BaseMessage) => {
+          emit({ type: 'message/unpinned', message: msg });
+        },
+        onMessageSaved: (msg: CometChat.BaseMessage) => {
+          emit({ type: 'message/saved', message: msg });
+        },
+        onMessageUnsaved: (msg: CometChat.BaseMessage) => {
+          emit({ type: 'message/unsaved', message: msg });
+        },
         onMessagesDelivered: (receipt: CometChat.MessageReceipt) => {
           emit({ type: 'receipt/delivered', receipt });
         },
@@ -254,6 +268,21 @@ export const CometChatEventsProvider: React.FC<CometChatEventsProviderProps> = (
   // --- Connection listener ---
   useEffect(() => {
     const id = `CometChatEvents_conn_${instanceId}`;
+    // Conversation pin/unpin — a sixth listener type, new in SDK 4.1.14-beta-3.
+    if (typeof CometChat.addConversationListener === 'function') {
+      CometChat.addConversationListener(
+        id,
+        new CometChat.ConversationListener({
+          onConversationPinned: (conversation: CometChat.Conversation) => {
+            emit({ type: 'conversation/pinned', conversation });
+          },
+          onConversationUnpinned: (conversation: CometChat.Conversation) => {
+            emit({ type: 'conversation/unpinned', conversation });
+          },
+        })
+      );
+    }
+
     CometChat.addConnectionListener(
       id,
       new CometChat.ConnectionListener({
@@ -267,6 +296,9 @@ export const CometChatEventsProvider: React.FC<CometChatEventsProviderProps> = (
     );
     return () => {
       CometChat.removeConnectionListener(id);
+      if (typeof CometChat.removeConversationListener === 'function') {
+        CometChat.removeConversationListener(id);
+      }
     };
   }, [instanceId, emit]);
 

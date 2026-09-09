@@ -103,6 +103,16 @@ export function useCometChatConversationsEvents(
         // Conversation UI Events
         // =====================================================================
 
+        // Pin/unpin — from another device, from an admin, or this tab's own
+        // optimistic flip. All three are idempotent: the reducer reads the state
+        // off the conversation rather than toggling.
+        case 'conversation/pinned':
+        case 'conversation/unpinned':
+        case 'ui:conversation/pin-changed': {
+          dispatch({ type: 'CONVERSATION_PIN_CHANGED', conversation: event.conversation });
+          break;
+        }
+
         case 'ui:conversation/updated': {
           dispatch({ type: 'UPDATE_CONVERSATION', conversation: event.conversation });
           break;

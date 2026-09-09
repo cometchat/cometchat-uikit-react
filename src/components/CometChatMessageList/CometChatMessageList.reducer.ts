@@ -11,6 +11,7 @@ import {
   updateQuotedMessageReferences,
 } from './CometChatMessageList.utils';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
+import { carryThreadSubscribed } from '../../utils/CometChatThreadSubscription';
 
 export { initialMessageListState };
 
@@ -58,6 +59,25 @@ function shouldReplace(existing: CometChat.BaseMessage, incoming: CometChat.Base
     }
   }
   return true;
+}
+
+/**
+ * Is this message already present in the list? Matches on SDK id (confirmed
+ * messages) or muid (optimistic ones). Falsy keys are ignored so an id of 0 or
+ * an empty muid never matches everything. Used to guard append paths against
+ * adding a message that is already in state.
+ */
+function messageAlreadyPresent(
+  messages: CometChat.BaseMessage[],
+  message: CometChat.BaseMessage
+): boolean {
+  const id = message.getId();
+  const muid = message.getMuid();
+  return messages.some(m => {
+    if (id && String(m.getId()) === String(id)) return true;
+    if (muid && m.getMuid() === muid) return true;
+    return false;
+  });
 }
 
 /**
@@ -143,7 +163,13 @@ export function messageListReducer(
     // --- Send lifecycle ---
 
     case 'MESSAGE_SEND_START': {
-      const messages = state.messages.some(m => m.getMuid() === action.muid)
+      const existsByMuid = state.messages.some(m => m.getMuid() === action.muid);
+      // Not the pending copy we're updating, yet already in state (e.g. the
+      // confirmed message landed first) — skip rather than append a duplicate.
+      if (!existsByMuid && messageAlreadyPresent(state.messages, action.message)) {
+        return state;
+      }
+      const messages = existsByMuid
         ? state.messages.map(m => (m.getMuid() === action.muid ? action.message : m))
         : [...state.messages, action.message];
       const fetchState =
@@ -178,7 +204,9 @@ export function messageListReducer(
         );
         return { ...state, messages };
       }
-      // Pending message not yet in state (React batching race) — add it directly
+      // Pending message not yet in state (React batching race) — add it directly,
+      // unless it's already present under another key.
+      if (messageAlreadyPresent(state.messages, action.message)) return state;
       return { ...state, messages: [...state.messages, action.message] };
     }
 
@@ -200,6 +228,7 @@ export function messageListReducer(
     }
 
     case 'ADD_STREAMING_BUBBLE': {
+      if (messageAlreadyPresent(state.messages, action.message)) return state;
       const messages = [...state.messages, action.message];
       const fetchState = state.fetchState === 'empty' ? 'loaded' : state.fetchState;
       return { ...state, messages, fetchState };
@@ -249,6 +278,11 @@ export function messageListReducer(
           messages[existingIndex] = action.message;
           return { ...state, messages };
         }
+        // Also skip if it's already present under another key (e.g. muid) — don't
+        // append a duplicate.
+        if (messageAlreadyPresent(state.messages, action.message)) {
+          return state;
+        }
       }
 
       // When not at latest, only increment count — don't append out-of-order messages.
@@ -282,9 +316,39 @@ export function messageListReducer(
     case 'MESSAGE_EDITED': {
       let messages = state.messages.map(m => {
         if (String(m.getId()) !== String(action.message.getId())) return m;
-        return shouldReplace(m, action.message) ? action.message : m;
+        if (!shouldReplace(m, action.message)) return m;
+        // An edit payload doesn't re-send threadSubscribed; keep the optimistic flag.
+        carryThreadSubscribed(m, action.message);
+        return action.message;
       });
       messages = updateQuotedMessageReferences(messages, action.message);
+      return { ...state, messages };
+    }
+
+    case 'MESSAGE_PIN_SAVE_UPDATE': {
+      const incoming = action.message;
+      const targetId = String(incoming.getId());
+      const index = state.messages.findIndex(m => String(m.getId()) === targetId);
+
+      // Not loaded in this window — nothing to reconcile.
+      if (index === -1) return state;
+
+      const existing = state.messages[index];
+      if (!existing) return state;
+
+      // Clone so React sees a new reference — the optimistic path mutates the very
+      // object held in state, which alone would never trigger a re-render.
+      const next = cloneMessage(existing);
+
+      if (action.scope === 'pin') {
+        next.setPinnedAt(incoming.getPinnedAt());
+        next.setPinnedBy(incoming.getPinnedBy());
+      } else {
+        next.setSavedAt(incoming.getSavedAt());
+      }
+
+      const messages = [...state.messages];
+      messages[index] = next;
       return { ...state, messages };
     }
 
@@ -302,6 +366,9 @@ export function messageListReducer(
       const msgMuid = action.message.getMuid() || '';
       const messages = state.messages.map(m => {
         if (m.getId() === msgId || (msgMuid && m.getMuid() === msgMuid)) {
+          // A moderation payload doesn't re-send threadSubscribed; keep the
+          // optimistic Case-2 flag so a just-sent message stays subscribed.
+          carryThreadSubscribed(m, action.message);
           return action.message;
         }
         return m;

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CometChatRichTextFormatState } from '../../../utils/RichTextEditor/RichTextEditor.types';
 
 /** Props for CometChatFormattingToolbar. */
@@ -17,6 +18,13 @@ export interface CometChatFormattingToolbarProps {
   onOrderedList: () => void;
   onBulletList: () => void;
   onLink: () => void;
+  /**
+   * Custom content rendered after the built-in buttons, inside the same toolbar row (preceded by a
+   * separator). Drives the composer's `toolbarTrailingView` prop — e.g. a view wrapping one or more
+   * buttons that apply custom formats via their formatter. Inherits the toolbar's
+   * mousedown-preventDefault, so the editor selection is preserved when clicked.
+   */
+  trailingContent?: ReactNode;
   /** Optional className. */
   className?: string;
 }

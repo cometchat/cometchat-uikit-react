@@ -12,6 +12,11 @@ import {
   isReactionForConversation,
 } from './CometChatMessageList.utils';
 import { playIncomingSound } from './CometChatMessageList.sound';
+import {
+  applyIncomingReplySubscription,
+  writeThreadSubscribed,
+  mirrorThreadSubscribed,
+} from '../../utils/CometChatThreadSubscription';
 import { noop, extractGroupFromEvent } from './messageListHelpers';
 import type { MessageListRefs, MessageListDispatch } from './messageListRefs';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
@@ -32,6 +37,8 @@ export interface UseMessageListEventsOptions {
   group: CometChat.Group | undefined;
   loggedInUser: CometChat.User;
   messagesRequestBuilder: CometChat.MessagesRequestBuilder | undefined;
+  /** The thread's parent message (thread view), for stamping realtime replies. */
+  parentMessage: CometChat.BaseMessage | undefined;
   parentMessageId: number | undefined;
   messageTypes: string[] | undefined;
   messageCategories: string[];
@@ -58,6 +65,7 @@ export function useMessageListEvents(
     group,
     loggedInUser,
     messagesRequestBuilder,
+    parentMessage,
     parentMessageId,
     messageTypes,
     messageCategories,
@@ -158,6 +166,27 @@ export function useMessageListEvents(
           }
 
           if (isForConversation || isOwnMessageFromElsewhere) {
+            // Case 2 — the author is auto-subscribed to their own message's thread by
+            // default. An own message arriving over the socket (sent from another tab/
+            // device) carries threadSubscribed:false / no flag, which we don't trust;
+            // derive the flag from the known default instead. Type-agnostic — covers
+            // text/media/custom/interactive/card (poll, collaborative, sticker, …).
+            // Placed before the reply reconciliation so a thread reply's parent-inherit
+            // still wins in a thread view (Case 4 is unchanged).
+            if (isFromLoggedInUser) {
+              writeThreadSubscribed(msg, true);
+            }
+            // A socket-delivered reply carries threadSubscribed:false / no flag. In a thread
+            // view we hold the authoritative parent, so stamp the reply with the
+            // thread's current state (and handle a mention that subscribes me)
+            // before it is appended and rendered. A no-op for non-thread messages.
+            applyIncomingReplySubscription({
+              reply: msg,
+              parentMessage,
+              loggedInUserUid: loggedInUser.getUid(),
+              publish,
+            });
+
             // hasReachedLatest check is done by the reducer
             dispatch({
               type: 'MESSAGE_RECEIVED',
@@ -214,6 +243,16 @@ export function useMessageListEvents(
               type: 'UPDATE_REPLY_COUNT',
               parentMessageId: msg.getParentMessageId(),
             });
+
+            // Case 3 — a reply from someone else that @mentions me subscribes me
+            // to the thread. The reply isn't displayed in the main list (no parent
+            // held), so this only flips the mounted surfaces via the mirror.
+            applyIncomingReplySubscription({
+              reply: msg,
+              parentMessage,
+              loggedInUserUid: loggedInUser.getUid(),
+              publish,
+            });
           }
           break;
         }
@@ -238,6 +277,42 @@ export function useMessageListEvents(
             ) as CometChat.BaseMessage;
             dispatch({ type: 'MESSAGE_EDITED', message: clonedMsg });
           }
+
+          // Edit-mention — an edited thread reply that @mentions me subscribes me to the
+          // parent (server-side), whoever edited it (mine or someone else's) and whether
+          // the mention was just added or preserved. Runs regardless of panel open, via
+          // the same reconciliation as an arriving reply — but with
+          // ownAuthorshipSubscribes:false, since editing my own message does NOT
+          // re-subscribe me (only a mention does). A no-op on top-level / non-thread
+          // edits, so a top-level mention never subscribes.
+          if (isForConv || isThreadReplyForConversation(msg, user, group)) {
+            applyIncomingReplySubscription({
+              reply: msg,
+              parentMessage,
+              loggedInUserUid: loggedInUser.getUid(),
+              publish,
+              ownAuthorshipSubscribes: false,
+            });
+          }
+          break;
+        }
+
+        // --- Pin / Save ---
+        // Pin is broadcast to every member; save is private to the acting user's
+        // own devices. The `ui:*` variants are this tab's optimistic flip, which
+        // mutates the message in place and so still needs a dispatch to re-render.
+        // All four are idempotent — state is read off the message, never toggled.
+        case 'message/pinned':
+        case 'message/unpinned':
+        case 'ui:message/pin-changed': {
+          dispatch({ type: 'MESSAGE_PIN_SAVE_UPDATE', message: event.message, scope: 'pin' });
+          break;
+        }
+
+        case 'message/saved':
+        case 'message/unsaved':
+        case 'ui:message/save-changed': {
+          dispatch({ type: 'MESSAGE_PIN_SAVE_UPDATE', message: event.message, scope: 'save' });
           break;
         }
 
@@ -404,6 +479,7 @@ export function useMessageListEvents(
             if (group) reconnectOpts.group = group;
             if (messagesRequestBuilder) reconnectOpts.builder = messagesRequestBuilder;
             if (parentMessageId) reconnectOpts.parentMessageId = parentMessageId;
+            if (opts.isAgentChat) reconnectOpts.isAgentChat = true;
 
             const newManager = new CometChatMessageListManager(reconnectOpts);
             refs.managerRef.current = newManager;
@@ -451,6 +527,7 @@ export function useMessageListEvents(
                 if (group) fallbackOpts.group = group;
                 if (messagesRequestBuilder) fallbackOpts.builder = messagesRequestBuilder;
                 if (parentMessageId) fallbackOpts.parentMessageId = parentMessageId;
+                if (opts.isAgentChat) fallbackOpts.isAgentChat = true;
 
                 const newManager = new CometChatMessageListManager(fallbackOpts);
                 refs.managerRef.current = newManager;
@@ -487,6 +564,16 @@ export function useMessageListEvents(
         case 'ui:message/sent': {
           const msg = event.message;
 
+          // Case 2 — sending any message auto-subscribes the author to its thread.
+          // Stamp the outgoing message's own flag so it shows subscribed in realtime,
+          // without depending on the send response carrying it. This event is the
+          // single same-device display choke point for every send that publishes it
+          // (text, media, batch, sticker, custom). An errored send created no thread,
+          // so skip it. `msg` is always authored by the logged-in user here.
+          if (event.status !== CometChatMessageStatus.error) {
+            writeThreadSubscribed(msg, true);
+          }
+
           // inprogress: add the pending message immediately (optimistic display)
           if (event.status === CometChatMessageStatus.inprogress) {
             const isForConv = isMessageForConversation(
@@ -521,6 +608,23 @@ export function useMessageListEvents(
           }
 
           if (event.status === CometChatMessageStatus.error) {
+            // Scope the errored/rejected message to the list it belongs to so a
+            // thread-level rejection doesn't leak into the main list (and vice
+            // versa). We check ONLY the thread scoping here — mirroring
+            // isMessageForConversation()'s parent logic — and deliberately skip
+            // its receiver matching, because the SDK may clear receiverId on
+            // failure, which would wrongly reject a valid same-conversation error.
+            // parentMessageId, unlike receiverId, is set by the composer before
+            // publishing and is not cleared on failure.
+            const msgParentId = msg.getParentMessageId() || 0;
+            if (parentMessageId) {
+              // Thread list: accept only its own thread's messages.
+              if (msgParentId !== parentMessageId) break;
+            } else if (msgParentId && !(opts.isAgentChat ?? false)) {
+              // Main list: reject thread replies (agent chat shows them inline).
+              break;
+            }
+
             const errorMuid = msg.getMuid() || '';
             if (errorMuid) {
               dispatch({
@@ -531,6 +635,17 @@ export function useMessageListEvents(
               });
             }
             break;
+          }
+
+          // Case 4 (same device) — an own threaded send subscribes the author to the
+          // parent thread. Mirror the flip on success (a failed send, handled above,
+          // created no thread) so the thread header/parent bubble agree — from
+          // whichever list (thread or main) is mounted; idempotent, so overlap is
+          // harmless. This is the single display-side home for the mirror; the send
+          // sites (composer/sticker) no longer do it.
+          const sentParentId = msg.getParentMessageId() || 0;
+          if (sentParentId) {
+            mirrorThreadSubscribed(sentParentId, publish);
           }
 
           // Check if this message belongs to the current conversation.
@@ -626,6 +741,23 @@ export function useMessageListEvents(
           if (event.status !== CometChatMessageStatus.success) break;
           const msg = event.message;
           dispatch({ type: 'MESSAGE_EDITED', message: msg });
+
+          // Edit-mention (my OWN edit, same device) — editing my reply to (re)mention
+          // me subscribes me to the parent. My own edit publishes ui:compose/edit
+          // (someone else's arrives as message/edited over the socket), so the same
+          // reconciliation must run here too. Own authorship alone doesn't re-subscribe
+          // on an edit (ownAuthorshipSubscribes:false) — only the mention does.
+          // isThreadReplyForConversation includes my own messages (receiver match) and
+          // is false for top-level, so a top-level edit-mention never subscribes.
+          if (isThreadReplyForConversation(msg, user, group)) {
+            applyIncomingReplySubscription({
+              reply: msg,
+              parentMessage,
+              loggedInUserUid: loggedInUser.getUid(),
+              publish,
+              ownAuthorshipSubscribes: false,
+            });
+          }
           break;
         }
 

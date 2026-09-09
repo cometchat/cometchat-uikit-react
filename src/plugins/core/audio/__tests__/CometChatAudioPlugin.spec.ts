@@ -6,6 +6,7 @@ function mockMediaMessage(
     attachments: unknown[];
     caption: string;
     senderName: string;
+    metadata: Record<string, unknown>;
   }> = {}
 ) {
   const attachments = overrides.attachments ?? [
@@ -38,7 +39,7 @@ function mockMediaMessage(
     getId: () => 1,
     getMuid: () => 'muid-1',
     getMentionedUsers: () => [],
-    getMetadata: () => ({}),
+    getMetadata: () => overrides.metadata ?? {},
   } as any;
 }
 
@@ -69,9 +70,21 @@ describe('CometChatAudioPlugin', () => {
       expect(result).toBeTruthy();
     });
 
-    it('returns element with correct type', () => {
+    it('renders CometChatAudiosBubble by default when audioType is absent (absence !== voice note)', () => {
       const result = CometChatAudioPlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.type?.displayName).toBe('CometChatAudioBubble');
+      expect(result.type?.displayName).toBe('CometChatAudiosBubble');
+    });
+
+    it('renders CometChatVoiceNoteBubble only when audioType is the explicit "voice_note" tag', () => {
+      const msg = mockMediaMessage({ metadata: { audioType: 'voice_note' } });
+      const result = CometChatAudioPlugin.renderBubble(msg, mockContext()) as any;
+      expect(result.type?.displayName).toBe('CometChatVoiceNoteBubble');
+    });
+
+    it('renders CometChatAudiosBubble when audioType is an explicit non-voicenote value', () => {
+      const msg = mockMediaMessage({ metadata: { audioType: 'audiofile' } });
+      const result = CometChatAudioPlugin.renderBubble(msg, mockContext()) as any;
+      expect(result.type?.displayName).toBe('CometChatAudiosBubble');
     });
 
     it('forwards the message for self-extraction', () => {
@@ -96,11 +109,15 @@ describe('CometChatAudioPlugin', () => {
       expect(result.props.alignment).toBe('left');
     });
 
-    it('forwards text formatters for caption rendering', () => {
-      const formatters = [{ id: 'mentions' }] as any;
-      const ctx = { ...mockContext(), getTextFormatters: () => formatters };
+    it('merges its own default formatters with context.textFormatters for captions', () => {
+      const custom = { id: 'color', priority: 60 } as any;
+      const ctx = { ...mockContext(), textFormatters: [custom] };
       const result = CometChatAudioPlugin.renderBubble(mockMediaMessage(), ctx) as any;
-      expect(result.props.textFormatters).toBe(formatters);
+      const ids = result.props.textFormatters.map((f: any) => f.id);
+      expect(ids).toContain('color');
+      expect(ids).toEqual(
+        expect.arrayContaining(['markdown-formatter', 'mentions-formatter', 'url-formatter'])
+      );
     });
 
     it('does not extract message-derived data itself', () => {
@@ -112,7 +129,12 @@ describe('CometChatAudioPlugin', () => {
   });
 
   describe('getLastMessagePreview', () => {
-    it('returns emoji + Audio text', () => {
+    it('returns "Voice Note" for a voice note (explicit "voice_note" tag)', () => {
+      const msg = mockMediaMessage({ metadata: { audioType: 'voice_note' } });
+      expect(CometChatAudioPlugin.getLastMessagePreview?.(msg, {} as any)).toBe('Voice Note');
+    });
+
+    it('returns "Audio" for audio with no audioType (absence => normal audio)', () => {
       expect(CometChatAudioPlugin.getLastMessagePreview?.(mockMediaMessage(), {} as any)).toBe(
         'Audio'
       );

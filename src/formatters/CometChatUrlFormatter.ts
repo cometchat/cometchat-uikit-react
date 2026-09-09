@@ -13,11 +13,11 @@ export class CometChatUrlFormatter extends CometChatTextFormatter {
 
   private urls: string[] = [];
 
-  getRegex(): RegExp {
+  override getRegex(): RegExp {
     return /(https?:\/\/[^\s<]+)|(www\.[^\s<]+)/gi;
   }
 
-  format(text: string): string {
+  override format(text: string): string {
     if (!text) {
       this.originalText = '';
       this.formattedText = '';
@@ -38,8 +38,10 @@ export class CometChatUrlFormatter extends CometChatTextFormatter {
       return `__COMETCHAT_LINK_${String(idx)}__`;
     });
 
-    // Protect existing <a> tags
-    const existingLinkRegex = /<a\s[^>]*href="[^"]*"[^>]*>[^<]*<\/a>/gi;
+    // Protect existing <a> tags. Uses [\s\S]*? (not [^<]*) for the link body so links whose text
+    // carries nested inline markup — e.g. a custom color <span>, bold, or a mention — are still
+    // protected; otherwise the bare URL inside href="…" gets re-linkified and the tag is corrupted.
+    const existingLinkRegex = /<a\s[^>]*href="[^"]*"[^>]*>[\s\S]*?<\/a>/gi;
     protectedText = protectedText.replace(existingLinkRegex, match => {
       const idx = placeholders.length;
       placeholders.push(match);

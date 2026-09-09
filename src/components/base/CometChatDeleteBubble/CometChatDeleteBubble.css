@@ -5,6 +5,7 @@
 .cometchat-delete-bubble {
   display: flex;
   padding: var(--cometchat-padding-2, 8px);
+  padding-bottom: 0;
   flex-direction: column;
   align-items: flex-end;
   border-radius: var(--cometchat-radius-3, 12px);

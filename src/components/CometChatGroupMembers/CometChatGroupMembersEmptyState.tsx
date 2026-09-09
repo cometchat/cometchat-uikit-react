@@ -19,8 +19,8 @@ export const CometChatGroupMembersEmptyState: React.FC<CometChatGroupMembersEmpt
             <img
               src={groupsEmptyIcon}
               alt=""
-              width={100}
-              height={68}
+              width={120}
+              height={120}
               loading="lazy"
               decoding="async"
             />

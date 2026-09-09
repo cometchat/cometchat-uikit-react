@@ -19,6 +19,7 @@ export interface UseMessageListScrollOptions {
   messageCategories: string[];
   onError: ((error: CometChat.CometChatException) => void) | null | undefined;
   onConversationMarkedAsRead: ((conversation: CometChat.Conversation) => void) | undefined;
+  isAgentChat: boolean | undefined;
 }
 
 export interface UseMessageListScrollReturn {
@@ -351,6 +352,7 @@ export function useMessageListScroll(
       if (group) managerOpts.group = group;
       if (messagesRequestBuilder) managerOpts.builder = messagesRequestBuilder;
       if (parentMessageId) managerOpts.parentMessageId = parentMessageId;
+      if (options.isAgentChat) managerOpts.isAgentChat = true;
 
       const newManager = new CometChatMessageListManager(managerOpts);
       refs.managerRef.current = newManager;
@@ -402,6 +404,7 @@ export function useMessageListScroll(
     messageTypes,
     messageCategories,
     onError,
+    options.isAgentChat,
     markConversationAsReadIfUnread,
     goToMessage,
     refs,

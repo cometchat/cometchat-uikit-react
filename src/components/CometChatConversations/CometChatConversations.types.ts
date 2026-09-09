@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import type { PinConversationConfirmState } from '../../hooks/usePinConversationActions';
 import type { CometChatFetchState } from '../../types';
 import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
+import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 
 // ==================== Selection Mode ====================
 
@@ -41,6 +43,8 @@ export interface CometChatConversationsRootProps {
   hideUnreadCount?: boolean;
   /** Whether to hide message receipts (sent/delivered/read). */
   hideReceipts?: boolean;
+  /** Custom display formatters applied to the last-message subtitle. */
+  textFormatters?: CometChatTextFormatter[];
   /** Whether to hide the group type indicator. */
   hideGroupType?: boolean;
   /** Custom date/time format configuration for the last message timestamp. */
@@ -74,6 +78,8 @@ export interface CometChatConversationsRootProps {
   showScrollbar?: boolean;
   /** Whether to hide the delete conversation option on conversation items. Default: false. */
   hideDeleteConversation?: boolean;
+  /** Whether to hide the Pin/Unpin conversation option on conversation items. Default: false. */
+  hidePinConversation?: boolean;
   /** Whether to show the search bar. Default: true. */
   showSearchBar?: boolean;
   /** Children (compound sub-components). If omitted, renders default layout. */
@@ -196,6 +202,8 @@ export interface CometChatConversationsContextValue {
   hideUnreadCount: boolean;
   /** Whether to hide message receipts. */
   hideReceipts: boolean;
+  /** Custom display formatters applied to the last-message subtitle. */
+  textFormatters?: CometChatTextFormatter[];
   /** Whether to hide the group type indicator. */
   hideGroupType: boolean;
   /** Custom date/time format configuration for the last message timestamp. */
@@ -228,6 +236,28 @@ export interface CometChatConversationsContextValue {
   deleteConversation: (conversationId: string) => Promise<void>;
   /** Set conversation to be deleted (shows confirm dialog). */
   setConversationToBeDeleted: (conversation: CometChat.Conversation | null) => void;
+  /** Pin a conversation for the logged-in user. */
+  pinConversation: (conversation: CometChat.Conversation) => void;
+  /** Remove the user's own pin. */
+  unpinConversation: (conversation: CometChat.Conversation) => void;
+  /** Pending pin/unpin toast text, empty when none. */
+  pinToastText: string;
+  /** Bumped on every raise, so two identical toasts in a row still remount. */
+  pinToastId: number;
+  /** Visual variant for that toast; `error` renders it red. */
+  pinToastVariant: 'default' | 'error';
+  clearPinToast: () => void;
+  /** Non-null while an unpin confirmation should be shown. */
+  pinConfirmState: PinConversationConfirmState | null;
+  /** Go ahead with the pending unpin. */
+  confirmPinAction: () => void;
+  /** Dismiss the unpin confirmation. */
+  cancelPinAction: () => void;
+  /** True while a pin/unpin call is in flight. */
+  pinIsBusy: boolean;
+
+  /** Drop Pin/Unpin from the row menu entirely. @default false */
+  hidePinConversation?: boolean;
   /** Conversation pending deletion (for confirm dialog). */
   conversationToBeDeleted: CometChat.Conversation | null;
   /** Callback when the search bar is clicked (acts as trigger for global search). */
@@ -317,4 +347,23 @@ export interface CometChatUseCometChatConversationsReturn {
   deleteConversation: (conversationId: string) => Promise<void>;
   setConversationToBeDeleted: (conversation: CometChat.Conversation | null) => void;
   conversationToBeDeleted: CometChat.Conversation | null;
+  /** Pin a conversation for the logged-in user. */
+  pinConversation: (conversation: CometChat.Conversation) => void;
+  /** Remove the user's own pin. Never offered for an admin-global pin. */
+  unpinConversation: (conversation: CometChat.Conversation) => void;
+  /** Pending pin/unpin toast text, empty when none. */
+  pinToastText: string;
+  /** Bumped on every raise, so two identical toasts in a row still remount. */
+  pinToastId: number;
+  /** Visual variant for that toast; `error` renders it red. */
+  pinToastVariant: 'default' | 'error';
+  clearPinToast: () => void;
+  /** Non-null while an unpin confirmation should be shown. */
+  pinConfirmState: PinConversationConfirmState | null;
+  /** Go ahead with the pending unpin. */
+  confirmPinAction: () => void;
+  /** Dismiss the unpin confirmation. */
+  cancelPinAction: () => void;
+  /** True while a pin/unpin call is in flight. */
+  pinIsBusy: boolean;
 }

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type {
   CometChatConfirmDialogRootProps,
   CometChatConfirmDialogContextValue,
@@ -135,7 +136,7 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
     .filter(Boolean)
     .join(' ');
 
-  return (
+  const dialog = (
     <CometChatConfirmDialogContext.Provider value={ctxValue}>
       <div className={backdropClasses}>
         <div
@@ -159,6 +160,11 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
       </div>
     </CometChatConfirmDialogContext.Provider>
   );
+
+  /*
+   * Portalled to the document body, NOT rendered in place.
+   */
+  return createPortal(dialog, getCurrentDocument().body);
 };
 
 CometChatConfirmDialogRoot.displayName = 'CometChatConfirmDialogRoot';

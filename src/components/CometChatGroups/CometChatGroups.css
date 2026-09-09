@@ -298,8 +298,8 @@
 }
 
 .cometchat-groups__empty-state-icon {
-  width: 100px;
-  height: 68px;
+  width: 120px;
+  height: 120px;
   margin-bottom: 12px;
   opacity: 0.6;
 }
@@ -327,8 +327,8 @@
 }
 
 .cometchat-groups__error-state-icon {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   margin-bottom: 16px;
 }
 

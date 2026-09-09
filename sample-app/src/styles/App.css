@@ -1,12 +1,3 @@
-.App {
-  text-align: center;
-  width: 100vw;
-  /* dvh = dynamic viewport height — excludes the mobile browser's collapsible
-     address bar so the layout fits the visible area (vh is a fallback). */
-  height: 100vh;
-  height: 100dvh;
-}
-
 body {
   margin: 0;
 }
@@ -85,6 +76,24 @@ body {
 }
 
 /* Global search overlay — covers the selector area */
+/*
+ * Saved Messages takes over the conversation column, mirroring how the scoped
+ * search overlay works. The tabs bar is hidden while it is open (see
+ * CometChatHome), so the panel owns the full column height.
+ */
+.saved-messages-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1001;
+  background: var(--cometchat-background-color-01, #fff);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .selector-wrapper-search {
   position: absolute;
   top: 0;

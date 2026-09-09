@@ -35,6 +35,7 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
     messageToReply,
     closePreview,
     onError,
+    isInEditMode,
   } = useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
   const publish = usePublishEvent();
@@ -100,6 +101,8 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
             message: sentMessage,
             status: CometChatMessageStatus.success,
           });
+          // Case 4 (own flag + parent mirror) is handled centrally by the message
+          // list's ui:message/sent handler — no per-send-site work needed here.
           if (messageToReply) {
             closePreview();
           }
@@ -127,6 +130,7 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
   const btnClass = [
     'cometchat-message-composer__sticker-button',
     isActive ? 'cometchat-message-composer__sticker-button--active' : '',
+    isInEditMode ? 'cometchat-message-composer__sticker-button--disabled' : '',
     className ?? '',
   ]
     .filter(Boolean)
@@ -142,8 +146,10 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
         <button
           type="button"
           className={btnClass}
+          disabled={isInEditMode}
           onClick={e => {
             e.stopPropagation();
+            if (isInEditMode) return;
             handleToggle();
           }}
           aria-label={getLocalizedString('message_composer_sticker_hover')}

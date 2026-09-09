@@ -59,30 +59,30 @@ describe('CometChatConfirmDialogIcon', () => {
   // --- Variant classes ---
 
   it('applies danger variant class by default', () => {
-    const { container } = renderIcon({}, { variant: 'danger' });
-    const iconWrapper = container.querySelector('[class*="cometchat-confirm-dialog__icon"]');
+    const { baseElement } = renderIcon({}, { variant: 'danger' });
+    const iconWrapper = baseElement.querySelector('[class*="cometchat-confirm-dialog__icon"]');
     expect(iconWrapper).toBeTruthy();
     // The wrapper should have the variant modifier class
     expect(iconWrapper?.className).toContain('icon--danger');
   });
 
   it('applies warning variant class', () => {
-    const { container } = renderIcon({}, { variant: 'warning' });
-    const iconWrapper = container.querySelector('[class*="cometchat-confirm-dialog__icon"]');
+    const { baseElement } = renderIcon({}, { variant: 'warning' });
+    const iconWrapper = baseElement.querySelector('[class*="cometchat-confirm-dialog__icon"]');
     expect(iconWrapper?.className).toContain('icon--warning');
   });
 
   it('applies info variant class', () => {
-    const { container } = renderIcon({}, { variant: 'info' });
-    const iconWrapper = container.querySelector('[class*="cometchat-confirm-dialog__icon"]');
+    const { baseElement } = renderIcon({}, { variant: 'info' });
+    const iconWrapper = baseElement.querySelector('[class*="cometchat-confirm-dialog__icon"]');
     expect(iconWrapper?.className).toContain('icon--info');
   });
 
   // --- Custom className ---
 
   it('applies custom className to icon wrapper', () => {
-    const { container } = renderIcon({ className: 'my-icon' });
-    const iconWrapper = container.querySelector('.my-icon');
+    const { baseElement } = renderIcon({ className: 'my-icon' });
+    const iconWrapper = baseElement.querySelector('.my-icon');
     expect(iconWrapper).toBeTruthy();
   });
 

@@ -38,8 +38,11 @@
 .cometchat-message-bubble__wrapper--moderation-disapproved .cometchat-message-bubble__body-wrapper,
 .cometchat-message-bubble__wrapper--moderation-disapproved .cometchat-message-bubble__body {
   min-width: 240px;
-  max-width: 240px;
   box-sizing: border-box;
+}
+
+.cometchat-message-bubble__body-bottom-view:has(.cometchat-moderation-view) {
+  max-width: 240px;
 }
 
 /* Leading view (avatar) */
@@ -61,11 +64,16 @@
 }
 
 /* Main bubble container */
+/*
+ * `min-width: fit-content` means wide content can override the cap: the box grows to whatever the content wants and pushes the hover options —
+ * which live INSIDE it — past the edge of the list. `min-width: 0` lets the cap
+ * actually hold, so content wraps and the options always have room. 
+ */
 .cometchat-message-bubble {
   display: flex;
   flex-direction: column;
-  max-width: 65%;
-  min-width: fit-content;
+  max-width: min(600px, 100%);
+  min-width: 0;
 }
 
 .cometchat-message-bubble-incoming {
@@ -151,13 +159,24 @@
 /* Body */
 .cometchat-message-bubble__body {
   display: flex;
-  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-1, 4px) 0
-    var(--cometchat-padding-1, 4px);
+  padding: var(--cometchat-padding-1, 4px);
   flex-direction: column;
   align-items: stretch;
   border-radius: var(--cometchat-radius-3, 12px);
   overflow: hidden;
   max-width: 100%;
+}
+
+.cometchat-message-bubble__body:has(.cometchat-files-bubble__container--multi),
+.cometchat-message-bubble__body:has(.cometchat-audios-bubble__container--multi) {
+  padding: 8px;
+}
+
+.cometchat-message-bubble__body:has(.cometchat-files-bubble__container--multi)
+  .cometchat-message-bubble__body-status-info-view,
+.cometchat-message-bubble__body:has(.cometchat-audios-bubble__container--multi)
+  .cometchat-message-bubble__body-status-info-view {
+  margin-bottom: 0;
 }
 
 /* --- Message type backgrounds --- */
@@ -222,8 +241,7 @@
 
 /* AI agent reply (agentic/assistant) — match the V6 incoming bubble background
    so the bubble stays distinct from the conversation background, and size to
-   content (V6 behaviour) instead of stretching to the full 65% cap. The parent
-   .cometchat-message-bubble still caps it at max-width 65%.
+   content (V6 behaviour).
    The 1:1 AI Assistant chat keeps its full-width look via its own
    higher-specificity `.cometchat-ai-assistant-chat …` rules. */
 .cometchat-message-bubble-incoming .cometchat-message-bubble__assistant-message {
@@ -251,11 +269,6 @@
   padding: 0;
 }
 
-/* Reset the parent's min-width: fit-content so a long agent reply wraps within the max-width 65% cap instead of pushing the hover options off-screen. */
-.cometchat-message-bubble-incoming:has(.cometchat-message-bubble__assistant-message) {
-  min-width: 0;
-}
-
 /* Action message centering */
 .cometchat-message-bubble-action .cometchat-message-bubble__body-wrapper {
   align-items: center;
@@ -278,15 +291,20 @@
 }
 
 /* Negative margin for text/audio to pull status info closer */
-.cometchat-message-bubble__text-message .cometchat-message-bubble__body-content-view,
-.cometchat-message-bubble__audio-message .cometchat-message-bubble__body-content-view {
+.cometchat-message-bubble__text-message
+  .cometchat-message-bubble__body-content-view:not(:has(.cometchat-delete-bubble)),
+.cometchat-message-bubble__body:has(.cometchat-message-bubble__status-info-view)
+  .cometchat-message-bubble__body-content-view:has(.cometchat-text-bubble):not(
+    :has(.cometchat-delete-bubble)
+  ) {
   margin-bottom: calc(var(--cometchat-margin-2, 8px) * -1);
 }
 
 /* Status info view */
 .cometchat-message-bubble__body-status-info-view {
-  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-2, 8px)
-    var(--cometchat-padding-1, 4px) var(--cometchat-padding-2, 8px);
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-2, 8px) 0
+    var(--cometchat-padding-2, 8px);
+  margin-bottom: 4px;
 }
 
 .cometchat-message-bubble__status-info-view {
@@ -325,6 +343,47 @@
     --cometchat-font-caption2-regular,
     400 10px var(--cometchat-font-family, 'Inter', sans-serif)
   );
+}
+
+/* --- Pin / Save indicators --- */
+
+/*
+ * Rendered via mask-image with `currentColor`, so the glyphs inherit the meta
+ * row's per-direction colour: lightened on the brand-purple outgoing bubble,
+ * secondary text colour on the incoming one. No direction-specific rules and no
+ * second set of icon files.
+ */
+.cometchat-message-bubble__status-info-view-indicator {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.cometchat-message-bubble__status-info-view-indicator--pinned {
+  -webkit-mask-image: url('../../assets/pinned.svg');
+  mask-image: url('../../assets/pinned.svg');
+}
+
+.cometchat-message-bubble__status-info-view-indicator--saved {
+  -webkit-mask-image: url('../../assets/saved.svg');
+  mask-image: url('../../assets/saved.svg');
+}
+
+/* Separator between the glyph cluster and the timestamp. */
+.cometchat-message-bubble__status-info-view-separator {
+  font: var(
+    --cometchat-font-caption2-regular,
+    400 10px var(--cometchat-font-family, 'Inter', sans-serif)
+  );
+  line-height: 1;
 }
 
 .cometchat-receipts {
@@ -490,4 +549,31 @@
 
 .cometchat-message-bubble-wrapper--center {
   justify-content: center;
+}
+
+/* --- Batch adjacency spacing (multi-attachment) ---
+ * Tight spacing within a batch group. The first/middle items reduce their bottom
+ * padding; the middle/last items reduce their top padding — visually connecting
+ * the batch into one cohesive unit.
+ */
+.cometchat-message-bubble-wrapper--batch-first {
+  padding-bottom: var(--cometchat-spacing-half, 2px);
+}
+
+.cometchat-message-bubble-wrapper--batch-middle {
+  padding-top: var(--cometchat-spacing-half, 2px);
+  padding-bottom: var(--cometchat-spacing-half, 2px);
+}
+
+.cometchat-message-bubble-wrapper--batch-last {
+  padding-top: var(--cometchat-spacing-half, 2px);
+}
+
+div:has(> .cometchat-message-bubble-wrapper--batch-first .cometchat-message-bubble__leading-view)
+  ~ div:has(> .cometchat-message-bubble-wrapper--batch-middle)
+  .cometchat-message-bubble-wrapper--batch-middle:has(.cometchat-message-bubble-incoming),
+div:has(> .cometchat-message-bubble-wrapper--batch-first .cometchat-message-bubble__leading-view)
+  ~ div:has(> .cometchat-message-bubble-wrapper--batch-last)
+  .cometchat-message-bubble-wrapper--batch-last:has(.cometchat-message-bubble-incoming) {
+  padding-left: 40px;
 }

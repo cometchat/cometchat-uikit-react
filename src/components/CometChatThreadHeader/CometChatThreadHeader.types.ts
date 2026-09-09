@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
+import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 
 /** Props for CometChatThreadHeaderRoot. */
 export interface CometChatThreadHeaderRootProps {
@@ -12,12 +13,24 @@ export interface CometChatThreadHeaderRootProps {
   hideDate?: boolean | undefined;
   /** Whether to hide the reply count section below the parent bubble. @default false */
   hideReplyCount?: boolean | undefined;
+  /**
+   * Whether to hide the follow/unfollow bell in the top bar. @default false
+   *
+   * The bell renders in both 1:1 and group threads; set this to hide it.
+   */
+  hideThreadSubscriptionToggle?: boolean | undefined;
+  /** Called when the thread's subscription state changes, from any source. */
+  onThreadSubscriptionChange?: ((subscribed: boolean) => void) | undefined;
   /** Format for the date chip shown above the parent bubble. */
   separatorDateTimeFormat?: CometChatDateFormatConfig | undefined;
   /** Format for the sent-at timestamp on the parent message bubble. */
   messageSentAtDateTimeFormat?: CometChatDateFormatConfig | undefined;
   /** Whether to show the scrollbar on the bubble wrapper area. @default false */
   showScrollbar?: boolean | undefined;
+  /**
+   * Custom display formatters applied to the parent message bubble text
+   */
+  textFormatters?: CometChatTextFormatter[] | undefined;
   /** Callback when the close button is clicked or Escape is pressed. */
   onClose?: (() => void) | undefined;
   /** Callback when the sender name / subtitle is clicked (navigate to parent in main list). */
@@ -60,6 +73,12 @@ export interface CometChatThreadHeaderCloseButtonProps {
   className?: string | undefined;
 }
 
+/** Props for CometChatThreadHeaderSubscriptionToggle. */
+export interface CometChatThreadHeaderSubscriptionToggleProps {
+  /** Optional custom className. */
+  className?: string | undefined;
+}
+
 /** Props for CometChatThreadHeaderParentBubble. */
 export interface CometChatThreadHeaderParentBubbleProps {
   /** Whether interactions on the bubble are disabled. Default: true. */
@@ -94,12 +113,18 @@ export interface CometChatThreadHeaderContextValue {
   hideDate?: boolean | undefined;
   /** Whether to hide the reply count section. */
   hideReplyCount?: boolean | undefined;
+  /** Whether to hide the follow/unfollow bell. */
+  hideThreadSubscriptionToggle?: boolean | undefined;
+  /** Subscription-change handler. */
+  onThreadSubscriptionChange?: ((subscribed: boolean) => void) | undefined;
   /** Format for the date chip above the parent bubble. */
   separatorDateTimeFormat?: CometChatDateFormatConfig | undefined;
   /** Format for the sent-at timestamp on the parent bubble. */
   messageSentAtDateTimeFormat?: CometChatDateFormatConfig | undefined;
   /** Whether to show the scrollbar. */
   showScrollbar?: boolean | undefined;
+  /** Custom display formatters applied to the parent message bubble text. */
+  textFormatters?: CometChatTextFormatter[] | undefined;
 }
 
 // ==================== Convenience Props (Flat API) ====================

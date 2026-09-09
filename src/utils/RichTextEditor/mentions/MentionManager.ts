@@ -63,6 +63,51 @@ export function getUniqueMentionUids(element: HTMLDivElement): Set<string> {
   return uids;
 }
 
+/** A typed-entity trigger, like the built-in mentions (`@`). */
+export interface TriggerRegistration {
+  /** The character that starts the trigger. */
+  char: string;
+  /** Called with the query (text after the char) while the trigger is active. */
+  onStart: (query: string) => void;
+  /** Called when the trigger is no longer active. */
+  onEnd?: () => void;
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Generic trigger detection (generalizes `checkMentionTrigger`).
+ *
+ * Scans the text before the caret for any registered trigger char and fires its
+ * `onStart(query)`. When none match, fires every trigger's `onEnd`. Only one trigger
+ * can be active at a time (first match in list order wins).
+ */
+export function checkTriggers(triggers: TriggerRegistration[], win?: Window): void {
+  if (triggers.length === 0) return;
+
+  const sel = (win ?? window).getSelection();
+  if (!sel || sel.rangeCount === 0) return;
+
+  const range = sel.getRangeAt(0);
+  const textNode = range.startContainer;
+  if (textNode.nodeType !== Node.TEXT_NODE) {
+    for (const t of triggers) t.onEnd?.();
+    return;
+  }
+
+  const before = (textNode.textContent ?? '').substring(0, range.startOffset);
+  for (const t of triggers) {
+    const match = new RegExp(`(^|\\s)${escapeRegExp(t.char)}([^\\s]*)$`).exec(before);
+    if (match) {
+      t.onStart(match[2] ?? '');
+      return;
+    }
+  }
+  for (const t of triggers) t.onEnd?.();
+}
+
 /** Check if @ was typed and invoke the mention callback. */
 export function checkMentionTrigger(
   onMentionStart?: (query: string) => void,

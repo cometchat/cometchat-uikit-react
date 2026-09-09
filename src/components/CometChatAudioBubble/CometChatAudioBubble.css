@@ -102,6 +102,7 @@
   display: flex;
   flex-direction: column;
   padding: var(--cometchat-padding-3, 12px);
+  padding-bottom: var(--cometchat-padding-1, 4px);
   gap: var(--cometchat-spacing-3, 12px);
   border-radius: var(--cometchat-radius-3, 12px);
 }

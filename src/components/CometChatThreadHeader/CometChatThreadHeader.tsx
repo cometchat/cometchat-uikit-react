@@ -4,6 +4,7 @@ import { CometChatThreadHeaderTopBar } from './CometChatThreadHeaderTopBar';
 import { CometChatThreadHeaderTitle } from './CometChatThreadHeaderTitle';
 import { CometChatThreadHeaderSenderName } from './CometChatThreadHeaderSenderName';
 import { CometChatThreadHeaderCloseButton } from './CometChatThreadHeaderCloseButton';
+import { CometChatThreadHeaderSubscriptionToggle } from './CometChatThreadHeaderSubscriptionToggle';
 import { CometChatThreadHeaderParentBubble } from './CometChatThreadHeaderParentBubble';
 import { CometChatThreadHeaderReplyCount } from './CometChatThreadHeaderReplyCount';
 import type { CometChatThreadHeaderProps } from './CometChatThreadHeader.types';
@@ -26,6 +27,7 @@ import type { CometChatThreadHeaderProps } from './CometChatThreadHeader.types';
  *   <CometChatThreadHeader.TopBar>
  *     <CometChatThreadHeader.Title />
  *     <CometChatThreadHeader.SenderName />
+ *     <CometChatThreadHeader.SubscriptionToggle />
  *     <CometChatThreadHeader.CloseButton />
  *   </CometChatThreadHeader.TopBar>
  *   <CometChatThreadHeader.ParentBubble />
@@ -64,6 +66,7 @@ export const CometChatThreadHeader = Object.assign(CometChatThreadHeaderComponen
   Title: CometChatThreadHeaderTitle,
   SenderName: CometChatThreadHeaderSenderName,
   CloseButton: CometChatThreadHeaderCloseButton,
+  SubscriptionToggle: CometChatThreadHeaderSubscriptionToggle,
   ParentBubble: CometChatThreadHeaderParentBubble,
   ReplyCount: CometChatThreadHeaderReplyCount,
 });

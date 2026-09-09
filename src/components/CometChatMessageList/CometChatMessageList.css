@@ -219,16 +219,14 @@
 .cometchat-message-list__error-state-icon {
   width: 120px;
   height: 120px;
-  background-color: var(--cometchat-error-color, #f44336);
-  opacity: 0.8;
-  mask: url('../../assets/list_error_state_icon.svg') center center / contain no-repeat;
-  -webkit-mask: url('../../assets/list_error_state_icon.svg') center center / contain no-repeat;
+  opacity: 0.6;
+  background: url('../../assets/list_error_state_icon.svg') center center / contain no-repeat;
 }
 
 .cometchat-message-list__error-state-text {
   margin: 0;
   font: var(--cometchat-font-body-regular, 400 14px / 16.8px Roboto);
-  color: var(--cometchat-error-color, #f44336);
+  color: var(--cometchat-text-color-secondary, #727272);
 }
 
 /* ============================================
@@ -350,10 +348,14 @@
    Element: Message Information overlay
    ============================================ */
 
+/* Above the context-menu band (999-1001): Another item despite being 
+   position: static can be a FLEX ITEM — z-index applies to flex items as if they 
+   were relative — so it paints into the root stacking context and would otherwise 
+   sit on top of this overlay, undimmed. */
 .cometchat-message-list__message-info-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 1200;
   display: flex;
   align-items: center;
   justify-content: center;

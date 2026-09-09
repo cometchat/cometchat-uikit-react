@@ -182,6 +182,26 @@ describe('CometChatMessageBubble', () => {
     expect(screen.getByText('(edited)')).toBeInTheDocument();
   });
 
+  it.each(['image', 'video', 'audio', 'file'])(
+    'shows "(edited)" for an edited %s (media) message',
+    type => {
+      render(
+        <CometChatMessageBubble {...defaultProps} message={mockMessage({ type, editedAt: 1000 })} />
+      );
+      expect(screen.getByText('(edited)')).toBeInTheDocument();
+    }
+  );
+
+  it('does not show "(edited)" for a media message that was never edited', () => {
+    render(
+      <CometChatMessageBubble
+        {...defaultProps}
+        message={mockMessage({ type: 'image', editedAt: 0 })}
+      />
+    );
+    expect(screen.queryByText('(edited)')).toBeNull();
+  });
+
   it('shows error receipt when showError is true', () => {
     render(<CometChatMessageBubble {...defaultProps} alignment="right" showError={true} />);
     expect(screen.getByRole('img', { name: 'Error' })).toBeInTheDocument();
@@ -201,6 +221,25 @@ describe('CometChatMessageBubble', () => {
       />
     );
     expect(screen.getByRole('img', { name: 'message_bubble_delivered' })).toBeInTheDocument();
+  });
+
+  // --- Suppressed status info view (statusInfoView={null}) ---
+  // The bubble suppresses the whole status row when statusInfoView is null,
+  // unconditionally. Whether an errored batch message should still show its
+  // status is the renderer's call (it just doesn't pass null in that case) —
+  // see CometChatMessageBubbleRenderer.spec.
+
+  it('suppresses the whole status row when statusInfoView is null, even on error', () => {
+    render(
+      <CometChatMessageBubble
+        {...defaultProps}
+        alignment="right"
+        statusInfoView={null}
+        showError={true}
+      />
+    );
+    expect(screen.queryByRole('img', { name: 'Error' })).toBeNull();
+    expect(document.querySelector('time')).toBeNull();
   });
 
   it('shows thread view when message has reply count', () => {

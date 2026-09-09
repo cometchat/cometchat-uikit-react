@@ -128,6 +128,11 @@ function mockMessage(opts: MockMessageOptions = {}): CometChat.BaseMessage {
         fileName,
         mimeType,
         metadata: { size: fileSize, mimeType },
+        getUrl: () => url,
+        getSize: () => fileSize,
+        getName: () => fileName,
+        getMimeType: () => mimeType,
+        getMetadata: () => ({ size: fileSize, mimeType }),
       }
     : null;
 
@@ -231,9 +236,9 @@ function createTestMessages(count = 15): CometChat.BaseMessage[] {
           mockMessage({
             ...base,
             type: 'image',
-            url: 'https://assets.cometchat.io/sampleapp/v2/users/cometchat-uid-2.webp',
-            fileName: 'sample-image.jpg',
-            mimeType: 'image/jpeg',
+            url: 'https://picsum.photos/seed/pano/1200/400',
+            fileName: 'sample-image.png',
+            mimeType: 'image/png',
           })
         );
         break;
@@ -265,7 +270,7 @@ function createTestMessages(count = 15): CometChat.BaseMessage[] {
           mockMessage({
             ...base,
             type: 'video',
-            url: 'https://www.w3schools.com/html/movie.mp4',
+            url: 'https://lorem.video/720p',
             fileName: 'recording.mp4',
             mimeType: 'video/mp4',
           })
@@ -374,17 +379,13 @@ function buildMockContextValue(
       hideModerationView: false,
       isAgentChat: false,
       bubbleView: undefined,
-      leadingBubbleView: undefined,
-      headerBubbleView: undefined,
-      statusInfoBubbleView: undefined,
-      footerBubbleView: undefined,
-      threadBubbleView: undefined,
       onEditMessage: undefined,
       onReplyMessage: undefined,
       showSmartReplies: false,
       smartRepliesKeywords: ['what', 'when', 'why', 'who', 'where', 'how', '?'],
       smartRepliesDelayDuration: 10000,
       showConversationStarters: false,
+      loadLastAgentConversation: false,
     },
   };
 }

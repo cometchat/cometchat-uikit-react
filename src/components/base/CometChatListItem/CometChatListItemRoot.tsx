@@ -83,13 +83,14 @@ export function CometChatListItemRoot({
       const target = event.target as HTMLElement;
       const currentTarget = event.currentTarget as HTMLElement;
 
-      // Skip if the click was on a nested interactive element (button, link, tabindex)
-      // but NOT if the interactive element is the root itself.
+      // Skip if the click landed on a control INSIDE the row — a button, link, or
+      // something explicitly in the tab order.
+      const control = target.closest('button, a, [tabindex]:not([tabindex="-1"])');
       const isNestedInteractive =
         target !== currentTarget &&
-        (target.tagName === 'BUTTON' ||
-          target.tagName === 'A' ||
-          target.closest('button, a, [tabindex]:not([role="option"])'));
+        control !== null &&
+        control !== currentTarget &&
+        currentTarget.contains(control);
 
       if (!isNestedInteractive) {
         onItemClick?.(event);

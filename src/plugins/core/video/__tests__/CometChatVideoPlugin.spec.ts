@@ -76,9 +76,9 @@ describe('CometChatVideoPlugin', () => {
       expect(result).toBeTruthy();
     });
 
-    it('returns element with correct type (CometChatVideoBubble)', () => {
+    it('renders the batch-aware CometChatVideosBubble by default (flag unset)', () => {
       const result = CometChatVideoPlugin.renderBubble(mockMediaMessage(), mockContext()) as any;
-      expect(result.type?.displayName).toBe('CometChatVideoBubble');
+      expect(result.type?.displayName).toBe('CometChatVideosBubble');
     });
 
     it('forwards the message to the bubble (self-extracting)', () => {
@@ -103,11 +103,15 @@ describe('CometChatVideoPlugin', () => {
       expect(result.props.alignment).toBe('left');
     });
 
-    it('forwards text formatters from context', () => {
-      const formatters = [{ id: 'mentions' }] as any;
-      const context = { ...mockContext(), getTextFormatters: () => formatters };
+    it('merges its own default formatters with context.textFormatters for captions', () => {
+      const custom = { id: 'color', priority: 60 } as any;
+      const context = { ...mockContext(), textFormatters: [custom] };
       const result = CometChatVideoPlugin.renderBubble(mockMediaMessage(), context) as any;
-      expect(result.props.textFormatters).toBe(formatters);
+      const ids = result.props.textFormatters.map((f: any) => f.id);
+      expect(ids).toContain('color'); // custom merged in
+      expect(ids).toEqual(
+        expect.arrayContaining(['markdown-formatter', 'mentions-formatter', 'url-formatter'])
+      ); // plugin's own defaults present
     });
 
     it('does not pass extracted-data props (attachments/variant/caption/senderName)', () => {
@@ -151,15 +155,20 @@ describe('CometChatVideoPlugin', () => {
       expect(extractVideoAttachments(msg as CometChat.MediaMessage)).toHaveLength(0);
     });
 
-    it('filters out attachments without a URL', () => {
+    it('returns the first attachment with a URL, skipping URL-less ones', () => {
+      // The singular bubble's util returns a single attachment (multi-attachment
+      // rendering is handled by CometChatVideosBubble). A leading URL-less
+      // attachment is skipped and the first one with a URL is used.
       const msg = mockMediaMessage({
         attachments: [
-          { url: 'https://example.com/v1.mp4', metadata: {} },
           { thumbnail: 'https://example.com/thumb.jpg', metadata: {} },
+          { url: 'https://example.com/v1.mp4', metadata: {} },
           { url: 'https://example.com/v2.mp4', metadata: {} },
         ],
       });
-      expect(extractVideoAttachments(msg as CometChat.MediaMessage)).toHaveLength(2);
+      const result = extractVideoAttachments(msg as CometChat.MediaMessage);
+      expect(result).toHaveLength(1);
+      expect(result[0]?.url).toBe('https://example.com/v1.mp4');
     });
   });
 

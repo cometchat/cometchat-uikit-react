@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// --- Mock the SDK (type-only import in source, but mock keeps it safe) ---
-vi.mock('@cometchat/chat-sdk-javascript', () => ({
-  CometChat: {
-    RECEIVER_TYPE: { USER: 'user', GROUP: 'group' },
-  },
-}));
+// The SDK is loaded for real here. It used to be stubbed with just RECEIVER_TYPE,
+// but the options module now reaches CometChatUIKitConstants and the moderation
+// helpers, which need the full constant set (categories, moderation statuses,
+// scopes) and real TextMessage/MediaMessage classes for `instanceof` checks.
+// A partial stub silently breaks those rather than failing loudly.
 
 // --- Mock the markdown formatter so copyOption doesn't pull heavy deps ---
 const mockFormat = vi.fn((text: string) => `<p>${text}</p>`);

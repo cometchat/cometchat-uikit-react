@@ -26,6 +26,11 @@ export interface CometChatMessageOption {
   receiverOnly?: boolean;
   /** Show only in group conversations. */
   groupOnly?: boolean;
+  /**
+   * Nested options, rendered as a hover fly-out submenu (e.g. "Organize ▸").
+   * One level only — a submenu's own children are ignored.
+   */
+  submenu?: CometChatMessageOption[];
 }
 
 // --- Plugin Context ---
@@ -38,6 +43,8 @@ export interface CometChatMessagePluginContext {
   group?: CometChat.Group;
   /** Bubble alignment for the current message. */
   alignment: CometChatMessageBubbleAlignment;
+  /** Batch position within a multi-attachment batch group ('first'|'middle'|'last'|'single'). */
+  batchPosition?: 'first' | 'middle' | 'last' | 'single';
   /** Current theme. */
   theme: 'light' | 'dark';
   /** Localization function. Returns the translated string for a given key. */
@@ -52,8 +59,10 @@ export interface CometChatMessagePluginContext {
   onThreadClick?: (message: CometChat.BaseMessage) => void;
   /** Mark a message as unread. Updates conversation unread count and last read ID. */
   onMarkAsUnread?: (message: CometChat.BaseMessage) => void;
-  /** Show a toast notification with the given text. */
-  showToast?: (text: string) => void;
+  /**
+   * Show a toast notification.
+   */
+  showToast?: (text: string, variant?: 'default' | 'error') => void;
   /** Disable text truncation (read more / show less) in text bubbles. */
   disableTruncation?: boolean;
   /** Disable interaction (click handlers, options) on the bubble. Used in thread header parent bubble. */
@@ -71,10 +80,30 @@ export interface CometChatMessagePluginContext {
   publish?: (event: CometChatUIEvent) => void;
   /** Get text formatters from the plugin registry (for caption rendering in media bubbles). */
   getTextFormatters?: () => CometChatTextFormatter[];
+  /**
+   * Whether the logged-in user follows this message's thread.
+   *
+   * Supplied by the message list, which tracks it reactively. The option must
+   * render from this rather than reading the SDK store itself: the store is
+   * only written once the server acks, so during the optimistic window the two
+   * disagree and the option label ends up one action behind.
+   */
+  isThreadSubscribed?: boolean;
+  /**
+   * Custom display formatters supplied at the MessageList level.
+   * A plugin that renders text merges these with its own (`getTextFormatters()`) before
+   * rendering, so a custom format's stored token renders styled in the bubble/caption.
+   */
+  textFormatters?: CometChatTextFormatter[];
 
   // --- Option visibility toggles (from MessageList props) ---
   hideReplyOption?: boolean;
   hideReplyInThreadOption?: boolean;
+  /**
+   * Hide the thread-subscription option ("Notify me about replies" /
+   * "Stop reply notifications"). The option is group-chat only regardless.
+   */
+  hideThreadSubscriptionOption?: boolean;
   hideEditMessageOption?: boolean;
   hideDeleteMessageOption?: boolean;
   hideCopyMessageOption?: boolean;
@@ -84,6 +113,40 @@ export interface CometChatMessagePluginContext {
   hideMessagePrivatelyOption?: boolean;
   hideTranslateMessageOption?: boolean;
   showMarkAsUnreadOption?: boolean;
+  hidePinMessageOption?: boolean;
+  hideUnpinMessageOption?: boolean;
+  hideSaveMessageOption?: boolean;
+  hideUnsaveMessageOption?: boolean;
+
+  // --- Options layout ---
+  /**
+   * How pin/save options are presented.
+   *
+   * - `'nested'` (default) — grouped under an "Organize ▸" fly-out. Used in the main
+   *   message list, where there is room for a submenu.
+   * - `'flat'` — surfaced as top-level items. Used in the thread column and the
+   *   Pinned/Saved panels, which are ~400px wide and have nowhere to fly out to.
+   */
+  optionsLayout?: 'nested' | 'flat';
+  /**
+   * Resolved Pin/Save feature flags.
+   *
+   * Passed explicitly (rather than read from the module cache) so that a
+   * resolution landing AFTER first paint changes the context identity and
+   * re-triggers the memoized option build. Falls back to the module cache when
+   * absent, which keeps non-React callers working.
+   */
+  pinSaveFeatures?: { pinMessage: boolean; saveMessage: boolean };
+
+  // --- Pin / Save actions ---
+  /** Pin a message to the conversation. Confirms, calls the SDK, then toasts. */
+  onPinMessage?: (message: CometChat.BaseMessage) => void;
+  /** Unpin a message from the conversation. */
+  onUnpinMessage?: (message: CometChat.BaseMessage) => void;
+  /** Save ("bookmark") a message for the logged-in user. Private to them. */
+  onSaveMessage?: (message: CometChat.BaseMessage) => void;
+  /** Remove a message from the logged-in user's saved list. */
+  onUnsaveMessage?: (message: CometChat.BaseMessage) => void;
 }
 
 // --- Core Plugin Interface ---
@@ -132,8 +195,10 @@ export interface CometChatMessagePlugin {
   ): string;
 
   /**
-   * Return text formatters this plugin provides.
-   * Only relevant for the text plugin. Other plugins return undefined or [].
+   * Return the display formatters this plugin OWNS (its own default set). A plugin that
+   * renders text or captions returns its set (typically `createDefaultTextFormatters()`)
+   * and merges it with `context.textFormatters` at render time. Plugins that render no
+   * free text return undefined or [].
    */
   getTextFormatters?(): CometChatTextFormatter[];
 

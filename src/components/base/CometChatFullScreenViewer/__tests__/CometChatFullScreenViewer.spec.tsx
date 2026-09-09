@@ -155,4 +155,103 @@ describe('CometChatFullScreenViewer', () => {
     fireEvent.click(screen.getByLabelText('Download'));
     expect(onDownload).toHaveBeenCalledWith('https://example.com/photo.jpg');
   });
+
+  // --- Unsupported / no-preview state ---
+
+  it('shows the unsupported state (with download) when an image fails to load', () => {
+    const onDownload = vi.fn();
+    renderViewer({ onDownload });
+    fireEvent.error(screen.getByAltText('Full screen image'));
+    expect(screen.getByText('No preview available')).toBeInTheDocument();
+    expect(screen.getByText("This file type isn't supported for preview.")).toBeInTheDocument();
+    // The unsupported state's own Download button triggers onDownload.
+    fireEvent.click(screen.getByText('Download'));
+    expect(onDownload).toHaveBeenCalledWith('https://example.com/photo.jpg');
+  });
+
+  it('clears the error when navigating from a broken item to a valid one', () => {
+    const attachments: CometChatMediaAttachment[] = [
+      { url: 'https://example.com/broken.jpg', type: 'image', name: 'a.jpg' },
+      { url: 'https://example.com/good.jpg', type: 'image', name: 'b.jpg' },
+    ];
+    renderViewer({ attachments, url: undefined, startIndex: 0 });
+    fireEvent.error(screen.getByAltText('Full screen image'));
+    expect(screen.getByText('No preview available')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Next'));
+    // The valid item must render normally, not inherit the previous error.
+    expect(screen.queryByText('No preview available')).toBeNull();
+    expect(screen.getByAltText('Full screen image')).toBeInTheDocument();
+  });
+
+  it('treats an audio-only file in a video message as unsupported and does not autoplay', () => {
+    renderViewer({ url: 'https://example.com/audio-as-video.mp4', mediaType: 'video' });
+    const video = screen
+      .getAllByLabelText('Full screen video')
+      .find(el => el.tagName === 'VIDEO') as HTMLVideoElement;
+    expect(video).toBeDefined();
+    // Playback is gated on a validated visual track, so autoPlay must be off.
+    expect(video.hasAttribute('autoplay')).toBe(false);
+    // jsdom reports videoWidth/Height of 0 → no visual track → unsupported.
+    fireEvent.loadedMetadata(video);
+    expect(screen.getByText('No preview available')).toBeInTheDocument();
+  });
+
+  it('keeps the video player hidden until it is confirmed to be a real video', () => {
+    renderViewer({ url: 'https://example.com/clip.mp4', mediaType: 'video' });
+    const video = screen
+      .getAllByLabelText('Full screen video')
+      .find(el => el.tagName === 'VIDEO') as HTMLVideoElement;
+    // Before metadata resolves, the player is hidden so an invalid file never
+    // flashes a player before the unsupported state.
+    expect(video.className).toContain('cometchat-fullscreen-viewer__body-video--loading');
+  });
+
+  it('clears the unsupported state when navigating from an invalid video to the next item', () => {
+    const attachments: CometChatMediaAttachment[] = [
+      { url: 'https://example.com/audio-as-video.mp4', type: 'video', name: 'a.mp4' },
+      { url: 'https://example.com/real-video.mp4', type: 'video', name: 'b.mp4' },
+    ];
+    renderViewer({ attachments, url: undefined, startIndex: 0 });
+    const video = screen
+      .getAllByLabelText('Full screen video')
+      .find(el => el.tagName === 'VIDEO') as HTMLVideoElement;
+    // jsdom reports 0×0 → the first item is unsupported.
+    fireEvent.loadedMetadata(video);
+    expect(screen.getByText('No preview available')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Next'));
+    // The next item must re-probe, not inherit the previous unsupported state.
+    expect(screen.queryByText('No preview available')).toBeNull();
+    expect(screen.getAllByLabelText('Full screen video').some(el => el.tagName === 'VIDEO')).toBe(
+      true
+    );
+  });
+
+  it('resolves even when metadata is already loaded before listeners attach (no event fires)', () => {
+    // Simulates the real bug: the bubble tile probes the same URL, so by the time
+    // fullscreen opens the metadata is already available and `loadedmetadata`
+    // never fires again — the view must still resolve from readyState/dimensions.
+    const media = window.HTMLMediaElement.prototype;
+    const video = window.HTMLVideoElement.prototype;
+    const saved = {
+      readyState: Object.getOwnPropertyDescriptor(media, 'readyState'),
+      videoWidth: Object.getOwnPropertyDescriptor(video, 'videoWidth'),
+      videoHeight: Object.getOwnPropertyDescriptor(video, 'videoHeight'),
+    };
+    const restore = (obj: object, key: string, desc: PropertyDescriptor | undefined) => {
+      if (desc) Object.defineProperty(obj, key, desc);
+    };
+    // Already-loaded, audio-only (no visual track).
+    Object.defineProperty(media, 'readyState', { configurable: true, get: () => 1 });
+    Object.defineProperty(video, 'videoWidth', { configurable: true, get: () => 0 });
+    Object.defineProperty(video, 'videoHeight', { configurable: true, get: () => 0 });
+    try {
+      renderViewer({ url: 'https://example.com/audio-as-video.mp4', mediaType: 'video' });
+      expect(screen.getByText('No preview available')).toBeInTheDocument();
+    } finally {
+      restore(media, 'readyState', saved.readyState);
+      restore(video, 'videoWidth', saved.videoWidth);
+      restore(video, 'videoHeight', saved.videoHeight);
+    }
+  });
 });
