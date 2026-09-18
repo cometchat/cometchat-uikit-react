@@ -292,7 +292,7 @@ export const CometChatGroupDetails = ({
 
         <div className="side-component-group-members-with-tabs">
           {groupTab === 'view' ? (
-            <CometChatGroupMembers group={group} />
+            <CometChatGroupMembers group={group} hideHeader />
           ) : (
             <CometChatBannedMembers group={group} />
           )}

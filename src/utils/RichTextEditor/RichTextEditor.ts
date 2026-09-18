@@ -44,6 +44,8 @@ import {
 } from './mentions';
 import type { TriggerRegistration } from './mentions';
 import { escapeUserHtml } from '../sanitizeHtml';
+import { shieldUrls } from '../urlShielding';
+import { applyInlineRules, EDITOR_TAGS, stripCaretMarkers } from '../markdownInline';
 
 export class RichTextEditor {
   private element: HTMLDivElement;
@@ -1428,18 +1430,21 @@ export function convertMarkdownToHtml(text: string): string {
 function applyInlineMarkdown(text: string): string {
   // SECURITY: escape raw HTML before converting markdown markers to tags — output is
   // inserted via insertHTML (e.g. raw paste), so literal tags must stay inert text.
-  return escapeUserHtml(text)
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<strong>$1</strong>')
-    .replace(/~~([^~]+)~~/g, '<s>$1</s>')
-    .replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
+  // Shield URLs afterwards so markers inside an address are left alone; this is the
+  // path a pasted link takes, where markers are never typed one at a time.
+  const { text: shielded, restore } = shieldUrls(escapeUserHtml(stripCaretMarkers(text)));
+
+  const converted = applyInlineRules(shielded, EDITOR_TAGS, { editor: true })
+    // A literal <u> typed by the user, rather than a markdown marker.
     .replace(/<u>([^<]+)<\/u>/g, '<u>$1</u>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, url: string) => {
       // Block dangerous URL schemes so links can't become script vectors.
-      const safeUrl = sanitizeLinkUrl(url);
+      // Resolve the placeholder first so the scheme check sees the real address.
+      const safeUrl = sanitizeLinkUrl(restore(url));
       return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     });
+
+  return restore(converted);
 }
 
 /** Block dangerous URL schemes (javascript:, data:, …) and escape quotes in the href. */

@@ -1,4 +1,5 @@
 import { CometChatTextFormatter } from './CometChatTextFormatter';
+import { stripCaretMarkers } from '../utils/markdownInline';
 
 /**
  * CometChatRichTextFormatter
@@ -427,7 +428,8 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
    * Clean up markdown output.
    */
   private cleanMarkdown(markdown: string): string {
-    return markdown
+    // The composer parks the caret in U+200B text nodes; they must not be stored.
+    return stripCaretMarkers(markdown)
       .replace(/```\n?(?:\u200B|\u200C|\u200D|\uFEFF|\s)*\n?```/g, '')
       .replace(/(?<!`)`(?!`)(?:[^\S\n]|\u200B|\u200C|\u200D|\uFEFF)*`(?!`)/g, '')
       .replace(/\n{3,}/g, '\n\n')

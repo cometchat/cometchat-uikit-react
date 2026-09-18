@@ -654,11 +654,13 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
   );
 
   const editMessage = useCallback(
-    async (richTextHtml?: string) => {
+    async (richTextHtml?: string, textOverride?: string) => {
       if (!state.textMessageToEdit) return;
       if (!isSdkInitialized()) return;
 
-      let textToSend = state.text;
+      // `textOverride` mirrors sendMessage(): plain text mode uses it to pass the
+      // text with mention tokens, which the text state alone does not carry.
+      let textToSend = textOverride ?? state.text;
       if (richTextHtml) {
         const { CometChatRichTextFormatter } =
           await import('../../formatters/CometChatRichTextFormatter');

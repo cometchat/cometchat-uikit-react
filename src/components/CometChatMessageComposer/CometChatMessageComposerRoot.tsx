@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { CometChatMessageComposerRootProps } from './CometChatMessageComposer.types';
 import { CometChatMessageComposerContext } from './CometChatMessageComposer.context';
@@ -12,6 +12,7 @@ import { CometChatMessageComposerStickerButton } from './CometChatMessageCompose
 import { CometChatMessageComposerEditPreview } from './CometChatMessageComposerEditPreview';
 import { CometChatMessageComposerReplyPreview } from './CometChatMessageComposerReplyPreview';
 import { CometChatMessageComposerMentionsList } from './CometChatMessageComposerMentionsList';
+import type { CometChatMessageComposerMentionsListHandle } from './CometChatMessageComposerMentionsList';
 import { CometChatMessageComposerTray } from './CometChatMessageComposerTray';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { CometChatFormattingToolbar } from '../base/CometChatFormattingToolbar/CometChatFormattingToolbar';
@@ -23,6 +24,11 @@ import { CometChatToast } from '../base/CometChatToast/CometChatToast';
 import { useRichTextEditor } from '../../utils/RichTextEditor/useRichTextEditor';
 import { convertMarkdownToHtml } from '../../utils/RichTextEditor/RichTextEditor';
 import { applyListStyles, fixOrderedListContinuation } from '../../utils/RichTextEditor/formats';
+import {
+  insertMention,
+  createMentionElement,
+  getTextWithMentionFormat,
+} from '../../utils/RichTextEditor/mentions';
 import { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 import { useCometChatMentions } from './useCometChatMentions';
 import { useLocale } from '../../context/locale/LocaleContext';
@@ -170,6 +176,14 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     getMentionedUsers: () => { uid: string; name: string }[];
     clearMentionedUsers: () => void;
   } | null>(null);
+
+  // Ref for the mentions dropdown's keyboard-navigation controller.
+  const mentionsListRef = useRef<CometChatMessageComposerMentionsListHandle>(null);
+
+  // Combobox wiring: the input keeps focus while the list is navigated, so the
+  // highlighted option is exposed to assistive tech via aria-activedescendant.
+  const mentionsListboxId = `cometchat-mention-listbox-${useId()}`;
+  const [mentionActiveDescendantId, setMentionActiveDescendantId] = useState<string | null>(null);
 
   const IframeContext = useCometChatFrameContext();
 
@@ -668,6 +682,23 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
   // Save editor selection when mention popup opens so we can restore it
   const mentionSavedRangeRef = useRef<Range | null>(null);
 
+  // Plain text mode has no editor instance to save/restore the caret through, so
+  // the range at the @ trigger is snapshotted here. Keyboard navigation moves
+  // focus into the suggestions list, which drops the composer's own selection.
+  const plainMentionRangeRef = useRef<Range | null>(null);
+
+  /**
+   * Text of the plain text input with mention nodes converted to SDK tokens
+   * (`<@uid:...>` / `<@all:...>`). Returns null when rich text is enabled or the
+   * input holds no mentions — callers then fall back to the plain text state.
+   */
+  const getPlainTextWithMentions = useCallback((): string | null => {
+    if (enableRichTextEditor) return null;
+    const el = hook.inputRef.current;
+    if (!el?.querySelector('[data-uid]')) return null;
+    return getTextWithMentionFormat(el);
+  }, [enableRichTextEditor, hook.inputRef]);
+
   const handleInsertMention = useCallback(
     (uid: string, label: string, charsToDelete: number, isSelf?: boolean) => {
       if (enableRichTextEditor) {
@@ -677,9 +708,62 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
           mentionSavedRangeRef.current = null;
         }
         richText.insertMention(uid, label, charsToDelete, isSelf);
+        return;
       }
+
+      // Plain text mode: insert the same mention node the rich text editor uses.
+      // The node carries data-uid, which the send path turns into an SDK token.
+      const el = hook.inputRef.current;
+      const selection = getCurrentWindow().getSelection();
+      if (!el || !selection) return;
+
+      const liveRange = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+      const savedRange = plainMentionRangeRef.current;
+      plainMentionRangeRef.current = null;
+
+      let deleteCount = charsToDelete;
+      let caretRange: Range | null = null;
+      if (liveRange && el.contains(liveRange.startContainer)) {
+        caretRange = liveRange;
+      } else if (savedRange && el.contains(savedRange.startContainer)) {
+        caretRange = savedRange;
+      } else {
+        // Caret was lost entirely — fall back to the end of the input, dropping
+        // the typed "@query" only when it is actually the trailing text.
+        const lastChild = el.lastChild;
+        const endRange = getCurrentDocument().createRange();
+        if (lastChild?.nodeType === Node.TEXT_NODE) {
+          const value = lastChild.textContent ?? '';
+          endRange.setStart(lastChild, value.length);
+          if (!value.slice(-deleteCount).startsWith('@')) deleteCount = 0;
+        } else {
+          endRange.selectNodeContents(el);
+          endRange.collapse(false);
+          deleteCount = 0;
+        }
+        endRange.collapse(true);
+        caretRange = endRange;
+      }
+
+      selection.removeAllRanges();
+      selection.addRange(caretRange);
+
+      insertMention(el, uid, label, deleteCount, isSelf);
+
+      // The input is uncontrolled in plain text mode — sync the text state so
+      // canSend, the placeholder and the send payload all see the mention.
+      hook.setText(el.textContent ?? '');
+      el.focus();
     },
-    [enableRichTextEditor, richText]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only depend on specific hook properties
+    [
+      enableRichTextEditor,
+      richText,
+      hook.inputRef,
+      hook.setText,
+      getCurrentDocument,
+      getCurrentWindow,
+    ]
   );
 
   const mentions = useCometChatMentions({
@@ -703,6 +787,81 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     getMentionedUsers: mentions.getMentionedUsers,
     clearMentionedUsers: mentions.clearMentionedUsers,
   };
+
+  // Plain text mode: entering edit mode seeds the text state with the raw message
+  // text, which still carries the SDK's <@uid:...> / <@all:...> tokens. Rebuild
+  // them as mention nodes so the user sees "@Name" and the tokens are restored
+  // on save. Nodes are built programmatically — never via innerHTML — because
+  // the message text is untrusted.
+  const prevPlainEditRef = useRef(hook.state.textMessageToEdit);
+  useEffect(() => {
+    const prevEdit = prevPlainEditRef.current;
+    const currentEdit = hook.state.textMessageToEdit;
+    prevPlainEditRef.current = currentEdit;
+
+    if (enableRichTextEditor || !currentEdit) return;
+    const isEnteringEdit = !prevEdit;
+    const isSwitchingEdit = prevEdit && prevEdit.getId() !== currentEdit.getId();
+    if (!isEnteringEdit && !isSwitchingEdit) return;
+
+    const el = hook.inputRef.current;
+    if (!el) return;
+
+    const rawText =
+      currentEdit.getType() === 'text' && 'getText' in currentEdit
+        ? currentEdit.getText()
+        : (currentEdit as CometChat.MediaMessage).getCaption() || '';
+    if (!/<@(?:uid|all):/.test(rawText)) return;
+
+    let mentionedUsers: (CometChat.User | CometChat.GroupMember)[] = [];
+    try {
+      mentionedUsers = currentEdit.getMentionedUsers();
+    } catch {
+      /* ignore — message has no mention metadata */
+    }
+
+    const currentDocument = getCurrentDocument();
+    const fragment = currentDocument.createDocumentFragment();
+    const tokenRegex = /<@(uid|all):(.*?)>/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = tokenRegex.exec(rawText)) !== null) {
+      if (match.index > lastIndex) {
+        fragment.appendChild(currentDocument.createTextNode(rawText.slice(lastIndex, match.index)));
+      }
+      const isChannelMention = match[1] === 'all';
+      const uid = match[2] ?? '';
+      const label = isChannelMention
+        ? mentionAllLabel
+        : (mentionedUsers.find(u => u.getUid() === uid)?.getName() ?? uid);
+      fragment.appendChild(
+        createMentionElement(
+          currentDocument,
+          isChannelMention ? 'all' : uid,
+          label,
+          isChannelMention
+        )
+      );
+      lastIndex = tokenRegex.lastIndex;
+    }
+    if (lastIndex < rawText.length) {
+      fragment.appendChild(currentDocument.createTextNode(rawText.slice(lastIndex)));
+    }
+
+    el.replaceChildren(fragment);
+    // Keep the text state in step with the DOM so the input's sync effect does
+    // not overwrite the mention nodes with the raw token text.
+    hook.setText(el.textContent ?? '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only depend on specific hook properties
+  }, [
+    hook.state.textMessageToEdit,
+    enableRichTextEditor,
+    hook.inputRef,
+    hook.setText,
+    mentionAllLabel,
+    getCurrentDocument,
+  ]);
 
   // Seed the mentions hook with existing mentioned users when entering edit mode,
   // so they're preserved when the edited message is sent.
@@ -728,6 +887,45 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
     }
   }, [hook.state.textMessageToEdit, mentions]);
 
+  // While the suggestions dropdown is open, drive it with the keyboard from the
+  // composer input (which keeps focus): arrows move the highlight, Enter/Tab
+  // select it. Shared by the rich text editor and the plain text input so both
+  // modes navigate mentions the same way. preventDefault stops the browser's
+  // native caret/scroll/focus behaviour; returning true tells the caller the key
+  // was consumed, so it must not send or insert a newline.
+  const handleMentionNavigationKey = useCallback(
+    (e: KeyboardEvent): boolean => {
+      const controller = mentionsListRef.current;
+      if (!mentions.isOpen || !controller) return false;
+      // An IME owns arrows/Enter while composing (CJK candidate selection and
+      // conversion commit); the rich text editor has no composition guard of its
+      // own, so check here rather than hijacking those keys.
+      if (e.isComposing) return false;
+      // Only claim the key if the highlight actually moved. While the list is
+      // open but still loading it holds no options, and swallowing the arrow
+      // would freeze the caret for as long as the fetch takes.
+      if (e.key === 'ArrowDown') {
+        if (!controller.moveHighlight(1)) return false;
+        e.preventDefault();
+        return true;
+      }
+      if (e.key === 'ArrowUp') {
+        if (!controller.moveHighlight(-1)) return false;
+        e.preventDefault();
+        return true;
+      }
+      // Shift+Tab moves focus backward out of the composer — don't treat it as select.
+      if (e.key === 'Enter' || (e.key === 'Tab' && !e.shiftKey)) {
+        if (controller.selectHighlighted()) {
+          e.preventDefault();
+          return true;
+        }
+      }
+      return false;
+    },
+    [mentions.isOpen]
+  );
+
   // Sync mention callbacks ref (breaks circular dep between richText and mentions)
   mentionCallbacksRef.current = {
     onStart: (query: string) => {
@@ -742,8 +940,51 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       mentionSavedRangeRef.current = null;
       mentions.handleMentionEnd();
     },
-    onKeyDown: mentions.handleKeyDown,
+    onKeyDown: (e: KeyboardEvent) => {
+      if (handleMentionNavigationKey(e)) return true;
+      // Fall back to the hook's handler (Escape closes the dropdown).
+      return mentions.handleKeyDown(e);
+    },
   };
+
+  // Plain text mode drives mention detection straight from the input's `onInput`
+  // (the rich text editor uses mentionCallbacksRef instead). Snapshot the caret
+  // on every keystroke of the query so the mention can still be inserted at the
+  // @ trigger after focus moves into the suggestions list.
+  const handleMentionQueryChange = useCallback(
+    (query: string) => {
+      const el = hook.inputRef.current;
+      const selection = getCurrentWindow().getSelection();
+      if (el && selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (el.contains(range.startContainer)) {
+          plainMentionRangeRef.current = range.cloneRange();
+        }
+      }
+      mentions.handleMentionStart(query);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only depend on specific hook properties
+    [hook.inputRef, getCurrentWindow, mentions.handleMentionStart]
+  );
+
+  const handleMentionEnd = useCallback(() => {
+    plainMentionRangeRef.current = null;
+    mentions.handleMentionEnd();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only depend on specific hook properties
+  }, [mentions.handleMentionEnd]);
+
+  // Arrows/Enter/Tab drive the suggestion list and Escape closes it. Returns true
+  // when the key was consumed so the input skips its own Enter/newline handling.
+  const handleMentionKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (handleMentionNavigationKey(e)) return true;
+      const consumed = mentions.handleKeyDown(e);
+      if (consumed) plainMentionRangeRef.current = null;
+      return consumed;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only depend on specific hook properties
+    [handleMentionNavigationKey, mentions.handleKeyDown]
+  );
 
   // Wrap insertEmoji so it uses the rich text editor's insertText when enabled.
   // The hook's insertEmoji only appends to plain text state — the rich text
@@ -910,12 +1151,19 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       // if any, rides along as the caption on the last message of the batch.
       const trayHasItems = hook.state.tray.items.length > 0;
 
+      // Plain text mode keeps mentions as DOM nodes; the text state only holds
+      // their visible "@Name" label. Send the tokenised text instead so the
+      // message list can resolve the mention on render.
+      const plainTextWithMentions = getPlainTextWithMentions();
+
       let sendPromise: Promise<void>;
       if (trayHasItems) {
         if (textOverride !== undefined) {
           sendPromise = hook.sendBatch(textOverride);
         } else if (enableRichTextEditor && richTextEditorElRef.current) {
           sendPromise = hook.sendBatch(undefined, richTextEditorElRef.current.innerHTML);
+        } else if (plainTextWithMentions !== null) {
+          sendPromise = hook.sendBatch(plainTextWithMentions);
         } else {
           sendPromise = hook.sendBatch();
         }
@@ -924,6 +1172,8 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       } else if (enableRichTextEditor && richTextEditorElRef.current) {
         const currentHtml = richTextEditorElRef.current.innerHTML;
         sendPromise = hook.sendMessage(undefined, currentHtml);
+      } else if (plainTextWithMentions !== null) {
+        sendPromise = hook.sendMessage(plainTextWithMentions);
       } else {
         sendPromise = hook.sendMessage();
       }
@@ -934,7 +1184,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       }
       return sendPromise;
     },
-    [enableRichTextEditor, hook, richText]
+    [enableRichTextEditor, hook, richText, getPlainTextWithMentions]
   );
 
   const contextValue = useMemo(
@@ -968,6 +1218,10 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
         if (enableRichTextEditor && richTextEditorElRef.current) {
           const currentHtml = richTextEditorElRef.current.innerHTML;
           return hook.editMessage(currentHtml);
+        }
+        const plainTextWithMentions = getPlainTextWithMentions();
+        if (plainTextWithMentions !== null) {
+          return hook.editMessage(undefined, plainTextWithMentions);
         }
         return hook.editMessage();
       },
@@ -1034,8 +1288,15 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       ...(onAttachmentAdded !== undefined && { onAttachmentAdded }),
       ...(onAttachmentRemoved !== undefined && { onAttachmentRemoved }),
       ...(onMentionSelected !== undefined && { onMentionSelected }),
-      onMentionQueryChange: mentions.handleMentionStart,
-      onMentionEnd: mentions.handleMentionEnd,
+      onMentionQueryChange: handleMentionQueryChange,
+      onMentionEnd: handleMentionEnd,
+      onMentionKeyDown: handleMentionKeyDown,
+      mentionCombobox: {
+        isOpen: mentions.isOpen,
+        listboxId: mentionsListboxId,
+        // Guard against a stale id if the list unmounts without reporting.
+        activeDescendantId: mentions.isOpen ? mentionActiveDescendantId : null,
+      },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- individual hook properties are listed
     [
@@ -1050,6 +1311,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       hook.sendMediaMessage,
       hook.editMessage,
       handleInsertEmoji,
+      getPlainTextWithMentions,
       hook.setContentToDisplay,
       hook.closePreview,
       hook.setRecording,
@@ -1099,8 +1361,12 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       onAttachmentAdded,
       onAttachmentRemoved,
       onMentionSelected,
-      mentions.handleMentionStart,
-      mentions.handleMentionEnd,
+      handleMentionQueryChange,
+      handleMentionEnd,
+      handleMentionKeyDown,
+      mentions.isOpen,
+      mentionsListboxId,
+      mentionActiveDescendantId,
     ]
   );
 
@@ -1182,6 +1448,9 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
           {/* Mention suggestions — inside input area, positioned above input */}
           {!(disableMentions && (disableMentionAll || !group)) && (
             <CometChatMessageComposerMentionsList
+              ref={mentionsListRef}
+              listboxId={mentionsListboxId}
+              onHighlightChange={setMentionActiveDescendantId}
               isOpen={mentions.isOpen}
               searchKeyword={mentions.searchKeyword}
               group={group}

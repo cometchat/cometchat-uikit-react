@@ -4,6 +4,7 @@ import { CometChatConversationsItem } from './CometChatConversationsItem';
 import type { CometChatConversationsListProps } from './CometChatConversations.types';
 import './CometChatConversations.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useListKeyboardNavigation } from '../../hooks/useListKeyboardNavigation';
 
 /**
  * CometChatConversationsList — Conversation list with infinite scroll.
@@ -16,6 +17,8 @@ export const CometChatConversationsList: React.FC<CometChatConversationsListProp
   const { getLocalizedString } = useLocale();
   const { conversations, hasMore, fetchState, fetchNext } = useCometChatConversationsContext();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const handleKeyDown = useListKeyboardNavigation(listRef);
 
   // --- Infinite scroll via IntersectionObserver ---
   useEffect(() => {
@@ -41,10 +44,13 @@ export const CometChatConversationsList: React.FC<CometChatConversationsListProp
 
   return (
     <div
+      ref={listRef}
       className={'cometchat-conversations__list'}
       role="listbox"
       aria-label={getLocalizedString('accessibility_conversations_list')}
       aria-busy={fetchState === 'loading'}
+      tabIndex={-1}
+      onKeyDown={handleKeyDown}
     >
       {conversations.map(conversation => (
         <React.Fragment key={conversation.getConversationId()}>

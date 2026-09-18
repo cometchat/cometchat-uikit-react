@@ -452,4 +452,22 @@ export interface CometChatMessageComposerContextValue {
   onMentionQueryChange?: (query: string) => void;
   /** Called when mention context is lost. */
   onMentionEnd?: () => void;
+  /**
+   * Called on keydown while the mention list may be open. Returns true when the
+   * key was consumed (Escape closes the list) and the input should ignore it.
+   */
+  onMentionKeyDown?: (e: KeyboardEvent) => boolean;
+  /**
+   * Combobox wiring for the mention suggestions, mirrored onto the input so
+   * screen readers can follow the keyboard highlight (the input keeps DOM focus
+   * while the list is navigated).
+   */
+  mentionCombobox?: {
+    /** Whether the suggestion list is currently rendered. */
+    isOpen: boolean;
+    /** Id of the listbox element, for aria-controls. */
+    listboxId: string;
+    /** Id of the highlighted option, for aria-activedescendant. */
+    activeDescendantId: string | null;
+  };
 }

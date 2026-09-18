@@ -63,6 +63,8 @@ function createMockContext(
     selectRange: () => {},
     deselectRange: () => {},
     clearSelection: () => {},
+    deselectAll: () => {},
+    toggleSelectAll: () => {},
     setActiveUser: () => {},
     handleItemClick: () => {},
     ...overrides,

@@ -6,6 +6,7 @@ import { CometChatUsersSectionHeader } from './CometChatUsersSectionHeader';
 import type { CometChatUsersListProps } from './CometChatUsers.types';
 import './CometChatUsers.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useListKeyboardNavigation } from '../../hooks/useListKeyboardNavigation';
 
 /**
  * CometChatUsersList — User list with infinite scroll.
@@ -23,8 +24,40 @@ export const CometChatUsersList: React.FC<CometChatUsersListProps> = ({ itemView
     sectionHeaderKey,
     showSectionHeader,
     showScrollbar,
+    selectionMode,
+    selectedUserIds,
+    toggleSelectAll,
+    deselectAll,
   } = useCometChatUsersContext();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const isMultiSelect = selectionMode === 'multiple';
+
+  // --- Keyboard navigation ---
+  const handleArrowNav = useListKeyboardNavigation(listRef);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      // Arrow / Home / End move focus between items (all selection modes).
+      handleArrowNav(e);
+      if (e.defaultPrevented) return;
+      // Select-all / deselect-all shortcuts (multiple mode only).
+      if (!isMultiSelect) return;
+      const mod = e.ctrlKey || e.metaKey;
+      // stopPropagation as well as preventDefault: an enclosing action sheet or
+      // dialog handles Escape on an ancestor without checking defaultPrevented,
+      // so one Escape would clear the selection AND close the container.
+      if (mod && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSelectAll?.();
+      } else if (e.key === 'Escape' && selectedUserIds.length > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        deselectAll?.();
+      }
+    },
+    [handleArrowNav, isMultiSelect, toggleSelectAll, deselectAll, selectedUserIds.length]
+  );
 
   // --- Infinite scroll via IntersectionObserver ---
   useEffect(() => {
@@ -80,10 +113,19 @@ export const CometChatUsersList: React.FC<CometChatUsersListProps> = ({ itemView
 
   return (
     <div
+      ref={listRef}
       className={`cometchat-users__list ${!showScrollbar ? 'cometchat-users__list--hide-scrollbar' : ''}`}
       role="listbox"
       aria-label={getLocalizedString('accessibility_users_list')}
       aria-busy={fetchState === 'loading'}
+      tabIndex={isMultiSelect ? 0 : -1}
+      onKeyDown={handleKeyDown}
+      {...(isMultiSelect
+        ? {
+            'aria-multiselectable': true,
+            'aria-keyshortcuts': 'Control+A Meta+A',
+          }
+        : {})}
     >
       {users.map((user, index) => {
         const showHeader = showSectionHeader && shouldShowSectionHeader(index);

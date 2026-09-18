@@ -6,6 +6,7 @@ import { CometChatConversationsItem } from '../CometChatConversations/CometChatC
 import { CometChatLocalize } from '../../resources/CometChatLocalize/CometChatLocalize';
 import type { CometChatSearchConversationsListProps } from './CometChatSearch.types';
 import './CometChatSearch.css';
+import { useListKeyboardNavigation } from '../../hooks/useListKeyboardNavigation';
 
 function getLocalizedString(key: string): string {
   const instance = CometChatLocalize.getSharedInstance();
@@ -47,6 +48,12 @@ export const CometChatSearchConversationsList: React.FC<CometChatSearchConversat
 
   // Ref for the scrollable container (used as IntersectionObserver root)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Arrow-key navigation over the result rows.
+  const listRef = useRef<HTMLDivElement>(null);
+  const handleListKeyDown = useListKeyboardNavigation(listRef, {
+    itemSelector: '[role="listitem"]',
+  });
 
   useEffect(() => {
     if (!useScrollPagination || !sentinelRef.current || !hasMore) return;
@@ -146,7 +153,12 @@ export const CometChatSearchConversationsList: React.FC<CometChatSearchConversat
       {/* Results */}
       {fetchState === 'loaded' && (
         <>
-          <div className={'cometchat-search__conversations-list'} role="list">
+          <div
+            ref={listRef}
+            className={'cometchat-search__conversations-list'}
+            role="list"
+            onKeyDown={handleListKeyDown}
+          >
             {conversations.map(conversation => (
               <div
                 key={conversation.getConversationId()}

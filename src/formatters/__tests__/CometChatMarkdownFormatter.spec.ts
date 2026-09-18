@@ -229,4 +229,94 @@ describe('CometChatMarkdownFormatter', () => {
       expect(result).toContain('<i>italic</i>');
     });
   });
+
+  // The inline markdown rules have no boundary guard, so two underscores inside a
+  // URL would otherwise pair up and inject <i> into it. The URL formatter then
+  // truncates the href at that '<', producing a dead link.
+  describe('URL protection', () => {
+    // A long path segment plus a query value, each carrying an underscore — the
+    // shape share links commonly take, and the minimum needed for a pair to form.
+    const TWO_UNDERSCORE_URL =
+      'https://example.com/file/d/1AbCdEfGhIj_kLmNoPqRsTu-9vWxY/view?usp=share_link';
+
+    it('leaves a URL with two underscores untouched', () => {
+      expect(formatter.format(TWO_UNDERSCORE_URL)).toBe(TWO_UNDERSCORE_URL);
+    });
+
+    it('does not italicise underscores inside a bare URL', () => {
+      const result = formatter.format('https://example.com/a_b_c');
+      expect(result).toBe('https://example.com/a_b_c');
+      expect(result).not.toContain('<i>');
+    });
+
+    it('keeps the URL intact in a markdown link href', () => {
+      const result = formatter.format(`[My file](${TWO_UNDERSCORE_URL})`);
+      expect(result).toContain(`href="${TWO_UNDERSCORE_URL}"`);
+      expect(result).toContain('>My file</a>');
+      expect(result).not.toContain('<i>');
+    });
+
+    it('leaves a URL inside inline code untouched', () => {
+      expect(formatter.format('`https://example.com/a_b_c`')).toBe(
+        '<code>https://example.com/a_b_c</code>'
+      );
+    });
+
+    it('leaves a URL inside a code block untouched', () => {
+      expect(formatter.format('```https://example.com/a_b_c```')).toBe(
+        '<pre><code>https://example.com/a_b_c</code></pre>'
+      );
+    });
+
+    it('protects www. URLs too', () => {
+      expect(formatter.format('www.example.com/a_b_c')).toBe('www.example.com/a_b_c');
+    });
+
+    it('protects URLs against the other inline markers', () => {
+      expect(formatter.format('https://example.com/a__b__c')).toBe('https://example.com/a__b__c');
+      expect(formatter.format('https://example.com/a~~b~~c')).toBe('https://example.com/a~~b~~c');
+      expect(formatter.format('https://example.com/a**b**c')).toBe('https://example.com/a**b**c');
+      expect(formatter.format('https://example.com/a++b++c')).toBe('https://example.com/a++b++c');
+    });
+
+    it('still applies markers that wrap the URL', () => {
+      expect(formatter.format('**https://example.com/a_b_c**')).toBe(
+        '<b>https://example.com/a_b_c</b>'
+      );
+      expect(formatter.format('_https://example.com/x_')).toBe('<i>https://example.com/x</i>');
+      expect(formatter.format('~~https://example.com/a_b_c~~')).toBe(
+        '<s>https://example.com/a_b_c</s>'
+      );
+    });
+
+    it('leaves trailing sentence punctuation outside the URL', () => {
+      expect(formatter.format('See https://example.com/a_b_c. Thanks!')).toBe(
+        'See https://example.com/a_b_c. Thanks!'
+      );
+    });
+
+    it('still formats markdown elsewhere in the message', () => {
+      expect(formatter.format('https://example.com/a_b_c and _italic_')).toBe(
+        'https://example.com/a_b_c and <i>italic</i>'
+      );
+    });
+
+    it('leaves intra-word underscores alone but still formats at a boundary', () => {
+      // The markers are word characters on both sides, so they are literal.
+      expect(formatter.format('a_b_c')).toBe('a_b_c');
+      expect(formatter.format('my_var_name is set')).toBe('my_var_name is set');
+      // A properly delimited marker in the same message still applies, which is
+      // what shows the URL shielding is not swallowing ordinary formatting.
+      expect(formatter.format('my_var_name and _real_ here')).toBe(
+        'my_var_name and <i>real</i> here'
+      );
+    });
+
+    it('protects URLs in the conversation subtitle path', () => {
+      expect(formatter.stripMarkdownForConversation(TWO_UNDERSCORE_URL)).toBe(TWO_UNDERSCORE_URL);
+      expect(formatter.stripMarkdownForConversation('https://example.com/a_b_c and _italic_')).toBe(
+        'https://example.com/a_b_c and <i>italic</i>'
+      );
+    });
+  });
 });

@@ -93,12 +93,15 @@ vi.mock('../../base/CometChatMediaRecorder/CometChatMediaRecorder.context', () =
 vi.mock('../useCometChatMentions', () => ({
   useCometChatMentions: () => ({
     isOpen: false,
-    suggestions: [],
-    isLoading: false,
-    focusedIndex: -1,
+    searchKeyword: '',
     handleMentionStart: vi.fn(),
     handleMentionEnd: vi.fn(),
-    handleSelect: vi.fn(),
+    handleItemClick: vi.fn(),
+    handleEmpty: vi.fn(),
+    handleKeyDown: vi.fn().mockReturnValue(false),
+    getMentionedUsers: vi.fn().mockReturnValue([]),
+    clearMentionedUsers: vi.fn(),
+    seedMentionedUsers: vi.fn(),
   }),
 }));
 

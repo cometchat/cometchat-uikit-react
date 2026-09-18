@@ -58,7 +58,10 @@
   position: relative;
 }
 
-.cometchat-group-members__item:hover {
+/* The data-cc-mention-active marker lets keyboard navigation in the mentions
+   dropdown reuse this same hover effect. */
+.cometchat-group-members__item:hover,
+.cometchat-group-members__item[data-cc-mention-active='true'] {
   background: var(--cometchat-background-color-02, #f5f5f5);
 }
 

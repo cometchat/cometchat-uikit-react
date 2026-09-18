@@ -1,5 +1,7 @@
 import { CometChatTextFormatter } from './CometChatTextFormatter';
 import { escapeUserHtml } from '../utils/sanitizeHtml';
+import { shieldUrls } from '../utils/urlShielding';
+import { applyInlineRules, RENDER_TAGS, stripCaretMarkers } from '../utils/markdownInline';
 
 /**
  * CometChatMarkdownFormatter
@@ -25,6 +27,9 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
   readonly id = 'markdown-formatter';
   override priority = 10;
 
+  /** Restores the URLs shielded for the current format() call. */
+  private urlRestore: (value: string) => string = value => value;
+
   override getRegex(): RegExp {
     return /(\*\*|__|~~|`|>|\[.*?\]\(.*?\)|(?:\d+|[a-z]|[ivxlcdm]+)\.\s|[•-]\s)/g;
   }
@@ -37,7 +42,15 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
     }
 
     this.originalText = text;
-    let result = text;
+    // Messages sent before the composer stopped storing caret markers still carry
+    // them; strip here too so those render correctly without being re-sent.
+    let result = stripCaretMarkers(text);
+
+    // Shield bare URLs before any markdown rule runs. Otherwise paired markers
+    // inside a URL (e.g. two underscores in a path or query string) are treated as
+    // formatting and inject tags into the middle of it, which in turn truncates the
+    // href the URL formatter builds.
+    result = this.protectUrls(result);
 
     // Process code blocks first (```code```) — must be before inline code
     result = this.formatCodeBlocks(result);
@@ -51,10 +64,7 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
     // This ensures markers like **_`text`_** are resolved correctly —
     // if we converted inline code first, the bold/italic markers would be split
     // across <code> tag boundaries and fail to match.
-    result = this.formatOutsideCodeBlocks(result, s => this.formatBold(s));
-    result = this.formatOutsideCodeBlocks(result, s => this.formatUnderline(s));
-    result = this.formatOutsideCodeBlocks(result, s => this.formatItalic(s));
-    result = this.formatOutsideCodeBlocks(result, s => this.formatStrikethrough(s));
+    result = this.formatOutsideCodeBlocks(result, s => this.formatInlineMarkers(s));
 
     // Process lists and links BEFORE inline code conversion too.
     // If inline code is converted first, formatOutsideCode splits by <code> tags,
@@ -67,8 +77,27 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
     // Process inline code (`code`) LAST among inline conversions
     result = this.formatInlineCode(result);
 
+    result = this.restoreUrls(result);
+
     this.formattedText = result;
     return this.formattedText;
+  }
+
+  // ─── URL Protection ────────────────────────────────────────────────────
+
+  /**
+   * Replace bare URLs with placeholders so no markdown rule can rewrite their
+   * contents, keeping the means to restore them for this format() call.
+   */
+  private protectUrls(text: string): string {
+    const shielded = shieldUrls(text);
+    this.urlRestore = shielded.restore;
+    return shielded.text;
+  }
+
+  /** Put the protected URLs back. No-op when nothing was protected. */
+  private restoreUrls(text: string): string {
+    return this.urlRestore(text);
   }
 
   // ─── Code Blocks ───────────────────────────────────────────────────────
@@ -147,32 +176,25 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
   }
 
   private formatInlineCode(text: string): string {
-    return text.replace(/`([^`]+)`/g, '<code>$1</code>');
+    return applyInlineRules(text, RENDER_TAGS, { formats: ['code'] });
   }
 
   // ─── Inline Formatting ─────────────────────────────────────────────────
 
-  private formatBold(text: string): string {
-    return text.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-  }
-
-  private formatItalic(text: string): string {
-    return text.replace(/_([^_]+)_/g, '<i>$1</i>');
-  }
-
-  private formatUnderline(text: string): string {
-    let result = text.replace(/__([^_]+)__/g, '<u>$1</u>');
-    result = result.replace(/\+\+([^+]+)\+\+/g, '<u>$1</u>');
-    return result;
-  }
-
-  private formatStrikethrough(text: string): string {
-    return text.replace(/~~([^~]+)~~/g, '<s>$1</s>');
+  /**
+   * Apply the marker rules shared with the composer, minus inline code, which
+   * this formatter runs later so that markers inside a code span resolve first.
+   */
+  private formatInlineMarkers(text: string): string {
+    return applyInlineRules(text, RENDER_TAGS, {
+      formats: ['bold', 'underline', 'strikethrough', 'italic'],
+    });
   }
 
   private formatLinks(text: string): string {
     return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, rawUrl: string) => {
-      const href = this.normalizeLinkUrl(rawUrl);
+      // Resolve any protected URL first — normalizeLinkUrl needs the real scheme.
+      const href = this.normalizeLinkUrl(this.restoreUrls(rawUrl));
       // Dangerous scheme — drop the link but keep the visible text.
       if (!href) return label;
       // The `cometchat-link` class is what the text bubble's click handler keys off of
@@ -182,7 +204,9 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
   }
 
   private normalizeLinkUrl(rawUrl: string): string {
-    const url = rawUrl.trim();
+    // Drop zero-width characters for the same reason as in CometChatUrlFormatter:
+    // invisible in the label, but they break the address.
+    const url = rawUrl.replace(/\u200B|\u200C|\u200D|\uFEFF/g, '').trim();
     if (!url) return '';
 
     // Strip whitespace/control chars that can obfuscate the scheme (e.g. "java\tscript:").
@@ -447,13 +471,13 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
     // raw HTML so tags become inert text (preserves mentions and <u>).
     result = escapeUserHtml(result);
 
+    // Shield URLs from the inline rules below, for the same reason as in format().
+    result = this.protectUrls(result);
+
     // Handle code blocks and inline code on the full text BEFORE splitting
     // into lines, because they can span multiple lines.
     // Strip code blocks: ```content``` → content (flatten for subtitle)
     result = result.replace(/```\n?([\s\S]*?)\n?```/g, '$1');
-    // Convert inline code: `content` → <code>content</code>
-    result = result.replace(/`([\s\S]+?)`/g, '<code>$1</code>');
-
     // Normalize ordered list markers: convert indented numeric markers (1.) to
     // depth-appropriate markers (a. for depth 1, i. for depth 2).
     // This handles old messages that stored all levels as "1."
@@ -464,18 +488,9 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
     const processedLines = lines.map(line => {
       let r = line;
 
-      // Convert bold: **content** → <b>content</b>
-      r = r.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-
-      // Convert underline: __content__ or ++content++ → <u>content</u>
-      r = r.replace(/__([^_]+)__/g, '<u>$1</u>');
-      r = r.replace(/\+\+([^+]+)\+\+/g, '<u>$1</u>');
-
-      // Convert italic: _content_ → <i>content</i>
-      r = r.replace(/_([^_]+)_/g, '<i>$1</i>');
-
-      // Convert strikethrough: ~~content~~ → <s>content</s>
-      r = r.replace(/~~([^~]+)~~/g, '<s>$1</s>');
+      // Inline markers and code, from the table shared with the bubble and
+      // composer. One call so that code spans shield the markers inside them.
+      r = applyInlineRules(r, RENDER_TAGS);
 
       // Strip links: [text](url) → text
       r = r.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
@@ -486,7 +501,7 @@ export class CometChatMarkdownFormatter extends CometChatTextFormatter {
       return r;
     });
 
-    return processedLines.join('\n');
+    return this.restoreUrls(processedLines.join('\n'));
   }
 
   /**

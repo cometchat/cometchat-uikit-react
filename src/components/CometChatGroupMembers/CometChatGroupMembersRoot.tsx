@@ -30,6 +30,7 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
   searchKeyword,
   hideUserStatus: hideUserStatusProp,
   hideSearch = false,
+  hideHeader = false,
   hideKickMemberOption = false,
   hideBanMemberOption = false,
   hideScopeChangeOption = false,
@@ -140,7 +141,7 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
           children
         ) : (
           <>
-            <CometChatGroupMembersHeader />
+            {!hideHeader && <CometChatGroupMembersHeader />}
             {!hideSearch && <CometChatGroupMembersSearchBar />}
             {hookReturn.fetchState === 'loading' && <CometChatGroupMembersLoadingState />}
             {hookReturn.fetchState === 'error' && <CometChatGroupMembersErrorState />}

@@ -1,5 +1,7 @@
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatLocalize } from '../resources/CometChatLocalize/CometChatLocalize';
+import { applyInlineRules, RENDER_TAGS, stripCaretMarkers } from './markdownInline';
+import { shieldUrls } from './urlShielding';
 
 /**
  * Builds the one-line HTML preview of a message used by list surfaces — search
@@ -45,16 +47,13 @@ export interface MessageSubtitleOptions {
 function applyInlineFormatting(input: string, message: CometChat.BaseMessage): string {
   let text = input;
 
-  // Bold: **text** → <b>text</b>
-  text = text.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-  // Underline: __text__ → <u>text</u>
-  text = text.replace(/__([^_]+)__/g, '<u>$1</u>');
-  // Italic: _text_ → <i>text</i>
-  text = text.replace(/(?<!_)_([^_]+)_(?!_)/g, '<i>$1</i>');
-  // Strikethrough: ~~text~~ → <s>text</s>
-  text = text.replace(/~~([^~]+)~~/g, '<s>$1</s>');
-  // Inline code: `text` → <code>text</code>
-  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Inline markers, from the table shared with the bubble and the composer, so a
+  // preview cannot format text differently from the message it previews. URLs
+  // are shielded first: markers inside an address are address characters.
+  {
+    const shielded = shieldUrls(stripCaretMarkers(text));
+    text = shielded.restore(applyInlineRules(shielded.text, RENDER_TAGS));
+  }
   // Strip links: [text](url) → text
   text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
   // Strip blockquotes: > text → text

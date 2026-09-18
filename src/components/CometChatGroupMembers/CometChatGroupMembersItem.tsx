@@ -227,7 +227,13 @@ function CometChatGroupMembersItemInner({
                 e.stopPropagation();
               }}
               onKeyDown={e => {
-                e.stopPropagation();
+                // Space natively toggles the checkbox (via onChange); stop it
+                // from also reaching the row handler (double toggle). Enter is
+                // left to bubble to the row, which toggles selection too (native
+                // checkboxes ignore Enter).
+                if (e.key === ' ') {
+                  e.stopPropagation();
+                }
               }}
               role="presentation"
             >

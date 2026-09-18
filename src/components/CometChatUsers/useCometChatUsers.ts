@@ -225,6 +225,26 @@ export function useCometChatUsers(
     dispatch({ type: 'CLEAR_SELECTION' });
   }, []);
 
+  // Deselect every currently selected user (fires onSelect(false) for each so
+  // consumers tracking selection via the callback stay in sync).
+  const deselectAll = useCallback(() => {
+    if (state.selectedUserIds.length > 0) {
+      deselectRange(state.selectedUserIds);
+    }
+  }, [state.selectedUserIds, deselectRange]);
+
+  // Ctrl/Cmd+A behaviour: select all loaded users, or deselect all when they
+  // are already selected (toggle). Only meaningful in multiple-selection mode.
+  const toggleSelectAll = useCallback(() => {
+    if (selectionMode !== 'multiple' || state.users.length === 0) return;
+    const allSelected = state.users.every(u => state.selectedUserIds.includes(u.getUid()));
+    if (allSelected) {
+      deselectAll();
+    } else {
+      selectRange(state.users);
+    }
+  }, [selectionMode, state.users, state.selectedUserIds, selectRange, deselectAll]);
+
   const setActiveUser = useCallback((userId: string | null) => {
     dispatch({ type: 'SET_ACTIVE_USER', userId });
   }, []);
@@ -294,6 +314,8 @@ export function useCometChatUsers(
     selectRange,
     deselectRange,
     clearSelection,
+    deselectAll,
+    toggleSelectAll,
     setActiveUser,
     handleItemClick,
   };

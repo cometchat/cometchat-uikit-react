@@ -9,7 +9,7 @@ import './styles/index.css';
 // CometChatUIKit (main entry point)
 export { CometChatUIKit, UIKitSettingsBuilder, UIKitSettings } from './CometChatUIKit';
 export type { CometChatPresenceSubscription } from './CometChatUIKit';
-export const VERSION = '7.2.0';
+export const VERSION = '7.2.1';
 
 // Root Provider
 export { CometChatProvider } from './context/CometChatProvider';

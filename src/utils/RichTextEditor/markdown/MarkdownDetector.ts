@@ -4,12 +4,9 @@
  * Fires on every `input` event. Checks the text before the cursor in the
  * current text node for a completed inline pattern (closing marker just typed).
  *
- * Supported inline conversions:
- * - **text**        → <strong>
- * - *text*          → <strong>  (single asterisk)
- * - _text_          → <em>
- * - ~~text~~        → <s>
- * - `text`          → <code>
+ * Inline marker conversions come from INLINE_RULES (see utils/markdownInline),
+ * the same table the message bubble and the paste pass use. Handled here on top
+ * of those:
  * - [label](url)    → <a href="url">label</a>
  * - <u>text</u>     → <u>
  *
@@ -21,6 +18,8 @@
 
 import type { EditorContext } from '../formats/format.types';
 import { applyListStyles } from '../formats/ListFormat';
+import { markersInsideUrl } from '../../urlShielding';
+import { INLINE_RULES, EDITOR_TAGS } from '../../markdownInline';
 import { fixOrderedListContinuation } from '../formats/ListFormat';
 
 /**
@@ -39,38 +38,14 @@ export function detectAndConvertMarkdown(ctx: EditorContext): boolean {
   const cursor = range.startOffset;
   const before = text.substring(0, cursor);
 
-  // ── Bold: **text** ──────────────────────────────────────────────────────────
-  const boldDouble = /\*\*([^*\n]+)\*\*$/.exec(before);
-  if (boldDouble) {
-    applyInlineFormat(textNode, boldDouble, 'STRONG', cursor);
-    return true;
-  }
-
-  // ── Bold: *text* (single asterisk) ─────────────────────────────────────────
-  const boldSingle = /(?<!\*)\*([^*\n]+)\*$/.exec(before);
-  if (boldSingle) {
-    applyInlineFormat(textNode, boldSingle, 'STRONG', cursor);
-    return true;
-  }
-
-  // ── Italic: _text_ ──────────────────────────────────────────────────────────
-  const italic = /(?<!_)_([^_\n]+)_$/.exec(before);
-  if (italic) {
-    applyInlineFormat(textNode, italic, 'EM', cursor);
-    return true;
-  }
-
-  // ── Strikethrough: ~~text~~ ─────────────────────────────────────────────────
-  const strike = /~~([^~\n]+)~~$/.exec(before);
-  if (strike) {
-    applyInlineFormat(textNode, strike, 'S', cursor);
-    return true;
-  }
-
-  // ── Inline code: `text` ─────────────────────────────────────────────────────
-  const code = /`([^`\n]+)`$/.exec(before);
-  if (code) {
-    applyInlineFormat(textNode, code, 'CODE', cursor);
+  // Inline markers, from the table shared with the bubble and the paste pass, so
+  // the composer preview cannot support a marker the sent message does not.
+  for (const rule of INLINE_RULES) {
+    const match = rule.anchored.exec(before);
+    if (!match) continue;
+    // Markers inside a URL are address characters, not formatting.
+    if (markersInsideUrl(text, cursor - match[0].length, cursor)) continue;
+    applyInlineFormat(textNode, match, EDITOR_TAGS[rule.format].toUpperCase(), cursor);
     return true;
   }
 
