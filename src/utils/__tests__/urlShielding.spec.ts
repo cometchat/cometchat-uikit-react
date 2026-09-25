@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shieldUrls, markersInsideUrl } from '../urlShielding';
+import { shieldUrls, markersInsideUrl, trimUrlTrailing } from '../urlShielding';
 
 describe('shieldUrls', () => {
   it('hides a URL from marker rules and restores it', () => {
@@ -32,6 +32,60 @@ describe('shieldUrls', () => {
     expect(text.endsWith(')')).toBe(true);
   });
 
+  it('shields a balanced paren as part of the address', () => {
+    const url = 'https://en.wikipedia.org/wiki/Mercury_(planet)';
+    const { text, restore } = shieldUrls(url);
+    expect(text).not.toContain(')');
+    expect(restore(text)).toBe(url);
+  });
+
+  it('keeps the markdown paren outside a target that has balanced ones', () => {
+    const { text } = shieldUrls('[Mercury](https://en.wikipedia.org/wiki/Mercury_(planet))');
+    expect(text).toBe(text.replace(/\)+$/, '') + ')');
+  });
+
+  it('keeps a markdown link separable when the label is itself a URL', () => {
+    // What pasting a copied link produces: the anchor's text is its own address.
+    const url = 'https://drive.google.com/file/d/1g3Xz3EficX_lDKh/view?usp=drive_link';
+    const { text, restore } = shieldUrls(`[${url}](${url})`);
+    // Label and target are shielded separately, so `](` survives for the link rule.
+    expect(text).toContain('](');
+    expect(text).not.toContain('_');
+    expect(restore(text)).toBe(`[${url}](${url})`);
+  });
+
+  it('shields an IPv6 host whole', () => {
+    // `]` only ends the span when `(` follows it.
+    const url = 'http://[::1]:3000/a_b_c';
+    const { text, restore } = shieldUrls(url);
+    expect(text).not.toContain('_');
+    expect(restore(text)).toBe(url);
+  });
+
+  // Balance alone cannot tell an address's own paren from the one closing
+  // `[label](…)`. Where the address holds an unmatched `(`, the parens add up
+  // only by borrowing the link's paren, leaving nothing to close the link.
+  it('hands back the paren that closes a markdown link', () => {
+    const { text } = shieldUrls('[docs](https://example.com/a_(b)');
+    expect(text.endsWith(')')).toBe(true);
+    expect(text).toContain('](');
+  });
+
+  it('keeps the address paren when the link brings its own', () => {
+    const { text, restore } = shieldUrls(
+      '[Mercury](https://en.wikipedia.org/wiki/Mercury_(planet))'
+    );
+    expect(text.endsWith(')')).toBe(true);
+    expect(restore(text)).toBe('[Mercury](https://en.wikipedia.org/wiki/Mercury_(planet))');
+  });
+
+  it('leaves a bare address with a balanced paren alone', () => {
+    const url = 'https://en.wikipedia.org/wiki/Mercury_(planet)';
+    const { text, restore } = shieldUrls(url);
+    expect(text).not.toContain(')');
+    expect(restore(text)).toBe(url);
+  });
+
   it('shields several URLs independently', () => {
     const input = 'https://a.com/x_y_z and https://b.com/p_q_r';
     const { text, restore } = shieldUrls(input);
@@ -50,6 +104,42 @@ describe('shieldUrls', () => {
   it('restore is a no-op when nothing was shielded', () => {
     const { restore } = shieldUrls('plain text');
     expect(restore('anything')).toBe('anything');
+  });
+});
+
+describe('trimUrlTrailing', () => {
+  // A closing paren ends both an address and the markdown that wraps one, so
+  // the balance decides it rather than the position.
+  it.each([
+    [
+      'https://en.wikipedia.org/wiki/Mercury_(planet)',
+      'https://en.wikipedia.org/wiki/Mercury_(planet)',
+    ],
+    [
+      'https://en.wikipedia.org/wiki/Python_(programming_language)',
+      'https://en.wikipedia.org/wiki/Python_(programming_language)',
+    ],
+    [
+      'https://learn.microsoft.com/api/string.format(v=vs.110)',
+      'https://learn.microsoft.com/api/string.format(v=vs.110)',
+    ],
+    ['https://example.com/a_(b)_(c)', 'https://example.com/a_(b)_(c)'],
+    // Nothing to close — the paren came from the text around the address.
+    ['https://example.com/page)', 'https://example.com/page'],
+    [
+      'https://en.wikipedia.org/wiki/Mercury_(planet))',
+      'https://en.wikipedia.org/wiki/Mercury_(planet)',
+    ],
+    // Ordinary sentence punctuation, and punctuation outside a balanced paren.
+    ['https://example.com/page.', 'https://example.com/page'],
+    [
+      'https://en.wikipedia.org/wiki/Mercury_(planet).',
+      'https://en.wikipedia.org/wiki/Mercury_(planet)',
+    ],
+    ['https://example.com/page**', 'https://example.com/page'],
+    ['https://example.com/page', 'https://example.com/page'],
+  ])('trims %s', (input, expected) => {
+    expect(trimUrlTrailing(input)).toBe(expected);
   });
 });
 

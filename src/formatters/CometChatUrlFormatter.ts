@@ -1,4 +1,5 @@
 import { CometChatTextFormatter } from './CometChatTextFormatter';
+import { trimUrlTrailing } from '../utils/urlShielding';
 
 /**
  * Formatter for URLs in text.
@@ -63,8 +64,9 @@ export class CometChatUrlFormatter extends CometChatTextFormatter {
 
     // Process bare URLs
     this.formattedText = protectedText.replace(this.getRegex(), match => {
-      // Strip trailing punctuation that's likely not part of the URL
-      const withoutTrailing = match.replace(/[).,;:!?]+$/, '');
+      // Strip trailing punctuation that's likely not part of the URL. A closing
+      // paren is decided by balance, so `/wiki/Mercury_(planet)` keeps its own.
+      const withoutTrailing = trimUrlTrailing(match, /[.,;:!?]+$/);
       const trailing = match.slice(withoutTrailing.length);
       const cleaned = withoutTrailing.replace(CometChatUrlFormatter.ZERO_WIDTH, '');
       this.urls.push(cleaned);

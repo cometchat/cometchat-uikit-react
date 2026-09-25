@@ -25,6 +25,57 @@ import { stripCaretMarkers } from '../utils/markdownInline';
  *
  * Priority is set high (200) so it runs AFTER other formatters in the pipeline.
  */
+/**
+ * The entities `innerHTML` produces when it serialises a text node, and the
+ * non-breaking space a contenteditable inserts to hold a trailing gap.
+ */
+const TEXT_NODE_ENTITIES: Readonly<Record<string, string>> = {
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&apos;': "'",
+  '&nbsp;': ' ',
+};
+
+/** Derived from the table, so the two cannot drift apart. */
+const TEXT_NODE_ENTITY = new RegExp(Object.keys(TEXT_NODE_ENTITIES).join('|'), 'g');
+
+/** The five characters that follow `&lt;` when the text spells a mention token. */
+const MENTION_TOKEN_START = /^@(?:uid|all):/i;
+
+/**
+ * Resolve the entities a serialiser introduced, and nothing else.
+ *
+ * Deliberately not a DOM decode. Handing this string to a parser would make the
+ * result depend on how that parser treats markup it was not expecting: a
+ * `textarea` round-trip drops an unrecognised tag on jsdom while preserving it
+ * in a browser, so a test would report behaviour the product does not have.
+ * This runs on unsanitised composer content, so a table of the seven entities
+ * `innerHTML` can emit is both sufficient and incapable of losing anything it
+ * does not recognise.
+ *
+ * One left-to-right pass, so `&amp;lt;` resolves to the literal `&lt;` rather
+ * than being decoded twice into `<`.
+ *
+ * A `&lt;` that would open a mention token is left alone. `<@uid:…>` and
+ * `<@all:…>` are how the SDK records a real mention, and the bubble styles any
+ * it finds in the message text without checking it against the mentioned users.
+ * Decoding text somebody typed by hand would therefore mint a mention nobody
+ * made. The escaped form still displays as `<` in the bubble, so the sender
+ * sees what they typed.
+ */
+function decodeHtmlEntities(text: string): string {
+  if (!text.includes('&')) return text;
+  return text.replace(TEXT_NODE_ENTITY, (entity, offset: number) => {
+    if (entity === '&lt;' && MENTION_TOKEN_START.test(text.slice(offset + 4, offset + 9))) {
+      return entity;
+    }
+    return TEXT_NODE_ENTITIES[entity] ?? entity;
+  });
+}
+
 export class CometChatRichTextFormatter extends CometChatTextFormatter {
   readonly id = 'rich-text-formatter';
   override priority = 200;
@@ -66,10 +117,15 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
       working = formatter.getOriginalText(working);
     }
 
-    // If no HTML tags, pass through
+    // No tags to convert, but the input is still HTML: the composer hands over
+    // its `innerHTML`, and serialising a bare text node escapes `&`, `<` and
+    // `>`. Returning it as-is stored a URL's query separator as `&amp;`, so the
+    // address that left the composer was not the one the sender typed, and
+    // every other platform received the broken form. Decode, without parsing
+    // markup — there is none to convert, and this text has not been sanitised.
     if (!this.shouldFormat(working)) {
-      this.formattedText = working;
-      return working;
+      this.formattedText = decodeHtmlEntities(working);
+      return this.formattedText;
     }
 
     // Use DOM parsing to convert HTML → markdown

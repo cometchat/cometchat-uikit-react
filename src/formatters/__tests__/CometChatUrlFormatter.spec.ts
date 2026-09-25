@@ -160,4 +160,72 @@ describe('CometChatUrlFormatter', () => {
       expect(result).toContain('</a>.');
     });
   });
+
+  // The shapes an address takes in ordinary use. The trailing-punctuation rule
+  // is the one piece of this formatter that has to tell an address apart from
+  // the sentence around it, so these guard it against a change made for a
+  // harder case.
+  describe('everyday addresses', () => {
+    it.each([
+      ['https://google.com', 'https://google.com'],
+      ['http://example.com', 'http://example.com'],
+      ['www.google.com', 'https://www.google.com'],
+      [
+        'https://github.com/cometchat/chat-uikit-react',
+        'https://github.com/cometchat/chat-uikit-react',
+      ],
+      ['https://example.com/path/to/page', 'https://example.com/path/to/page'],
+      ['https://example.com/search?q=hello&lang=en', 'https://example.com/search?q=hello&lang=en'],
+      ['https://example.com/page#section-2', 'https://example.com/page#section-2'],
+      ['https://sub.domain.example.co.uk/a/b', 'https://sub.domain.example.co.uk/a/b'],
+      ['http://localhost:3000/chat', 'http://localhost:3000/chat'],
+      ['https://192.168.1.10:8080/x', 'https://192.168.1.10:8080/x'],
+      ['https://example.com/a_b_c', 'https://example.com/a_b_c'],
+    ])('links %s in full', (input, href) => {
+      const result = new CometChatUrlFormatter().format(input);
+      expect(result).toContain(`href="${href}"`);
+      expect(result).toContain(`>${input}</a>`);
+    });
+
+    it('links every address in a sentence', () => {
+      const result = new CometChatUrlFormatter().format(
+        'Links: https://a.com, https://b.com and https://c.com'
+      );
+      expect(Array.from(result.matchAll(/href="([^"]*)"/g), m => m[1])).toEqual([
+        'https://a.com',
+        'https://b.com',
+        'https://c.com',
+      ]);
+    });
+
+    it('leaves text with no address alone', () => {
+      const text = 'Hello world, no links here';
+      expect(new CometChatUrlFormatter().format(text)).toBe(text);
+    });
+  });
+
+  describe('addresses that end in a parenthesis', () => {
+    // Wikipedia qualifies an ambiguous title with a parenthesis, so these are
+    // ordinary links to paste into a chat, not an edge case.
+    it('keeps a balanced closing paren in the href and the label', () => {
+      const url = 'https://en.wikipedia.org/wiki/Mercury_(planet)';
+      const result = new CometChatUrlFormatter().format(url);
+      expect(result).toContain(`href="${url}"`);
+      expect(result).toContain(`>${url}</a>`);
+    });
+
+    it('leaves a paren that closes the surrounding sentence outside the link', () => {
+      const result = new CometChatUrlFormatter().format('(see https://example.com/page)');
+      expect(result).toContain('href="https://example.com/page"');
+      expect(result.endsWith(')')).toBe(true);
+    });
+
+    it('still trims ordinary sentence punctuation', () => {
+      const result = new CometChatUrlFormatter().format(
+        'See https://en.wikipedia.org/wiki/Mercury_(planet).'
+      );
+      expect(result).toContain('href="https://en.wikipedia.org/wiki/Mercury_(planet)"');
+      expect(result.endsWith('.')).toBe(true);
+    });
+  });
 });

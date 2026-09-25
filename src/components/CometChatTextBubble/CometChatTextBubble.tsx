@@ -8,6 +8,7 @@ import type { CometChatTextFormatter } from '../../formatters/CometChatTextForma
 import { CometChatMentionsFormatter } from '../../formatters/CometChatMentionsFormatter';
 import { sanitizeHtml, escapeUserHtml, stripInvalidMentionFormats } from '../../utils/sanitizeHtml';
 import { convertHtmlToMarkdown } from '../../utils/HtmlToMarkdown';
+import { selectDestinationPreviews } from '../../utils/linkPreviewTargets';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
 import { usePublishEvent } from '../../hooks/usePublishEvent';
@@ -307,10 +308,15 @@ export const CometChatTextBubble: React.FC<CometChatTextBubbleProps> = ({
   // Detect single emoji
   const isSingleEmoji = useMemo(() => detectSingleEmoji(effectiveText), [effectiveText]);
 
-  // Extract link previews from message metadata
+  // Extract link previews from message metadata, keeping only those for
+  // addresses the message's links actually open.
   const linkPreviews = useMemo(
-    () => extractLinkPreviews(message as CometChat.TextMessage | undefined),
-    [message]
+    () =>
+      selectDestinationPreviews(
+        extractLinkPreviews(message as CometChat.TextMessage | undefined),
+        effectiveText
+      ),
+    [message, effectiveText]
   );
 
   // Extract translation from message metadata

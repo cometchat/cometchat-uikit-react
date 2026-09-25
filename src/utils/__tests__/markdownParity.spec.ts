@@ -52,11 +52,15 @@ function shape(html: string): string {
  * The composer does not linkify a bare URL as you type — that would rewrite the
  * text under the caret. The bubble does. This is the one intended difference,
  * so it is normalised away rather than left to fail the comparison.
+ *
+ * Applied to both sides, because an anchor whose label is its own address can
+ * arise either way: the bubble builds one from a bare URL, and both surfaces
+ * build one from `[url](url)`, which is what pasting a copied link stores. A
+ * link with a distinct label is left alone on both sides and still has to match.
  */
 function ignoreAutoLink(html: string): string {
-  // Only unwrap anchors the URL formatter created from a bare URL, where the
-  // link text is the address itself. A markdown link has a distinct label and
-  // must still match the composer.
+  // Only unwrap anchors whose link text is the address itself. A markdown link
+  // with a distinct label must still match between the two surfaces.
   return html.replace(
     /<a href="([^"]*)"[^>]*>([^<]*)<\/a>/g,
     (match, href: string, label: string) =>
@@ -97,6 +101,10 @@ describe('composer preview matches bubble render', () => {
     '`https://x.com/a_b_c`',
     // A markdown link whose label is itself formatted.
     '[**bold**](https://x.com/a_b_c)',
+    // A markdown link whose label is its own address — what pasting a copied
+    // link produces, since the pasted anchor's text equals its href.
+    '[https://x.com/a_b_c](https://x.com/a_b_c)',
+    '[https://x.com/shown_a](https://x.com/target_b)',
     // Text that must not be mistaken for formatting.
     '2*3*4',
     'snake_case_name_here',
@@ -107,6 +115,11 @@ describe('composer preview matches bubble render', () => {
     'https://x.com/a~~b~~c',
     'https://x.com/p?a_b#c_d',
     'https://en.wikipedia.org/wiki/Foo_(bar)_baz',
+    // An address that ends in a paren, which is how Wikipedia qualifies an
+    // ambiguous title.
+    'https://en.wikipedia.org/wiki/Mercury_(planet)',
+    '[Mercury](https://en.wikipedia.org/wiki/Mercury_(planet))',
+    'See https://en.wikipedia.org/wiki/Mercury_(planet).',
     '~~https://x.com/a_b_c~~',
     '🎉 _party_ 🎉',
     '> _quoted_ text',
@@ -139,7 +152,7 @@ describe('composer preview matches bubble render', () => {
 
   for (const input of CASES) {
     it(`agrees on ${JSON.stringify(input)}`, () => {
-      const preview = shape(composerPreview(input));
+      const preview = ignoreAutoLink(shape(composerPreview(input)));
       const bubble = ignoreAutoLink(shape(bubbleRender(input)));
       expect(preview).toBe(bubble);
     });

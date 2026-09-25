@@ -140,7 +140,7 @@ export class CometChatUIKit {
     if (typeof window !== 'undefined') {
       (window as unknown as Record<string, unknown>).CometChatUiKit = {
         name: '@cometchat/chat-uikit-react',
-        version: '7.2.1',
+        version: '7.2.2',
       };
     }
 
@@ -208,7 +208,7 @@ export class CometChatUIKit {
       if (typeof window !== 'undefined') {
         (window as unknown as Record<string, unknown>).CometChatUiKit = {
           name: '@cometchat/chat-uikit-react',
-          version: '7.2.1',
+          version: '7.2.2',
         };
       }
 

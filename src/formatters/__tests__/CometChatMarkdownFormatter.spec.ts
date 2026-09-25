@@ -109,6 +109,58 @@ describe('CometChatMarkdownFormatter', () => {
       expect(result).toContain('href="http://a.com"');
       expect(result).toContain('href="http://b.com"');
     });
+
+    // Pasting a copied link hands the composer an anchor whose visible text is
+    // its own address, which is stored as `[url](url)`. The label being a URL
+    // must not stop the link from rendering.
+    it('should convert a link whose label is the same URL as its target', () => {
+      const url = 'https://drive.google.com/file/d/1g3Xz3EficX_lDKh/view?usp=drive_link';
+      const result = formatter.format(`[${url}](${url})`);
+      expect(result).toBe(
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" class="cometchat-link">${url}</a>`
+      );
+      expect(result).not.toContain('](');
+      expect(result).not.toContain('<i>');
+    });
+
+    it('should convert a link whose label is a different URL from its target', () => {
+      const result = formatter.format('[https://shown.com/a_b](https://target.com/c_d)');
+      expect(result).toContain('href="https://target.com/c_d"');
+      expect(result).toContain('>https://shown.com/a_b</a>');
+    });
+
+    it('should keep a balanced closing paren in the target', () => {
+      const url = 'https://en.wikipedia.org/wiki/Mercury_(planet)';
+      const result = formatter.format(`[Mercury](${url})`);
+      expect(result).toContain(`href="${url}"`);
+      expect(result).toContain('>Mercury</a>');
+    });
+
+    it.each([
+      // The address holds an unmatched `(`, so the link's own `)` is the only
+      // one; balance alone would keep it and the link would never form.
+      ['[docs](https://example.com/a_(b)', 'https://example.com/a_(b', 'docs'],
+      ['[docs](https://example.com/a_(b) and more', 'https://example.com/a_(b', 'docs'],
+      // The link brings a second `)`, so the address keeps its own.
+      [
+        '[Mercury](https://en.wikipedia.org/wiki/Mercury_(planet))',
+        'https://en.wikipedia.org/wiki/Mercury_(planet)',
+        'Mercury',
+      ],
+    ])('should convert %s', (input, href, label) => {
+      const result = formatter.format(input);
+      expect(result).toContain(`href="${href}"`);
+      expect(result).toContain(`>${label}</a>`);
+    });
+
+    it('should convert two pasted links in one message', () => {
+      const a = 'https://a.com/x_y';
+      const b = 'https://b.com/p_q';
+      const result = formatter.format(`[${a}](${a}) and [${b}](${b})`);
+      expect(result).toContain(`href="${a}"`);
+      expect(result).toContain(`href="${b}"`);
+      expect(result).not.toContain('](');
+    });
   });
 
   describe('format - blockquotes', () => {
