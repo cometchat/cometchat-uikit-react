@@ -34,12 +34,23 @@ describe('useNotificationUnreadCount', () => {
   });
 
   it('does not crash during server-side rendering', () => {
-    const SsrProbe = () => {
-      useNotificationUnreadCount();
-      return React.createElement('div');
-    };
+    const originalWindow = (globalThis as any).window;
+    const originalDocument = (globalThis as any).document;
 
-    expect(() => renderToString(React.createElement(SsrProbe))).not.toThrow();
+    vi.stubGlobal('window', undefined);
+    vi.stubGlobal('document', undefined);
+
+    try {
+      const SsrProbe = () => {
+        useNotificationUnreadCount();
+        return React.createElement('div');
+      };
+
+      expect(() => renderToString(React.createElement(SsrProbe))).not.toThrow();
+    } finally {
+      vi.stubGlobal('window', originalWindow);
+      vi.stubGlobal('document', originalDocument);
+    }
   });
 
   it('uses the provided polling interval', async () => {
