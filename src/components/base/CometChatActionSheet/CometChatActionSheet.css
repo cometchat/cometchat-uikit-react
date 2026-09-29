@@ -1,13 +1,18 @@
 /* ActionSheet — overlay + backdrop */
+/* absolute, not fixed — overlays cover the app (the positioned `.cometchat` wrapper), not the
+   browser viewport. See styles/index.css. */
 .cometchat-action-sheet__backdrop {
-  position: fixed;
+  border-radius: inherit;
+  position: absolute;
   inset: 0;
   z-index: 1000;
   background: var(--cometchat-overlay-background-heavy, rgba(0, 0, 0, 0.6));
 }
 
+/* absolute, not fixed — a modal sheet belongs to the app, not the browser window. It carries no
+   offsets, so this only changes which ancestor it is out-of-flow relative to. */
 .cometchat-action-sheet {
-  position: fixed;
+  position: absolute;
   z-index: 1001;
   display: flex;
   min-width: 200px;

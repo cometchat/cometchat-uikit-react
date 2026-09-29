@@ -49,7 +49,7 @@ export const CometChatCallLogDetails = ({ selectedItem, onBack }: CometChatCallL
       }
     };
     void fetchUser();
-  }, [selectedItem]);
+  }, [selectedItem, getLocalizedString]);
 
   // User status listener
   useEffect(() => {
@@ -73,7 +73,7 @@ export const CometChatCallLogDetails = ({ selectedItem, onBack }: CometChatCallL
     return () => {
       CometChat.removeUserListener(listenerId);
     };
-  }, [user]);
+  }, [user, getLocalizedString]);
 
   const getLoadingView = () => {
     return (

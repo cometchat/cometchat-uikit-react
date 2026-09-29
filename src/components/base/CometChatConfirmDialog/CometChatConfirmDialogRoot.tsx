@@ -9,6 +9,7 @@ import { CometChatConfirmDialogIcon } from './CometChatConfirmDialogIcon';
 import { CometChatConfirmDialogContent } from './CometChatConfirmDialogContent';
 import { CometChatConfirmDialogActions } from './CometChatConfirmDialogActions';
 import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
+import { useOverlayContainer } from '../../../context/OverlayContainerContext';
 import './CometChatConfirmDialog.css';
 
 /** Stable IDs for aria-labelledby / aria-describedby. */
@@ -26,10 +27,18 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
   variant = 'danger',
   children,
   className,
+  container,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const IframeContext = useCometChatFrameContext();
+  const defaultContainer = useOverlayContainer();
+  /**
+   * `container === null` means "render in place, do not portal" — distinct from `undefined`,
+   * which means "use the app root". Collapsing the two would make an opt-out render nothing.
+   */
+  const shouldPortal = container !== null;
+  const portalTarget = container ?? defaultContainer;
 
   const getCurrentDocument = useCallback(() => {
     return IframeContext.iframeDocument ?? document;
@@ -131,12 +140,22 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
   );
 
   if (!isOpen) return null;
+  // Only a *portalling* dialog needs to wait for a target; an in-place one renders immediately.
+  if (shouldPortal && !portalTarget) return null;
 
   const backdropClasses = ['cometchat-confirm-dialog__backdrop', className]
     .filter(Boolean)
     .join(' ');
 
-  const dialog = (
+  /**
+   * Portalled to the app wrapper, not rendered in place.
+   *
+   * `position: absolute` alone is not containment — it resolves against the nearest *positioned*
+   * ancestor, and this dialog is opened from places that have several. The
+   * portal lifts it to `.cometchat` so `inset: 0` covers the whole app, which is what a modal
+   * backdrop means.
+   */
+  const dialogTree = (
     <CometChatConfirmDialogContext.Provider value={ctxValue}>
       <div className={backdropClasses}>
         <div
@@ -161,10 +180,7 @@ export const CometChatConfirmDialogRoot: React.FC<CometChatConfirmDialogRootProp
     </CometChatConfirmDialogContext.Provider>
   );
 
-  /*
-   * Portalled to the document body, NOT rendered in place.
-   */
-  return createPortal(dialog, getCurrentDocument().body);
+  return shouldPortal && portalTarget ? createPortal(dialogTree, portalTarget) : dialogTree;
 };
 
 CometChatConfirmDialogRoot.displayName = 'CometChatConfirmDialogRoot';

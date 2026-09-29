@@ -841,8 +841,10 @@
 }
 
 /* ==================== Link Dialog Overlay ==================== */
+/* absolute, not fixed — overlays cover the app (the positioned `.cometchat` wrapper), not the
+   browser viewport. See styles/index.css. */
 .cometchat-message-composer__link-dialog-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 1000;
   display: flex;

@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useCometChatMessageListContext } from './CometChatMessageList.context';
 import { CometChatMessageListDateSeparator } from './CometChatMessageListDateSeparator';
@@ -16,6 +17,7 @@ import { useMessageListViewDialogs } from './useMessageListViewDialogs';
 import { isDifferentDay } from './CometChatMessageList.utils';
 import { computeBatchPosition } from '../../utils/CometChatBatchUtils';
 import type { CometChatMessageListAlignment } from './CometChatMessageList.types';
+import { useOverlayContainer } from '../../context/OverlayContainerContext';
 import './CometChatMessageList.css';
 
 // Lazy-load heavy components only needed on interaction
@@ -68,6 +70,7 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
   hideModerationView: hideModerationViewProp,
   isAgentChat: isAgentChatProp,
 }) => {
+  const overlayContainer = useOverlayContainer();
   const {
     allMessages,
     loggedInUser,
@@ -199,6 +202,7 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
               batchPosition={computeBatchPosition(prevMsg, msg, messages[i + 1])}
               {...(onThreadRepliesClick !== undefined && { onThreadRepliesClick })}
               {...(onAvatarClick !== undefined && { onAvatarClick })}
+              hideReceipts={listOptions.hideReceipts}
               onDeleteMessage={handleDeleteMessage}
               onFlagMessage={handleFlagMessage}
               onMarkAsUnread={handleMarkAsUnread}
@@ -423,30 +427,36 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
         </Suspense>
       )}
 
-      {/* Message Information panel — centered overlay */}
-      {messageInfoTarget && (
-        <div
-          className={'cometchat-message-list__message-info-overlay'}
-          onClick={e => {
-            if (e.target === e.currentTarget) {
-              handleMessageInfoClose();
-            }
-          }}
-          role="presentation"
-        >
-          <div className={'cometchat-message-list__message-info-panel'}>
-            <Suspense fallback={null}>
-              <LazyCometChatMessageInformation
-                message={messageInfoTarget}
-                onClose={handleMessageInfoClose}
-                {...(listOptions.textFormatters !== undefined && {
-                  textFormatters: listOptions.textFormatters,
-                })}
-              />
-            </Suspense>
-          </div>
-        </div>
-      )}
+      {/* Message Information panel — centered overlay.
+          Portalled: the message list sets `position: relative` for its own scroll-to-bottom and
+          shimmer children, so an `absolute` overlay rendered here would cover only the list. */}
+      {messageInfoTarget &&
+        overlayContainer &&
+        createPortal(
+          <div
+            className={'cometchat-message-list__message-info-overlay'}
+            onClick={e => {
+              if (e.target === e.currentTarget) {
+                handleMessageInfoClose();
+              }
+            }}
+            role="presentation"
+          >
+            <div className={'cometchat-message-list__message-info-panel'}>
+              <Suspense fallback={null}>
+                <LazyCometChatMessageInformation
+                  message={messageInfoTarget}
+                  onClose={handleMessageInfoClose}
+                  hideReceipts={listOptions.hideReceipts}
+                  {...(listOptions.textFormatters !== undefined && {
+                    textFormatters: listOptions.textFormatters,
+                  })}
+                />
+              </Suspense>
+            </div>
+          </div>,
+          overlayContainer
+        )}
     </>
   );
 };

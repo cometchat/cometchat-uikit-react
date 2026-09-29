@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { CometChatConversationsContext } from './CometChatConversations.context';
 import { useCometChatConversations } from './useCometChatConversations';
 import { CometChatConversationsList } from './CometChatConversationsList';
@@ -118,9 +118,11 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
     hookReturn.setConversationToBeDeleted(null);
   }, [hookReturn]);
 
+  const [conversationsRoot, setConversationsRoot] = useState<HTMLDivElement | null>(null);
   return (
     <CometChatConversationsContext.Provider value={contextValue}>
       <div
+        ref={setConversationsRoot}
         className={'cometchat-conversations'}
         role="region"
         aria-label={getLocalizedString('conversation_chat_title')}
@@ -141,13 +143,17 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
           </>
         )}
 
-        {/* Delete confirmation dialog. Rendered directly so it uses the confirm
-            dialog's own body-portalled, fixed full-screen backdrop and overlays
-            the whole app (over the chat) — same as the pin/save dialog below.
-            Do NOT wrap it in a locally-positioned backdrop: the dialog portals to
-            <body>, so a `position: absolute/static` wrapper drops it behind the UI. */}
+        {/* Delete confirmation dialog — scoped to the conversation list, not the app.
+            `container` points at this component's own root, so the dialog's backdrop dims exactly
+            the list where the action was taken and the rest of the UI stays usable. */}
         {hookReturn.conversationToBeDeleted && (
-          <CometChatConfirmDialog.Root isOpen={true} onClose={handleDeleteCancel} variant="danger">
+          <CometChatConfirmDialog.Root
+            isOpen={true}
+            onClose={handleDeleteCancel}
+            variant="danger"
+            className={'cometchat-conversations__delete-dialog'}
+            container={conversationsRoot}
+          >
             <CometChatConfirmDialog.Icon />
             <CometChatConfirmDialog.Content
               title={getLocalizedString('conversation_delete_title')}

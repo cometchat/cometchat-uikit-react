@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { CometChatOverlayContainerContext } from './OverlayContainerContext';
 import type { CometChatTheme, CometChatThemeProviderProps } from './ThemeContext.types';
 import { CometChatThemeContext } from './ThemeContext';
 
@@ -26,6 +27,15 @@ export const CometChatThemeProvider: React.FC<CometChatThemeProviderProps> = ({
 }) => {
   const [internalTheme, setInternalTheme] = useState<CometChatTheme>(themeProp);
 
+  /**
+   * The `.cometchat` node, published so overlays can portal into it instead of the page body.
+   *
+   * State rather than a ref: a ref's `.current` mutation does not re-render, so consumers reading
+   * it through context would see `null` on the first paint and never be told otherwise. A callback
+   * ref stored in state re-renders once when the node attaches, which is what portalling needs.
+   */
+  const [overlayContainer, setOverlayContainer] = useState<HTMLDivElement | null>(null);
+
   // Sync internal state when prop changes (controlled mode)
   useEffect(() => {
     setInternalTheme(themeProp);
@@ -42,8 +52,10 @@ export const CometChatThemeProvider: React.FC<CometChatThemeProviderProps> = ({
 
   return (
     <CometChatThemeContext.Provider value={contextValue}>
-      <div data-theme={internalTheme} className="cometchat">
-        {children}
+      <div data-theme={internalTheme} className="cometchat" ref={setOverlayContainer}>
+        <CometChatOverlayContainerContext.Provider value={overlayContainer}>
+          {children}
+        </CometChatOverlayContainerContext.Provider>
       </div>
     </CometChatThemeContext.Provider>
   );

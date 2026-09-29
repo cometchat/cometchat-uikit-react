@@ -6,7 +6,6 @@ import type {
 import { extractAudioAttachments, extractAudioCaption } from './CometChatAudioBubble.utils';
 import { CometChatTextBubble } from '../CometChatTextBubble/CometChatTextBubble';
 import { WaveSurfer } from './wavesurfer';
-import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { downloadWithProgress } from '../../utils/downloadWithProgress';
 import { getBubbleAlignment } from '../../utils/getBubbleAlignment';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
@@ -47,7 +46,6 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const isPlayingRef = useRef(false);
-  const IframeContext = useCometChatFrameContext();
 
   // Stable handle for the global single-audio policy: pausing from elsewhere
   // must also reflect the paused state in this item's own UI.
@@ -59,10 +57,6 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
     },
   });
 
-  const getCurrentDocument = useCallback(() => {
-    return IframeContext.iframeDocument ?? document;
-  }, [IframeContext.iframeDocument]);
-
   const isOutgoing = variant === 'outgoing';
 
   // Initialize WaveSurfer
@@ -72,19 +66,29 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
     setIsLoading(true);
     setHasError(false);
 
-    const root = getCurrentDocument().documentElement;
+    /*
+     * Read the theme off the waveform element, not <html>. Theme variables are set on
+     * `.cometchat[data-theme]`, and <html> only carries the light defaults — so reading there
+     * ignored both a custom brand colour and dark mode. Custom properties inherit, so this element
+     * sees whatever its nearest themed ancestor set. Its own window keeps it correct in an iframe.
+     */
+    const el = waveformRef.current;
+    const styles = (el.ownerDocument.defaultView ?? window).getComputedStyle(el);
     const progressColor = isOutgoing
-      ? getComputedStyle(root).getPropertyValue('--cometchat-static-white').trim() || '#fff'
-      : getComputedStyle(root).getPropertyValue('--cometchat-primary-color').trim() || '#6852d6';
+      ? styles.getPropertyValue('--cometchat-static-white').trim() || '#fff'
+      : styles.getPropertyValue('--cometchat-primary-color').trim() || '#6852d6';
     const waveColor = isOutgoing
-      ? getComputedStyle(root).getPropertyValue('--cometchat-neutral-color-500').trim() || '#999'
-      : getComputedStyle(root).getPropertyValue('--cometchat-extended-primary-color-300').trim() ||
-        '#b8aee8';
-    const barRadiusStr = getComputedStyle(root).getPropertyValue('--cometchat-radius-max').trim();
+      ? styles.getPropertyValue('--cometchat-neutral-color-500').trim() || '#999'
+      : styles.getPropertyValue('--cometchat-extended-primary-color-300').trim() || '#b8aee8';
+    const barRadiusStr = styles.getPropertyValue('--cometchat-radius-max').trim();
     const barRadius = parseInt(barRadiusStr.replace('px', ''), 10) || 1000;
 
     const ws = WaveSurfer.create({
       container: waveformRef.current,
+      // The element's own realm: inside an iframe (the no-code widget) it is not an instance of the
+      // host page's HTMLElement, and the renderer rejects it with "Container not found".
+      iframeDocument: el.ownerDocument,
+      iframeWindow: el.ownerDocument.defaultView ?? window,
       height: 16,
       normalize: false,
       waveColor,
@@ -151,7 +155,7 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
       }
       wsRef.current = null;
     };
-  }, [attachment.url, isOutgoing, getCurrentDocument]);
+  }, [attachment.url, isOutgoing]);
 
   // Play/pause
   const handlePlayPause = useCallback(() => {

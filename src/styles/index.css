@@ -3,8 +3,32 @@
 @import url('./themes/dark.css');
 
 @layer cometchat {
+  /**
+   * The containment boundary for overlays.
+   *
+   * `.cometchat` is the wrapper CometChatThemeProvider renders around the whole app. Making it a
+   * positioned ancestor means overlays (fullscreen viewer, call screens, dialog backdrops) can use
+   * `position: absolute; inset: 0` to cover *the app* rather than `position: fixed` to cover the
+   * browser window. Those are the same thing in a standalone app and very different in an embed —
+   * a viewport-covering overlay spills over the
+   * surrounding page.
+   *
+   * Overlays portal here via `useOverlayContainer()` so intermediate ancestors (a message bubble's
+   * own `position: relative`, a `transform` on an animated parent) cannot capture them first.
+   */
+  .cometchat {
+    position: relative;
+  }
+
+  /**
+   * Viewport height only where `.cometchat` really is the page — mounted straight into `#root`.
+   *
+   * An embed sizes its own container and its `.cometchat` fills it with `height: 100%`, so this
+   * selector deliberately does not match there. Since overlays are contained to this element,
+   * sizing it to the viewport is also what keeps them in view.
+   */
   #root > .cometchat {
-    height: 100vh;
+    height: 100dvh;
   }
 
   body {

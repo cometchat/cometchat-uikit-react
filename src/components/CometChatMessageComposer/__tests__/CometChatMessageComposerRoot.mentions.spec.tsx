@@ -1,7 +1,7 @@
 /**
  * Mentions in the plain text composer (enableRichTextEditor={false}).
  *
- * Regression coverage for: selecting a suggestion recorded the
+ * Regression coverage for ENG-38099: selecting a suggestion recorded the
  * mentioned user on the outgoing payload but never inserted anything into the
  * composer, so the message went out without the mention text or its SDK token.
  */

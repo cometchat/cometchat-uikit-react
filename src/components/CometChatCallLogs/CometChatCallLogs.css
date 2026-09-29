@@ -15,9 +15,11 @@
 }
 
 /* Outgoing call overlay — full viewport */
+/* absolute, not fixed — overlays cover the app (the positioned `.cometchat` wrapper), not the
+   browser viewport. See styles/index.css. */
 .cometchat-call-logs__outgoing-call {
   background: rgba(0, 0, 0, 0.5);
-  position: fixed;
+  position: absolute;
   left: 0;
   top: 0;
   width: 100%;
@@ -30,7 +32,7 @@
 
 /* Ongoing call overlay — full viewport */
 .cometchat-call-logs__ongoing-call {
-  position: fixed;
+  position: absolute;
   left: 0;
   top: 0;
   width: 100%;

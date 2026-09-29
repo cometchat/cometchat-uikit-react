@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useSettings } from '../../config/SettingsContext';
+import type { TabName } from '../../config/settings.types';
 import './CometChatTabs.css';
 
 export interface TabItem {
@@ -53,11 +55,20 @@ const defaultTabItems: TabItem[] = [
 export const CometChatTabs = (props: CometChatTabsProps) => {
   const { onTabClicked = () => {}, activeTab, tabNames } = props;
   const [hoverTab, setHoverTab] = useState('');
+  const { layout } = useSettings();
 
-  const tabItems: TabItem[] = defaultTabItems.map((tab) => ({
-    ...tab,
-    name: tabNames?.[tab.id] ?? tab.name,
-  }));
+  // Keep the default ordering and filter down to the enabled tabs, rather than following the
+  // order in settings — matches how the v6 builder behaved.
+  const tabItems: TabItem[] = defaultTabItems
+    .filter((tab) => layout.tabs.includes(tab.id as TabName))
+    .map((tab) => ({
+      ...tab,
+      name: tabNames?.[tab.id] ?? tab.name,
+    }));
+
+  // A single tab is not a choice — hide the bar entirely. With default settings all four tabs
+  // are enabled, so this never triggers in the plain sample app.
+  if (tabItems.length <= 1) return null;
 
   return (
     <div className="cometchat-tab-component">

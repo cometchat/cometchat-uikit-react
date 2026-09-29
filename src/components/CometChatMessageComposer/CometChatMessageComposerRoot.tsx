@@ -15,6 +15,7 @@ import { CometChatMessageComposerMentionsList } from './CometChatMessageComposer
 import type { CometChatMessageComposerMentionsListHandle } from './CometChatMessageComposerMentionsList';
 import { CometChatMessageComposerTray } from './CometChatMessageComposerTray';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
+import { useOverlayContainer } from '../../context/OverlayContainerContext';
 import { CometChatFormattingToolbar } from '../base/CometChatFormattingToolbar/CometChatFormattingToolbar';
 import { CometChatLinkDialog } from '../base/CometChatLinkDialog/CometChatLinkDialog';
 import { CometChatLinkPopover } from '../base/CometChatLinkPopover/CometChatLinkPopover';
@@ -186,6 +187,8 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
   const [mentionActiveDescendantId, setMentionActiveDescendantId] = useState<string | null>(null);
 
   const IframeContext = useCometChatFrameContext();
+
+  const overlayContainer = useOverlayContainer();
 
   const getCurrentDocument = useCallback(() => {
     return IframeContext.iframeDocument ?? document;
@@ -1225,6 +1228,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
         }
         return hook.editMessage();
       },
+      playOutgoingSound: hook.playOutgoingSound,
       insertEmoji: handleInsertEmoji,
       setContentToDisplay: hook.setContentToDisplay,
       closePreview: hook.closePreview,
@@ -1309,6 +1313,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
       hook.setText,
       handleSendMessage,
       hook.sendMediaMessage,
+      hook.playOutgoingSound,
       hook.editMessage,
       handleInsertEmoji,
       getPlainTextWithMentions,
@@ -1702,8 +1707,14 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
           />
         )}
       </div>
-      {/* Link Dialog — rendered via portal to escape composer stacking context */}
+      {/*
+        Link Dialog — portalled out of the composer's stacking context, but into the app root
+        rather than the document. `useOverlayContainer()` resolves the nearest `.cometchat`
+        through context; a `document.querySelector('.cometchat')` returns the *first* match in
+        document order, which is the wrong root as soon as a page hosts more than one..
+      */}
       {linkDialogState.open &&
+        overlayContainer &&
         createPortal(
           <div className={'cometchat-message-composer__link-dialog-overlay'}>
             <CometChatLinkDialog
@@ -1715,7 +1726,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
               onCancel={handleLinkDialogCancel}
             />
           </div>,
-          getCurrentDocument().querySelector('.cometchat') ?? getCurrentDocument().body
+          overlayContainer
         )}
     </CometChatMessageComposerContext.Provider>
   );

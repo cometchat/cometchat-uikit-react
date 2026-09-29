@@ -88,8 +88,16 @@ export const CometChatTooltip: React.FC<CometChatTooltipProps> = ({
     const anchor = anchorEl.getBoundingClientRect();
     const { width: tipW, height: tipH } = tip.getBoundingClientRect();
 
-    // Horizontal bounds: the bounds element's rect, or the viewport.
-    const viewportW = typeof window !== 'undefined' ? window.innerWidth : tipW;
+    /**
+     * Horizontal bounds: the bounds element's rect, or the viewport.
+     *
+     * The viewport is the *anchor's* — not the global one. The tooltip already portals into
+     * `anchorEl.ownerDocument`, so clamping against `window` measured the host page whenever the
+     * anchor lived in an iframe, letting the tooltip settle outside the visible area of an
+     * embedded widget. Falls back to `window` when there is no defaultView (detached document).
+     */
+    const ownerWindow = anchorEl.ownerDocument.defaultView ?? window;
+    const viewportW = typeof ownerWindow !== 'undefined' ? ownerWindow.innerWidth : tipW;
     const bounds = boundsEl?.getBoundingClientRect();
     const boundsLeft = (bounds?.left ?? 0) + boundsPadding;
     const boundsRight = (bounds?.right ?? viewportW) - boundsPadding;

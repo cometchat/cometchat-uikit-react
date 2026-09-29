@@ -63,6 +63,8 @@ function createContextValue(
     avatarName: '',
     isUserConversation: false,
     isGroupConversation: false,
+    // Mirrors the Root's own default, which is what the menu sees in practice.
+    showSearchOption: true,
     summaryGenerationMessageCount: 1000,
     ...overrides,
   };
@@ -100,11 +102,33 @@ describe('CometChatMessageHeaderOverflowMenu', () => {
   });
 
   it('renders Search and Conversation Summary menu items', () => {
-    renderOverflowMenu();
+    renderOverflowMenu({ showConversationSummaryButton: true });
     expect(screen.getByTestId('context-menu-item-search')).toBeInTheDocument();
     expect(screen.getByTestId('context-menu-item-summary')).toBeInTheDocument();
     expect(screen.getByText('search_title')).toBeInTheDocument();
     expect(screen.getByText('ai_conversation_summary_title')).toBeInTheDocument();
+  });
+
+  /**
+   * The menu also opens for search plus pinned messages, so the summary entry has to be gated on
+   * its own flag — it used to be pushed unconditionally and showed up with the feature off.
+   */
+  it('omits the summary item when showConversationSummaryButton is false', () => {
+    renderOverflowMenu({ showConversationSummaryButton: false });
+    expect(screen.getByTestId('context-menu-item-search')).toBeInTheDocument();
+    expect(screen.queryByTestId('context-menu-item-summary')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Search used to be pushed into the list unconditionally. That was invisible only because the
+   * Root refused to render this menu at all unless search was enabled — so the moment the Root
+   * learned to open the menu for pinned messages alone, an unwanted Search entry would have come
+   * with it.
+   */
+  it('omits the search item when showSearchOption is false', () => {
+    renderOverflowMenu({ showSearchOption: false, showConversationSummaryButton: true });
+    expect(screen.queryByTestId('context-menu-item-search')).not.toBeInTheDocument();
+    expect(screen.getByTestId('context-menu-item-summary')).toBeInTheDocument();
   });
 
   it('calls onSearchOptionClicked when Search item is clicked', () => {
@@ -116,7 +140,7 @@ describe('CometChatMessageHeaderOverflowMenu', () => {
 
   it('calls onSummaryClick when Conversation Summary item is clicked', () => {
     const onSummaryClick = vi.fn();
-    renderOverflowMenu({ onSummaryClick });
+    renderOverflowMenu({ onSummaryClick, showConversationSummaryButton: true });
     fireEvent.click(screen.getByTestId('context-menu-item-summary'));
     expect(onSummaryClick).toHaveBeenCalledTimes(1);
   });
@@ -129,7 +153,7 @@ describe('CometChatMessageHeaderOverflowMenu', () => {
   });
 
   it('does not throw when Summary is clicked without onSummaryClick', () => {
-    renderOverflowMenu({ onSummaryClick: undefined });
+    renderOverflowMenu({ onSummaryClick: undefined, showConversationSummaryButton: true });
     expect(() => {
       fireEvent.click(screen.getByTestId('context-menu-item-summary'));
     }).not.toThrow();

@@ -95,11 +95,11 @@ describe('CometChatOngoingCall', () => {
       expect(dialog.className).toContain('my-call');
     });
 
-    it('renders with full-screen fixed positioning', () => {
-      const { container } = render(<CometChatOngoingCall sessionID="session-123" />);
-      const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.style.position).toBe('fixed');
-      expect(wrapper.style.inset).toBe('0');
+    it('wraps the call screen in the restackable ongoing-call overlay, not inline styles', () => {
+      render(<CometChatOngoingCall sessionID="session-123" />);
+      const wrapper = screen.getByRole('dialog').parentElement!;
+      expect(wrapper).toHaveClass('cometchat-call-overlay', 'cometchat-call-overlay--ongoing');
+      expect(wrapper.getAttribute('style')).toBeNull();
     });
   });
 
@@ -114,11 +114,11 @@ describe('CometChatOngoingCall', () => {
       });
     });
 
-    it('generates a call token with sessionID', async () => {
+    it("generates a call token with sessionID and the logged-in user's auth token", async () => {
       render(<CometChatOngoingCall sessionID="session-123" />);
 
       await waitFor(() => {
-        expect(mockGenerateToken).toHaveBeenCalledWith('session-123');
+        expect(mockGenerateToken).toHaveBeenCalledWith('session-123', 'auth-token-123');
       });
     });
 

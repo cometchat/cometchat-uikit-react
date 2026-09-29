@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import React from 'react';
 import { CometChatConversationsContext } from '../CometChatConversations.context';
 import type { CometChatConversationsContextValue } from '../CometChatConversations.types';
@@ -162,17 +162,25 @@ vi.mock('../../base/CometChatSearchBar/CometChatSearchBar', () => ({
 }));
 
 // Mock CometChatConfirmDialog base component
+const confirmDialogProps = vi.hoisted(() => ({
+  container: undefined as HTMLElement | null | undefined,
+}));
 vi.mock('../../base/CometChatConfirmDialog/CometChatConfirmDialog', () => ({
   CometChatConfirmDialog: {
     Root: ({
       children,
+      container,
     }: {
       children: React.ReactNode;
       isOpen?: boolean;
       onClose?: () => void;
       variant?: string;
       className?: string;
-    }) => <div data-testid="confirm-dialog-root">{children}</div>,
+      container?: HTMLElement | null;
+    }) => {
+      confirmDialogProps.container = container;
+      return <div data-testid="confirm-dialog-root">{children}</div>;
+    },
     Icon: () => <span data-testid="confirm-dialog-icon" />,
     Content: ({ title, message }: { title: string; message: string }) => (
       <div data-testid="confirm-dialog-content">
@@ -568,6 +576,30 @@ describe('CometChatConversationsRoot', () => {
       </CometChatConversationsRoot>
     );
     expect(screen.getByTestId('custom-child')).toBeInTheDocument();
+  });
+
+  it('scopes the delete confirmation to the conversation list, not the whole app', async () => {
+    const DeleteTrigger: React.FC = () => {
+      const ctx = React.useContext(CometChatConversationsContext);
+      return (
+        <button type="button" onClick={() => ctx!.setConversationToBeDeleted({} as never)}>
+          delete
+        </button>
+      );
+    };
+    const { container } = render(
+      <CometChatConversationsRoot>
+        <DeleteTrigger />
+      </CometChatConversationsRoot>
+    );
+
+    await act(async () => {
+      screen.getByText('delete').click();
+    });
+
+    expect(screen.getByTestId('confirm-dialog-root')).toBeInTheDocument();
+    // The dialog portals into the list's own root, so its backdrop dims the list and nothing else.
+    expect(confirmDialogProps.container).toBe(container.querySelector('[role="region"]'));
   });
 
   it('provides context to children', () => {

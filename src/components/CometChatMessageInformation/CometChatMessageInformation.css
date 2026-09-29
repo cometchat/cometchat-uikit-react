@@ -193,6 +193,7 @@
   align-items: flex-start;
   padding: var(--cometchat-padding-3, 12px) var(--cometchat-padding-4, 16px);
   border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+  gap: 8px;
 }
 
 .cometchat-message-information__user-item:last-child {

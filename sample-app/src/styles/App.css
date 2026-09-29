@@ -7,8 +7,9 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  height: 100dvh;
+  /* 100% not 100vh: this renders inside the embed too, and a viewport-tall spinner overflows a
+     preview pane the same way the app itself did. */
+  height: 100%;
   gap: 16px;
   color: var(--cometchat-text-color-secondary, #666);
 }
@@ -30,13 +31,20 @@ body {
 
 .cometchat-root {
   width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  max-height: 100vh;
-  max-height: 100dvh;
+  /**
+   * Fills whatever box the embedder provides — it does not measure the viewport. The UI Kit sizes
+   * `#root > .cometchat` to the viewport, which is what makes the standalone app work.
+   */
+  height: 100%;
   display: flex;
   overflow: hidden;
   position: relative;
+}
+
+/* Config-driven hide (`layout.withSideBar: false`). The element stays mounted so embedders can
+   override this rule — the no-code widget forces the list back for narrow docked layouts. */
+.conversations-wrapper.hide-sidebar {
+  display: none;
 }
 
 .cometchat-root * {
@@ -47,8 +55,8 @@ body {
   display: flex;
   width: 30%;
   max-width: 420px;
-  height: 100vh;
-  height: 100dvh;
+  /* No height: as a flex child of .cometchat-root, `flex: 3` below plus the default
+     `align-items: stretch` already sizes this. */
   flex-direction: column;
   align-items: flex-start;
   gap: 0px;
@@ -133,31 +141,55 @@ body {
 
 .messages-wrapper {
   width: 40%;
-  height: 100vh;
-  height: 100dvh;
-  max-height: 100vh;
-  max-height: 100dvh;
+  /* Sized by `flex: 5` against .cometchat-root — see .conversations-wrapper above. */
   display: flex;
   flex-direction: column;
   flex: 5;
+  /**
+   * Establishes a stacking context so the pane's internals stay inside it.
+   *
+   * The message list has its own z-indexes (floating date 5, scroll-to-bottom 10, emoji picker
+   * 100). Without a context here those compete directly with the app's own panels, so a
+   * full-surface thread panel at z-index 4 rendered *underneath* the floating date. A flex item
+   * takes z-index without needing `position`, so this costs nothing and keeps the numbers local.
+   * Below .conversations-wrapper's 2 is deliberate: the sidebar overlaps the messages pane, not
+   * the other way round.
+   */
+  position: relative;
+  z-index: 1;
   background: var(--cometchat-background-color-03, #f5f5f5);
   overflow: hidden;
 }
 
-@media (max-width: 768px) {
-  .conversations-wrapper {
-    width: 100vw;
-    max-width: 100%;
-    min-width: 100%;
-    z-index: 1;
-  }
+/**
+ * Single-pane layout — driven by a class, NOT a media query.
+ *
+ * `useIsMobile()` measures the app's own container via ResizeObserver, because an embedded app is
+ * routinely far narrower than the window it sits in. A `@media (max-width: 768px)` rule measures
+ * the *viewport*, so the two disagreed exactly where it matters: in the builder's preview pane the
+ * container is narrow while the window is wide, so JS switched to single-pane and hid the message
+ * pane while CSS kept desktop widths — leaving the conversation list at 30% and an empty strip
+ * where the messages should be.
+ *
+ * `CometChatHome` now puts `cometchat-root--mobile` on the root from that same hook, so both sides
+ * read one measurement. Two numbers that must agree became one that cannot disagree.
+ */
+.cometchat-root--mobile .conversations-wrapper {
+  /* 100% of .cometchat-root, not the window — same reason as above. */
+  width: 100%;
+  max-width: 100%;
+  min-width: 100%;
+  z-index: 1;
+}
 
-  .cometchat-root {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin-bottom: 0;
-    overflow: hidden;
-  }
+.cometchat-root--mobile {
+  /* absolute, not fixed — on mobile this fills the app wrapper rather than the device viewport,
+     so an embedded app stays inside its box. In a standalone app the two are identical, since
+     `#root > .cometchat` is itself viewport-height. */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin-bottom: 0;
+  overflow: hidden;
 }

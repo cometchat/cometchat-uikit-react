@@ -390,6 +390,15 @@ export interface CometChatMessageComposerContextValue {
     options?: { isVoiceNote?: boolean }
   ) => Promise<void>;
   editMessage: () => Promise<void>;
+  /**
+   * Plays the outgoing-message sound, unless the host disabled it.
+   *
+   * Exposed because a message can leave the composer by five different routes — text, a single
+   * media file, a voice note, a batch from the staging tray, a sticker, or an extension (poll,
+   * collaborative document/whiteboard) — and only the first three go through this hook's own send
+   * functions. The others call it themselves rather than each re-deriving the setting.
+   */
+  playOutgoingSound: () => void;
   insertEmoji: (emoji: string) => void;
   setContentToDisplay: (content: CometChatComposerContentToDisplay) => void;
   closePreview: () => void;

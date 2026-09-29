@@ -9,7 +9,7 @@ import './styles/index.css';
 // CometChatUIKit (main entry point)
 export { CometChatUIKit, UIKitSettingsBuilder, UIKitSettings } from './CometChatUIKit';
 export type { CometChatPresenceSubscription } from './CometChatUIKit';
-export const VERSION = '7.2.2';
+export { VERSION } from './version';
 
 // Root Provider
 export { CometChatProvider } from './context/CometChatProvider';
@@ -18,6 +18,16 @@ export type { CometChatProviderProps } from './context/ChatState.types';
 
 // Frame Context (iframe embedding support)
 export { CometChatFrameProvider, useCometChatFrameContext } from './context/CometChatFrameContext';
+
+/**
+ * Exported so app-level overlays outside the UI Kit — the sample app's own dialogs, and any
+ * consumer building a modal — can portal into the same container the UI Kit uses, and stay
+ * contained within the app rather than covering the host page.
+ */
+export {
+  useOverlayContainer,
+  CometChatOverlayContainerContext,
+} from './context/OverlayContainerContext';
 export type {
   CometChatFrameContextValue,
   CometChatFrameProviderProps,

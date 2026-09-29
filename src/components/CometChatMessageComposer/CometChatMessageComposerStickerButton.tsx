@@ -36,6 +36,7 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
     closePreview,
     onError,
     isInEditMode,
+    playOutgoingSound,
   } = useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
   const publish = usePublishEvent();
@@ -96,6 +97,7 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
           return CometChat.sendCustomMessage(customMessage);
         })
         .then((sentMessage: CometChat.BaseMessage) => {
+          playOutgoingSound();
           publish({
             type: 'ui:message/sent',
             message: sentMessage,
@@ -116,6 +118,7 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
       group,
       parentMessageId,
       messageToReply,
+      playOutgoingSound,
       closePreview,
       setContentToDisplay,
       onError,

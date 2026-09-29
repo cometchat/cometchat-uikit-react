@@ -140,7 +140,9 @@ function CometChatGroupMembersItemInner({
 
     const items: CometChatContextMenuItemData[] = [];
 
-    if (canKick) {
+    // The scope rules say what this member MAY do; the `hide*` props say what the host wants
+    // offered. Both have to agree, and the props were previously ignored entirely.
+    if (canKick && !ctx.hideKickMemberOption) {
       items.push({
         id: 'kick',
         title: 'Kick',
@@ -150,7 +152,7 @@ function CometChatGroupMembersItemInner({
       });
     }
 
-    if (canBan) {
+    if (canBan && !ctx.hideBanMemberOption) {
       items.push({
         id: 'ban',
         title: 'Ban',
@@ -161,7 +163,7 @@ function CometChatGroupMembersItemInner({
     }
 
     // Scope change option — opens CometChatChangeScope dialog
-    if (canChangeScope) {
+    if (canChangeScope && !ctx.hideScopeChangeOption) {
       items.push({
         id: 'change-scope',
         title: 'Change Scope',

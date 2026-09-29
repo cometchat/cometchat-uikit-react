@@ -31,6 +31,20 @@ Check out the [Sample App](https://github.com/cometchat/cometchat-uikit-react/bl
 npm install @cometchat/chat-uikit-react
 ```
 
+## Integrate with AI Coding Agents
+
+[CometChat Agent Skills](https://www.cometchat.com/docs/agent-skills) teach your AI coding agent how to build with the CometChat React UI Kit in React 18+ apps built with Vite, Create React App, Next.js, React Router, or Astro. Ask your agent to *"add chat to my app"* and it detects your project setup, walks you through a short plan for your approval, and then writes the integration code directly into your existing app, following the official CometChat guides. The skills work with Claude Code, Cursor, GitHub Copilot, Codex, Windsurf, and other popular coding agents.
+
+Run the installer in your project root (requires Node.js 18+):
+
+```sh
+npx @cometchat/skills add
+```
+
+The skills are installed for Claude Code by default; pass `--ide <agent>` (for example, `--ide cursor`) to install them for a different agent. Then open your project in your agent and prompt it with *"add chat to my app"*, or run `/cometchat`.
+
+To learn more, visit [CometChat Agent Skills](https://www.cometchat.com/docs/agent-skills).
+
 ## Features
 
 - **Conversations** — List and manage one-on-one and group chats

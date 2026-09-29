@@ -405,7 +405,10 @@ export class RichTextEditor {
     this.on(this.element, 'keydown', e => {
       this.handleKeyDown(e as KeyboardEvent);
     });
-    this.on(document, 'selectionchange', () => {
+    // `selectionchange` fires on the document that owns the selection. When the editor is
+    // inside an iframe that is the iframe's document, so binding to the global `document`
+    // would never fire and the toolbar's format state would go stale.
+    this.on(this.getDocument(), 'selectionchange', () => {
       this.handleSelectionChange();
     });
     this.on(this.element, 'focus', () => {

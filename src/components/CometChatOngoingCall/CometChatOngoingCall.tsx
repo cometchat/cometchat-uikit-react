@@ -1,10 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatOngoingCallProps } from './CometChatOngoingCall.types';
 import { CometChatUIKitCalls } from '../../CometChatUIKit/CometChatCalls';
 import { useGlobalConfig } from '../../context/GlobalConfigContext';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { useCometChatEvents } from '../../hooks/useCometChatEvents';
+import { useOverlayContainer } from '../../context/OverlayContainerContext';
+import './CometChatOngoingCall.css';
 
 /**
  * CometChatOngoingCall — renders the Calls SDK call UI in a full-screen container.
@@ -27,6 +30,7 @@ export const CometChatOngoingCall: React.FC<CometChatOngoingCallProps> = ({
   className,
 }) => {
   const { getLocalizedString } = useLocale();
+  const overlayContainer = useOverlayContainer();
   const callScreenFrameRef = useRef<HTMLDivElement | null>(null);
   const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(null);
   const globalConfig = useGlobalConfig();
@@ -192,33 +196,25 @@ export const CometChatOngoingCall: React.FC<CometChatOngoingCallProps> = ({
     [sessionID, isDirectCalling]
   );
 
-  if (!sessionID) return null;
-
+  if (!sessionID || !overlayContainer) return null;
   const rootClass = ['cometchat-ongoing-call', className].filter(Boolean).join(' ');
 
-  return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-      }}
-    >
+  return createPortal(
+    <div className="cometchat-call-overlay cometchat-call-overlay--ongoing">
       <div
         className={rootClass}
         ref={callScreenFrameRef}
         style={{
           width: '100%',
           height: '100%',
-          borderRadius: 0,
+          borderRadius: 'inherit',
           border: 'none',
         }}
         role="dialog"
         aria-label={getLocalizedString('accessibility_ongoing_call')}
       />
-    </div>
+    </div>,
+    overlayContainer
   );
 };
 

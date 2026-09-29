@@ -494,6 +494,7 @@ export interface CometChatMessageListOptions {
   hideStickyDate: boolean;
   hideAvatar: boolean;
   hideGroupActionMessages: boolean;
+  hideReceipts: boolean;
   quickOptionsCount: number;
 
   // --- Message context-menu option toggles ---

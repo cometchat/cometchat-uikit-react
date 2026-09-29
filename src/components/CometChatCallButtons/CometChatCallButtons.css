@@ -62,6 +62,19 @@
   mask-image: url('../../assets/video_call_button.svg');
 }
 
+/* Outgoing call backdrop, portalled to the app root. A class rather than inline styles so
+   embedders can restack it; `.cometchat-call-overlay` is shared with the ongoing call. */
+.cometchat-call-overlay--outgoing {
+  position: absolute;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: inherit;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .cometchat-call-buttons__button {

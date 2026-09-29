@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type {
   CometChatFullScreenViewerRootProps,
   CometChatFullScreenViewerContextValue,
@@ -8,6 +9,7 @@ import { CometChatFullScreenViewerHeader } from './CometChatFullScreenViewerHead
 import { CometChatFullScreenViewerBody } from './CometChatFullScreenViewerBody';
 import { CometChatFullScreenViewerNavigation } from './CometChatFullScreenViewerNavigation';
 import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
+import { useOverlayContainer } from '../../../context/OverlayContainerContext';
 import { useLocale } from '../../../context/locale/LocaleContext';
 import './CometChatFullScreenViewer.css';
 
@@ -37,6 +39,7 @@ export const CometChatFullScreenViewerRoot: React.FC<CometChatFullScreenViewerRo
   const containerRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const IframeContext = useCometChatFrameContext();
+  const overlayContainer = useOverlayContainer();
 
   const getCurrentDocument = useCallback(() => {
     return IframeContext.iframeDocument ?? document;
@@ -199,7 +202,22 @@ export const CometChatFullScreenViewerRoot: React.FC<CometChatFullScreenViewerRo
 
   const rootClasses = ['cometchat-fullscreen-viewer', className].filter(Boolean).join(' ');
 
-  return (
+  /**
+   * Portalled to the app's `.cometchat` wrapper, not to where it is mounted and not to the page.
+   *
+   * Two separate problems, one solution. It is invoked deep inside the bubble tree
+   * (CometChatImagesBubble, CometChatMessageComposerTray), so every ancestor's `position: relative`
+   * or `transform` is a containing block that can trap it — portalling removes the chain. And it
+   * must cover *the app*, not the browser window, so it portals to `.cometchat` (which carries
+   * `position: relative`) and positions itself `absolute` rather than `fixed`. In an embed those
+   * are very different boxes.
+   *
+   * `useOverlayContainer()` falls back to the owning document's body if no provider is present, so
+   * a bare component still renders — just uncontained.
+   */
+  if (!overlayContainer) return null;
+
+  return createPortal(
     <CometChatFullScreenViewerContext.Provider value={ctxValue}>
       <div
         ref={containerRef}
@@ -218,7 +236,8 @@ export const CometChatFullScreenViewerRoot: React.FC<CometChatFullScreenViewerRo
           </>
         )}
       </div>
-    </CometChatFullScreenViewerContext.Provider>
+    </CometChatFullScreenViewerContext.Provider>,
+    overlayContainer
   );
 };
 

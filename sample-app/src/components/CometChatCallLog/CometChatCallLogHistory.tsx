@@ -17,8 +17,30 @@ export const CometChatCallLogHistory = ({ call }: { call: any }) => {
     CometChat.getLoggedinUser().then((user) => setLoggedInUser(user));
   }, []);
 
+  const fetchCallList = useCallback(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const request = requestBuilder.current;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const calls = await request?.fetchNext();
+      // The call changed while this page was loading; its results belong to the previous person.
+      if (request !== requestBuilder.current) return;
+      if (calls && calls.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        setCallList((prev) => [...prev, ...calls]);
+      }
+      setLoading(false);
+    } catch {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!loggedInUser || !CometChatUIKitCalls) return;
+
+    // A new call means a new person's history: start from an empty list, not the previous one.
+    setCallList([]);
+    setLoading(true);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const callUser = verifyCallUser(call, loggedInUser);
@@ -40,21 +62,7 @@ export const CometChatCallLogHistory = ({ call }: { call: any }) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     requestBuilder.current = builder.build();
     void fetchCallList();
-  }, [loggedInUser]);
-
-  const fetchCallList = useCallback(async () => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const calls = await requestBuilder.current?.fetchNext();
-      if (calls && calls.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        setCallList((prev) => [...prev, ...calls]);
-      }
-      setLoading(false);
-    } catch {
-      setLoading(false);
-    }
-  }, []);
+  }, [loggedInUser, call, fetchCallList]);
 
   const isSentByMe = (item: any): boolean => { // eslint-disable-line @typescript-eslint/no-explicit-any
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call

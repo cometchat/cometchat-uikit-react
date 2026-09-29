@@ -14,12 +14,14 @@
  */
 
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatCreatePollProps, CometChatPollOption } from './CometChatCreatePoll.types';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { POLLS_CONSTANTS } from '../../constants/CometChatExtensionConstants';
 import './CometChatCreatePoll.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useOverlayContainer } from '../../context/OverlayContainerContext';
 
 let idCounter = 0;
 function generateOptionId(): string {
@@ -184,7 +186,11 @@ export const CometChatCreatePoll: React.FC<CometChatCreatePollProps> = ({
     getLocalizedString,
   ]);
 
-  return (
+  const overlayContainer = useOverlayContainer();
+  if (!overlayContainer) return null;
+
+  /** Portalled so the backdrop covers the app, not whichever positioned ancestor opened it. */
+  return createPortal(
     <div className={'cometchat-create-poll__backdrop'}>
       <div
         ref={modalRef}
@@ -302,7 +308,8 @@ export const CometChatCreatePoll: React.FC<CometChatCreatePollProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    overlayContainer
   );
 };
 

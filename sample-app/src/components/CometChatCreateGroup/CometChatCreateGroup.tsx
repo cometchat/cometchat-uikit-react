@@ -18,8 +18,21 @@ export const CometChatCreateGroup = ({
   const [groupPassword, setGroupPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  /**
+   * Creates the group.
+   *
+   * Deliberately not reliant on form submission. This component renders inside the Chat Builder,
+   * whose settings panel wraps the whole preview in an antd `<Form>` — so our `<form>` ends up
+   * nested inside another one. Nested forms are invalid HTML and browsers disagree about which
+   * form a submit button belongs to; when the outer one wins, the click became a native
+   * submission and the page reloaded without ever creating the group.
+   *
+   * The button below is `type="button"` with an onClick, so the click path never involves form
+   * submission at all. The `onSubmit` binding stays so that pressing Enter in a field still works
+   * in the standalone app, and it calls `preventDefault` defensively.
+   */
+  const handleSubmit = async (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
     if (isCreating) return;
 
     setIsCreating(true);
@@ -140,7 +153,9 @@ export const CometChatCreateGroup = ({
         </div>
         <button
           className="cometchat-create-group__submit-button"
-          type="submit"
+          /* Not `type="submit"` — see handleSubmit. */
+          type="button"
+          onClick={handleSubmit}
           disabled={isCreating}
         >
           {isCreating ? getLocalizedString('sample_creating') : getLocalizedString('sample_create_group')}

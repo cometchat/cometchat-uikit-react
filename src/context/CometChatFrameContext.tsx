@@ -56,11 +56,11 @@ export const CometChatFrameProvider: React.FC<CometChatFrameProviderProps> = ({
         setIframeWindow(win);
         setIframeDocument(doc);
 
-        if (mutationObserver) {
-          mutationObserver.disconnect();
-          mutationObserver = null;
-        }
-
+        // Deliberately keep the MutationObserver connected. A host that re-renders can replace
+        // the iframe element entirely, and a
+        // detached iframe's window still answers property access while its Selection is null —
+        // so mentions, formatting and emoji insertion would fail silently against a stale
+        // reference. Staying subscribed lets us re-resolve when the element is swapped.
         return true;
       } catch (error) {
         console.warn('CometChatFrameProvider: Failed to access iframe content:', error);
@@ -115,8 +115,11 @@ export const CometChatFrameProvider: React.FC<CometChatFrameProviderProps> = ({
       });
     };
 
+    // Always observe, even when the iframe is already present: the element can be replaced
+    // later by a host re-render, and we need to re-resolve when it is. Retries are only needed
+    // while it is still missing.
+    setupMutationObserver();
     if (!initializeIframe()) {
-      setupMutationObserver();
       scheduleRetry();
     }
 

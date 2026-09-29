@@ -14,7 +14,7 @@
  * dashboard configuration (AI → Agent Builder).
  */
 
-import { useEffect, useId, useState, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 
 // Lazy-load — Tier 4, only loaded when this page is shown

@@ -16,6 +16,12 @@ function renderViewer(props: Partial<Parameters<typeof CometChatFullScreenViewer
   return render(<CometChatFullScreenViewer.Root {...defaultProps} />);
 }
 
+/*
+ * Assertions below query `document.body`, not the render `container`: this overlay is portalled
+ * so it is contained by the app rather than the positioned ancestor that opened it, which puts
+ * its markup outside the container React Testing Library returns.
+ */
+
 describe('CometChatFullScreenViewer a11y', () => {
   it('passes axe-core audit with zero violations (image mode)', async () => {
     const { container } = renderViewer({
@@ -109,8 +115,8 @@ describe('CometChatFullScreenViewer a11y', () => {
       { url: 'https://example.com/1.jpg', type: 'image' },
       { url: 'https://example.com/2.jpg', type: 'image' },
     ];
-    const { container } = renderViewer({ attachments, url: undefined });
-    const indexDisplay = container.querySelector('[aria-live="polite"]');
+    renderViewer({ attachments, url: undefined });
+    const indexDisplay = document.body.querySelector('[aria-live="polite"]');
     expect(indexDisplay).not.toBeNull();
     expect(indexDisplay?.textContent).toContain('1 of 2');
   });

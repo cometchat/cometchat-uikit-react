@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { CometChatGroupMembersContext } from './CometChatGroupMembers.context';
 import { useCometChatGroupMembers } from './useCometChatGroupMembers';
 import { CometChatGroupMembersList } from './CometChatGroupMembersList';
@@ -16,6 +17,7 @@ import type {
 import './CometChatGroupMembers.css';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { useGlobalConfig } from '../../context/GlobalConfigContext';
+import { useOverlayContainer } from '../../context/OverlayContainerContext';
 
 /**
  * CometChatGroupMembersRoot — Provider + default layout.
@@ -130,6 +132,7 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
     }));
   }, [hookReturn.memberToChangeScope, hookReturn.loggedInUserScope]);
 
+  const overlayContainer = useOverlayContainer();
   return (
     <CometChatGroupMembersContext.Provider value={contextValue}>
       <div
@@ -153,37 +156,43 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
         )}
 
         {/* Change Scope dialog — rendered at Root level to cover entire component */}
-        {hookReturn.memberToChangeScope && changeScopeOptions.length > 0 && (
-          <div
-            className={'cometchat-group-members__backdrop'}
-            onClick={handleChangeScopeClose}
-            onKeyDown={e => {
-              if (e.key === 'Escape') handleChangeScopeClose();
-            }}
-            role="presentation"
-          >
+        {/* Portalled: `absolute` resolves against the nearest positioned ancestor, which here is
+            the members list itself — the backdrop covered only the list instead of the app. */}
+        {hookReturn.memberToChangeScope &&
+          changeScopeOptions.length > 0 &&
+          overlayContainer &&
+          createPortal(
             <div
-              onClick={e => {
-                e.stopPropagation();
-              }}
+              className={'cometchat-group-members__backdrop'}
+              onClick={handleChangeScopeClose}
               onKeyDown={e => {
-                e.stopPropagation();
+                if (e.key === 'Escape') handleChangeScopeClose();
               }}
               role="presentation"
             >
-              <CometChatChangeScope
-                options={changeScopeOptions}
-                defaultSelection={hookReturn.memberToChangeScope.getScope()}
-                onScopeChanged={handleChangeScopeConfirm}
-                onClose={handleChangeScopeClose}
-                title={getLocalizedString('change_scope_title')}
-                description="You can change scope for the group member to manage group permissions and responsibilities."
-                submitText={getLocalizedString('change_scope_confirm_yes')}
-                cancelText={getLocalizedString('change_scope_confirm_no')}
-              />
-            </div>
-          </div>
-        )}
+              <div
+                onClick={e => {
+                  e.stopPropagation();
+                }}
+                onKeyDown={e => {
+                  e.stopPropagation();
+                }}
+                role="presentation"
+              >
+                <CometChatChangeScope
+                  options={changeScopeOptions}
+                  defaultSelection={hookReturn.memberToChangeScope.getScope()}
+                  onScopeChanged={handleChangeScopeConfirm}
+                  onClose={handleChangeScopeClose}
+                  title={getLocalizedString('change_scope_title')}
+                  description="You can change scope for the group member to manage group permissions and responsibilities."
+                  submitText={getLocalizedString('change_scope_confirm_yes')}
+                  cancelText={getLocalizedString('change_scope_confirm_no')}
+                />
+              </div>
+            </div>,
+            overlayContainer
+          )}
       </div>
     </CometChatGroupMembersContext.Provider>
   );

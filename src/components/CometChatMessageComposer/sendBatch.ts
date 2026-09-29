@@ -82,6 +82,14 @@ export interface SendBatchOptions {
   publish: (event: Record<string, unknown>) => void;
   /** Optional onSendButtonClick callback called for each confirmed message. */
   onSendButtonClick?: (message: CometChat.BaseMessage, mode?: 'send' | 'edit') => void;
+  /**
+   * Called after each message the batch sends successfully.
+   *
+   * The composer uses it for the outgoing-message sound. A batch is one send action, so the
+   * composer plays once and ignores the rest — but reporting each send keeps this module free of
+   * that policy.
+   */
+  onSent?: (message: CometChat.BaseMessage) => void;
 }
 
 /**
@@ -113,6 +121,7 @@ export async function sendBatch(options: SendBatchOptions): Promise<void> {
     messageToReply,
     publish,
     onSendButtonClick,
+    onSent,
   } = options;
 
   const groups = groupAndOrderTrayItems(items);
@@ -194,6 +203,7 @@ export async function sendBatch(options: SendBatchOptions): Promise<void> {
     // Send via SDK — best-effort, continue on failure.
     try {
       const confirmedMessage = (await CometChat.sendMediaMessage(msg)) as CometChat.MediaMessage;
+      onSent?.(confirmedMessage);
 
       // Defensive carry-over: the pre-uploaded send path (null file + setAttachments)
       // can return a confirmed message that dropped fields we set on the optimistic

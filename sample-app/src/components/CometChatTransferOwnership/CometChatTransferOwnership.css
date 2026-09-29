@@ -113,8 +113,12 @@
   background: rgba(244, 70, 73, 0.1);
 }
 
+/* absolute, not fixed — this backdrop covers the app, not the browser viewport. The app root
+   (.cometchat / .cometchat-root) is positioned, so `inset: 0` resolves against it. */
 .cometchat-transfer-ownership__backdrop {
-  position: fixed;
+  /* Match the app's corners — see the UI Kit's overlays. */
+  border-radius: inherit;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -133,8 +137,10 @@
 
 @media (max-width: 768px) {
   .cometchat-transfer-ownership__backdrop > .cometchat-transfer-ownership {
-    width: 100vw;
-    height: 100vh;
+    /* The backdrop is already `width: 100%; height: 100%` — matching that here instead of vw/vh
+       means this stays correct even if the backdrop ever stops being position: fixed. */
+    width: 100%;
+    height: 100%;
     border-radius: 0;
   }
 }

@@ -1,0 +1,12 @@
+/* Ongoing call container, portalled to the app root. A class rather than inline styles so
+   embedders can restack it; `.cometchat-call-overlay` is shared with the outgoing call. */
+.cometchat-call-overlay--ongoing {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  /* Match the app's corners when the embedder rounds them. */
+  border-radius: inherit;
+  overflow: hidden;
+}

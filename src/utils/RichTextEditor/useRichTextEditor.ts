@@ -170,6 +170,13 @@ export function useRichTextEditor(options: UseRichTextEditorOptions = {}): UseRi
       placeholder,
       ariaLabel,
       enableFormatting: true,
+      // When rendered inside an iframe (the no-code widget), the editable element belongs to
+      // the iframe's document. Without these, RichTextEditor falls back to the global
+      // `document`/`window`, whose Selection never contains the caret — so `collapseToEnd()`
+      // throws "there is no selection", mentions never trigger, and execCommand-based
+      // formatting and emoji insertion silently target the wrong document.
+      ownerDocument: IframeContext.iframeDocument ?? undefined,
+      ownerWindow: IframeContext.iframeWindow ?? undefined,
       onUpdate: (html, text) => {
         callbacksRef.current.onUpdate?.(html, text);
       },
@@ -210,7 +217,11 @@ export function useRichTextEditor(options: UseRichTextEditorOptions = {}): UseRi
       instance.destroy();
       editorInstanceRef.current = null;
     };
-  }, [enabled, placeholder, ariaLabel]);
+    // The frame context resolves asynchronously — CometChatFrameProvider only finds the iframe
+    // once it exists in the DOM. The editor is therefore first built against the global
+    // document and must be rebuilt when the real one arrives, or the config above is moot.
+    // Outside an iframe both stay null and this never re-runs.
+  }, [enabled, placeholder, ariaLabel, IframeContext.iframeDocument, IframeContext.iframeWindow]);
 
   // --- Action callbacks (stable via useCallback) ---
 

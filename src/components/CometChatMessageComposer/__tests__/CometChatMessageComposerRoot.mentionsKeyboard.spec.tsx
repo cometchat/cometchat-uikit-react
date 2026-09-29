@@ -1,6 +1,6 @@
 /**
  * Keyboard navigation of the mention suggestions from the composer input
- *, in both editor modes.
+ * (ENG-37419), in both editor modes.
  *
  * The composer keeps focus while the list is open: ArrowDown/ArrowUp move the
  * highlight, Enter/Tab select the highlighted suggestion instead of sending, and

@@ -12,6 +12,12 @@ const actionItemArb = fc.record({
   disabled: fc.boolean(),
 });
 
+/*
+ * Assertions below query `document.body`, not the render `container`: this overlay is portalled
+ * so it is contained by the app rather than the positioned ancestor that opened it, which puts
+ * its markup outside the container React Testing Library returns.
+ */
+
 describe('CometChatActionSheet property-based tests', () => {
   it('for any array of CometChatActionSheetItemData (0–50 items), all items render without errors', () => {
     fc.assert(
@@ -93,7 +99,7 @@ describe('CometChatActionSheet property-based tests', () => {
     fc.assert(
       fc.property(fc.array(fc.boolean(), { minLength: 5, maxLength: 30 }), toggles => {
         const onClose = vi.fn();
-        const { rerender, unmount, container } = render(
+        const { rerender, unmount } = render(
           <CometChatActionSheet.Root isOpen={false} onClose={onClose}>
             <CometChatActionSheet.Layout>
               <CometChatActionSheet.Item item={{ id: '1', title: 'Action', onClick: vi.fn() }} />
@@ -112,7 +118,7 @@ describe('CometChatActionSheet property-based tests', () => {
         }
 
         const lastState = toggles[toggles.length - 1];
-        const dialog = container.querySelector('[role="dialog"]');
+        const dialog = document.body.querySelector('[role="dialog"]');
         if (lastState) {
           expect(dialog).not.toBeNull();
         } else {

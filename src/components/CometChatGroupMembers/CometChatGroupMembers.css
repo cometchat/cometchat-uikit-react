@@ -315,9 +315,12 @@
   margin: 0;
 }
 
+/* absolute, not fixed — overlays cover the app (the positioned `.cometchat` wrapper), not the
+   browser viewport. See styles/index.css. */
 .cometchat-group-members__backdrop {
+  border-radius: inherit;
   background: rgba(0, 0, 0, 0.5);
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   height: 100%;

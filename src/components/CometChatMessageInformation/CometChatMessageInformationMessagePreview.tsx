@@ -12,7 +12,8 @@ import './CometChatMessageInformation.css';
  *
  * Uses the plugin registry to resolve the correct plugin for the message,
  * calls renderBubble() to produce the inner content, and wraps it in
- * CometChatMessageBubble with receipts/avatar hidden.
+ * CometChatMessageBubble with avatar and sender name hidden. The receipt stays visible unless
+ * `hideReceipts` (or GlobalConfig) hides it, as it does in the message list.
  *
  * Falls back to a simple text preview if the plugin registry is not available
  * (e.g., in Storybook without CometChatProvider).
@@ -20,7 +21,8 @@ import './CometChatMessageInformation.css';
 export const CometChatMessageInformationMessagePreview: React.FC<
   CometChatMessageInformationMessagePreviewProps
 > = ({ className }) => {
-  const { message, showScrollbar, textFormatters } = useCometChatMessageInformationContext();
+  const { message, showScrollbar, textFormatters, hideReceipts } =
+    useCometChatMessageInformationContext();
   const { getLocalizedString } = useLocale();
 
   // Try to get plugin registry — may be null in Storybook
@@ -69,7 +71,7 @@ export const CometChatMessageInformationMessagePreview: React.FC<
           contentView={contentView}
           hideAvatar
           hideSenderName
-          hideReceipts
+          {...(hideReceipts !== undefined && { hideReceipts })}
           hideThreadView
           disableInteraction
         />

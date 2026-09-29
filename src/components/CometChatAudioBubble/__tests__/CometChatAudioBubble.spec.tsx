@@ -18,18 +18,22 @@ vi.mock('../../../hooks/useLoggedInUser', () => ({
 }));
 
 // Mock WaveSurfer to avoid actual audio processing in tests
+const { createWaveSurfer } = vi.hoisted(() => ({ createWaveSurfer: vi.fn() }));
 vi.mock('../wavesurfer', () => ({
   WaveSurfer: {
-    create: () => ({
-      on: vi.fn(),
-      load: vi.fn().mockResolvedValue(undefined),
-      pause: vi.fn(),
-      play: vi.fn().mockResolvedValue(undefined),
-      stop: vi.fn(),
-      seekTo: vi.fn(),
-      destroy: vi.fn(),
-      unAll: vi.fn(),
-    }),
+    create: (options: unknown) => (
+      createWaveSurfer(options),
+      {
+        on: vi.fn(),
+        load: vi.fn().mockResolvedValue(undefined),
+        pause: vi.fn(),
+        play: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn(),
+        seekTo: vi.fn(),
+        destroy: vi.fn(),
+        unAll: vi.fn(),
+      }
+    ),
   },
 }));
 
@@ -77,6 +81,19 @@ function buildAudioMessage(
 }
 
 describe('CometChatAudioBubble', () => {
+  it("gives WaveSurfer the waveform element's own document and window (iframe hosts)", () => {
+    createWaveSurfer.mockClear();
+    render(<CometChatAudioBubble message={buildAudioMessage()} />);
+    expect(createWaveSurfer).toHaveBeenCalled();
+    const options = createWaveSurfer.mock.calls[0]![0] as {
+      container: HTMLElement;
+      iframeDocument?: Document;
+      iframeWindow?: Window;
+    };
+    expect(options.iframeDocument).toBe(options.container.ownerDocument);
+    expect(options.iframeWindow).toBe(options.container.ownerDocument.defaultView);
+  });
+
   it('renders the component with base class', () => {
     const { container } = render(<CometChatAudioBubble message={buildAudioMessage()} />);
     expect(container.firstChild).toHaveClass('cometchat-audio-bubble');

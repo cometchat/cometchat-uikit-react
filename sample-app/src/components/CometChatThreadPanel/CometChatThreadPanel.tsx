@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import {
   CometChatThreadHeader,
@@ -8,6 +8,7 @@ import {
   usePublishEvent,
 } from '@cometchat/chat-uikit-react';
 import type { CometChatEvent } from '@cometchat/chat-uikit-react';
+import { useFeatureProps } from '../../config/useFeatureProps';
 import './CometChatThreadPanel.css';
 
 interface CometChatThreadPanelProps {
@@ -46,6 +47,7 @@ export const CometChatThreadPanel = ({
 
   const [isBlocked, setIsBlocked] = useState(() => user?.getBlockedByMe?.() ?? false);
   const publish = usePublishEvent();
+  const featureProps = useFeatureProps();
 
   useEffect(() => {
     setIsBlocked(user?.getBlockedByMe?.() ?? false);
@@ -77,6 +79,7 @@ export const CometChatThreadPanel = ({
           onClose={onClose}
           onSubtitleClicked={onSubtitleClicked}
           onParentDeleted={onClose}
+          {...featureProps.threadHeader}
         />
       </div>
       <div className="cometchat-thread-panel__messages">
@@ -87,6 +90,7 @@ export const CometChatThreadPanel = ({
           parentMessage={parentMessage}
           goToMessageId={goToMessageId}
           className='cometchat-thread-panel__message-list'
+          {...featureProps.messageList}
         />
       </div>
       {!isBlocked ? (
@@ -95,9 +99,10 @@ export const CometChatThreadPanel = ({
             user={user}
             group={group}
             parentMessageId={parentMessageId}
-            layout="compact"
+            layout={featureProps.settings.layout.compactMessageComposer ? 'compact' : 'multiline'}
             enableRichTextEditor
             className='cometchat-thread-panel__composer'
+            {...featureProps.composer}
           />
         </div>
       ) : (

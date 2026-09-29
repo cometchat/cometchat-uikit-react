@@ -1,5 +1,5 @@
 /**
- * Tests for the mentions dropdown's keyboard-navigation controller.
+ * Tests for the mentions dropdown's keyboard-navigation controller (ENG-37419).
  *
  * The child list components (CometChatGroupMembers / CometChatUsers) are mocked
  * to render simple role="option" rows so we can drive the imperative handle

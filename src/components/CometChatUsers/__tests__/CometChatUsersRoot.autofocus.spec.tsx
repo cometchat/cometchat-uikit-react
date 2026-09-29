@@ -1,5 +1,5 @@
 /**
- * Tests for the CometChatUsers.Root `autoFocus` prop.
+ * Tests for the CometChatUsers.Root `autoFocus` prop (ENG-37421).
  *
  * When set, the list should receive focus once users first load, so keyboard
  * shortcuts (e.g. Ctrl/Cmd+A select-all) work without a prior click.

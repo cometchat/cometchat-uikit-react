@@ -1,10 +1,17 @@
 import { useState } from 'react';
-import cometChatLogo from '../../assets/cometchat_logo.svg';
-import cometChatLogoDark from '../../assets/cometchat_logo_dark.svg';
-import usIcon from '../../assets/us-icon.svg';
-import euIcon from '../../assets/eu-icon.svg';
-import inIcon from '../../assets/in-icon.svg';
+import cometChatLogoAsset from '../../assets/cometchat_logo.svg';
+import cometChatLogoDarkAsset from '../../assets/cometchat_logo_dark.svg';
+import usIconAsset from '../../assets/us-icon.svg';
+import euIconAsset from '../../assets/eu-icon.svg';
+import inIconAsset from '../../assets/in-icon.svg';
 import './CometChatCredentials.css';
+import { assetUrl } from '../../utils/assetUrl';
+
+const cometChatLogo = assetUrl(cometChatLogoAsset);
+const cometChatLogoDark = assetUrl(cometChatLogoDarkAsset);
+const usIcon = assetUrl(usIconAsset);
+const euIcon = assetUrl(euIconAsset);
+const inIcon = assetUrl(inIconAsset);
 
 interface CometChatCredentialsProps {
   onCredentialsSaved: () => void;

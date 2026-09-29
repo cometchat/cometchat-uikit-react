@@ -2,7 +2,9 @@ import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatMessageHeader, CometChatMessageList, useCometChatEvents, usePublishEvent, useLocale, CometChatMessageComposer } from '@cometchat/chat-uikit-react';
 import type { CometChatEvent } from '@cometchat/chat-uikit-react';
 import { useCallback, useEffect, useState } from 'react';
+import { useFeatureProps } from '../../config/useFeatureProps';
 import './CometChatMessages.css';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface MessagesViewProps {
   user?: CometChat.User;
@@ -14,6 +16,11 @@ interface MessagesViewProps {
   showComposer?: boolean;
   onBack?: () => void;
   goToMessageId?: string;
+  /**
+   * Whether "X added Y to the group" action messages appear in the list.
+   * Undefined leaves the settings-derived default (shown) untouched.
+   */
+  showGroupActionMessages?: boolean;
 }
 
 export const CometChatMessages = (props: MessagesViewProps) => {
@@ -27,12 +34,14 @@ export const CometChatMessages = (props: MessagesViewProps) => {
     showComposer = true,
     onBack = () => {},
     goToMessageId,
+    showGroupActionMessages,
   } = props;
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isMobile = useIsMobile();
   const [isBlockedByMe, setIsBlockedByMe] = useState(user?.getBlockedByMe?.() ?? false);
   const publish = usePublishEvent();
   const { getLocalizedString } = useLocale();
+  const featureProps = useFeatureProps();
 
   useEffect(() => {
     setIsBlockedByMe(user?.getBlockedByMe?.() ?? false);
@@ -59,14 +68,6 @@ export const CometChatMessages = (props: MessagesViewProps) => {
     }
   }, [user, publish]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
     <div className="cometchat-messages-wrapper">
       <div className="cometchat-header-wrapper">
@@ -78,7 +79,7 @@ export const CometChatMessages = (props: MessagesViewProps) => {
           onItemClick={onHeaderClicked}
           onSearchOptionClicked={onSearchClicked}
           onPinnedMessagesClicked={onPinnedMessagesClicked}
-          showSearchOption={true}
+          {...featureProps.messageHeader({ isGroup: !!group })}
         />
       </div>
       <div className="cometchat-message-list-wrapper">
@@ -88,7 +89,10 @@ export const CometChatMessages = (props: MessagesViewProps) => {
           onThreadRepliesClick={(message: CometChat.BaseMessage) => onThreadRepliesClick(message)}
           goToMessageId={goToMessageId ? Number(goToMessageId) : undefined}
           startFromUnreadMessages={true}
-          showMarkAsUnreadOption={true}
+          {...featureProps.messageList}
+          {...(showGroupActionMessages === undefined
+            ? {}
+            : { hideGroupActionMessages: !showGroupActionMessages })}
         />
       </div>
       {showComposer && !isBlockedByMe && (
@@ -96,8 +100,9 @@ export const CometChatMessages = (props: MessagesViewProps) => {
           <CometChatMessageComposer
             user={user}
             group={group}
-            layout="compact"
+            layout={featureProps.settings.layout.compactMessageComposer ? 'compact' : 'multiline'}
             enableRichTextEditor
+            {...featureProps.composer}
           />
         </div>
       )}

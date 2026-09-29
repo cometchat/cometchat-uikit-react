@@ -174,6 +174,8 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
       onSummaryClick: effectiveSummaryClick,
       onPinnedMessagesClicked,
       hidePinnedMessagesOption,
+      showConversationSummaryButton,
+      showSearchOption,
       summaryGenerationMessageCount,
     }),
     [
@@ -192,6 +194,8 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
       effectiveSummaryClick,
       onPinnedMessagesClicked,
       hidePinnedMessagesOption,
+      showConversationSummaryButton,
+      showSearchOption,
       summaryGenerationMessageCount,
     ]
   );
@@ -205,16 +209,22 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
   const effectiveHideVoiceCall = hideVoiceCallButton || !callingEnabled;
   const effectiveHideVideoCall = hideVideoCallButton || !callingEnabled;
   const showCallButtons = !effectiveHideVoiceCall || !effectiveHideVideoCall;
-  // The overflow menu previously appeared only when search AND summary were both
-  // enabled. Pinned Messages is a third entry, so it must also be able to promote
-  // a lone search button into the menu — otherwise the option is unreachable in
-  // any app that doesn't also enable the summary button.
+  /*
+   * Which of the three trailing options are available decides how they are presented: one of them
+   * alone gets a dedicated button, two or more share the overflow menu.
+   *
+   * Counting them is what makes that work in every combination.
+   */
   const pinnedMenuAvailable =
     isPinEnabled && !hidePinnedMessagesOption && Boolean(onPinnedMessagesClicked);
-  const showOverflowMenu =
-    showSearchOption && (showConversationSummaryButton || pinnedMenuAvailable);
-  const showSearchOnly = showSearchOption && !showConversationSummaryButton && !pinnedMenuAvailable;
-  const showSummaryOnly = showConversationSummaryButton && !showSearchOption;
+  const availableOptionCount =
+    Number(showSearchOption) + Number(showConversationSummaryButton) + Number(pinnedMenuAvailable);
+
+  // Only search and summary have a standalone button; a lone Pinned Messages falls through to the
+  // menu below, which is the only place it can be reached from.
+  const showSearchOnly = availableOptionCount === 1 && showSearchOption;
+  const showSummaryOnly = availableOptionCount === 1 && showConversationSummaryButton;
+  const showOverflowMenu = availableOptionCount > 0 && !showSearchOnly && !showSummaryOnly;
 
   return (
     <CometChatMessageHeaderContext.Provider value={contextValue}>

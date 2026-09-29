@@ -123,6 +123,45 @@ describe('sendBatch', () => {
     });
   });
 
+  /**
+   * The composer plays the outgoing-message sound from this callback. Attachments go through the
+   * staging tray by default, so without it a batch — and therefore any attachment at all — was
+   * sent silently while text messages were not.
+   */
+  describe('onSent', () => {
+    it('reports every message the batch sends', async () => {
+      const onSent = vi.fn();
+      const items = [makeTrayItem('f1', 'image'), makeTrayItem('f2', 'file')];
+
+      await sendBatch({
+        items,
+        batchId: 'batch-sound',
+        caption: '',
+        receiverId: 'user-2',
+        receiverType: 'user',
+        publish: vi.fn(),
+        onSent,
+      });
+
+      // One message per kind: image and file.
+      expect(mockCometChat.sendMediaMessage).toHaveBeenCalledTimes(2);
+      expect(onSent).toHaveBeenCalledTimes(2);
+    });
+
+    it('is optional', async () => {
+      await expect(
+        sendBatch({
+          items: [makeTrayItem('f1', 'image')],
+          batchId: 'batch-no-callback',
+          caption: '',
+          receiverId: 'user-2',
+          receiverType: 'user',
+          publish: vi.fn(),
+        })
+      ).resolves.toBeUndefined();
+    });
+  });
+
   describe('single-type send (one message)', () => {
     it('sends exactly one MediaMessage when all items share the same kind', async () => {
       const publish = vi.fn();

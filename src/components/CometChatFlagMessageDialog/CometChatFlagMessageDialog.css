@@ -1,6 +1,9 @@
 /* Backdrop overlay */
+/* absolute, not fixed — overlays cover the app (the positioned `.cometchat` wrapper), not the
+   browser viewport. See styles/index.css. */
 .cometchat-flag-message-dialog__backdrop {
-  position: fixed;
+  border-radius: inherit;
+  position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
