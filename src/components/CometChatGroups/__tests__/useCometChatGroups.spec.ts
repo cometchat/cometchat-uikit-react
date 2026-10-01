@@ -393,6 +393,44 @@ describe('useCometChatGroups', () => {
     });
   });
 
+  /*
+   * A reconnect must not throw away an active search.
+   *
+   * The connection listener is attached once and not re-attached when the search text changes, so
+   * it used to re-fetch with whatever the text was at attach time — the empty string. Any
+   * reconnect while a search was open silently swapped the filtered list back to the full one,
+   * which showed up in e2e as a group being found and then vanishing before it could be clicked.
+   */
+  it('re-fetches with the current search keyword after a reconnect', async () => {
+    const { CometChat } = await import('@cometchat/chat-sdk-javascript');
+    const { result } = renderHook(() => useCometChatGroups());
+
+    await waitFor(() => {
+      expect(result.current.fetchState).toBe('loaded');
+    });
+
+    act(() => {
+      result.current.setSearchText('Strategy');
+    });
+    await waitFor(() => {
+      expect(result.current.searchText).toBe('Strategy');
+    });
+
+    const connListenerCallbacks = vi.mocked(CometChat.ConnectionListener).mock.calls[0]?.[0] as
+      | { onConnected?: () => void }
+      | undefined;
+
+    mockSetSearchKeyword.mockClear();
+    act(() => {
+      connListenerCallbacks?.onConnected?.();
+    });
+
+    await waitFor(() => {
+      expect(mockSetSearchKeyword).toHaveBeenCalledWith('Strategy');
+    });
+    expect(mockSetSearchKeyword).not.toHaveBeenCalledWith('');
+  });
+
   it('fetchNext appends more groups to the list', async () => {
     const { result } = renderHook(() => useCometChatGroups());
 

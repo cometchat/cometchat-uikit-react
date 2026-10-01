@@ -136,8 +136,12 @@ export const CometChatAddMembers = ({
     <div className="cometchat-add-members">
       {showBackButton && (
         <div className="cometchat-add-members__header">
-          <button className="cometchat-add-members__back-button" onClick={onBack}>
-            ←
+          <button
+            className="cometchat-add-members__back-button"
+            onClick={onBack}
+            aria-label={getLocalizedString('accessibility_back')}
+          >
+            <span className="cometchat-add-members__back-icon" />
           </button>
           <div className="cometchat-add-members__title">{getLocalizedString('add_members')}</div>
         </div>
@@ -145,9 +149,9 @@ export const CometChatAddMembers = ({
       <div className="cometchat-add-members__users-list">
         <CometChatUsers.Root
           selectionMode="multiple"
+          autoFocus
           onSelect={handleSelect}
         >
-          <CometChatUsers.Header />
           <CometChatUsers.SearchBar />
           <CometChatUsers.LoadingState />
           <CometChatUsers.ErrorState />

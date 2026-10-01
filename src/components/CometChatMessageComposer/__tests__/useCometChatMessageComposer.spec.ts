@@ -23,7 +23,12 @@ vi.mock('../CometChatMessageComposerManager', async () => {
   };
 });
 
+vi.mock('../../../resources/CometChatSoundManager/CometChatSoundManager', () => ({
+  CometChatSoundManager: { play: vi.fn() },
+}));
+
 import { useCometChatMessageComposer } from '../useCometChatMessageComposer';
+import { CometChatSoundManager } from '../../../resources/CometChatSoundManager/CometChatSoundManager';
 import * as ComposerManager from '../CometChatMessageComposerManager';
 
 function makeUser(uid = 'user-1') {
@@ -595,5 +600,50 @@ describe('useCometChatMessageComposer', () => {
       expect(mockCometChat.sendMediaMessage).toHaveBeenCalled();
       expect(mockCometChat.sendMessage).not.toHaveBeenCalled();
     });
+  });
+
+  /**
+   * The outgoing-message sound.
+   *
+   * `disableSoundForMessage` was accepted, forwarded here and never read — there was no sound call
+   * in the send path at all, so the setting could not do anything and neither could the default.
+   * Played on the ack, which is where v6 played it.
+   */
+  describe('outgoing message sound', () => {
+    /* `CometChatSoundManager.play` here is a vi.fn() the module mock installed — these assertions
+       read the spy, they never call the method, so the unbound-method rule does not apply. */
+    /* eslint-disable @typescript-eslint/unbound-method */
+    const sendAs = async (options: Parameters<typeof useCometChatMessageComposer>[0]) => {
+      mockCometChat.isInitialized = vi.fn().mockReturnValue(true);
+      mockCometChat.getLoggedinUser = vi.fn().mockResolvedValue(makeUser('user-1'));
+      const { result } = renderHook(() =>
+        useCometChatMessageComposer({ user: makeUser('user-1'), ...options })
+      );
+      act(() => {
+        result.current.setText('Hello');
+      });
+      await act(async () => {
+        await result.current.sendMessage();
+      });
+    };
+
+    it('plays on a successful send by default', async () => {
+      await sendAs({});
+      expect(CometChatSoundManager.play).toHaveBeenCalledWith('outgoingMessage', undefined);
+    });
+
+    it('stays silent when disableSoundForMessage is set', async () => {
+      await sendAs({ disableSoundForMessage: true });
+      expect(CometChatSoundManager.play).not.toHaveBeenCalled();
+    });
+
+    it('uses customSoundForMessage when given', async () => {
+      await sendAs({ customSoundForMessage: '/sounds/ping.wav' });
+      expect(CometChatSoundManager.play).toHaveBeenCalledWith(
+        'outgoingMessage',
+        '/sounds/ping.wav'
+      );
+    });
+    /* eslint-enable @typescript-eslint/unbound-method */
   });
 });

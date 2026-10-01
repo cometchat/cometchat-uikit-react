@@ -12,7 +12,7 @@
   display: flex;
   width: 30%;
   max-width: 420px;
-  height: 100vh;
+  /* No height: flex child of .cometchat-root, sized by the default align-items: stretch. */
   flex-shrink: 0;
   border-left: 1px solid var(--cometchat-border-color-light, #f5f5f5);
 }
@@ -83,14 +83,31 @@
   text-decoration: underline;
 }
 
+/**
+ * Narrow layout: the thread takes over the whole app instead of sitting in a 30% column.
+ *
+ * Driven by a class, not a media query. `@media (max-width: 768px)` measures the *browser window*,
+ * which is the wrong question for a wider encapsulating embed — a 400px-wide app inside a 1500px browser is
+ * narrow, but no viewport media query will ever fire for it.
+ */
+.cometchat-thread-panel-wrapper--fullscreen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: 100%;
+  z-index: 4;
+  border-left: none;
+}
+
 @media (max-width: 768px) {
   /* Same fix as .side-component-wrapper — see CometChatDetails.css. Without
-     `inset: 0` a fixed element sits at its static position, i.e. offscreen. */
+     `inset: 0` a positioned element sits at its static position, i.e. offscreen. */
   .cometchat-thread-panel {
-    min-width: 100vw;
-    position: fixed;
+    min-width: 100%;
+    /* absolute, not fixed — fills the app root rather than the device viewport, so an embedded
+       app stays inside its box. */
+    position: absolute;
     inset: 0;
-    height: 100vh;
-    z-index: 1001;
+    z-index: 4; /* see CometChatDetails.css for why not 1001 */
   }
 }

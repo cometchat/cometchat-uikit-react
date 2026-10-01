@@ -3,8 +3,11 @@
  * BEM CSS with CSS variables for theming.
  */
 
+/* absolute, not fixed — overlays cover the app (the positioned `.cometchat` wrapper), not the
+   browser viewport. See styles/index.css. */
 .cometchat-create-poll__backdrop {
-  position: fixed;
+  border-radius: inherit;
+  position: absolute;
   inset: 0;
   z-index: 1000;
   display: flex;

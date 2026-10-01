@@ -99,6 +99,16 @@
   border-radius: var(--cometchat-radius-1, 4px);
 }
 
+/* --- Link Preview --- */
+
+/* When a link preview is present, keep a sensible minimum width so the preview
+   card doesn't collapse, but let the bubble still grow up to its normal
+   max-width for longer text (ENG-37417) — the text must not be constrained to
+   the link-preview width. */
+.cometchat-text-bubble--has-link-preview {
+  min-width: var(--cometchat-text-bubble-link-preview-min-width, 240px);
+}
+
 .cometchat-text-bubble__link-preview-container {
   display: flex;
   flex-direction: column;

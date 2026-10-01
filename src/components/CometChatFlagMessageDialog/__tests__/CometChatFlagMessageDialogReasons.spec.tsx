@@ -41,6 +41,14 @@ function renderReasons(
   );
 }
 
+/*
+ * Assertions below query `document.body`, not the render `container`.
+ *
+ * The dialog is portalled so its backdrop covers the app rather than whichever positioned
+ * ancestor happened to open it, which puts its markup outside the container React Testing
+ * Library hands back.
+ */
+
 describe('CometChatFlagMessageDialogReasons', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -58,8 +66,8 @@ describe('CometChatFlagMessageDialogReasons', () => {
 
   it('sets aria-busy="true" during loading', () => {
     getFlagReasons.mockReturnValue(new Promise(() => {}));
-    const { container } = renderReasons();
-    const loadingContainer = container.querySelector('[aria-busy="true"]');
+    renderReasons();
+    const loadingContainer = document.body.querySelector('[aria-busy="true"]');
     expect(loadingContainer).toBeTruthy();
   });
 
@@ -234,9 +242,9 @@ describe('CometChatFlagMessageDialogReasons', () => {
   // --- Custom className ---
 
   it('applies custom className to reasons container', async () => {
-    const { container } = renderReasons({ className: 'my-reasons' });
+    renderReasons({ className: 'my-reasons' });
     await waitFor(() => {
-      const reasonsEl = container.querySelector('.my-reasons');
+      const reasonsEl = document.body.querySelector('.my-reasons');
       expect(reasonsEl).toBeTruthy();
     });
   });

@@ -32,6 +32,8 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
     richTextEditorRef,
     onMentionQueryChange,
     onMentionEnd,
+    onMentionKeyDown,
+    mentionCombobox,
   } = useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
   const IframeContext = useCometChatFrameContext();
@@ -111,6 +113,10 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
       if (enableRichTextEditor) return;
       if (isComposingRef.current) return;
 
+      // Give the mentions dropdown first refusal (Escape closes it) so the key
+      // does not also reach the send/newline handling below.
+      if (onMentionKeyDown?.(e.nativeEvent)) return;
+
       if (e.key === 'Enter' && !e.shiftKey) {
         if (enterKeyBehavior === 'send') {
           e.preventDefault();
@@ -127,7 +133,15 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
         }
       }
     },
-    [enterKeyBehavior, isInEditMode, canSend, sendMessage, editMessage, enableRichTextEditor]
+    [
+      enterKeyBehavior,
+      isInEditMode,
+      canSend,
+      sendMessage,
+      editMessage,
+      enableRichTextEditor,
+      onMentionKeyDown,
+    ]
   );
 
   // Sync text from state to contentEditable (for programmatic changes like emoji insert)
@@ -172,6 +186,13 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
         role="textbox"
         tabIndex={0}
         aria-multiline="true"
+        // Combobox wiring for mention suggestions: focus stays here while the
+        // list is navigated, so the highlighted option is announced through
+        // aria-activedescendant. role stays "textbox" — ARIA 1.2 doesn't allow
+        // aria-expanded on it, and switching roles mid-typing confuses AT more
+        // than it helps.
+        aria-controls={mentionCombobox?.isOpen ? mentionCombobox.listboxId : undefined}
+        aria-activedescendant={mentionCombobox?.activeDescendantId ?? undefined}
         aria-label={
           isInEditMode
             ? getLocalizedString('message_composer_edit_message')

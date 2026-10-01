@@ -2,9 +2,14 @@ import { useState, useEffect } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatAvatar, CometChatConfirmDialog, usePublishEvent, useCometChatEvents, useLocale } from '@cometchat/chat-uikit-react';
 import type { CometChatEvent } from '@cometchat/chat-uikit-react';
-import blockIcon from '../../assets/block.svg';
-import deleteIcon from '../../assets/delete.svg';
+import { useSettings } from '../../config/SettingsContext';
+import blockIconAsset from '../../assets/block.svg';
+import deleteIconAsset from '../../assets/delete.svg';
 import './CometChatDetails.css';
+import { assetUrl } from '../../utils/assetUrl';
+
+const blockIcon = assetUrl(blockIconAsset);
+const deleteIcon = assetUrl(deleteIconAsset);
 
 interface CometChatUserDetailsProps {
   user: CometChat.User;
@@ -22,6 +27,9 @@ export const CometChatUserDetails = ({
   onConversationDeleted,
 }: CometChatUserDetailsProps) => {
   const { getLocalizedString } = useLocale();
+  // Hand-rolled status text, so the UI Kit's hideUserStatus prop does not reach it.
+  const { chatFeatures } = useSettings();
+  const showPresence = chatFeatures.coreMessagingExperience.userAndFriendsPresence;
   const [isBlocked, setIsBlocked] = useState(user.getBlockedByMe?.() ?? false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -103,22 +111,18 @@ export const CometChatUserDetails = ({
   return (
     <>
       {showBlockDialog && (
-        <div className="cometchat-block-user-dialog__backdrop">
-          <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowBlockDialog(false)}>
-            <CometChatConfirmDialog.Icon />
-            <CometChatConfirmDialog.Content title={getLocalizedString('block_contact')} messageText={getLocalizedString('confirm_block_contact')} />
-            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('user_details_block')} onConfirm={handleBlock} onCancel={() => setShowBlockDialog(false)} />
-          </CometChatConfirmDialog.Root>
-        </div>
+        <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowBlockDialog(false)}>
+          <CometChatConfirmDialog.Icon />
+          <CometChatConfirmDialog.Content title={getLocalizedString('block_contact')} messageText={getLocalizedString('confirm_block_contact')} />
+          <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('user_details_block')} onConfirm={handleBlock} onCancel={() => setShowBlockDialog(false)} />
+        </CometChatConfirmDialog.Root>
       )}
       {showDeleteDialog && (
-        <div className="cometchat-delete-chat-dialog__backdrop">
-          <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowDeleteDialog(false)}>
-            <CometChatConfirmDialog.Icon />
-            <CometChatConfirmDialog.Content title={getLocalizedString('delete_chat')} messageText={getLocalizedString('confirm_delete_chat')} />
-            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_chat')} onConfirm={handleDeleteConversation} onCancel={() => setShowDeleteDialog(false)} />
-          </CometChatConfirmDialog.Root>
-        </div>
+        <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowDeleteDialog(false)}>
+          <CometChatConfirmDialog.Icon />
+          <CometChatConfirmDialog.Content title={getLocalizedString('delete_chat')} messageText={getLocalizedString('confirm_delete_chat')} />
+          <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_chat')} onConfirm={handleDeleteConversation} onCancel={() => setShowDeleteDialog(false)} />
+        </CometChatConfirmDialog.Root>
       )}
 
       <div className="side-component-header">
@@ -132,7 +136,7 @@ export const CometChatUserDetails = ({
           </div>
           <div className="side-component-content__title__wrapper">
             <div className="side-component-content__title">{user.getName()}</div>
-            {!isBlocked && !user.getHasBlockedMe?.() && (
+            {showPresence && !isBlocked && !user.getHasBlockedMe?.() && (
               <div className="side-component-content__description">
                 {user.getStatus?.() === 'online' ? getLocalizedString('call_logs_user_status_online') : getLocalizedString('call_logs_user_status_offline')}
               </div>

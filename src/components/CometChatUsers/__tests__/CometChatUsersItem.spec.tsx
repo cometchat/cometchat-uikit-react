@@ -56,6 +56,8 @@ function createMockContext(
     selectRange: vi.fn(),
     deselectRange: vi.fn(),
     clearSelection: vi.fn(),
+    deselectAll: vi.fn(),
+    toggleSelectAll: vi.fn(),
     setActiveUser: vi.fn(),
     handleItemClick: vi.fn(),
     ...overrides,
@@ -72,6 +74,21 @@ function renderItem(user: CometChat.User, ctxOverrides: Partial<CometChatUsersCo
       </CometChatUsersContext.Provider>
     ),
   };
+}
+
+/** Render a multi-select item inside a listbox with a keydown spy on the container. */
+function renderItemInListbox(
+  user: CometChat.User,
+  onListKeyDown: (e: React.KeyboardEvent) => void
+) {
+  const ctx = createMockContext({ selectionMode: 'multiple' });
+  return render(
+    <CometChatUsersContext.Provider value={ctx}>
+      <div role="listbox" tabIndex={0} onKeyDown={onListKeyDown}>
+        <CometChatUsersItem user={user} />
+      </div>
+    </CometChatUsersContext.Provider>
+  );
 }
 
 describe('CometChatUsersItem', () => {
@@ -263,5 +280,67 @@ describe('CometChatUsersItem', () => {
     );
 
     expect(screen.getByText('Alice')).toBeInTheDocument();
+  });
+
+  // --- Checkbox: keep list-scoped shortcuts working (ENG-37421) ---
+
+  it('lets Ctrl/Cmd+A bubble from the checkbox to the list', () => {
+    const user = createMockUser('u1', 'Alice');
+    const onListKeyDown = vi.fn();
+    renderItemInListbox(user, onListKeyDown);
+
+    fireEvent.keyDown(screen.getByRole('checkbox'), { key: 'a', ctrlKey: true });
+    expect(onListKeyDown).toHaveBeenCalled();
+  });
+
+  it('toggles selection when Enter is pressed on the checkbox', () => {
+    const user = createMockUser('u1', 'Alice');
+    const handleItemClick = vi.fn();
+    renderItem(user, { selectionMode: 'multiple', handleItemClick });
+
+    // Native checkboxes ignore Enter; the key bubbles to the row, which toggles.
+    fireEvent.keyDown(screen.getByRole('checkbox'), { key: 'Enter' });
+    expect(handleItemClick).toHaveBeenCalledWith(user, { shiftKey: false });
+  });
+
+  it('stops Space from bubbling past the checkbox wrapper (avoids double toggle)', () => {
+    const user = createMockUser('u1', 'Alice');
+    const onListKeyDown = vi.fn();
+    renderItemInListbox(user, onListKeyDown);
+
+    fireEvent.keyDown(screen.getByRole('checkbox'), { key: ' ' });
+    expect(onListKeyDown).not.toHaveBeenCalled();
+  });
+
+  // Focus lands on the row rather than the listbox: keydown still bubbles to the
+  // listbox handler, and arrow navigation resumes from the clicked row instead of
+  // restarting at the top of the list.
+  it('focuses the clicked row after a mouse click on the checkbox', () => {
+    const user = createMockUser('u1', 'Alice');
+    renderItemInListbox(user, vi.fn());
+
+    const row = screen.getByRole('option');
+    fireEvent.click(screen.getByRole('checkbox'), { detail: 1 });
+    expect(row).toHaveFocus();
+  });
+
+  it('keeps list-level shortcuts working after a checkbox click (keydown still bubbles)', () => {
+    const user = createMockUser('u1', 'Alice');
+    const onListKeyDown = vi.fn();
+    renderItemInListbox(user, onListKeyDown);
+
+    fireEvent.click(screen.getByRole('checkbox'), { detail: 1 });
+    fireEvent.keyDown(screen.getByRole('option'), { key: 'a', ctrlKey: true });
+    expect(onListKeyDown).toHaveBeenCalled();
+  });
+
+  it('does not move focus on a keyboard-triggered checkbox click', () => {
+    const user = createMockUser('u1', 'Alice');
+    renderItemInListbox(user, vi.fn());
+
+    const listbox = screen.getByRole('listbox');
+    // detail 0 => keyboard-activated click; focus should not be yanked.
+    fireEvent.click(screen.getByRole('checkbox'), { detail: 0 });
+    expect(listbox).not.toHaveFocus();
   });
 });

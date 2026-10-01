@@ -1,4 +1,3 @@
-import type { CometChat } from '@cometchat/chat-sdk-javascript';
 
 export interface AppState {
   activeTab: string;

@@ -1,5 +1,9 @@
+/* absolute, not fixed — this backdrop covers the app, not the browser viewport. The app root
+   (.cometchat / .cometchat-root) is positioned, so `inset: 0` resolves against it. */
 .cometchat-create-group__backdrop {
-    position: fixed;
+    /* Match the app's corners — see the UI Kit's overlays. */
+    border-radius: inherit;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -185,9 +189,17 @@
     border-radius: 4px;
 }
 
-@media (max-width: 768px) {
-    .cometchat-create-group {
-        width: 320px;
-        padding: var(--cometchat-padding-5, 20px) var(--cometchat-padding-5, 20px) var(--cometchat-padding-10, 40px) var(--cometchat-padding-5, 20px);
-    }
+/**
+ * Narrow layout — keyed off the app root's class, not the viewport.
+ *
+ * `@media (max-width: 768px)` asks how wide the *browser window* is, which is the wrong question
+ * for an embedded app: in the builder's mobile preview the pane is ~370px inside a 1500px window,
+ * so the query never fired and this modal stayed 400px — wider than the pane, and clipped.
+ * `.cometchat-root--mobile` comes from `useIsMobile()`, which measures the app container.
+ *
+ * This renders inside `.cometchat-root` (it does not portal), so a descendant selector reaches it.
+ */
+.cometchat-root--mobile .cometchat-create-group {
+    width: 320px;
+    padding: var(--cometchat-padding-5, 20px) var(--cometchat-padding-5, 20px) var(--cometchat-padding-10, 40px) var(--cometchat-padding-5, 20px);
 }

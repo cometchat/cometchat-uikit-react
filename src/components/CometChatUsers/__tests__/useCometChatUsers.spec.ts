@@ -141,6 +141,62 @@ describe('useCometChatUsers', () => {
     expect(result.current.selectedUserIds).toEqual([]);
   });
 
+  it('toggleSelectAll selects all loaded users, then deselects on second call', async () => {
+    const onSelect = vi.fn();
+    const { result } = renderHook(() => useCometChatUsers({ selectionMode: 'multiple', onSelect }));
+
+    await waitFor(() => {
+      expect(result.current.fetchState).toBe('loaded');
+    });
+
+    act(() => {
+      result.current.toggleSelectAll();
+    });
+    expect(result.current.selectedUserIds).toEqual(expect.arrayContaining(['u1', 'u2']));
+    expect(result.current.selectedUserIds).toHaveLength(2);
+
+    act(() => {
+      result.current.toggleSelectAll();
+    });
+    expect(result.current.selectedUserIds).toEqual([]);
+  });
+
+  it('deselectAll clears selection and fires onSelect(false) for each user', async () => {
+    const onSelect = vi.fn();
+    const { result } = renderHook(() => useCometChatUsers({ selectionMode: 'multiple', onSelect }));
+
+    await waitFor(() => {
+      expect(result.current.fetchState).toBe('loaded');
+    });
+
+    act(() => {
+      result.current.toggleSelectAll();
+    });
+    onSelect.mockClear();
+
+    act(() => {
+      result.current.deselectAll();
+    });
+
+    expect(result.current.selectedUserIds).toEqual([]);
+    expect(onSelect).toHaveBeenCalledTimes(2);
+    expect(onSelect).toHaveBeenLastCalledWith(expect.anything(), false);
+  });
+
+  it('toggleSelectAll is a no-op in non-multiple selection mode', async () => {
+    const { result } = renderHook(() => useCometChatUsers({ selectionMode: 'single' }));
+
+    await waitFor(() => {
+      expect(result.current.fetchState).toBe('loaded');
+    });
+
+    act(() => {
+      result.current.toggleSelectAll();
+    });
+
+    expect(result.current.selectedUserIds).toEqual([]);
+  });
+
   it('setSearchText resets list and re-fetches', async () => {
     const { result } = renderHook(() => useCometChatUsers());
 

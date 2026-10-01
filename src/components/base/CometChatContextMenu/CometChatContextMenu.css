@@ -101,6 +101,11 @@
 }
 
 /* Dropdown container — uses position: fixed to escape overflow: hidden ancestors */
+/* Stays `fixed` deliberately. Unlike the app's overlays, this is positioned from inline
+   top/left computed via getBoundingClientRect(), which returns *viewport* coordinates —
+   switching to `absolute` would offset it by the containing block's position. It is a small
+   popup anchored to a trigger inside the app, not a surface meant to cover it, so leaving it
+   viewport-positioned is correct. */
 .cometchat-context-menu__dropdown {
   position: fixed;
   z-index: 1000;

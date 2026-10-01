@@ -13,6 +13,12 @@ function renderLayout(mode?: 'list' | 'grid') {
   );
 }
 
+/*
+ * Assertions below query `document.body`, not the render `container`: this overlay is portalled
+ * so it is contained by the app rather than the positioned ancestor that opened it, which puts
+ * its markup outside the container React Testing Library returns.
+ */
+
 describe('CometChatActionSheetLayout', () => {
   it('renders children in a vertical list when mode is "list"', () => {
     renderLayout('list');
@@ -33,7 +39,7 @@ describe('CometChatActionSheetLayout', () => {
   });
 
   it('applies correct CSS class for each layout mode', () => {
-    const { container, rerender } = render(
+    const { rerender } = render(
       <CometChatActionSheet.Root isOpen={true} onClose={vi.fn()} layoutMode="list">
         <CometChatActionSheet.Layout mode="list">
           <CometChatActionSheet.Item item={{ id: '1', title: 'A', onClick: vi.fn() }} />
@@ -41,7 +47,7 @@ describe('CometChatActionSheetLayout', () => {
       </CometChatActionSheet.Root>
     );
 
-    const listLayout = container.querySelector('[role="dialog"] > div');
+    const listLayout = document.body.querySelector('[role="dialog"] > div');
     const listClass = listLayout?.className ?? '';
 
     rerender(
@@ -52,7 +58,7 @@ describe('CometChatActionSheetLayout', () => {
       </CometChatActionSheet.Root>
     );
 
-    const gridLayout = container.querySelector('[role="dialog"] > div');
+    const gridLayout = document.body.querySelector('[role="dialog"] > div');
     const gridClass = gridLayout?.className ?? '';
 
     // The classes should differ between list and grid modes

@@ -122,11 +122,29 @@ test.describe('CometChatMessageHeader', () => {
 
   // ==================== Search Button ====================
 
+  /*
+   * Search has two possible homes in the header, and which one it gets depends on the app's
+   * other features — so the test has to accept either.
+   *
+   * It is a standalone button only when nothing else would share the trailing slot. As soon as
+   * the conversation summary or Pinned Messages is enabled, search is folded into the overflow
+   * menu instead, and `--search` never renders. This sample app enables pinned messages, which
+   * is why asserting on the standalone button alone used to fail here.
+   */
   test('search button renders and clicking triggers search', async () => {
-    const searchBtn = page.locator('.cometchat-message-header__menu-button--search').first();
-    await expect(searchBtn).toBeVisible({ timeout: 5_000 });
+    const standaloneBtn = page.locator('.cometchat-message-header__menu-button--search').first();
+    const overflowBtn = page
+      .locator('.cometchat-message-header__menu-button')
+      .filter({ has: page.locator('.cometchat-message-header__menu-button-icon--more') })
+      .first();
 
-    await searchBtn.click();
+    if (await standaloneBtn.isVisible().catch(() => false)) {
+      await standaloneBtn.click();
+    } else {
+      await expect(overflowBtn).toBeVisible({ timeout: 5_000 });
+      await overflowBtn.click();
+      await page.getByText('Search', { exact: true }).first().click();
+    }
     await page.waitForTimeout(2000);
 
     // Search component should appear

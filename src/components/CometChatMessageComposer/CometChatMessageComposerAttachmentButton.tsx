@@ -47,6 +47,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     closePreview,
     onError,
     isInEditMode,
+    playOutgoingSound,
   } = useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
   const IframeContext = useCometChatFrameContext();
@@ -121,7 +122,10 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
 
   const handlePollCreated = useCallback(() => {
     setShowCreatePoll(false);
-  }, []);
+    // Polls, documents and whiteboards are created by an extension rather than sent from here, so
+    // none of them pass through the composer's send functions — each says so itself.
+    playOutgoingSound();
+  }, [playOutgoingSound]);
 
   const handleCollaborativeDocument = useCallback(() => {
     setContentToDisplay('none');
@@ -140,6 +144,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
 
     void CometChat.callExtension('document', 'POST', 'v1/create', payload)
       .then(() => {
+        playOutgoingSound();
         if (messageToReply) {
           closePreview();
         }
@@ -147,7 +152,16 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
       .catch((error: unknown) => {
         if (error instanceof CometChatException) onError?.(error);
       });
-  }, [setContentToDisplay, user, group, parentMessageId, messageToReply, closePreview, onError]);
+  }, [
+    setContentToDisplay,
+    user,
+    group,
+    parentMessageId,
+    messageToReply,
+    closePreview,
+    playOutgoingSound,
+    onError,
+  ]);
 
   const handleCollaborativeWhiteboard = useCallback(() => {
     setContentToDisplay('none');
@@ -166,6 +180,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
 
     void CometChat.callExtension('whiteboard', 'POST', 'v1/create', payload)
       .then(() => {
+        playOutgoingSound();
         if (messageToReply) {
           closePreview();
         }
@@ -173,7 +188,16 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
       .catch((error: unknown) => {
         if (error instanceof CometChatException) onError?.(error);
       });
-  }, [setContentToDisplay, user, group, parentMessageId, messageToReply, closePreview, onError]);
+  }, [
+    setContentToDisplay,
+    user,
+    group,
+    parentMessageId,
+    messageToReply,
+    closePreview,
+    playOutgoingSound,
+    onError,
+  ]);
 
   // Build attachment options
   const attachmentItems: CometChatActionSheetItemData[] = useMemo(() => {

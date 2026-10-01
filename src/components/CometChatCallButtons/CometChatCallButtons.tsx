@@ -1,10 +1,12 @@
 import React, { useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatCallButtonsProps } from './CometChatCallButtons.types';
 import { useCometChatCallButtons } from './useCometChatCallButtons';
 import { CometChatOutgoingCall } from '../CometChatOutgoingCall/CometChatOutgoingCall';
 import { CometChatOngoingCall } from '../CometChatOngoingCall/CometChatOngoingCall';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useOverlayContainer } from '../../context/OverlayContainerContext';
 import './CometChatCallButtons.css';
 
 /**
@@ -52,6 +54,9 @@ export const CometChatCallButtons: React.FC<CometChatCallButtonsProps> = ({
     cancelOutgoingCall,
     resetCallState,
   } = useCometChatCallButtons({ user, group, onError });
+
+  /** Nearest `.cometchat` root — the outgoing-call overlay portals here (see below). */
+  const overlayContainer = useOverlayContainer();
 
   const handleVoiceCall = useCallback(
     (event: React.MouseEvent) => {
@@ -178,32 +183,28 @@ export const CometChatCallButtons: React.FC<CometChatCallButtonsProps> = ({
         </div>
       )}
 
-      {/* Outgoing Call — overlay shown when initiating a call */}
-      {showOutgoingCallScreen && activeCall && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9998,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.5)',
-          }}
-        >
-          <CometChatOutgoingCall
-            call={activeCall}
-            onCallCanceled={() => void cancelOutgoingCall()}
-            onError={
-              onError
-                ? (error: CometChat.CometChatException) => {
-                    onError(error);
-                  }
-                : null
-            }
-          />
-        </div>
-      )}
+      {/*
+        Outgoing Call — portalled to the app root rather than rendered in place.
+      */}
+      {showOutgoingCallScreen &&
+        activeCall &&
+        overlayContainer &&
+        createPortal(
+          <div className="cometchat-call-overlay cometchat-call-overlay--outgoing">
+            <CometChatOutgoingCall
+              call={activeCall}
+              onCallCanceled={() => void cancelOutgoingCall()}
+              onError={
+                onError
+                  ? (error: CometChat.CometChatException) => {
+                      onError(error);
+                    }
+                  : null
+              }
+            />
+          </div>,
+          overlayContainer
+        )}
 
       {/* Ongoing Call — full-screen overlay when a call is active */}
       {showOngoingCall && callSessionId && (

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatUsers, CometChatGroups, useLocale } from '@cometchat/chat-uikit-react';
 import './CometChatNewChatView.css';
 
 interface CometChatNewChatViewProps {
+  /** Narrow layout — cover the app rather than sit inside the messages column. */
+  isFullScreen?: boolean;
   onBack: () => void;
   onUserSelected: (user: CometChat.User) => void;
   onGroupSelected: (group: CometChat.Group) => void;
@@ -13,12 +14,15 @@ export const CometChatNewChatView = ({
   onBack,
   onUserSelected,
   onGroupSelected,
+  isFullScreen,
 }: CometChatNewChatViewProps) => {
   const [selectedTab, setSelectedTab] = useState<'user' | 'group'>('user');
   const { getLocalizedString } = useLocale();
 
   return (
-    <div className="cometchat-new-chat-view">
+    <div
+      className={`cometchat-new-chat-view${isFullScreen ? ' cometchat-new-chat-view--fullscreen' : ''}`}
+    >
       {/* Header with back icon and title */}
       <div className="cometchat-new-chat-view__header">
         <button

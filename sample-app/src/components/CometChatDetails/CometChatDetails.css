@@ -2,7 +2,8 @@
   display: flex;
   width: 30%;
   max-width: 420px;
-  height: 100vh;
+  /* No height: as a flex child of .cometchat-root, the default align-items: stretch already
+     sizes this. */
   flex-direction: column;
   align-items: flex-start;
   position: relative;
@@ -54,7 +55,10 @@
 .side-component-content {
   display: flex;
   padding-top: 40px;
-  height: calc(100vh - 64px);
+  /* Was calc(100vh - 64px). .side-component-wrapper__content is `height: 100%` of
+     .side-component-wrapper — once that stops measuring the viewport (above), 100% here resolves
+     against the panel's real height and the same subtraction works without touching vh. */
+  height: calc(100% - 64px);
   flex-direction: column;
   align-items: center;
   gap: var(--cometchat-padding-5, 20px);
@@ -251,11 +255,15 @@
 }
 
 /* Dialog backdrops */
+/* absolute, not fixed — these cover the app, not the browser viewport. The app root
+   (.cometchat / .cometchat-root) is positioned, so top/left + 100% resolves against it. */
 .cometchat-leave-group__backdrop,
 .cometchat-delete-group__backdrop,
 .cometchat-block-user-dialog__backdrop,
 .cometchat-delete-chat-dialog__backdrop {
-  position: fixed;
+  /* Match the app's corners — see the UI Kit's overlays. */
+  border-radius: inherit;
+  position: absolute;
   height: 100%;
   width: 100%;
   top: 0;
@@ -267,20 +275,38 @@
   z-index: 10;
 }
 
+/**
+ * Narrow layout: the details panel covers the app instead of sitting in a 30% column.
+ *
+ * Class-driven for the same reason as the thread panel — `@media (max-width: 768px)` measures the
+ * browser window, which never fires for a narrow *container* inside a wide one..
+ */
+.side-component-wrapper--fullscreen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  z-index: 4;
+  border-left: none;
+}
+
 @media (max-width: 768px) {
-  /* Full-screen takeover. `inset: 0` is load-bearing: a fixed element with auto
-     offsets sits at its STATIC position — here, past the right edge of the
+  /* Full-screen takeover. `inset: 0` is load-bearing: a positioned element with
+     auto offsets sits at its STATIC position — here, past the right edge of the
      full-width messages area — so the panel landed offscreen and the message
      header underneath stayed visible and clickable.
 
-     z-index matches the app's other full-screen overlays (.saved-messages-wrapper)
-     so it also covers the header's context-menu layer, which sits at 1000. */
+     z-index stays 4: above .messages-wrapper (1) and .conversations-wrapper (2).
+     The header's context-menu layer (1000) is inside .messages-wrapper's stacking
+     context, so 4 already covers it — while a value in the 1000s would bury the
+     dialogs, tooltips and toasts portalled into .cometchat at 1000. */
   .side-component-wrapper {
-    min-width: 100vw;
-    position: fixed;
-    inset: 0;
-    height: 100vh;
+    min-width: 100%;
     max-width: none;
-    z-index: 1001;
+    /* absolute, not fixed — fills the app root rather than the device viewport. */
+    position: absolute;
+    inset: 0;
+    z-index: 4;
   }
 }

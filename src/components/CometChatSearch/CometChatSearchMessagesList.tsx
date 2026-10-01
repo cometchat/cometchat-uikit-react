@@ -9,6 +9,7 @@ import { sanitizeHtml } from '../../utils/sanitizeHtml';
 import { getMessageSubtitle as buildMessageSubtitle } from '../../utils/messageSubtitle';
 import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
 import './CometChatSearch.css';
+import { useListKeyboardNavigation } from '../../hooks/useListKeyboardNavigation';
 
 // File type icons
 import fileIcon from '../../assets/document-file-icon.svg';
@@ -172,6 +173,12 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Arrow-key navigation over the result rows (skips date separators).
+  const listRef = useRef<HTMLDivElement>(null);
+  const handleListKeyDown = useListKeyboardNavigation(listRef, {
+    itemSelector: '[role="listitem"]',
+  });
+
   useEffect(() => {
     if (!useScrollPagination || !sentinelRef.current || !hasMore) return;
 
@@ -272,7 +279,12 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
       {/* Results */}
       {fetchState === 'loaded' && (
         <>
-          <div className={'cometchat-search__messages-list'} role="list">
+          <div
+            ref={listRef}
+            className={'cometchat-search__messages-list'}
+            role="list"
+            onKeyDown={handleListKeyDown}
+          >
             {messages.map((message, index) => (
               <React.Fragment key={message.getId()}>
                 {/* Date separator */}

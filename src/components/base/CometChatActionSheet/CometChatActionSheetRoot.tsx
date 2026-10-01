@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type {
   CometChatActionSheetRootProps,
   CometChatActionSheetContextValue,
@@ -6,6 +7,7 @@ import type {
 import { CometChatActionSheetContext } from './CometChatActionSheet.context';
 import { HEADER_TITLE_ID } from './CometChatActionSheetHeader';
 import { useCometChatFrameContext } from '../../../context/CometChatFrameContext';
+import { useOverlayContainer } from '../../../context/OverlayContainerContext';
 import './CometChatActionSheet.css';
 
 /**
@@ -140,12 +142,14 @@ export const CometChatActionSheetRoot: React.FC<CometChatActionSheetRootProps> =
     [isOpen, onClose, layoutMode]
   );
 
-  if (!isOpen) return null;
+  const overlayContainer = useOverlayContainer();
+  if (!isOpen || !overlayContainer) return null;
 
   const sheetBase = 'cometchat-action-sheet';
   const sheetClass = className ? `${sheetBase} ${className}` : sheetBase;
 
-  return (
+  /** Portalled so the backdrop and sheet cover the app, not the ancestor that opened them. */
+  return createPortal(
     <CometChatActionSheetContext.Provider value={ctxValue}>
       <div
         className={'cometchat-action-sheet__backdrop'}
@@ -163,6 +167,7 @@ export const CometChatActionSheetRoot: React.FC<CometChatActionSheetRootProps> =
       >
         {children}
       </div>
-    </CometChatActionSheetContext.Provider>
+    </CometChatActionSheetContext.Provider>,
+    overlayContainer
   );
 };

@@ -17,6 +17,7 @@ import { useMessageListEvents } from './useMessageListEvents';
 import { useMessageListActions } from './useMessageListActions';
 import { useMessageListScroll } from './useMessageListScroll';
 import type { MessageListRefs } from './messageListRefs';
+import { useGlobalConfig } from '../../context/GlobalConfigContext';
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -53,7 +54,7 @@ export function useCometChatMessageList(
     disableSoundForMessages = false,
     customSoundForMessages,
     scrollToBottomOnNewMessages = false,
-    hideReceipts = false,
+    hideReceipts: hideReceiptsProp,
     isAgentChat = false,
     textFormatters,
     onError,
@@ -62,6 +63,12 @@ export function useCometChatMessageList(
     onConversationMarkedAsRead,
     onConversationUpdated,
   } = options;
+
+  // Resolved here rather than defaulted in the destructure, matching CometChatConversationsRoot
+  // and CometChatSearchRoot: a plain `= false` default is indistinguishable from the caller
+  // asking for `false`, and the bubble's own GlobalConfig fallback would never be reached.
+  const globalConfig = useGlobalConfig();
+  const hideReceipts = hideReceiptsProp ?? globalConfig.hideReceipts ?? false;
 
   // `parentMessage` is the preferred thread input; the deprecated `parentMessageId`
   // is still honoured when it is absent. Everything downstream keeps using the
@@ -283,6 +290,7 @@ export function useCometChatMessageList(
       hideStickyDate,
       hideAvatar,
       hideGroupActionMessages,
+      hideReceipts,
       quickOptionsCount,
       hideReplyOption,
       hideReplyInThreadOption,
@@ -330,6 +338,7 @@ export function useCometChatMessageList(
       hideStickyDate,
       hideAvatar,
       hideGroupActionMessages,
+      hideReceipts,
       quickOptionsCount,
       hideReplyOption,
       hideReplyInThreadOption,

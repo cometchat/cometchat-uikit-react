@@ -1,10 +1,12 @@
 import React, { useCallback, useMemo, useRef, useState, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatToast } from '../base/CometChatToast';
 import { usePinSaveActions } from '../../hooks/usePinSaveActions';
 import { CometChatPinSaveConfirmDialog } from '../base/CometChatPinSaveConfirmDialog';
 import { usePanelA11y } from '../../hooks/usePanelA11y';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
+import { useOverlayContainer } from '../../context/OverlayContainerContext';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { localizeWithFallback } from '../../utils/localizeWithFallback';
 import { useCometChatPinnedMessages } from './useCometChatPinnedMessages';
@@ -87,6 +89,7 @@ export const CometChatPinnedMessagesRoot: React.FC<CometChatPinnedMessagesRootPr
   }, []);
 
   const [messageInfoTarget, setMessageInfoTarget] = useState<CometChat.BaseMessage | null>(null);
+  const overlayContainer = useOverlayContainer();
 
   const panelRef = useRef<HTMLDivElement>(null);
   // Escape closes the panel, unless the Message Information overlay is up — that
@@ -188,28 +191,33 @@ export const CometChatPinnedMessagesRoot: React.FC<CometChatPinnedMessagesRootPr
           </>
         )}
 
-        {/* Message Information — same centered overlay the message list uses. */}
-        {messageInfoTarget && (
-          <div
-            className={'cometchat-pinned-messages__message-info-overlay'}
-            onClick={e => {
-              if (e.target === e.currentTarget) setMessageInfoTarget(null);
-            }}
-            role="presentation"
-          >
-            <div className={'cometchat-pinned-messages__message-info-panel'}>
-              <Suspense fallback={null}>
-                <LazyCometChatMessageInformation
-                  message={messageInfoTarget}
-                  onClose={() => {
-                    setMessageInfoTarget(null);
-                  }}
-                  {...(textFormatters !== undefined && { textFormatters })}
-                />
-              </Suspense>
-            </div>
-          </div>
-        )}
+        {/* Message Information — same centered overlay the message list uses, portalled the same way.
+            This panel sits in a positioned side column, so an overlay rendered in place would cover
+            only the column; in `.cometchat` it covers the app and keeps the theme. */}
+        {messageInfoTarget &&
+          overlayContainer &&
+          createPortal(
+            <div
+              className={'cometchat-pinned-messages__message-info-overlay'}
+              onClick={e => {
+                if (e.target === e.currentTarget) setMessageInfoTarget(null);
+              }}
+              role="presentation"
+            >
+              <div className={'cometchat-pinned-messages__message-info-panel'}>
+                <Suspense fallback={null}>
+                  <LazyCometChatMessageInformation
+                    message={messageInfoTarget}
+                    onClose={() => {
+                      setMessageInfoTarget(null);
+                    }}
+                    {...(textFormatters !== undefined && { textFormatters })}
+                  />
+                </Suspense>
+              </div>
+            </div>,
+            overlayContainer
+          )}
 
         {pinSave.confirmState && (
           <CometChatPinSaveConfirmDialog

@@ -1,5 +1,8 @@
 /* Container for the outgoing call UI */
 .cometchat-outgoing-call {
+  /* Padding inside the size: on narrow screens this is width/height 100% plus padding. The call
+     overlay is portalled outside the app's own border-box scope, so it has to say this itself. */
+  box-sizing: border-box;
   display: flex;
   width: 360px;
   height: 540px;

@@ -274,6 +274,19 @@ describe('CometChatGroupMembers — Integration', () => {
     });
   });
 
+  it('hides the default header when hideHeader is set', async () => {
+    const members = [createMockMember('u1', 'Alice', 'participant')];
+    mockFetchNext.mockResolvedValueOnce(members);
+
+    render(<CometChatGroupMembers group={createMockGroup()} hideHeader />);
+
+    // Members still render, but the "Members" title should not.
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Members')).not.toBeInTheDocument();
+  });
+
   it('renders role badges for non-participant members', async () => {
     const members = [
       createMockMember('u1', 'Alice', 'owner'),

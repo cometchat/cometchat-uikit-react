@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatUIKit } from '@cometchat/chat-uikit-react';
 import { sampleUsers } from './sampledata';
-import cometChatLogo from '../../assets/cometchat_logo.svg';
-import cometChatLogoDark from '../../assets/cometchat_logo_dark.svg';
+import cometChatLogoAsset from '../../assets/cometchat_logo.svg';
+import cometChatLogoDarkAsset from '../../assets/cometchat_logo_dark.svg';
 import './CometChatLogin.css';
+import { assetUrl } from '../../utils/assetUrl';
+
+const cometChatLogo = assetUrl(cometChatLogoAsset);
+const cometChatLogoDark = assetUrl(cometChatLogoDarkAsset);
 
 type User = {
   name: string;

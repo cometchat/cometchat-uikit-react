@@ -225,14 +225,15 @@
 }
 
 /* Message Information overlay — mirrors the message list's, so the panel looks
-   the same wherever Info is opened from. Fixed, not scoped to the narrow column.
+   the same wherever Info is opened from. Portalled into `.cometchat`, so `absolute`
+   covers the app rather than the narrow column, and never the host page.
 
    z-index must clear the context-menu band (999-1001). Another item despite being 
    position: static can be a FLEX ITEM — z-index applies to flex items as if they 
    were relative — so it paints into the root stacking context and would otherwise 
    sit on top of this overlay, undimmed. */
 .cometchat-pinned-messages__message-info-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 1200;
   display: flex;

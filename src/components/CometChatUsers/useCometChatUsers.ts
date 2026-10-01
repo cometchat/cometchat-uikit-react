@@ -157,18 +157,28 @@ export function useCometChatUsers(
     return cleanup;
   }, [instanceId, hideUserStatus]);
 
+  /*
+   * The live search text, for the connection listener below.
+   *
+   * That listener is attached once and deliberately not re-attached when the search text changes,
+   * so reading `state.searchText` directly inside it captures whatever the value was at attach
+   * time — almost always the empty string. A reconnect mid-search then re-fetched unfiltered and
+   * silently replaced the filtered list with the full one.
+   */
+  const searchTextRef = useRef(state.searchText);
+  searchTextRef.current = state.searchText;
+
   // --- Connection recovery ---
   useEffect(() => {
     const listenerId = `CometChatUsers_conn_${instanceId}`;
     const cleanup = CometChatUsersManager.attachConnectionListener(listenerId, {
       onConnected: () => {
         CometChatLogger.info('CometChatUsers', 'Connection recovered, re-fetching users');
-        initializeAndFetch(state.searchText);
+        initializeAndFetch(searchTextRef.current);
       },
     });
 
     return cleanup;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instanceId, initializeAndFetch]);
 
   // --- Active user sync ---
@@ -224,6 +234,26 @@ export function useCometChatUsers(
   const clearSelection = useCallback(() => {
     dispatch({ type: 'CLEAR_SELECTION' });
   }, []);
+
+  // Deselect every currently selected user (fires onSelect(false) for each so
+  // consumers tracking selection via the callback stay in sync).
+  const deselectAll = useCallback(() => {
+    if (state.selectedUserIds.length > 0) {
+      deselectRange(state.selectedUserIds);
+    }
+  }, [state.selectedUserIds, deselectRange]);
+
+  // Ctrl/Cmd+A behaviour: select all loaded users, or deselect all when they
+  // are already selected (toggle). Only meaningful in multiple-selection mode.
+  const toggleSelectAll = useCallback(() => {
+    if (selectionMode !== 'multiple' || state.users.length === 0) return;
+    const allSelected = state.users.every(u => state.selectedUserIds.includes(u.getUid()));
+    if (allSelected) {
+      deselectAll();
+    } else {
+      selectRange(state.users);
+    }
+  }, [selectionMode, state.users, state.selectedUserIds, selectRange, deselectAll]);
 
   const setActiveUser = useCallback((userId: string | null) => {
     dispatch({ type: 'SET_ACTIVE_USER', userId });
@@ -294,6 +324,8 @@ export function useCometChatUsers(
     selectRange,
     deselectRange,
     clearSelection,
+    deselectAll,
+    toggleSelectAll,
     setActiveUser,
     handleItemClick,
   };

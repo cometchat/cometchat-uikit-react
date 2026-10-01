@@ -1,5 +1,9 @@
+/* absolute, not fixed — this backdrop covers the app, not the browser viewport. The app root
+   (.cometchat / .cometchat-root) is positioned, so `inset: 0` resolves against it. */
 .cometchat-join-group__backdrop {
-    position: fixed;
+  /* Match the app's corners — see the UI Kit's overlays. */
+  border-radius: inherit;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;

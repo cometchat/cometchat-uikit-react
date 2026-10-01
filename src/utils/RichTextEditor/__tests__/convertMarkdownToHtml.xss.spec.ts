@@ -93,4 +93,66 @@ describe('convertMarkdownToHtml — XSS', () => {
   it('preserves <u> underline syntax', () => {
     expect(convertMarkdownToHtml('<u>under</u>')).toContain('<u>under</u>');
   });
+
+  // Pasting a link takes this path rather than the as-you-type detector, so the
+  // markers inside an address are all present at once and must not be paired up.
+  describe('URL shielding', () => {
+    it('leaves a URL with two underscores untouched', () => {
+      const url = 'https://example.com/file/d/1AbCdEfGhIj_kLmNoPqRsTu/view?usp=share_link';
+      expect(convertMarkdownToHtml(url)).toBe(`<p>${url}</p>`);
+    });
+
+    it('does not italicise underscores inside a bare URL', () => {
+      expect(convertMarkdownToHtml('https://example.com/a_b_c')).toBe(
+        '<p>https://example.com/a_b_c</p>'
+      );
+    });
+
+    it('protects the other inline markers inside a URL', () => {
+      expect(convertMarkdownToHtml('https://example.com/a*b*c')).toBe(
+        '<p>https://example.com/a*b*c</p>'
+      );
+      expect(convertMarkdownToHtml('https://example.com/a~~b~~c')).toBe(
+        '<p>https://example.com/a~~b~~c</p>'
+      );
+    });
+
+    it('protects www. URLs', () => {
+      expect(convertMarkdownToHtml('www.example.com/my_file_name')).toBe(
+        '<p>www.example.com/my_file_name</p>'
+      );
+    });
+
+    it('still converts markers that wrap a URL', () => {
+      expect(convertMarkdownToHtml('**https://example.com/a_b_c**')).toBe(
+        '<p><strong>https://example.com/a_b_c</strong></p>'
+      );
+      expect(convertMarkdownToHtml('_https://example.com/abc_')).toBe(
+        '<p><em>https://example.com/abc</em></p>'
+      );
+    });
+
+    it('still converts formatting elsewhere in the same text', () => {
+      expect(convertMarkdownToHtml('https://example.com/a_b_c and _really italic_ here')).toBe(
+        '<p>https://example.com/a_b_c and <em>really italic</em> here</p>'
+      );
+    });
+
+    it('leaves intra-word underscores alone but still formats at a boundary', () => {
+      expect(convertMarkdownToHtml('my_var_name')).toBe('<p>my_var_name</p>');
+      expect(convertMarkdownToHtml('my_var_name and _real_ here')).toBe(
+        '<p>my_var_name and <em>real</em> here</p>'
+      );
+    });
+
+    it('keeps a markdown link whose URL has underscores intact', () => {
+      const result = convertMarkdownToHtml('[Q3](https://example.com/d/abc_def?usp=share_link)');
+      expect(result).toContain('href="https://example.com/d/abc_def?usp=share_link"');
+      expect(result).toContain('>Q3</a>');
+    });
+
+    it('still blocks dangerous schemes in a markdown link', () => {
+      expect(convertMarkdownToHtml('[bad](javascript:alert(1))')).toContain('href="#"');
+    });
+  });
 });

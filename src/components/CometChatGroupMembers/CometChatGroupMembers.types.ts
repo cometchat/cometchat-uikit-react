@@ -60,6 +60,8 @@ export interface CometChatGroupMembersRootProps {
   onBack?: () => void;
   /** Whether to hide the search bar. Default: false. */
   hideSearch?: boolean;
+  /** Whether to hide the default header/title. Default: false. */
+  hideHeader?: boolean;
   /** Show the native scrollbar on the list. Default: false (scrollbar hidden). */
   showScrollbar?: boolean;
   /** Children (compound sub-components). If omitted, renders default layout. */

@@ -221,18 +221,28 @@ export function useCometChatGroups(
     return cleanup;
   }, [instanceId]);
 
+  /*
+   * The live search text, for the connection listener below.
+   *
+   * That listener is attached once and deliberately not re-attached when the search text changes,
+   * so reading `state.searchText` directly inside it captures whatever the value was at attach
+   * time — almost always the empty string. A reconnect mid-search then re-fetched unfiltered and
+   * silently replaced the filtered list with the full one.
+   */
+  const searchTextRef = useRef(state.searchText);
+  searchTextRef.current = state.searchText;
+
   // --- Connection recovery ---
   useEffect(() => {
     const listenerId = `CometChatGroups_conn_${instanceId}`;
     const cleanup = CometChatGroupsManager.attachConnectionListener(listenerId, {
       onConnected: () => {
         CometChatLogger.info('CometChatGroups', 'Connection recovered, re-fetching groups');
-        initializeAndFetch(state.searchText);
+        initializeAndFetch(searchTextRef.current);
       },
     });
 
     return cleanup;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instanceId, initializeAndFetch]);
 
   // --- Active group sync ---

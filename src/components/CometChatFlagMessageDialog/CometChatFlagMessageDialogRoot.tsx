@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type {
   CometChatFlagMessageDialogRootProps,
   CometChatFlagMessageDialogContextValue,
@@ -11,6 +12,7 @@ import { CometChatFlagMessageDialogActions } from './CometChatFlagMessageDialogA
 import { useCometChatFlagMessageDialog } from './useCometChatFlagMessageDialog';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
+import { useOverlayContainer } from '../../context/OverlayContainerContext';
 import './CometChatFlagMessageDialog.css';
 
 /** Stable IDs for aria-labelledby / aria-describedby. */
@@ -150,13 +152,15 @@ export const CometChatFlagMessageDialogRoot: React.FC<CometChatFlagMessageDialog
     [isOpen, handleClose, message, hookData]
   );
 
-  if (!isOpen) return null;
+  const overlayContainer = useOverlayContainer();
+  if (!isOpen || !overlayContainer) return null;
 
   const backdropClasses = ['cometchat-flag-message-dialog__backdrop', className]
     .filter(Boolean)
     .join(' ');
 
-  return (
+  /** Portalled so the backdrop covers the app, not the positioned ancestor that opened it. */
+  return createPortal(
     <CometChatFlagMessageDialogContext.Provider value={ctxValue}>
       <div className={backdropClasses}>
         {hookData.errorMessage && (
@@ -191,7 +195,8 @@ export const CometChatFlagMessageDialogRoot: React.FC<CometChatFlagMessageDialog
           )}
         </div>
       </div>
-    </CometChatFlagMessageDialogContext.Provider>
+    </CometChatFlagMessageDialogContext.Provider>,
+    overlayContainer
   );
 };
 

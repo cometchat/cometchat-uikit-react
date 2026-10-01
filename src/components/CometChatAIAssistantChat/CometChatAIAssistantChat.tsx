@@ -43,6 +43,7 @@ import {
 } from './CometChatAIStreamingService';
 import { CometChatAIAssistantChatHistory } from './CometChatAIAssistantChatHistory';
 import { CometChatMessageList } from '../CometChatMessageList/CometChatMessageList';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { CometChatMessageComposer } from '../CometChatMessageComposer/CometChatMessageComposer';
 import { CometChatMessageHeader } from '../CometChatMessageHeader/CometChatMessageHeader';
 import { usePublishEvent } from '../../context/CometChatEventsContext';
@@ -252,7 +253,6 @@ const CometChatAIAssistantChatComponent: React.FC<CometChatAIAssistantChatProps>
   const chatId = user.getUid();
   const publish = usePublishEvent();
 
-  const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(null);
   const [startNewChat, setStartNewChat] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loadLastAgentConversationState, setLoadLastAgentConversationState] =
@@ -279,16 +279,67 @@ const CometChatAIAssistantChatComponent: React.FC<CometChatAIAssistantChatProps>
   const sidebarTriggerRef = useRef<HTMLButtonElement | null>(null);
   const historyRef = useRef<CometChatAIAssistantChatHistoryHandle | null>(null);
 
-  // Fetch logged-in user
+  /**
+   * Resolve the logged-in user, and keep resolving it.
+   *
+   * The message list below is gated on this, so a wrong answer removes it from the DOM entirely —
+   * no greeting, no messages, no realtime updates, and the header and composer collapse together.
+   * Two things make that easy to get wrong: `CometChat.getLoggedinUser()` *resolves with `null`*
+   * while a login is in flight rather than rejecting, and this component can mount before login
+   * finishes. A single mount-time fetch therefore loses a genuine race and never recovers.
+   *
+   * Hence three sources: the UI Kit's synchronous cache (already correct if login preceded mount),
+   * an async fetch as fallback, and a login listener so a late login unblocks the list.
+   *
+   * TEMPORARY. `CometChatMessageList` should resolve the user itself — it is the component that
+   * needs it, and today every consumer either duplicates this or relies on a non-null assertion
+   * that crashes on the first message event when it is wrong. Once the list handles it, delete
+   * this block and the render gate below.
+   */
+  const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(() =>
+    CometChatUIKit.getLoggedInUser()
+  );
+
+  // Covers a login that completed between module init and this effect.
   useEffect(() => {
+    if (loggedInUser) return;
+    let cancelled = false;
     CometChat.getLoggedinUser()
       .then(u => {
-        if (u) setLoggedInUser(u);
+        if (!cancelled && u) setLoggedInUser(u);
       })
       .catch(() => {
-        /* non-fatal */
+        /* non-fatal — the listener below is the real safety net */
       });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [loggedInUser]);
+
+  /*
+   * Covers a login that completes AFTER mount — the case a one-shot fetch cannot see.
+   *
+   * Registered once for the component's lifetime, not alongside the fetch above: this is a global
+   * SDK subscription, and re-registering it every time the user changes would churn it on each
+   * login and logout for no benefit.
+   */
+  useEffect(() => {
+    const listenerId = `CometChatAIAssistantChat_login_${instanceId}`;
+    CometChat.addLoginListener(
+      listenerId,
+      new CometChat.LoginListener({
+        loginSuccess: (u: CometChat.User) => {
+          setLoggedInUser(u);
+        },
+        logoutSuccess: () => {
+          setLoggedInUser(null);
+        },
+      })
+    );
+    return () => {
+      CometChat.removeLoginListener(listenerId);
+    };
+  }, [instanceId]);
 
   // Sync props
   useEffect(() => {

@@ -140,7 +140,9 @@ function CometChatGroupMembersItemInner({
 
     const items: CometChatContextMenuItemData[] = [];
 
-    if (canKick) {
+    // The scope rules say what this member MAY do; the `hide*` props say what the host wants
+    // offered. Both have to agree, and the props were previously ignored entirely.
+    if (canKick && !ctx.hideKickMemberOption) {
       items.push({
         id: 'kick',
         title: 'Kick',
@@ -150,7 +152,7 @@ function CometChatGroupMembersItemInner({
       });
     }
 
-    if (canBan) {
+    if (canBan && !ctx.hideBanMemberOption) {
       items.push({
         id: 'ban',
         title: 'Ban',
@@ -161,7 +163,7 @@ function CometChatGroupMembersItemInner({
     }
 
     // Scope change option — opens CometChatChangeScope dialog
-    if (canChangeScope) {
+    if (canChangeScope && !ctx.hideScopeChangeOption) {
       items.push({
         id: 'change-scope',
         title: 'Change Scope',
@@ -227,7 +229,13 @@ function CometChatGroupMembersItemInner({
                 e.stopPropagation();
               }}
               onKeyDown={e => {
-                e.stopPropagation();
+                // Space natively toggles the checkbox (via onChange); stop it
+                // from also reaching the row handler (double toggle). Enter is
+                // left to bubble to the row, which toggles selection too (native
+                // checkboxes ignore Enter).
+                if (e.key === ' ') {
+                  e.stopPropagation();
+                }
               }}
               role="presentation"
             >

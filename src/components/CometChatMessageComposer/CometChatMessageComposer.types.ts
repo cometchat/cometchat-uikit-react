@@ -390,6 +390,15 @@ export interface CometChatMessageComposerContextValue {
     options?: { isVoiceNote?: boolean }
   ) => Promise<void>;
   editMessage: () => Promise<void>;
+  /**
+   * Plays the outgoing-message sound, unless the host disabled it.
+   *
+   * Exposed because a message can leave the composer by five different routes — text, a single
+   * media file, a voice note, a batch from the staging tray, a sticker, or an extension (poll,
+   * collaborative document/whiteboard) — and only the first three go through this hook's own send
+   * functions. The others call it themselves rather than each re-deriving the setting.
+   */
+  playOutgoingSound: () => void;
   insertEmoji: (emoji: string) => void;
   setContentToDisplay: (content: CometChatComposerContentToDisplay) => void;
   closePreview: () => void;
@@ -452,4 +461,22 @@ export interface CometChatMessageComposerContextValue {
   onMentionQueryChange?: (query: string) => void;
   /** Called when mention context is lost. */
   onMentionEnd?: () => void;
+  /**
+   * Called on keydown while the mention list may be open. Returns true when the
+   * key was consumed (Escape closes the list) and the input should ignore it.
+   */
+  onMentionKeyDown?: (e: KeyboardEvent) => boolean;
+  /**
+   * Combobox wiring for the mention suggestions, mirrored onto the input so
+   * screen readers can follow the keyboard highlight (the input keeps DOM focus
+   * while the list is navigated).
+   */
+  mentionCombobox?: {
+    /** Whether the suggestion list is currently rendered. */
+    isOpen: boolean;
+    /** Id of the listbox element, for aria-controls. */
+    listboxId: string;
+    /** Id of the highlighted option, for aria-activedescendant. */
+    activeDescendantId: string | null;
+  };
 }

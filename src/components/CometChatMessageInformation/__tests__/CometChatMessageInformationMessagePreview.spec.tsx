@@ -6,6 +6,7 @@ import { CometChatMessageInformationContext } from '../CometChatMessageInformati
 import { buildTextMessage, buildMediaMessage } from '../../../testing/mock-builders';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatMessageInformationContextValue } from '../CometChatMessageInformation.types';
+import { CometChatPluginRegistryContext } from '../../../context/PluginRegistryContext';
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
   CometChat: {
@@ -21,7 +22,12 @@ vi.mock('../../../context/PluginRegistryContext', () => ({
 // Mock CometChatMessageBubble to avoid pulling in complex dependencies
 vi.mock('../../CometChatMessageBubble', () => ({
   CometChatMessageBubble: (props: Record<string, unknown>) => (
-    <div data-testid="message-bubble">{props.contentView as React.ReactNode}</div>
+    <div
+      data-testid="message-bubble"
+      data-hide-receipts={'hideReceipts' in props ? String(props.hideReceipts) : 'unset'}
+    >
+      {props.contentView as React.ReactNode}
+    </div>
   ),
 }));
 
@@ -136,3 +142,34 @@ function buildUser(overrides: { uid?: string; name?: string } = {}) {
     getStatus: () => 'online',
   };
 }
+
+describe('CometChatMessageInformationMessagePreview receipts on the bubble', () => {
+  const registry = {
+    findPlugin: () => ({ renderBubble: () => <span>bubble content</span> }),
+  } as unknown as React.ContextType<typeof CometChatPluginRegistryContext>;
+
+  const renderWithRegistry = (overrides: Partial<CometChatMessageInformationContextValue>) =>
+    render(
+      <CometChatPluginRegistryContext.Provider value={registry}>
+        <CometChatMessageInformationContext.Provider value={createMockContext(overrides)}>
+          <CometChatMessageInformationMessagePreview />
+        </CometChatMessageInformationContext.Provider>
+      </CometChatPluginRegistryContext.Provider>
+    );
+
+  it('leaves the receipt to the bubble (GlobalConfig) when hideReceipts is not set', () => {
+    renderWithRegistry({});
+    expect(screen.getByTestId('message-bubble')).toHaveAttribute('data-hide-receipts', 'unset');
+    expect(screen.getByText('bubble content')).toBeInTheDocument();
+  });
+
+  it('passes hideReceipts through to the bubble', () => {
+    renderWithRegistry({ hideReceipts: true });
+    expect(screen.getByTestId('message-bubble')).toHaveAttribute('data-hide-receipts', 'true');
+  });
+
+  it('shows the receipt when hideReceipts is false', () => {
+    renderWithRegistry({ hideReceipts: false });
+    expect(screen.getByTestId('message-bubble')).toHaveAttribute('data-hide-receipts', 'false');
+  });
+});

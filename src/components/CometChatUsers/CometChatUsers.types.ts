@@ -60,6 +60,12 @@ export interface CometChatUsersRootProps {
   showSelectedUsersPreview?: boolean;
   /** Show the native scrollbar on the list. Default: false (scrollbar hidden). */
   showScrollbar?: boolean;
+  /**
+   * Move focus to the list once, after users first load. Useful in multiple-
+   * selection flows so keyboard shortcuts (e.g. Ctrl/Cmd+A) work immediately.
+   * Default: false.
+   */
+  autoFocus?: boolean;
   /** Children (compound sub-components). If omitted, renders default layout. */
   children?: ReactNode;
 }
@@ -205,6 +211,18 @@ export interface CometChatUsersContextValue {
   deselectRange: (userIds: string[]) => void;
   /** Clear all selections. */
   clearSelection: () => void;
+  /**
+   * Deselect every selected user (fires onSelect(false) for each).
+   *
+   * Optional only for backwards compatibility: added in 7.2.1, and this type is
+   * public, so requiring it would fail to compile any hand-built value written
+   * against 7.2.0 (a test fake or Storybook harness). The provider always
+   * supplies it — call it with `?.()` and the shortcut degrades to a no-op
+   * rather than throwing if a caller ever builds the value themselves.
+   */
+  deselectAll?: () => void;
+  /** Toggle select-all: select all loaded users, or deselect all if already selected. Optional — see {@link deselectAll}. */
+  toggleSelectAll?: () => void;
   /** Set active user UID. */
   setActiveUser: (userId: string | null) => void;
   /** Handle item click (selection + callback). */
@@ -278,6 +296,10 @@ export interface CometChatUseCometChatUsersReturn {
   selectRange: (users: CometChat.User[]) => void;
   deselectRange: (userIds: string[]) => void;
   clearSelection: () => void;
+  /** Optional for backwards compatibility — see CometChatUsersContextValue.deselectAll. */
+  deselectAll?: () => void;
+  /** Optional for backwards compatibility — see CometChatUsersContextValue.deselectAll. */
+  toggleSelectAll?: () => void;
   setActiveUser: (userId: string | null) => void;
   handleItemClick: (user: CometChat.User, event?: { shiftKey?: boolean }) => void;
 }

@@ -29,6 +29,7 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
   messageSentAtDateTimeFormat,
   textFormatters,
   showScrollbar = false,
+  hideReceipts,
   children,
   className,
 }) => {
@@ -120,6 +121,7 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
       messageSentAtDateTimeFormat,
       textFormatters: textFormatters ?? [],
       showScrollbar,
+      ...(hideReceipts !== undefined && { hideReceipts }),
       onClose: handleClose,
       retry,
     }),
@@ -135,6 +137,7 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
       messageSentAtDateTimeFormat,
       textFormatters,
       showScrollbar,
+      hideReceipts,
       handleClose,
       retry,
     ]

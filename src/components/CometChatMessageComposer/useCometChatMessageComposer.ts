@@ -17,6 +17,7 @@ import type { CometChatEvent } from '../../context/CometChatEvents.types';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { writeThreadSubscribed } from '../../utils/CometChatThreadSubscription';
+import { CometChatSoundManager } from '../../resources/CometChatSoundManager/CometChatSoundManager';
 
 const TYPING_TIMEOUT_MS = 500;
 
@@ -76,6 +77,8 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
     messageToEdit,
     messageToReply,
     disableTypingEvents,
+    disableSoundForMessage = false,
+    customSoundForMessage,
     onSendButtonClick,
     sendTextMessageOverride,
     onError,
@@ -93,6 +96,18 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
     ...initialComposerState,
     text: initialText ?? '',
   });
+
+  /**
+   * Plays the outgoing-message sound, once the send is acknowledged.
+   *
+   * On the ack rather than on the click, so the sound means "it went out" — the same point v6
+   * played it at. The manager is a no-op until the user has interacted with the page, so an
+   * autoplay-blocked tab stays silent instead of throwing.
+   */
+  const playOutgoingSound = useCallback(() => {
+    if (disableSoundForMessage) return;
+    CometChatSoundManager.play('outgoingMessage', customSoundForMessage);
+  }, [disableSoundForMessage, customSoundForMessage]);
 
   const receiverId = user?.getUid() ?? group?.getGuid() ?? '';
   const receiverType = user ? CometChat.RECEIVER_TYPE.USER : CometChat.RECEIVER_TYPE.GROUP;
@@ -361,6 +376,8 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           onSendButtonClick(confirmedMessage, 'send');
         }
 
+        playOutgoingSound();
+
         publish({
           type: 'ui:message/sent',
           message: confirmedMessage,
@@ -418,6 +435,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       parentMessageId,
       sendTextMessageOverride,
       onSendButtonClick,
+      playOutgoingSound,
       endTyping,
       handleError,
       isSdkInitialized,
@@ -519,6 +537,8 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           onSendButtonClick(confirmedMessage, 'send');
         }
 
+        playOutgoingSound();
+
         publish({
           type: 'ui:message/sent',
           message: confirmedMessage,
@@ -570,6 +590,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       receiverType,
       parentMessageId,
       onSendButtonClick,
+      playOutgoingSound,
       onAttachmentAdded,
       onAttachmentRemoved,
       handleError,
@@ -614,6 +635,9 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
         caption = formatter.format(richTextHtml);
       }
 
+      // One send action, one sound — a batch of four files is still a single press of send.
+      let soundPlayed = false;
+
       try {
         await sendBatchFn({
           items: itemsSnapshot,
@@ -625,6 +649,11 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           messageToReply: replyMessage,
           publish: publish as (event: Record<string, unknown>) => void,
           onSendButtonClick,
+          onSent: () => {
+            if (soundPlayed) return;
+            soundPlayed = true;
+            playOutgoingSound();
+          },
         });
         // Case 4 — a threaded attachment batch subscribes the sender. Each batch
         // message's own flag is stamped in sendBatch; the cross-surface mirror is
@@ -646,6 +675,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       receiverType,
       parentMessageId,
       onSendButtonClick,
+      playOutgoingSound,
       endTyping,
       isSdkInitialized,
       publish,
@@ -654,11 +684,13 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
   );
 
   const editMessage = useCallback(
-    async (richTextHtml?: string) => {
+    async (richTextHtml?: string, textOverride?: string) => {
       if (!state.textMessageToEdit) return;
       if (!isSdkInitialized()) return;
 
-      let textToSend = state.text;
+      // `textOverride` mirrors sendMessage(): plain text mode uses it to pass the
+      // text with mention tokens, which the text state alone does not carry.
+      let textToSend = textOverride ?? state.text;
       if (richTextHtml) {
         const { CometChatRichTextFormatter } =
           await import('../../formatters/CometChatRichTextFormatter');
@@ -957,6 +989,7 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
     sendMessage,
     sendMediaMessage,
     sendBatch,
+    playOutgoingSound,
     editMessage,
     insertEmoji,
     setContentToDisplay,

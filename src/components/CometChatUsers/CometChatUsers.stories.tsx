@@ -93,6 +93,12 @@ function createMockContext(
     clearSelection: () => {
       /* no-op */
     },
+    deselectAll: () => {
+      /* no-op */
+    },
+    toggleSelectAll: () => {
+      /* no-op */
+    },
     setActiveUser: () => {
       /* no-op */
     },

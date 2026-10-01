@@ -11,7 +11,7 @@ export const CometChatBannedMembers = ({ group }: CometChatBannedMembersProps) =
   const { getLocalizedString } = useLocale();
   const [bannedMembers, setBannedMembers] = useState<CometChat.GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const requestRef = useRef<any>(null);
+  const requestRef = useRef<CometChat.BannedMembersRequest | null>(null);
   const publish = usePublishEvent();
   const loggedInUserRef = useRef<CometChat.User | null>(null);
 
@@ -46,7 +46,7 @@ export const CometChatBannedMembers = ({ group }: CometChatBannedMembersProps) =
     requestRef.current = null;
     setBannedMembers([]);
     fetchBannedMembers();
-  }, [group]);
+  }, [group, fetchBannedMembers]);
 
   const handleUnban = async (member: CometChat.GroupMember) => {
     try {

@@ -3,6 +3,7 @@
  * - hideGroupActionMessages
  * - hideStickyDate
  * - hideAvatar (threaded through to BubbleRenderer)
+ * - hideReceipts (threaded through to BubbleRenderer)
  * - quickOptionsCount (threaded through to BubbleRenderer)
  * - hide*Option / showMarkAsUnreadOption (option-menu toggles)
  * - separatorDateTimeFormat / stickyDateTimeFormat / messageSentAtDateTimeFormat
@@ -48,6 +49,7 @@ vi.mock('../../CometChatMessageBubble/CometChatMessageBubbleRenderer', () => ({
     <div
       data-testid="mock-bubble"
       data-hide-avatar={String(props.hideAvatar ?? '')}
+      data-hide-receipts={String(props.hideReceipts ?? '')}
       data-quick-options-count={String(props.quickOptionsCount ?? '')}
       data-hide-reply-option={String(props.hideReplyOption ?? '')}
       data-hide-edit-option={String(props.hideEditMessageOption ?? '')}
@@ -105,6 +107,7 @@ const DEFAULT_OPTIONS: CometChatMessageListOptions = {
   hideStickyDate: false,
   hideAvatar: false,
   hideGroupActionMessages: false,
+  hideReceipts: false,
   quickOptionsCount: 2,
   hideReplyOption: false,
   hideReplyInThreadOption: false,
@@ -229,6 +232,24 @@ describe('CometChatMessageList — option visibility props', () => {
       // No floating date element
       const floating = container.querySelector('[class*="floating-date"]');
       expect(floating).toBeNull();
+    });
+  });
+
+  describe('hideReceipts', () => {
+    it('passes hideReceipts=false to BubbleRenderer by default', () => {
+      const msgs = [buildMessage({ id: 1 })];
+      renderView(buildCtx(msgs));
+      const bubble = screen.getByTestId('mock-bubble');
+      expect(bubble.getAttribute('data-hide-receipts')).toBe('false');
+    });
+
+    // Regression: the list accepted hideReceipts and gated receipt *events* on it, but never
+    // threaded it to the bubble, so the indicator kept rendering with the prop set.
+    it('passes hideReceipts=true to BubbleRenderer when set', () => {
+      const msgs = [buildMessage({ id: 1 })];
+      renderView(buildCtx(msgs, { hideReceipts: true }));
+      const bubble = screen.getByTestId('mock-bubble');
+      expect(bubble.getAttribute('data-hide-receipts')).toBe('true');
     });
   });
 

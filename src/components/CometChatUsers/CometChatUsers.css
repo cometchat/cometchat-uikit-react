@@ -86,8 +86,10 @@
   position: relative;
 }
 
-/* Hover State - only apply when NOT active */
-.cometchat-users__item:hover:not(.cometchat-users__item--active) {
+/* Hover State - only apply when NOT active. The data-cc-mention-active marker
+   lets keyboard navigation in the mentions dropdown reuse this same effect. */
+.cometchat-users__item:hover:not(.cometchat-users__item--active),
+.cometchat-users__item[data-cc-mention-active='true']:not(.cometchat-users__item--active) {
   background: var(--cometchat-background-color-02, #fafafa);
 }
 

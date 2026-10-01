@@ -109,6 +109,58 @@ describe('CometChatMarkdownFormatter', () => {
       expect(result).toContain('href="http://a.com"');
       expect(result).toContain('href="http://b.com"');
     });
+
+    // Pasting a copied link hands the composer an anchor whose visible text is
+    // its own address, which is stored as `[url](url)`. The label being a URL
+    // must not stop the link from rendering.
+    it('should convert a link whose label is the same URL as its target', () => {
+      const url = 'https://drive.google.com/file/d/1g3Xz3EficX_lDKh/view?usp=drive_link';
+      const result = formatter.format(`[${url}](${url})`);
+      expect(result).toBe(
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" class="cometchat-link">${url}</a>`
+      );
+      expect(result).not.toContain('](');
+      expect(result).not.toContain('<i>');
+    });
+
+    it('should convert a link whose label is a different URL from its target', () => {
+      const result = formatter.format('[https://shown.com/a_b](https://target.com/c_d)');
+      expect(result).toContain('href="https://target.com/c_d"');
+      expect(result).toContain('>https://shown.com/a_b</a>');
+    });
+
+    it('should keep a balanced closing paren in the target', () => {
+      const url = 'https://en.wikipedia.org/wiki/Mercury_(planet)';
+      const result = formatter.format(`[Mercury](${url})`);
+      expect(result).toContain(`href="${url}"`);
+      expect(result).toContain('>Mercury</a>');
+    });
+
+    it.each([
+      // The address holds an unmatched `(`, so the link's own `)` is the only
+      // one; balance alone would keep it and the link would never form.
+      ['[docs](https://example.com/a_(b)', 'https://example.com/a_(b', 'docs'],
+      ['[docs](https://example.com/a_(b) and more', 'https://example.com/a_(b', 'docs'],
+      // The link brings a second `)`, so the address keeps its own.
+      [
+        '[Mercury](https://en.wikipedia.org/wiki/Mercury_(planet))',
+        'https://en.wikipedia.org/wiki/Mercury_(planet)',
+        'Mercury',
+      ],
+    ])('should convert %s', (input, href, label) => {
+      const result = formatter.format(input);
+      expect(result).toContain(`href="${href}"`);
+      expect(result).toContain(`>${label}</a>`);
+    });
+
+    it('should convert two pasted links in one message', () => {
+      const a = 'https://a.com/x_y';
+      const b = 'https://b.com/p_q';
+      const result = formatter.format(`[${a}](${a}) and [${b}](${b})`);
+      expect(result).toContain(`href="${a}"`);
+      expect(result).toContain(`href="${b}"`);
+      expect(result).not.toContain('](');
+    });
   });
 
   describe('format - blockquotes', () => {
@@ -227,6 +279,96 @@ describe('CometChatMarkdownFormatter', () => {
       const result = formatter.stripMarkdownForConversation(input);
       expect(result).toContain('<b>bold</b>');
       expect(result).toContain('<i>italic</i>');
+    });
+  });
+
+  // The inline markdown rules have no boundary guard, so two underscores inside a
+  // URL would otherwise pair up and inject <i> into it. The URL formatter then
+  // truncates the href at that '<', producing a dead link.
+  describe('URL protection', () => {
+    // A long path segment plus a query value, each carrying an underscore — the
+    // shape share links commonly take, and the minimum needed for a pair to form.
+    const TWO_UNDERSCORE_URL =
+      'https://example.com/file/d/1AbCdEfGhIj_kLmNoPqRsTu-9vWxY/view?usp=share_link';
+
+    it('leaves a URL with two underscores untouched', () => {
+      expect(formatter.format(TWO_UNDERSCORE_URL)).toBe(TWO_UNDERSCORE_URL);
+    });
+
+    it('does not italicise underscores inside a bare URL', () => {
+      const result = formatter.format('https://example.com/a_b_c');
+      expect(result).toBe('https://example.com/a_b_c');
+      expect(result).not.toContain('<i>');
+    });
+
+    it('keeps the URL intact in a markdown link href', () => {
+      const result = formatter.format(`[My file](${TWO_UNDERSCORE_URL})`);
+      expect(result).toContain(`href="${TWO_UNDERSCORE_URL}"`);
+      expect(result).toContain('>My file</a>');
+      expect(result).not.toContain('<i>');
+    });
+
+    it('leaves a URL inside inline code untouched', () => {
+      expect(formatter.format('`https://example.com/a_b_c`')).toBe(
+        '<code>https://example.com/a_b_c</code>'
+      );
+    });
+
+    it('leaves a URL inside a code block untouched', () => {
+      expect(formatter.format('```https://example.com/a_b_c```')).toBe(
+        '<pre><code>https://example.com/a_b_c</code></pre>'
+      );
+    });
+
+    it('protects www. URLs too', () => {
+      expect(formatter.format('www.example.com/a_b_c')).toBe('www.example.com/a_b_c');
+    });
+
+    it('protects URLs against the other inline markers', () => {
+      expect(formatter.format('https://example.com/a__b__c')).toBe('https://example.com/a__b__c');
+      expect(formatter.format('https://example.com/a~~b~~c')).toBe('https://example.com/a~~b~~c');
+      expect(formatter.format('https://example.com/a**b**c')).toBe('https://example.com/a**b**c');
+      expect(formatter.format('https://example.com/a++b++c')).toBe('https://example.com/a++b++c');
+    });
+
+    it('still applies markers that wrap the URL', () => {
+      expect(formatter.format('**https://example.com/a_b_c**')).toBe(
+        '<b>https://example.com/a_b_c</b>'
+      );
+      expect(formatter.format('_https://example.com/x_')).toBe('<i>https://example.com/x</i>');
+      expect(formatter.format('~~https://example.com/a_b_c~~')).toBe(
+        '<s>https://example.com/a_b_c</s>'
+      );
+    });
+
+    it('leaves trailing sentence punctuation outside the URL', () => {
+      expect(formatter.format('See https://example.com/a_b_c. Thanks!')).toBe(
+        'See https://example.com/a_b_c. Thanks!'
+      );
+    });
+
+    it('still formats markdown elsewhere in the message', () => {
+      expect(formatter.format('https://example.com/a_b_c and _italic_')).toBe(
+        'https://example.com/a_b_c and <i>italic</i>'
+      );
+    });
+
+    it('leaves intra-word underscores alone but still formats at a boundary', () => {
+      // The markers are word characters on both sides, so they are literal.
+      expect(formatter.format('a_b_c')).toBe('a_b_c');
+      expect(formatter.format('my_var_name is set')).toBe('my_var_name is set');
+      // A properly delimited marker in the same message still applies, which is
+      // what shows the URL shielding is not swallowing ordinary formatting.
+      expect(formatter.format('my_var_name and _real_ here')).toBe(
+        'my_var_name and <i>real</i> here'
+      );
+    });
+
+    it('protects URLs in the conversation subtitle path', () => {
+      expect(formatter.stripMarkdownForConversation(TWO_UNDERSCORE_URL)).toBe(TWO_UNDERSCORE_URL);
+      expect(formatter.stripMarkdownForConversation('https://example.com/a_b_c and _italic_')).toBe(
+        'https://example.com/a_b_c and <i>italic</i>'
+      );
     });
   });
 });

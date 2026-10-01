@@ -33,6 +33,14 @@ function renderRemark(
   );
 }
 
+/*
+ * Assertions below query `document.body`, not the render `container`.
+ *
+ * The dialog is portalled so its backdrop covers the app rather than whichever positioned
+ * ancestor happened to open it, which puts its markup outside the container React Testing
+ * Library hands back.
+ */
+
 describe('CometChatFlagMessageDialogRemark', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -172,8 +180,8 @@ describe('CometChatFlagMessageDialogRemark', () => {
   // --- Custom className ---
 
   it('applies custom className to remark container', () => {
-    const { container } = renderRemark({ className: 'my-remark' });
-    const remarkEl = container.querySelector('.my-remark');
+    renderRemark({ className: 'my-remark' });
+    const remarkEl = document.body.querySelector('.my-remark');
     expect(remarkEl).toBeTruthy();
   });
 

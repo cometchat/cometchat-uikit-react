@@ -89,12 +89,23 @@
   overflow: hidden;
 }
 
+/**
+ * Narrow layout: the picker covers the app. Class-driven rather than a viewport media query, which
+ * cannot see a narrow container inside a wide window.
+ */
+.cometchat-new-chat-view--fullscreen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  z-index: 4;
+}
+
 @media (max-width: 768px) {
   .cometchat-new-chat-view {
-    width: 100vw;
-    position: fixed;
-    top: 0;
-    left: 0;
+    /* absolute, not fixed — fills the app root rather than the device viewport. */
+    position: absolute;
+    inset: 0;
+    width: 100%;
     z-index: 4;
   }
 }

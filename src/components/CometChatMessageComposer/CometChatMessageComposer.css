@@ -841,8 +841,10 @@
 }
 
 /* ==================== Link Dialog Overlay ==================== */
+/* absolute, not fixed — overlays cover the app (the positioned `.cometchat` wrapper), not the
+   browser viewport. See styles/index.css. */
 .cometchat-message-composer__link-dialog-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 1000;
   display: flex;
@@ -1023,8 +1025,11 @@
   );
 }
 
+/* Keyboard navigation reuses the hover state (data-cc-mention-active is set
+   imperatively by the mentions controller during arrow-key navigation). */
 .cometchat-message-composer__mentions-item:hover,
-.cometchat-message-composer__mentions-item--focused {
+.cometchat-message-composer__mentions-item--focused,
+.cometchat-message-composer__mentions-item[data-cc-mention-active='true'] {
   background: var(
     --cometchat-message-composer-mention-option-background-hover,
     var(--cometchat-background-color-02, #f5f5f5)

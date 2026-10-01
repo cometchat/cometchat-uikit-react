@@ -120,4 +120,82 @@ describe('MarkdownDetector', () => {
       expect(result).toBe(false);
     });
   });
+
+  // Markdown markers inside a URL are address characters, not formatting. Without
+  // this guard, typing a link with two underscores italicises the span between
+  // them live in the composer, and the caret-parking ZWSP lands inside the URL,
+  // which later corrupts the href of the sent message.
+  describe('URL awareness', () => {
+    /** Type text one character at a time, running the detector after each keystroke. */
+    function typeText(text: string): string {
+      const sel = window.getSelection()!;
+      for (const ch of text) {
+        const node = sel.rangeCount ? sel.getRangeAt(0).startContainer : null;
+        if (node?.nodeType !== Node.TEXT_NODE) {
+          const created = document.createTextNode(ch);
+          container.appendChild(created);
+          const range = document.createRange();
+          range.setStart(created, 1);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          const offset = sel.getRangeAt(0).startOffset;
+          const textNode = node as Text;
+          const content = textNode.textContent ?? '';
+          textNode.textContent = content.slice(0, offset) + ch + content.slice(offset);
+          const range = document.createRange();
+          range.setStart(textNode, offset + 1);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        detectAndConvertMarkdown(ctx);
+      }
+      return container.innerHTML;
+    }
+
+    it('leaves a URL with two underscores untouched while typing', () => {
+      const url = 'https://example.com/file/d/1AbCdEfGhIj_kLmNoPqRsTu/view?usp=share_link';
+      expect(typeText(url)).toBe(url);
+    });
+
+    it('does not italicise underscores inside a bare URL', () => {
+      expect(typeText('https://example.com/a_b_c')).toBe('https://example.com/a_b_c');
+    });
+
+    it('leaves no zero-width character inside a URL', () => {
+      expect(typeText('https://example.com/a_b_c')).not.toContain('​');
+    });
+
+    it('protects the other inline markers inside a URL', () => {
+      expect(typeText('https://example.com/a*b*c')).toBe('https://example.com/a*b*c');
+    });
+
+    it('protects www. and http:// forms', () => {
+      expect(typeText('www.example.com/a_b_c')).toBe('www.example.com/a_b_c');
+    });
+
+    it('still converts markers that wrap a URL', () => {
+      expect(typeText('_https://example.com/abc_')).toContain('<em>https://example.com/abc</em>');
+    });
+
+    it('still converts a markdown link whose URL has underscores', () => {
+      expect(typeText('[label](https://example.com/a_b_c)')).toContain(
+        'href="https://example.com/a_b_c"'
+      );
+    });
+
+    it('still converts formatting elsewhere in the same text', () => {
+      expect(typeText('https://example.com/x and _it_ here')).toContain('<em>it</em>');
+    });
+
+    it('leaves intra-word underscores alone but still formats at a boundary', () => {
+      expect(typeText('my_var_name')).toBe('my_var_name');
+    });
+
+    it('still italicises a properly delimited marker', () => {
+      expect(typeText('say _hello_ now')).toContain('<em>hello</em>');
+    });
+  });
 });

@@ -4,6 +4,7 @@ import { CometChatGroupMembersItem } from './CometChatGroupMembersItem';
 import type { CometChatGroupMembersListProps } from './CometChatGroupMembers.types';
 import './CometChatGroupMembers.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { useListKeyboardNavigation } from '../../hooks/useListKeyboardNavigation';
 
 /**
  * CometChatGroupMembersList — Member list with infinite scroll.
@@ -16,6 +17,8 @@ export const CometChatGroupMembersList: React.FC<CometChatGroupMembersListProps>
   const { getLocalizedString } = useLocale();
   const { members, hasMore, fetchState, fetchNext } = useCometChatGroupMembersContext();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const handleKeyDown = useListKeyboardNavigation(listRef);
 
   // --- Infinite scroll via IntersectionObserver ---
   useEffect(() => {
@@ -38,10 +41,13 @@ export const CometChatGroupMembersList: React.FC<CometChatGroupMembersListProps>
 
   return (
     <div
+      ref={listRef}
       className={'cometchat-group-members__list'}
       role="listbox"
       aria-label={getLocalizedString('accessibility_group_members_list')}
       aria-busy={fetchState === 'loading'}
+      tabIndex={-1}
+      onKeyDown={handleKeyDown}
     >
       {members.map(member => (
         <React.Fragment key={member.getUid()}>

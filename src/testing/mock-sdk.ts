@@ -303,6 +303,20 @@ export const mockCometChat = {
     this.getUid = () => this.uid;
     this.getName = () => this.name;
   }),
+  // Listener constructors — the SDK wraps callback bundles in these before they
+  // are handed to add*Listener.
+  MessageListener: vi.fn().mockImplementation(function (
+    this: Record<string, unknown>,
+    callbacks: Record<string, unknown>
+  ) {
+    Object.assign(this, callbacks);
+  }),
+  ConnectionListener: vi.fn().mockImplementation(function (
+    this: Record<string, unknown>,
+    callbacks: Record<string, unknown>
+  ) {
+    Object.assign(this, callbacks);
+  }),
   TypingIndicator: vi.fn().mockImplementation(function (
     this: Record<string, unknown>,
     receiverId: string,

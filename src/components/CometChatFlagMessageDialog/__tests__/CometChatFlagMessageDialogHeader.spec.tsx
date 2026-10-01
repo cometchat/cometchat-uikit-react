@@ -33,6 +33,14 @@ function renderHeader(
   );
 }
 
+/*
+ * Assertions below query `document.body`, not the render `container`.
+ *
+ * The dialog is portalled so its backdrop covers the app rather than whichever positioned
+ * ancestor happened to open it, which puts its markup outside the container React Testing
+ * Library hands back.
+ */
+
 describe('CometChatFlagMessageDialogHeader', () => {
   // --- Default rendering ---
 
@@ -100,8 +108,8 @@ describe('CometChatFlagMessageDialogHeader', () => {
   // --- Custom className ---
 
   it('applies custom className to header container', () => {
-    const { container } = renderHeader({ className: 'my-header' });
-    const headerEl = container.querySelector('.my-header');
+    renderHeader({ className: 'my-header' });
+    const headerEl = document.body.querySelector('.my-header');
     expect(headerEl).toBeTruthy();
   });
 

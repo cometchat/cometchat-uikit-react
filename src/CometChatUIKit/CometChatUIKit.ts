@@ -9,6 +9,7 @@ import { CometChatMessageStatus } from '../context/CometChatEvents.types';
 // module's graph and breaks consumers that stub the SDK.
 import { resetPinSaveFeatures, resolvePinSaveFeatures } from '../utils/pinSaveFeatures';
 import { resetPinSaveLimits, resolvePinSaveLimits } from '../utils/pinSaveLimits';
+import { UIKIT_METADATA } from '../version';
 
 /**
  * CometChatUIKit — static facade for initializing and interacting with the UIKit.
@@ -138,10 +139,7 @@ export class CometChatUIKit {
 
     // Set window metadata for debugging/support
     if (typeof window !== 'undefined') {
-      (window as unknown as Record<string, unknown>).CometChatUiKit = {
-        name: '@cometchat/chat-uikit-react',
-        version: '7.2.0',
-      };
+      (window as unknown as Record<string, unknown>).CometChatUiKit = { ...UIKIT_METADATA };
     }
 
     // Initialize SDK
@@ -206,10 +204,7 @@ export class CometChatUIKit {
     return new Promise((resolve, reject) => {
       // Analytics: register UIKit metadata on the window for tracking.
       if (typeof window !== 'undefined') {
-        (window as unknown as Record<string, unknown>).CometChatUiKit = {
-          name: '@cometchat/chat-uikit-react',
-          version: '7.2.0',
-        };
+        (window as unknown as Record<string, unknown>).CometChatUiKit = { ...UIKIT_METADATA };
       }
 
       // CRITICAL: Call initFromSettings — NOT init().

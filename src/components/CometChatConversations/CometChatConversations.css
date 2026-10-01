@@ -612,10 +612,16 @@
   font-size: var(--cometchat-font-body-regular, 14px);
   color: var(--cometchat-text-color-secondary, #727272);
 }
-/* The delete confirmation dialog uses CometChatConfirmDialog's own body-portalled,
-   fixed full-screen backdrop (see CometChatConversationsRoot) — no conversations-
-   scoped backdrop or position override, which would drop the portalled dialog
-   behind the app. */
+/* Delete confirmation dialog — scoped to conversations container */
+
+/**
+ * `className` on CometChatConfirmDialog.Root lands on its *backdrop*, not the dialog box.
+ *
+ * Only the width override remains, and it is applied to the dialog box rather than the backdrop.
+ */
+.cometchat-conversations__delete-dialog .cometchat-confirm-dialog {
+  width: 320px;
+}
 
 /* Group type indicator (private/password) */
 .cometchat-conversations__item-group-type {

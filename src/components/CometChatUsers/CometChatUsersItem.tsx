@@ -109,9 +109,27 @@ function CometChatUsersItemInner({
           className={'cometchat-users__item-trailing'}
           onClick={e => {
             e.stopPropagation();
+            // On a real mouse click the checkbox steals (or drops) focus, which
+            // breaks list-scoped shortcuts like Ctrl/Cmd+A. Move focus to the
+            // clicked row: keydown still bubbles to the listbox handler, so
+            // select-all/Escape keep working, and arrow navigation resumes from
+            // that row instead of restarting at the top. detail > 0 excludes
+            // keyboard-triggered clicks so Tab navigation isn't disrupted.
+            if (e.detail > 0) {
+              e.currentTarget.closest<HTMLElement>('[role="option"]')?.focus({
+                preventScroll: true,
+              });
+            }
           }}
           onKeyDown={e => {
-            e.stopPropagation();
+            // Space natively toggles the checkbox (via onChange); stop it from
+            // also reaching the row handler, which would toggle a second time.
+            // Enter is left to bubble to the row so it toggles selection too
+            // (native checkboxes ignore Enter). Ctrl/Cmd+A and Escape also
+            // bubble to the list for select-all / clear shortcuts.
+            if (e.key === ' ') {
+              e.stopPropagation();
+            }
           }}
           role="presentation"
         >

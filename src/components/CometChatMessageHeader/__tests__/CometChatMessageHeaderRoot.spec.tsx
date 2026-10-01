@@ -1,8 +1,14 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CometChatMessageHeaderRoot } from '../CometChatMessageHeaderRoot';
 import { useCometChatMessageHeaderContext } from '../CometChatMessageHeader.context';
+
+// Lets a test turn Pinned Messages on, which is otherwise off by default in this environment.
+const pinSaveFeatures = vi.hoisted(() => ({ pinMessage: false, saveMessage: false }));
+vi.mock('../../../hooks/usePinSaveFeatures', () => ({
+  usePinSaveFeatures: () => pinSaveFeatures,
+}));
 
 // Mock dependencies
 vi.mock('../../../hooks/useLoggedInUser', () => ({
@@ -345,5 +351,67 @@ describe('CometChatMessageHeaderRoot', () => {
       />
     );
     expect(screen.getByRole('button', { name: 'Conversation summary' })).toBeInTheDocument();
+  });
+
+  /*
+   * How the three trailing options are presented, across the combinations that used to be wrong.
+   *
+   * The menu was gated on search — `search && (summary || pinned)` — so turning off
+   * `conversationAndAdvancedSearch` also took Pinned Messages with it, even though the two
+   * features are unrelated. It is gated on how many options exist now.
+   */
+  describe('trailing options presentation', () => {
+    const MORE_ICON = '.cometchat-message-header__menu-button-icon--more';
+    const SEARCH_BUTTON = '.cometchat-message-header__menu-button--search';
+
+    afterEach(() => {
+      pinSaveFeatures.pinMessage = false;
+    });
+
+    it('offers pinned messages through the menu when search is off', () => {
+      pinSaveFeatures.pinMessage = true;
+      const { container } = render(
+        <CometChatMessageHeaderRoot
+          user={createMockUser()}
+          showSearchOption={false}
+          onPinnedMessagesClicked={vi.fn()}
+        />
+      );
+
+      expect(container.querySelector(MORE_ICON)).not.toBeNull();
+      expect(container.querySelector(SEARCH_BUTTON)).toBeNull();
+    });
+
+    it('gives search its own button when it is the only option', () => {
+      const { container } = render(
+        <CometChatMessageHeaderRoot user={createMockUser()} showSearchOption />
+      );
+
+      expect(container.querySelector(SEARCH_BUTTON)).not.toBeNull();
+      expect(container.querySelector(MORE_ICON)).toBeNull();
+    });
+
+    it('folds search into the menu once pinned messages joins it', () => {
+      pinSaveFeatures.pinMessage = true;
+      const { container } = render(
+        <CometChatMessageHeaderRoot
+          user={createMockUser()}
+          showSearchOption
+          onPinnedMessagesClicked={vi.fn()}
+        />
+      );
+
+      expect(container.querySelector(MORE_ICON)).not.toBeNull();
+      expect(container.querySelector(SEARCH_BUTTON)).toBeNull();
+    });
+
+    it('renders nothing in the menu slot when every option is off', () => {
+      const { container } = render(
+        <CometChatMessageHeaderRoot user={createMockUser()} showSearchOption={false} />
+      );
+
+      expect(container.querySelector(MORE_ICON)).toBeNull();
+      expect(container.querySelector(SEARCH_BUTTON)).toBeNull();
+    });
   });
 });

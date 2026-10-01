@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { CometChatUsersList } from '../CometChatUsersList';
 import { CometChatUsersContext } from '../CometChatUsers.context';
@@ -76,6 +76,8 @@ function createMockContext(
     selectRange: vi.fn(),
     deselectRange: vi.fn(),
     clearSelection: vi.fn(),
+    deselectAll: vi.fn(),
+    toggleSelectAll: vi.fn(),
     setActiveUser: vi.fn(),
     handleItemClick: vi.fn(),
     ...overrides,
@@ -203,5 +205,163 @@ describe('CometChatUsersList', () => {
     }
 
     expect(fetchNext).not.toHaveBeenCalled();
+  });
+
+  // --- Select-all / deselect-all keyboard shortcuts ---
+
+  it('is focusable and multi-selectable in multiple mode', () => {
+    const ctx = createMockContext({ selectionMode: 'multiple' });
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <CometChatUsersList />
+      </CometChatUsersContext.Provider>
+    );
+    const list = screen.getByRole('listbox');
+    expect(list).toHaveAttribute('aria-multiselectable', 'true');
+    expect(list).toHaveAttribute('tabindex', '0');
+  });
+
+  it('is not a tab stop / multi-selectable outside multiple mode', () => {
+    const ctx = createMockContext({ selectionMode: 'none' });
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <CometChatUsersList />
+      </CometChatUsersContext.Provider>
+    );
+    const list = screen.getByRole('listbox');
+    expect(list).not.toHaveAttribute('aria-multiselectable');
+    // tabIndex -1 keeps it programmatically focusable but out of the tab order.
+    expect(list).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('Ctrl+A toggles select-all in multiple mode', () => {
+    const toggleSelectAll = vi.fn();
+    const ctx = createMockContext({ selectionMode: 'multiple', toggleSelectAll });
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <CometChatUsersList />
+      </CometChatUsersContext.Provider>
+    );
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'a', ctrlKey: true });
+    expect(toggleSelectAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('Meta+A toggles select-all (macOS)', () => {
+    const toggleSelectAll = vi.fn();
+    const ctx = createMockContext({ selectionMode: 'multiple', toggleSelectAll });
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <CometChatUsersList />
+      </CometChatUsersContext.Provider>
+    );
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'A', metaKey: true });
+    expect(toggleSelectAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('Escape deselects all when there is a selection', () => {
+    const deselectAll = vi.fn();
+    const ctx = createMockContext({
+      selectionMode: 'multiple',
+      selectedUserIds: ['u1'],
+      deselectAll,
+    });
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <CometChatUsersList />
+      </CometChatUsersContext.Provider>
+    );
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+    expect(deselectAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('Escape does nothing when nothing is selected', () => {
+    const deselectAll = vi.fn();
+    const ctx = createMockContext({
+      selectionMode: 'multiple',
+      selectedUserIds: [],
+      deselectAll,
+    });
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <CometChatUsersList />
+      </CometChatUsersContext.Provider>
+    );
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+    expect(deselectAll).not.toHaveBeenCalled();
+  });
+
+  // Review #7: overlay roots (action sheet, dialog) handle Escape and arrows on
+  // an ancestor without checking defaultPrevented, so a shortcut that only calls
+  // preventDefault would fire the container's handler too — clearing the
+  // selection AND closing the sheet on a single keypress.
+  it('Escape does not reach an enclosing overlay handler', () => {
+    const onAncestorKeyDown = vi.fn();
+    const ctx = createMockContext({
+      selectionMode: 'multiple',
+      selectedUserIds: ['u1'],
+      deselectAll: vi.fn(),
+    });
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <div onKeyDown={onAncestorKeyDown}>
+          <CometChatUsersList />
+        </div>
+      </CometChatUsersContext.Provider>
+    );
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+    expect(onAncestorKeyDown).not.toHaveBeenCalled();
+  });
+
+  it('Ctrl+A does not reach an enclosing overlay handler', () => {
+    const onAncestorKeyDown = vi.fn();
+    const ctx = createMockContext({ selectionMode: 'multiple', toggleSelectAll: vi.fn() });
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <div onKeyDown={onAncestorKeyDown}>
+          <CometChatUsersList />
+        </div>
+      </CometChatUsersContext.Provider>
+    );
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'a', ctrlKey: true });
+    expect(onAncestorKeyDown).not.toHaveBeenCalled();
+  });
+
+  it('a handled arrow key does not reach an enclosing overlay handler', () => {
+    const onAncestorKeyDown = vi.fn();
+    const ctx = createMockContext();
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <div onKeyDown={onAncestorKeyDown}>
+          <CometChatUsersList />
+        </div>
+      </CometChatUsersContext.Provider>
+    );
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowDown' });
+    expect(onAncestorKeyDown).not.toHaveBeenCalled();
+  });
+
+  it('ArrowDown moves focus to the next item (arrow-key navigation)', () => {
+    const ctx = createMockContext();
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <CometChatUsersList />
+      </CometChatUsersContext.Provider>
+    );
+    const opts = screen.getAllByRole('option');
+    opts[0]?.focus();
+    fireEvent.keyDown(opts[0]!, { key: 'ArrowDown' });
+    expect(opts[1]).toHaveFocus();
+  });
+
+  it('Ctrl+A is ignored outside multiple mode', () => {
+    const toggleSelectAll = vi.fn();
+    const ctx = createMockContext({ selectionMode: 'none', toggleSelectAll });
+    render(
+      <CometChatUsersContext.Provider value={ctx}>
+        <CometChatUsersList />
+      </CometChatUsersContext.Provider>
+    );
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'a', ctrlKey: true });
+    expect(toggleSelectAll).not.toHaveBeenCalled();
   });
 });

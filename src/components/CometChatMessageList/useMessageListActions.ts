@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { usePublishEvent } from '../../context/CometChatEventsContext';
 import type { MessageListRefs, MessageListDispatch } from './messageListRefs';
@@ -6,6 +6,41 @@ import type { MessageListRefs, MessageListDispatch } from './messageListRefs';
 // ---------------------------------------------------------------------------
 // Message actions sub-hook (delete, mark as unread, react)
 // ---------------------------------------------------------------------------
+
+/**
+ * Reaction list after toggling `emoji`. Uses fresh `ReactionCount` instances so
+ * the pre-toggle snapshot stays intact for rollback.
+ */
+function computeOptimisticReactions(
+  reactions: CometChat.ReactionCount[],
+  emoji: string,
+  isRemoving: boolean
+): CometChat.ReactionCount[] {
+  const next: CometChat.ReactionCount[] = [];
+  let found = false;
+
+  for (const reaction of reactions) {
+    if (reaction.getReaction() !== emoji) {
+      next.push(reaction);
+      continue;
+    }
+    found = true;
+    const count = reaction.getCount();
+    if (isRemoving) {
+      // Drop it entirely if we were the only reactor.
+      if (count <= 1) continue;
+      next.push(new CometChat.ReactionCount(emoji, count - 1, false));
+    } else {
+      next.push(new CometChat.ReactionCount(emoji, count + 1, true));
+    }
+  }
+
+  if (!found && !isRemoving) {
+    next.push(new CometChat.ReactionCount(emoji, 1, true));
+  }
+
+  return next;
+}
 
 export interface UseMessageListActionsOptions {
   onError: ((error: CometChat.CometChatException) => void) | null | undefined;
@@ -30,6 +65,11 @@ export function useMessageListActions(
   const { onError, onMessageDeleted, onConversationUpdated } = options;
 
   const publish = usePublishEvent();
+
+  // Toggles in flight, keyed by message + emoji. A second toggle for the same
+  // pair would race the first: both reconcile dispatches land in response order,
+  // so the UI could settle on the opposite of the server state.
+  const inFlightReactionsRef = useRef<Set<string>>(new Set());
 
   const deleteMessage = useCallback(
     async (messageId: number) => {
@@ -81,31 +121,66 @@ export function useMessageListActions(
       const targetMessage = currentState.messages.find(m => m.getId() === messageId);
       if (!targetMessage) return;
 
-      // Determine if we're adding or removing (toggle behavior)
-      const existingReactions = targetMessage.getReactions();
-      const existingReaction = existingReactions.find(
+      const inFlightKey = `${String(messageId)}:${emoji}`;
+      if (inFlightReactionsRef.current.has(inFlightKey)) return;
+      inFlightReactionsRef.current.add(inFlightKey);
+
+      const originalReactions = targetMessage.getReactions();
+
+      // Toggle: removing only if we already reacted with this emoji.
+      const existingReaction = originalReactions.find(
         (r: CometChat.ReactionCount) => r.getReaction() === emoji
       );
       const isRemoving = existingReaction?.getReactedByMe() === true;
 
-      try {
-        let updatedMessage: CometChat.BaseMessage;
-        if (isRemoving) {
-          updatedMessage = await CometChat.removeReaction(messageId, emoji);
-        } else {
-          updatedMessage = await CometChat.addReaction(messageId, emoji);
-        }
+      // Optimistic update — reflect the change immediately, like v6.
+      const optimisticReactions = computeOptimisticReactions(originalReactions, emoji, isRemoving);
+      dispatch({ type: 'REACTION_UPDATE', messageId, reactions: optimisticReactions });
 
-        // Only extract the reactions from the SDK response — the reducer will
-        // apply them to the existing message in state, preserving all other
-        // fields (quotedMessage, metadata, etc.).
+      try {
+        const updatedMessage = isRemoving
+          ? await CometChat.removeReaction(messageId, emoji)
+          : await CometChat.addReaction(messageId, emoji);
+
         const reactions = updatedMessage.getReactions();
-        dispatch({ type: 'REACTION_UPDATE', messageId, reactions });
+
+        // Reconcile with the server's authoritative reactions.
+        dispatch({
+          type: 'REACTION_UPDATE',
+          messageId,
+          reactions: reactions,
+        });
+
         // The socket does not echo our own reaction back, so tell the other
         // surfaces showing this message ourselves.
         publish({ type: 'ui:message/reaction-changed', messageId, reactions });
       } catch (error) {
+        // Undo our own change against the CURRENT reactions rather than
+        // replaying the pre-request snapshot: a reaction from someone else may
+        // have arrived over the socket while the request was in flight, and the
+        // snapshot would erase it.
+        const latest = refs.stateRef.current.messages.find(
+          m => String(m.getId()) === String(messageId)
+        );
+        let rollbackReactions = originalReactions;
+        if (latest) {
+          const latestReactions = latest.getReactions();
+          const entry = latestReactions.find(
+            (r: CometChat.ReactionCount) => r.getReaction() === emoji
+          );
+          // reactedByMe flips in both directions, so it tells us whether the
+          // optimistic update is actually reflected in what we just read (state
+          // may not have caught up with the dispatch yet). Removing our only
+          // reaction drops the entry entirely, which counts as reflected.
+          const optimisticApplied = entry ? entry.getReactedByMe() === !isRemoving : isRemoving;
+          rollbackReactions = optimisticApplied
+            ? computeOptimisticReactions(latestReactions, emoji, !isRemoving)
+            : latestReactions;
+        }
+        dispatch({ type: 'REACTION_UPDATE', messageId, reactions: rollbackReactions });
         onError?.(error as CometChat.CometChatException);
+      } finally {
+        inFlightReactionsRef.current.delete(inFlightKey);
       }
     },
     [onError, refs.stateRef, dispatch, publish]

@@ -6,6 +6,11 @@
  * an exact point at the anchor's center); the arrow-variant classes below provide
  * a sensible fallback when no inline value is supplied. */
 
+/* Stays `fixed` deliberately. Unlike the app's overlays, this is positioned from inline
+   top/left computed via getBoundingClientRect(), which returns *viewport* coordinates —
+   switching to `absolute` would offset it by the containing block's position. It is a small
+   popup anchored to a trigger inside the app, not a surface meant to cover it, so leaving it
+   viewport-positioned is correct. */
 .cometchat-tooltip {
   /* Drives both the box background and the arrow so they always match. */
   --cometchat-tooltip-bg: var(--cometchat-neutral-color-900, #141414);

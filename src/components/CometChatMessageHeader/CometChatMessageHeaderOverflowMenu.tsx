@@ -10,9 +10,11 @@ import './CometChatMessageHeader.css';
 import { useLocale } from '../../context/locale/LocaleContext';
 
 /**
- * CometChatMessageHeaderOverflowMenu — context menu for search + summary.
+ * CometChatMessageHeaderOverflowMenu — the header's "More options" menu.
  *
- * Renders when both search and summary buttons are enabled.
+ * Renders whenever two or more of its entries are available — search, pinned messages, summary —
+ * and also when pinned messages is the only one, since that is the sole place it can be reached
+ * from. Each entry is gated on its own flag.
  * Uses CometChatContextMenu for the dropdown. Matches menu
  * with icon + title per option.
  */
@@ -25,20 +27,26 @@ export const CometChatMessageHeaderOverflowMenu: React.FC<
     onSummaryClick,
     onPinnedMessagesClicked,
     hidePinnedMessagesOption,
+    showConversationSummaryButton,
+    showSearchOption,
   } = useCometChatMessageHeaderContext();
   const { pinMessage: isPinEnabled } = usePinSaveFeatures();
 
   const menuItems = useMemo(() => {
-    const items = [
-      {
+    const items: { id: string; title: string; iconURL: string; onClick: () => void }[] = [];
+
+    // Gated like every other entry. It used to be unconditional, which was invisible only because
+    // the Root refused to render this menu at all unless search was on.
+    if (showSearchOption) {
+      items.push({
         id: 'search',
         title: getLocalizedString('search_title'),
         iconURL: searchIcon,
         onClick: () => {
           onSearchOptionClicked?.();
         },
-      },
-    ];
+      });
+    }
 
     // Immediately after Search, per the spec. Hidden when the feature flag is
     // off or the host has no handler for it.
@@ -54,14 +62,16 @@ export const CometChatMessageHeaderOverflowMenu: React.FC<
       });
     }
 
-    items.push({
-      id: 'summary',
-      title: getLocalizedString('ai_conversation_summary_title'),
-      iconURL: conversationSummaryIcon,
-      onClick: () => {
-        onSummaryClick?.();
-      },
-    });
+    if (showConversationSummaryButton) {
+      items.push({
+        id: 'summary',
+        title: getLocalizedString('ai_conversation_summary_title'),
+        iconURL: conversationSummaryIcon,
+        onClick: () => {
+          onSummaryClick?.();
+        },
+      });
+    }
 
     return items;
   }, [
@@ -70,6 +80,8 @@ export const CometChatMessageHeaderOverflowMenu: React.FC<
     onPinnedMessagesClicked,
     hidePinnedMessagesOption,
     isPinEnabled,
+    showConversationSummaryButton,
+    showSearchOption,
     getLocalizedString,
   ]);
 

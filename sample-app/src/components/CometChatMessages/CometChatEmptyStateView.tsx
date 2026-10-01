@@ -1,6 +1,9 @@
 import { useLocale } from '@cometchat/chat-uikit-react';
-import emptyStateIcon from '../../assets/emptyStateIconChat.svg';
+import emptyStateIconAsset from '../../assets/emptyStateIconChat.svg';
 import './CometChatEmptyStateView.css';
+import { assetUrl } from '../../utils/assetUrl';
+
+const emptyStateIcon = assetUrl(emptyStateIconAsset);
 
 export const CometChatEmptyStateView = (props: { activeTab?: string }) => {
   const { activeTab } = props;

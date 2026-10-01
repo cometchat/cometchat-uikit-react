@@ -38,6 +38,8 @@ export interface MessageItemProps {
   onMessageInfo?: (message: CometChat.BaseMessage) => void;
   onReplyPreviewClick?: (message: CometChat.BaseMessage) => void;
   showToast?: (text: string) => void;
+  /** Hides the read-receipt indicator on outgoing bubbles. */
+  hideReceipts?: boolean;
   disableTruncation?: boolean;
   hideModerationView?: boolean;
   isAgentChat?: boolean;
@@ -89,6 +91,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onMessageInfo,
   onReplyPreviewClick,
   showToast,
+  hideReceipts,
   disableTruncation,
   hideModerationView,
   isAgentChat,
@@ -144,6 +147,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         index={index}
         total={total}
         {...(batchPosition !== undefined && { batchPosition })}
+        {...(hideReceipts !== undefined && { hideReceipts })}
         {...(onThreadRepliesClick !== undefined && { onThreadRepliesClick })}
         {...(onAvatarClick !== undefined && { onAvatarClick })}
         {...(onDeleteMessage !== undefined && { onDeleteMessage })}

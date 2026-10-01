@@ -17,6 +17,16 @@ export interface CometChatConfirmDialogRootProps {
   children: ReactNode;
   /** Optional custom className for the root container. */
   className?: string;
+  /**
+   * Where the dialog portals to. Defaults to the app root (`.cometchat`), so the backdrop covers
+   * the whole app — the right behaviour for a modal opened from a details panel or a message.
+   *
+   * Pass an element to scope it somewhere narrower.
+   *
+   * Pass `null` to render in place without portalling, when the caller already provides its own
+   * positioned backdrop.
+   */
+  container?: HTMLElement | null;
 }
 
 /** Props for CometChatConfirmDialog.Icon. */

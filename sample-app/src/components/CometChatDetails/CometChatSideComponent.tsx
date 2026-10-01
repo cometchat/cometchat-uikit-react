@@ -1,4 +1,3 @@
-import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatUserDetails } from './CometChatUserDetails';
 import { CometChatGroupDetails } from './CometChatGroupDetails';
 import './CometChatDetails.css';
@@ -13,6 +12,8 @@ interface CometChatSideComponentProps {
   onGroupLeft?: () => void;
   onGroupDeleted?: () => void;
   isFreshChat?: boolean;
+  /** Narrow layout — cover the app rather than sit in a side column. */
+  isFullScreen?: boolean;
 }
 
 export const CometChatSideComponent = ({
@@ -25,9 +26,12 @@ export const CometChatSideComponent = ({
   onGroupLeft,
   onGroupDeleted,
   isFreshChat,
+  isFullScreen,
 }: CometChatSideComponentProps) => {
   return (
-    <div className="side-component-wrapper">
+    <div
+      className={`side-component-wrapper${isFullScreen ? ' side-component-wrapper--fullscreen' : ''}`}
+    >
       <div className="side-component-wrapper__content">
         {type === 'user' && user && (
           <CometChatUserDetails

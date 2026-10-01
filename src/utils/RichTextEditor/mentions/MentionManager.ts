@@ -2,6 +2,27 @@
  * MentionManager — handles mention insertion, detection, and extraction.
  */
 
+/**
+ * Build a mention node. Shared by the rich text editor and the plain text
+ * composer so both produce markup the formatters can read back.
+ */
+export function createMentionElement(
+  doc: Document,
+  id: string,
+  label: string,
+  isSelf = false
+): HTMLSpanElement {
+  const mention = doc.createElement('span');
+  mention.className = isSelf
+    ? 'cometchat-mention cometchat-mention--self cometchat-mentions cometchat-mentions-you'
+    : 'cometchat-mention cometchat-mentions cometchat-mentions-other';
+  mention.setAttribute('contenteditable', 'false');
+  mention.setAttribute('data-uid', id);
+  mention.setAttribute('data-mention-type', isSelf ? 'self' : 'other');
+  mention.textContent = `@${label}`;
+  return mention;
+}
+
 /** Insert a mention node at the current cursor position. */
 export function insertMention(
   element: HTMLDivElement,
@@ -20,14 +41,7 @@ export function insertMention(
     range.deleteContents();
   }
 
-  const mention = element.ownerDocument.createElement('span');
-  mention.className = isSelf
-    ? 'cometchat-mention cometchat-mention--self cometchat-mentions cometchat-mentions-you'
-    : 'cometchat-mention cometchat-mentions cometchat-mentions-other';
-  mention.setAttribute('contenteditable', 'false');
-  mention.setAttribute('data-uid', id);
-  mention.setAttribute('data-mention-type', isSelf ? 'self' : 'other');
-  mention.textContent = `@${label}`;
+  const mention = createMentionElement(element.ownerDocument, id, label, isSelf);
 
   range.insertNode(mention);
 
@@ -40,15 +54,16 @@ export function insertMention(
   sel.addRange(newRange);
 }
 
-/** Convert editor content to CometChat mention format: <@uid:{uid}> */
+/** Convert editor content to CometChat mention format: <@uid:{uid}> / <@all:{uid}> */
 export function getTextWithMentionFormat(element: HTMLDivElement): string {
   const clone = element.cloneNode(true) as HTMLElement;
   clone.querySelectorAll('[data-uid]').forEach(mention => {
     const uid = mention.getAttribute('data-uid') ?? '';
-    mention.parentNode?.replaceChild(
-      element.ownerDocument.createTextNode(`<@uid:${uid}>`),
-      mention
-    );
+    const mentionType = mention.getAttribute('data-mention-type') ?? '';
+    // Channel mentions use their own token so the formatter renders the label
+    // instead of trying to resolve 'all' as a user uid.
+    const token = uid === 'all' || mentionType === 'channel' ? `<@all:${uid}>` : `<@uid:${uid}>`;
+    mention.parentNode?.replaceChild(element.ownerDocument.createTextNode(token), mention);
   });
   return clone.textContent ?? '';
 }

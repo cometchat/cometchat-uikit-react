@@ -350,6 +350,7 @@ function buildMockContextValue(
       hideStickyDate: false,
       hideAvatar: false,
       hideGroupActionMessages: false,
+      hideReceipts: false,
       quickOptionsCount: 2,
       hideReplyOption: false,
       hideReplyInThreadOption: false,

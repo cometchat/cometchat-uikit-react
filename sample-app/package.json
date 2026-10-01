@@ -1,12 +1,13 @@
 {
   "name": "sample-app",
-  "version": "7.0.1",
+  "version": "7.0.2",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
     "e2e:seed": "tsx scripts/seed-e2e-data.ts",
     "e2e:cleanup": "tsx scripts/cleanup-e2e-data.ts",
     "e2e": "playwright test",
@@ -21,7 +22,7 @@
     "dompurify": "^3.4.13",
     "@cometchat/calls-sdk-javascript": "^5.0.3",
     "@cometchat/chat-sdk-javascript": "^4.2.0",
-    "@cometchat/chat-uikit-react": "^7.2.0",
+    "@cometchat/chat-uikit-react": "^7.2.3",
     "dompurify": "3.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -39,5 +40,7 @@
     "tsx": "^4.19.0",
     "typescript": "~5.7.0",
     "vite": "^8.2.1"
+    "vite": "^6.3.1",
+    "vitest": "^3.1.1"
   }
 }

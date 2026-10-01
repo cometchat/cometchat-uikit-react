@@ -49,6 +49,11 @@ export interface CometChatMessageInformationRootProps {
   textFormatters?: CometChatTextFormatter[];
   /** Whether to show the scrollbar in the content area. Default: false. */
   showScrollbar?: boolean;
+  /**
+   * Hides the read/delivery receipt on the message bubble preview. When omitted, the bubble
+   * follows `GlobalConfig.hideReceipts` (shown by default).
+   */
+  hideReceipts?: boolean;
   /** Children (sub-components). When omitted, renders default layout. */
   children?: ReactNode;
   /** Optional custom className. */
@@ -129,6 +134,8 @@ export interface CometChatMessageInformationContextValue {
   textFormatters: CometChatTextFormatter[];
   /** Whether to show the scrollbar. */
   showScrollbar: boolean;
+  /** Hides the receipt on the message bubble preview; undefined defers to GlobalConfig. */
+  hideReceipts?: boolean;
   /** Close the panel. */
   onClose: () => void;
   /** Retry fetching receipts after error. */

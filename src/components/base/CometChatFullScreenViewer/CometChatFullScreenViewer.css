@@ -1,6 +1,9 @@
 /* Block: cometchat-fullscreen-viewer */
+/* absolute, not fixed — overlays cover the app (the positioned `.cometchat` wrapper), not the
+   browser viewport. See styles/index.css. */
 .cometchat-fullscreen-viewer {
-  position: fixed;
+  border-radius: inherit;
+  position: absolute;
   inset: 0;
   z-index: 10000;
   display: flex;

@@ -59,6 +59,10 @@ export interface CometChatMessageHeaderContextValue {
   onPinnedMessagesClicked?: () => void;
   /** Whether the "Pinned Messages" option is hidden. */
   hidePinnedMessagesOption?: boolean;
+  /** Whether the conversation summary option is offered. */
+  showConversationSummaryButton?: boolean;
+  /** Whether the search option is offered. */
+  showSearchOption?: boolean;
   /** Number of messages to include in summary generation (default: 1000). */
   summaryGenerationMessageCount: number;
 }

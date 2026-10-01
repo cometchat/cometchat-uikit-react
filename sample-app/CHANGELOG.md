@@ -1,3 +1,19 @@
+# [7.0.2]
+
+## New
+
+* Added configurable settings that allow features to be enabled or disabled through a shared settings interface. Apps without custom settings continue to use the default behavior with all features enabled.
+
+## Enhancements
+
+* Improved embedded app layouts by sizing dialogs, outgoing-call screens, and the new-chat picker within the app container instead of the browser viewport.
+* Improved support for apps served from different paths by ensuring image assets resolve correctly from the application bundle.
+* Improved responsive behavior in embedded apps by detecting the width of the app's owning window and switching to the appropriate layout.
+
+## Fixes
+
+* Fixed an issue where pinned messages could not be accessed when the search option was disabled.
+
 # [7.0.0]
 
 ## New

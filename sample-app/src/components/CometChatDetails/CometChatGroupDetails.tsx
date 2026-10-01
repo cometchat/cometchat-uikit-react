@@ -1,14 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
-import { CometChatAvatar, CometChatGroupMembers, CometChatConfirmDialog, usePublishEvent, useLocale, useCometChatEvents } from '@cometchat/chat-uikit-react';
+import { CometChatAvatar, CometChatGroupMembers, CometChatConfirmDialog, usePublishEvent, useLocale, useCometChatEvents, useOverlayContainer } from '@cometchat/chat-uikit-react';
 import type { CometChatEvent } from '@cometchat/chat-uikit-react';
 import { CometChatAddMembers } from '../CometChatAddMembers/CometChatAddMembers';
 import { CometChatBannedMembers } from './CometChatBannedMembers';
 import { CometChatTransferOwnership } from '../CometChatTransferOwnership/CometChatTransferOwnership';
-import addMembersIcon from '../../assets/addMembers.svg';
-import deleteIcon from '../../assets/delete.svg';
-import leaveGroupIcon from '../../assets/leaveGroup.svg';
+import addMembersIconAsset from '../../assets/addMembers.svg';
+import deleteIconAsset from '../../assets/delete.svg';
+import leaveGroupIconAsset from '../../assets/leaveGroup.svg';
+import { useSettings } from '../../config/SettingsContext';
+import { useFeatureProps } from '../../config/useFeatureProps';
 import './CometChatDetails.css';
+import { assetUrl } from '../../utils/assetUrl';
+
+const addMembersIcon = assetUrl(addMembersIconAsset);
+const deleteIcon = assetUrl(deleteIconAsset);
+const leaveGroupIcon = assetUrl(leaveGroupIconAsset);
 
 interface CometChatGroupDetailsProps {
   group: CometChat.Group;
@@ -41,6 +49,10 @@ export const CometChatGroupDetails = ({
   const [groupTab, setGroupTab] = useState<'view' | 'banned'>('view');
   const groupListenerRef = useRef('GroupDetails_' + Date.now());
   const { getLocalizedString } = useLocale();
+  const overlayContainer = useOverlayContainer();
+  const { chatFeatures } = useSettings();
+  const groupManagement = chatFeatures.groupManagement;
+  const featureProps = useFeatureProps();
 
   // Listen to UI events for member changes and active chat / message state
   useCometChatEvents((event: CometChatEvent) => {
@@ -78,8 +90,9 @@ export const CometChatGroupDetails = ({
     setMemberCount(group.getMembersCount());
     setLoggedInUserScope(group.getScope?.());
 
+    const listenerId = groupListenerRef.current;
     CometChat.addGroupListener(
-      groupListenerRef.current,
+      listenerId,
       new CometChat.GroupListener({
         onGroupMemberKicked: () => {
           setMemberCount(prev => Math.max(0, prev - 1));
@@ -87,7 +100,7 @@ export const CometChatGroupDetails = ({
         onGroupMemberBanned: () => {
           setMemberCount(prev => Math.max(0, prev - 1));
         },
-        onMemberAddedToGroup: (_msg: any, _added: any, _by: any, inGroup: CometChat.Group) => {
+        onMemberAddedToGroup: (_msg: CometChat.Action, _added: CometChat.User, _by: CometChat.User, inGroup: CometChat.Group) => {
           // Use the SDK count only if it's greater than current (batch add scenario)
           setMemberCount(prev => {
             const sdkCount = inGroup.getMembersCount();
@@ -100,7 +113,7 @@ export const CometChatGroupDetails = ({
         onGroupMemberJoined: () => {
           setMemberCount(prev => prev + 1);
         },
-        onGroupMemberScopeChanged: (_msg: any, changedUser: CometChat.User, newScope: string) => {
+        onGroupMemberScopeChanged: (_msg: CometChat.Action, changedUser: CometChat.User, newScope: string) => {
           // If the logged-in user's scope was changed, update permissions in real-time
           if (changedUser.getUid() === loggedInUser.getUid()) {
             setLoggedInUserScope(newScope);
@@ -110,7 +123,7 @@ export const CometChatGroupDetails = ({
     );
 
     return () => {
-      CometChat.removeGroupListener(groupListenerRef.current);
+      CometChat.removeGroupListener(listenerId);
     };
   }, [group, loggedInUser]);
 
@@ -153,7 +166,7 @@ export const CometChatGroupDetails = ({
   };
 
   const actionItems = [
-    ...(isAdminOrOwner()
+    ...(isAdminOrOwner() && groupManagement.addMembersToGroups
       ? [
           {
             name: getLocalizedString('add_members'),
@@ -187,7 +200,9 @@ export const CometChatGroupDetails = ({
           setShowLeaveDialog(true);
         }
       },
-      isAllowed: () => memberCount > 1 || loggedInUser.getUid() !== group.getOwner(),
+      isAllowed: () =>
+        groupManagement.joinLeaveGroup &&
+        (memberCount > 1 || loggedInUser.getUid() !== group.getOwner()),
     },
     {
       name: getLocalizedString('delete_and_exit'),
@@ -195,38 +210,32 @@ export const CometChatGroupDetails = ({
       id: 'delete_exit',
       type: 'alert' as const,
       onClick: () => setShowDeleteDialog(true),
-      isAllowed: () => isAdminOrOwner(),
+      isAllowed: () => isAdminOrOwner() && groupManagement.deleteGroup,
     },
   ];
 
   return (
     <>
       {showLeaveDialog && (
-        <div className="cometchat-leave-group__backdrop">
-          <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowLeaveDialog(false)}>
-            <CometChatConfirmDialog.Icon />
-            <CometChatConfirmDialog.Content title={getLocalizedString('leave_group')} messageText={getLocalizedString('confirm_leave_group')} />
-            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('leave')} onConfirm={handleLeaveGroup} onCancel={() => setShowLeaveDialog(false)} />
-          </CometChatConfirmDialog.Root>
-        </div>
+        <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowLeaveDialog(false)}>
+          <CometChatConfirmDialog.Icon />
+          <CometChatConfirmDialog.Content title={getLocalizedString('leave_group')} messageText={getLocalizedString('confirm_leave_group')} />
+          <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('leave')} onConfirm={handleLeaveGroup} onCancel={() => setShowLeaveDialog(false)} />
+        </CometChatConfirmDialog.Root>
       )}
       {showDeleteDialog && (
-        <div className="cometchat-delete-group__backdrop">
-          <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowDeleteDialog(false)}>
-            <CometChatConfirmDialog.Icon />
-            <CometChatConfirmDialog.Content title={getLocalizedString('delete_and_exit')} messageText={getLocalizedString('confirm_delete_and_exit')} />
-            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_and_exit')} onConfirm={handleDeleteGroup} onCancel={() => setShowDeleteDialog(false)} />
-          </CometChatConfirmDialog.Root>
-        </div>
+        <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowDeleteDialog(false)}>
+          <CometChatConfirmDialog.Icon />
+          <CometChatConfirmDialog.Content title={getLocalizedString('delete_and_exit')} messageText={getLocalizedString('confirm_delete_and_exit')} />
+          <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_and_exit')} onConfirm={handleDeleteGroup} onCancel={() => setShowDeleteDialog(false)} />
+        </CometChatConfirmDialog.Root>
       )}
       {showDeleteChatDialog && (
-        <div className="cometchat-delete-chat-dialog__backdrop">
-          <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowDeleteChatDialog(false)}>
-            <CometChatConfirmDialog.Icon />
-            <CometChatConfirmDialog.Content title={getLocalizedString('delete_chat')} messageText={getLocalizedString('confirm_delete_chat')} />
-            <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_chat')} onConfirm={handleDeleteConversation} onCancel={() => setShowDeleteChatDialog(false)} />
-          </CometChatConfirmDialog.Root>
-        </div>
+        <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowDeleteChatDialog(false)}>
+          <CometChatConfirmDialog.Icon />
+          <CometChatConfirmDialog.Content title={getLocalizedString('delete_chat')} messageText={getLocalizedString('confirm_delete_chat')} />
+          <CometChatConfirmDialog.Actions confirmButtonText={getLocalizedString('delete_chat')} onConfirm={handleDeleteConversation} onCancel={() => setShowDeleteChatDialog(false)} />
+        </CometChatConfirmDialog.Root>
       )}
 
       <div className="side-component-header">
@@ -267,7 +276,7 @@ export const CometChatGroupDetails = ({
             ))}
         </div>
 
-        {isAdminOrOwner() && (
+        {isAdminOrOwner() && groupManagement.viewGroupMembers && (
           <div className="side-component-group-tabs-wrapper">
             <div className="side-component-group-tabs">
               <div
@@ -290,13 +299,15 @@ export const CometChatGroupDetails = ({
           </div>
         )}
 
-        <div className="side-component-group-members-with-tabs">
-          {groupTab === 'view' ? (
-            <CometChatGroupMembers group={group} />
-          ) : (
-            <CometChatBannedMembers group={group} />
-          )}
-        </div>
+        {groupManagement.viewGroupMembers && (
+          <div className="side-component-group-members-with-tabs">
+            {groupTab === 'view' ? (
+              <CometChatGroupMembers group={group} hideHeader {...featureProps.groupMembers} />
+            ) : (
+              <CometChatBannedMembers group={group} />
+            )}
+          </div>
+        )}
       </div>
 
       {showAddMembers && (
@@ -310,25 +321,26 @@ export const CometChatGroupDetails = ({
       )}
 
       {showTransferOwnershipDialog && (
-        <div className="cometchat-leave-group__backdrop">
-          <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowTransferOwnershipDialog(false)} variant="info" closeOnOutsideClick={false}>
-            <CometChatConfirmDialog.Content
-              title={getLocalizedString('ownership_transfer')}
-              messageText={getLocalizedString('confirm_ownership_transfer')}
-            />
-            <CometChatConfirmDialog.Actions
-              confirmButtonText={getLocalizedString('continue')}
-              onConfirm={() => {
-                setShowTransferOwnershipDialog(false);
-                setShowTransferOwnership(true);
-              }}
-              onCancel={() => setShowTransferOwnershipDialog(false)}
-            />
-          </CometChatConfirmDialog.Root>
-        </div>
+        <CometChatConfirmDialog.Root isOpen={true} onClose={() => setShowTransferOwnershipDialog(false)} variant="info" closeOnOutsideClick={false}>
+          <CometChatConfirmDialog.Content
+            title={getLocalizedString('ownership_transfer')}
+            messageText={getLocalizedString('confirm_ownership_transfer')}
+          />
+          <CometChatConfirmDialog.Actions
+            confirmButtonText={getLocalizedString('continue')}
+            onConfirm={() => {
+              setShowTransferOwnershipDialog(false);
+              setShowTransferOwnership(true);
+            }}
+            onCancel={() => setShowTransferOwnershipDialog(false)}
+          />
+        </CometChatConfirmDialog.Root>
       )}
 
-      {showTransferOwnership && (
+      {/* Portalled, unlike the ConfirmDialog cases above which portal themselves: this backdrop is
+          the sample app's own, and `absolute` would resolve against .side-component-wrapper —
+          confining it to the details panel instead of the app. */}
+      {showTransferOwnership && overlayContainer && createPortal(
         <div className="cometchat-transfer-ownership__backdrop">
           <CometChatTransferOwnership
             group={group}
@@ -337,7 +349,8 @@ export const CometChatGroupDetails = ({
               setShowTransferOwnership(false);
             }}
           />
-        </div>
+        </div>,
+        overlayContainer
       )}
     </>
   );

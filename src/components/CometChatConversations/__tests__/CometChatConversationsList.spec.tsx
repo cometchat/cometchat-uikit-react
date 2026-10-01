@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { CometChatConversationsList } from '../CometChatConversationsList';
 import { CometChatConversationsContext } from '../CometChatConversations.context';
@@ -83,6 +83,19 @@ describe('CometChatConversationsList', () => {
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     const options = screen.getAllByRole('option');
     expect(options).toHaveLength(2);
+  });
+
+  it('ArrowDown moves focus to the next item (arrow-key navigation)', () => {
+    const ctx = createMockContext();
+    render(
+      <CometChatConversationsContext.Provider value={ctx}>
+        <CometChatConversationsList />
+      </CometChatConversationsContext.Provider>
+    );
+    const options = screen.getAllByRole('option');
+    options[0]?.focus();
+    fireEvent.keyDown(options[0]!, { key: 'ArrowDown' });
+    expect(options[1]).toHaveFocus();
   });
 
   it('renders nothing when fetchState is not loaded and no conversations', () => {

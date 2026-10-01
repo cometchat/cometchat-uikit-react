@@ -21,17 +21,28 @@
   height: 32px;
   border: none;
   background: transparent;
-  font-size: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--cometchat-icon-color-primary, #141414);
   border-radius: 8px;
+  padding: 0;
 }
 
 .cometchat-add-members__back-button:hover {
   background: var(--cometchat-background-color-03, #f5f5f5);
+}
+
+/* Back arrow icon (matches the v6 design — arrow_back.svg). Rendered via mask
+   so it inherits the theme icon color. */
+.cometchat-add-members__back-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--cometchat-icon-color-primary, #141414);
+  -webkit-mask: url("../../assets/arrow_back.svg") center center no-repeat;
+  mask: url("../../assets/arrow_back.svg") center center no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .cometchat-add-members__title {

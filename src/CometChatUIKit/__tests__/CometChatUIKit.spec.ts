@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 // Value import resolves to the vi.mock below — used to attach feature-flag stubs.
 import { CometChat as CometChatSDK } from '@cometchat/chat-sdk-javascript';
+import { UIKIT_METADATA } from '../../version';
 
 const mockInit = vi.fn();
 const mockInitFromSettings = vi.fn();
@@ -142,6 +143,16 @@ const mockCallsInitFromSettings = vi.fn();
 const mockCallsLoginWithAuthToken = vi.fn();
 const mockLoadCallsSDK = vi.fn();
 
+/**
+ * `loginWithAuthToken` is still mocked even though `_initCalling()` must never call it.
+ *
+ * It used to run there, and it wrote `${appId}:common_store/user` — the same localStorage key
+ * `CometChat.onStorageEvent` watches — a second time on every login. A background tab saw the two
+ * writes as two storage events and opened a WebSocket for each, the first torn down mid-handshake.
+ * The fix drops the persistent Calls session: `CometChatOngoingCall` now passes
+ * `loggedInUser.getAuthToken()` straight to `callsSDK.generateToken(sessionID, authToken)`, so the
+ * token is supplied per session instead. Keeping the spy lets the tests below assert the absence.
+ */
 const mockCallsSDK = {
   init: (...args: unknown[]) => mockCallsInit(...args),
   initFromSettings: (...args: unknown[]) => mockCallsInitFromSettings(...args),
@@ -295,6 +306,26 @@ describe('CometChatUIKit', () => {
       expect(mockCallsInit).toHaveBeenCalledWith({ appId: 'test-app-id', region: 'us' });
       expect(mockCallsInitFromSettings).not.toHaveBeenCalled();
     });
+
+    it('never opens a persistent Calls session on the plain init() path either', async () => {
+      // Guards the double-WebSocket regression from both directions: neither entry point may
+      // log the Calls SDK in. See the note on mockCallsSDK.
+      mockInit.mockResolvedValue(true);
+      mockGetLoggedinUser.mockResolvedValue({ getUid: () => 'user1', getAuthToken: () => 'tok' });
+
+      const settings = new UIKitSettingsBuilder()
+        .setAppId('test-app-id')
+        .setRegion('us')
+        .setAuthKey('test-auth-key')
+        .setCallingEnabled(true)
+        .build();
+      await CometChatUIKit.init(settings);
+
+      await vi.waitFor(() => {
+        expect(mockCallsInit).toHaveBeenCalled();
+      });
+      expect(mockCallsLoginWithAuthToken).not.toHaveBeenCalled();
+    });
   });
 
   describe('initFromSettings', () => {
@@ -327,8 +358,7 @@ describe('CometChatUIKit', () => {
       await CometChatUIKit.initFromSettings(ssrSettings);
 
       expect((window as unknown as Record<string, unknown>).CometChatUiKit).toEqual({
-        name: '@cometchat/chat-uikit-react',
-        version: '7.2.0',
+        ...UIKIT_METADATA,
       });
     });
 
@@ -352,7 +382,8 @@ describe('CometChatUIKit', () => {
         expect(mockCallsInitFromSettings).toHaveBeenCalledWith(callsSettings);
       });
       expect(mockCallsInit).not.toHaveBeenCalled();
-      expect(mockCallsLoginWithAuthToken).toHaveBeenCalledWith('tok');
+      // Init only. The Calls session is established later, per call, by generateToken().
+      expect(mockCallsLoginWithAuthToken).not.toHaveBeenCalled();
     });
 
     it('does not initialize the Calls SDK when calling is not enabled', async () => {

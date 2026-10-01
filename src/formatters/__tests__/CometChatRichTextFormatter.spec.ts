@@ -61,6 +61,109 @@ describe('CometChatRichTextFormatter', () => {
     });
   });
 
+  // The composer hands over its `innerHTML`, and serialising a bare
+  // text node escapes `&`, `<` and `>` even when there is no tag to convert.
+  // Returning that string as-is sent the escaped form to the SDK: a URL's query
+  // separator was stored as `&amp;`, so `?a=1&amp;b=2` reached every other
+  // platform with a parameter literally named `amp;b`.
+  describe('format - entities in text carrying no tags', () => {
+    it('decodes the ampersand of a URL query string', () => {
+      expect(formatter.format('https://example.com/?a=1&amp;b=2')).toBe(
+        'https://example.com/?a=1&b=2'
+      );
+    });
+
+    it('decodes entities in ordinary prose', () => {
+      expect(formatter.format('Tom &amp; Jerry')).toBe('Tom & Jerry');
+    });
+
+    it.each([
+      ['&amp;', '&'],
+      ['&lt;', '<'],
+      ['&gt;', '>'],
+      ['&quot;', '"'],
+      ['&#39;', "'"],
+      ['&apos;', "'"],
+      ['&nbsp;', '\u00A0'],
+    ])('decodes %s', (entity, decoded) => {
+      expect(formatter.format(`a${entity}b`)).toBe(`a${decoded}b`);
+    });
+
+    it('decodes in one pass, so an escaped entity stays literal', () => {
+      // The sender typed the text "&lt;", not the character "<".
+      expect(formatter.format('&amp;lt;')).toBe('&lt;');
+    });
+
+    it('leaves an unknown entity alone', () => {
+      expect(formatter.format('100 &euro; and &notreal;')).toBe('100 &euro; and &notreal;');
+    });
+
+    it('leaves text with no ampersand untouched', () => {
+      expect(formatter.format('https://example.com/a/b?q=1')).toBe('https://example.com/a/b?q=1');
+    });
+
+    // `<@uid:…>` and `<@all:…>` are how the SDK records a real mention, and the
+    // bubble styles any it finds in the text without checking the mentioned
+    // users. Decoding one somebody typed by hand would mint a mention nobody
+    // made, so the escaped form is left as it is — which still displays as `<`.
+    it.each([
+      ['&lt;@all:everyone&gt; hi', '&lt;@all:everyone> hi'],
+      ['&lt;@uid:someone&gt; hi', '&lt;@uid:someone> hi'],
+      ['&lt;@UID:someone&gt;', '&lt;@UID:someone>'],
+      ['hey &lt;@all:team&gt; now', 'hey &lt;@all:team> now'],
+    ])('keeps the opening bracket of a typed mention token: %s', (input, expected) => {
+      expect(formatter.format(input)).toBe(expected);
+    });
+
+    it.each([
+      ['a &lt; b', 'a < b'],
+      ['&lt;@ not a token', '<@ not a token'],
+      ['&lt;@allsorts&gt;', '<@allsorts>'],
+      ['&lt;div&gt;', '<div>'],
+      ['5 &lt; 10 &amp;&amp; 3 &gt; 1', '5 < 10 && 3 > 1'],
+    ])('still decodes an ordinary angle bracket: %s', (input, expected) => {
+      expect(formatter.format(input)).toBe(expected);
+    });
+
+    it('agrees with the tagged path, which already decoded', () => {
+      const tagless = formatter.format('https://example.com/?a=1&amp;b=2');
+      const wrapped = formatter.format('<p>https://example.com/?a=1&amp;b=2</p>');
+      expect(tagless).toBe(wrapped);
+    });
+  });
+
+  // The decode above runs only where there is no tag to convert. Content the
+  // editor did tag goes through the DOM conversion, which resolved entities
+  // already, and has to keep converting exactly as it did.
+  describe('format - entities inside tagged content', () => {
+    it.each([
+      ['<p>Tom &amp; Jerry</p>', 'Tom & Jerry'],
+      ['<p>a &lt; b &gt; c</p>', 'a < b > c'],
+      ['<p>&quot;quoted&quot;</p>', '"quoted"'],
+      ['<b>a &amp; b</b>', '**a & b**'],
+      ['<blockquote>a &amp; b</blockquote>', '> a & b'],
+      ['<code>a &amp; b</code>', '`a & b`'],
+      [
+        '<pre><code>if (a &amp;&amp; b) return &lt;x&gt;;</code></pre>',
+        '```\nif (a && b) return <x>;\n```',
+      ],
+    ])('converts %s', (html, markdown) => {
+      expect(formatter.format(html)).toBe(markdown);
+    });
+
+    it('keeps the ampersand of a link href and its label', () => {
+      const html = '<a href="https://example.com/?a=1&amp;b=2">text &amp; more</a>';
+      expect(formatter.format(html)).toBe('[text & more](https://example.com/?a=1&b=2)');
+    });
+
+    it('keeps a link whose address ends in a parenthesis', () => {
+      const html = '<a href="https://en.wikipedia.org/wiki/Mercury_(planet)">Mercury</a>';
+      expect(formatter.format(html)).toBe(
+        '[Mercury](https://en.wikipedia.org/wiki/Mercury_(planet))'
+      );
+    });
+  });
+
   describe('format - bold', () => {
     it('should convert <b> to **', () => {
       const result = formatter.format('<b>bold</b>');

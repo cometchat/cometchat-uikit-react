@@ -1,5 +1,6 @@
 export {
   insertMention,
+  createMentionElement,
   getTextWithMentionFormat,
   getUniqueMentionUids,
   checkMentionTrigger,
