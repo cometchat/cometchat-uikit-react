@@ -4,6 +4,15 @@
 
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 
+function isSafeExtensionUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Extracts a URL from a CometChat message's extension metadata.
  * Path: `@injected -> extensions -> extensionKey -> urlKey`
@@ -34,7 +43,7 @@ export function extractExtensionUrl(
     const url = extension[urlKey];
     if (!url || typeof url !== 'string') return '';
 
-    return url;
+    return isSafeExtensionUrl(url) ? url : '';
   } catch {
     return '';
   }

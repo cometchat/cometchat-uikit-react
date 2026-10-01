@@ -61,4 +61,11 @@ describe('CometChatCollaborativeWhiteboardBubble', () => {
     render(<CometChatCollaborativeWhiteboardBubble message={boardMessage()} disabled />);
     expect(screen.getByRole('button')).toBeDisabled();
   });
+
+  it('disables the button for unsafe URLs', () => {
+    render(
+      <CometChatCollaborativeWhiteboardBubble message={boardMessage('javascript:alert(1)')} />
+    );
+    expect(screen.getByRole('button')).toBeDisabled();
+  });
 });

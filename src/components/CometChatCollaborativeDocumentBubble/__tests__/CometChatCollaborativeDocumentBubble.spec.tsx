@@ -60,4 +60,9 @@ describe('CometChatCollaborativeDocumentBubble', () => {
     render(<CometChatCollaborativeDocumentBubble message={docMessage()} disabled />);
     expect(screen.getByRole('button')).toBeDisabled();
   });
+
+  it('disables the button for unsafe URLs', () => {
+    render(<CometChatCollaborativeDocumentBubble message={docMessage('javascript:alert(1)')} />);
+    expect(screen.getByRole('button')).toBeDisabled();
+  });
 });
