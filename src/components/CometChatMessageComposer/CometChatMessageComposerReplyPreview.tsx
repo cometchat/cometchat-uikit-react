@@ -113,52 +113,58 @@ export const CometChatMessageComposerReplyPreview: React.FC<
       return null;
     }
 
-    // Non-text, non-media messages: return localized type label
+    /*
+     * Non-text, non-media: a localized label, or text carried on the message (a poll question, a
+     * custom message's own text). All of it is plain text going into an HTML sink, so it is escaped rather than sanitized.
+     */
     if (messageType !== 'text') {
-      switch (messageType) {
-        case 'extension_sticker':
-          return getLocalizedString('conversation_subtitle_sticker') || 'Sticker';
-        case 'extension_poll': {
-          try {
-            const customData = (
-              messageToReply as unknown as { getCustomData?: () => Record<string, unknown> }
-            ).getCustomData?.();
-            if (customData?.question) {
-              return customData.question as string;
+      const label = ((): string => {
+        switch (messageType) {
+          case 'extension_sticker':
+            return getLocalizedString('conversation_subtitle_sticker') || 'Sticker';
+          case 'extension_poll': {
+            try {
+              const customData = (
+                messageToReply as unknown as { getCustomData?: () => Record<string, unknown> }
+              ).getCustomData?.();
+              if (customData?.question) {
+                return customData.question as string;
+              }
+            } catch {
+              /* ignore */
             }
-          } catch {
-            /* ignore */
+            return getLocalizedString('conversation_subtitle_poll') || 'Poll';
           }
-          return getLocalizedString('conversation_subtitle_poll') || 'Poll';
-        }
-        case 'extension_whiteboard':
-          return (
-            getLocalizedString('conversation_subtitle_collaborative_whiteboard') ||
-            'Collaborative Whiteboard'
-          );
-        case 'extension_document':
-          return (
-            getLocalizedString('conversation_subtitle_collaborative_document') ||
-            'Collaborative Document'
-          );
-        default: {
-          try {
-            const customMsg = messageToReply as unknown as {
-              getConversationText?: () => string;
-              getCustomData?: () => Record<string, unknown>;
-            };
-            const conversationText = customMsg.getConversationText?.();
-            if (conversationText) return conversationText;
-            const customData = customMsg.getCustomData?.();
-            if (customData && typeof customData === 'object' && 'text' in customData) {
-              return String(customData.text);
+          case 'extension_whiteboard':
+            return (
+              getLocalizedString('conversation_subtitle_collaborative_whiteboard') ||
+              'Collaborative Whiteboard'
+            );
+          case 'extension_document':
+            return (
+              getLocalizedString('conversation_subtitle_collaborative_document') ||
+              'Collaborative Document'
+            );
+          default: {
+            try {
+              const customMsg = messageToReply as unknown as {
+                getConversationText?: () => string;
+                getCustomData?: () => Record<string, unknown>;
+              };
+              const conversationText = customMsg.getConversationText?.();
+              if (conversationText) return conversationText;
+              const customData = customMsg.getCustomData?.();
+              if (customData && typeof customData === 'object' && 'text' in customData) {
+                return String(customData.text);
+              }
+            } catch {
+              /* ignore */
             }
-          } catch {
-            /* ignore */
+            return messageType.charAt(0).toUpperCase() + messageType.slice(1);
           }
-          return messageType.charAt(0).toUpperCase() + messageType.slice(1);
         }
-      }
+      })();
+      return label.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     // Text messages

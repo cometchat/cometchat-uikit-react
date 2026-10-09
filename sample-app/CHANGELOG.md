@@ -1,3 +1,10 @@
+# [7.0.3]
+
+## Fixes
+
+* Fixed an issue where a chat requested through `defaultChatID` was not opened when `autoOpenFirstItem` was turned off. The two settings are now independent: `autoOpenFirstItem` governs only what happens when no chat was requested.
+* Fixed an issue where a `chatType` that did not match the supplied user or group caused the first conversation to open instead of none.
+
 # [7.0.2]
 
 ## New

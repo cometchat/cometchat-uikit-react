@@ -376,8 +376,11 @@ export const CometChatHome = ({
     const conversationType = layout.chatType === 'group' ? 'group' : 'user';
     // Still once per configuration, so a chat the user picked by hand is never yanked away; a
     // genuine change of chat type or sidebar mode is a new configuration and selects again.
-    const configuration = `${conversationType}|${String(layout.withSideBar)}`;
-    if (!autoOpenFirstItem || autoOpenedFor.current === configuration) return;
+    // Read the target the chat type actually asks for: a group type with only a user supplied is a
+    // mismatch, and must not count as "the host named a chat".
+    const target = (conversationType === 'group' ? defaultGroup?.getGuid() : defaultUser?.getUid()) ?? '';
+    const configuration = `${conversationType}|${String(layout.withSideBar)}|${target}`;
+    if ((!autoOpenFirstItem && !target) || autoOpenedFor.current === configuration) return;
     autoOpenedFor.current = configuration;
 
     let cancelled = false;

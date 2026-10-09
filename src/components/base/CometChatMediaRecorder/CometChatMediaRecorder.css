@@ -345,3 +345,9 @@
     max-width: 45%;
   }
 }
+
+@media (max-width: 399px) {
+  .cometchat-media-recorder__waveform {
+    max-width: 35%;
+  }
+}

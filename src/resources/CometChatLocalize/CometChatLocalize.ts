@@ -172,6 +172,24 @@ export class CometChatLocalize implements CometChatLocalizeInstance {
     return this.currentLanguage;
   }
 
+  /**
+   * Language codes that currently have at least one registered translation.
+   */
+  getAvailableLanguages(): string[] {
+    return Object.keys(this.translations);
+  }
+
+  /**
+   * Whether a key resolves — in the given language, or failing that in the fallback.
+   */
+  hasTranslation(key: string, language?: string): boolean {
+    const lang = (language ?? this.currentLanguage).toLowerCase();
+    return (
+      this.translations[lang]?.[key] !== undefined ||
+      this.translations[this.fallbackLanguage]?.[key] !== undefined
+    );
+  }
+
   registerSetLanguageCallback(callback: (t: TranslateFunction) => void) {
     this.setLanguageCallback = callback;
   }

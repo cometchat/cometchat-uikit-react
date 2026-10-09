@@ -10,7 +10,7 @@
  * Requirements: 1.1, 1.6, 8.2
  */
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -23,31 +23,33 @@ vi.mock('../../../context/locale/LocaleContext', () => ({
   useLocale: () => ({ getLocalizedString: (key: string) => key }),
 }));
 
-// A fake document whose createElement returns a controllable <input>, so the
-// picker's file selection can be driven without opening a real file dialog.
-const fakeInput = {
-  type: '',
-  accept: '',
-  multiple: false,
-  files: null as unknown as FileList,
-  onchange: null as null | (() => void),
-  click: vi.fn(),
-} as unknown as HTMLInputElement & { onchange: null | (() => void) };
+// The picker builds a real <input> against the top-level document, so the Files it yields belong
+// to the SDK's realm. Catching it on click drives the selection without stubbing the document.
+let pickedInput: HTMLInputElement | null = null;
+let clickSpy: ReturnType<typeof vi.spyOn>;
 
-const fakeDocument = {
-  createElement: vi.fn(() => {
-    // Reset per-creation fields.
-    fakeInput.type = '';
-    fakeInput.accept = '';
-    fakeInput.multiple = false;
-    fakeInput.onchange = null;
-    return fakeInput;
-  }),
-} as unknown as Document;
+/** The input the picker just opened, or a readable failure if it never opened one. */
+function picker(): HTMLInputElement {
+  if (!pickedInput) throw new Error('the attachment picker did not open an input');
+  return pickedInput;
+}
 
-vi.mock('../../../context/CometChatFrameContext', () => ({
-  useCometChatFrameContext: () => ({ iframeDocument: fakeDocument, iframeWindow: window }),
-}));
+/** `files` is read-only on a real input, so the selection is defined onto it. */
+function choose(files: File[]): void {
+  Object.defineProperty(picker(), 'files', { value: fileList(files), configurable: true });
+  picker().dispatchEvent(new Event('change'));
+}
+
+beforeAll(() => {
+  clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {
+    const calls = clickSpy.mock.instances;
+    pickedInput = calls[calls.length - 1] as HTMLInputElement;
+  });
+});
+
+afterAll(() => {
+  clickSpy.mockRestore();
+});
 
 // Render the popover trigger and content inline so option buttons are visible.
 vi.mock('../../base/CometChatPopover', () => ({
@@ -111,6 +113,7 @@ function fileList(files: File[]): FileList {
 describe('CometChatMessageComposerAttachmentButton.handleFileSelect', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    pickedInput = null;
   });
 
   it('multi-select enabled: stages ALL selected files and does NOT send immediately', async () => {
@@ -122,17 +125,14 @@ describe('CometChatMessageComposerAttachmentButton.handleFileSelect', () => {
     await user.click(screen.getByText('message_composer_attach_image'));
 
     // Picker opts into multi-select.
-    expect(fakeInput.multiple).toBe(true);
+    expect(picker().multiple).toBe(true);
 
     const files = [
       new File(['a'], 'a.png', { type: 'image/png' }),
       new File(['b'], 'b.png', { type: 'image/png' }),
       new File(['c'], 'c.png', { type: 'image/png' }),
     ];
-    fakeInput.files = fileList(files);
-
-    // Simulate the browser firing change after selection.
-    fakeInput.onchange?.();
+    choose(files);
 
     expect(stageAttachments).toHaveBeenCalledTimes(1);
     // Files are staged with the chosen picker kind forced ('image' here).
@@ -149,12 +149,10 @@ describe('CometChatMessageComposerAttachmentButton.handleFileSelect', () => {
     await user.click(screen.getByText('message_composer_attach_image'));
 
     // Legacy branch does not enable multi-select.
-    expect(fakeInput.multiple).toBe(false);
+    expect(picker().multiple).toBe(false);
 
     const single = new File(['a'], 'a.png', { type: 'image/png' });
-    fakeInput.files = fileList([single]);
-
-    fakeInput.onchange?.();
+    choose([single]);
 
     expect(sendMediaMessage).toHaveBeenCalledTimes(1);
     expect(sendMediaMessage).toHaveBeenCalledWith(single, 'image');

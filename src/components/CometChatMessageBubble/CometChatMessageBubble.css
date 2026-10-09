@@ -521,6 +521,16 @@
   }
 }
 
+@media (max-width: 480px) {
+  .cometchat-message-bubble {
+    max-width: 100%;
+  }
+
+  .cometchat-message-bubble__options {
+    padding: 0 var(--cometchat-padding-1, 4px);
+  }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .cometchat-message-bubble__options {

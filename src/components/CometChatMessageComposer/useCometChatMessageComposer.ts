@@ -62,6 +62,11 @@ export interface CometChatUseCometChatMessageComposerOptions {
 }
 
 /**
+ * Whether a file came from this realm, so the SDK's own `instanceof Blob` check will accept it. Deliberately returns `boolean` rather than being a type predicate
+ */
+const isSameRealmBlob = (value: unknown): boolean => value instanceof Blob;
+
+/**
  * useCometChatMessageComposer — data hook for the message composer.
  *
  * Manages text state, send/edit operations, typing indicators,
@@ -450,6 +455,10 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
     async (file: File, fileType: string, options?: { isVoiceNote?: boolean }) => {
       if (!receiverId) return;
       if (!isSdkInitialized()) return;
+
+      if (!isSameRealmBlob(file)) {
+        file = new File([file], file.name, { type: file.type, lastModified: file.lastModified });
+      }
 
       // --- File type validation ---
       // If the user selected a specific media type (image, video, audio),

@@ -1,6 +1,6 @@
 {
   "name": "sample-app",
-  "version": "7.0.2",
+  "version": "7.0.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,7 +18,7 @@
   "dependencies": {
     "@cometchat/calls-sdk-javascript": "^5.0.3",
     "@cometchat/chat-sdk-javascript": "^4.2.0",
-    "@cometchat/chat-uikit-react": "^7.2.3",
+    "@cometchat/chat-uikit-react": "^7.2.4",
     "dompurify": "3.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

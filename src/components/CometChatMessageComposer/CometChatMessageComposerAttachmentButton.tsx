@@ -8,7 +8,6 @@ import { useCometChatMessageComposerContext } from './CometChatMessageComposer.c
 import { CometChatPopover } from '../base/CometChatPopover';
 import type { CometChatActionSheetItemData } from '../base/CometChatActionSheet/CometChatActionSheet.types';
 import { useLocale } from '../../context/locale/LocaleContext';
-import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { CometChatCreatePoll } from '../CometChatCreatePoll/CometChatCreatePoll';
 import addCircleIcon from '../../assets/add_circle.svg';
 import addCircleFillIcon from '../../assets/add_circle_fill.svg';
@@ -50,11 +49,6 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     playOutgoingSound,
   } = useCometChatMessageComposerContext();
   const { getLocalizedString } = useLocale();
-  const IframeContext = useCometChatFrameContext();
-
-  const getCurrentDocument = useCallback(() => {
-    return IframeContext.iframeDocument ?? document;
-  }, [IframeContext.iframeDocument]);
 
   const [showCreatePoll, setShowCreatePoll] = useState(false);
 
@@ -64,7 +58,8 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
 
   const handleFileSelect = useCallback(
     (type: string) => {
-      const input = getCurrentDocument().createElement('input');
+      // Creating it here means the Files it yields belong to the same realm as the SDK, instead of the iframe's.
+      const input = document.createElement('input');
       input.type = 'file';
       input.accept =
         allowedFileTypes && allowedFileTypes.length > 0
@@ -106,7 +101,6 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
       stageAttachments,
       sendMediaMessage,
       setContentToDisplay,
-      getCurrentDocument,
       allowedFileTypes,
     ]
   );
@@ -390,6 +384,8 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
   ]
     .filter(Boolean)
     .join(' ');
+
+  if (attachmentItems.length === 0) return null;
 
   return (
     <>

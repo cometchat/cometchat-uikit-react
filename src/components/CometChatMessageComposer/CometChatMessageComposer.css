@@ -746,6 +746,10 @@
   height: 24px;
 }
 
+.cometchat-message-composer__attachment-button-wrapper:empty {
+  display: none;
+}
+
 .cometchat-message-composer__emoji-button-wrapper {
   height: 24px;
   width: 24px;

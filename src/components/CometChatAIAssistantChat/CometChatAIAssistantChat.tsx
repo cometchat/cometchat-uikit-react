@@ -631,6 +631,11 @@ const CometChatAIAssistantChatComponent: React.FC<CometChatAIAssistantChatProps>
               hideMessagePrivatelyOption
               hideReactionOption
               hideReplyInThreadOption
+              hidePinMessageOption
+              hideUnpinMessageOption
+              hideSaveMessageOption
+              hideUnsaveMessageOption
+              hideThreadSubscriptionOption
               hideStickyDate
               hideTranslateMessageOption
               hideFlagMessageOption

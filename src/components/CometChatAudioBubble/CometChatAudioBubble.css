@@ -378,3 +378,10 @@
     transition: none;
   }
 }
+
+/* Below 480px the bubble fills its row; above it, the max-width still decides the width. */
+@media (max-width: 480px) {
+  .cometchat-audio-bubble {
+    width: 100%;
+  }
+}

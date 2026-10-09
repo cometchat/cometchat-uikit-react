@@ -356,12 +356,10 @@
     min-height: 120px;
   }
 
-  .cometchat-videos-bubble {
-    --cometchat-videos-bubble-container-max-width: 240px;
-  }
-
   .cometchat-videos-bubble--single
     .cometchat-videos-bubble__tile:not(:has(.cometchat-videos-bubble__thumbnail)) {
-    min-width: 240px;
+    min-width: var(--cometchat-videos-bubble-single-tile-min-width, 240px);
+    /* Fills the column; min-width is the floor and the container's max-width the ceiling. */
+    width: 100%;
   }
 }
