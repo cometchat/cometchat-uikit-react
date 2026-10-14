@@ -50,7 +50,7 @@ export const CometChatCollaborativeWhiteboardBubble: React.FC<
     if (onButtonClick) {
       onButtonClick(url);
     } else {
-      getCurrentWindow().open(url, '', 'fullscreen=yes, scrollbars=auto');
+      getCurrentWindow().open(url, '_blank', 'noopener,noreferrer');
     }
   }, [url, isButtonDisabled, onButtonClick, getCurrentWindow]);
 

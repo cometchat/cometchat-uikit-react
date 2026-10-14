@@ -106,7 +106,7 @@ describe('CometChatAISanitize', () => {
       );
       expect(out).toContain('href="https://example.com"');
       expect(out).toContain('target="_blank"');
-      expect(out).toContain('rel="noopener"');
+      expect(out).toContain('rel="noopener noreferrer"');
     });
 
     it('keeps class and mention data attributes on span', () => {

@@ -61,4 +61,16 @@ describe('extractExtensionUrl', () => {
       )
     ).toBe('');
   });
+
+  it('returns empty string for unsafe URL schemes', () => {
+    expect(
+      extractExtensionUrl(
+        mockMsg({
+          '@injected': { extensions: { document: { document_url: 'javascript:alert(1)' } } },
+        }),
+        'document',
+        'document_url'
+      )
+    ).toBe('');
+  });
 });
