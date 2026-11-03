@@ -4,6 +4,7 @@ import React, { useCallback, useContext, useState } from 'react';
 import { CometChatPluginRegistryContext } from '../../context/PluginRegistryContext';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
 import { CometChatLocalize } from '../../resources/CometChatLocalize/CometChatLocalize';
+import { useLocale } from '../../context/locale/LocaleContext';
 import { CometChatAvatar } from '../base/CometChatAvatar/CometChatAvatar';
 import { CometChatCheckbox } from '../base/CometChatCheckbox/CometChatCheckbox';
 import { CometChatContextMenu } from '../base/CometChatContextMenu/CometChatContextMenu';
@@ -13,6 +14,7 @@ import { CometChatRadioButton } from '../base/CometChatRadioButton/CometChatRadi
 import { useOptionalConversationsContext } from './CometChatConversations.context';
 import { sanitizeHtml } from '../../utils/sanitizeHtml';
 import { localizeSharedWithFallback } from '../../utils/localizeWithFallback';
+import { dateLiteral } from '../../resources/CometChatLocalize/dateFormat.utils';
 import { isConversationPinned, isConversationSystemPinned } from './CometChatConversations.utils';
 import { usePinSaveFeatures } from '../../hooks/usePinSaveFeatures';
 import pinIcon from '../../assets/pin.svg';
@@ -20,6 +22,7 @@ import unpinIcon from '../../assets/unpin.svg';
 import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
 import './CometChatConversations.css';
 import type { CometChatConversationsItemProps } from './CometChatConversations.types';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * Get the display name for a conversation.
@@ -438,6 +441,18 @@ function getLastMessageTimestamp(conversation: CometChat.Conversation): number |
  */
 type ReceiptStatus = 'wait' | 'sent' | 'delivered' | 'read' | 'error' | null;
 
+/**
+ * One whole label per receipt state, so the state doesn't reach screen readers as an English word.
+ * The English one stands in for a missing string, rather than its key.
+ */
+const RECEIPT_LABELS: Record<NonNullable<ReceiptStatus>, [key: string, english: string]> = {
+  read: ['accessibility_message_read', 'Message read'],
+  delivered: ['accessibility_message_delivered', 'Message delivered'],
+  sent: ['accessibility_message_sent', 'Message sent'],
+  wait: ['accessibility_message_sending', 'Message sending'],
+  error: ['accessibility_message_failed', 'Message failed to send'],
+};
+
 function getReceiptStatus(
   conversation: CometChat.Conversation,
   loggedInUserId?: string
@@ -486,6 +501,7 @@ function CometChatConversationsItemInner({
   trailingView,
 }: CometChatConversationsItemProps) {
   const ctx = useOptionalConversationsContext();
+  const { calendarObject } = useLocale();
   const pluginRegistry = useContext(CometChatPluginRegistryContext);
   const chatStateUser = useLoggedInUser();
 
@@ -683,7 +699,11 @@ function CometChatConversationsItemInner({
           {!hideGroupType && (groupType === 'private' || groupType === 'password') && (
             <span
               className={`cometchat-conversations__item-group-type cometchat-conversations__item-group-type--${groupType}`}
-              aria-label={groupType === 'private' ? 'Private group' : 'Password protected group'}
+              aria-label={
+                CometChatLocalize.getSharedInstance()?.t(
+                  groupType === 'private' ? 'accessibility_private_group' : 'accessibility_password_group'
+                ) ?? (groupType === 'private' ? 'Private group' : 'Password protected group')
+              }
             >
               <span className="cometchat-conversations__item-group-type-icon" />
             </span>
@@ -748,11 +768,7 @@ function CometChatConversationsItemInner({
                     return (
                       <span
                         className={`cometchat-conversations__item-receipt ${receiptClass}`}
-                        aria-label={(
-                          CometChatLocalize.getSharedInstance()?.t(
-                            'accessibility_message_receipt'
-                          ) ?? 'Message {status}'
-                        ).replace('{status}', receipt)}
+                        aria-label={t(...RECEIPT_LABELS[receipt])}
                       />
                     );
                   })()}
@@ -823,11 +839,13 @@ function CometChatConversationsItemInner({
               <CometChatDate
                 timestamp={lastMessageTimestamp}
                 variant="caption2"
+                // As in v6: the default, then the app's calendar format, then the prop.
                 formatConfig={{
                   today: 'hh:mm A',
-                  yesterday:
-                    CometChatLocalize.getSharedInstance()?.t('date_yesterday') ?? 'Yesterday',
+                  yesterday: dateLiteral(t('date_yesterday', 'Yesterday')),
                   otherDays: 'DD/MM/YYYY',
+                  ...calendarObject,
+                  ...ctx?.lastMessageDateTimeFormat,
                 }}
               />
             )}
@@ -836,10 +854,10 @@ function CometChatConversationsItemInner({
               {!hideUnread && unreadCount > 0 && (
                 <span
                   className={'cometchat-conversations__item-unread-badge'}
-                  aria-label={(
+                  aria-label={fillTemplate((
                     CometChatLocalize.getSharedInstance()?.t('accessibility_unread_messages') ??
                     '{count} unread messages'
-                  ).replace('{count}', String(unreadCount))}
+                  ), { count: String(unreadCount) })}
                 >
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
@@ -931,10 +949,10 @@ function CometChatConversationsItemInner({
           <CometChatCheckbox
             checked={isSelected}
             onChange={handleCheckboxChange}
-            aria-label={(
+            aria-label={fillTemplate((
               CometChatLocalize.getSharedInstance()?.t('accessibility_select_item') ??
               'Select {name}'
-            ).replace('{name}', name)}
+            ), { name })}
           />
         </div>
       )}
@@ -953,10 +971,10 @@ function CometChatConversationsItemInner({
             name="cometchat-conversations-selection"
             checked={isSelected}
             onChange={handleRadioChange}
-            ariaLabel={(
+            ariaLabel={fillTemplate((
               CometChatLocalize.getSharedInstance()?.t('accessibility_select_item') ??
               'Select {name}'
-            ).replace('{name}', name)}
+            ), { name })}
           />
         </div>
       )}

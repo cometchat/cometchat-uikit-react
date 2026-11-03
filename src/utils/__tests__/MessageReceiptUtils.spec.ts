@@ -150,6 +150,20 @@ import {
   isMessagePendingModeration,
 } from '../MessageReceiptUtils';
 
+/** Setter surface of the mocked SDK message classes above (the real SDK typings differ). */
+interface MockBaseMessage {
+  setId(id: number): void;
+  setSentAt(t: number): void;
+  setDeliveredAt(t: number): void;
+  setReadAt(t: number): void;
+  setSender(s: { getUid: () => string }): void;
+  setMetadata(m: Record<string, unknown> | null): void;
+}
+
+interface MockModeratedMessage extends MockBaseMessage {
+  setModerationStatus(s: string): void;
+}
+
 function createTextMessage(
   overrides: {
     id?: number;
@@ -163,7 +177,7 @@ function createTextMessage(
     _ccError?: unknown;
   } = {}
 ): CometChat.TextMessage {
-  const msg = new CometChat.TextMessage();
+  const msg = new (CometChat.TextMessage as unknown as new () => MockModeratedMessage)();
   if (overrides.id !== undefined) msg.setId(overrides.id);
   if (overrides.sentAt !== undefined) msg.setSentAt(overrides.sentAt);
   if (overrides.deliveredAt !== undefined) msg.setDeliveredAt(overrides.deliveredAt);
@@ -179,7 +193,7 @@ function createTextMessage(
   if (overrides._ccError !== undefined) {
     (msg as unknown as Record<string, unknown>)._ccError = overrides._ccError;
   }
-  return msg;
+  return msg as unknown as CometChat.TextMessage;
 }
 
 function createMediaMessage(
@@ -195,7 +209,7 @@ function createMediaMessage(
     _ccError?: unknown;
   } = {}
 ): CometChat.MediaMessage {
-  const msg = new CometChat.MediaMessage();
+  const msg = new (CometChat.MediaMessage as unknown as new () => MockModeratedMessage)();
   if (overrides.id !== undefined) msg.setId(overrides.id);
   if (overrides.sentAt !== undefined) msg.setSentAt(overrides.sentAt);
   if (overrides.deliveredAt !== undefined) msg.setDeliveredAt(overrides.deliveredAt);
@@ -211,7 +225,7 @@ function createMediaMessage(
   if (overrides._ccError !== undefined) {
     (msg as unknown as Record<string, unknown>)._ccError = overrides._ccError;
   }
-  return msg;
+  return msg as unknown as CometChat.MediaMessage;
 }
 
 function createBaseMessage(
@@ -226,7 +240,7 @@ function createBaseMessage(
     _ccError?: unknown;
   } = {}
 ): CometChat.BaseMessage {
-  const msg = new CometChat.BaseMessage();
+  const msg = new (CometChat.BaseMessage as unknown as new () => MockBaseMessage)();
   if (overrides.id !== undefined) msg.setId(overrides.id);
   if (overrides.sentAt !== undefined) msg.setSentAt(overrides.sentAt);
   if (overrides.deliveredAt !== undefined) msg.setDeliveredAt(overrides.deliveredAt);
@@ -241,7 +255,7 @@ function createBaseMessage(
   if (overrides._ccError !== undefined) {
     (msg as unknown as Record<string, unknown>)._ccError = overrides._ccError;
   }
-  return msg;
+  return msg as unknown as CometChat.BaseMessage;
 }
 
 describe('MessageReceiptUtils', () => {

@@ -4,7 +4,7 @@
  * Its own module rather than `index.ts` so `CometChatUIKit` can import it without a cycle —
  * `index.ts` re-exports `CometChatUIKit`.
  */
-export const VERSION = '7.2.4';
+export const VERSION = '7.2.5';
 
 /** What the UI Kit registers on `window.CometChatUiKit` for support and analytics. */
 export const UIKIT_METADATA = {

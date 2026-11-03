@@ -11,6 +11,8 @@ const UID = 'alice';
 
 let published: CometChatUIEvent[] = [];
 let toasts: string[] = [];
+/** Every toast as [text, variant], for the assertions that care about the variant. */
+let toastCalls: [string, string | undefined][] = [];
 
 function wrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -56,7 +58,13 @@ function makeMessage(init: { pinnedAt?: number; pinnedBy?: string; savedAt?: num
 
 function setup() {
   return renderHook(
-    () => usePinSaveActions({ loggedInUserUid: UID, showToast: t => toasts.push(t) }),
+    () => usePinSaveActions({
+        loggedInUserUid: UID,
+        showToast: (t, variant) => {
+          toasts.push(t);
+          toastCalls.push([t, variant]);
+        },
+      }),
     { wrapper }
   );
 }
@@ -87,6 +95,7 @@ async function request(
 beforeEach(() => {
   published = [];
   toasts = [];
+  toastCalls = [];
 });
 
 afterEach(() => {
@@ -303,7 +312,10 @@ describe('usePinSaveActions — failure handling', () => {
 
     await request(result, 'requestPin', msg);
 
-    expect(toasts).toContain('You can only pin 250 messages. Unpin one to pin another.');
+    expect(toastCalls).toContainEqual([
+      'You can only pin 250 messages. Unpin one to pin another.',
+      'error',
+    ]);
   });
 
   it('falls back to the cap in the error text when the setting is unknown', async () => {
@@ -318,7 +330,7 @@ describe('usePinSaveActions — failure handling', () => {
 
     await request(result, 'requestSave', msg);
 
-    expect(toasts).toContain('You can save up to 42 messages.');
+    expect(toastCalls).toContainEqual(['You can save up to 42 messages.', 'error']);
   });
 
   it('falls back to generic copy for a non-limit failure', async () => {

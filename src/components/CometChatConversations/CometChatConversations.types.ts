@@ -47,7 +47,10 @@ export interface CometChatConversationsRootProps {
   textFormatters?: CometChatTextFormatter[];
   /** Whether to hide the group type indicator. */
   hideGroupType?: boolean;
-  /** Custom date/time format configuration for the last message timestamp. */
+  /**
+   * Date/time format for the last message's timestamp, laid over the global calendar format
+   * (`CometChatLocalize`); any part left out keeps the default.
+   */
   lastMessageDateTimeFormat?: CometChatDateFormatConfig;
   /** Whether to disable sound notifications for incoming messages. */
   disableSoundForMessages?: boolean;
@@ -206,6 +209,8 @@ export interface CometChatConversationsContextValue {
   textFormatters?: CometChatTextFormatter[];
   /** Whether to hide the group type indicator. */
   hideGroupType: boolean;
+  /** Whether to show the native scrollbar. Default: false (hidden). */
+  showScrollbar: boolean;
   /** Custom date/time format configuration for the last message timestamp. */
   lastMessageDateTimeFormat?: CometChatDateFormatConfig | undefined;
   /** Logged-in user UID (for receipt display). */

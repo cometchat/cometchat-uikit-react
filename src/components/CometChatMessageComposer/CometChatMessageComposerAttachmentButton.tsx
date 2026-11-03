@@ -119,7 +119,10 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
     // Polls, documents and whiteboards are created by an extension rather than sent from here, so
     // none of them pass through the composer's send functions — each says so itself.
     playOutgoingSound();
-  }, [playOutgoingSound]);
+    if (messageToReply) {
+      closePreview();
+    }
+  }, [messageToReply, closePreview, playOutgoingSound]);
 
   const handleCollaborativeDocument = useCallback(() => {
     setContentToDisplay('none');
@@ -449,6 +452,7 @@ export const CometChatMessageComposerAttachmentButton: React.FC<
         <CometChatCreatePoll
           {...(user ? { user } : {})}
           {...(group ? { group } : {})}
+          {...(messageToReply ? { replyToMessage: messageToReply } : {})}
           onClose={handleClosePoll}
           onPollCreated={handlePollCreated}
           {...(onError ? { onError } : {})}

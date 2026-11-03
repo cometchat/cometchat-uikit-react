@@ -560,6 +560,45 @@ describe('messageListReducer', () => {
     expect(setQuotedMessage).toHaveBeenCalledWith(edited);
   });
 
+  describe('MESSAGE_EDITED with a quoted message', () => {
+    const withQuote = (id: number, quote?: CometChat.BaseMessage) => {
+      let quoted = quote;
+      let quotedId = quote?.getId() ?? 0;
+      return Object.assign(msg(id), {
+        getQuotedMessage: () => quoted,
+        getQuotedMessageId: () => quotedId,
+        setQuotedMessage: (m: CometChat.BaseMessage) => {
+          quoted = m;
+        },
+        setQuotedMessageId: (value: number) => {
+          quotedId = value;
+        },
+      }) as unknown as CometChat.TextMessage;
+    };
+    const edit = (existing: CometChat.BaseMessage, incoming: CometChat.BaseMessage) =>
+      messageListReducer(
+        { ...initialMessageListState, messages: [existing] },
+        { type: 'MESSAGE_EDITED', message: incoming }
+      ).messages[0] as CometChat.TextMessage;
+
+    it('keeps the quote when the edit payload has none, as an extension edit does', () => {
+      const quote = msg(9);
+
+      const result = edit(withQuote(1, quote), withQuote(1));
+
+      expect(result.getQuotedMessage()).toBe(quote);
+      expect(result.getQuotedMessageId()).toBe(9);
+    });
+
+    it('uses the quote in the edit payload when it has one', () => {
+      const fresher = msg(9);
+
+      const result = edit(withQuote(1, msg(9)), withQuote(1, fresher));
+
+      expect(result.getQuotedMessage()).toBe(fresher);
+    });
+  });
+
   it('MESSAGE_DELETED replaces message (not removes)', () => {
     const original = msg(1);
     const deleted = buildDeletedMessage({ id: 1 }) as unknown as CometChat.BaseMessage;

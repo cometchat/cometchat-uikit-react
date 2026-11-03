@@ -60,7 +60,12 @@ function createMockGroup() {
 // Meta Configuration
 // ============================================
 
-const meta: Meta = {
+/** Story controls; forwarded to the Root that wraps each item. */
+interface GroupMembersItemStoryArgs {
+  hideUserStatus: boolean;
+}
+
+const meta: Meta<GroupMembersItemStoryArgs> = {
   title: 'Components/Groups/CometChat Group Member Item',
   tags: ['autodocs'],
   args: {
@@ -97,7 +102,7 @@ const meta: Meta = {
   ],
 };
 export default meta;
-type Story = StoryObj;
+type Story = StoryObj<GroupMembersItemStoryArgs>;
 
 // ============================================
 // Stories

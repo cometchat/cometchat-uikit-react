@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openBobChat, openDesignTeamChat } from '../helpers';
 
 /**
@@ -18,16 +18,6 @@ test.describe('CometChatMessageList', () => {
   });
 
   // ==================== Rendering ====================
-
-  test('message list renders for active conversation', async () => {
-    await expect(page.locator('.cometchat-message-list').first()).toBeVisible();
-  });
-
-  test('messages load and display in the list', async () => {
-    await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
-    const messageCount = await page.locator('.cometchat-message-bubble').count();
-    expect(messageCount).toBeGreaterThan(0);
-  });
 
   test('text messages render with content', async () => {
     const textBubble = page.locator('.cometchat-text-bubble').first();
@@ -70,14 +60,30 @@ test.describe('CometChatMessageList', () => {
     const list = page.locator('.cometchat-message-list').first();
     await expect(list).toBeVisible();
 
-    const hasAriaElements = await list.locator('[aria-label], [role]').first().isVisible({ timeout: 3_000 }).catch(() => false);
-    expect(hasAriaElements).toBeTruthy();
+    await expect(list.locator('[aria-label], [role]').first()).toBeVisible({ timeout: 3_000 });
   });
 });
 
 // ═══════════════════════════════════════════════════════════════
 // PAGINATION & SCROLL (Design Team — 40 messages)
 // ═══════════════════════════════════════════════════════════════
+
+/**
+ * Wait until a newly opened chat has made its initial scroll to the latest message. The list
+ * renders first and scrolls to the bottom a frame later; scrolling up before that is a no-op
+ * (the list is already at the top), after which the initial scroll lands at the bottom anyway.
+ */
+async function waitForInitialScroll(page: Page) {
+  const scrollContainer = page.locator('.cometchat-message-list__scroll-container').first();
+  await expect(page.locator('.cometchat-message-bubble').first()).toBeVisible({ timeout: 15_000 });
+  await expect
+    .poll(() => scrollContainer.evaluate(el => el.scrollHeight - el.scrollTop - el.clientHeight), {
+      message: 'the chat opens scrolled to its latest message',
+      timeout: 10_000,
+    })
+    .toBeLessThanOrEqual(2);
+  return scrollContainer;
+}
 
 test.describe('CometChatMessageList (Pagination)', () => {
   let page: Page;
@@ -89,10 +95,9 @@ test.describe('CometChatMessageList (Pagination)', () => {
     await openDesignTeamChat(page);
   });
 
-  test('scrolling up loads older messages (pagination)', async () => {
+  test('scrolling up loads older messages (pagination)', { tag: '@smoke' }, async () => {
     // Design Team has 40+ text messages — initial load fetches latest batch (typically 30)
-    await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
-    await page.waitForTimeout(2000);
+    const scrollContainer = await waitForInitialScroll(page);
 
     const initialCount = await page.locator('.cometchat-message-bubble').count();
     // The list must be scrollable for pagination to work — need enough messages that
@@ -101,7 +106,6 @@ test.describe('CometChatMessageList (Pagination)', () => {
     expect(initialCount).toBeGreaterThanOrEqual(15);
 
     // Verify the list IS scrollable (scrollHeight > clientHeight)
-    const scrollContainer = page.locator('.cometchat-message-list__scroll-container').first();
     const isScrollable = await scrollContainer.evaluate(el => el.scrollHeight > el.clientHeight);
     expect(isScrollable).toBeTruthy();
 
@@ -115,12 +119,10 @@ test.describe('CometChatMessageList (Pagination)', () => {
   });
 
   test('scroll-to-bottom button appears when scrolled up', async () => {
-    await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
+    const scrollContainer = await waitForInitialScroll(page);
 
     // Scroll up
-    const scrollContainer = page.locator('.cometchat-message-list__scroll-container').first();
     await scrollContainer.evaluate(el => { el.scrollTop = 0; });
-    await page.waitForTimeout(1000);
 
     // Scroll-to-bottom button should appear
     const scrollBtn = page.locator('.cometchat-message-list__scroll-to-bottom').first();
@@ -128,20 +130,33 @@ test.describe('CometChatMessageList (Pagination)', () => {
   });
 
   test('clicking scroll-to-bottom scrolls to latest message', async () => {
-    await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
+    const scrollContainer = await waitForInitialScroll(page);
 
-    // Scroll up
-    const scrollContainer = page.locator('.cometchat-message-list__scroll-container').first();
+    // Scroll up — this also fetches an older page, which prepends bubbles.
     await scrollContainer.evaluate(el => { el.scrollTop = 0; });
-    await page.waitForTimeout(1000);
+
+    // Let that fetch land before clicking, so the click isn't racing a prepend:
+    // the bubble count must hold steady across two consecutive reads.
+    const bubbles = page.locator('.cometchat-messages-wrapper .cometchat-message-list .cometchat-message-bubble');
+    let last = -1;
+    await expect
+      .poll(async () => {
+        const n = await bubbles.count();
+        const stable = n === last;
+        last = n;
+        return stable;
+      }, { intervals: [1_000], timeout: 15_000 })
+      .toBe(true);
 
     // Click scroll-to-bottom button
     const scrollBtn = page.locator('.cometchat-message-list__scroll-to-bottom').first();
     await expect(scrollBtn).toBeVisible({ timeout: 5_000 });
     await scrollBtn.click();
-    await page.waitForTimeout(2000);
 
-    // Button should disappear after scrolling to bottom
+    // The list reaches the bottom and the button goes away.
+    await expect
+      .poll(() => scrollContainer.evaluate(el => el.scrollHeight - el.scrollTop - el.clientHeight), { timeout: 10_000 })
+      .toBeLessThanOrEqual(2);
     await expect(scrollBtn).not.toBeVisible({ timeout: 5_000 });
   });
 });

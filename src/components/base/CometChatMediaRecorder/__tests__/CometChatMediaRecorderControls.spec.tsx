@@ -29,6 +29,10 @@ function createMockContext(
     pauseRecording: vi.fn(),
     deleteRecording: vi.fn(),
     inlineSend: vi.fn(),
+    isPreviewPlaying: false,
+    previewUrl: null,
+    previewProgress: 0,
+    togglePreviewPlayback: vi.fn(),
     ...overrides,
   };
 }

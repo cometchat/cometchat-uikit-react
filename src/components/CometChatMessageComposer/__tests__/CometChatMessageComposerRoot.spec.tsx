@@ -5,6 +5,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { mockCometChat } from '../../../testing/mock-sdk';
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({ CometChat: mockCometChat }));
@@ -33,13 +34,27 @@ vi.mock('../CometChatMessageComposerStickerButton', () => ({
   ),
 }));
 
-vi.mock('../CometChatMessageComposerVoiceButton', () => ({
-  CometChatMessageComposerVoiceButton: () => (
-    <button type="button" aria-label="Voice Recording" data-testid="voice-btn">
-      Voice
-    </button>
-  ),
-}));
+vi.mock('../CometChatMessageComposerVoiceButton', async () => {
+  const { useCometChatMessageComposerContext } =
+    await import('../CometChatMessageComposer.context');
+  return {
+    CometChatMessageComposerVoiceButton: () => {
+      const { setRecording } = useCometChatMessageComposerContext();
+      return (
+        <button
+          type="button"
+          aria-label="Voice Recording"
+          data-testid="voice-btn"
+          onClick={() => {
+            setRecording(true);
+          }}
+        >
+          Voice
+        </button>
+      );
+    },
+  };
+});
 
 vi.mock('../CometChatMessageComposerEditPreview', () => ({
   CometChatMessageComposerEditPreview: () => null,
@@ -77,7 +92,22 @@ vi.mock('../../base/CometChatLinkPopover/CometChatLinkPopover', () => ({
 
 vi.mock('../../base/CometChatMediaRecorder/CometChatMediaRecorder', () => ({
   CometChatMediaRecorder: {
-    Root: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    Root: ({
+      children,
+      onSubmit,
+    }: {
+      children: React.ReactNode;
+      onSubmit?: (file: Blob) => void;
+    }) => (
+      <div>
+        {children}
+        <button
+          type="button"
+          data-testid="recorder-submit"
+          onClick={() => onSubmit?.(new Blob(['webm-audio'], { type: 'audio/webm' }))}
+        />
+      </div>
+    ),
     Controls: () => null,
     Timer: () => null,
     RecordingView: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -88,6 +118,12 @@ vi.mock('../../base/CometChatMediaRecorder/CometChatMediaRecorder', () => ({
 
 vi.mock('../../base/CometChatMediaRecorder/CometChatMediaRecorder.context', () => ({
   useCometChatMediaRecorderContext: () => ({ inlineSend: vi.fn() }),
+}));
+
+vi.mock('../../../utils/wavConversion', () => ({
+  convertToWav: vi.fn(() =>
+    Promise.resolve({ wav: new Blob(['wav-audio'], { type: 'audio/wav' }), durationSeconds: 2.5 })
+  ),
 }));
 
 vi.mock('../useCometChatMentions', () => ({
@@ -144,6 +180,7 @@ vi.mock('../../../utils/RichTextEditor/useRichTextEditor', () => ({
 import { LocaleProvider } from '../../../context/locale/LocaleProvider';
 import { CometChatMessageComposerRoot } from '../CometChatMessageComposerRoot';
 import { CometChatMessageComposer } from '../CometChatMessageComposer';
+import { convertToWav } from '../../../utils/wavConversion';
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <LocaleProvider>{children}</LocaleProvider>
@@ -382,6 +419,35 @@ describe('CometChatMessageComposerRoot', () => {
       await user.click(screen.getByRole('button', { name: /send/i }));
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /send/i })).toBeDisabled();
+      });
+    });
+  });
+
+  describe('voice note send', () => {
+    it('sends a submitted recording as a voice note, converted to WAV', async () => {
+      mockCometChat.isInitialized = vi.fn().mockReturnValue(true);
+      const user = userEvent.setup();
+      const receiver = {
+        getUid: () => 'user-2',
+        getName: () => 'Receiver',
+      } as unknown as CometChat.User;
+      render(<CometChatMessageComposerRoot user={receiver} />, { wrapper });
+
+      await user.click(screen.getByTestId('voice-btn'));
+      await user.click(screen.getByTestId('recorder-submit'));
+
+      await waitFor(() => {
+        expect(mockCometChat.sendMediaMessage).toHaveBeenCalledOnce();
+      });
+      expect(convertToWav).toHaveBeenCalledOnce();
+      const sent = vi.mocked(mockCometChat.sendMediaMessage).mock.lastCall?.[0] as {
+        getMetadata: () => Record<string, unknown>;
+      };
+      expect(sent.getMetadata()).toMatchObject({
+        audioType: 'voice_note',
+        fileName: 'voice-recording.wav',
+        fileType: 'audio/wav',
+        audioDuration: 2,
       });
     });
   });

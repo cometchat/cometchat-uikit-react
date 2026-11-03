@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useCometChatConversations } from '../useCometChatConversations';
+import { CometChatConversationsManager } from '../CometChatConversationsManager';
 
 /* eslint-disable @typescript-eslint/unbound-method */
 
@@ -522,5 +523,60 @@ describe('useCometChatConversations', () => {
       });
       expect(lastMessage.setDeliveredAt).toHaveBeenCalledWith(555);
     });
+  });
+});
+
+describe('useCometChatConversations — message during the first load', () => {
+  // Known issue: a realtime message during the first load marks the one-row list as loaded,
+  // the list then asks for the next page, and the first page's result is dropped as stale.
+  it.fails('keeps the first page when a message arrives while it is loading', async () => {
+    const { CometChat } = await import('@cometchat/chat-sdk-javascript');
+    let resolveFirstPage: (page: CometChat.Conversation[]) => void = () => undefined;
+    mockFetchNext.mockReset();
+    mockFetchNext
+      .mockReturnValueOnce(
+        new Promise<CometChat.Conversation[]>(resolve => {
+          resolveFirstPage = resolve;
+        })
+      )
+      // The SDK answers a second fetchNext made while one is pending with an empty page.
+      .mockResolvedValueOnce([])
+      .mockResolvedValue([]);
+    vi.spyOn(CometChatConversationsManager, 'shouldLastMessageAndUnreadCountBeUpdated').mockReturnValue(true);
+    vi.mocked(CometChat.CometChatHelper.getConversationFromMessage).mockResolvedValue(
+      createMockConversation('c9')
+    );
+
+    const { result } = renderHook(() => useCometChatConversations());
+    const calls = vi.mocked(CometChat.addMessageListener).mock.calls;
+    const callbacks = calls[calls.length - 1]?.[1] as unknown as
+      | { onTextMessageReceived: (m: unknown) => void }
+      | undefined;
+    if (!callbacks) throw new Error('no message listener was registered');
+
+    act(() => {
+      callbacks.onTextMessageReceived({
+        getSender: () => ({ getUid: () => 'logged-in-user' }),
+        getReceiverType: () => 'user',
+        getDeliveredAt: () => 1,
+        getReadAt: () => 1,
+      });
+    });
+    await waitFor(() => {
+      expect(result.current.conversations.map(c => c.getConversationId())).toEqual(['c9']);
+    });
+
+    // The list shows one row, so its scroll sentinel asks for the next page.
+    await act(() => result.current.fetchNext());
+    await act(async () => {
+      resolveFirstPage([createMockConversation('c1'), createMockConversation('c2')]);
+      await Promise.resolve();
+    });
+
+    expect(result.current.conversations.map(c => c.getConversationId()).sort()).toEqual([
+      'c1',
+      'c2',
+      'c9',
+    ]);
   });
 });

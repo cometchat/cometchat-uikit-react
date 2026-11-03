@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { CometChatCallLogs } from '../CometChatCallLogs';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { covers } from '../../../testing/covers';
 
 // Mock the hook to control component state
 const mockUseCometChatCallLogs = vi.fn();
@@ -228,6 +229,7 @@ describe('CometChatCallLogs', () => {
     });
 
     it('renders custom loadingView when provided', () => {
+      covers('CometChatCallLogs.loadingView', 'custom');
       mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'loading' }));
 
       render(
@@ -248,6 +250,7 @@ describe('CometChatCallLogs', () => {
     });
 
     it('renders custom emptyView when provided', () => {
+      covers('CometChatCallLogs.emptyView', 'custom');
       mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'empty' }));
 
       render(<CometChatCallLogs emptyView={<div data-testid="custom-empty">No calls</div>} />);
@@ -266,6 +269,7 @@ describe('CometChatCallLogs', () => {
     });
 
     it('renders custom errorView when provided', () => {
+      covers('CometChatCallLogs.errorView', 'custom');
       mockUseCometChatCallLogs.mockReturnValue(buildHookValue({ fetchState: 'error' }));
 
       render(<CometChatCallLogs errorView={<div data-testid="custom-error">Error!</div>} />);
@@ -305,6 +309,7 @@ describe('CometChatCallLogs', () => {
 
   describe('callbacks', () => {
     it('calls onItemClick when a call log item is clicked', () => {
+      covers('CometChatCallLogs.onItemClick', 'called');
       const onItemClick = vi.fn();
       const calls = [buildMockCallLog({ receiverName: 'Alice' })];
 
@@ -338,6 +343,7 @@ describe('CometChatCallLogs', () => {
 
   describe('custom views', () => {
     it('renders custom itemView when provided', () => {
+      covers('CometChatCallLogs.itemView', 'custom');
       const calls = [buildMockCallLog()];
 
       mockUseCometChatCallLogs.mockReturnValue(
@@ -348,6 +354,7 @@ describe('CometChatCallLogs', () => {
         <CometChatCallLogs itemView={() => <div data-testid="custom-item">Custom Item</div>} />
       );
       expect(screen.getByTestId('custom-item')).toBeInTheDocument();
+      expect(screen.queryByText('Receiver')).toBeNull();
     });
 
     it('renders custom leadingView when provided', () => {
@@ -394,6 +401,7 @@ describe('CometChatCallLogs', () => {
     });
 
     it('renders custom trailingView when provided', () => {
+      covers('CometChatCallLogs.trailingView', 'custom');
       const calls = [buildMockCallLog()];
 
       mockUseCometChatCallLogs.mockReturnValue(
@@ -406,6 +414,7 @@ describe('CometChatCallLogs', () => {
         />
       );
       expect(screen.getByTestId('custom-trailing')).toBeInTheDocument();
+      expect(screen.queryByTestId('call-buttons')).toBeNull();
     });
   });
 

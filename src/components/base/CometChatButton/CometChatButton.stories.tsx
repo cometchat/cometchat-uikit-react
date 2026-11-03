@@ -14,7 +14,7 @@ interface ButtonStoryArgs {
   isLoading: boolean;
 }
 
-const meta: Meta = {
+const meta: Meta<ButtonStoryArgs> = {
   title: 'Base Elements/Button',
   tags: ['autodocs'],
   args: {
@@ -55,7 +55,7 @@ const meta: Meta = {
 };
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<ButtonStoryArgs>;
 
 /** Default — interactive controls for variant, size, disabled, and loading. */
 export const Default: Story = {

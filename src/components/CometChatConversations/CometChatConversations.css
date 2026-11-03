@@ -6,7 +6,7 @@
   height: 100%;
   overflow: hidden;
   background: var(--cometchat-background-color-01, #fff);
-  border-radius: var(--cometchat-border-radius-3, 8px);
+  border-radius: var(--cometchat-border-radius-3, var(--cometchat-radius-2, 8px));
   font-family: var(--cometchat-font-family, inherit);
   position: relative;
 }
@@ -52,11 +52,14 @@
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
+}
+
+.cometchat-conversations__list--hide-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-.cometchat-conversations__list::-webkit-scrollbar {
+.cometchat-conversations__list--hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
@@ -205,7 +208,7 @@
   font-size: 0.9em;
   background: var(--cometchat-background-color-03, #ebebeb);
   padding: 1px 4px;
-  border-radius: var(--cometchat-border-radius-1, 4px);
+  border-radius: var(--cometchat-border-radius-1, var(--cometchat-radius-1, 4px));
 }
 
 /* Receipt icon */
@@ -514,7 +517,7 @@
 .cometchat-conversations__shimmer-item-title {
   height: 14px;
   width: 120px;
-  border-radius: var(--cometchat-border-radius-2, 8px);
+  border-radius: var(--cometchat-border-radius-2, var(--cometchat-radius-2, 8px));
   background: var(
     --cometchat-shimmer-gradient-color,
     linear-gradient(90deg, #e0e0e0 0%, #eee 100%)
@@ -526,7 +529,7 @@
 .cometchat-conversations__shimmer-item-subtitle {
   height: 12px;
   width: 180px;
-  border-radius: var(--cometchat-border-radius-2, 8px);
+  border-radius: var(--cometchat-border-radius-2, var(--cometchat-radius-2, 8px));
   background: var(
     --cometchat-shimmer-gradient-color,
     linear-gradient(90deg, #e0e0e0 0%, #eee 100%)

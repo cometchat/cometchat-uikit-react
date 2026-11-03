@@ -8,6 +8,7 @@ import { useLocale } from '../../context/locale/LocaleContext';
 import type { CometChatUsersItemProps } from './CometChatUsers.types';
 import type { CometChatContextMenuItemData } from '../base/CometChatContextMenu/CometChatContextMenu.types';
 import './CometChatUsers.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * CometChatUsersItem — Individual user item (avatar, name, status, trailing).
@@ -136,7 +137,7 @@ function CometChatUsersItemInner({
           <CometChatCheckbox
             checked={isSelected}
             onChange={handleCheckboxChange}
-            aria-label={getLocalizedString('accessibility_select_item').replace('{name}', name)}
+            aria-label={fillTemplate(getLocalizedString('accessibility_select_item'), { name })}
           />
         </div>
       ) : ctx.selectionMode === 'single' ? (
@@ -154,7 +155,7 @@ function CometChatUsersItemInner({
             name="cometchat-users-selection"
             checked={isSelected}
             onChange={handleRadioChange}
-            ariaLabel={getLocalizedString('accessibility_select_item').replace('{name}', name)}
+            ariaLabel={fillTemplate(getLocalizedString('accessibility_select_item'), { name })}
           />
         </div>
       ) : null}

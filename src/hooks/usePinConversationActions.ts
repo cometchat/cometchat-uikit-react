@@ -7,6 +7,7 @@ import { isPermissionError, isLimitError, readLimitFromError } from '../utils/pi
 import { getPinSaveLimits } from '../utils/pinSaveLimits';
 import { isConversationSystemPinned } from '../components/CometChatConversations/CometChatConversations.utils';
 import type { PinSaveConfirmAction } from '../components/base/CometChatPinSaveConfirmDialog';
+import { fillTemplate } from '../utils/fillTemplate';
 
 export type PinConversationAction = 'pin' | 'unpin';
 
@@ -131,10 +132,10 @@ export function usePinConversationActions(
         const cap = getPinSaveLimits().pinnedConversations ?? readLimitFromError(error);
         if (cap !== null) {
           showToast(
-            loc(
+            fillTemplate(loc(
               'pin_conversation_limit_reached',
               'You can only pin {limit} chats. Unpin one to pin another.'
-            ).replace('{limit}', String(cap)),
+            ), { limit: String(cap) }),
             'error'
           );
           return;

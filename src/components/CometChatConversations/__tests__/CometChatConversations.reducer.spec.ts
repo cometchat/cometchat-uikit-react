@@ -367,6 +367,7 @@ describe('conversationsReducer', () => {
         selectedConversationsMap: new Map([['c1', createMockConversation('c1')]]),
         activeConversationId: 'c1',
         searchText: 'alice',
+        typingIndicatorMap: new Map(),
       };
       const state = conversationsReducer(stateWithData, { type: 'RESET' });
       expect(state.conversations).toEqual([]);

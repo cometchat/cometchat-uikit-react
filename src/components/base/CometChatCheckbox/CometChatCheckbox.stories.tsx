@@ -5,18 +5,16 @@ import { CometChatCheckbox } from './CometChatCheckbox';
 interface CheckboxStoryArgs {
   checked: boolean;
   disabled: boolean;
-  indeterminate: boolean;
   label: string;
 }
 
-const meta: Meta<typeof CometChatCheckbox> = {
+const meta: Meta<CheckboxStoryArgs> = {
   title: 'Base Elements/Checkbox',
   component: CometChatCheckbox,
   tags: ['autodocs'],
   args: {
     checked: false,
     disabled: false,
-    indeterminate: false,
     label: 'Checkbox label',
   },
   argTypes: {
@@ -28,10 +26,6 @@ const meta: Meta<typeof CometChatCheckbox> = {
       control: 'boolean',
       description: 'Whether the checkbox is disabled.',
     },
-    indeterminate: {
-      control: 'boolean',
-      description: 'Whether the checkbox is in an indeterminate state.',
-    },
     label: {
       control: 'text',
       description: 'Label text displayed next to the checkbox.',
@@ -41,7 +35,7 @@ const meta: Meta<typeof CometChatCheckbox> = {
     docs: {
       description: {
         component:
-          'A checkbox input component supporting checked, unchecked, disabled, and indeterminate states.',
+          'A checkbox input component supporting checked, unchecked, and disabled states.',
       },
     },
     layout: 'centered',
@@ -66,7 +60,7 @@ const meta: Meta<typeof CometChatCheckbox> = {
 };
 export default meta;
 
-type Story = StoryObj<typeof CometChatCheckbox>;
+type Story = StoryObj<CheckboxStoryArgs>;
 
 function DefaultDemo(args: CheckboxStoryArgs) {
   const [checked, setChecked] = useState(args.checked);
@@ -78,7 +72,6 @@ function DefaultDemo(args: CheckboxStoryArgs) {
     <CometChatCheckbox
       checked={checked}
       disabled={args.disabled}
-      indeterminate={args.indeterminate}
       label={args.label}
       onChange={({ checked: c }) => setChecked(c)}
     />
@@ -95,7 +88,6 @@ function CheckedDemo(args: CheckboxStoryArgs) {
     <CometChatCheckbox
       checked={checked}
       disabled={args.disabled}
-      indeterminate={args.indeterminate}
       label={args.label}
       onChange={({ checked: c }) => setChecked(c)}
     />
@@ -115,7 +107,6 @@ function WithLabelDemo(args: CheckboxStoryArgs) {
     <CometChatCheckbox
       checked={checked}
       disabled={args.disabled}
-      indeterminate={args.indeterminate}
       label={args.label}
       onChange={({ checked: c }) => setChecked(c)}
     />
@@ -134,7 +125,6 @@ function DisabledUncheckedDemo(args: CheckboxStoryArgs) {
     <CometChatCheckbox
       disabled={args.disabled}
       label={args.label}
-      indeterminate={args.indeterminate}
     />
   );
 }
@@ -152,7 +142,6 @@ function DisabledCheckedDemo(args: CheckboxStoryArgs) {
     <CometChatCheckbox
       checked={args.checked}
       disabled={args.disabled}
-      indeterminate={args.indeterminate}
       label={args.label}
     />
   );

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useCometChatGroupMembersContext } from './CometChatGroupMembers.context';
 import type { CometChatGroupMembersErrorStateProps } from './CometChatGroupMembers.types';
 import listErrorIcon from '../../assets/list_error_state_icon.svg';
 import './CometChatGroupMembers.css';
@@ -11,6 +12,11 @@ export const CometChatGroupMembersErrorState: React.FC<CometChatGroupMembersErro
   children,
 }) => {
   const { getLocalizedString } = useLocale();
+  const { fetchState } = useCometChatGroupMembersContext();
+
+  // Shown only in its state, wherever it is placed.
+  if (fetchState !== 'error') return null;
+
   return (
     <div className={'cometchat-group-members__error-state'} role="alert">
       {children ?? (

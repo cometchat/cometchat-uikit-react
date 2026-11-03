@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /**
  * CometChatAIPlugin
  *
@@ -258,11 +258,11 @@ export const CometChatAIPlugin: CometChatMessagePlugin = {
       const type = message.getType();
 
       if (type === CometChatUIKitConstants.MessageTypes.toolArguments) {
-        return 'Tool call';
+        return t?.('ai_tool_call') ?? 'Tool call';
       }
 
       if (type === CometChatUIKitConstants.MessageTypes.toolResults) {
-        return 'Tool result';
+        return t?.('ai_tool_result') ?? 'Tool result';
       }
 
       // assistant type — build preview from message elements (v6 parity), with
@@ -276,6 +276,6 @@ export const CometChatAIPlugin: CometChatMessagePlugin = {
     } catch {
       // fall through
     }
-    return 'AI message';
+    return t?.('ai_message_fallback') ?? 'AI message';
   },
 };

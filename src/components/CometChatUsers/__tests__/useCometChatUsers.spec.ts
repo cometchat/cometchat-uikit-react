@@ -150,13 +150,13 @@ describe('useCometChatUsers', () => {
     });
 
     act(() => {
-      result.current.toggleSelectAll();
+      result.current.toggleSelectAll!();
     });
     expect(result.current.selectedUserIds).toEqual(expect.arrayContaining(['u1', 'u2']));
     expect(result.current.selectedUserIds).toHaveLength(2);
 
     act(() => {
-      result.current.toggleSelectAll();
+      result.current.toggleSelectAll!();
     });
     expect(result.current.selectedUserIds).toEqual([]);
   });
@@ -170,12 +170,12 @@ describe('useCometChatUsers', () => {
     });
 
     act(() => {
-      result.current.toggleSelectAll();
+      result.current.toggleSelectAll!();
     });
     onSelect.mockClear();
 
     act(() => {
-      result.current.deselectAll();
+      result.current.deselectAll!();
     });
 
     expect(result.current.selectedUserIds).toEqual([]);
@@ -191,7 +191,7 @@ describe('useCometChatUsers', () => {
     });
 
     act(() => {
-      result.current.toggleSelectAll();
+      result.current.toggleSelectAll!();
     });
 
     expect(result.current.selectedUserIds).toEqual([]);
@@ -443,31 +443,24 @@ describe('useCometChatUsers', () => {
   it('user status listener updates user when onUserOnline fires', async () => {
     const { CometChat } = await import('@cometchat/chat-sdk-javascript');
 
-    renderHook(() => useCometChatUsers({ hideUserStatus: false }));
-
+    const { result } = renderHook(() => useCometChatUsers({ hideUserStatus: false }));
     await waitFor(() => {
-      // Wait for initial fetch and listener setup
+      expect(result.current.fetchState).toBe('loaded');
     });
+    const statuses = () => result.current.users.map(u => [u.getUid(), u.getStatus()]);
+    expect(statuses()).toEqual([['u1', 'offline'], ['u2', 'offline']]);
 
-    // Get the UserListener callbacks that were passed to addUserListener
-    const addUserListenerCalls = vi.mocked(CometChat.addUserListener).mock.calls;
-    const statusListenerCall = addUserListenerCalls.find(call =>
-      (call[0] as string).includes('status')
-    );
-    expect(statusListenerCall).toBeDefined();
-
-    // The second argument is the UserListener mock which received the callbacks
-    const listenerCallbacks = vi.mocked(CometChat.UserListener).mock.calls[0]?.[0] as
-      | { onUserOnline?: (user: unknown) => void; onUserOffline?: (user: unknown) => void }
+    // The callbacks the hook gave its status listener (UserListener returns them as is).
+    const statusListener = vi
+      .mocked(CometChat.addUserListener)
+      .mock.calls.find(([id]) => id.includes('status'))?.[1] as unknown as
+      | { onUserOnline: (user: unknown) => void }
       | undefined;
-    expect(listenerCallbacks?.onUserOnline).toBeDefined();
-    expect(listenerCallbacks?.onUserOffline).toBeDefined();
-
-    // Invoke the callback — should not throw
-    const updatedUser = createMockUser('u1', 'User', 'online');
     act(() => {
-      listenerCallbacks?.onUserOnline?.(updatedUser);
+      statusListener?.onUserOnline(createMockUser('u1', 'User', 'online'));
     });
+
+    expect(statuses()).toEqual([['u1', 'online'], ['u2', 'offline']]);
   });
 
   it('connection listener triggers re-fetch when onConnected fires', async () => {

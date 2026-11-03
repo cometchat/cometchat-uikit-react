@@ -13,7 +13,7 @@
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CometChatMessageListView } from '../CometChatMessageListView';
 import { CometChatMessageListProvider } from '../CometChatMessageList.context';
 import type {
@@ -111,6 +111,7 @@ const DEFAULT_OPTIONS: CometChatMessageListOptions = {
   quickOptionsCount: 2,
   hideReplyOption: false,
   hideReplyInThreadOption: false,
+  hideThreadSubscriptionOption: false,
   hideEditMessageOption: false,
   hideDeleteMessageOption: false,
   hideCopyMessageOption: false,
@@ -120,6 +121,10 @@ const DEFAULT_OPTIONS: CometChatMessageListOptions = {
   hideMessagePrivatelyOption: false,
   hideTranslateMessageOption: false,
   showMarkAsUnreadOption: false,
+  hidePinMessageOption: false,
+  hideUnpinMessageOption: false,
+  hideSaveMessageOption: false,
+  hideUnsaveMessageOption: false,
   separatorDateTimeFormat: undefined,
   stickyDateTimeFormat: undefined,
   messageSentAtDateTimeFormat: undefined,
@@ -130,17 +135,20 @@ const DEFAULT_OPTIONS: CometChatMessageListOptions = {
   messageAlignment: 1,
   showScrollbar: false,
   hideDateSeparator: false,
-  loadingView: undefined,
-  emptyView: undefined,
-  errorView: undefined,
-  headerView: undefined,
-  footerView: undefined,
   onThreadRepliesClick: undefined,
   onAvatarClick: undefined,
+  onEditMessage: undefined,
+  onReplyMessage: undefined,
   hideFlagRemarkField: false,
   disableTruncation: false,
   hideModerationView: false,
   isAgentChat: false,
+  bubbleView: undefined,
+  showSmartReplies: false,
+  smartRepliesKeywords: ['what', 'when', 'why', 'who', 'where', 'how', '?'],
+  smartRepliesDelayDuration: 10000,
+  showConversationStarters: false,
+  loadLastAgentConversation: false,
 };
 
 function buildCtx(
@@ -158,6 +166,7 @@ function buildCtx(
     state,
     allMessages: state.messages,
     loggedInUser: buildUser() as never,
+    user: undefined,
     group: undefined,
     isLoading: false,
     isEmpty: false,
@@ -218,12 +227,25 @@ describe('CometChatMessageList — option visibility props', () => {
   });
 
   describe('hideStickyDate', () => {
+    // jsdom lays nothing out, so no message is ever under the chip and it never shows. Give
+    // every element a box, so the first message is the one the chip dates.
+    beforeEach(() => {
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+        DOMRect.fromRect({ x: 0, y: 0, width: 100, height: 100 })
+      );
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     it('renders the floating date chip by default', () => {
       const msgs = [buildMessage({ id: 1 })];
       const { container } = renderView(buildCtx(msgs));
-      // The floating date has aria-hidden="true"
-      const floating = container.querySelector('[aria-hidden="true"]');
-      expect(floating).not.toBeNull();
+      expect(container.querySelector('.cometchat-message-list__floating-date time')).toHaveAttribute(
+        'datetime',
+        new Date(1_700_000_000 * 1000).toISOString()
+      );
     });
 
     it('hides the floating date chip when hideStickyDate is true', () => {
@@ -392,9 +414,12 @@ describe('CometChatMessageList — option visibility props', () => {
           },
         })
       );
-      // DateSeparator renders role="separator"
-      const separator = container.querySelector('[role="separator"]');
-      expect(separator).not.toBeNull();
+      // The message is from November 2023, so it takes the otherDays pattern.
+      const sentAt = new Date(1_700_000_000 * 1000);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      expect(container.querySelector('[role="separator"]')).toHaveTextContent(
+        `${pad(sentAt.getDate())}.${pad(sentAt.getMonth() + 1)}.${String(sentAt.getFullYear())}`
+      );
     });
   });
 });

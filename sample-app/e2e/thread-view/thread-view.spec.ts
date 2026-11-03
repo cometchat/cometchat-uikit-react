@@ -1,5 +1,8 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openStrategyChat } from '../helpers';
+import { expectSendAccepted, THREAD_LIST } from '../helpers/send';
+import { waitForBubbleSettled } from '../helpers/threads';
+import { sendStrategyMessage, PRIMARY_UID, SECONDARY_UID } from '../helpers/pinSave';
 
 /**
  * E2E Tests — CometChatThreadView (React)
@@ -14,7 +17,13 @@ test.describe('CometChatThreadView', () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {
+    // The page first, so afterAll can close it even if the seeding below fails.
     page = await browser.newPage();
+    // A thread with a reply, so the later tests find a thread to open even when the first one
+    // (tagged @smoke) doesn't run.
+    const parent = await sendStrategyMessage({ as: PRIMARY_UID, text: `Thread view parent [${Date.now()}]` });
+    await sendStrategyMessage({ as: SECONDARY_UID, text: `Thread view reply [${Date.now()}]`, parentMessageId: parent });
+
     await loginToApp(page);
     await page.waitForSelector('.cometchat-conversations__item', { timeout: 30_000 });
     await openStrategyChat(page);
@@ -26,12 +35,13 @@ test.describe('CometChatThreadView', () => {
 
   // ==================== Create Thread Reply First ====================
 
-  test('open reply in thread and send a reply', async () => {
+  test('open reply in thread and send a reply', { tag: '@smoke' }, async () => {
     // Target a message bubble and hover its body
     const outgoingWrapper = page.locator('.cometchat-message-bubble__wrapper--outgoing').last();
     await expect(outgoingWrapper).toBeVisible({ timeout: 10_000 });
 
     const bodyArea = outgoingWrapper.locator('.cometchat-message-bubble__body').first();
+    await waitForBubbleSettled(bodyArea);
     await bodyArea.hover();
     await page.waitForTimeout(500);
 
@@ -62,8 +72,7 @@ test.describe('CometChatThreadView', () => {
 
     // Send via send button
     const sendBtn = threadComposer.locator('[class*="send-button"], button[aria-label*="Send" i]').first();
-    await sendBtn.click();
-    await page.waitForTimeout(3000);
+    await expectSendAccepted(page, () => sendBtn.click(), { list: THREAD_LIST });
 
     // Verify the reply appeared in thread
     const threadMessages = page.locator('.cometchat-thread-panel__messages .cometchat-message-bubble');
@@ -104,11 +113,6 @@ test.describe('CometChatThreadView', () => {
     expect(text?.trim()).toBeTruthy();
   });
 
-  test('thread header has close/back button', async () => {
-    const closeBtn = page.locator('.cometchat-thread-header__close-button');
-    await expect(closeBtn).toBeVisible({ timeout: 5_000 });
-  });
-
   // ==================== Thread Message List ====================
 
   test('thread message list loads replies', async () => {
@@ -117,11 +121,6 @@ test.describe('CometChatThreadView', () => {
   });
 
   // ==================== Thread Composer ====================
-
-  test('thread has its own message composer', async () => {
-    const threadComposer = page.locator('.cometchat-thread-panel .cometchat-message-composer');
-    await expect(threadComposer).toBeVisible({ timeout: 5_000 });
-  });
 
   // ==================== Close Thread ====================
 
@@ -176,10 +175,8 @@ test.describe('CometChatThreadView', () => {
     await threadInput.click();
     await page.keyboard.type(`Thread leak test ${Date.now()}`);
     const sendBtn = threadComposer.locator('[class*="send-button"], button[aria-label*="Send" i]').first();
-    await sendBtn.click();
-
-    // Wait for the message to appear and confirm (pending → sent)
-    await page.waitForTimeout(5000);
+    // Wait until the server accepted it (pending → sent)
+    await expectSendAccepted(page, () => sendBtn.click(), { list: THREAD_LIST });
 
     // Hover the last message in the thread to get options
     const lastThreadBubble = threadPanel.locator('.cometchat-message-bubble__body-wrapper').last();

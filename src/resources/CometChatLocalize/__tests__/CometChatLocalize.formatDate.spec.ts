@@ -141,5 +141,16 @@ describe('CometChatLocalize — date/time configuration', () => {
       const result = localize.formatDate(nowTimestamp, config);
       expect(result).toBe('Today');
     });
+
+    it('keeps text in [brackets] literal, so Turkish "Dün" is not read as the day of the month', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(12, 0, 0, 0);
+      const timestamp = Math.floor(yesterday.getTime() / 1000);
+      const localize = new CometChatLocalize({ language: 'en-us' });
+
+      expect(localize.formatDate(timestamp, { yesterday: '[Dün]' })).toBe('Dün');
+      expect(localize.formatDate(timestamp, { yesterday: '[Dün], hh:mm A' })).toBe('Dün, 12:00 PM');
+    });
   });
 });

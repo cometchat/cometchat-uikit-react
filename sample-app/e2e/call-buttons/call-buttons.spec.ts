@@ -1,5 +1,9 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openStrategyChat } from '../helpers';
+import { waitForChatOpen } from '../helpers/navigation';
+
+/** The user the 1:1 call tests call (e2e-user-3). */
+const CALLEE_NAME = 'Charlie Brown';
 
 /**
  * E2E Tests — CometChatCallButtons & Calling (React)
@@ -23,86 +27,18 @@ test.describe('CometChatCallButtons & Calling', () => {
       await openStrategyChat(page);
     });
 
-    test('call buttons render for group conversation', async () => {
-      const callButtons = page.locator('.cometchat-call-buttons').first();
-      const hasCallButtons = await callButtons.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(hasCallButtons, 'Element should be visible: hasCallButtons').toBeTruthy();
-      await expect(callButtons).toBeVisible();
-    });
-
-    test('voice call button is present', async () => {
-      const voiceBtn = page
-        .locator(
-          '.cometchat-call-buttons__voice, button[aria-label*="Voice" i], button[aria-label*="Audio" i]'
-        )
-        .first();
-      const hasVoice = await voiceBtn.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(hasVoice, 'Element should be visible: hasVoice').toBeTruthy();
-      await expect(voiceBtn).toBeVisible();
-    });
-
-    test('video call button is present', async () => {
-      const videoBtn = page
-        .locator('.cometchat-call-buttons__video, button[aria-label*="Video" i]')
-        .first();
-      const hasVideo = await videoBtn.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(hasVideo, 'Element should be visible: hasVideo').toBeTruthy();
-      await expect(videoBtn).toBeVisible();
-    });
-
-    test('voice call button initiates outgoing voice call', async () => {
-      const voiceBtn = page
-        .locator(
-          '.cometchat-call-buttons__voice, button[aria-label*="Voice" i], button[aria-label*="Audio" i]'
-        )
-        .first();
-      const hasVoice = await voiceBtn.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(hasVoice, 'Element should be visible: hasVoice').toBeTruthy();
-      await voiceBtn.click();
-      await page.waitForTimeout(7500);
-
-      const ongoingCall = page
-        .locator('.cometchat-ongoing-call, [class*="ongoing-call"]')
-        .first();
-      const hasOngoing = await ongoingCall.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(
-        hasOngoing,
-        'Ongoing call screen must appear after clicking call button'
-      ).toBeTruthy();
-      const cancelBtn = page
-        .locator(
-          '.cometchat-calls-control-button--call-end'
-        )
-        .first();
-      await expect(cancelBtn).toBeVisible({ timeout: 5_000 });
-      await cancelBtn.click();
-      await page.waitForTimeout(2000);
-    });
-
     test('video call button initiates outgoing video call', async () => {
       const videoBtn = page
         .locator('.cometchat-call-buttons__video, button[aria-label*="Video" i]')
         .first();
-      const hasVideo = await videoBtn.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(hasVideo, 'Element should be visible: hasVideo').toBeTruthy();
+      await expect(videoBtn).toBeVisible({ timeout: 5_000 });
       await videoBtn.click();
       await page.waitForTimeout(7500);
 
       const ongoingCall = page
         .locator('.cometchat-ongoing-call, [class*="ongoing-call"]')
         .first();
-      const hasOngoing = await ongoingCall.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(
-        hasOngoing,
-        'Ongoing call screen must appear after clicking call button'
-      ).toBeTruthy();
+      await expect(ongoingCall, 'Ongoing call screen must appear after clicking call button').toBeVisible({ timeout: 5_000 });
       const cancelBtn = page
         .locator(
           '.cometchat-calls-control-button--call-end'
@@ -119,31 +55,21 @@ test.describe('CometChatCallButtons & Calling', () => {
           '.cometchat-call-buttons__voice, button[aria-label*="Voice" i], button[aria-label*="Audio" i]'
         )
         .first();
-      const hasVoice = await voiceBtn.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(hasVoice, 'Element should be visible: hasVoice').toBeTruthy();
+      await expect(voiceBtn).toBeVisible({ timeout: 5_000 });
       await voiceBtn.click();
       await page.waitForTimeout(7500);
 
       const ongoingCall = page
         .locator('.cometchat-ongoing-call, [class*="ongoing-call"]')
         .first();
-      const hasOngoing = await ongoingCall.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(
-        hasOngoing,
-        'Outgoing call screen must appear after clicking call button'
-      ).toBeTruthy();
+      await expect(ongoingCall, 'Outgoing call screen must appear after clicking call button').toBeVisible({ timeout: 5_000 });
       const cancelBtn = ongoingCall
         .locator(
           '.cometchat-calls-control-button--call-end'
         )
         .first();
       await cancelBtn.click();
-      await page.waitForTimeout(2000);
-
-      const stillVisible = await ongoingCall.isVisible().catch(() => false);
-      expect(stillVisible).toBeFalsy();
+      await expect(ongoingCall).toBeHidden({ timeout: 10_000 });
     });
   });
 
@@ -151,28 +77,18 @@ test.describe('CometChatCallButtons & Calling', () => {
 
   test.describe('Calling (User)', () => {
     test.beforeEach(async () => {
-      // Open a 1:1 chat with any user (not Bob — Bob is immutable)
-      // Use Users tab and click the first user (Alice won't show since she's logged in)
+      // Call Charlie, never Bob: Bob's chat is the static fixture other specs read, and every
+      // call leaves records in the chat it was placed from. Open Charlie by name and wait for his
+      // header, so a slow users list can't leave the call going out from whichever chat was open.
       const usersTab = page.locator('.cometchat-tab-component__tab:has-text("Users")').first();
       await usersTab.click();
-      await page.waitForSelector('.cometchat-users__item', { timeout: 30_000 });
-
-      // Click first user that is not Bob
-      const allUsers = page.locator('.cometchat-users__item');
-      const count = await allUsers.count();
-      for (let i = 0; i < count; i++) {
-        const name = await allUsers.nth(i).locator('.cometchat-users__item-title').textContent();
-        if (!name?.includes('Bob')) {
-          await allUsers.nth(i).click();
-          break;
-        }
-      }
-
-      await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
-      await page.waitForTimeout(1000);
+      const charlie = page.locator('.cometchat-users__item').filter({ hasText: CALLEE_NAME }).first();
+      await expect(charlie).toBeVisible({ timeout: 30_000 });
+      await charlie.click();
+      await waitForChatOpen(page, CALLEE_NAME);
     });
 
-    test('voice call shows outgoing call screen and cancel dismisses it', async () => {
+    test('voice call shows outgoing call screen and cancel dismisses it', { tag: '@smoke' }, async () => {
       const voiceBtn = page
         .locator('.cometchat-call-buttons__voice, button[aria-label*="Voice" i], button[aria-label*="Audio" i]')
         .first();
@@ -228,40 +144,9 @@ test.describe('CometChatCallButtons & Calling', () => {
       await page.waitForTimeout(3000);
     });
 
-    test('call logs list renders', async () => {
-      // CometChatCallLogs renders in the selector area — wait for it to appear
-      await page.waitForTimeout(3000);
-
-      // Check for call log items, empty state, or the call logs container
-      const hasItems = await page
-        .locator('.cometchat-call-logs__list-item')
-        .first()
-        .isVisible()
-        .catch(() => false);
-      const hasEmpty = await page
-        .locator('[class*="empty"]')
-        .isVisible()
-        .catch(() => false);
-      const hasCallLogsContainer = await page
-        .locator('[class*="call-log"], [class*="calllog"]')
-        .first()
-        .isVisible()
-        .catch(() => false);
-      const hasShimmer = await page
-        .locator('[class*="shimmer"]')
-        .first()
-        .isVisible()
-        .catch(() => false);
-
-      // At least something related to call logs should be visible
-      expect(hasItems || hasEmpty || hasCallLogsContainer || hasShimmer).toBeTruthy();
-    });
-
     test('call log entries show type and status', async () => {
       const callLogItem = page.locator('.cometchat-call-logs__list-item').first();
-      const hasItem = await callLogItem.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(hasItem, 'Element should be visible: hasItem').toBeTruthy();
+      await expect(callLogItem).toBeVisible({ timeout: 5_000 });
       const hasTypeIcon = await callLogItem
         .locator('[class*="audio"], [class*="video"], img, svg')
         .first()
@@ -272,15 +157,10 @@ test.describe('CometChatCallButtons & Calling', () => {
 
     test('call logs list has proper ARIA attributes', async () => {
       const callLogs = page.locator('.cometchat-call-logs, [class*="call-log"]').first();
-      const hasCallLogs = await callLogs.isVisible({ timeout: 5_000 }).catch(() => false);
-
-      expect(hasCallLogs, 'Element should be visible: hasCallLogs').toBeTruthy();
-      const hasAriaElements = await callLogs
+      await expect(callLogs).toBeVisible({ timeout: 5_000 });
+      await expect(callLogs
         .locator('[aria-label], [role]')
-        .first()
-        .isVisible({ timeout: 2_000 })
-        .catch(() => false);
-      expect(hasAriaElements).toBeTruthy();
+        .first()).toBeVisible({ timeout: 2_000 });
     });
 
     test('clicking a call log entry opens call details', async () => {

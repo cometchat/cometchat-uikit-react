@@ -1,5 +1,6 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openAIAgentChat } from '../helpers';
+import { visibleWithin } from '../helpers/wait';
 
 /**
  * E2E Tests — CometChatAIAssistantChat (React)
@@ -134,7 +135,7 @@ test.describe('CometChatAIAssistantChat', () => {
 
     // Wait for history items to load (or empty state)
     const historyItem = page.locator('.cometchat-ai-assistant-chat-history__item').first();
-    const hasItem = await historyItem.isVisible({ timeout: 10_000 }).catch(() => false);
+    const hasItem = await visibleWithin(historyItem, 10_000);
 
     if (hasItem) {
       await historyItem.click();

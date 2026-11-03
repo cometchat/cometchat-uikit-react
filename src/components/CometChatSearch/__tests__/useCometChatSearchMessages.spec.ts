@@ -96,9 +96,10 @@ vi.mock('../CometChatSearchMessagesManager', () => ({
 }));
 
 import { useCometChatSearchMessages } from '../useCometChatSearchMessages';
+import type { CometChatSearchFilter } from '../CometChatSearch.types';
 
 describe('useCometChatSearchMessages', () => {
-  const stableEmptyFilters: string[] = [];
+  const stableEmptyFilters: CometChatSearchFilter[] = [];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -183,7 +184,7 @@ describe('useCometChatSearchMessages', () => {
 
     it('triggers search when message filters are active', async () => {
       mockSearch.mockResolvedValueOnce({ results: [{ getId: () => 1 }], hasMore: false });
-      const photosFilter = ['photos'];
+      const photosFilter: CometChatSearchFilter[] = ['photos'];
 
       const { result } = renderHook(() =>
         useCometChatSearchMessages({

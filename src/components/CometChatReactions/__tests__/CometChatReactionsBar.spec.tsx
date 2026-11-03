@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatReactionsBar } from '../CometChatReactionsBar';
 import { CometChatReactionsContext } from '../CometChatReactions.context';
 import type { CometChatReactionsContextValue } from '../CometChatReactions.types';
+import { CometChatReactionsRoot } from '../CometChatReactionsRoot';
+import { covers } from '../../../testing/covers';
 
 // ─── Browser API Polyfills ──────────────────────────────────────────────────
 
@@ -290,6 +292,55 @@ describe('CometChatReactionsBar - CometChatReactionList integration', () => {
     });
   });
 
+  // ─── onReactorClick replaces the default ───
+
+  describe('onReactorClick', () => {
+    it('is called with the reaction and message when your own row is clicked, instead of removing it', async () => {
+      covers('CometChatReactions.onReactorClick', 'called');
+      const mine = {
+        getReaction: () => '👍',
+        getReactedBy: () => ({
+          getUid: () => 'alice-1',
+          getName: () => 'Alice',
+          getAvatar: () => '',
+        }),
+        getMessageId: () => 1,
+      };
+      vi.mocked(CometChat.ReactionsRequestBuilder).mockImplementation(
+        () =>
+          ({
+            setLimit: vi.fn().mockReturnThis(),
+            setMessageId: vi.fn().mockReturnThis(),
+            build: () => ({ fetchNext: vi.fn().mockResolvedValue([mine]) }),
+          }) as unknown as CometChat.ReactionsRequestBuilder
+      );
+      const counts = ['👍', '❤️', '😂', '🔥'].map(emoji => buildReactionCount(emoji));
+      const message = {
+        getId: () => 1,
+        getReactions: () => counts,
+      } as unknown as CometChat.BaseMessage;
+      const onReactionClick = vi.fn();
+      const onReactorClick = vi.fn();
+
+      render(
+        <CometChatReactionsRoot
+          message={message}
+          onReactionClick={onReactionClick}
+          onReactorClick={onReactorClick}
+        >
+          <CometChatReactionsBar maxVisible={2} />
+        </CometChatReactionsRoot>
+      );
+      fireEvent.click(screen.getByRole('button', { name: /more_reactions/i }));
+      const row = (await screen.findByText('reaction_list_you')).closest('[role="listitem"]');
+      if (!row) throw new Error('your reaction is not in the list');
+      fireEvent.click(row);
+
+      expect(onReactorClick).toHaveBeenCalledWith(mine, message);
+      expect(onReactionClick).not.toHaveBeenCalled();
+    });
+  });
+
   // ─── Popover closes on outside click ───
 
   describe('popover closes on outside click', () => {
@@ -334,6 +385,39 @@ describe('CometChatReactionsBar - CometChatReactionList integration', () => {
       // Popover should remain open
       const stillOpen = document.querySelector('[class*="cometchat-reaction-list"]');
       expect(stillOpen).toBeInTheDocument();
+    });
+  });
+
+  // ─── Hover delay ───
+
+  describe('hover delay', () => {
+    it('hoverDebounceTime sets how long a hover waits before showing who reacted; 500 ms by default', () => {
+      covers('CometChatReactions.hoverDebounceTime', 'set', 'default');
+      const message = {
+        getId: () => 1,
+        getReactions: () => [buildReactionCount('👍')],
+      } as unknown as CometChat.BaseMessage;
+      vi.useFakeTimers();
+      try {
+        for (const [props, wait] of [
+          [{ hoverDebounceTime: 100 }, 100],
+          [{}, 500],
+        ] as const) {
+          const view = render(<CometChatReactionsRoot message={message} {...props} />);
+          fireEvent.mouseEnter(screen.getByText('👍'));
+          act(() => {
+            vi.advanceTimersByTime(wait - 1);
+          });
+          expect(screen.queryByRole('tooltip')).toBeNull();
+          act(() => {
+            vi.advanceTimersByTime(1);
+          });
+          expect(screen.getByRole('tooltip')).toBeInTheDocument();
+          view.unmount();
+        }
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });

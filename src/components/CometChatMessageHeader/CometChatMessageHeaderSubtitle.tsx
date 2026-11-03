@@ -2,6 +2,8 @@ import React from 'react';
 import type { CometChatMessageHeaderSubtitleProps } from './CometChatMessageHeader.types';
 import { useCometChatMessageHeaderContext } from './CometChatMessageHeader.context';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { dateLiteral, formatDateWithConfig } from '../../resources/CometChatLocalize/dateFormat.utils';
+import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
 import './CometChatMessageHeader.css';
 
 /**
@@ -10,7 +12,7 @@ import './CometChatMessageHeader.css';
  * User conversations:
  * - Typing: animated dots + "typing"
  * - Online: "Online"
- * - Offline: "Last seen" + timestamp (via CometChatDate)
+ * - Offline: "Last seen" + timestamp (`lastActiveAtDateTimeFormat` over the global calendar format)
  *
  * Group conversations:
  * - Typing: "{name} is typing", "{name1} and {name2} are typing", "{name} and N others are typing"
@@ -27,10 +29,11 @@ export const CometChatMessageHeaderSubtitle: React.FC<CometChatMessageHeaderSubt
     userStatus,
     hideUserStatus,
     lastActiveAt,
+    lastActiveAtDateTimeFormat,
     groupMemberCount,
     user,
   } = useCometChatMessageHeaderContext();
-  const { getLocalizedString } = useLocale();
+  const { getLocalizedString, calendarObject, timezone, dateLocaleLanguage } = useLocale();
 
   const rootClasses = ['cometchat-message-header__subtitle-wrapper', className]
     .filter(Boolean)
@@ -82,7 +85,18 @@ export const CometChatMessageHeaderSubtitle: React.FC<CometChatMessageHeaderSubt
 
     // Offline with last active
     if (lastActiveAt) {
-      const formattedDate = formatLastActive(lastActiveAt, getLocalizedString);
+      const formattedDate =
+        lastActiveAtDateTimeFormat || calendarObject
+          ? formatDateWithConfig(
+              toSeconds(lastActiveAt),
+              {
+                ...defaultLastActiveFormat(getLocalizedString),
+                ...calendarObject,
+                ...lastActiveAtDateTimeFormat,
+              },
+              { timezone, locale: dateLocaleLanguage }
+            )
+          : formatLastActive(lastActiveAt, getLocalizedString);
       return (
         <div className={rootClasses}>
           <span
@@ -140,6 +154,31 @@ export const CometChatMessageHeaderSubtitle: React.FC<CometChatMessageHeaderSubt
 };
 
 CometChatMessageHeaderSubtitle.displayName = 'CometChatMessageHeaderSubtitle';
+
+/** Last active times arrive in seconds or, from presence events, in milliseconds. */
+function toSeconds(timestamp: number): number {
+  return timestamp < 1e12 ? timestamp : Math.floor(timestamp / 1000);
+}
+
+/**
+ * The parts of the default that a custom format leaves out: relative times within a day, as
+ * `formatLastActive` gives them. Localized words go into date patterns only as literals, where
+ * a word such as Turkish "Dün" would otherwise be read as tokens.
+ */
+function defaultLastActiveFormat(
+  getLocalizedString: (key: string) => string
+): CometChatDateFormatConfig {
+  return {
+    today: dateLiteral(getLocalizedString('date_today')),
+    yesterday: dateLiteral(getLocalizedString('date_yesterday')),
+    relativeTime: {
+      minute: `1 ${getLocalizedString('message_header_minute_ago')}`,
+      minutes: `%d ${getLocalizedString('message_header_minutes_ago')}`,
+      hour: `1 ${getLocalizedString('message_header_hour_ago')}`,
+      hours: `%d ${getLocalizedString('message_header_hours_ago')}`,
+    },
+  };
+}
 
 /**
  * Format a last active timestamp into a human-readable string.

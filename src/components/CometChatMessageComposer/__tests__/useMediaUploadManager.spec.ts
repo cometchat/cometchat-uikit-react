@@ -79,7 +79,7 @@ describe('useMediaUploadManager', () => {
       expect(request.uploadAttachments).toHaveBeenCalledTimes(1);
       // The app owns identity: uploadAttachments gets { fileId, file } pairs with
       // non-empty caller-supplied ids.
-      const uploadArg = request.uploadAttachments.mock.calls[0][0] as { fileId: string }[];
+      const uploadArg = request.uploadAttachments.mock.calls[0]![0] as { fileId: string }[];
       expect(uploadArg).toHaveLength(2);
       expect(uploadArg.every(i => typeof i.fileId === 'string' && i.fileId.length > 0)).toBe(true);
 
@@ -96,7 +96,7 @@ describe('useMediaUploadManager', () => {
       act(() => {
         result.current.manager.startUpload([makeFile('a.png', 'image/png')]);
       });
-      const listener = getLastUploadRequest().uploadAttachments.mock.calls[0][1] as
+      const listener = getLastUploadRequest().uploadAttachments.mock.calls[0]![1] as
         | Record<string, unknown>
         | undefined;
       expect(listener).toBeDefined();
@@ -151,9 +151,9 @@ describe('useMediaUploadManager', () => {
       // needs a stable URL so its <audio> element isn't reset to 0:00 on re-render.)
       expect(createObjectURLSpy).toHaveBeenCalledTimes(2);
       const [img, audio, file] = result.current.state.tray.items;
-      expect(img.previewUrl).toBe('blob:mock');
-      expect(audio.previewUrl).toBe('blob:mock');
-      expect(file.previewUrl).toBeUndefined();
+      expect(img!.previewUrl).toBe('blob:mock');
+      expect(audio!.previewUrl).toBe('blob:mock');
+      expect(file!.previewUrl).toBeUndefined();
     });
 
     it('reuses the same request (same batch) on a subsequent upload', () => {
@@ -169,7 +169,7 @@ describe('useMediaUploadManager', () => {
       // with the listener).
       expect(mockCometChat.createUploadFileRequest).toHaveBeenCalledTimes(1);
       expect(request.uploadAttachments).toHaveBeenCalledTimes(2);
-      expect(request.uploadAttachments.mock.calls[1][1]).toBeDefined();
+      expect(request.uploadAttachments.mock.calls[1]![1]).toBeDefined();
       expect(result.current.state.tray.items).toHaveLength(2);
     });
 
@@ -193,7 +193,7 @@ describe('useMediaUploadManager', () => {
       });
       return (
         result as unknown as { current: { state: { tray: { items: { fileId: string }[] } } } }
-      ).current.state.tray.items[0].fileId;
+      ).current.state.tray.items[0]!.fileId;
     }
 
     it('onFileProgress updates the tile percent', () => {
@@ -202,7 +202,7 @@ describe('useMediaUploadManager', () => {
       act(() => {
         getListener().onFileProgress(fileId, 50, 100, 50);
       });
-      expect(result.current.state.tray.items[0].percent).toBe(50);
+      expect(result.current.state.tray.items[0]!.percent).toBe(50);
     });
 
     it('onFileUploaded sets the attachment and marks success', () => {
@@ -212,7 +212,7 @@ describe('useMediaUploadManager', () => {
       act(() => {
         getListener().onFileUploaded(fileId, attachment);
       });
-      const item = result.current.state.tray.items[0];
+      const item = result.current.state.tray.items[0]!;
       expect(item.status).toBe('success');
       expect(item.attachment).toBe(attachment);
     });
@@ -223,7 +223,7 @@ describe('useMediaUploadManager', () => {
       act(() => {
         getListener().onFileFailure(fileId, { code: 'ERR_S3_UPLOAD_FAILED' });
       });
-      expect(result.current.state.tray.items[0].status).toBe('failed');
+      expect(result.current.state.tray.items[0]!.status).toBe('failed');
       expect(result.current.state.showValidationError).toBe(false);
     });
 
@@ -233,7 +233,7 @@ describe('useMediaUploadManager', () => {
       act(() => {
         getListener().onFileError(fileId, { code: 'ERR_FILE_SIZE_EXCEEDED' });
       });
-      expect(result.current.state.tray.items[0].status).toBe('rejected');
+      expect(result.current.state.tray.items[0]!.status).toBe('rejected');
       expect(result.current.state.showValidationError).toBe(false);
     });
 
@@ -243,7 +243,7 @@ describe('useMediaUploadManager', () => {
       act(() => {
         getListener().onFileError(fileId, { code: 'ERR_FILE_COUNT_EXCEEDED' });
       });
-      expect(result.current.state.tray.items[0].status).toBe('rejected');
+      expect(result.current.state.tray.items[0]!.status).toBe('rejected');
       expect(result.current.state.showValidationError).toBe(true);
       expect(result.current.state.validationErrorText).toBe('attachment_count_exceeded');
     });
@@ -257,7 +257,7 @@ describe('useMediaUploadManager', () => {
       });
       // Still uploading → not sendable.
       expect(result.current.manager.sendable).toBe(false);
-      const fileId = result.current.state.tray.items[0].fileId;
+      const fileId = result.current.state.tray.items[0]!.fileId;
       act(() => {
         getListener().onFileUploaded(fileId, { getUrl: () => 'https://x' });
       });
@@ -274,7 +274,7 @@ describe('useMediaUploadManager', () => {
       });
       const [first] = result.current.state.tray.items.map(i => i.fileId);
       act(() => {
-        getListener().onFileUploaded(first, { getUrl: () => 'https://x' });
+        getListener().onFileUploaded(first!, { getUrl: () => 'https://x' });
       });
       // Second file still uploading → not sendable.
       expect(result.current.manager.sendable).toBe(false);
@@ -285,7 +285,7 @@ describe('useMediaUploadManager', () => {
       act(() => {
         result.current.manager.startUpload([makeFile('a.png', 'image/png')]);
       });
-      const fileId = result.current.state.tray.items[0].fileId;
+      const fileId = result.current.state.tray.items[0]!.fileId;
       act(() => {
         getListener().onFileFailure(fileId, { code: 'ERR_S3_UPLOAD_FAILED' });
       });
@@ -299,7 +299,7 @@ describe('useMediaUploadManager', () => {
       act(() => {
         result.current.manager.startUpload([makeFile('a.png', 'image/png')]);
       });
-      const fileId = result.current.state.tray.items[0].fileId;
+      const fileId = result.current.state.tray.items[0]!.fileId;
       act(() => {
         getListener().onFileFailure(fileId, { code: 'ERR_S3_UPLOAD_FAILED' });
       });
@@ -307,7 +307,7 @@ describe('useMediaUploadManager', () => {
         result.current.manager.retryItem(fileId);
       });
       expect(getLastUploadRequest().retryAttachment).toHaveBeenCalledWith(fileId);
-      expect(result.current.state.tray.items[0].status).toBe('uploading');
+      expect(result.current.state.tray.items[0]!.status).toBe('uploading');
     });
   });
 
@@ -322,7 +322,7 @@ describe('useMediaUploadManager', () => {
       });
       const [first, second] = result.current.state.tray.items.map(i => i.fileId);
       act(() => {
-        result.current.manager.removeItem(first);
+        result.current.manager.removeItem(first!);
       });
       expect(getLastUploadRequest().removeAttachment).toHaveBeenCalledWith(first);
       expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:mock');
@@ -337,7 +337,7 @@ describe('useMediaUploadManager', () => {
       const request = getLastUploadRequest();
       const [only] = result.current.state.tray.items.map(i => i.fileId);
       act(() => {
-        result.current.manager.removeItem(only);
+        result.current.manager.removeItem(only!);
       });
       // Batch destroyed, not just the single file dropped.
       expect(request.clearAll).toHaveBeenCalledTimes(1);

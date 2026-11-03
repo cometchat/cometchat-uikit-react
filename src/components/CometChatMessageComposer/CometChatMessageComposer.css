@@ -968,7 +968,7 @@
   );
   box-shadow: var(
     --cometchat-message-composer-mention-suggestions-box-shadow,
-    var(--cometchat-shadow-high, 0 4px 16px rgba(0, 0, 0, 0.12))
+    var(--cometchat-shadow-high, var(--cometchat-elevation-2, 0 4px 16px rgba(0, 0, 0, 0.12)))
   );
   margin-bottom: var(
     --cometchat-message-composer-mention-suggestions-margin-bottom,

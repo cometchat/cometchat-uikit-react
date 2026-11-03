@@ -74,6 +74,14 @@ vi.mock('@cometchat/chat-sdk-javascript', () => {
 import { createStreamingMessage } from '../CometChatStreamingMessageFactory';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 
+/** Members the streaming placeholder exposes beyond its declared BaseMessage type. */
+type StreamingMessage = CometChat.BaseMessage & {
+  getMessageId(): number;
+  getText(): string;
+  setText(text: string): void;
+  getCustomData(): object;
+};
+
 describe('CometChatStreamingMessageFactory', () => {
   const mockSender = {
     getName: () => 'AI Bot',
@@ -93,7 +101,7 @@ describe('CometChatStreamingMessageFactory', () => {
         chatId: 'chat_123',
       });
       expect(msg.getId()).toBe(-42);
-      expect(msg.getMessageId()).toBe(-42);
+      expect((msg as StreamingMessage).getMessageId()).toBe(-42);
     });
 
     it('should return the provided sender via getSender', () => {
@@ -175,7 +183,7 @@ describe('CometChatStreamingMessageFactory', () => {
         receiver: mockReceiver,
         chatId: 'chat_123',
       });
-      expect(msg.getText()).toBe('');
+      expect((msg as StreamingMessage).getText()).toBe('');
     });
 
     it('should return 0 for getParentMessageId', () => {
@@ -213,7 +221,7 @@ describe('CometChatStreamingMessageFactory', () => {
       expect(() => msg.setReceiver({} as CometChat.User)).not.toThrow();
       expect(() => msg.setCategory('message' as CometChat.MessageCategory)).not.toThrow();
       expect(() => msg.setType('text')).not.toThrow();
-      expect(() => msg.setText('hello')).not.toThrow();
+      expect(() => (msg as StreamingMessage).setText('hello')).not.toThrow();
       expect(() => msg.setParentMessageId(5)).not.toThrow();
       expect(() => msg.setSentAt(1000)).not.toThrow();
       expect(() => msg.setMuid('muid_123')).not.toThrow();
@@ -251,7 +259,7 @@ describe('CometChatStreamingMessageFactory', () => {
         receiver: mockReceiver,
         chatId: 'chat_123',
       });
-      expect(msg.getCustomData()).toEqual({});
+      expect((msg as StreamingMessage).getCustomData()).toEqual({});
     });
   });
 });

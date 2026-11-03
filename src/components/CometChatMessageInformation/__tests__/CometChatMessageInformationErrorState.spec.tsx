@@ -103,4 +103,12 @@ describe('CometChatMessageInformationErrorState', () => {
     const retryButton = screen.getByRole('button', { name: 'retry' });
     expect(retryButton).toHaveAttribute('type', 'button');
   });
+
+  it('renders nothing unless the load failed with nothing to show', () => {
+    for (const overrides of [{ fetchState: 'loaded' as const }, { oneOnOneReadAt: 1000 }]) {
+      const { container, unmount } = renderErrorState(overrides);
+      expect(container).toBeEmptyDOMElement();
+      unmount();
+    }
+  });
 });

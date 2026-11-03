@@ -1,5 +1,7 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp } from '../helpers';
+import { visibleWithin } from '../helpers/wait';
+import { expectArrowFocusNavigation } from '../helpers/keyboard';
 
 /**
  * E2E Tests — CometChatUsers (React)
@@ -24,17 +26,6 @@ test.describe('CometChatUsers', () => {
   });
 
   // ==================== Rendering & Loading ====================
-
-  test('users list renders and loads users on init', async () => {
-    await expect(page.locator('.cometchat-users').first()).toBeVisible();
-
-    const hasItems = await page.locator('.cometchat-users__item').first().isVisible({ timeout: 10_000 }).catch(() => false);
-    const hasShimmer = await page.locator('[class*="shimmer"]').first().isVisible().catch(() => false);
-    const hasEmptyState = await page.locator('[class*="empty"]').isVisible().catch(() => false);
-    const hasSearchBar = await page.locator('.cometchat-search, input[placeholder]').first().isVisible().catch(() => false);
-
-    expect(hasItems || hasShimmer || hasEmptyState || hasSearchBar).toBeTruthy();
-  });
 
   test('users list displays user items with avatar and name', async () => {
     const firstUser = page.locator('.cometchat-users__item').first();
@@ -71,15 +62,18 @@ test.describe('CometChatUsers', () => {
 
   // ==================== Click Interaction ====================
 
-  test('clicking a user selects it', async () => {
+  test('clicking a user selects it', { tag: '@smoke' }, async () => {
     const firstUser = page.locator('.cometchat-users__item').first();
     await expect(firstUser).toBeVisible({ timeout: 10_000 });
 
+    const name = (await firstUser.locator('.cometchat-users__item-title').first().innerText()).trim();
     await firstUser.click();
 
-    await expect(
-      page.locator('.cometchat-message-header, [class*="list-item--active"]')
-    ).toBeVisible({ timeout: 10_000 });
+    // The chat for that user opens.
+    await expect(page.locator('.cometchat-messages-wrapper .cometchat-message-header__title').first()).toContainText(
+      name,
+      { timeout: 10_000 }
+    );
   });
 
   // ==================== Pagination ====================
@@ -111,10 +105,7 @@ test.describe('CometChatUsers', () => {
   // ==================== Keyboard Navigation ====================
 
   test('keyboard navigation works', async () => {
-    const usersList = page.locator('.cometchat-users').first();
-    await usersList.click();
-    await page.keyboard.press('ArrowDown');
-    await page.waitForTimeout(300);
+    await expectArrowFocusNavigation(page.locator('.cometchat-users__item'));
   });
 
   // ==================== Accessibility ====================
@@ -123,8 +114,7 @@ test.describe('CometChatUsers', () => {
     const list = page.locator('.cometchat-users').first();
     await expect(list).toBeVisible();
 
-    const hasAriaLabel = await page.locator('.cometchat-users[aria-label], [role="region"][aria-label]').first().isVisible({ timeout: 2_000 }).catch(() => false);
-    expect(hasAriaLabel).toBeTruthy();
+    await expect(page.locator('.cometchat-users[aria-label], [role="region"][aria-label]').first()).toBeVisible({ timeout: 2_000 });
   });
 
   test('empty state renders when search has no results', async () => {

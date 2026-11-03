@@ -32,7 +32,7 @@ import type {
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
 import './CometChatAIAssistantChatHistory.css';
 import { useLocale } from '../../context/locale/LocaleContext';
-import { formatDateWithConfig } from '../../resources/CometChatLocalize/dateFormat.utils';
+import { dateLiteral, formatDateWithConfig } from '../../resources/CometChatLocalize/dateFormat.utils';
 
 type HistoryState = 'loading' | 'loaded' | 'empty' | 'error';
 
@@ -372,8 +372,8 @@ export const CometChatAIAssistantChatHistory = forwardRef<
                         {formatDateWithConfig(
                           message.getSentAt(),
                           {
-                            today: getLocalizedString('date_today'),
-                            yesterday: getLocalizedString('date_yesterday'),
+                            today: dateLiteral(getLocalizedString('date_today')),
+                            yesterday: dateLiteral(getLocalizedString('date_yesterday')),
                             lastWeek: undefined,
                             otherDays: 'DD MMM, YYYY',
                             ...calendarObject,

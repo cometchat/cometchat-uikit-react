@@ -356,6 +356,23 @@ interface MessageWithQuote extends CometChat.BaseMessage {
   setQuotedMessage(message: CometChat.BaseMessage): void;
 }
 
+/**
+ * An extension's edit event (e.g. voice transcription updating an audio message)
+ * has no quote in its payload, though the message still has one on the server.
+ * Keep the quote already on screen. A person's edit does include it.
+ */
+export function carryQuotedMessage(
+  previous: CometChat.BaseMessage,
+  next: CometChat.BaseMessage
+): void {
+  const quoted = previous as unknown as Partial<CometChat.TextMessage>;
+  const incoming = next as unknown as Partial<CometChat.TextMessage>;
+  const quotedMessage = quoted.getQuotedMessage?.();
+  if (!quotedMessage || incoming.getQuotedMessage?.()) return;
+  incoming.setQuotedMessage?.(quotedMessage);
+  incoming.setQuotedMessageId?.(quoted.getQuotedMessageId?.() ?? quotedMessage.getId());
+}
+
 export function updateQuotedMessageReferences(
   messages: CometChat.BaseMessage[],
   editedMessage: CometChat.BaseMessage

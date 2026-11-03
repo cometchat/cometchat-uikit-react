@@ -219,7 +219,7 @@ describe('CometChatReactionsContextValue — slimmed interface', () => {
       const reactions = [buildReactionCount('👍', 3), buildReactionCount('❤️', 1)];
       renderBarWithSlimContext({ reactions });
       const buttons = screen.getAllByRole('button');
-      buttons[0].focus();
+      buttons[0]!.focus();
       expect(() => {
         fireEvent.keyDown(screen.getByRole('group'), { key: 'ArrowRight' });
       }).not.toThrow();

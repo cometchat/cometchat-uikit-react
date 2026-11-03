@@ -1,5 +1,5 @@
-import { render, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, fireEvent, screen } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatAudiosBubble } from '../CometChatAudiosBubble';
 import { buildUser } from '../../../testing/mock-builders';
@@ -49,6 +49,10 @@ function buildAudioMessage(
 }
 
 describe('CometChatAudiosBubble', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   // --- Row render ---
 
   it('renders one row per audio attachment', () => {
@@ -108,15 +112,24 @@ describe('CometChatAudiosBubble', () => {
     expect(duration?.textContent).toContain('0:00');
   });
 
-  // --- Fullscreen open ---
+  // --- Playback ---
 
-  it('opens minimal audio fullscreen on play button click when audio unavailable', () => {
-    const { container } = render(
-      <CometChatAudiosBubble message={buildAudioMessage()} alignment="right" />
-    );
-    const playBtn = container.querySelector('.cometchat-audios-bubble__play-btn');
-    expect(playBtn).toBeTruthy();
-    fireEvent.click(playBtn!);
+  it('plays the file when its play button is clicked, and the button turns to pause', () => {
+    // jsdom plays nothing: record what is played, and report it started, as a browser does.
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementation(function (this: HTMLMediaElement) {
+        this.dispatchEvent(new Event('play'));
+        return Promise.resolve();
+      });
+    render(<CometChatAudiosBubble message={buildAudioMessage()} alignment="right" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Play audio' }));
+
+    expect(play.mock.contexts.map(audio => (audio as HTMLAudioElement).src)).toEqual([
+      'https://example.com/audio.mp3',
+    ]);
+    expect(screen.getByRole('button', { name: 'Pause audio' })).toBeInTheDocument();
   });
 
   // --- Caption ---
@@ -128,18 +141,18 @@ describe('CometChatAudiosBubble', () => {
         alignment="right"
       />
     );
-    expect(container.querySelector('.cometchat-audios-bubble__caption')).toBeTruthy();
+    expect(container.querySelector('.cometchat-audios-bubble__caption')).toHaveTextContent(
+      'Listen to this'
+    );
   });
 
   // --- Accessibility ---
 
   it('cards have a play button with aria-label', () => {
-    const { container } = render(
-      <CometChatAudiosBubble message={buildAudioMessage()} alignment="right" />
+    render(<CometChatAudiosBubble message={buildAudioMessage()} alignment="right" />);
+    expect(screen.getByRole('button', { name: 'Play audio' })).toHaveClass(
+      'cometchat-audios-bubble__play-btn'
     );
-    const playBtn = container.querySelector('.cometchat-audios-bubble__play-btn');
-    expect(playBtn).toBeTruthy();
-    expect(playBtn?.getAttribute('aria-label')).toBeTruthy();
   });
 
   it('cards display filename', () => {
@@ -153,5 +166,33 @@ describe('CometChatAudiosBubble', () => {
     );
     const name = container.querySelector('.cometchat-audios-bubble__name');
     expect(name?.textContent).toContain('podcast.mp3');
+  });
+
+  // --- Show more / Show less ---
+
+  it('labels the toggle "Show less" once the overflowing list is expanded', () => {
+    const { container } = render(
+      <CometChatAudiosBubble
+        message={buildAudioMessage({
+          attachments: [1, 2, 3, 4, 5].map(n => ({
+            url: `https://example.com/a${String(n)}.mp3`,
+            name: `track${String(n)}.mp3`,
+          })),
+        })}
+        alignment="right"
+      />
+    );
+    expect(container.querySelectorAll('.cometchat-audios-bubble__card')).toHaveLength(3);
+
+    const showMore = container.querySelector('.cometchat-audios-bubble__toggle');
+    expect(showMore).toHaveAttribute('aria-expanded', 'false');
+    if (!showMore) throw new Error('show-more toggle not rendered');
+    fireEvent.click(showMore);
+
+    expect(container.querySelectorAll('.cometchat-audios-bubble__card')).toHaveLength(5);
+    const showLess = container.querySelector('.cometchat-audios-bubble__toggle');
+    expect(showLess).toHaveAttribute('aria-expanded', 'true');
+    expect(showLess).toHaveAttribute('aria-label', 'Show less');
+    expect(showLess?.textContent).toContain('Show less');
   });
 });

@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp } from '../helpers';
 
 /**
@@ -67,7 +67,7 @@ test.describe('CometChatCreateGroup', () => {
     await expect(passwordInput).toBeVisible({ timeout: 3_000 });
   });
 
-  test('public group creation works', async () => {
+  test('public group creation works', { tag: '@smoke' }, async () => {
     const dialog = await openCreateGroupDialog();
 
     // Fill group name

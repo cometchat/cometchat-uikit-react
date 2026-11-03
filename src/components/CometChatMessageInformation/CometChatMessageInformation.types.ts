@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatTextFormatter } from '../../formatters';
+import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
 
 /** Fetch lifecycle state. */
 export type CometChatMessageInformationFetchState =
@@ -41,7 +42,10 @@ export interface CometChatMessageInformationRootProps {
   onClose?: () => void;
   /** Error callback for SDK failures. */
   onError?: ((error: CometChat.CometChatException) => void) | null;
-  /** Date format for receipt timestamps (read/delivered). */
+  /**
+   * Date format for receipt timestamps (read/delivered), laid over the global calendar format
+   * (`CometChatLocalize`); any part left out keeps the default.
+   */
   messageInfoDateTimeFormat?: CometChatMessageInformationCalendarObject;
   /** Format for the sent-at timestamp on the message bubble preview. */
   messageSentAtDateTimeFormat?: CometChatMessageInformationCalendarObject;
@@ -90,6 +94,8 @@ export interface CometChatMessageInformationReceiptListProps {
 export interface CometChatMessageInformationLoadingStateProps {
   /** Optional custom className. */
   className?: string;
+  /** Custom content in place of the spinner. */
+  children?: ReactNode;
 }
 
 // --- ErrorState ---
@@ -98,6 +104,8 @@ export interface CometChatMessageInformationLoadingStateProps {
 export interface CometChatMessageInformationErrorStateProps {
   /** Optional custom className. */
   className?: string;
+  /** Custom content in place of the message and retry button. */
+  children?: ReactNode;
 }
 
 // --- EmptyState ---
@@ -106,6 +114,8 @@ export interface CometChatMessageInformationErrorStateProps {
 export interface CometChatMessageInformationEmptyStateProps {
   /** Optional custom className. */
   className?: string;
+  /** Custom content in place of the empty message. */
+  children?: ReactNode;
 }
 
 // --- Context ---
@@ -127,7 +137,7 @@ export interface CometChatMessageInformationContextValue {
   /** Whether this is a group message. */
   isGroupMessage: boolean;
   /** Date format for receipt timestamps. */
-  messageInfoDateTimeFormat: CometChatMessageInformationCalendarObject;
+  messageInfoDateTimeFormat: CometChatDateFormatConfig;
   /** Format for the sent-at timestamp on the message bubble preview. */
   messageSentAtDateTimeFormat?: CometChatMessageInformationCalendarObject;
   /** Text formatters for the message bubble preview. */

@@ -60,6 +60,7 @@ export const CometChatThreadHeaderParentBubble: React.FC<
 }) => {
   const {
     parentMessage,
+    hideReceipts,
     hideDate,
     separatorDateTimeFormat,
     messageSentAtDateTimeFormat: messageSentAtDateTimeFormatCtx,
@@ -67,7 +68,10 @@ export const CometChatThreadHeaderParentBubble: React.FC<
     textFormatters,
   } = useCometChatThreadHeaderContext();
   const loggedInUser = useLoggedInUser();
-  const { getLocalizedString } = useLocale();
+  const { getLocalizedString, calendarObject } = useLocale();
+
+  // As in v6: the prop is laid over the app's calendar format (CometChatDate fills in the rest).
+  const separatorFormat = separatorDateTimeFormat && { ...calendarObject, ...separatorDateTimeFormat };
 
   // Prop takes precedence over context
   const messageSentAtDateTimeFormat =
@@ -124,7 +128,7 @@ export const CometChatThreadHeaderParentBubble: React.FC<
             <CometChatDate
               timestamp={parentMessage.getSentAt()}
               variant="separator"
-              formatConfig={separatorDateTimeFormat}
+              formatConfig={separatorFormat}
             />
           </div>
         )}
@@ -142,7 +146,7 @@ export const CometChatThreadHeaderParentBubble: React.FC<
           <CometChatDate
             timestamp={parentMessage.getSentAt()}
             variant="separator"
-            formatConfig={separatorDateTimeFormat}
+            formatConfig={separatorFormat}
           />
         </div>
       )}
@@ -153,6 +157,7 @@ export const CometChatThreadHeaderParentBubble: React.FC<
         options={[]}
         hideThreadView
         disableInteraction={disableInteraction}
+        {...(hideReceipts !== undefined && { hideReceipts })}
         {...(messageSentAtDateTimeFormat !== undefined && { messageSentAtDateTimeFormat })}
       />
     </div>

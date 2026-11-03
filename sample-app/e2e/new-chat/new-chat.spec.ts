@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp } from '../helpers';
 
 /**
@@ -30,13 +30,6 @@ test.describe('CometChatNewChat', () => {
     await page.waitForTimeout(2000);
   }
 
-  test('new chat dialog opens from conversations menu', async () => {
-    await openNewChat();
-
-    const newChatComponent = page.locator('.cometchat-new-chat, [class*="new-chat"]').first();
-    await expect(newChatComponent).toBeVisible({ timeout: 5_000 });
-  });
-
   test('users list renders in new chat', async () => {
     await openNewChat();
 
@@ -54,13 +47,12 @@ test.describe('CometChatNewChat', () => {
 
     const searchInput = page.locator('.cometchat-new-chat-view input[placeholder*="Search" i], .cometchat-new-chat-view .cometchat-search input').first();
     await expect(searchInput).toBeVisible({ timeout: 5_000 });
+    await searchInput.fill('Bob');
 
-    await searchInput.fill('super');
-    await page.waitForTimeout(2000);
-
-    const userItems = page.locator('.cometchat-users__item');
-    const count = await userItems.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    const userItems = page.locator('.cometchat-new-chat-view .cometchat-users__item');
+    // Wait for the filter to apply: every row matches, and at least one remains.
+    await expect(userItems.filter({ hasNotText: 'Bob' })).toHaveCount(0, { timeout: 10_000 });
+    await expect(userItems.first()).toContainText('Bob');
   });
 
   test('clicking a user starts a new conversation', async () => {
@@ -71,8 +63,7 @@ test.describe('CometChatNewChat', () => {
     await userItem.click();
     await page.waitForTimeout(2000);
 
-    const hasMessages = await page.locator('.cometchat-message-header, .cometchat-message-list, .cometchat-message-composer').first().isVisible({ timeout: 10_000 }).catch(() => false);
-    expect(hasMessages).toBeTruthy();
+    await expect(page.locator('.cometchat-message-header, .cometchat-message-list, .cometchat-message-composer').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('back button closes new chat', async () => {
@@ -95,7 +86,6 @@ test.describe('CometChatNewChat', () => {
     const newChatComponent = page.locator('.cometchat-new-chat, [class*="new-chat"]').first();
     await expect(newChatComponent).toBeVisible({ timeout: 5_000 });
 
-    const hasAriaElements = await newChatComponent.locator('[aria-label], [role], input').first().isVisible({ timeout: 2_000 }).catch(() => false);
-    expect(hasAriaElements).toBeTruthy();
+    await expect(newChatComponent.locator('[aria-label], [role], input').first()).toBeVisible({ timeout: 2_000 });
   });
 });

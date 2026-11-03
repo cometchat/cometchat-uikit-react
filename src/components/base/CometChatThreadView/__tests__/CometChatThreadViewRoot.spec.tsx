@@ -4,12 +4,16 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { CometChatThreadView } from '../CometChatThreadView';
 
-vi.mock('../../../../context/locale/LocaleContext', () => ({
-  useLocale: () => ({
-    getLocalizedString: (key: string) => key,
-    language: 'en-us',
-  }),
-}));
+vi.mock('../../../../context/locale/LocaleContext', async () => {
+  const enUs = (await import('../../../../resources/CometChatLocalize/resources/en-us/translation.json'))
+    .default as Record<string, string>;
+  return {
+    useLocale: () => ({
+      getLocalizedString: (key: string) => enUs[key] ?? key,
+      language: 'en-us',
+    }),
+  };
+});
 
 describe('CometChatThreadViewRoot', () => {
   it('renders nothing when replyCount is 0', () => {
@@ -87,7 +91,7 @@ describe('CometChatThreadViewRoot', () => {
     );
     expect(screen.getByRole('button')).toHaveAttribute(
       'aria-label',
-      '1 thread_view_reply, view thread'
+      '1 reply, view thread'
     );
   });
 
@@ -99,7 +103,7 @@ describe('CometChatThreadViewRoot', () => {
     );
     expect(screen.getByRole('button')).toHaveAttribute(
       'aria-label',
-      '5 thread_view_replies, view thread'
+      '5 replies, view thread'
     );
   });
 
@@ -111,7 +115,7 @@ describe('CometChatThreadViewRoot', () => {
     );
     expect(screen.getByRole('button')).toHaveAttribute(
       'aria-label',
-      '999+ thread_view_replies, view thread'
+      '999+ replies, view thread'
     );
   });
 
@@ -123,7 +127,7 @@ describe('CometChatThreadViewRoot', () => {
     );
     expect(screen.getByRole('button')).toHaveAttribute(
       'aria-label',
-      '5 thread_view_replies, view thread, 2 unread'
+      '5 replies, view thread, 2 unread'
     );
   });
 
@@ -178,7 +182,7 @@ describe('CometChatThreadViewRoot', () => {
 
   it('renders default sub-components (Icon + ReplyCount + UnreadIndicator) when no children', () => {
     render(<CometChatThreadView.Root replyCount={3} unreadReplyCount={1} onClick={() => {}} />);
-    expect(screen.getByText('3 thread_view_replies')).toBeInTheDocument();
+    expect(screen.getByText('3 Replies')).toBeInTheDocument();
     // Unread indicator should be present
     const btn = screen.getByRole('button');
     expect(btn.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
@@ -186,6 +190,6 @@ describe('CometChatThreadViewRoot', () => {
 
   it('renders default sub-components without unread indicator when unreadReplyCount is 0', () => {
     render(<CometChatThreadView.Root replyCount={3} onClick={() => {}} />);
-    expect(screen.getByText('3 thread_view_replies')).toBeInTheDocument();
+    expect(screen.getByText('3 Replies')).toBeInTheDocument();
   });
 });

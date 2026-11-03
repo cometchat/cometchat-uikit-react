@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatStickersKeyboard } from '../CometChatStickersKeyboard';
 import type { CometChatStickerSet } from '../CometChatStickersKeyboard.types';
 
@@ -26,14 +27,14 @@ describe('CometChatStickersKeyboard', () => {
   it('switching tab changes grid content', () => {
     render(<CometChatStickersKeyboard stickerData={mockData} onStickerClick={() => {}} />);
     const tabs = screen.getAllByRole('tab');
-    fireEvent.click(tabs[1]); // Click Set B
+    fireEvent.click(tabs[1]!); // Click Set B
     expect(screen.getAllByRole('gridcell').length).toBe(1); // Set B has 1 sticker
   });
 
   it('calls onStickerClick when sticker is clicked', () => {
     const onClick = vi.fn();
     render(<CometChatStickersKeyboard stickerData={mockData} onStickerClick={onClick} />);
-    fireEvent.click(screen.getAllByRole('gridcell')[0]);
+    fireEvent.click(screen.getAllByRole('gridcell')[0]!);
     expect(onClick).toHaveBeenCalledWith({
       stickerUrl: 'https://example.com/a1.png',
       stickerName: 'Set A',
@@ -61,5 +62,43 @@ describe('CometChatStickersKeyboard', () => {
     const tabs = screen.getAllByRole('tab');
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
     expect(tabs[1]).toHaveAttribute('aria-selected', 'false');
+  });
+
+  describe('fetching sticker sets', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('fetches sticker sets when none are passed and activates the first set', async () => {
+      vi.spyOn(CometChat, 'callExtension').mockResolvedValue({
+        data: {
+          defaultStickers: [
+            { stickerSetName: 'Fetched A', stickerUrl: 'https://example.com/fa.png', stickerOrder: 1 },
+          ],
+          customStickers: [
+            { stickerSetName: 'Fetched B', stickerUrl: 'https://example.com/fb.png', stickerOrder: 1 },
+          ],
+        },
+      });
+      render(<CometChatStickersKeyboard onStickerClick={() => {}} />);
+
+      const tabs = await screen.findAllByRole('tab');
+      expect(tabs).toHaveLength(2);
+      expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+      expect(tabs[1]).toHaveAttribute('aria-selected', 'false');
+    });
+  });
+
+  describe('keyboard selection of a category tab', () => {
+    it.each(['Enter', ' '])('"%s" on a tab selects that category', key => {
+      render(<CometChatStickersKeyboard stickerData={mockData} onStickerClick={() => {}} />);
+      const tabs = screen.getAllByRole('tab');
+      expect(tabs[1]).toHaveAttribute('aria-selected', 'false');
+
+      fireEvent.keyDown(tabs[1]!, { key });
+
+      expect(screen.getAllByRole('tab')[1]).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getAllByRole('tab')[0]).toHaveAttribute('aria-selected', 'false');
+    });
   });
 });

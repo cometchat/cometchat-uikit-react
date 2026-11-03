@@ -65,7 +65,7 @@ describe('CometChatFormattingToolbar', () => {
     render(<CometChatFormattingToolbar {...defaultProps} onBold={onBold} />);
     // Bold is the first button (uses fallback label since mock returns key)
     const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[0]);
+    fireEvent.click(buttons[0]!);
     expect(onBold).toHaveBeenCalledOnce();
   });
 
@@ -73,7 +73,7 @@ describe('CometChatFormattingToolbar', () => {
     const onItalic = vi.fn();
     render(<CometChatFormattingToolbar {...defaultProps} onItalic={onItalic} />);
     const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[1]);
+    fireEvent.click(buttons[1]!);
     expect(onItalic).toHaveBeenCalledOnce();
   });
 

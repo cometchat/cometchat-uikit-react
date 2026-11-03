@@ -1,5 +1,34 @@
 import '@testing-library/jest-dom/vitest';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
+import fc from 'fast-check';
+import { vi } from 'vitest';
+
+// Property tests run with a fixed seed so every run is reproducible. For a deeper
+// exploratory run set FC_SEED=random (and e.g. FC_NUM_RUNS=1000); fast-check
+// prints the failing seed, which replays with FC_SEED=<seed>.
+const fcSeed = process.env.FC_SEED === 'random' ? Date.now() : Number(process.env.FC_SEED ?? 42);
+fc.configureGlobal({
+  seed: fcSeed,
+  ...(process.env.FC_NUM_RUNS ? { numRuns: Number(process.env.FC_NUM_RUNS) } : {}),
+});
+
+// A deep run: with FC_RUNS_MULTIPLIER=n, every property runs n times the cases its test asks for
+// (most tests set their own numRuns, which FC_NUM_RUNS can't raise). Pair it with FC_SEED=random.
+// A counterexample is a real bug: fast-check prints the seed and path that replay it.
+if (process.env.FC_RUNS_MULTIPLIER) {
+  const multiplier = Number(process.env.FC_RUNS_MULTIPLIER);
+  if (!(multiplier >= 1)) throw new Error(`FC_RUNS_MULTIPLIER must be >= 1, got ${process.env.FC_RUNS_MULTIPLIER}`);
+  vi.doMock('fast-check', async importOriginal => {
+    const original = await importOriginal<typeof fc & { default: typeof fc }>();
+    type Runner = (property: unknown, params?: { numRuns?: number }) => unknown;
+    // assert and check are overloaded; one wrapper serves every overload.
+    const deeper = (run: Runner): Runner => (property, params) =>
+      run(property, { ...params, numRuns: Math.ceil((params?.numRuns ?? 100) * multiplier) });
+    const assert = deeper(original.assert as Runner) as typeof fc.assert;
+    const check = deeper(original.check as Runner) as typeof fc.check;
+    return { ...original, assert, check, default: { ...original.default, assert, check } };
+  });
+}
 
 // jsdom doesn't implement HTMLMediaElement playback: play() returns undefined
 // (so `.catch(...)` on it throws) and pause()/load() log "Not implemented"

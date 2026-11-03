@@ -64,6 +64,7 @@ function makeRefs(options: Partial<CometChatUseMessageListOptions> = {}) {
       } as CometChatUseMessageListOptions,
     },
     initializeRef: { current: null },
+    pendingMessagesMap: {},
   };
   return refs;
 }

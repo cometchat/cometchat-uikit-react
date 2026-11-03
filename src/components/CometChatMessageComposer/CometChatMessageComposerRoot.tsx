@@ -36,6 +36,7 @@ import { useLocale } from '../../context/locale/LocaleContext';
 import sendFillIcon from '../../assets/send_fill.svg';
 import uploadIcon from '../../assets/upload-icon.svg';
 import './CometChatMessageComposer.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * ComposerValidationError — inline error banner for file validation errors.
@@ -52,7 +53,7 @@ const ComposerValidationError: React.FC<{
   let displayText = textKey ? getLocalizedString(textKey) || textKey : '';
   // The count-exceeded message carries the dynamic per-batch max from settings.
   if (textKey === 'attachment_count_exceeded') {
-    displayText = displayText.replace('{count}', String(maxCount));
+    displayText = fillTemplate(displayText, { count: String(maxCount) });
   }
 
   if (!displayText) return null;
@@ -346,7 +347,7 @@ export const CometChatMessageComposerRoot: React.FC<CometChatMessageComposerRoot
   const richText = useRichTextEditor({
     enabled: enableRichTextEditor,
     placeholder,
-    ariaLabel: 'Type a message',
+    ariaLabel: getLocalizedStringComposer('message_composer_type_message'),
     onUpdate: (html, plainText) => {
       const hasStructuralContent = /<(ol|ul|li|blockquote|pre)[^>]*>/i.test(html);
       hook.setText(hasStructuralContent && plainText.trim() === '' ? ' ' : plainText);

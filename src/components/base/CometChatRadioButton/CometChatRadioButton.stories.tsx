@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { CometChatRadioButton } from './CometChatRadioButton';
 
-const meta: Meta<typeof CometChatRadioButton> = {
+interface RadioButtonStoryArgs {
+  checked: boolean;
+  disabled: boolean;
+  label: string;
+}
+
+const meta: Meta<RadioButtonStoryArgs> = {
   title: 'Base Elements/Radio Button',
   component: CometChatRadioButton,
   tags: ['autodocs'],
@@ -52,10 +58,10 @@ const meta: Meta<typeof CometChatRadioButton> = {
 };
 export default meta;
 
-type Story = StoryObj<typeof CometChatRadioButton>;
+type Story = StoryObj<RadioButtonStoryArgs>;
 
 /** Default radio button with interactive controls. */
-function DefaultDemo(args: { checked: boolean; disabled: boolean; label: string }) {
+function DefaultDemo(args: RadioButtonStoryArgs) {
   const [checked, setChecked] = useState(args.checked);
   // Keep the local state in sync with the Controls `checked` toggle.
   useEffect(() => {
@@ -78,7 +84,7 @@ export const Default: Story = {
 };
 
 /** Radio button in the selected state. */
-function CheckedDemo(args: { checked: boolean; disabled: boolean; label: string }) {
+function CheckedDemo(args: RadioButtonStoryArgs) {
   const [selected, setSelected] = useState('checked');
   return (
     <CometChatRadioButton
@@ -101,7 +107,7 @@ export const Checked: Story = {
 };
 
 /** Radio button with label text. */
-function WithLabelDemo(args: { checked: boolean; disabled: boolean; label: string }) {
+function WithLabelDemo(args: RadioButtonStoryArgs) {
   const [selected, setSelected] = useState('');
   return (
     <CometChatRadioButton

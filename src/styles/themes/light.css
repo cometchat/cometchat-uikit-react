@@ -71,6 +71,12 @@
     --cometchat-radius-6: var(--cometchat-spacing-6);
     --cometchat-radius-max: var(--cometchat-spacing-max);
 
+    /* Elevation (box shadows), lowest to highest */
+    --cometchat-elevation-1: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --cometchat-elevation-2: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --cometchat-elevation-3: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --cometchat-elevation-4: 0 8px 32px rgba(0, 0, 0, 0.16);
+
     /* Font */
     --cometchat-font-family: 'Roboto', 'Inter', sans-serif;
     --cometchat-font-title-bold: 700 32px/38.4px var(--cometchat-font-family);
@@ -101,6 +107,9 @@
     --cometchat-font-button-medium: 500 14px/16.8px var(--cometchat-font-family);
     --cometchat-font-button-regular: 400 14px/16.8px var(--cometchat-font-family);
     --cometchat-font-link: 400 14px/19.6px var(--cometchat-font-family);
+    /* Single font properties, for rules that set size or weight on their own (same scale) */
+    --cometchat-font-size-body: 14px;
+    --cometchat-font-size-caption1: 12px;
 
     /* Primary & Extended Colors */
     --cometchat-primary-color: #6852d6;

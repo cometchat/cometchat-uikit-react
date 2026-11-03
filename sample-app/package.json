@@ -13,25 +13,31 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",
-    "e2e:debug": "playwright test --debug"
+    "e2e:debug": "playwright test --debug",
+    "lint:e2e": "eslint e2e"
   },
   "dependencies": {
     "@cometchat/calls-sdk-javascript": "^5.0.3",
-    "@cometchat/chat-sdk-javascript": "^4.2.0",
-    "@cometchat/chat-uikit-react": "^7.2.4",
+    "@cometchat/chat-sdk-javascript": "^4.2.1",
+    "@cometchat/chat-uikit-react": "^7.2.5",
     "dompurify": "3.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.59.1",
     "@types/node": "^25.5.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.4.1",
     "dotenv": "^16.4.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-playwright": "^2.12.1",
+    "monocart-coverage-reports": "2.13.2",
     "tsx": "^4.19.0",
     "typescript": "~5.7.0",
+    "typescript-eslint": "^8.71.2",
     "vite": "^6.3.1",
     "vitest": "^3.1.1"
   }

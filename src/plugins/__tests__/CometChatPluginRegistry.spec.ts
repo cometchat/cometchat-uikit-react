@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CometChatPluginRegistry } from '../CometChatPluginRegistry';
 import type { CometChatMessagePlugin } from '../plugin.types';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 
 // Minimal mock plugins
 const textPlugin: CometChatMessagePlugin = {
@@ -38,7 +39,7 @@ function mockMessage(type: string, category: string, deletedAt: number | null = 
     getType: () => type,
     getCategory: () => category,
     getDeletedAt: () => deletedAt,
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+  } as unknown as CometChat.BaseMessage;
 }
 
 describe('CometChatPluginRegistry', () => {

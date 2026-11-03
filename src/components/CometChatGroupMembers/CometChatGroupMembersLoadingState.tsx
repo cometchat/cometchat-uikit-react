@@ -1,4 +1,5 @@
 import React from 'react';
+import { useCometChatGroupMembersContext } from './CometChatGroupMembers.context';
 import type { CometChatGroupMembersLoadingStateProps } from './CometChatGroupMembers.types';
 import './CometChatGroupMembers.css';
 import { useLocale } from '../../context/locale/LocaleContext';
@@ -10,6 +11,10 @@ export const CometChatGroupMembersLoadingState: React.FC<
   CometChatGroupMembersLoadingStateProps
 > = ({ children }) => {
   const { getLocalizedString } = useLocale();
+  const { fetchState } = useCometChatGroupMembersContext();
+
+  // Shown only in its state, wherever it is placed.
+  if (fetchState !== 'loading') return null;
   const shimmerItems = Array.from({ length: 8 }, (_, i) => i);
 
   return (

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useCometChatNotificationFeedContext } from './CometChatNotificationFeed.context';
+import { useLocale } from '../../context/locale/LocaleContext';
 import type { CometChatNotificationFeedHeaderProps } from './CometChatNotificationFeed.types';
 import './CometChatNotificationFeed.css';
 
@@ -13,6 +14,7 @@ export const CometChatNotificationFeedHeader: React.FC<CometChatNotificationFeed
   children,
 }) => {
   const ctx = useCometChatNotificationFeedContext();
+  const { getLocalizedString } = useLocale();
   const displayTitle = titleProp ?? ctx.title;
   const showBack = showBackButtonProp ?? ctx.showBackButton;
   const handleBackPress = onBackPressProp ?? ctx.onBackPress;
@@ -30,7 +32,7 @@ export const CometChatNotificationFeedHeader: React.FC<CometChatNotificationFeed
                 onClick={handleBackPress}
                 role="button"
                 tabIndex={0}
-                aria-label="Go back"
+                aria-label={getLocalizedString('accessibility_back')}
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') handleBackPress?.();
                 }}

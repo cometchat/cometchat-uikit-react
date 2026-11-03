@@ -8,6 +8,7 @@ import { useLocale } from '../../context/locale/LocaleContext';
 import type { CometChatGroupsItemProps } from './CometChatGroups.types';
 import type { CometChatContextMenuItemData } from '../base/CometChatContextMenu/CometChatContextMenu.types';
 import './CometChatGroups.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * CometChatGroupsItem — Individual group item (avatar, name, type icon, member count, trailing).
@@ -62,18 +63,10 @@ function CometChatGroupsItemInner({
     ctx.handleItemClick(group);
   }, [ctx, group]);
 
-  const getTypeAriaLabel = (): string => {
-    switch (groupType) {
-      case 'public':
-        return 'Public group';
-      case 'private':
-        return 'Private group';
-      case 'password':
-        return 'Password protected group';
-      default:
-        return 'Group';
-    }
-  };
+  // Only private and password groups show a type badge, so only they need a label.
+  const typeAriaLabel = getLocalizedString(
+    groupType === 'private' ? 'accessibility_private_group' : 'accessibility_password_group'
+  );
 
   const classNames = [
     'cometchat-groups__item',
@@ -99,7 +92,7 @@ function CometChatGroupsItemInner({
           {!ctx.hideGroupType && groupType === 'private' && (
             <span
               className={`cometchat-groups__item-type-badge cometchat-groups__item-type-badge--private`}
-              aria-label={getTypeAriaLabel()}
+              aria-label={typeAriaLabel}
               role="img"
             >
               <span className={'cometchat-groups__item-type-badge-icon--shield'} />
@@ -108,7 +101,7 @@ function CometChatGroupsItemInner({
           {!ctx.hideGroupType && groupType === 'password' && (
             <span
               className={`cometchat-groups__item-type-badge cometchat-groups__item-type-badge--password`}
-              aria-label={getTypeAriaLabel()}
+              aria-label={typeAriaLabel}
               role="img"
             >
               <span className={'cometchat-groups__item-type-badge-icon--lock'} />
@@ -149,7 +142,7 @@ function CometChatGroupsItemInner({
           <CometChatCheckbox
             checked={isSelected}
             onChange={handleCheckboxChange}
-            aria-label={getLocalizedString('accessibility_select_item').replace('{name}', name)}
+            aria-label={fillTemplate(getLocalizedString('accessibility_select_item'), { name })}
           />
         </div>
       ) : ctx.selectionMode === 'single' ? (
@@ -167,7 +160,7 @@ function CometChatGroupsItemInner({
             name="cometchat-groups-selection"
             checked={isSelected}
             onChange={handleRadioChange}
-            ariaLabel={getLocalizedString('accessibility_select_item').replace('{name}', name)}
+            ariaLabel={fillTemplate(getLocalizedString('accessibility_select_item'), { name })}
           />
         </div>
       ) : null}

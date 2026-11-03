@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openDesignTeamChat, openStrategyChat } from '../helpers';
 
 /**
@@ -44,28 +44,27 @@ test.describe('CometChatGroupMembers', () => {
   });
 
   test('search filters members by name', async () => {
-    const membersList = page.locator('.cometchat-group-members').first();
-    await expect(membersList).toBeVisible({ timeout: 10_000 });
+    const items = page.locator('.cometchat-group-members .cometchat-group-members__item');
+    await expect(items.first()).toBeVisible({ timeout: 10_000 });
+    const total = await items.count();
 
     const searchBar = page.locator('.cometchat-group-members__search-bar input, .cometchat-group-members input').first();
     await expect(searchBar).toBeVisible({ timeout: 5_000 });
+    await searchBar.fill('Bob');
 
-    await searchBar.fill('zzzznonexistent12345');
-    await page.waitForTimeout(2000);
-
-    const itemCount = await page.locator('.cometchat-group-members .cometchat-group-members__item').count();
-    expect(itemCount).toBeGreaterThanOrEqual(0);
+    // Wait for the filter to apply: every row matches, and at least one remains.
+    await expect(items.filter({ hasNotText: 'Bob' })).toHaveCount(0, { timeout: 10_000 });
+    await expect(items.first()).toContainText('Bob');
 
     await searchBar.fill('');
-    await page.waitForTimeout(2000);
+    await expect(items).toHaveCount(total, { timeout: 10_000 });
   });
 
   test('group members list has proper ARIA attributes', async () => {
     const membersList = page.locator('.cometchat-group-members').first();
     await expect(membersList).toBeVisible({ timeout: 10_000 });
 
-    const hasAriaElements = await membersList.locator('[aria-label], [role]').first().isVisible({ timeout: 2_000 }).catch(() => false);
-    expect(hasAriaElements).toBeTruthy();
+    await expect(membersList.locator('[aria-label], [role]').first()).toBeVisible({ timeout: 2_000 });
   });
 
   test('empty state renders when no members match search', async () => {

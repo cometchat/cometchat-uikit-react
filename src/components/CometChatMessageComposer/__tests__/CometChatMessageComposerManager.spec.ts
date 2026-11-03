@@ -4,6 +4,7 @@
  * Tests all SDK-facing functions in isolation by mocking the CometChat SDK.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { mockCometChat } from '../../../testing/mock-sdk';
 
 // ─── SDK mock ────────────────────────────────────────────────────────────────
@@ -104,7 +105,7 @@ describe('CometChatMessageComposerManager', () => {
     it('creates a TextMessage with correct receiverId, text, and receiverType', async () => {
       await ComposerManager.sendTextMessage('user-1', 'user', 'Hello world');
       expect(mockCometChat.sendMessage).toHaveBeenCalledOnce();
-      const msg = mockCometChat.sendMessage.mock.calls[0][0] as ReturnType<
+      const msg = mockCometChat.sendMessage.mock.calls[0]![0] as ReturnType<
         typeof makeTextMessageMock
       >;
       expect(msg.receiverId).toBe('user-1');
@@ -119,7 +120,7 @@ describe('CometChatMessageComposerManager', () => {
 
     it('sets parentMessageId on the message when provided', async () => {
       await ComposerManager.sendTextMessage('user-1', 'user', 'Thread reply', 99);
-      const msg = mockCometChat.sendMessage.mock.calls[0][0] as ReturnType<
+      const msg = mockCometChat.sendMessage.mock.calls[0]![0] as ReturnType<
         typeof makeTextMessageMock
       >;
       expect(msg._parentMessageId).toBe(99);
@@ -127,35 +128,25 @@ describe('CometChatMessageComposerManager', () => {
 
     it('does NOT set parentMessageId when not provided', async () => {
       await ComposerManager.sendTextMessage('user-1', 'user', 'Normal message');
-      const msg = mockCometChat.sendMessage.mock.calls[0][0] as ReturnType<
+      const msg = mockCometChat.sendMessage.mock.calls[0]![0] as ReturnType<
         typeof makeTextMessageMock
       >;
       expect(msg._parentMessageId).toBeUndefined();
     });
 
-    it('sets richText metadata when richTextHtml is provided', async () => {
-      // Rich text metadata is no longer set at the Manager level.
-      // The Manager's sendTextMessage only handles text, parentMessageId, and quotedMessage.
-      // Rich text formatting is handled at the hook/component level.
+    // Rich-text metadata is added by the composer hook; the Manager sends plain text only.
+    it('sends the text to the receiver', async () => {
       await ComposerManager.sendTextMessage('user-1', 'user', 'Bold text');
-      const msg = mockCometChat.sendMessage.mock.calls[0][0] as ReturnType<
+      const msg = mockCometChat.sendMessage.mock.calls[0]![0] as ReturnType<
         typeof makeTextMessageMock
       >;
       expect(msg.text).toBe('Bold text');
       expect(msg.receiverId).toBe('user-1');
     });
 
-    it('does NOT set metadata when richTextHtml is empty string', async () => {
-      await ComposerManager.sendTextMessage('user-1', 'user', 'Plain', undefined, undefined, '');
-      const msg = mockCometChat.sendMessage.mock.calls[0][0] as ReturnType<
-        typeof makeTextMessageMock
-      >;
-      expect(msg._metadata).toBeUndefined();
-    });
-
-    it('does NOT set metadata when richTextHtml is whitespace only', async () => {
-      await ComposerManager.sendTextMessage('user-1', 'user', 'Plain', undefined, undefined, '   ');
-      const msg = mockCometChat.sendMessage.mock.calls[0][0] as ReturnType<
+    it('leaves metadata unset', async () => {
+      await ComposerManager.sendTextMessage('user-1', 'user', 'Plain');
+      const msg = mockCometChat.sendMessage.mock.calls[0]![0] as ReturnType<
         typeof makeTextMessageMock
       >;
       expect(msg._metadata).toBeUndefined();
@@ -168,9 +159,9 @@ describe('CometChatMessageComposerManager', () => {
         'user',
         'Reply',
         undefined,
-        quotedMsg as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage
+        quotedMsg as unknown as CometChat.BaseMessage
       );
-      const msg = mockCometChat.sendMessage.mock.calls[0][0] as ReturnType<
+      const msg = mockCometChat.sendMessage.mock.calls[0]![0] as ReturnType<
         typeof makeTextMessageMock
       >;
       expect(msg._quotedMessage).toBe(quotedMsg);
@@ -191,7 +182,7 @@ describe('CometChatMessageComposerManager', () => {
       const file = new File(['data'], 'photo.jpg', { type: 'image/jpeg' });
       await ComposerManager.sendMediaMessage('user-1', 'user', file, 'image');
       expect(mockCometChat.sendMediaMessage).toHaveBeenCalledOnce();
-      const msg = mockCometChat.sendMediaMessage.mock.calls[0][0] as ReturnType<
+      const msg = mockCometChat.sendMediaMessage.mock.calls[0]![0] as ReturnType<
         typeof makeMediaMessageMock
       >;
       expect(msg.receiverId).toBe('user-1');
@@ -203,7 +194,7 @@ describe('CometChatMessageComposerManager', () => {
     it('sets parentMessageId on the media message when provided', async () => {
       const file = new File(['data'], 'video.mp4', { type: 'video/mp4' });
       await ComposerManager.sendMediaMessage('user-1', 'user', file, 'video', 77);
-      const msg = mockCometChat.sendMediaMessage.mock.calls[0][0] as ReturnType<
+      const msg = mockCometChat.sendMediaMessage.mock.calls[0]![0] as ReturnType<
         typeof makeMediaMessageMock
       >;
       expect(msg._parentMessageId).toBe(77);
@@ -222,7 +213,7 @@ describe('CometChatMessageComposerManager', () => {
     it('calls CometChat.editMessage with a TextMessage containing the new text', async () => {
       await ComposerManager.editTextMessage(42, 'Updated text');
       expect(mockCometChat.editMessage).toHaveBeenCalledOnce();
-      const msg = mockCometChat.editMessage.mock.calls[0][0] as ReturnType<
+      const msg = mockCometChat.editMessage.mock.calls[0]![0] as ReturnType<
         typeof makeTextMessageMock
       >;
       expect(msg.text).toBe('Updated text');
@@ -230,7 +221,7 @@ describe('CometChatMessageComposerManager', () => {
 
     it('sets the message ID on the TextMessage', async () => {
       await ComposerManager.editTextMessage(99, 'Edited');
-      const msg = mockCometChat.editMessage.mock.calls[0][0] as ReturnType<
+      const msg = mockCometChat.editMessage.mock.calls[0]![0] as ReturnType<
         typeof makeTextMessageMock
       >;
       expect(msg._id).toBe(99);
@@ -254,7 +245,7 @@ describe('CometChatMessageComposerManager', () => {
 
     it('creates TypingIndicator with correct receiverId and receiverType', () => {
       ComposerManager.startTypingIndicator('group-1', 'group');
-      const indicator = mockCometChat.startTyping.mock.calls[0][0] as ReturnType<
+      const indicator = mockCometChat.startTyping.mock.calls[0]![0] as ReturnType<
         typeof makeTypingIndicatorMock
       >;
       expect(indicator.receiverId).toBe('group-1');
@@ -279,7 +270,7 @@ describe('CometChatMessageComposerManager', () => {
 
     it('creates TypingIndicator with correct receiverId and receiverType', () => {
       ComposerManager.endTypingIndicator('group-1', 'group');
-      const indicator = mockCometChat.endTyping.mock.calls[0][0] as ReturnType<
+      const indicator = mockCometChat.endTyping.mock.calls[0]![0] as ReturnType<
         typeof makeTypingIndicatorMock
       >;
       expect(indicator.receiverId).toBe('group-1');

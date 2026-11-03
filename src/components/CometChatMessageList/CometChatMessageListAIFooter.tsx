@@ -25,6 +25,8 @@ export const CometChatMessageListAIFooter: React.FC = () => {
 
   // --- Panel state (managed by events for summary, auto for starters/replies) ---
   const [activePanel, setActivePanel] = useState<FooterPanel>('none');
+  // How many messages the summary covers, as asked by whoever opened it (the message header).
+  const [summaryMessageCount, setSummaryMessageCount] = useState<number | undefined>(undefined);
   const [autoPanel, setAutoPanel] = useState<FooterPanel>('none');
 
   // --- Smart Replies timer ---
@@ -40,6 +42,7 @@ export const CometChatMessageListAIFooter: React.FC = () => {
     event => {
       if (event.type === 'ui:panel/show' && event.position === 'messageListFooter') {
         setActivePanel(event.panel);
+        setSummaryMessageCount(event.messageCount);
       }
       if (event.type === 'ui:panel/hide' && event.position === 'messageListFooter') {
         setActivePanel('none');
@@ -207,10 +210,14 @@ export const CometChatMessageListAIFooter: React.FC = () => {
     const receiverId = user?.getUid() ?? group?.getGuid();
     const receiverType = user ? CometChat.RECEIVER_TYPE.USER : CometChat.RECEIVER_TYPE.GROUP;
     if (!receiverId) return '';
-    const response = await CometChat.getConversationSummary(receiverId, receiverType);
+    const response = await CometChat.getConversationSummary(
+      receiverId,
+      receiverType,
+      ...(summaryMessageCount !== undefined ? [{ lastNMessages: summaryMessageCount }] : [])
+    );
     if (typeof response === 'string') return response;
     return '';
-  }, [user, group]);
+  }, [user, group, summaryMessageCount]);
 
   // --- Determine what to show ---
   // Active panel (event-driven, e.g., summary) takes priority over auto panel (starters/replies)

@@ -18,7 +18,11 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { CometChatUsers } from './CometChatUsers';
 import { CometChatUsersContext } from './CometChatUsers.context';
-import type { CometChatUsersContextValue } from './CometChatUsers.types';
+import type {
+  CometChatUsersContextValue,
+  CometChatUsersRootProps,
+  CometChatUsersSelectionMode,
+} from './CometChatUsers.types';
 
 // ============================================
 // Mock Data
@@ -126,7 +130,20 @@ const containerStyle: React.CSSProperties = {
 // Meta Configuration
 // ============================================
 
-const meta: Meta = {
+/** Story controls; they feed the mock context, plus the Root callbacks logged as actions. */
+interface UsersStoryArgs extends Pick<
+  CometChatUsersRootProps,
+  'onItemClick' | 'onSelect' | 'onError' | 'onEmpty'
+> {
+  hideUserStatus: boolean;
+  hideSearch: boolean;
+  showSectionHeader: boolean;
+  showSelectedUsersPreview: boolean;
+  showScrollbar: boolean;
+  selectionMode: CometChatUsersSelectionMode;
+}
+
+const meta: Meta<UsersStoryArgs> = {
   title: 'Components/Users/CometChat Users',
   component: CometChatUsers.Root,
   tags: ['autodocs'],
@@ -199,20 +216,14 @@ const meta: Meta = {
   ],
 };
 export default meta;
-type Story = StoryObj;
+type Story = StoryObj<UsersStoryArgs>;
 
 // ============================================
 // Stories
 // ============================================
 
 /** Default loaded state with users. */
-function DefaultDemo(args: {
-  hideUserStatus?: boolean;
-  hideSearch?: boolean;
-  showSectionHeader?: boolean;
-  showSelectedUsersPreview?: boolean;
-  selectionMode?: string;
-}) {
+function DefaultDemo(args: UsersStoryArgs) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const selectedMap = new Map(
     selectedIds
@@ -231,7 +242,8 @@ function DefaultDemo(args: {
     selectionMode: args.selectionMode,
     selectedUserIds: selectedIds,
     selectedUsersMap: selectedMap,
-    selectUser: (id: string) => {
+    selectUser: (user: CometChat.User) => {
+      const id = user.getUid();
       if (args.selectionMode === 'single') {
         setSelectedIds([id]);
       } else {
@@ -257,7 +269,7 @@ function DefaultDemo(args: {
     <CometChatUsersContext.Provider value={ctx}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <CometChatUsers.Header />
-        {args.hideSearch !== true && <CometChatUsers.SearchBar />}
+        {!args.hideSearch && <CometChatUsers.SearchBar />}
         <CometChatUsers.List />
       </div>
     </CometChatUsersContext.Provider>
@@ -345,7 +357,7 @@ export const SingleSelection: Story = {
   render: args => <UsersSingleSelectionDemo {...args} />,
 };
 
-function UsersSingleSelectionDemo(args: any) {
+function UsersSingleSelectionDemo(args: UsersStoryArgs) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>(['bob-1']);
   const selectedMap = new Map(
     selectedIds
@@ -362,8 +374,8 @@ function UsersSingleSelectionDemo(args: any) {
     showSectionHeader: args.showSectionHeader,
     selectedUserIds: selectedIds,
     selectedUsersMap: selectedMap,
-    selectUser: (id: string) => {
-      setSelectedIds([id]);
+    selectUser: (user: CometChat.User) => {
+      setSelectedIds([user.getUid()]);
     },
     deselectUser: (id: string) => {
       setSelectedIds(prev => prev.filter(x => x !== id));
@@ -392,7 +404,7 @@ export const MultipleSelection: Story = {
   render: args => <UsersMultipleSelectionDemo {...args} />,
 };
 
-function UsersMultipleSelectionDemo(args: any) {
+function UsersMultipleSelectionDemo(args: UsersStoryArgs) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([
     'alice-1',
     'charlie-1',
@@ -414,7 +426,8 @@ function UsersMultipleSelectionDemo(args: any) {
     showSelectedUsersPreview: args.showSelectedUsersPreview,
     selectedUserIds: selectedIds,
     selectedUsersMap: selectedMap,
-    selectUser: (id: string) => {
+    selectUser: (user: CometChat.User) => {
+      const id = user.getUid();
       setSelectedIds(prev => (prev.includes(id) ? prev : [...prev, id]));
     },
     deselectUser: (id: string) => {

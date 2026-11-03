@@ -11,7 +11,7 @@ interface AvatarStoryArgs {
   size: 'small' | 'medium' | 'large';
 }
 
-const meta: Meta = {
+const meta: Meta<AvatarStoryArgs> = {
   title: 'Components/Misc/Avatar',
   tags: ['autodocs'],
   args: {
@@ -46,8 +46,10 @@ const meta: Meta = {
 };
 export default meta;
 
+type Story = StoryObj<AvatarStoryArgs>;
+
 /** Default with image. */
-export const Default: StoryObj = {
+export const Default: Story = {
   render: (args: AvatarStoryArgs) => (
     <CometChatAvatar.Root name={args.name} image={args.image} size={args.size}>
       <CometChatAvatar.Image />
@@ -66,7 +68,7 @@ function InitialsFallbackDemo(args: AvatarStoryArgs) {
   );
 }
 
-export const InitialsFallback = {
+export const InitialsFallback: Story = {
   args: {
     name: 'Jane Smith',
     image: '',
@@ -84,7 +86,7 @@ function ImageErrorFallbackDemo(args: AvatarStoryArgs) {
   );
 }
 
-export const ImageErrorFallback = {
+export const ImageErrorFallback: Story = {
   args: {
     name: 'Bruce Wayne',
     image: BROKEN_IMAGE,
@@ -109,7 +111,7 @@ function SizeVariantsDemo(args: AvatarStoryArgs) {
   );
 }
 
-export const SizeVariants = {
+export const SizeVariants: Story = {
   render: (args: AvatarStoryArgs) => <SizeVariantsDemo {...args} />,
 };
 
@@ -124,7 +126,7 @@ function StatusOnlineDemo(args: AvatarStoryArgs) {
   );
 }
 
-export const StatusOnline = {
+export const StatusOnline: Story = {
   args: {
     size: 'large',
   },
@@ -140,7 +142,7 @@ function LongNameDemo(args: AvatarStoryArgs) {
   );
 }
 
-export const LongName = {
+export const LongName: Story = {
   args: {
     name: 'Alexander Benjamin Christopher',
   },
@@ -156,7 +158,7 @@ function SingleCharNameDemo(args: AvatarStoryArgs) {
   );
 }
 
-export const SingleCharName = {
+export const SingleCharName: Story = {
   args: {
     name: 'A',
   },
@@ -173,7 +175,7 @@ function EmptyNameDemo(args: AvatarStoryArgs) {
   );
 }
 
-export const EmptyName = {
+export const EmptyName: Story = {
   args: {
     name: '',
     image: '',
@@ -191,7 +193,7 @@ function BrokenImageDemo(args: AvatarStoryArgs) {
   );
 }
 
-export const BrokenImage = {
+export const BrokenImage: Story = {
   args: {
     name: 'Bruce Wayne',
     image: 'https://example.com/nonexistent.png',
@@ -209,7 +211,7 @@ function RenderImageDemo(args: AvatarStoryArgs) {
   );
 }
 
-export const RenderImage = {
+export const RenderImage: Story = {
   args: {
     name: 'Tony Stark',
     image: 'https://data-in.cometchat.io/assets/images/avatars/ironman.png',

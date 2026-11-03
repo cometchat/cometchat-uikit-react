@@ -56,6 +56,7 @@ function createMockContext(
     selectionMode: 'none',
     hideGroupType: false,
     hideSearch: false,
+    showScrollbar: false,
     options: undefined,
     fetchNext: async () => {},
     setSearchText: () => {},
@@ -66,6 +67,10 @@ function createMockContext(
     clearSelection: () => {},
     setActiveGroup: () => {},
     handleItemClick: () => {},
+    createGroup: (group: CometChat.Group) => Promise.resolve(group),
+    joinGroup: () => Promise.resolve(publicGroup),
+    leaveGroup: () => Promise.resolve(true),
+    deleteGroup: () => Promise.resolve(true),
     ...overrides,
   };
 }
@@ -74,7 +79,12 @@ function createMockContext(
 // Meta Configuration
 // ============================================
 
-const meta: Meta = {
+/** Story controls; they feed the mock context rather than component props. */
+interface GroupsItemStoryArgs {
+  hideGroupType: boolean;
+}
+
+const meta: Meta<GroupsItemStoryArgs> = {
   title: 'Components/Groups/CometChat Group Item',
   tags: ['autodocs'],
   args: {
@@ -111,7 +121,7 @@ const meta: Meta = {
   ],
 };
 export default meta;
-type Story = StoryObj;
+type Story = StoryObj<GroupsItemStoryArgs>;
 
 // ============================================
 // Stories

@@ -7,12 +7,17 @@ import { CometChatThreadHeaderTopBar } from './CometChatThreadHeaderTopBar';
 import { CometChatThreadHeaderParentBubble } from './CometChatThreadHeaderParentBubble';
 import { CometChatThreadHeaderReplyCount } from './CometChatThreadHeaderReplyCount';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
+import { useLocale } from '../../context/locale/LocaleContext';
 import './CometChatThreadHeader.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * Get a short text preview of the parent message for aria-label.
  */
-function getMessagePreview(message: CometChat.BaseMessage): string {
+function getMessagePreview(
+  message: CometChat.BaseMessage,
+  getLocalizedString: (key: string) => string
+): string {
   const type = message.getType();
 
   if (type === 'text') {
@@ -21,20 +26,20 @@ function getMessagePreview(message: CometChat.BaseMessage): string {
     if (text.length > 50) {
       return text.substring(0, 50) + '...';
     }
-    return text || 'Text message';
+    return text || getLocalizedString('text_message_fallback');
   }
 
   switch (type) {
     case 'image':
-      return 'Photo';
+      return getLocalizedString('conversation_subtitle_image');
     case 'video':
-      return 'Video';
+      return getLocalizedString('conversation_subtitle_video');
     case 'audio':
-      return 'Audio';
+      return getLocalizedString('conversation_subtitle_audio');
     case 'file':
-      return 'File';
+      return getLocalizedString('conversation_subtitle_file');
     default:
-      return 'Message';
+      return getLocalizedString('accessibility_message');
   }
 }
 
@@ -51,6 +56,7 @@ export const CometChatThreadHeaderRoot: React.FC<CometChatThreadHeaderRootProps>
   onSubtitleClicked,
   onParentDeleted,
   onError,
+  hideReceipts,
   hideDate = false,
   hideReplyCount = false,
   hideThreadSubscriptionToggle = false,
@@ -63,6 +69,7 @@ export const CometChatThreadHeaderRoot: React.FC<CometChatThreadHeaderRootProps>
   children,
 }) => {
   const loggedInUser = useLoggedInUser();
+  const { getLocalizedString } = useLocale();
 
   const { replyCount, senderName, currentParentMessage } = useCometChatThreadHeader({
     parentMessage,
@@ -90,6 +97,7 @@ export const CometChatThreadHeaderRoot: React.FC<CometChatThreadHeaderRootProps>
       senderName,
       onClose,
       onSubtitleClicked,
+      hideReceipts,
       hideDate,
       hideReplyCount,
       hideThreadSubscriptionToggle,
@@ -105,6 +113,7 @@ export const CometChatThreadHeaderRoot: React.FC<CometChatThreadHeaderRootProps>
       senderName,
       onClose,
       onSubtitleClicked,
+      hideReceipts,
       hideDate,
       hideReplyCount,
       hideThreadSubscriptionToggle,
@@ -118,10 +127,10 @@ export const CometChatThreadHeaderRoot: React.FC<CometChatThreadHeaderRootProps>
 
   // Build aria-label
   const ariaLabel = useMemo(() => {
-    const preview = getMessagePreview(currentParentMessage);
+    const preview = getMessagePreview(currentParentMessage, getLocalizedString);
     const countDisplay = replyCount > 999 ? '999+' : String(replyCount);
-    return `Thread: ${preview}, ${countDisplay} replies`;
-  }, [currentParentMessage, replyCount]);
+    return fillTemplate(getLocalizedString('accessibility_thread_header'), { preview, count: countDisplay });
+  }, [currentParentMessage, replyCount, getLocalizedString]);
 
   const rootClasses = [
     'cometchat-thread-header',

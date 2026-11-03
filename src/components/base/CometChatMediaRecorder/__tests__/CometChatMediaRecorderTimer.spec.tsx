@@ -8,13 +8,17 @@ import type { CometChatMediaRecorderContextValue } from '../CometChatMediaRecord
 
 // ── Locale mock ────────────────────────────────────────────────────
 
-vi.mock('../../../../context/locale/LocaleContext', () => ({
-  useLocale: () => ({
-    getLocalizedString: (key: string) => key,
-    tDateTimeParser: (d: Date) => d.toISOString(),
-    language: 'en-us',
-  }),
-}));
+vi.mock('../../../../context/locale/LocaleContext', async () => {
+  const enUs = (await import('../../../../resources/CometChatLocalize/resources/en-us/translation.json'))
+    .default as Record<string, string>;
+  return {
+    useLocale: () => ({
+      getLocalizedString: (key: string) => enUs[key] ?? key,
+      tDateTimeParser: (d: Date) => d.toISOString(),
+      language: 'en-us',
+    }),
+  };
+});
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -30,6 +34,10 @@ function createMockContext(
     pauseRecording: vi.fn(),
     deleteRecording: vi.fn(),
     inlineSend: vi.fn(),
+    isPreviewPlaying: false,
+    previewUrl: null,
+    previewProgress: 0,
+    togglePreviewPlayback: vi.fn(),
     ...overrides,
   };
 }

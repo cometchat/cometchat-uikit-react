@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatConversationsContext } from '../CometChatConversations.context';
+import { CometChatLocalize } from '../../../resources/CometChatLocalize/CometChatLocalize';
 import { resolvePinSaveFeatures, resetPinSaveFeatures } from '../../../utils/pinSaveFeatures';
 import type { CometChatConversationsContextValue } from '../CometChatConversations.types';
 
@@ -81,6 +82,7 @@ interface MockConversationOverrides {
   lastMessageDeletedAt?: number | null;
   unreadCount?: number;
   callStatus?: string;
+  groupType?: string;
 }
 
 function createMockConversation(overrides: MockConversationOverrides = {}) {
@@ -101,6 +103,7 @@ function createMockConversation(overrides: MockConversationOverrides = {}) {
     lastMessageDeletedAt: null as number | null,
     unreadCount: 0,
     callStatus: 'ended',
+    groupType: 'public',
     ...overrides,
   };
 
@@ -119,6 +122,7 @@ function createMockConversation(overrides: MockConversationOverrides = {}) {
             getGuid: () => defaults.id,
             getName: () => defaults.name,
             getIcon: () => defaults.avatar,
+            getType: () => defaults.groupType,
           },
     getLastMessage: () =>
       defaults.lastMessageType
@@ -188,6 +192,13 @@ function createMockContext(
     pinConfirmState: null,
     confirmPinAction: vi.fn(),
     cancelPinAction: vi.fn(),
+    typingIndicatorMap: new Map(),
+    hideGroupType: false,
+    showScrollbar: false,
+    hideDeleteConversation: false,
+    showSearchBar: false,
+    pinToastId: 0,
+    pinIsBusy: false,
     ...overrides,
   };
 }
@@ -249,6 +260,10 @@ function clickRowOption(container: HTMLElement, label: string): void {
 describe('CometChatConversationsItem', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   // 1. Renders conversation name and avatar
@@ -325,6 +340,45 @@ describe('CometChatConversationsItem', () => {
 
     const receiptEl = container.querySelector('[class*="cometchat-conversations__item-receipt--"]');
     expect(receiptEl?.className).toContain('cometchat-conversations__item-receipt--sent');
+  });
+
+  // 7c. A read message is announced as read, not as sent.
+  it('labels the receipt of a read message "Message read", which a sent one is not', () => {
+    // The label's words come from the kit's shared CometChatLocalize, which every app has
+    // (CometChatUIKit.init() creates it); the rest of this file runs without one.
+    vi.spyOn(CometChatLocalize, 'getSharedInstance').mockReturnValue(new CometChatLocalize());
+    const receipt = (readAt: number) =>
+      renderWithContext(
+        createMockConversation({
+          lastMessageSenderId: 'user-1',
+          lastMessageDeliveredAt: readAt,
+          lastMessageReadAt: readAt,
+        }),
+        { loggedInUserId: 'user-1' }
+      ).container.querySelector('.cometchat-conversations__item-receipt');
+
+    const read = receipt(2000);
+    expect(read).toHaveClass('cometchat-conversations__item-receipt--read');
+    expect(read).toHaveAttribute('aria-label', 'Message read');
+    const sent = receipt(0);
+    expect(sent).toHaveClass('cometchat-conversations__item-receipt--sent');
+    expect(sent).toHaveAttribute('aria-label', 'Message sent');
+  });
+
+  // 7d. Without a shared localizer the label is English, never the raw key.
+  it('labels a read receipt "Message read" even with no shared localizer, not with its key', () => {
+    const conv = createMockConversation({
+      lastMessageSenderId: 'user-1',
+      lastMessageDeliveredAt: 2000,
+      lastMessageReadAt: 2000,
+    });
+    const { container } = renderWithContext(conv, { loggedInUserId: 'user-1' });
+
+    expect(CometChatLocalize.getSharedInstance()).toBeNull();
+    expect(container.querySelector('.cometchat-conversations__item-receipt')).toHaveAttribute(
+      'aria-label',
+      'Message read'
+    );
   });
 
   // 8. Does NOT show receipt for messages from others
@@ -611,6 +665,40 @@ describe('CometChatConversationsItem — hideDeleteButton', () => {
   });
 });
 
+describe('CometChatConversationsItem — group type icon', () => {
+  it('labels the icon of a private group conversation', () => {
+    const conv = createMockConversation({ type: 'group', groupType: 'private' });
+    const { container } = renderWithContext(conv);
+
+    const icon = container.querySelector('.cometchat-conversations__item-group-type');
+    expect(icon).toHaveAttribute('aria-label', 'Private group');
+    expect(icon).toHaveClass('cometchat-conversations__item-group-type--private');
+  });
+
+  it('labels the icon of a password group conversation', () => {
+    const conv = createMockConversation({ type: 'group', groupType: 'password' });
+    const { container } = renderWithContext(conv);
+
+    const icon = container.querySelector('.cometchat-conversations__item-group-type');
+    expect(icon).toHaveAttribute('aria-label', 'Password protected group');
+    expect(icon).toHaveClass('cometchat-conversations__item-group-type--password');
+  });
+
+  it('shows no icon for a public group conversation', () => {
+    const conv = createMockConversation({ type: 'group', groupType: 'public' });
+    const { container } = renderWithContext(conv);
+
+    expect(container.querySelector('.cometchat-conversations__item-group-type')).toBeNull();
+  });
+
+  it('shows no icon when hideGroupType is set', () => {
+    const conv = createMockConversation({ type: 'group', groupType: 'private' });
+    const { container } = renderWithContext(conv, { hideGroupType: true });
+
+    expect(container.querySelector('.cometchat-conversations__item-group-type')).toBeNull();
+  });
+});
+
 describe('CometChatConversationsItem — context-optional (standalone usage)', () => {
   it('renders without crashing when no context provider is present', () => {
     const conv = createMockConversation({ name: 'Bob' });
@@ -681,15 +769,19 @@ describe('CometChatConversationsItem — pin conversation', () => {
 
   it('shows a pin indicator on a pinned conversation', () => {
     const conv = withPin(createMockConversation(), 'user');
-    const { container } = renderWithContext(conv);
-    expect(container.querySelector('.cometchat-conversations__item-pin-indicator')).toBeTruthy();
+    renderWithContext(conv);
+    expect(screen.getByRole('img', { name: 'Pinned' })).toHaveClass(
+      'cometchat-conversations__item-pin-indicator'
+    );
   });
 
   it('shows the same indicator for an admin-global pin', () => {
     // One glyph for both tiers — they differ by available actions, not by icon.
     const conv = withPin(createMockConversation(), 'global');
-    const { container } = renderWithContext(conv);
-    expect(container.querySelector('.cometchat-conversations__item-pin-indicator')).toBeTruthy();
+    renderWithContext(conv);
+    expect(screen.getByRole('img', { name: 'Pinned' })).toHaveClass(
+      'cometchat-conversations__item-pin-indicator'
+    );
   });
 
   it('shows no indicator when unpinned', () => {

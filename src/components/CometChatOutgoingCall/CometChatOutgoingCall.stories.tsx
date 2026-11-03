@@ -6,7 +6,6 @@
  * - Video call
  * - Custom views (title, subtitle, avatar, cancel button)
  * - Dark theme
- * - RTL
  *
  * NOTE: Sound playback is disabled in these stories via `disableSoundForCalls`.
  *

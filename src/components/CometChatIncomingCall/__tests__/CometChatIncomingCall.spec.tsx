@@ -69,6 +69,10 @@ vi.mock('../../../context/locale/LocaleContext', () => ({
     getLocalizedString: (key: string) => {
       const map: Record<string, string> = {
         accessibility_incoming_call_from: '{type} call from {name}',
+        accessibility_incoming_voice_call_from: 'Voice call from {name}',
+        accessibility_incoming_video_call_from: 'Video call from {name}',
+        incoming_call_voice: 'Incoming Voice Call',
+        incoming_call_video: 'Incoming Video Call',
         incoming_call_confirm_no: 'Decline',
         incoming_call_confirm_yes: 'Accept',
       };

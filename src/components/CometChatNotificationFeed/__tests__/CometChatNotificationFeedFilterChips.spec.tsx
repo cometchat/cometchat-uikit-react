@@ -79,7 +79,7 @@ describe('CometChatNotificationFeedFilterChips', () => {
     renderWithContext(<CometChatNotificationFeedFilterChips />);
     const tablist = screen.getByRole('tablist');
     expect(tablist).toBeInTheDocument();
-    expect(tablist).toHaveAttribute('aria-label', 'Filter notifications by category');
+    expect(tablist).toHaveAttribute('aria-label', 'accessibility_filter_notifications');
   });
 
   it('renders the "All" chip and category chips', () => {

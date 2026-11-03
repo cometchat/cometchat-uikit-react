@@ -19,6 +19,7 @@ function buildCtx(
     state: initialMessageListState,
     allMessages: [],
     loggedInUser: { getUid: () => 'me', getName: () => 'Me' } as never,
+    user: undefined,
     group: undefined,
     isLoading: false,
     isEmpty: false,
@@ -48,9 +49,11 @@ function buildCtx(
       hideStickyDate: false,
       hideAvatar: false,
       hideGroupActionMessages: false,
+      hideReceipts: false,
       quickOptionsCount: 2,
       hideReplyOption: false,
       hideReplyInThreadOption: false,
+      hideThreadSubscriptionOption: false,
       hideEditMessageOption: false,
       hideDeleteMessageOption: false,
       hideCopyMessageOption: false,
@@ -60,6 +63,10 @@ function buildCtx(
       hideMessagePrivatelyOption: false,
       hideTranslateMessageOption: false,
       showMarkAsUnreadOption: false,
+      hidePinMessageOption: false,
+      hideUnpinMessageOption: false,
+      hideSaveMessageOption: false,
+      hideUnsaveMessageOption: false,
       separatorDateTimeFormat: undefined,
       stickyDateTimeFormat: undefined,
       messageSentAtDateTimeFormat: undefined,
@@ -70,18 +77,20 @@ function buildCtx(
       messageAlignment: 1,
       showScrollbar: false,
       hideDateSeparator: false,
-      loadingView: undefined,
-      emptyView: undefined,
-      errorView: undefined,
-      headerView: undefined,
-      footerView: undefined,
       onThreadRepliesClick: undefined,
       onAvatarClick: undefined,
+      onEditMessage: undefined,
+      onReplyMessage: undefined,
       hideFlagRemarkField: false,
       disableTruncation: false,
       hideModerationView: false,
       isAgentChat: false,
       bubbleView: undefined,
+      showSmartReplies: false,
+      smartRepliesKeywords: ['what', 'when', 'why', 'who', 'where', 'how', '?'],
+      smartRepliesDelayDuration: 10000,
+      showConversationStarters: false,
+      loadLastAgentConversation: false,
     },
     ...overrides,
   };
@@ -136,7 +145,7 @@ describe('CometChatMessageListScrollToBottom', () => {
   });
 
   it('calls scrollToBottom on click and, when it returns scroll-dom, updates the container', () => {
-    const scrollToBottom = vi.fn<[], 'scroll-dom' | 'refetching'>(() => 'scroll-dom');
+    const scrollToBottom = vi.fn<() => 'scroll-dom' | 'refetching'>(() => 'scroll-dom');
     const container = document.createElement('div');
     Object.defineProperty(container, 'scrollHeight', { configurable: true, value: 500 });
     container.scrollTop = 0;
@@ -152,7 +161,7 @@ describe('CometChatMessageListScrollToBottom', () => {
   });
 
   it('does not set scrollTop when scrollToBottom returns refetching', () => {
-    const scrollToBottom = vi.fn<[], 'scroll-dom' | 'refetching'>(() => 'refetching');
+    const scrollToBottom = vi.fn<() => 'scroll-dom' | 'refetching'>(() => 'refetching');
     const container = document.createElement('div');
     Object.defineProperty(container, 'scrollHeight', { configurable: true, value: 500 });
     container.scrollTop = 10;
@@ -167,7 +176,7 @@ describe('CometChatMessageListScrollToBottom', () => {
   });
 
   it('supports Enter and Space keyboard activation', () => {
-    const scrollToBottom = vi.fn<[], 'scroll-dom' | 'refetching'>(() => 'refetching');
+    const scrollToBottom = vi.fn<() => 'scroll-dom' | 'refetching'>(() => 'refetching');
     renderScrollToBottom(buildCtx({ isAtBottom: false, scrollToBottom }));
 
     const btn = screen.getByRole('button', { name: /scroll to bottom/i });

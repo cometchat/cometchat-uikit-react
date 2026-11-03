@@ -11,7 +11,6 @@
  * - Multiple selection mode
  * - With active group highlighted
  * - Dark theme
- * - RTL layout
  *
  * @module components/CometChatGroups
  */
@@ -20,7 +19,11 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { CometChatGroups } from './CometChatGroups';
 import { CometChatGroupsContext } from './CometChatGroups.context';
-import type { CometChatGroupsContextValue } from './CometChatGroups.types';
+import type {
+  CometChatGroupsContextValue,
+  CometChatGroupsRootProps,
+  CometChatGroupsSelectionMode,
+} from './CometChatGroups.types';
 
 // ============================================
 // Mock Data
@@ -71,6 +74,7 @@ function createMockContext(
     selectionMode: 'none',
     hideGroupType: false,
     hideSearch: false,
+    showScrollbar: false,
     options: undefined,
     fetchNext: async () => {
       /* no-op */
@@ -124,7 +128,18 @@ const containerStyle: React.CSSProperties = {
 // Meta Configuration
 // ============================================
 
-const meta: Meta = {
+/** Story controls; they feed the mock context, plus the Root callbacks logged as actions. */
+interface GroupsStoryArgs extends Pick<
+  CometChatGroupsRootProps,
+  'onItemClick' | 'onSelect' | 'onError' | 'onEmpty'
+> {
+  hideGroupType: boolean;
+  hideSearch: boolean;
+  showScrollbar: boolean;
+  selectionMode: CometChatGroupsSelectionMode;
+}
+
+const meta: Meta<GroupsStoryArgs> = {
   title: 'Components/Groups/CometChat Groups',
   component: CometChatGroups.Root,
   tags: ['autodocs'],
@@ -187,18 +202,14 @@ const meta: Meta = {
   ],
 };
 export default meta;
-type Story = StoryObj;
+type Story = StoryObj<GroupsStoryArgs>;
 
 // ============================================
 // Stories
 // ============================================
 
 /** Default loaded state with groups. */
-function DefaultDemo(args: {
-  hideGroupType?: boolean;
-  hideSearch?: boolean;
-  selectionMode?: string;
-}) {
+function DefaultDemo(args: GroupsStoryArgs) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const selectedMap = new Map(
     selectedIds
@@ -215,7 +226,8 @@ function DefaultDemo(args: {
     selectionMode: args.selectionMode,
     selectedGroupIds: selectedIds,
     selectedGroupsMap: selectedMap,
-    selectGroup: (id: string) => {
+    selectGroup: (group: CometChat.Group) => {
+      const id = group.getGuid();
       if (args.selectionMode === 'single') {
         setSelectedIds([id]);
       } else {
@@ -241,7 +253,7 @@ function DefaultDemo(args: {
     <CometChatGroupsContext.Provider value={ctx}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <CometChatGroups.Header />
-        {args.hideSearch !== true && <CometChatGroups.SearchBar />}
+        {!args.hideSearch && <CometChatGroups.SearchBar />}
         <CometChatGroups.List />
       </div>
     </CometChatGroupsContext.Provider>
@@ -278,10 +290,12 @@ export const WithSearch: Story = {
 /** Loading state with shimmer effect. */
 export const LoadingState: Story = {
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <CometChatGroups.Header />
-      <CometChatGroups.LoadingState />
-    </div>
+    <CometChatGroupsContext.Provider value={createMockContext({ groups: [], fetchState: 'loading' })}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <CometChatGroups.Header />
+        <CometChatGroups.LoadingState />
+      </div>
+    </CometChatGroupsContext.Provider>
   ),
 };
 
@@ -336,7 +350,7 @@ export const SingleSelection: Story = {
   render: args => <GroupsSingleSelectionDemo {...args} />,
 };
 
-function GroupsSingleSelectionDemo(args: any) {
+function GroupsSingleSelectionDemo(args: GroupsStoryArgs) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>(['group-2']);
   const selectedMap = new Map(
     selectedIds
@@ -352,8 +366,8 @@ function GroupsSingleSelectionDemo(args: any) {
     hideSearch: args.hideSearch,
     selectedGroupIds: selectedIds,
     selectedGroupsMap: selectedMap,
-    selectGroup: (id: string) => {
-      setSelectedIds([id]);
+    selectGroup: (group: CometChat.Group) => {
+      setSelectedIds([group.getGuid()]);
     },
     deselectGroup: (id: string) => {
       setSelectedIds(prev => prev.filter(x => x !== id));
@@ -382,7 +396,7 @@ export const MultipleSelection: Story = {
   render: args => <GroupsMultipleSelectionDemo {...args} />,
 };
 
-function GroupsMultipleSelectionDemo(args: any) {
+function GroupsMultipleSelectionDemo(args: GroupsStoryArgs) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>(['group-1', 'group-3', 'group-6']);
   const selectedMap = new Map(
     selectedIds
@@ -398,7 +412,8 @@ function GroupsMultipleSelectionDemo(args: any) {
     hideSearch: args.hideSearch,
     selectedGroupIds: selectedIds,
     selectedGroupsMap: selectedMap,
-    selectGroup: (id: string) => {
+    selectGroup: (group: CometChat.Group) => {
+      const id = group.getGuid();
       setSelectedIds(prev => (prev.includes(id) ? prev : [...prev, id]));
     },
     deselectGroup: (id: string) => {

@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { CometChatUsers } from '../CometChatUsers';
+import { covers } from '../../../testing/covers';
 
 // --- Mock SDK ---
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
@@ -33,6 +34,7 @@ describe('CometChatUsers.Root', () => {
   });
 
   it('renders custom children when provided', () => {
+    covers('CometChatUsers.children', 'custom');
     render(
       <CometChatUsers.Root>
         <div data-testid="custom-child">Custom Content</div>

@@ -23,6 +23,8 @@ function createContextValue(
     isUserConversation: false,
     isGroupConversation: false,
     summaryGenerationMessageCount: 1000,
+    hideVoiceCallButton: false,
+    hideVideoCallButton: false,
     ...overrides,
   };
 }

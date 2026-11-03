@@ -204,7 +204,7 @@ describe('useCometChatMessageHeader', () => {
       act(() => {
         const callbacks = getListenerCallbacks(mockAddMessageListener);
         const indicator = createMockTypingIndicator({ senderUid: 'user-1' });
-        callbacks.onTypingStarted(indicator);
+        callbacks.onTypingStarted!(indicator);
       });
 
       expect(result.current.isTyping).toBe(true);
@@ -223,7 +223,7 @@ describe('useCometChatMessageHeader', () => {
           senderUid: 'u1',
           senderName: 'Alice',
         });
-        callbacks.onTypingStarted(indicator);
+        callbacks.onTypingStarted!(indicator);
       });
 
       expect(result.current.isTyping).toBe(true);
@@ -236,7 +236,7 @@ describe('useCometChatMessageHeader', () => {
 
       act(() => {
         const callbacks = getListenerCallbacks(mockAddMessageListener);
-        callbacks.onTypingStarted(
+        callbacks.onTypingStarted!(
           createMockTypingIndicator({
             receiverId: 'group-1',
             receiverType: 'group',
@@ -248,7 +248,7 @@ describe('useCometChatMessageHeader', () => {
 
       act(() => {
         const callbacks = getListenerCallbacks(mockAddMessageListener);
-        callbacks.onTypingStarted(
+        callbacks.onTypingStarted!(
           createMockTypingIndicator({
             receiverId: 'group-1',
             receiverType: 'group',
@@ -274,7 +274,7 @@ describe('useCometChatMessageHeader', () => {
       for (const u of users) {
         act(() => {
           const callbacks = getListenerCallbacks(mockAddMessageListener);
-          callbacks.onTypingStarted(
+          callbacks.onTypingStarted!(
             createMockTypingIndicator({
               receiverId: 'group-1',
               receiverType: 'group',
@@ -303,7 +303,7 @@ describe('useCometChatMessageHeader', () => {
           senderUid: 'u1',
           senderName: 'Alice',
         });
-        callbacks.onTypingStarted(indicator);
+        callbacks.onTypingStarted!(indicator);
       });
 
       expect(result.current.isTyping).toBe(true);
@@ -325,7 +325,7 @@ describe('useCometChatMessageHeader', () => {
           senderUid: 'u1',
           senderName: 'Alice',
         });
-        callbacks.onTypingEnded(indicator);
+        callbacks.onTypingEnded!(indicator);
       });
 
       expect(result.current.isTyping).toBe(false);
@@ -338,14 +338,14 @@ describe('useCometChatMessageHeader', () => {
 
       act(() => {
         const callbacks = getListenerCallbacks(mockAddMessageListener);
-        callbacks.onTypingStarted(createMockTypingIndicator({ senderUid: 'user-1' }));
+        callbacks.onTypingStarted!(createMockTypingIndicator({ senderUid: 'user-1' }));
       });
 
       expect(result.current.isTyping).toBe(true);
 
       act(() => {
         const callbacks = getListenerCallbacks(mockAddMessageListener);
-        callbacks.onTypingEnded(createMockTypingIndicator({ senderUid: 'user-1' }));
+        callbacks.onTypingEnded!(createMockTypingIndicator({ senderUid: 'user-1' }));
       });
 
       expect(result.current.isTyping).toBe(false);
@@ -361,14 +361,14 @@ describe('useCometChatMessageHeader', () => {
 
       act(() => {
         const callbacks = getListenerCallbacks(mockAddConnectionListener);
-        callbacks.onDisconnected();
+        callbacks.onDisconnected!();
       });
 
       expect(result.current.connectionStatus).toBe('disconnected');
 
       act(() => {
         const callbacks = getListenerCallbacks(mockAddConnectionListener);
-        callbacks.onConnected();
+        callbacks.onConnected!();
       });
 
       expect(result.current.connectionStatus).toBe('connected');
@@ -401,7 +401,7 @@ describe('useCometChatMessageHeader', () => {
 
       act(() => {
         const callbacks = getListenerCallbacks(mockAddUserListener);
-        callbacks.onUserOnline({ getUid: () => 'user-1' });
+        callbacks.onUserOnline!({ getUid: () => 'user-1' });
       });
 
       expect(result.current.userStatus).toBe('online');
@@ -413,7 +413,7 @@ describe('useCometChatMessageHeader', () => {
 
       act(() => {
         const callbacks = getListenerCallbacks(mockAddUserListener);
-        callbacks.onUserOffline({
+        callbacks.onUserOffline!({
           getUid: () => 'user-1',
           getLastActiveAt: () => 1700000000,
         });
@@ -440,7 +440,7 @@ describe('useCometChatMessageHeader', () => {
       act(() => {
         const callbacks = getListenerCallbacks(mockAddGroupListener);
         const updatedGroup = { getGuid: () => 'group-1', getMembersCount: () => 11 };
-        callbacks.onGroupMemberJoined({}, {}, updatedGroup);
+        callbacks.onGroupMemberJoined!({}, {}, updatedGroup);
       });
 
       expect(result.current.groupMemberCount).toBe(11);
@@ -453,7 +453,7 @@ describe('useCometChatMessageHeader', () => {
       act(() => {
         const callbacks = getListenerCallbacks(mockAddGroupListener);
         const updatedGroup = { getGuid: () => 'group-1', getMembersCount: () => 9 };
-        callbacks.onGroupMemberLeft({}, {}, updatedGroup);
+        callbacks.onGroupMemberLeft!({}, {}, updatedGroup);
       });
 
       expect(result.current.groupMemberCount).toBe(9);
@@ -466,7 +466,7 @@ describe('useCometChatMessageHeader', () => {
       act(() => {
         const callbacks = getListenerCallbacks(mockAddGroupListener);
         const updatedGroup = { getGuid: () => 'group-1', getMembersCount: () => 9 };
-        callbacks.onGroupMemberKicked({}, {}, {}, updatedGroup);
+        callbacks.onGroupMemberKicked!({}, {}, {}, updatedGroup);
       });
 
       expect(result.current.groupMemberCount).toBe(9);
@@ -479,7 +479,7 @@ describe('useCometChatMessageHeader', () => {
       act(() => {
         const callbacks = getListenerCallbacks(mockAddGroupListener);
         const updatedGroup = { getGuid: () => 'group-1', getMembersCount: () => 9 };
-        callbacks.onGroupMemberBanned({}, {}, {}, updatedGroup);
+        callbacks.onGroupMemberBanned!({}, {}, {}, updatedGroup);
       });
 
       expect(result.current.groupMemberCount).toBe(9);
@@ -492,7 +492,7 @@ describe('useCometChatMessageHeader', () => {
       act(() => {
         const callbacks = getListenerCallbacks(mockAddGroupListener);
         const updatedGroup = { getGuid: () => 'group-1', getMembersCount: () => 11 };
-        callbacks.onMemberAddedToGroup({}, {}, {}, updatedGroup);
+        callbacks.onMemberAddedToGroup!({}, {}, {}, updatedGroup);
       });
 
       expect(result.current.groupMemberCount).toBe(11);
@@ -504,7 +504,7 @@ describe('useCometChatMessageHeader', () => {
 
       act(() => {
         const callbacks = getListenerCallbacks(mockAddGroupListener);
-        callbacks.onGroupMemberScopeChanged({}, {}, 'admin', 'participant', {
+        callbacks.onGroupMemberScopeChanged!({}, {}, 'admin', 'participant', {
           getGuid: () => 'group-1',
         });
       });

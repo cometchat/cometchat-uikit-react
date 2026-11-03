@@ -14,6 +14,7 @@ import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vites
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatMessageComposerContextValue } from '../CometChatMessageComposer.types';
 
 // --- Mocks ---------------------------------------------------------------
@@ -67,14 +68,30 @@ vi.mock('../../base/CometChatPopover', () => ({
   ),
 }));
 
-// CometChatCreatePoll is not exercised here; stub it to avoid SDK pulls.
+// CometChatCreatePoll has its own spec; the stub shows what it was given and lets a test finish it.
 vi.mock('../../CometChatCreatePoll/CometChatCreatePoll', () => ({
-  CometChatCreatePoll: () => null,
+  CometChatCreatePoll: ({
+    replyToMessage,
+    onPollCreated,
+    onClose,
+  }: {
+    replyToMessage?: { getId: () => number };
+    onPollCreated?: () => void;
+    onClose?: () => void;
+  }) => (
+    <div>
+      <span>poll replying to {replyToMessage?.getId() ?? 'nothing'}</span>
+      <button onClick={onPollCreated}>finish poll</button>
+      <button onClick={onClose}>cancel poll</button>
+    </div>
+  ),
 }));
 
 // Controllable context value used by the component under test.
 const sendMediaMessage = vi.fn().mockResolvedValue(undefined);
 const stageAttachments = vi.fn();
+const closePreview = vi.fn();
+const playOutgoingSound = vi.fn();
 let contextValue: CometChatMessageComposerContextValue;
 
 vi.mock('../CometChatMessageComposer.context', () => ({
@@ -91,6 +108,8 @@ function buildContext(
     setContentToDisplay: vi.fn(),
     sendMediaMessage,
     stageAttachments,
+    closePreview,
+    playOutgoingSound,
     enableMultipleAttachments: true,
     ...overrides,
   } as unknown as CometChatMessageComposerContextValue;
@@ -188,5 +207,51 @@ describe('CometChatMessageComposerAttachmentButton — thread option gating', ()
     // Regular file-attachment options remain available in threads.
     expect(screen.getByText('message_composer_attach_image')).toBeInTheDocument();
     expect(screen.getByText('message_composer_attach_file')).toBeInTheDocument();
+  });
+});
+
+describe('CometChatMessageComposerAttachmentButton — polls in reply mode', () => {
+  const quoted = { getId: () => 7 } as unknown as CometChat.BaseMessage;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  async function openPoll(messageToReply: CometChat.BaseMessage | null) {
+    contextValue = buildContext({ messageToReply });
+    const user = userEvent.setup();
+    render(<CometChatMessageComposerAttachmentButton />);
+    await user.click(screen.getByText('message_composer_polls'));
+    return user;
+  }
+
+  it('gives the poll the message being replied to, and clears the reply once it is created', async () => {
+    const user = await openPoll(quoted);
+
+    expect(screen.getByText('poll replying to 7')).toBeInTheDocument();
+    expect(closePreview).not.toHaveBeenCalled();
+
+    await user.click(screen.getByText('finish poll'));
+
+    expect(closePreview).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('finish poll')).not.toBeInTheDocument();
+  });
+
+  it('keeps the reply when the poll is cancelled', async () => {
+    const user = await openPoll(quoted);
+
+    await user.click(screen.getByText('cancel poll'));
+
+    expect(closePreview).not.toHaveBeenCalled();
+  });
+
+  it('has no reply to give or clear outside reply mode', async () => {
+    const user = await openPoll(null);
+
+    expect(screen.getByText('poll replying to nothing')).toBeInTheDocument();
+
+    await user.click(screen.getByText('finish poll'));
+
+    expect(closePreview).not.toHaveBeenCalled();
   });
 });

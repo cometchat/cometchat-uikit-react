@@ -14,20 +14,24 @@ import type { CometChatMessagePlugin } from '../../../plugins/plugin.types';
 
 /**
  * jsdom has no IntersectionObserver. Capture the callbacks so a test can trip the
- * sentinel deliberately rather than depending on layout.
+ * sentinel deliberately rather than depending on layout. Like the real API, a
+ * disconnected observer stops receiving entries, so only live observers fire.
  */
 const intersectionCallbacks: IntersectionObserverCallback[] = [];
 vi.stubGlobal(
   'IntersectionObserver',
   class {
+    private readonly cb: IntersectionObserverCallback;
     constructor(cb: IntersectionObserverCallback) {
+      this.cb = cb;
       intersectionCallbacks.push(cb);
     }
     observe() {
       /* no-op */
     }
     disconnect() {
-      /* no-op */
+      const i = intersectionCallbacks.indexOf(this.cb);
+      if (i >= 0) intersectionCallbacks.splice(i, 1);
     }
     unobserve() {
       /* no-op */
@@ -326,8 +330,10 @@ describe('CometChatSavedMessages', () => {
       };
       return builder as unknown as CometChat.MessagesRequestBuilder;
     });
-    const { container } = renderPanel();
-    expect(container.querySelector('.cometchat-conversations__loading-state')).toBeTruthy();
+    renderPanel();
+    const shimmer = screen.getByRole('status', { name: 'Loading conversations' });
+    expect(shimmer).toHaveClass('cometchat-conversations__loading-state', 'cometchat-saved-messages__shimmer');
+    expect(shimmer).toHaveAttribute('aria-busy', 'true');
   });
 
   it('renders the empty state when nothing is saved', async () => {
@@ -591,6 +597,9 @@ describe('CometChatSavedMessages — paging', () => {
     // The sentinel is present while more may exist; tripping the observer is what
     // a scroll to the bottom does.
     expect(container.querySelector('.cometchat-saved-messages__sentinel')).toBeTruthy();
+    // Let pending effects run first, so the observer for the settled (not loading)
+    // list is registered before the "scroll" — otherwise it can race the effect.
+    await act(async () => {});
     act(() => {
       triggerIntersection();
     });

@@ -267,6 +267,8 @@ export type CometChatUIEvent =
       type: 'ui:panel/show';
       position: 'messageListFooter' | 'messageListHeader';
       panel: 'smartReplies' | 'conversationSummary' | 'conversationStarters';
+      /** For the conversation summary: how many of the latest messages to summarise. */
+      messageCount?: number;
     }
   | {
       type: 'ui:panel/hide';

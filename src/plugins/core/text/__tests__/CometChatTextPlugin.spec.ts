@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatTextFormatter } from '../../../../formatters/CometChatTextFormatter';
 
 // Hoist mocks so vi.mock factory can reference them
@@ -87,9 +88,13 @@ vi.mock('../../shared/CometChatMessageOptions', () => ({
 }));
 
 import { CometChatTextPlugin } from '../CometChatTextPlugin';
+import { CometChatMarkdownFormatter } from '../../../../formatters/CometChatMarkdownFormatter';
 import { CometChatMentionsFormatter } from '../../../../formatters/CometChatMentionsFormatter';
 import { CometChatUrlFormatter } from '../../../../formatters/CometChatUrlFormatter';
 import type { CometChatMessagePluginContext } from '../../../plugin.types';
+import type { CometChatTextBubbleProps } from '../../../../components/CometChatTextBubble/CometChatTextBubble.types';
+
+type BubbleElement = React.ReactElement<CometChatTextBubbleProps>;
 
 // --- Helpers ---
 
@@ -108,7 +113,7 @@ function createMockTextMessage(
     getCategory: () => 'message',
     getDeletedAt: () => null,
     getMetadata: () => null,
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.TextMessage;
+  } as unknown as CometChat.TextMessage;
 }
 
 function createMockContext(
@@ -118,7 +123,7 @@ function createMockContext(
     loggedInUser: {
       getUid: () => 'user-1',
       getName: () => 'Test User',
-    } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.User,
+    } as unknown as CometChat.User,
     alignment: 'right',
     theme: 'light',
     ...overrides,
@@ -156,13 +161,13 @@ describe('CometChatTextPlugin', () => {
       const message = createMockTextMessage({ text: 'My message text' });
       const context = createMockContext();
 
-      const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
+      const element = CometChatTextPlugin.renderBubble(message, context) as BubbleElement;
 
       // The plugin no longer pre-extracts text; it forwards the message and the
       // bubble derives the content itself via message.getText().
       expect(element.props.text).toBeUndefined();
       expect(element.props.message).toBe(message);
-      expect((element.props.message as { getText: () => string }).getText()).toBe(
+      expect((element.props.message as CometChat.TextMessage).getText()).toBe(
         'My message text'
       );
     });
@@ -171,7 +176,7 @@ describe('CometChatTextPlugin', () => {
       const message = createMockTextMessage();
       const context = createMockContext({ alignment: 'right' });
 
-      const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
+      const element = CometChatTextPlugin.renderBubble(message, context) as BubbleElement;
 
       expect(element.props.isSentByMe).toBe(true);
     });
@@ -180,7 +185,7 @@ describe('CometChatTextPlugin', () => {
       const message = createMockTextMessage();
       const context = createMockContext({ alignment: 'left' });
 
-      const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
+      const element = CometChatTextPlugin.renderBubble(message, context) as BubbleElement;
 
       expect(element.props.isSentByMe).toBe(false);
     });
@@ -189,20 +194,20 @@ describe('CometChatTextPlugin', () => {
       const message = createMockTextMessage();
       const context = createMockContext();
 
-      const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
+      const element = CometChatTextPlugin.renderBubble(message, context) as BubbleElement;
 
       expect(Array.isArray(element.props.textFormatters)).toBe(true);
-      expect(element.props.textFormatters.length).toBeGreaterThan(0);
+      expect(element.props.textFormatters!.length).toBeGreaterThan(0);
     });
 
     it('merges context.textFormatters (custom display formats) with the plugin defaults', () => {
       class CustomFormatter extends CometChatTextFormatter {
         readonly id = 'test-custom';
         override priority = 50;
-        getRegex(): RegExp {
+        override getRegex(): RegExp {
           return /x/g;
         }
-        format(text: string): string {
+        override format(text: string): string {
           this.formattedText = text;
           return text;
         }
@@ -210,7 +215,7 @@ describe('CometChatTextPlugin', () => {
       const message = createMockTextMessage();
       const context = createMockContext({ textFormatters: [new CustomFormatter()] });
 
-      const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
+      const element = CometChatTextPlugin.renderBubble(message, context) as BubbleElement;
       const ids = (element.props.textFormatters as { id: string }[]).map(f => f.id);
 
       expect(ids).toContain('test-custom'); // custom formatter present
@@ -223,25 +228,24 @@ describe('CometChatTextPlugin', () => {
       const message = createMockTextMessage();
       const context = createMockContext();
 
-      const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
+      const element = CometChatTextPlugin.renderBubble(message, context) as BubbleElement;
 
       expect(element.props.message).toBe(message);
     });
 
-    it('configures MentionsFormatter with loggedInUser from context', () => {
-      const message = createMockTextMessage();
-      const loggedInUser = {
-        getUid: () => 'me-123',
-        getName: () => 'Me',
-      } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.User;
-      const context = createMockContext({ loggedInUser });
+    // The plugin only hands over fresh formatters; the text bubble sets the logged-in user on
+    // the mentions one (from useLoggedInUser), so that is not checked here.
+    it('hands the bubble the markdown, mentions and URL formatters', () => {
+      const element = CometChatTextPlugin.renderBubble(
+        createMockTextMessage(),
+        createMockContext()
+      ) as BubbleElement;
 
-      const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
-      const mentionsFormatter = element.props.textFormatters.find(
-        (f: unknown) => f instanceof CometChatMentionsFormatter
-      );
-
-      expect(mentionsFormatter).toBeDefined();
+      expect(element.props.textFormatters!.map(f => f.constructor)).toEqual([
+        CometChatMarkdownFormatter,
+        CometChatMentionsFormatter,
+        CometChatUrlFormatter,
+      ]);
     });
 
     it('sets mentioned users on MentionsFormatter when message has mentions', () => {
@@ -252,10 +256,10 @@ describe('CometChatTextPlugin', () => {
       const message = createMockTextMessage({ mentionedUsers });
       const context = createMockContext();
 
-      const element = CometChatTextPlugin.renderBubble(message, context) as React.ReactElement;
+      const element = CometChatTextPlugin.renderBubble(message, context) as BubbleElement;
 
       // The formatters should be configured — just verify the element is valid
-      expect(element.props.textFormatters.length).toBeGreaterThanOrEqual(2);
+      expect(element.props.textFormatters!.length).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -427,15 +431,14 @@ describe('CometChatTextPlugin', () => {
     it('includes CometChatMentionsFormatter', () => {
       const formatters = CometChatTextPlugin.getTextFormatters!();
 
-      const mentionsFormatter = formatters.find(f => f instanceof CometChatMentionsFormatter);
-      expect(mentionsFormatter).toBeDefined();
+      // Exactly one: a second would format every mention twice.
+      expect(formatters.filter(f => f instanceof CometChatMentionsFormatter)).toHaveLength(1);
     });
 
     it('includes CometChatUrlFormatter', () => {
       const formatters = CometChatTextPlugin.getTextFormatters!();
 
-      const urlFormatter = formatters.find(f => f instanceof CometChatUrlFormatter);
-      expect(urlFormatter).toBeDefined();
+      expect(formatters.filter(f => f instanceof CometChatUrlFormatter)).toHaveLength(1);
     });
 
     it('returns new formatter instances on each call', () => {

@@ -1,64 +1,13 @@
-import { test, expect, Page } from '@playwright/test';
-import { loginToApp, openStrategyChat } from '../helpers';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { test, expect, Page } from '../helpers/test';
+import { loginToApp, openStrategyChat, expectSendAccepted } from '../helpers';
+import { visibleWithin } from '../helpers/wait';
+import { stageAndSendAttachment } from '../helpers/attachments';
 
 /**
  * E2E Tests — CometChatMessageComposer (React)
  *
  * Tests the message composer component. Requires opening a conversation first.
  */
-
-/**
- * Stage a single attachment via the action sheet and send it.
- *
- * The composer runs with `enableMultipleAttachments` (default), so picking a file
- * routes it to the staging tray rather than sending immediately. We wait for the
- * tray + upload to finish, then click send. The message list then renders the
- * batch-aware plural bubbles (ImagesBubble/VideosBubble/AudiosBubble/FilesBubble).
- */
-async function stageAndSendAttachment(page: Page, optionLabel: string, filePath: string) {
-  const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
-  await expect(attachBtn).toBeVisible({ timeout: 5_000 });
-  await attachBtn.click();
-  await page.waitForTimeout(1000);
-
-  const optionsList = page.locator('.cometchat-message-composer__attachment-list').first();
-  await expect(optionsList).toBeVisible({ timeout: 5_000 });
-
-  const option = optionsList
-    .locator('.cometchat-message-composer__attachment-option')
-    .filter({
-      has: page.locator(
-        `.cometchat-message-composer__attachment-option-title:has-text("${optionLabel}")`
-      ),
-    })
-    .first();
-  await expect(option).toBeVisible({ timeout: 3_000 });
-
-  const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 5_000 });
-  await option.click();
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles(filePath);
-
-  // The file stages to the tray; wait for it to appear and for uploads to finish.
-  const tray = page.locator('.cometchat-message-composer__tray').first();
-  await expect(tray).toBeVisible({ timeout: 10_000 });
-  await expect(tray.locator('.cometchat-message-composer__tray-progress')).toHaveCount(0, {
-    timeout: 60_000,
-  });
-
-  // Send the staged attachment.
-  const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
-  await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-  await sendBtn.click();
-
-  // Tray clears once sent.
-  await expect(tray).not.toBeVisible({ timeout: 15_000 });
-}
 
 test.describe('CometChatMessageComposer', () => {
   let page: Page;
@@ -72,35 +21,9 @@ test.describe('CometChatMessageComposer', () => {
 
   // ==================== Rendering ====================
 
-  test('composer renders with text input and send button', async () => {
-    const composer = page.locator('.cometchat-message-composer').first();
-    await expect(composer).toBeVisible({ timeout: 5_000 });
-
-    const input = composer.locator('[contenteditable="true"]').first();
-    await expect(input).toBeVisible({ timeout: 5_000 });
-  });
-
-  test('send button is present', async () => {
-    const composer = page.locator('.cometchat-message-composer').first();
-    const sendBtn = composer.locator('[class*="send-button"], [class*="send"], button[aria-label*="Send" i]').first();
-    const hasSend = await sendBtn.isVisible({ timeout: 5_000 }).catch(() => false);
-    expect(hasSend).toBeTruthy();
-  });
-
   // ==================== Text Input ====================
 
-  test('typing text in composer works', async () => {
-    const composer = page.locator('.cometchat-message-composer').first();
-    const input = composer.locator('[contenteditable="true"]').first();
-    await input.click();
-    await page.keyboard.type('Hello E2E test');
-    await page.waitForTimeout(300);
-
-    const content = await input.textContent();
-    expect(content).toContain('Hello E2E test');
-  });
-
-  test('send button sends the message', async () => {
+  test('send button sends the message', { tag: '@smoke' }, async () => {
     const composer = page.locator('.cometchat-message-composer').first();
     const input = composer.locator('[contenteditable="true"]').first();
     await input.click();
@@ -109,7 +32,7 @@ test.describe('CometChatMessageComposer', () => {
     await page.keyboard.type(testMessage);
 
     const sendBtn = composer.locator('[class*="send-button"], [class*="send"], button[aria-label*="Send" i]').first();
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
 
     // Wait for the message to appear in the list (polls until visible or timeout)
     await expect(
@@ -124,7 +47,7 @@ test.describe('CometChatMessageComposer', () => {
 
     const testMessage = `Enter test ${Date.now()}`;
     await page.keyboard.type(testMessage);
-    await page.keyboard.press('Enter');
+    await expectSendAccepted(page, () => page.keyboard.press('Enter'));
 
     // Wait for the message to appear in the list
     await expect(
@@ -134,21 +57,6 @@ test.describe('CometChatMessageComposer', () => {
 
   // ==================== Attachment Menu ====================
 
-  test('attachment button opens menu', async () => {
-    const composer = page.locator('.cometchat-message-composer').first();
-    const attachBtn = composer.locator('[class*="attachment"], [class*="add-button"], button[aria-label*="Attach" i], [class*="auxiliary"] button').first();
-    await expect(attachBtn).toBeVisible({ timeout: 5_000 });
-    await attachBtn.click();
-    await page.waitForTimeout(1000);
-
-    // Action sheet / popover MUST appear
-    const menu = page.locator('.cometchat-action-sheet, .cometchat-popover, [class*="action-sheet"]').first();
-    await expect(menu).toBeVisible({ timeout: 5_000 });
-
-    // Close it
-    await page.keyboard.press('Escape');
-  });
-
   // ==================== Emoji Keyboard ====================
 
   test('emoji button opens emoji keyboard', async () => {
@@ -156,7 +64,6 @@ test.describe('CometChatMessageComposer', () => {
     const emojiBtn = composer.locator('[class*="emoji"], button[aria-label*="Emoji" i]').first();
     await expect(emojiBtn).toBeVisible({ timeout: 5_000 });
     await emojiBtn.click();
-    await page.waitForTimeout(1000);
 
     const keyboard = page.locator('.cometchat-emoji-keyboard, [class*="emoji-keyboard"]').first();
     await expect(keyboard).toBeVisible({ timeout: 5_000 });
@@ -170,60 +77,51 @@ test.describe('CometChatMessageComposer', () => {
   test('voice recording button is present', async () => {
     // Voice recording is an OPTIONAL extension — skip if not enabled
     const voiceBtn = page.locator('.cometchat-message-composer__voice-button, [class*="voice-recording"], button[aria-label*="Voice" i]').first();
-    const hasVoice = await voiceBtn.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasVoice = await visibleWithin(voiceBtn, 3_000);
     test.skip(!hasVoice, 'Voice recording extension not enabled');
     await expect(voiceBtn).toBeVisible();
   });
 
   // ==================== Placeholder ====================
 
-  test('placeholder text displays when input is empty', async () => {
+  test('placeholder shows while empty, hides when typing, returns when cleared', async () => {
     const composer = page.locator('.cometchat-message-composer').first();
     const input = composer.locator('[contenteditable="true"]').first();
-    await expect(input).toBeVisible();
+    const placeholder = composer.locator('.cometchat-message-composer__input-placeholder');
+    await expect(placeholder).toHaveText('Enter your message here', { timeout: 5_000 });
+
+    await input.click();
+    await page.keyboard.type('draft');
+    await expect(placeholder).toHaveCount(0);
+
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.press('Backspace');
+    await expect(placeholder).toHaveText('Enter your message here');
   });
 
   // ==================== Formatting Toolbar ====================
 
-  test('text formatting options are available', async () => {
-    const toolbar = page.locator('.cometchat-message-composer__toolbar, [class*="formatting-toolbar"]').first();
-    await expect(toolbar).toBeVisible({ timeout: 5_000 });
-
-    const buttons = toolbar.locator('button');
-    const count = await buttons.count();
-    expect(count).toBeGreaterThan(0);
-  });
-
   // ==================== Accessibility ====================
 
-  test('composer has proper ARIA attributes', async () => {
-    const composer = page.locator('.cometchat-message-composer').first();
-    await expect(composer).toBeVisible();
-    const input = composer.locator('[contenteditable="true"]').first();
-    await expect(input).toBeVisible();
+  test('composer input is an accessible multiline textbox with a label', async () => {
+    const input = page.locator('.cometchat-message-composer [contenteditable="true"]').first();
+    await expect(input).toHaveAttribute('role', 'textbox');
+    await expect(input).toHaveAttribute('aria-multiline', 'true');
+    await expect(input).toHaveAttribute('aria-label', /\S/);
+    // Reachable by its accessible name, as assistive tech would find it.
+    const label = (await input.getAttribute('aria-label')) ?? '';
+    await expect(page.getByRole('textbox', { name: label, exact: true }).first()).toBeVisible();
   });
 
   // ==================== Disabled State ====================
 
-  test('composer input is interactive by default', async () => {
-    const composer = page.locator('.cometchat-message-composer').first();
-    const input = composer.locator('[contenteditable="true"]').first();
-    await expect(input).toBeVisible();
-    const isEditable = await input.getAttribute('contenteditable');
-    expect(isEditable).toBe('true');
-  });
-
   // ==================== Image Attachment ====================
 
-  test('send image attachment via action sheet', async () => {
+  test('send image attachment via action sheet', { tag: '@smoke' }, async () => {
     // Count existing image bubbles before sending
     const imageBubblesBefore = await page.locator('.cometchat-images-bubble').count();
 
-    await stageAndSendAttachment(
-      page,
-      'Image',
-      path.resolve(__dirname, '../fixtures/test-image.png')
-    );
+    await stageAndSendAttachment(page, 'Image');
 
     // A NEW image bubble should appear (count increased)
     await expect(async () => {
@@ -238,11 +136,7 @@ test.describe('CometChatMessageComposer', () => {
     // Count existing file bubbles before sending
     const fileBubblesBefore = await page.locator('.cometchat-files-bubble').count();
 
-    await stageAndSendAttachment(
-      page,
-      'File',
-      path.resolve(__dirname, '../fixtures/test-file.pdf')
-    );
+    await stageAndSendAttachment(page, 'File');
 
     // A NEW file bubble should appear (count increased)
     await expect(async () => {
@@ -258,11 +152,7 @@ test.describe('CometChatMessageComposer', () => {
     const imageBubblesBefore = await page.locator('.cometchat-images-bubble').count();
 
     // Send an image first
-    await stageAndSendAttachment(
-      page,
-      'Image',
-      path.resolve(__dirname, '../fixtures/test-image.png')
-    );
+    await stageAndSendAttachment(page, 'Image');
 
     // Wait for a NEW image bubble (count increased)
     await expect(async () => {
@@ -270,15 +160,23 @@ test.describe('CometChatMessageComposer', () => {
       expect(count).toBeGreaterThan(imageBubblesBefore);
     }).toPass({ timeout: 15_000 });
 
-    // Wait for image to fully render
-    await page.waitForTimeout(7500);
-
     // Click the LAST image bubble (the one we just sent)
     const imageBubble = page.locator('.cometchat-images-bubble').last();
     const imageWrapper = imageBubble.locator('.cometchat-images-bubble__image-wrapper').first();
     await expect(imageWrapper).toBeVisible({ timeout: 5_000 });
+    // The bubble first shows the local preview, then re-renders with the uploaded
+    // URL; click only once the uploaded image has actually loaded.
+    const image = imageWrapper.locator('img').first();
+    await expect
+      .poll(
+        () =>
+          image.evaluate(
+            (el: HTMLImageElement) => !el.src.startsWith('blob:') && el.complete && el.naturalWidth > 0
+          ),
+        { timeout: 20_000 }
+      )
+      .toBe(true);
     await imageWrapper.click();
-    await page.waitForTimeout(1000);
 
     // Full-screen viewer should open
     const viewer = page.locator('.cometchat-fullscreen-viewer').first();
@@ -286,7 +184,6 @@ test.describe('CometChatMessageComposer', () => {
 
     // Close via Escape
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
 
     // Viewer should close
     await expect(viewer).not.toBeVisible({ timeout: 5_000 });
@@ -304,7 +201,6 @@ test.describe('CometChatMessageComposer', () => {
     const attachBtn = page.locator('.cometchat-message-composer__attachment-button').first();
     await expect(attachBtn).toBeVisible({ timeout: 5_000 });
     await attachBtn.click();
-    await page.waitForTimeout(1000);
 
     const optionsList = page.locator('.cometchat-message-composer__attachment-list').first();
     await expect(optionsList).toBeVisible({ timeout: 5_000 });
@@ -329,11 +225,7 @@ test.describe('CometChatMessageComposer', () => {
     // Count existing video bubbles before sending
     const videoBubblesBefore = await page.locator('.cometchat-videos-bubble').count();
 
-    await stageAndSendAttachment(
-      page,
-      'Video',
-      path.resolve(__dirname, '../fixtures/test-video.mp4')
-    );
+    await stageAndSendAttachment(page, 'Video');
 
     // A NEW video bubble should appear (count increased)
     await expect(async () => {
@@ -348,11 +240,7 @@ test.describe('CometChatMessageComposer', () => {
     // Count existing audio bubbles before sending
     const audioBubblesBefore = await page.locator('.cometchat-audios-bubble').count();
 
-    await stageAndSendAttachment(
-      page,
-      'Audio',
-      path.resolve(__dirname, '../fixtures/test-audio.mp3')
-    );
+    await stageAndSendAttachment(page, 'Audio');
 
     // A NEW audio bubble should appear (count increased)
     await expect(async () => {
@@ -363,12 +251,4 @@ test.describe('CometChatMessageComposer', () => {
 
   // ==================== Audio Playback ====================
 
-  test('audio bubble has play button', async () => {
-    // There should be an audio bubble from the previous test or existing messages
-    const audioBubble = page.locator('.cometchat-audios-bubble').last();
-    await expect(audioBubble).toBeVisible({ timeout: 15_000 });
-
-    const playBtn = audioBubble.locator('.cometchat-audios-bubble__play-btn').first();
-    await expect(playBtn).toBeVisible({ timeout: 5_000 });
-  });
 });

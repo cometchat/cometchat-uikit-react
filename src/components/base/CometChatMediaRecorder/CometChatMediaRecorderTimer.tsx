@@ -1,7 +1,9 @@
 import React from 'react';
 import type { CometChatMediaRecorderTimerProps } from './CometChatMediaRecorder.types';
 import { useCometChatMediaRecorderContext } from './CometChatMediaRecorder.context';
+import { useLocale } from '../../../context/locale/LocaleContext';
 import './CometChatMediaRecorder.css';
+import { fillTemplate } from '../../../utils/fillTemplate';
 
 /**
  * Formats seconds into M:SS string (matching Angular implementation).
@@ -20,11 +22,12 @@ export const CometChatMediaRecorderTimer: React.FC<CometChatMediaRecorderTimerPr
   className,
 }) => {
   const { elapsedSeconds } = useCometChatMediaRecorderContext();
+  const { getLocalizedString } = useLocale();
   const formatted = formatTime(elapsedSeconds);
 
   const mins = Math.floor(elapsedSeconds / 60);
   const secs = elapsedSeconds % 60;
-  const durationLabel = `${String(mins)} minutes ${String(secs)} seconds`;
+  const durationLabel = fillTemplate(getLocalizedString('accessibility_recording_duration'), { minutes: String(mins), seconds: String(secs) });
 
   const baseClass = 'cometchat-media-recorder__timer';
   const timerClass = className ? `${baseClass} ${className}` : baseClass;

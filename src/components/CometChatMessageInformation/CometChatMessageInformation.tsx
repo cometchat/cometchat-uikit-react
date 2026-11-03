@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CometChatMessageInformationRoot } from './CometChatMessageInformationRoot';
 import { CometChatMessageInformationHeader } from './CometChatMessageInformationHeader';
 import { CometChatMessageInformationMessagePreview } from './CometChatMessageInformationMessagePreview';
@@ -7,6 +7,7 @@ import { CometChatMessageInformationLoadingState } from './CometChatMessageInfor
 import { CometChatMessageInformationErrorState } from './CometChatMessageInformationErrorState';
 import { CometChatMessageInformationEmptyState } from './CometChatMessageInformationEmptyState';
 import type { CometChatMessageInformationProps } from './CometChatMessageInformation.types';
+import { CometChatMessageInformationViewsContext } from './CometChatMessageInformation.context';
 
 /**
  * CometChatMessageInformation — Direct flat API component.
@@ -37,26 +38,16 @@ const CometChatMessageInformationComponent: React.FC<CometChatMessageInformation
   emptyView,
   ...rootProps
 }) => {
-  const hasConvenienceProps =
-    headerView !== undefined ||
-    receiptListView !== undefined ||
-    loadingView !== undefined ||
-    errorView !== undefined ||
-    emptyView !== undefined;
+  const views = useMemo(
+    () => ({ headerView, receiptListView, loadingView, errorView, emptyView }),
+    [headerView, receiptListView, loadingView, errorView, emptyView]
+  );
 
-  if (!hasConvenienceProps) {
-    return <CometChatMessageInformationRoot {...rootProps} />;
-  }
-
+  // Root's default layout places the views (see CometChatMessageInformationViewsContext).
   return (
-    <CometChatMessageInformationRoot {...rootProps}>
-      {headerView !== undefined ? headerView : <CometChatMessageInformationHeader />}
-      <CometChatMessageInformationMessagePreview />
-      {receiptListView !== undefined ? receiptListView : <CometChatMessageInformationReceiptList />}
-      {loadingView !== undefined && <CometChatMessageInformationLoadingState />}
-      {errorView !== undefined && <CometChatMessageInformationErrorState />}
-      {emptyView !== undefined && <CometChatMessageInformationEmptyState />}
-    </CometChatMessageInformationRoot>
+    <CometChatMessageInformationViewsContext.Provider value={views}>
+      <CometChatMessageInformationRoot {...rootProps} />
+    </CometChatMessageInformationViewsContext.Provider>
   );
 };
 

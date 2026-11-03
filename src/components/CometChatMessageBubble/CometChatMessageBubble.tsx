@@ -10,6 +10,7 @@ import { CometChatContextMenu } from '../base/CometChatContextMenu/CometChatCont
 import type { CometChatContextMenuItemData } from '../base/CometChatContextMenu/CometChatContextMenu.types';
 import type { CometChatMessageOption } from '../../plugins/plugin.types';
 import { isPinned, isSaved } from '../../utils/pinSaveUtils';
+import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
 import './CometChatMessageBubble.css';
 
 import statusSent from '../../assets/status_sent.svg';
@@ -27,10 +28,9 @@ import { localizeWithFallback } from '../../utils/localizeWithFallback';
 
 /**
  * Message types whose content is user-editable (text body or media caption).
- * A non-zero `editedAt` on any of these means the message was edited, so the
- * bubble surfaces the "Edited" indicator. Media types are included so edited
- * image/video/audio/file messages — including multi-attachment/plural bubbles —
- * show it too, not just plain text.
+ * The bubble surfaces the "Edited" indicator on these. Media types are included
+ * so edited image/video/audio/file messages — including multi-attachment/plural
+ * bubbles — show it too, not just plain text.
  */
 const EDITABLE_MESSAGE_TYPES = new Set<string>([
   CometChat.MESSAGE_TYPE.TEXT,
@@ -175,12 +175,15 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   const messageCategory = message.getCategory();
   // "Edited" applies to any editable-content message, not just text: media
   // messages (image/video/audio/file — including multi-attachment/plural bubbles)
-  // carry an editable caption, so a non-zero editedAt on them is a real edit.
-  // Restricting this to `text` hid the indicator for edited media messages.
+  // carry an editable caption. Extensions also edit media server-side as app_system
+  // (voice transcription updates audio right after it's sent), and nobody edited
+  // those, so only a person's edit counts on media.
   const isEdited =
     Boolean(message.getEditedAt()) &&
     messageCategory === CometChat.MessageCategory.MESSAGE &&
-    EDITABLE_MESSAGE_TYPES.has(messageType);
+    EDITABLE_MESSAGE_TYPES.has(messageType) &&
+    (messageType === CometChat.MESSAGE_TYPE.TEXT ||
+      message.getEditedBy() !== CometChatUIKitConstants.messages.APP_SYSTEM);
   const replyCount = message.getReplyCount();
   const sentAt = message.getSentAt();
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { CometChatSearchBar } from '../CometChatSearchBar';
 
@@ -17,7 +17,8 @@ describe('CometChatSearchBar accessibility', () => {
   it('root container has role="search" landmark', () => {
     renderFull();
     const search = screen.getByRole('search');
-    expect(search).toBeTruthy();
+    expect(search).toHaveClass('cometchat-search-bar');
+    expect(within(search).getByRole('searchbox')).toBeInTheDocument();
   });
 
   it('input has role="searchbox" and aria-label', () => {
@@ -62,7 +63,7 @@ describe('CometChatSearchBar accessibility', () => {
 
   it('clear button is not in tab order when input is empty', () => {
     const { container } = renderFull({ searchText: '' });
-    const clearBtn = container.querySelector('button[aria-label="Clear search"]');
+    const clearBtn = container.querySelector<HTMLButtonElement>('button[aria-label="Clear search"]');
     expect(clearBtn).toBeTruthy();
     expect(clearBtn!.tabIndex).toBe(-1);
   });

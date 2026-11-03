@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 config({ path: resolve(__dirname, '../.env.e2e') });
 
-// Provisions the agentic test groups (ENG-36495). Safe regardless of import
+// Provisions the agentic test groups. Safe regardless of import
 // ordering — the helper reads env lazily at call time, not at module load.
 // No-op unless GROUP_AGENT_1_UID / GROUP_AGENT_2_UID are set.
 import { ensureAgenticGroups } from '../e2e/helpers/seed';
@@ -156,6 +156,22 @@ async function conversationHasMessages(uid1: string, uid2: string): Promise<bool
   return Array.isArray(data?.data) && data.data.length > 0;
 }
 
+/**
+ * Whether the latest messages of a 1:1 chat include both people. Tests read the newest page
+ * (the app loads 30 messages), so a burst of messages from one side — from anything else that
+ * uses the app — would push the other side's messages out of it.
+ */
+async function latestMessagesFromBoth(uid1: string, uid2: string, count = 20): Promise<boolean> {
+  const res = await fetch(`${BASE_URL}/users/${uid2}/messages?per_page=${count}&affix=prepend&category=message`, {
+    headers: { ...HEADERS, onBehalfOf: uid1 },
+  });
+  const data = await res.json().catch(() => ({ data: [] }));
+  const senders = new Set(
+    ((data?.data ?? []) as { sender?: string }[]).map(message => message.sender).filter(Boolean)
+  );
+  return senders.has(uid1) && senders.has(uid2);
+}
+
 async function groupHasMessages(guid: string): Promise<boolean> {
   const res = await fetch(`${BASE_URL}/groups/${guid}/messages?limit=1&category=message`, {
     headers: { ...HEADERS, onBehalfOf: 'e2e-user-1' },
@@ -247,9 +263,13 @@ async function main() {
   }
   console.log('   Done.\n');
 
-  // ─── Step 4: Seed Bob chat (user-1 ↔ user-2, exactly 4 messages: 2 outgoing + 2 incoming) ─────────────
+  // ─── Step 4: Seed Bob chat (user-1 ↔ user-2: 2 outgoing + 2 incoming) ─────────────
+  // Sent again whenever the newest messages are no longer from both sides, so tests that need an
+  // outgoing and an incoming bubble on the first page always find them.
   console.log('💬 Seeding Bob chat: user-1 ↔ user-2 (4 messages)...');
-  const has12 = await conversationHasMessages('e2e-user-1', 'e2e-user-2');
+  const has12 =
+    (await conversationHasMessages('e2e-user-1', 'e2e-user-2')) &&
+    (await latestMessagesFromBoth('e2e-user-1', 'e2e-user-2'));
   if (!has12) {
     const bobMessages = [
       { sender: 'e2e-user-1', receiver: 'e2e-user-2', text: 'Hey Bob, how are you doing?' },
@@ -260,7 +280,7 @@ async function main() {
     for (const msg of bobMessages) {
       await sendMessage(msg.sender, msg.receiver, msg.text, 'user');
     }
-    console.log('   ✅ Sent 4 messages (2 outgoing + 2 incoming).');
+    console.log('   ✅ Sent 4 messages (2 outgoing + 2 incoming): the chat was empty or its newest messages were one-sided.');
   } else {
     stats.messagesSkipped += 4;
     console.log('   ⏭️  Already has messages.');
@@ -331,7 +351,15 @@ async function main() {
   }
   console.log('   Done.\n');
 
-  // ─── Step 8: Seed agentic group chat groups (ENG-36495) ────────────────────
+  // ─── Step 7b: Performance-measurement user ──────────────────────────────────
+  // A stable login for performance tooling. It is outside the e2e-user-*
+  // pattern, so E2E cleanup never deletes it.
+  const LH_USER_UID = process.env.LH_USER_UID || 'perf-user-1';
+  console.log(`📈 Ensuring performance user ${LH_USER_UID}...`);
+  await createUser(LH_USER_UID, 'Perf User', AVATARS[0]);
+  console.log('');
+
+  // ─── Step 8: Seed agentic group chat groups ────────────────────
   console.log('🤖 Ensuring agentic group chat groups...');
   await ensureAgenticGroups();
   console.log('');

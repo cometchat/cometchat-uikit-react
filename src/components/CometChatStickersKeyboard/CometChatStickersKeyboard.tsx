@@ -27,6 +27,7 @@ import type {
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { STICKERS_CONSTANTS } from '../../constants/CometChatExtensionConstants';
 import './CometChatStickersKeyboard.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 const GRID_COLUMNS = 4;
 
@@ -113,7 +114,7 @@ export const CometChatStickersKeyboard: React.FC<CometChatStickersKeyboardProps>
           return;
         }
         setStickerSets(parsed);
-        setActiveCategory(Object.keys(parsed)[0]);
+        setActiveCategory(Object.keys(parsed)[0] ?? '');
         setState('loaded');
       } else {
         setState('empty');
@@ -128,7 +129,7 @@ export const CometChatStickersKeyboard: React.FC<CometChatStickersKeyboardProps>
     if (initialState) return;
     if (stickerData && Object.keys(stickerData).length > 0) {
       setStickerSets(stickerData);
-      setActiveCategory(Object.keys(stickerData)[0]);
+      setActiveCategory(Object.keys(stickerData)[0] ?? '');
       setState('loaded');
     } else {
       fetchStickers();
@@ -160,6 +161,7 @@ export const CometChatStickersKeyboard: React.FC<CometChatStickersKeyboardProps>
         clearTimeout(timer);
       };
     }
+    return undefined;
   }, [state, autoFocus]);
 
   const handleImageLoaded = useCallback((url: string) => {
@@ -191,7 +193,7 @@ export const CometChatStickersKeyboard: React.FC<CometChatStickersKeyboardProps>
         (tabs?.[prev] as HTMLElement)?.focus();
       } else if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        setActiveCategory(categoryNames[index]);
+        setActiveCategory(categoryNames[index] ?? '');
       }
     },
     [categoryNames]
@@ -383,10 +385,7 @@ export const CometChatStickersKeyboard: React.FC<CometChatStickersKeyboardProps>
       <div
         className={'cometchat-stickers-keyboard__grid'}
         role="grid"
-        aria-label={getLocalizedString('accessibility_stickers_category').replace(
-          '{category}',
-          activeCategory
-        )}
+        aria-label={fillTemplate(getLocalizedString('accessibility_stickers_category'), { category: activeCategory })}
       >
         {currentStickers.map((sticker, i) => (
           <div
@@ -395,9 +394,7 @@ export const CometChatStickersKeyboard: React.FC<CometChatStickersKeyboardProps>
             role="gridcell"
             tabIndex={0}
             title={sticker.stickerSetName}
-            aria-label={getLocalizedString('accessibility_sticker_from')
-              .replace('{number}', String(i + 1))
-              .replace('{name}', sticker.stickerSetName)}
+            aria-label={fillTemplate(getLocalizedString('accessibility_sticker_from'), { number: String(i + 1), name: sticker.stickerSetName })}
             onClick={() => {
               handleStickerClick(sticker);
             }}

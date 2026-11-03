@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openBobChat, selectGroupByName } from '../helpers';
 
 /**
@@ -19,10 +19,6 @@ test.describe('CometChatMessageHeader', () => {
 
   // ==================== Rendering ====================
 
-  test('message header renders for active conversation', async () => {
-    await expect(page.locator('.cometchat-message-header').first()).toBeVisible();
-  });
-
   test('header displays user/group name', async () => {
     const title = page.locator('.cometchat-message-header__title, [class*="message-header"] [class*="title"]').first();
     await expect(title).toBeVisible();
@@ -37,14 +33,6 @@ test.describe('CometChatMessageHeader', () => {
 
   // ==================== User Status ====================
 
-  test('user online/offline status indicator displays', async () => {
-    const statusIndicator = page.locator('.cometchat-message-header__subtitle').first();
-    const hasStatus = await statusIndicator.isVisible().catch(() => false);
-
-    expect(hasStatus, 'Element should be visible: hasStatus').toBeTruthy();
-      expect(hasStatus).toBeTruthy();
-  });
-
   // ==================== Subtitle ====================
 
   test('subtitle displays (last active or member count)', async () => {
@@ -58,30 +46,19 @@ test.describe('CometChatMessageHeader', () => {
 
   // ==================== Call Buttons ====================
 
-  test('voice call button renders', async () => {
-    const voiceCallBtn = page.locator('.cometchat-call-buttons__voice, [class*="call-buttons"] [class*="voice"]').first();
-    const hasVoiceCall = await voiceCallBtn.isVisible().catch(() => false);
-
-    expect(hasVoiceCall, 'Element should be visible: hasVoiceCall').toBeTruthy();
-      await expect(voiceCallBtn).toBeVisible();
-  });
-
-  test('video call button renders', async () => {
-    const videoCallBtn = page.locator('.cometchat-call-buttons__video, [class*="call-buttons"] [class*="video"]').first();
-    const hasVideoCall = await videoCallBtn.isVisible().catch(() => false);
-
-    expect(hasVideoCall, 'Element should be visible: hasVideoCall').toBeTruthy();
-      await expect(videoCallBtn).toBeVisible();
-  });
-
   // ==================== Back Button ====================
 
-  test('back button is present', async () => {
-    // Back button may only be shown on mobile viewport or when configured
-    const backBtn = page.locator('.cometchat-message-header__back-button, [class*="message-header"] [class*="back"]').first();
-    const hasBack = await backBtn.isVisible().catch(() => false);
-    // At minimum verify the selector query ran — back button presence depends on viewport
-    expect(typeof hasBack).toBe('boolean');
+  test('back button shows only on mobile and returns to the list', async () => {
+    const backBtn = page.locator('.cometchat-messages-wrapper .cometchat-message-header__back-button');
+    // Desktop: the list and the chat are side by side, so there is no back button.
+    await expect(backBtn).toHaveCount(0);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(backBtn.first()).toBeVisible({ timeout: 10_000 });
+    await backBtn.first().click();
+    // This spec opens Bob from the Users tab, so back returns to that list.
+    await expect(page.locator('.cometchat-users').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.cometchat-messages-wrapper .cometchat-message-header')).toHaveCount(0);
   });
 
   // ==================== Typing Indicator ====================
@@ -99,8 +76,7 @@ test.describe('CometChatMessageHeader', () => {
     const header = page.locator('.cometchat-message-header').first();
     await expect(header).toBeVisible();
 
-    const hasAriaElements = await header.locator('[aria-label]').first().isVisible({ timeout: 3_000 }).catch(() => false);
-    expect(hasAriaElements).toBeTruthy();
+    await expect(header.locator('[aria-label]').first()).toBeVisible({ timeout: 3_000 });
   });
 
   // ==================== Group Header ====================

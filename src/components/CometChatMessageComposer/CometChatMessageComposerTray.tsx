@@ -26,6 +26,7 @@ import fileTypeMov from '../../assets/file_type_mov.svg';
 import fileTypeJpg from '../../assets/file_type_jpg.svg';
 import fileTypeUnsupported from '../../assets/file_type_unsupported.svg';
 import './CometChatMessageComposerTray.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 // Lazy-load the FullScreenViewer — heavy and only needed when a media tile is opened.
 const LazyCometChatFullScreenViewer = lazy(
@@ -107,11 +108,10 @@ function formatSizeLimitMB(bytes: number): string {
 function buildSizeExceededTooltip(template: string, error: unknown): string {
   const bytes = extractSizeLimitBytes(error);
   if (bytes == null)
-    return template
-      .replace('{count}', '')
+    return fillTemplate(template, { count: '' })
       .replace(/\s{2,}/g, ' ')
       .trim();
-  return template.replace('{count}', formatSizeLimitMB(bytes));
+  return fillTemplate(template, { count: formatSizeLimitMB(bytes) });
 }
 
 /** Extract the uppercased file extension (e.g. "PDF") for the file-card meta label. */

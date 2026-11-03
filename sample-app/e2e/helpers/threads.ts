@@ -1,4 +1,5 @@
 import { Page, Request, expect } from '@playwright/test';
+import { expectSendAccepted, THREAD_LIST } from './send';
 
 /**
  * Helpers for the thread-subscription suite.
@@ -200,14 +201,40 @@ export async function restoreSubscriptionWrites(page: Page): Promise<void> {
 // ─── UI ──────────────────────────────────────────────────────────────────────
 
 /** Open a message bubble's action sheet, given a locator for its wrapper. */
-export async function openActionSheet(page: Page, bubble: ReturnType<Page['locator']>) {
-  await bubble.locator('.cometchat-message-bubble__body').first().hover();
-  await page.waitForTimeout(400);
+/**
+ * Wait until `bubble` stops moving. A new message smooth-scrolls the list, and
+ * the kit closes any open context menu on scroll — so opening a menu while the
+ * list is still scrolling gets it closed again under the test.
+ */
+export async function waitForBubbleSettled(bubble: ReturnType<Page['locator']>) {
+  let last: number | undefined;
+  await expect
+    .poll(
+      async () => {
+        const box = await bubble.boundingBox({ timeout: 2_000 }).catch(() => null);
+        if (!box) throw new Error('bubble is not on screen (gone from the DOM, or the app unmounted)');
+        const y = box.y;
+        const settled = y === last;
+        last = y;
+        return settled;
+      },
+      { message: 'bubble kept moving (list still scrolling)', intervals: [250], timeout: 10_000 }
+    )
+    .toBe(true);
+}
 
+export async function openActionSheet(page: Page, bubble: ReturnType<Page['locator']>) {
+  await waitForBubbleSettled(bubble);
   const moreButton = bubble.locator('button[aria-label*="More" i]').first();
-  await expect(moreButton).toBeVisible({ timeout: 5_000 });
-  await moreButton.click();
-  await page.waitForTimeout(400);
+  const anyOption = page.getByRole('menuitem').first();
+  // The kit closes an open menu on any scroll (a late receipt or a new message
+  // can still nudge the list), so retry until the menu is actually showing.
+  await expect(async () => {
+    if (await anyOption.isVisible()) return;
+    await bubble.locator('.cometchat-message-bubble__body').first().hover();
+    await moreButton.click({ timeout: 3_000 });
+    await expect(anyOption).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
 }
 
 export async function closeActionSheet(page: Page) {
@@ -243,9 +270,17 @@ export async function isBellFollowed(page: Page): Promise<boolean> {
 
 /** Open the thread for a bubble via its "Reply in thread" option. */
 export async function openThreadFor(page: Page, bubble: ReturnType<Page['locator']>) {
-  await openActionSheet(page, bubble);
-  await page.locator('[role="menuitem"]:has-text("Reply in thread")').first().click();
-  await expect(page.locator('.cometchat-thread-panel').first()).toBeVisible({ timeout: 10_000 });
+  const option = page.locator('[role="menuitem"]:has-text("Reply in thread")').first();
+  const panel = page.locator('.cometchat-thread-panel').first();
+  const panelWasOpen = await panel.isVisible();
+  // The menu closes when the list re-renders under it, so reopen and click until the
+  // thread panel shows.
+  await expect(async () => {
+    if (!panelWasOpen && (await panel.isVisible())) return;
+    if (!(await option.isVisible())) await openActionSheet(page, bubble);
+    await option.click({ timeout: 2_000 });
+    await expect(panel).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: 20_000 });
   await page.waitForTimeout(1000);
 }
 
@@ -284,12 +319,8 @@ export async function sendThreadReply(page: Page, text: string) {
   const input = composer.locator('[contenteditable="true"]').first();
   await input.click();
   await page.keyboard.type(text);
-  await page.waitForTimeout(300);
-  await composer
-    .locator('[class*="send-button"], button[aria-label*="Send" i]')
-    .first()
-    .click();
-  await page.waitForTimeout(2500);
+  const sendBtn = composer.locator('[class*="send-button"], button[aria-label*="Send" i]').first();
+  await expectSendAccepted(page, () => sendBtn.click(), { list: THREAD_LIST });
 }
 
 // ─── Non-text sends (auto-subscribe by message type) ──────────────────────────
@@ -312,7 +343,6 @@ export async function sendSticker(page: Page): Promise<void> {
   const stickerBtn = page.locator('.cometchat-message-composer__sticker-button').first();
   await expect(stickerBtn).toBeVisible({ timeout: 5_000 });
   await stickerBtn.click();
-  await page.waitForTimeout(1500);
 
   const keyboard = page
     .locator('.cometchat-stickers-keyboard, [class*="stickers-keyboard"]')
@@ -321,8 +351,7 @@ export async function sendSticker(page: Page): Promise<void> {
 
   const firstSticker = keyboard.locator('.cometchat-stickers-keyboard__sticker-item').first();
   await expect(firstSticker).toBeVisible({ timeout: 5_000 });
-  await firstSticker.click();
-  await page.waitForTimeout(3000);
+  await expectSendAccepted(page, () => firstSticker.click());
 }
 
 /**
@@ -361,9 +390,8 @@ export async function sendImage(page: Page, filePath: string): Promise<void> {
 
   const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
   await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-  await sendBtn.click();
+  await expectSendAccepted(page, () => sendBtn.click());
   await expect(tray).not.toBeVisible({ timeout: 15_000 });
-  await page.waitForTimeout(1500);
 }
 
 /**

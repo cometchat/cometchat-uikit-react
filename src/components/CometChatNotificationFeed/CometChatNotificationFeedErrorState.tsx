@@ -40,7 +40,7 @@ export const CometChatNotificationFeedErrorState: React.FC<
           <button
             className="cometchat-notification-feed__error-retry-button"
             onClick={() => void refresh()}
-            aria-label="Retry loading notifications"
+            aria-label={getLocalizedString('accessibility_retry_notifications')}
           >
             {getLocalizedString('retry')}
           </button>

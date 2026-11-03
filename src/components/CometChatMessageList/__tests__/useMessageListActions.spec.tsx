@@ -20,7 +20,7 @@ import { buildTextMessage } from '../../../testing/mock-builders';
 
 function makeRefs(initialState: CometChatMessageListState = initialMessageListState): {
   refs: MessageListRefs;
-  manager: Record<string, ReturnType<typeof vi.fn>>;
+  manager: Record<'deleteMessage' | 'markMessageAsUnread' | 'markConversationAsRead', ReturnType<typeof vi.fn>>;
 } {
   const manager = {
     deleteMessage: vi.fn(),
@@ -37,6 +37,7 @@ function makeRefs(initialState: CometChatMessageListState = initialMessageListSt
     stateRef: { current: initialState },
     optionsRef: { current: {} as CometChatUseMessageListOptions },
     initializeRef: { current: null },
+    pendingMessagesMap: {},
   };
   return { refs, manager };
 }

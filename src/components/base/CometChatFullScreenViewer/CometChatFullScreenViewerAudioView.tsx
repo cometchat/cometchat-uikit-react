@@ -2,6 +2,7 @@ import React from 'react';
 import { useCometChatFullScreenViewerContext } from './CometChatFullScreenViewer.context';
 import { useLocale } from '../../../context/locale/LocaleContext';
 import './CometChatFullScreenViewer.css';
+import { fillTemplate } from '../../../utils/fillTemplate';
 
 /**
  * Audio display view with icon, native controls, and filename.
@@ -20,7 +21,7 @@ export const CometChatFullScreenViewerAudioView: React.FC = () => {
         autoPlay
         aria-label={
           senderName
-            ? `Audio from ${senderName}`
+            ? fillTemplate(getLocalizedString('accessibility_audio_from'), { name: senderName })
             : getLocalizedString('accessibility_full_screen_audio')
         }
       >

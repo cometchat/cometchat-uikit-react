@@ -36,6 +36,7 @@ interface AudioCardProps {
 }
 
 const AudioCard: React.FC<AudioCardProps> = ({ attachment }) => {
+  const { getLocalizedString } = useLocale();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -161,7 +162,7 @@ const AudioCard: React.FC<AudioCardProps> = ({ attachment }) => {
         type="button"
         className="cometchat-audios-bubble__play-btn"
         onClick={togglePlay}
-        aria-label={isPlaying ? 'Pause' : 'Play'}
+        aria-label={getLocalizedString(isPlaying ? 'accessibility_pause_audio' : 'accessibility_play_audio')}
       >
         <img
           src={isPlaying ? pauseIcon : playArrowIcon}
@@ -186,7 +187,7 @@ const AudioCard: React.FC<AudioCardProps> = ({ attachment }) => {
           step={0.1}
           value={currentTime}
           onChange={handleSeek}
-          aria-label="Seek audio"
+          aria-label={getLocalizedString('message_composer_tray_seek_audio')}
           style={{ background: sliderBg }}
         />
         <span className="cometchat-audios-bubble__time">
@@ -263,7 +264,10 @@ export const CometChatAudiosBubble: React.FC<CometChatAudiosBubbleProps> = ({
             className="cometchat-audios-bubble__toggle"
             onClick={toggleExpanded}
             aria-expanded={false}
-            aria-label={`Show ${String(remainingCount)} more`}
+            aria-label={getLocalizedString('accessibility_show_more_files').replace(
+              '{count}',
+              String(remainingCount)
+            )}
           >
             {(getLocalizedString('bubble_show_more') || 'Show {count} more').replace(
               '{count}',
@@ -294,7 +298,7 @@ export const CometChatAudiosBubble: React.FC<CometChatAudiosBubbleProps> = ({
             className="cometchat-audios-bubble__toggle"
             onClick={toggleExpanded}
             aria-expanded={true}
-            aria-label="Show less"
+            aria-label={getLocalizedString('bubble_show_less')}
           >
             {getLocalizedString('bubble_show_less') || 'Show less'}
             <svg

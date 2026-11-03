@@ -7,6 +7,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import {
   computeBatchPosition,
   getMessageBatchId,
@@ -22,7 +23,7 @@ function makeMessage(batchId?: string | null) {
     getMetadata: () => (batchId === undefined ? null : metadata),
     getId: () => Math.floor(Math.random() * 1000000),
     getMuid: () => `muid-${Math.random().toString(36).slice(2)}`,
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+  } as unknown as CometChat.BaseMessage;
 }
 
 // --- Property 7: Batch position from neighbors ---
@@ -139,21 +140,21 @@ describe('getMessageBatchId', () => {
   it('returns undefined when metadata is null', () => {
     const msg = {
       getMetadata: () => null,
-    } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+    } as unknown as CometChat.BaseMessage;
     expect(getMessageBatchId(msg)).toBeUndefined();
   });
 
   it('returns undefined when batchId is empty string', () => {
     const msg = {
       getMetadata: () => ({ batchId: '' }),
-    } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+    } as unknown as CometChat.BaseMessage;
     expect(getMessageBatchId(msg)).toBeUndefined();
   });
 
   it('returns undefined when batchId is not a string', () => {
     const msg = {
       getMetadata: () => ({ batchId: 42 }),
-    } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+    } as unknown as CometChat.BaseMessage;
     expect(getMessageBatchId(msg)).toBeUndefined();
   });
 });

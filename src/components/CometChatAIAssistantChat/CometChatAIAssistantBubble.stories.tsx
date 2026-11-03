@@ -21,6 +21,7 @@ Would you like me to help with anything specific?`,
   }),
   getMetadata: () => ({}),
   getDeletedAt: () => null,
+  getReceiverType: () => 'user',
 } as unknown as CometChat.BaseMessage;
 
 const mockSimpleMessage = {

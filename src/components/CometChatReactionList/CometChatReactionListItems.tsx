@@ -5,6 +5,7 @@ import { useCometChatReactionListContext } from './CometChatReactionList.context
 import { useLocale } from '../../context/locale/LocaleContext';
 import { CometChatAvatar } from '../base/CometChatAvatar';
 import './CometChatReactionList.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * CometChatReactionList.Items — scrollable list of users who reacted.
@@ -77,7 +78,9 @@ export const CometChatReactionListItems: React.FC<CometChatReactionListItemsProp
       className={rootClass}
       role="list"
       aria-label={
-        selectedEmoji ? `Users who reacted with ${selectedEmoji}` : 'All users who reacted'
+        selectedEmoji
+          ? fillTemplate(getLocalizedString('accessibility_users_reacted_with'), { emoji: selectedEmoji })
+          : getLocalizedString('accessibility_all_users_reacted')
       }
     >
       {filteredReactions.map(reaction => {
@@ -99,8 +102,8 @@ export const CometChatReactionListItems: React.FC<CometChatReactionListItemsProp
           .join(' ');
 
         const ariaLabel = isMine
-          ? `${displayName} reacted with ${emoji}. ${clickToRemoveText}`
-          : `${name} reacted with ${emoji}`;
+          ? fillTemplate(getLocalizedString('accessibility_you_reacted_with'), { emoji })
+          : fillTemplate(getLocalizedString('accessibility_user_reacted_with'), { name, emoji });
 
         return (
           <div

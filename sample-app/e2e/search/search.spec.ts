@@ -1,5 +1,7 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp } from '../helpers';
+import { visibleWithin } from '../helpers/wait';
+import { expectArrowFocusNavigation } from '../helpers/keyboard';
 
 /**
  * E2E Tests — CometChatSearch (React)
@@ -25,14 +27,6 @@ test.describe('CometChatSearch', () => {
 
   // ==================== Rendering ====================
 
-  test('search component renders with input', async () => {
-    const searchComponent = page.locator('.cometchat-search').first();
-    await expect(searchComponent).toBeVisible({ timeout: 5_000 });
-
-    const input = page.locator('.cometchat-search__input input').first();
-    await expect(input).toBeVisible();
-  });
-
   test('search input is focusable and accepts text', async () => {
     const input = page.locator('.cometchat-search__input input').first();
     await expect(input).toBeVisible({ timeout: 5_000 });
@@ -46,21 +40,6 @@ test.describe('CometChatSearch', () => {
   });
 
   // ==================== Search Triggers ====================
-
-  test('typing in search input triggers search results', async () => {
-    const input = page.locator('.cometchat-search__input input').first();
-    await expect(input).toBeVisible({ timeout: 5_000 });
-
-    await input.fill('test');
-    await page.waitForTimeout(3000);
-
-    const hasResults = await page.locator('.cometchat-search__results').first().isVisible().catch(() => false);
-    const hasConversationResults = await page.locator('.cometchat-search__conversations-list-item').first().isVisible().catch(() => false);
-    const hasMessageResults = await page.locator('.cometchat-search__messages-list-item').first().isVisible().catch(() => false);
-    const hasEmpty = await page.locator('.cometchat-search__empty-view').isVisible().catch(() => false);
-
-    expect(hasResults || hasConversationResults || hasMessageResults || hasEmpty).toBeTruthy();
-  });
 
   // ==================== Conversations Results ====================
 
@@ -77,7 +56,7 @@ test.describe('CometChatSearch', () => {
 
   // ==================== Result Click ====================
 
-  test('clicking a search result navigates to conversation', async () => {
+  test('clicking a search result navigates to conversation', { tag: '@smoke' }, async () => {
     const input = page.locator('.cometchat-search__input input').first();
     await expect(input).toBeVisible({ timeout: 5_000 });
 
@@ -89,8 +68,7 @@ test.describe('CometChatSearch', () => {
     await resultItem.click();
     await page.waitForTimeout(2000);
 
-    const hasMessages = await page.locator('.cometchat-message-header, .cometchat-message-list').first().isVisible({ timeout: 10_000 }).catch(() => false);
-    expect(hasMessages).toBeTruthy();
+    await expect(page.locator('.cometchat-message-header, .cometchat-message-list').first()).toBeVisible({ timeout: 10_000 });
   });
 
   // ==================== Back Button ====================
@@ -131,12 +109,9 @@ test.describe('CometChatSearch', () => {
   test('keyboard navigation through results works', async () => {
     const input = page.locator('.cometchat-search__input input').first();
     await expect(input).toBeVisible({ timeout: 5_000 });
+    await input.fill('Team');
 
-    await input.fill('Design');
-    await page.waitForTimeout(3000);
-
-    await page.keyboard.press('ArrowDown');
-    await page.waitForTimeout(300);
+    await expectArrowFocusNavigation(page.locator('.cometchat-search__conversations-list-item'));
   });
 
   // ==================== Accessibility ====================
@@ -184,7 +159,7 @@ test.describe('CometChatSearch', () => {
     // After applying Audio filter, no results should match "Hello"
     const emptyView = page.locator('.cometchat-search__empty-view').first();
     const noItems = await page.locator('.cometchat-search__messages-list-item').count() === 0;
-    const hasEmpty = await emptyView.isVisible({ timeout: 5_000 }).catch(() => false);
+    const hasEmpty = await visibleWithin(emptyView, 5_000);
     expect(noItems || hasEmpty).toBeTruthy();
   });
 

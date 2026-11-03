@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
 import { downloadWithProgress } from '../downloadWithProgress';
 
 describe('downloadWithProgress', () => {
   let mockFetch: ReturnType<typeof vi.fn>;
-  let mockCreateElement: ReturnType<typeof vi.fn>;
+  let mockCreateElement: MockInstance<Document['createElement']>;
   let mockCreateObjectURL: ReturnType<typeof vi.fn>;
   let mockRevokeObjectURL: ReturnType<typeof vi.fn>;
   let mockWindowOpen: ReturnType<typeof vi.fn>;
@@ -89,7 +89,9 @@ describe('downloadWithProgress', () => {
       headers: { get: () => '2' },
     });
 
-    const linkElement = { href: '', download: '', click: vi.fn() };
+    // Real anchor: saveBlob appends it to the DOM, which a plain object can't survive.
+    const linkElement = document.createElement('a');
+    vi.spyOn(linkElement, 'click').mockImplementation(() => undefined);
     mockCreateElement.mockReturnValue(linkElement);
 
     await downloadWithProgress(
@@ -197,7 +199,9 @@ describe('downloadWithProgress', () => {
       headers: { get: () => '7' },
     });
 
-    const linkElement = { href: '', download: '', click: vi.fn() };
+    // Real anchor: saveBlob appends it to the DOM, which a plain object can't survive.
+    const linkElement = document.createElement('a');
+    vi.spyOn(linkElement, 'click').mockImplementation(() => undefined);
     mockCreateElement.mockReturnValue(linkElement);
 
     const onProgress = vi.fn();

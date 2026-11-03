@@ -3,6 +3,7 @@ import { useCometChatFullScreenViewerContext } from './CometChatFullScreenViewer
 import { CometChatFullScreenViewerUnsupportedState } from './CometChatFullScreenViewerUnsupportedState';
 import { useLocale } from '../../../context/locale/LocaleContext';
 import './CometChatFullScreenViewer.css';
+import { fillTemplate } from '../../../utils/fillTemplate';
 
 /**
  * Image display view. Shows the image with box-shadow. When the image fails to
@@ -29,7 +30,7 @@ export const CometChatFullScreenViewerImageView: React.FC = () => {
       className={'cometchat-fullscreen-viewer__body-image'}
       alt={
         senderName
-          ? `Image from ${senderName}`
+          ? fillTemplate(getLocalizedString('accessibility_image_from'), { name: senderName })
           : getLocalizedString('accessibility_full_screen_image')
       }
       decoding="async"

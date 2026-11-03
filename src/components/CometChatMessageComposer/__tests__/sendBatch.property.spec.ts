@@ -123,8 +123,8 @@ describe('Feature: multi-attachments, Property 5: Fan-out ordering is determinis
         // Verify the ordering: for each pair of adjacent groups, the first
         // must come before the second in KIND_ORDER.
         for (let i = 0; i < groups.length - 1; i++) {
-          const currentIdx = KIND_ORDER.indexOf(groups[i].kind);
-          const nextIdx = KIND_ORDER.indexOf(groups[i + 1].kind);
+          const currentIdx = KIND_ORDER.indexOf(groups[i]!.kind);
+          const nextIdx = KIND_ORDER.indexOf(groups[i + 1]!.kind);
           expect(currentIdx).toBeLessThan(nextIdx);
         }
       }),
@@ -158,7 +158,7 @@ describe('Feature: multi-attachments, Property 5: Fan-out ordering is determinis
         // Simulate sentAt = nowSeconds + p for each position p
         const sentAts = groups.map((_, p) => nowSeconds + p);
         for (let i = 0; i < sentAts.length - 1; i++) {
-          expect(sentAts[i]).toBeLessThan(sentAts[i + 1]);
+          expect(sentAts[i]).toBeLessThan(sentAts[i + 1]!);
         }
       }),
       { numRuns: 100 }

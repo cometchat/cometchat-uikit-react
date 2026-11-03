@@ -113,7 +113,7 @@ export const CometChatNotificationFeedRoot: React.FC<CometChatNotificationFeedRo
         ref={contentRef}
         className="cometchat-notification-feed"
         role="region"
-        aria-label="Notifications"
+        aria-label={getLocalizedString('notifications_title')}
       >
         {hasChildren ? (
           children

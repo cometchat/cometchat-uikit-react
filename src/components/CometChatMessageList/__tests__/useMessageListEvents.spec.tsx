@@ -8,7 +8,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { CometChatEventsContext } from '../../../context/CometChatEventsContext';
-import type { CometChatSDKEvent } from '../../../context/CometChatEvents.types';
+import type { CometChatEvent } from '../../../context/CometChatEvents.types';
 import { CometChatMessageStatus } from '../../../context/CometChatEvents.types';
 
 vi.mock('../CometChatMessageList.sound', () => ({
@@ -52,11 +52,12 @@ function makeRefs(
       } as CometChatUseMessageListOptions,
     },
     initializeRef: { current: null },
+    pendingMessagesMap: {},
   };
   return { refs, manager };
 }
 
-type Emit = (event: CometChatSDKEvent) => void;
+type Emit = (event: CometChatEvent) => void;
 
 function setup(
   options: Parameters<typeof useMessageListEvents>[0],
@@ -66,10 +67,10 @@ function setup(
   dispatched: CometChatMessageListAction[];
   publish: ReturnType<typeof vi.fn>;
 } {
-  const handlers = new Set<(event: CometChatSDKEvent) => void>();
+  const handlers = new Set<(event: CometChatEvent) => void>();
   const publish = vi.fn();
   const bridge = {
-    subscribe: (handler: (event: CometChatSDKEvent) => void) => {
+    subscribe: (handler: (event: CometChatEvent) => void) => {
       handlers.add(handler);
       return () => {
         handlers.delete(handler);
@@ -1034,7 +1035,7 @@ describe('useMessageListEvents', () => {
     const { CometChat } = await import('@cometchat/chat-sdk-javascript');
     const helperSpy = vi
       .spyOn(CometChat.CometChatHelper, 'updateMessageWithReactionInfo')
-      .mockImplementation((msg: never) => msg);
+      .mockImplementation(msg => msg);
 
     const existing = buildTextMessage({ id: 77 });
     const { refs } = makeRefs({
@@ -1071,7 +1072,7 @@ describe('useMessageListEvents', () => {
     const { CometChat } = await import('@cometchat/chat-sdk-javascript');
     const helperSpy = vi
       .spyOn(CometChat.CometChatHelper, 'updateMessageWithReactionInfo')
-      .mockImplementation((msg: never) => msg);
+      .mockImplementation(msg => msg);
 
     const existing = buildTextMessage({ id: 77 });
     const { refs } = makeRefs({

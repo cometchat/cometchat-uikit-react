@@ -69,7 +69,7 @@ describe('CometChatThreadHeaderManager', () => {
 
       const callbacks = getListenerCallbacks();
       const message = createMockMessage({ parentMessageId: 100, senderUid: 'other-user' });
-      callbacks.onTextMessageReceived(message);
+      callbacks.onTextMessageReceived!(message);
 
       expect(onNewReply).toHaveBeenCalledWith(message);
     });
@@ -80,7 +80,7 @@ describe('CometChatThreadHeaderManager', () => {
 
       const callbacks = getListenerCallbacks();
       const message = createMockMessage({ parentMessageId: 100, senderUid: 'logged-in-user' });
-      callbacks.onTextMessageReceived(message);
+      callbacks.onTextMessageReceived!(message);
 
       expect(onNewReply).not.toHaveBeenCalled();
     });
@@ -91,7 +91,7 @@ describe('CometChatThreadHeaderManager', () => {
 
       const callbacks = getListenerCallbacks();
       const message = createMockMessage({ parentMessageId: 999, senderUid: 'other-user' });
-      callbacks.onTextMessageReceived(message);
+      callbacks.onTextMessageReceived!(message);
 
       expect(onNewReply).not.toHaveBeenCalled();
     });
@@ -102,7 +102,7 @@ describe('CometChatThreadHeaderManager', () => {
 
       const callbacks = getListenerCallbacks();
       const message = createMockMessage({ parentMessageId: 100, senderUid: 'other-user' });
-      callbacks.onMediaMessageReceived(message);
+      callbacks.onMediaMessageReceived!(message);
 
       expect(onNewReply).toHaveBeenCalledWith(message);
     });
@@ -113,7 +113,7 @@ describe('CometChatThreadHeaderManager', () => {
 
       const callbacks = getListenerCallbacks();
       const message = createMockMessage({ parentMessageId: 100, senderUid: 'other-user' });
-      callbacks.onCustomMessageReceived(message);
+      callbacks.onCustomMessageReceived!(message);
 
       expect(onNewReply).toHaveBeenCalledWith(message);
     });
@@ -124,7 +124,7 @@ describe('CometChatThreadHeaderManager', () => {
 
       const callbacks = getListenerCallbacks();
       const message = createMockMessage({ parentMessageId: 100, senderUid: 'other-user' });
-      callbacks.onInteractiveMessageReceived(message);
+      callbacks.onInteractiveMessageReceived!(message);
 
       expect(onNewReply).toHaveBeenCalledWith(message);
     });

@@ -64,6 +64,7 @@ function createMockContext(
     selectionMode: 'none',
     hideGroupType: false,
     hideSearch: false,
+    showScrollbar: false,
     options: undefined,
     fetchNext: vi.fn(),
     setSearchText: vi.fn(),

@@ -215,34 +215,52 @@ interface DateTokens {
 }
 
 /**
+ * Marks text as literal in a date pattern, so a localized word isn't read as tokens: Turkish
+ * "Dün" (yesterday) would otherwise show as "30ün", its "D" taken for the day of the month.
+ */
+export function dateLiteral(text: string): string {
+  return `[${text}]`;
+}
+
+/**
  * Formats a Date using a pattern string with optional timezone and locale support.
  *
  * Supported tokens: DD, D, MMMM, MMM, MM, M, YYYY, YY, hh, h, mm, m, A (AM/PM),
- * a (am/pm), dddd, ddd, dd. Literal text (no matching token) passes through unchanged.
+ * a (am/pm), dddd, ddd, dd. Text in [brackets] is literal and loses its brackets; other text
+ * without a matching token passes through unchanged.
  */
 export function formatDateFromPattern(
   date: Date,
   format: string,
   options?: FormatDateOptions
 ): string {
-  const hasUpperA = /\bA\b/.test(format);
-  const hasLowerA = /\ba\b/.test(format);
+  // Set the [literal] parts aside, so nothing in them is read as a token, and put them back last.
+  const literals: string[] = [];
+  const pattern = format.replace(/\[(.*?)\]/g, (_match, text: string) => {
+    literals.push(text);
+    return `${String(literals.length - 1)}`;
+  });
+  const withLiterals = (text: string) =>
+    text.replace(/(\d+)/g, (_match, index: string) => literals[Number(index)] ?? '');
+
+  const hasUpperA = /\bA\b/.test(pattern);
+  const hasLowerA = /\ba\b/.test(pattern);
   const intlOptions: Intl.DateTimeFormatOptions = {
-    day: format.includes('D') ? '2-digit' : undefined,
+    day: pattern.includes('D') ? '2-digit' : undefined,
     month:
-      format.includes('MMMM') ||
-      format.includes('MMM') ||
-      format.includes('MM') ||
-      format.includes('M')
+      pattern.includes('MMMM') ||
+      pattern.includes('MMM') ||
+      pattern.includes('MM') ||
+      pattern.includes('M')
         ? '2-digit'
         : undefined,
-    year: format.includes('YYYY') ? 'numeric' : format.includes('YY') ? '2-digit' : undefined,
-    hour: format.includes('hh') ? '2-digit' : format.includes('h') ? 'numeric' : undefined,
-    minute: format.includes('mm') ? '2-digit' : format.includes('m') ? 'numeric' : undefined,
+    year: pattern.includes('YYYY') ? 'numeric' : pattern.includes('YY') ? '2-digit' : undefined,
+    hour: pattern.includes('hh') ? '2-digit' : pattern.includes('h') ? 'numeric' : undefined,
+    minute: pattern.includes('mm') ? '2-digit' : pattern.includes('m') ? 'numeric' : undefined,
     hour12: hasUpperA || hasLowerA,
-    weekday: format.includes('dddd')
+    weekday: pattern.includes('dddd')
       ? 'long'
-      : format.includes('ddd') || format.includes('dd')
+      : pattern.includes('ddd') || pattern.includes('dd')
         ? 'short'
         : undefined,
   };
@@ -255,7 +273,7 @@ export function formatDateFromPattern(
   // If no Intl tokens are needed (e.g., format is just "Yesterday"), return as-is
   const hasTokens = Object.values(intlOptions).some(v => v !== undefined && v !== false);
   if (!hasTokens) {
-    return format;
+    return withLiterals(pattern);
   }
 
   // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
@@ -345,8 +363,7 @@ export function formatDateFromPattern(
       }
     }
 
-    return format
-      .replace(/\[(.*?)\]/g, '$1')
+    const formatted = pattern
       .replace(/\bDD\b/g, r.DD)
       .replace(/\bD\b/g, r.D)
       .replace(/\bMMMM\b/g, r.MMMM)
@@ -370,6 +387,7 @@ export function formatDateFromPattern(
       .replace(/^a\s/g, `${r.a || 'a'} `)
       .replace(/\sa$/, ` ${r.a || 'a'}`)
       .replace(/^a$/, r.a || 'a');
+    return withLiterals(formatted);
   } catch {
     return date.toLocaleDateString();
   }

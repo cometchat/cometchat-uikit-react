@@ -24,10 +24,6 @@
     "exclude": [
         "dist",
         "node_modules",
-        "src/**/*.test.tsx",
-        "src/**/*.test.ts",
-        "src/**/*.spec.tsx",
-        "src/**/*.spec.ts",
         "sample-app-old/",
         "sample-app/"
     ]

@@ -6,6 +6,7 @@ import { useLoggedInUser } from '../../hooks/useLoggedInUser';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { localizeWithFallback } from '../../utils/localizeWithFallback';
 import { getMessageSubtitle } from '../../utils/messageSubtitle';
+import { dateLiteral } from '../../resources/CometChatLocalize/dateFormat.utils';
 import { useCometChatPinnedMessagesContext } from './CometChatPinnedMessages.context';
 import type { CometChatPinnedMessagesItemProps } from './CometChatPinnedMessages.types';
 
@@ -123,7 +124,7 @@ export const CometChatPinnedMessagesItem: React.FC<CometChatPinnedMessagesItemPr
           variant="caption2"
           formatConfig={{
             today: 'hh:mm A',
-            yesterday: loc('date_yesterday', 'Yesterday'),
+            yesterday: dateLiteral(loc('date_yesterday', 'Yesterday')),
             otherDays: 'DD/MM/YYYY',
           }}
         />

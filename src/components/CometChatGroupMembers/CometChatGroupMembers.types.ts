@@ -56,7 +56,7 @@ export interface CometChatGroupMembersRootProps {
   onError?: ((error: CometChat.CometChatException) => void) | null;
   /** Callback when the member list is empty after initial fetch. */
   onEmpty?: () => void;
-  /** Callback when back button is clicked. */
+  /** Callback when the back button is clicked. The header shows a back button only when this is set. */
   onBack?: () => void;
   /** Whether to hide the search bar. Default: false. */
   hideSearch?: boolean;
@@ -173,6 +173,12 @@ export interface CometChatGroupMembersContextValue {
   hideUserStatus: boolean;
   /** Whether to hide the search bar. */
   hideSearch: boolean;
+  /** Whether to hide the header. */
+  hideHeader: boolean;
+  /** Whether to show the native scrollbar. Default: false (hidden). */
+  showScrollbar: boolean;
+  /** Callback for the header's back button, which is shown only when this is set. */
+  onBack?: (() => void) | undefined;
   /** Whether to hide the kick member option. */
   hideKickMemberOption: boolean;
   /** Whether to hide the ban member option. */

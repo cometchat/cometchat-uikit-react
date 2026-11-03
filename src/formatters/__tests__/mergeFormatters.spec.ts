@@ -6,10 +6,10 @@ function fmt(id: string, priority = 100): CometChatTextFormatter {
   return new (class extends CometChatTextFormatter {
     readonly id = id;
     override priority = priority;
-    getRegex(): RegExp {
+    override getRegex(): RegExp {
       return /a/g;
     }
-    format(text: string): string {
+    override format(text: string): string {
       return text;
     }
   })();

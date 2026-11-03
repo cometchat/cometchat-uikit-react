@@ -17,7 +17,10 @@ export interface CometChatReactionsRootProps {
   reactionsRequestBuilder?: CometChat.ReactionsRequestBuilder;
   /** Called when a reaction chip is clicked (toggle). Parent handles SDK call. */
   onReactionClick?: (emoji: string, message: CometChat.BaseMessage) => void;
-  /** Called when a user in the reaction list is clicked. */
+  /**
+   * Called when a user in the reaction list is clicked (only your own reactions can be clicked).
+   * When set, it replaces the default, which removes your reaction.
+   */
   onReactorClick?: (reaction: CometChat.Reaction, message: CometChat.BaseMessage) => void;
   /** Debounce time in ms before showing reaction info tooltip on hover. Default: 500. */
   hoverDebounceTime?: number;
@@ -87,6 +90,10 @@ export interface CometChatReactionsContextValue {
   overflowCount: number;
   /** Toggle a reaction (fires parent callback). */
   onReactionClick: (emoji: string) => void;
+  /** Called when a user in the reaction list is clicked; replaces removing the reaction. */
+  onReactorClick?:
+    | ((reaction: CometChat.Reaction, message: CometChat.BaseMessage) => void)
+    | undefined;
   /** Request builder for reactor fetching. */
   reactionsRequestBuilder?: CometChat.ReactionsRequestBuilder;
   /** Debounce time in ms before showing reaction info tooltip on hover. */

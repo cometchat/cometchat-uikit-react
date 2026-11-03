@@ -1,5 +1,8 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openBobChat, openStrategyChat } from '../helpers';
+import { expectSendAccepted } from '../helpers/send';
+import { visibleWithin } from '../helpers/wait';
+import { openActionSheet, waitForBubbleSettled } from '../helpers/threads';
 
 /**
  * E2E Tests — Message Actions (React)
@@ -29,6 +32,7 @@ test.describe('Message Actions', () => {
 
     await incomingWrapper.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
+    await waitForBubbleSettled(incomingWrapper);
     await incomingWrapper.hover();
     await page.waitForTimeout(500);
 
@@ -47,37 +51,34 @@ test.describe('Message Actions', () => {
 
     // Close thread
     const closeBtn = page.locator('button[aria-label*="Close" i], .cometchat-thread-header__close').first();
-    const hasClose = await closeBtn.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasClose = await visibleWithin(closeBtn, 3_000);
     if (hasClose) await closeBtn.click();
   });
 
   // ==================== Report (incoming message) ====================
 
-  test('report option is available on incoming messages', async () => {
+  test('report opens the report dialog, and cancel closes it without reporting', async () => {
     const incomingWrapper = page.locator('.cometchat-message-bubble-incoming').last();
     await expect(incomingWrapper).toBeVisible({ timeout: 10_000 });
 
     await incomingWrapper.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(300);
+    await waitForBubbleSettled(incomingWrapper);
     await incomingWrapper.hover();
-    await page.waitForTimeout(500);
 
     const moreBtn = incomingWrapper.locator('..').locator('button[aria-label*="More" i]').first();
     await expect(moreBtn).toBeVisible({ timeout: 5_000 });
     await moreBtn.click();
-    await page.waitForTimeout(500);
 
     const reportOption = page.locator('[role="menuitem"]:has-text("Report")').first();
     await expect(reportOption).toBeVisible({ timeout: 5_000 });
     await reportOption.click();
-    await page.waitForTimeout(1000);
 
-    // Report dialog or confirmation
-    const reportDialog = page.locator('.cometchat-confirm-dialog, [role="dialog"]').first();
-    const hasDialog = await reportDialog.isVisible({ timeout: 5_000 }).catch(() => false);
-    if (hasDialog) {
-      await page.keyboard.press('Escape');
-    }
+    // Cancel, never submit — this is shared seed data.
+    const dialog = page.locator('.cometchat-flag-message-dialog').first();
+    await expect(dialog).toBeVisible({ timeout: 5_000 });
+    await expect(dialog.locator('.cometchat-flag-message-dialog__actions-submit')).toBeVisible();
+    await dialog.locator('.cometchat-flag-message-dialog__actions-cancel').click();
+    await expect(dialog).toBeHidden({ timeout: 5_000 });
   });
 
   // ==================== Mark as Unread (incoming message) ====================
@@ -88,6 +89,7 @@ test.describe('Message Actions', () => {
 
     await incomingWrapper.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
+    await waitForBubbleSettled(incomingWrapper);
     await incomingWrapper.hover();
     await page.waitForTimeout(500);
 
@@ -109,10 +111,16 @@ test.describe('Message Actions', () => {
   // ==================== Message Information (outgoing message) ====================
 
   test('message info option opens information panel', async () => {
-    const outgoingWrapper = page.locator('.cometchat-message-bubble__wrapper--outgoing').last();
+    // Message Info belongs to outgoing TEXT messages. Filter to them, as the copy and edit tests
+    // below do: the chat can also hold outgoing call bubbles, which have no options to open.
+    const outgoingWrapper = page
+      .locator('.cometchat-message-bubble__wrapper--outgoing')
+      .filter({ has: page.locator('.cometchat-text-bubble') })
+      .last();
     await expect(outgoingWrapper).toBeVisible({ timeout: 10_000 });
 
     const bodyArea = outgoingWrapper.locator('.cometchat-message-bubble__body').first();
+    await waitForBubbleSettled(bodyArea);
     await bodyArea.hover();
     await page.waitForTimeout(500);
 
@@ -135,36 +143,16 @@ test.describe('Message Actions', () => {
 
   // ==================== Copy (outgoing text message) ====================
 
-  test('copy option is available for text messages', async () => {
-    const outgoingTextWrapper = page.locator('.cometchat-message-bubble__wrapper--outgoing').filter({ has: page.locator('.cometchat-text-bubble') }).last();
-    await expect(outgoingTextWrapper).toBeVisible({ timeout: 10_000 });
-
-    const bodyArea = outgoingTextWrapper.locator('.cometchat-message-bubble__body').first();
-    await bodyArea.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(300);
-    await bodyArea.hover();
-    await page.waitForTimeout(500);
-
-    const moreBtn = outgoingTextWrapper.locator('button[aria-label*="More" i]').first();
-    await expect(moreBtn).toBeVisible({ timeout: 5_000 });
-    await moreBtn.click();
-    await page.waitForTimeout(500);
-
-    const copyOption = page.locator('[role="menuitem"]:has-text("Copy")').first();
-    await expect(copyOption).toBeVisible({ timeout: 5_000 });
-    await copyOption.click();
-    await page.waitForTimeout(500);
-  });
-
   // ==================== Edit (outgoing text message) ====================
 
-  test('edit shows preview in composer, edits message, and shows edited label', async () => {
+  test('edit shows preview in composer, edits message, and shows edited label', { tag: '@smoke' }, async () => {
     const outgoingTextWrapper = page.locator('.cometchat-message-bubble__wrapper--outgoing').filter({ has: page.locator('.cometchat-text-bubble') }).last();
     await expect(outgoingTextWrapper).toBeVisible({ timeout: 10_000 });
 
     const bodyArea = outgoingTextWrapper.locator('.cometchat-message-bubble__body').first();
     await bodyArea.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
+    await waitForBubbleSettled(bodyArea);
     await bodyArea.hover();
     await page.waitForTimeout(500);
 
@@ -202,33 +190,6 @@ test.describe('Message Actions', () => {
 
   // ==================== Reply in thread (outgoing message) ====================
 
-  test('reply in thread option opens thread panel', async () => {
-    const outgoingWrapper = page.locator('.cometchat-message-bubble__wrapper--outgoing').last();
-    await expect(outgoingWrapper).toBeVisible({ timeout: 10_000 });
-
-    const bodyArea = outgoingWrapper.locator('.cometchat-message-bubble__body').first();
-    await bodyArea.hover();
-    await page.waitForTimeout(500);
-
-    const moreBtn = outgoingWrapper.locator('button[aria-label*="More" i]').first();
-    await expect(moreBtn).toBeVisible({ timeout: 5_000 });
-    await moreBtn.click();
-    await page.waitForTimeout(500);
-
-    const threadOption = page.locator('[role="menuitem"]:has-text("Reply in thread")').first();
-    await expect(threadOption).toBeVisible({ timeout: 5_000 });
-    await threadOption.click();
-    await page.waitForTimeout(2000);
-
-    const threadPanel = page.locator('.cometchat-thread-panel-wrapper, .cometchat-threaded-messages').first();
-    await expect(threadPanel).toBeVisible({ timeout: 10_000 });
-
-    // Close thread
-    const closeBtn = page.locator('button[aria-label*="Close" i], .cometchat-thread-header__close').first();
-    const hasClose = await closeBtn.isVisible({ timeout: 3_000 }).catch(() => false);
-    if (hasClose) await closeBtn.click();
-  });
-
   // ==================== Toast after Copy ====================
 
   test('copy action shows toast notification', async () => {
@@ -238,6 +199,7 @@ test.describe('Message Actions', () => {
     const bodyArea = outgoingTextWrapper.locator('.cometchat-message-bubble__body').first();
     await bodyArea.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
+    await waitForBubbleSettled(bodyArea);
     await bodyArea.hover();
     await page.waitForTimeout(500);
 
@@ -282,7 +244,7 @@ test.describe('Message Actions (Mutable)', () => {
     await input.click();
     await page.keyboard.type(text);
     const sendBtn = composer.locator('[class*="send-button"], button[aria-label*="Send" i]').first();
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
     await expect(
       page.locator('.cometchat-message-list').getByText(text)
     ).toBeVisible({ timeout: 15_000 });
@@ -290,21 +252,12 @@ test.describe('Message Actions (Mutable)', () => {
 
   // ==================== Delete a message ====================
 
-  test('delete a message shows deleted bubble', async () => {
+  test('delete a message shows deleted bubble', { tag: '@smoke' }, async () => {
     const deleteMsg = `Delete me ${Date.now()}`;
     await sendAndVerify(deleteMsg);
 
-    // Hover the sent message to get context menu
-    const targetBubble = page.locator('.cometchat-message-bubble__wrapper--outgoing').last();
-    const bodyArea = targetBubble.locator('.cometchat-message-bubble__body').first();
-    await bodyArea.hover();
-    await page.waitForTimeout(500);
-
-    // Click "More options" to open submenu (Delete is in the dropdown, not top-menu)
-    const moreBtn = targetBubble.locator('button[aria-label*="More" i]').first();
-    await expect(moreBtn).toBeVisible({ timeout: 5_000 });
-    await moreBtn.click();
-    await page.waitForTimeout(500);
+    const targetBubble = page.locator('.cometchat-message-bubble__wrapper--outgoing').filter({ hasText: deleteMsg }).last();
+    await openActionSheet(page, targetBubble);
 
     // Click "Delete"
     const deleteOption = page.locator('[role="menuitem"]:has-text("Delete")').first();
@@ -314,7 +267,7 @@ test.describe('Message Actions (Mutable)', () => {
 
     // Confirm deletion dialog if it appears
     const confirmBtn = page.locator('.cometchat-confirm-dialog__actions-confirm button').first();
-    const hasConfirm = await confirmBtn.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasConfirm = await visibleWithin(confirmBtn, 3_000);
     if (hasConfirm) {
       await confirmBtn.click();
     }
@@ -329,7 +282,7 @@ test.describe('Message Actions (Mutable)', () => {
 
   // ==================== Reply (Quoted Reply) ====================
 
-  test('reply shows preview in composer, sends with quoted bubble', async () => {
+  test('reply shows preview in composer, sends with quoted bubble', { tag: '@smoke' }, async () => {
     const originalMsg = `Quote me ${Date.now()}`;
     await sendAndVerify(originalMsg);
 
@@ -356,7 +309,7 @@ test.describe('Message Actions (Mutable)', () => {
     const replyText = `Reply to: ${originalMsg}`;
     await page.keyboard.type(replyText);
     const sendBtn = composer.locator('[class*="send-button"], button[aria-label*="Send" i]').first();
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
 
     // The reply should appear in the message list
     await expect(

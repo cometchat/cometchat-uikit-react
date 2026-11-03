@@ -43,7 +43,7 @@ function createMockMessage(reactions: ReturnType<typeof createMockReactionCount>
     getDeletedAt: () => null,
     getType: () => 'text',
     getCategory: () => 'message',
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+  } as unknown as CometChat.BaseMessage;
 }
 
 const defaultReactions = [

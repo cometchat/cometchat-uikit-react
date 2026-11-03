@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useCometChatNotificationFeedContext } from './CometChatNotificationFeed.context';
 import { CometChatDate } from '../base/CometChatDate';
+import { useLocale } from '../../context/locale/LocaleContext';
 import { CometChatCardView } from '@cometchat/cards-react';
 import type { CometChatNotificationFeedItemProps } from './CometChatNotificationFeed.types';
 import './CometChatNotificationFeed.css';
@@ -17,6 +18,7 @@ export const CometChatNotificationFeedItem: React.FC<CometChatNotificationFeedIt
   cardThemeOverride: cardThemeOverrideProp,
 }) => {
   const ctx = useCometChatNotificationFeedContext();
+  const { getLocalizedString } = useLocale();
   const themeMode = cardThemeModeProp ?? ctx.cardThemeMode;
   const themeOverride = cardThemeOverrideProp ?? ctx.cardThemeOverride;
 
@@ -74,7 +76,7 @@ export const CometChatNotificationFeedItem: React.FC<CometChatNotificationFeedIt
   } catch {
     // Fallback if card rendering fails
     const content = item.getContent() as Record<string, unknown> | undefined;
-    const fallbackText = (content?.fallbackText as string) || 'Unable to display notification';
+    const fallbackText = (content?.fallbackText as string) || getLocalizedString('notification_feed_card_fallback');
     cardContent = <div className="cometchat-notification-feed__card-fallback">{fallbackText}</div>;
   }
 
@@ -91,7 +93,10 @@ export const CometChatNotificationFeedItem: React.FC<CometChatNotificationFeedIt
       }}
       role="article"
       tabIndex={0}
-      aria-label={`Notification from ${item.getCategory()}`}
+      aria-label={getLocalizedString('accessibility_notification_from').replace(
+        '{source}',
+        item.getCategory()
+      )}
     >
       {item.getReadAt() === null && (
         <div className="cometchat-notification-feed__unread-indicator" />

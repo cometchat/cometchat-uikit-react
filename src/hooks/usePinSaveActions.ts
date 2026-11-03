@@ -6,6 +6,7 @@ import { localizeWithFallback } from '../utils/localizeWithFallback';
 import { isPermissionError, isLimitError, readLimitFromError } from '../utils/pinSaveUtils';
 import { getPinSaveLimits } from '../utils/pinSaveLimits';
 import type { PinSaveConfirmAction } from '../components/base/CometChatPinSaveConfirmDialog';
+import { fillTemplate } from '../utils/fillTemplate';
 
 /** The four pin/save actions. */
 export type PinSaveAction = 'pin' | 'unpin' | 'save' | 'unsave';
@@ -151,7 +152,7 @@ export function usePinSaveActions(options: UsePinSaveActionsOptions): UsePinSave
                 'You can only pin {limit} messages. Unpin one to pin another.'
               )
             : loc('save_limit_reached', 'You can save up to {limit} messages.');
-          showToast(template.replace('{limit}', String(cap)), 'error');
+          showToast(fillTemplate(template, { limit: String(cap) }), 'error');
           return;
         }
       }

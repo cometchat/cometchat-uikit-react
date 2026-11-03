@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatPollBubble } from '../CometChatPollBubble';
 
 // Localization — return the raw key so assertions stay stable.
@@ -93,8 +94,8 @@ describe('CometChatPollBubble', () => {
     mockLoggedInUser = { getUid: () => 'u1', getName: () => 'A', getAvatar: () => '' };
     render(<CometChatPollBubble message={mockMsg()} />);
     const radios = screen.getAllByRole('radio');
-    expect(radios[0].getAttribute('aria-checked')).toBe('true');
-    expect(radios[1].getAttribute('aria-checked')).toBe('false');
+    expect(radios[0]!.getAttribute('aria-checked')).toBe('true');
+    expect(radios[1]!.getAttribute('aria-checked')).toBe('false');
   });
 
   it('returns null for missing poll data', () => {
@@ -103,20 +104,38 @@ describe('CometChatPollBubble', () => {
     expect(container.innerHTML).toBe('');
   });
 
+  /** The bubble's side: exactly one of its two variant classes. */
+  const side = (container: HTMLElement) => {
+    const bubble = container.querySelector('.cometchat-poll-bubble');
+    return ['outgoing', 'incoming'].filter(v => bubble?.classList.contains(`cometchat-poll-bubble--${v}`));
+  };
+
   it('derives outgoing alignment when the logged-in user is the sender', () => {
     // Sender u2 === logged-in user u2 → outgoing, no alignment prop needed.
     const { container } = render(<CometChatPollBubble message={mockMsg('u2')} />);
-    expect(container.querySelector('[class*="outgoing"]')).not.toBeNull();
+    expect(side(container)).toEqual(['outgoing']);
   });
 
   it('derives incoming alignment when another user is the sender', () => {
     const { container } = render(<CometChatPollBubble message={mockMsg('other-user')} />);
-    expect(container.querySelector('[class*="incoming"]')).not.toBeNull();
+    expect(side(container)).toEqual(['incoming']);
   });
 
   it('alignment prop overrides the derived alignment', () => {
     // Sender u2 === logged-in user u2 would derive outgoing, but prop forces incoming.
     const { container } = render(<CometChatPollBubble message={mockMsg('u2')} alignment="left" />);
-    expect(container.querySelector('[class*="incoming"]')).not.toBeNull();
+    expect(side(container)).toEqual(['incoming']);
+  });
+
+  it('announces a submitted vote to screen readers, using the translated sentence', async () => {
+    const callExtension = vi.spyOn(CometChat, 'callExtension').mockResolvedValue({});
+    const { container } = render(<CometChatPollBubble message={mockMsg('other-user')} />);
+    fireEvent.click(screen.getByRole('radio', { name: /^Vue/ }));
+
+    const live = container.querySelector('[aria-live="polite"]');
+    await waitFor(() => {
+      expect(live).toHaveTextContent('accessibility_vote_submitted');
+    });
+    callExtension.mockRestore();
   });
 });

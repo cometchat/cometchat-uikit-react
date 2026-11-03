@@ -30,7 +30,10 @@ export interface CometChatProviderProps {
   config?: CometChatGlobalConfig;
   /** Theme: 'light' or 'dark'. Default: 'light'. */
   theme?: CometChatTheme;
-  /** Locale override (e.g., 'en', 'fr', 'de'). Default: browser language. */
+  /**
+   * UI language (e.g. 'en-us', 'fr', 'de'). Default: 'en-us'. The provider doesn't follow the
+   * browser's language; pass `locale` to choose one.
+   */
   locale?: string;
   children: ReactNode;
 }

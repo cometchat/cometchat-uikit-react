@@ -1,8 +1,10 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openStrategyChat } from '../helpers';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { expectSendAccepted } from '../helpers/send';
+import { waitForBubbleSettled } from '../helpers/threads';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -600,7 +602,7 @@ test.describe('Multi-Attachment Send & Batch Rendering', () => {
     // Send
     const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
     await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
 
     // Tray should disappear after send
     await expect(tray).not.toBeVisible({ timeout: 15_000 });
@@ -713,7 +715,7 @@ test.describe('Multi-Attachment Send & Batch Rendering', () => {
     // Send without typing any caption
     const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
     await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
 
     await expect(tray).not.toBeVisible({ timeout: 15_000 });
     // Wait for the new batch to appear
@@ -769,7 +771,7 @@ test.describe('Multi-Attachment Edit Option', () => {
 
     const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
     await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
 
     await expect(tray).not.toBeVisible({ timeout: 15_000 });
     await expect(
@@ -794,7 +796,7 @@ test.describe('Multi-Attachment Edit Option', () => {
 
     const sendBtn2 = page.locator('.cometchat-message-composer__send-button--active').first();
     await expect(sendBtn2).toBeVisible({ timeout: 5_000 });
-    await sendBtn2.click();
+    await expectSendAccepted(page, () => sendBtn2.click());
     await expect(tray).not.toBeVisible({ timeout: 15_000 });
     await page.waitForTimeout(5000);
   });
@@ -813,6 +815,7 @@ test.describe('Multi-Attachment Edit Option', () => {
     const bodyArea = captionBubble.locator('.cometchat-message-bubble__body').first();
     await bodyArea.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
+    await waitForBubbleSettled(bodyArea);
     await bodyArea.hover();
     await page.waitForTimeout(500);
 
@@ -843,6 +846,7 @@ test.describe('Multi-Attachment Edit Option', () => {
     const bodyArea = lastOutgoing.locator('.cometchat-message-bubble__body').first();
     await bodyArea.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
+    await waitForBubbleSettled(bodyArea);
     await bodyArea.hover();
     await page.waitForTimeout(500);
 
@@ -1069,7 +1073,7 @@ test.describe('Multi-Image Bubble', () => {
 
     const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
     await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
     await expect(tray).not.toBeVisible({ timeout: 15_000 });
 
     // Wait for the images bubble to appear
@@ -1151,7 +1155,7 @@ test.describe('Multi-Audio Bubble Expand/Collapse', () => {
 
     const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
     await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
     await expect(tray).not.toBeVisible({ timeout: 15_000 });
 
     await page.waitForTimeout(5000);
@@ -1231,7 +1235,7 @@ test.describe('Multi-File Bubble Expand/Collapse', () => {
 
     const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
     await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
     await expect(tray).not.toBeVisible({ timeout: 15_000 });
 
     await page.waitForTimeout(5000);
@@ -1307,7 +1311,7 @@ test.describe('Multi-Video Bubble', () => {
 
     const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
     await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
     await expect(tray).not.toBeVisible({ timeout: 15_000 });
 
     await page.waitForTimeout(8000);
@@ -1392,7 +1396,7 @@ test.describe('Multi-Attachment Conversation Subtitle', () => {
 
     const sendBtn = page.locator('.cometchat-message-composer__send-button--active').first();
     await expect(sendBtn).toBeVisible({ timeout: 5_000 });
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
     await expect(tray).not.toBeVisible({ timeout: 15_000 });
     await page.waitForTimeout(5000);
   });

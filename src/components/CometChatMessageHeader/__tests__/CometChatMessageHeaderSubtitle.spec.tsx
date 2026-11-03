@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CometChatMessageHeaderSubtitle } from '../CometChatMessageHeaderSubtitle';
 import { CometChatMessageHeaderContext } from '../CometChatMessageHeader.context';
@@ -30,6 +30,8 @@ function createContextValue(
     isUserConversation: false,
     isGroupConversation: false,
     summaryGenerationMessageCount: 1000,
+    hideVoiceCallButton: false,
+    hideVideoCallButton: false,
     ...overrides,
   };
 }
@@ -206,6 +208,8 @@ describe('CometChatMessageHeaderSubtitle', () => {
         isUserConversation: false,
         isGroupConversation: false,
         summaryGenerationMessageCount: 1000,
+        hideVoiceCallButton: false,
+        hideVideoCallButton: false,
       });
       const wrapper = container.querySelector('[class*="subtitle-wrapper"]');
       expect(wrapper).toBeInTheDocument();

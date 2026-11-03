@@ -19,14 +19,16 @@ const REACTIONS_PADDING = 8;
  * and wires the reactions context props to CometChatReactionList.Root.
  */
 const ReactionListPopoverContent: React.FC = () => {
-  const { message, reactionsRequestBuilder, onReactionClick } = useCometChatReactionsContext();
+  const { message, reactionsRequestBuilder, onReactionClick, onReactorClick } =
+    useCometChatReactionsContext();
   const { close } = useCometChatPopoverContext();
 
   const handleItemClick = useCallback(
     (reaction: CometChat.Reaction) => {
-      onReactionClick(reaction.getReaction());
+      if (onReactorClick) onReactorClick(reaction, message);
+      else onReactionClick(reaction.getReaction());
     },
-    [onReactionClick]
+    [onReactionClick, onReactorClick, message]
   );
 
   const handleEmpty = useCallback(() => {
@@ -55,7 +57,7 @@ export const CometChatReactionsBar: React.FC<CometChatReactionsBarProps> = ({
   className,
 }) => {
   const { getLocalizedString } = useLocale();
-  const { reactions, alignment } = useCometChatReactionsContext();
+  const { reactions, alignment, hoverDebounceTime } = useCometChatReactionsContext();
   const barRef = useRef<HTMLDivElement>(null);
   const [computedMaxVisible, setComputedMaxVisible] = useState(
     maxVisibleProp ?? reactions.length // Show all initially; ResizeObserver constrains after layout
@@ -145,7 +147,7 @@ export const CometChatReactionsBar: React.FC<CometChatReactionsBarProps> = ({
         <div key={reaction.getReaction()} className={'cometchat-reactions__info-wrapper'}>
           <CometChatPopover
             showOnHover
-            debounceOnHover={500}
+            debounceOnHover={hoverDebounceTime}
             placement="top"
             trigger={<CometChatReactionsChip reaction={reaction} />}
             content={<CometChatReactionsInfo emoji={reaction.getReaction()} />}

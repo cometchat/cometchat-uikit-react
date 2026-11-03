@@ -1,6 +1,6 @@
 /**
- * Keyboard navigation of the mention suggestions from the composer input
- * (ENG-37419), in both editor modes.
+ * Keyboard navigation of the mention suggestions from the composer input,
+ * in both editor modes.
  *
  * The composer keeps focus while the list is open: ArrowDown/ArrowUp move the
  * highlight, Enter/Tab select the highlighted suggestion instead of sending, and
@@ -9,12 +9,13 @@
  */
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { mockCometChat } from '../../../testing/mock-sdk';
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({ CometChat: mockCometChat }));
 
-type TestUser = import('@cometchat/chat-sdk-javascript').CometChat.User;
+type TestUser = CometChat.User;
 
 const makeUser = (uid: string, name: string) =>
   ({ getUid: () => uid, getName: () => name, getAvatar: () => '' }) as unknown as TestUser;
@@ -79,7 +80,7 @@ vi.mock('../CometChatMessageComposerMentionsList', () => ({
             role="option"
             aria-selected={i === active}
             id={`${listboxId ?? 'listbox'}-opt-${String(i)}`}
-            data-testid={`option-${String(m.getUid())}`}
+            data-testid={`option-${m.getUid()}`}
           >
             {m.getName()}
           </div>
@@ -130,7 +131,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 const RECEIVER = {
   getUid: () => 'cometchat-uid-2',
   getName: () => 'Andrew',
-} as unknown as import('@cometchat/chat-sdk-javascript').CometChat.User;
+} as unknown as CometChat.User;
 
 /** Type `value` into the contentEditable and put the caret at its end. */
 function typeInto(input: HTMLElement, value: string): void {
@@ -245,7 +246,7 @@ describe('mention keyboard navigation — plain text composer (enableRichTextEdi
     await waitFor(() => {
       expect(mockCometChat.sendMessage).toHaveBeenCalledTimes(1);
     });
-    const sent = mockCometChat.sendMessage.mock.calls[0][0] as { getText: () => string };
+    const sent = mockCometChat.sendMessage.mock.calls[0]![0] as { getText: () => string };
     expect(sent.getText()).toBe('<@uid:member1>');
   });
 

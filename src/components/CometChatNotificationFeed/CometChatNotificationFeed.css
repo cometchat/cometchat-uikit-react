@@ -296,7 +296,7 @@
   color: var(--cometchat-primary-button-icon);
   border: none;
   border-radius: var(--cometchat-radius-2);
-  font: var(--cometchat-font-caption1-semibold);
+  font: var(--cometchat-font-caption1-semibold, inherit);
   cursor: pointer;
   line-height: 18px;
 }

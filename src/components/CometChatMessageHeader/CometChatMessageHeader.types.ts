@@ -36,6 +36,10 @@ export interface CometChatMessageHeaderContextValue {
   groupMemberCount: number;
   /** Whether user status should be hidden. */
   hideUserStatus: boolean;
+  /** Format for the "last seen" time; see the root prop. */
+  lastActiveAtDateTimeFormat?:
+    | import('../base/CometChatDate/CometChatDate.types').CometChatDateFormatConfig
+    | undefined;
   /** Display name (user name or group name). */
   displayName: string;
   /** Avatar image URL. */
@@ -65,6 +69,20 @@ export interface CometChatMessageHeaderContextValue {
   showSearchOption?: boolean;
   /** Number of messages to include in summary generation (default: 1000). */
   summaryGenerationMessageCount: number;
+  // --- Calls (read by CallButtons; its own props win) ---
+  /** Whether the voice call button is hidden. */
+  hideVoiceCallButton: boolean;
+  /** Whether the video call button is hidden. */
+  hideVideoCallButton: boolean;
+  /** Callback when the voice call button is clicked. Overrides default call initiation. */
+  onVoiceCallClick?: ((entity: CometChat.User | CometChat.Group) => void) | undefined;
+  /** Callback when the video call button is clicked. Overrides default call initiation. */
+  onVideoCallClick?: ((entity: CometChat.User | CometChat.Group) => void) | undefined;
+  /** Custom call settings builder. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callSettingsBuilder?: any;
+  /** Error callback. */
+  onError?: ((error: CometChat.CometChatException) => void) | null | undefined;
 }
 
 // --- Root Props ---
@@ -109,7 +127,10 @@ export interface CometChatMessageHeaderRootProps {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   callSettingsBuilder?: any;
-  /** Custom date/time format for the "last active" timestamp in the subtitle. */
+  /**
+   * Format for the time after "Last seen" in the subtitle. It is laid over the global calendar
+   * format, and any part left out keeps the default ("5 minutes ago" within a day).
+   */
   lastActiveAtDateTimeFormat?: import('../base/CometChatDate/CometChatDate.types').CometChatDateFormatConfig;
   /** Callback when the back button is clicked. */
   onBack?: () => void;

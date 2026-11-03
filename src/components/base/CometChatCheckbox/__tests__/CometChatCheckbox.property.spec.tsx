@@ -64,7 +64,7 @@ describe('CometChatCheckbox property-based tests', () => {
         fireEvent.click(input, { shiftKey, metaKey });
 
         if (onChange.mock.calls.length > 0) {
-          const payload = onChange.mock.calls[0][0];
+          const payload = onChange.mock.calls[0]![0];
           expect(payload.shiftKey).toBe(shiftKey);
           expect(payload.metaKey).toBe(metaKey);
         }

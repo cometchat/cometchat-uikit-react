@@ -1,8 +1,9 @@
 import { Page, expect } from '@playwright/test';
+import { expectSendAccepted } from './send';
 import { selectGroupByName } from './navigation';
 
 /**
- * Browser-side helpers for the agentic group chat tests (ENG-36495).
+ * Browser-side helpers for the agentic group chat tests.
  *
  * Agent replies render as `assistant`-type bubbles inside the normal group
  * message list — root class `.cometchat-ai-assistant-bubble`.
@@ -82,7 +83,8 @@ export async function sendComposerMessage(page: Page, text: string): Promise<voi
   const sendBtn = composer
     .locator('[class*="send-button"], button[aria-label*="Send" i]')
     .first();
-  await sendBtn.click();
+  // Judge this exact message: counting bubbles from an index races with history loading.
+  await expectSendAccepted(page, () => sendBtn.click(), { text });
 }
 
 /**
@@ -120,5 +122,5 @@ export async function sendMentionMessage(
   const sendBtn = composer
     .locator('[class*="send-button"], button[aria-label*="Send" i]')
     .first();
-  await sendBtn.click();
+  await expectSendAccepted(page, () => sendBtn.click(), { text: suffix.trim() });
 }

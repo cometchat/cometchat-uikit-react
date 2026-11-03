@@ -15,7 +15,8 @@ export const CometChatGroupMembersList: React.FC<CometChatGroupMembersListProps>
   itemView,
 }) => {
   const { getLocalizedString } = useLocale();
-  const { members, hasMore, fetchState, fetchNext } = useCometChatGroupMembersContext();
+  const { members, hasMore, fetchState, fetchNext, showScrollbar } =
+    useCometChatGroupMembersContext();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const handleKeyDown = useListKeyboardNavigation(listRef);
@@ -42,7 +43,7 @@ export const CometChatGroupMembersList: React.FC<CometChatGroupMembersListProps>
   return (
     <div
       ref={listRef}
-      className={'cometchat-group-members__list'}
+      className={`cometchat-group-members__list ${!showScrollbar ? 'cometchat-group-members__list--hide-scrollbar' : ''}`}
       role="listbox"
       aria-label={getLocalizedString('accessibility_group_members_list')}
       aria-busy={fetchState === 'loading'}

@@ -9,6 +9,7 @@ import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { useGlobalConfig } from '../../context/GlobalConfigContext';
 import './CometChatIncomingCall.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * CometChatIncomingCall — listens for incoming calls and shows accept/reject UI.
@@ -169,7 +170,7 @@ export const CometChatIncomingCall: React.FC<CometChatIncomingCallProps> = ({
 
   const callerName = incomingCall.getSender().getName() || 'Unknown';
   const callerAvatar = incomingCall.getSender().getAvatar();
-  const callType = incomingCall.getType() === 'audio' ? 'Voice' : 'Video';
+  const isVoiceCall = incomingCall.getType() === 'audio';
 
   const rootClass = ['cometchat-incoming-call', className].filter(Boolean).join(' ');
 
@@ -177,9 +178,9 @@ export const CometChatIncomingCall: React.FC<CometChatIncomingCallProps> = ({
     <div
       className={rootClass}
       role="alertdialog"
-      aria-label={getLocalizedString('accessibility_incoming_call_from')
-        .replace('{type}', callType)
-        .replace('{name}', callerName)}
+      aria-label={fillTemplate(getLocalizedString(
+        isVoiceCall ? 'accessibility_incoming_voice_call_from' : 'accessibility_incoming_video_call_from'
+      ), { name: callerName })}
     >
       {itemView ? (
         itemView(incomingCall)
@@ -204,7 +205,9 @@ export const CometChatIncomingCall: React.FC<CometChatIncomingCallProps> = ({
             {subtitleView ? (
               subtitleView(incomingCall)
             ) : (
-              <div className={'cometchat-incoming-call__subtitle'}>Incoming {callType} Call</div>
+              <div className={'cometchat-incoming-call__subtitle'}>
+                {getLocalizedString(isVoiceCall ? 'incoming_call_voice' : 'incoming_call_video')}
+              </div>
             )}
           </div>
           {trailingView && (

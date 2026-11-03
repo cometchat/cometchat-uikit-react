@@ -186,7 +186,7 @@ describe('CometChatNotificationFeedList', () => {
     });
     expect(screen.getByText('notifications_pagination_error')).toBeInTheDocument();
     expect(screen.getByText('notifications_tap_to_retry')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tap to retry loading more' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'accessibility_retry_loading_more' })).toBeInTheDocument();
   });
 
   it('hides the pagination error block while loading more', () => {
@@ -207,7 +207,7 @@ describe('CometChatNotificationFeedList', () => {
       groupedItems: [{ label: 'Today', items: [createMockItem('a')] }],
       paginationError: true,
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Tap to retry loading more' }));
+    fireEvent.click(screen.getByRole('button', { name: 'accessibility_retry_loading_more' }));
     expect(value.retryPagination).toHaveBeenCalledTimes(1);
   });
 
@@ -218,7 +218,7 @@ describe('CometChatNotificationFeedList', () => {
       groupedItems: [{ label: 'Today', items: [createMockItem('a')] }],
       paginationError: true,
     });
-    const btn = screen.getByRole('button', { name: 'Tap to retry loading more' });
+    const btn = screen.getByRole('button', { name: 'accessibility_retry_loading_more' });
     fireEvent.keyDown(btn, { key: 'Enter' });
     fireEvent.keyDown(btn, { key: ' ' });
     fireEvent.keyDown(btn, { key: 'Escape' });

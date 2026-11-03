@@ -4,8 +4,11 @@ import React from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { usePinConversationActions } from '../usePinConversationActions';
 import { CometChatEventsContext } from '../../context/CometChatEventsContext';
+import { resetPinSaveLimits } from '../../utils/pinSaveLimits';
 
 let toasts: string[] = [];
+/** Every toast as [text, variant], for the assertions that care about the variant. */
+let toastCalls: [string, string | undefined][] = [];
 
 function wrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -48,17 +51,24 @@ function conv(pin: 'global' | 'user' | 'none' = 'user'): CometChat.Conversation 
 }
 
 function setup() {
-  return renderHook(() => usePinConversationActions({ showToast: t => toasts.push(t) }), {
+  return renderHook(() => usePinConversationActions({
+        showToast: (t, variant) => {
+          toasts.push(t);
+          toastCalls.push([t, variant]);
+        },
+      }), {
     wrapper,
   });
 }
 
 beforeEach(() => {
   toasts = [];
+  toastCalls = [];
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
+  resetPinSaveLimits();
 });
 
 describe('usePinConversationActions', () => {
@@ -139,5 +149,27 @@ describe('usePinConversationActions', () => {
     expect(result.current.confirmState).toBeNull();
     expect(spy).not.toHaveBeenCalled();
     expect(toasts).toContain("You can't unpin a conversation pinned by an admin.");
+  });
+
+  it('names the pinned-chats cap when the pin limit is hit', async () => {
+    // No warmed app setting, so the number comes from the error text.
+    const c = conv('none');
+    vi.spyOn(CometChat, 'pinConversation').mockRejectedValue({
+      code: 'ERR_PINNED_CONVERSATIONS_LIMIT_EXCEEDED',
+      message: 'has reached the allowed limit of 7.',
+    });
+    const { result } = setup();
+
+    await act(async () => {
+      result.current.requestPin(c);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(toastCalls).toContainEqual([
+        'You can only pin 7 chats. Unpin one to pin another.',
+        'error',
+      ]);
+    });
   });
 });

@@ -70,6 +70,7 @@ function makeRefs(
       } as CometChatUseMessageListOptions,
     },
     initializeRef: { current: null },
+    pendingMessagesMap: {},
   };
   return { refs, manager };
 }

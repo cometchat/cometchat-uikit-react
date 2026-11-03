@@ -419,7 +419,7 @@ describe('copy option onClick', () => {
 
     // The markdown formatter is invoked on resolved text
     expect(mockFormat).toHaveBeenCalled();
-    const formatted = mockFormat.mock.calls[0][0];
+    const formatted = mockFormat.mock.calls[0]![0];
     expect(formatted).toContain('@Alice');
     expect(formatted).toContain('@team');
     expect(showToast).toHaveBeenCalled();

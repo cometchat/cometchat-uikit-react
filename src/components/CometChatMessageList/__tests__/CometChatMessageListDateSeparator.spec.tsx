@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CometChatMessageListDateSeparator } from '../CometChatMessageListDateSeparator';
 import { LocaleProvider } from '../../../context/locale/LocaleProvider';
+import { CometChatLocalize } from '../../../resources/CometChatLocalize/CometChatLocalize';
 
 function renderWithLocale(ui: React.ReactElement) {
   return render(<LocaleProvider locale="en-us">{ui}</LocaleProvider>);
@@ -39,5 +40,17 @@ describe('CometChatMessageListDateSeparator', () => {
 
   it('has the correct display name', () => {
     expect(CometChatMessageListDateSeparator.displayName).toBe('CometChatMessageListDateSeparator');
+  });
+
+  it('says "yesterday" in Turkish as the word "Dün", not with its D read as the day', () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(12, 0, 0, 0);
+    render(
+      <LocaleProvider localizeInstance={new CometChatLocalize({ language: 'tr' })}>
+        <CometChatMessageListDateSeparator timestamp={Math.floor(yesterday.getTime() / 1000)} />
+      </LocaleProvider>
+    );
+    expect(screen.getByRole('separator')).toHaveTextContent(/^Dün$/);
   });
 });

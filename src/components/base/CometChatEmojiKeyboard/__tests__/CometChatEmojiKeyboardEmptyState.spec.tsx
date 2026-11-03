@@ -1,7 +1,30 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render as rtlRender, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { CometChatEmojiKeyboardEmptyState } from '../CometChatEmojiKeyboardEmptyState';
+import { CometChatEmojiKeyboardContext } from '../CometChatEmojiKeyboard.context';
+import type { CometChatEmojiKeyboardContextValue } from '../CometChatEmojiKeyboard.types';
+
+/** Renders inside the keyboard's context: a search with no results unless overridden. */
+function render(ui: React.ReactElement, overrides: Partial<CometChatEmojiKeyboardContextValue> = {}) {
+  const ctx: CometChatEmojiKeyboardContextValue = {
+    categories: [],
+    activeCategoryId: '',
+    setActiveCategory: vi.fn(),
+    searchQuery: 'zzz',
+    setSearchQuery: vi.fn(),
+    searchResults: {},
+    isSearching: true,
+    onEmojiClick: vi.fn(),
+    listRef: { current: null },
+    ...overrides,
+  };
+  return rtlRender(ui, {
+    wrapper: ({ children }) => (
+      <CometChatEmojiKeyboardContext.Provider value={ctx}>{children}</CometChatEmojiKeyboardContext.Provider>
+    ),
+  });
+}
 
 describe('CometChatEmojiKeyboardEmptyState', () => {
   it('renders default "No emojis found" text when no children provided', () => {
@@ -40,5 +63,19 @@ describe('CometChatEmojiKeyboardEmptyState', () => {
     const { container } = render(<CometChatEmojiKeyboardEmptyState />);
     const el = container.firstElementChild as HTMLElement;
     expect(el.className).not.toContain('undefined');
+  });
+
+  it('renders nothing when not searching, or when the search found emojis', () => {
+    for (const overrides of [
+      { isSearching: false },
+      { searchResults: { smile: { emoji: '😄', name: 'smile', keywords: [] } } },
+    ]) {
+      const { container, unmount } = render(
+        <CometChatEmojiKeyboardEmptyState />,
+        overrides as Partial<CometChatEmojiKeyboardContextValue>
+      );
+      expect(container).toBeEmptyDOMElement();
+      unmount();
+    }
   });
 });

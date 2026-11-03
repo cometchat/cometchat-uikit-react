@@ -27,7 +27,7 @@
 .cometchat-toolcall-argument-bubble__execution-text {
   font: var(--cometchat-font-body-regular, 400 14px Roboto);
   color: var(--cometchat-text-color-secondary, #727272);
-  font-size: var(--cometchat-font-size-xs, 12px);
+  font-size: var(--cometchat-font-size-xs, var(--cometchat-font-size-caption1, 12px));
 }
 
 .cometchat-toolcall-argument-bubble__label {

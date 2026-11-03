@@ -1,5 +1,5 @@
 /**
- * Tests for the mentions dropdown's keyboard-navigation controller (ENG-37419).
+ * Tests for the mentions dropdown's keyboard-navigation controller.
  *
  * The child list components (CometChatGroupMembers / CometChatUsers) are mocked
  * to render simple role="option" rows so we can drive the imperative handle
@@ -61,7 +61,7 @@ const fakeGroup = {
 } as never;
 
 function renderList(
-  handle: React.RefObject<CometChatMessageComposerMentionsListHandle>,
+  handle: React.RefObject<CometChatMessageComposerMentionsListHandle | null>,
   extraProps: Partial<React.ComponentProps<typeof CometChatMessageComposerMentionsList>> = {}
 ) {
   return render(

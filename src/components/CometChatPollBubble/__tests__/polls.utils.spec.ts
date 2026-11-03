@@ -68,8 +68,8 @@ describe('processPollOptions', () => {
       },
     };
     const opts = processPollOptions(data);
-    expect(opts[0].percent).toBe('75%');
-    expect(opts[1].percent).toBe('25%');
+    expect(opts[0]!.percent).toBe('75%');
+    expect(opts[1]!.percent).toBe('25%');
   });
 
   it('handles zero total votes', () => {
@@ -80,7 +80,7 @@ describe('processPollOptions', () => {
       results: { total: 0, options: { '1': { count: 0, voters: {} } } },
     };
     const opts = processPollOptions(data);
-    expect(opts[0].percent).toBe('0%');
+    expect(opts[0]!.percent).toBe('0%');
   });
 
   it('detects selectedByLoggedInUser', () => {
@@ -91,7 +91,7 @@ describe('processPollOptions', () => {
       results: { total: 1, options: { '1': { count: 1, voters: { 'uid-1': { name: 'Alice' } } } } },
     };
     const opts = processPollOptions(data, 'uid-1');
-    expect(opts[0].selectedByLoggedInUser).toBe(true);
+    expect(opts[0]!.selectedByLoggedInUser).toBe(true);
   });
 
   it('limits voters to 3', () => {
@@ -104,6 +104,6 @@ describe('processPollOptions', () => {
       results: { total: 5, options: { '1': { count: 5, voters } } },
     };
     const opts = processPollOptions(data);
-    expect(opts[0].voters.length).toBe(3);
+    expect(opts[0]!.voters.length).toBe(3);
   });
 });

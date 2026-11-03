@@ -552,7 +552,7 @@ class WaveSurfer extends Player<WaveSurferEvents> {
         const sample = channel.slice(Math.floor(j * sampleSize), Math.ceil((j + 1) * sampleSize));
         let max = 0;
         for (let x = 0; x < sample.length; x++) {
-          const n = sample[x];
+          const n = sample[x] ?? 0;
           if (Math.abs(n) > Math.abs(max)) max = n;
         }
         data.push(Math.round(max * precision) / precision);

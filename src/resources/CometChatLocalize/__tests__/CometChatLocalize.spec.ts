@@ -17,7 +17,7 @@ describe('CometChatLocalize', () => {
       localize.setCurrentLanguage('de');
 
       expect(callback).toHaveBeenCalledTimes(1);
-      expect(typeof callback.mock.calls[0][0]).toBe('function');
+      expect(typeof callback.mock.calls[0]![0]).toBe('function');
     });
 
     it('recreates t() to resolve keys against the new language', () => {

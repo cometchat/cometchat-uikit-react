@@ -31,6 +31,7 @@ function mockMessage(
     deliveredAt: number;
     readAt: number;
     editedAt: number;
+    editedBy: string;
     deletedAt: number;
     replyCount: number;
   }> = {}
@@ -49,6 +50,7 @@ function mockMessage(
     getDeliveredAt: () => overrides.deliveredAt ?? 0,
     getReadAt: () => overrides.readAt ?? 0,
     getEditedAt: () => overrides.editedAt ?? 0,
+    getEditedBy: () => overrides.editedBy ?? '',
     getDeletedAt: () => overrides.deletedAt ?? 0,
     getReplyCount: () => overrides.replyCount ?? 0,
     getReactions: () => [],
@@ -191,6 +193,39 @@ describe('CometChatMessageBubble', () => {
       expect(screen.getByText('(edited)')).toBeInTheDocument();
     }
   );
+
+  it.each(['image', 'video', 'audio', 'file'])(
+    'does not show "(edited)" for a %s message only an extension edited',
+    type => {
+      render(
+        <CometChatMessageBubble
+          {...defaultProps}
+          message={mockMessage({ type, editedAt: 1000, editedBy: 'app_system' })}
+        />
+      );
+      expect(screen.queryByText('(edited)')).not.toBeInTheDocument();
+    }
+  );
+
+  it('shows "(edited)" for a voice note whose caption a person edited', () => {
+    render(
+      <CometChatMessageBubble
+        {...defaultProps}
+        message={mockMessage({ type: 'audio', editedAt: 1000, editedBy: 'cometchat-uid-1' })}
+      />
+    );
+    expect(screen.getByText('(edited)')).toBeInTheDocument();
+  });
+
+  it('still shows "(edited)" for a text message edited as app_system', () => {
+    render(
+      <CometChatMessageBubble
+        {...defaultProps}
+        message={mockMessage({ editedAt: 1000, editedBy: 'app_system' })}
+      />
+    );
+    expect(screen.getByText('(edited)')).toBeInTheDocument();
+  });
 
   it('does not show "(edited)" for a media message that was never edited', () => {
     render(

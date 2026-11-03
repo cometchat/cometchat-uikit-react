@@ -5,6 +5,8 @@ import { CometChatThreadHeaderParentBubble } from '../CometChatThreadHeaderParen
 import { CometChatThreadHeaderContext } from '../CometChatThreadHeader.context';
 import { CometChatPluginRegistryContext } from '../../../context/PluginRegistryContext';
 import type { CometChatThreadHeaderContextValue } from '../CometChatThreadHeader.types';
+import { CometChatThreadHeaderRoot } from '../CometChatThreadHeaderRoot';
+import { covers } from '../../../testing/covers';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 
 // ---------------------------------------------------------------------------
@@ -50,6 +52,7 @@ vi.mock('../../CometChatMessageBubble', () => ({
       data-alignment={props.alignment}
       data-hide-thread-view={String(props.hideThreadView)}
       data-disable-interaction={String(props.disableInteraction)}
+      data-hide-receipts={String(props.hideReceipts)}
     >
       {props.contentView as React.ReactNode}
     </div>
@@ -301,6 +304,35 @@ describe('CometChatThreadHeaderParentBubble', () => {
 
       const bubble = screen.getByTestId('mock-message-bubble');
       expect(bubble).toHaveAttribute('data-alignment', 'left');
+    });
+  });
+
+  describe('hideReceipts on the thread header', () => {
+    it('reaches the parent bubble; unset, the bubble follows the global setting', () => {
+      covers('CometChatThreadHeader.hideReceipts', 'true', 'false', 'default');
+      const registry = {
+        findPlugin: () => ({ renderBubble: () => <span>Content</span> }),
+      };
+      const passed = (hideReceipts?: boolean) => {
+        const { unmount } = render(
+          <CometChatPluginRegistryContext.Provider value={registry as never}>
+            <CometChatThreadHeaderRoot
+              parentMessage={createMockMessage()}
+              {...(hideReceipts !== undefined && { hideReceipts })}
+            >
+              <CometChatThreadHeaderParentBubble />
+            </CometChatThreadHeaderRoot>
+          </CometChatPluginRegistryContext.Provider>
+        );
+        const value = screen.getByTestId('mock-message-bubble').getAttribute('data-hide-receipts');
+        unmount();
+        return value;
+      };
+
+      expect(passed(true)).toBe('true');
+      expect(passed(false)).toBe('false');
+      // Left unset, the bubble resolves it: the global setting, else receipts shown.
+      expect(passed()).toBe('undefined');
     });
   });
 

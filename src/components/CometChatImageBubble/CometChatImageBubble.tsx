@@ -9,8 +9,10 @@ import { CometChatTextBubble } from '../CometChatTextBubble/CometChatTextBubble'
 import { downloadWithProgress } from '../../utils/downloadWithProgress';
 import { getBubbleAlignment } from '../../utils/getBubbleAlignment';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
+import { useLocale } from '../../context/locale/LocaleContext';
 import { extractImageAttachments, extractCaption } from './CometChatImageBubble.utils';
 import './CometChatImageBubble.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 // Lazy-load the FullScreenViewer — it's heavy and only needed on image click.
 const LazyCometChatFullScreenViewer = lazy(
@@ -135,6 +137,7 @@ export const CometChatImageBubble: React.FC<CometChatImageBubbleProps> = ({
   placeholderImage,
   onImageClicked,
 }) => {
+  const { getLocalizedString } = useLocale();
   const [showGalleryViewer, setShowGalleryViewer] = useState(false);
   const [galleryStartIndex, setGalleryStartIndex] = useState(0);
 
@@ -204,12 +207,14 @@ export const CometChatImageBubble: React.FC<CometChatImageBubbleProps> = ({
   // --- Accessibility ---
 
   const imageAriaLabel = caption
-    ? `Image: ${caption}. Press Enter to view fullscreen.`
-    : 'Image message. Press Enter to view fullscreen.';
+    ? fillTemplate(getLocalizedString('accessibility_image_caption_view'), { caption })
+    : getLocalizedString('accessibility_image_message_view');
 
-  const overflowAriaLabel = `${String(overflowCount)} more images. Press Enter to view all.`;
+  const overflowAriaLabel = fillTemplate(getLocalizedString('accessibility_more_images'), { count: String(overflowCount) });
 
-  const altText = senderName ? `Photo from ${senderName}` : 'Photo';
+  const altText = senderName
+    ? fillTemplate(getLocalizedString('accessibility_photo_from'), { name: senderName })
+    : getLocalizedString('accessibility_photo');
 
   // --- CSS classes ---
 
@@ -252,7 +257,7 @@ export const CometChatImageBubble: React.FC<CometChatImageBubbleProps> = ({
       onKeyDown: (e: React.KeyboardEvent) => {
         handleImageKeyDown(e, index);
       },
-      ariaLabel: !attachment.url ? 'Uploading image...' : imageAriaLabel,
+      ariaLabel: !attachment.url ? getLocalizedString('accessibility_uploading_image') : imageAriaLabel,
     };
     if (placeholderImage) {
       tileProps.placeholderImage = placeholderImage;

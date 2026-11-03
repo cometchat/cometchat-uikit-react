@@ -61,14 +61,17 @@ describe('CometChatFlagMessageDialogReasons', () => {
     // Use a promise that never resolves to keep loading state
     getFlagReasons.mockReturnValue(new Promise(() => {}));
     renderReasons();
-    expect(screen.getByText('LOADING')).toBeInTheDocument();
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
   });
 
   it('sets aria-busy="true" during loading', () => {
     getFlagReasons.mockReturnValue(new Promise(() => {}));
     renderReasons();
-    const loadingContainer = document.body.querySelector('[aria-busy="true"]');
-    expect(loadingContainer).toBeTruthy();
+    expect(document.body.querySelector('.cometchat-flag-message-dialog__reasons')).toHaveAttribute(
+      'aria-busy',
+      'true'
+    );
+    expect(screen.queryByRole('radiogroup')).toBeNull();
   });
 
   // --- Rendering reasons ---
@@ -244,8 +247,10 @@ describe('CometChatFlagMessageDialogReasons', () => {
   it('applies custom className to reasons container', async () => {
     renderReasons({ className: 'my-reasons' });
     await waitFor(() => {
-      const reasonsEl = document.body.querySelector('.my-reasons');
-      expect(reasonsEl).toBeTruthy();
+      expect(screen.getByRole('radiogroup')).toHaveClass(
+        'cometchat-flag-message-dialog__reasons',
+        'my-reasons'
+      );
     });
   });
 

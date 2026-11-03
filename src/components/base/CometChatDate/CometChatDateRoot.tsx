@@ -2,6 +2,7 @@ import type { CometChatDateRootProps } from './CometChatDate.types';
 import { CometChatDateContext } from './CometChatDate.context';
 import { useCometChatDate } from './useCometChatDate';
 import { useLocale } from '../../../context/locale/LocaleContext';
+import { dateLiteral } from '../../../resources/CometChatLocalize/dateFormat.utils';
 import './CometChatDate.css';
 
 export function CometChatDateRoot({
@@ -15,18 +16,18 @@ export function CometChatDateRoot({
   const { calendarObject, timezone, dateLocaleLanguage, getLocalizedString } = useLocale();
 
   // Use component-level formatConfig if provided; otherwise fall back to global calendarObject from context.
-  // Inject localized "Today" / "Yesterday" strings when the effective config uses the defaults.
+  // Inject localized "Today" / "Yesterday" strings when the effective config uses the defaults,
+  // as literals, so a word such as Turkish "Dün" isn't read as date tokens.
   const baseConfig = formatConfig ?? calendarObject;
+  const today = dateLiteral(getLocalizedString('date_today'));
+  const yesterday = dateLiteral(getLocalizedString('date_yesterday'));
   const effectiveFormatConfig = baseConfig
     ? {
         ...baseConfig,
-        today: baseConfig.today ?? getLocalizedString('date_today'),
-        yesterday: baseConfig.yesterday ?? getLocalizedString('date_yesterday'),
+        today: baseConfig.today ?? today,
+        yesterday: baseConfig.yesterday ?? yesterday,
       }
-    : {
-        today: getLocalizedString('date_today'),
-        yesterday: getLocalizedString('date_yesterday'),
-      };
+    : { today, yesterday };
 
   const { formattedDate, isoDate, fullDateLabel } = useCometChatDate({
     timestamp,

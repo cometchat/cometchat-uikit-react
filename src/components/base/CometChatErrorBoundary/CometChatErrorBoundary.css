@@ -41,11 +41,11 @@
   );
   color: var(
     --cometchat-error-boundary-retry-color,
-    var(--cometchat-primary-button-text-color, #fff)
+    var(--cometchat-primary-button-text-color, var(--cometchat-primary-button-text, #fff))
   );
   background: var(
     --cometchat-error-boundary-retry-background,
-    var(--cometchat-primary-button-background-color, #6852d6)
+    var(--cometchat-primary-button-background-color, var(--cometchat-primary-button-background, #6852d6))
   );
   border: var(--cometchat-error-boundary-retry-border, none);
   border-radius: var(
@@ -62,7 +62,7 @@
 .cometchat-error-boundary__retry:hover {
   background: var(
     --cometchat-error-boundary-retry-background-hover,
-    var(--cometchat-primary-button-background-color-hover, #5a46c0)
+    var(--cometchat-primary-button-background-color-hover, var(--cometchat-extended-primary-color-900, #5a46c0))
   );
 }
 

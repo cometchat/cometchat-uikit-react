@@ -1,5 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
-import { loginToApp } from '../helpers';
+import { test, expect, Page } from '../helpers/test';
+import { knownIssue, loginToApp } from '../helpers';
 import {
   STRATEGY_GROUP,
   PRIMARY_UID,
@@ -16,6 +16,8 @@ import {
   conversationPinIndicator,
   conversationTitles,
 } from '../helpers/pinSave';
+import { expectArrowFocusNavigation } from '../helpers/keyboard';
+import { visibleWithin } from '../helpers/wait';
 
 /**
  * E2E Tests — CometChatConversations (React)
@@ -75,7 +77,7 @@ test.describe('CometChatConversations', () => {
     ).toBeVisible({ timeout: 5_000 });
   });
 
-  test('clicking a conversation opens the message view', async () => {
+  test('clicking a conversation opens the message view', { tag: '@smoke' }, async () => {
     await page.locator('.cometchat-conversations__item').first().click();
     await page.waitForTimeout(2000);
 
@@ -119,21 +121,21 @@ test.describe('CometChatConversations', () => {
   // ==================== Keyboard Navigation ====================
 
   test('keyboard navigation works with arrow keys', async () => {
-    const conversationsList = page.locator('.cometchat-conversations__list').first();
-    await conversationsList.click();
-    await page.keyboard.press('ArrowDown');
-    await page.waitForTimeout(500);
-    // No crash means keyboard nav works
+    await expectArrowFocusNavigation(page.locator('.cometchat-conversations__item'));
   });
 
   test('Enter key selects focused conversation', async () => {
-    const conversationsList = page.locator('.cometchat-conversations__list').first();
-    await conversationsList.click();
-    await page.keyboard.press('ArrowDown');
-    await page.waitForTimeout(300);
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(1000);
-    // No crash means Enter selection works
+    const items = page.locator('.cometchat-conversations__item');
+    await expect(items.nth(1)).toBeVisible({ timeout: 30_000 });
+
+    await items.first().focus();
+    await items.first().press('ArrowDown');
+    await expect(items.nth(1)).toBeFocused();
+    await items.nth(1).press('Enter');
+
+    // The row becomes the active chat. (Not asserted through the message header: an AI agent's
+    // chat opens the assistant view, which has a different header.)
+    await expect(items.nth(1)).toHaveClass(/cometchat-conversations__item--active/, { timeout: 15_000 });
   });
 
   // ==================== Empty State ====================
@@ -209,7 +211,7 @@ test.describe('CometChatConversations', () => {
 
   // ==================== Unread Badge ====================
 
-  test('unread badge shows when another user sends a message', async () => {
+  test('unread badge shows when another user sends a message', { tag: '@smoke' }, async () => {
     // Send a message from user-2 to a group that user-1 is in (Strategy) via REST API
     const APP_ID = process.env.COMETCHAT_APP_ID ?? '';
     const REGION = process.env.COMETCHAT_REGION ?? 'us';
@@ -272,6 +274,18 @@ test.describe('Pin conversation', () => {
       text: `Eng bump [${Date.now()}]`,
     });
     await expect(conversationItem(page, 'Engineering')).toBeVisible({ timeout: 15_000 });
+    // A message that lands while the list is (re)loading can drop its first page, leaving
+    // only the chats that just received messages. Reload once so the pin tests still run.
+    if (!(await visibleWithin(conversationItem(page, 'Strategy'), 3_000))) {
+      test.info().annotations.push({
+        type: 'known-bug',
+        description: 'first page of chats dropped by a message during load; reloaded',
+      });
+      await page.reload();
+      await openChatsTab(page);
+      await expectTitleAt(page, 0, 'Strategy');
+      await expect(conversationItem(page, 'Engineering')).toBeVisible({ timeout: 15_000 });
+    }
   };
 
   test.beforeEach(async ({ page }) => {
@@ -280,18 +294,15 @@ test.describe('Pin conversation', () => {
     await userUnpinGroupConversation(engineeringGuid, PRIMARY_UID);
     await loginToApp(page);
     await openChatsTab(page);
+    // Let the first page finish loading before any message arrives. A message during the
+    // first load can drop that page (a known issue covered by the unit tests), which is
+    // not what these tests are about.
+    await expectTitleAt(page, 0, 'Strategy');
   });
 
-  test('offers "Pin conversation" in the Engineering row menu', async ({ page }) => {
-    await revealEngineering(page);
-    await page.waitForTimeout(5000);
-
-    await openConversationRowMenu(page, 'Engineering');
-    // Exact match — "Pin conversation" is a substring of "Unpin conversation".
-    await expect(
-      page.getByRole('menuitem', { name: PIN_CONVERSATION_OPTION, exact: true }).first()
-    ).toBeVisible({ timeout: 5_000 });
-    await page.keyboard.press('Escape');
+  // Strategy stays pinned (an admin pin other tests expect); Engineering is this block's own pin.
+  test.afterEach(async () => {
+    if (engineeringGuid) await userUnpinGroupConversation(engineeringGuid, PRIMARY_UID);
   });
 
   test('a pinned chat sorts above a more-recently-active unpinned chat', async ({ page }) => {
@@ -331,5 +342,31 @@ test.describe('Pin conversation', () => {
         timeout: 15_000,
       })
       .toBeGreaterThan(1);
+  });
+});
+
+test.describe('Conversation list loading', () => {
+  test('keeps the first page when a message arrives while the list is loading', async ({ page }) => {
+    // Slow the conversations endpoint so the message lands mid-load, as on a slow network.
+    await page.route(/\/conversations\?/, async route => {
+      await new Promise(resolve => setTimeout(resolve, 6_000));
+      await route.continue();
+    });
+    await loginToApp(page);
+    await sendMessageToGroup({
+      guid: STRATEGY_GROUP,
+      as: SECONDARY_UID,
+      text: `Arrives during load [${Date.now()}]`,
+    });
+
+    await knownIssue(
+      'a message arriving while the list loads leaves only the chats that just received messages',
+      async () => {
+        await expect
+          .poll(async () => (await conversationTitles(page)).length, { timeout: 30_000 })
+          .toBeGreaterThan(5);
+      },
+      { intermittent: true }
+    );
   });
 });

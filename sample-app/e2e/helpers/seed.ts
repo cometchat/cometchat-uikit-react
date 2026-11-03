@@ -5,7 +5,8 @@
  * Ensures per-run readiness without modifying permanent seed data.
  *
  * Chat assignment strategy:
- * - Bob (e2e-user-2): static, never modified by tests
+ * - Bob (e2e-user-2): static, never modified by tests (global setup only tops up its
+ *   baseline when other traffic has pushed it off the first page — see ensureBobChatBaseline)
  * - Design Team (e2e-group-1): static, >30 msgs for pagination
  * - Strategy (e2e-group-35): mutable, used for send/edit/delete/thread tests
  */
@@ -41,7 +42,7 @@ async function apiCall(method: string, path: string, body?: object): Promise<any
   return res.json().catch(() => null);
 }
 
-// ─── Agentic Group Chat (ENG-36495) ──────────────────────────────────────────
+// ─── Agentic Group Chat ──────────────────────────────────────────
 
 /** Display names for the agentic test groups (used to open them from the UI). */
 export const AGENTIC_GROUP_1_NAME = 'AI Solo E2E';
@@ -165,7 +166,7 @@ export async function ensureAgenticGroups(): Promise<void> {
  *
  * - Verifies primary user exists
  * - Sends a message to Strategy group to bring it to top of conversations list
- * - Does NOT modify Bob chat (static)
+ * - Tops up the Bob chat baseline if it has fallen off the first page (ensureBobChatBaseline)
  */
 export async function seedTestData(): Promise<void> {
   // Verify primary user exists
@@ -190,6 +191,74 @@ export async function seedTestData(): Promise<void> {
     }),
   });
   console.log(`[seed] Strategy group message: ${strategyRes.ok ? 'OK' : 'FAILED'}`);
+
+  await ensureBobChatBaseline();
+}
+
+/** Messages the chat loads first; the Bob chat specs only see this page. */
+const FIRST_PAGE = 30;
+/** Text messages each side must have on that page (the specs assume 2 incoming + 2 outgoing). */
+const BASELINE_PER_SIDE = 2;
+
+/**
+ * Keep the Bob chat's baseline on its first page.
+ *
+ * The Bob chat specs read the latest page and need Alice's and Bob's own text messages on it.
+ * Anything else that lands in the chat (call records, stray sends) pushes the baseline back; once
+ * it is off the first page those specs fail with no outgoing or incoming bubble to act on. This
+ * only adds: when a side is short on the first page, it sends that side's missing baseline
+ * messages again. Nothing is deleted.
+ */
+async function ensureBobChatBaseline(): Promise<void> {
+  const res = await fetch(`${apiBase()}/users/${SECONDARY_USER}/messages?limit=${FIRST_PAGE}`, {
+    headers: { ...apiHeaders(), onBehalfOf: PRIMARY_USER },
+  });
+  if (!res.ok) {
+    console.log(`[seed] Bob chat baseline: could not read the chat (HTTP ${res.status}), left as is`);
+    return;
+  }
+  const page = ((await res.json()) as { data?: BaselineMessage[] }).data ?? [];
+  const texts = page.filter(m => m.category === 'message' && m.type === 'text' && !m.deletedAt);
+  const missing: Record<string, number> = {
+    [SECONDARY_USER]: BASELINE_PER_SIDE - texts.filter(m => m.sender === SECONDARY_USER).length,
+    [PRIMARY_USER]: BASELINE_PER_SIDE - texts.filter(m => m.sender === PRIMARY_USER).length,
+  };
+  if (missing[SECONDARY_USER] <= 0 && missing[PRIMARY_USER] <= 0) {
+    console.log('[seed] Bob chat baseline: OK');
+    return;
+  }
+
+  // Incoming first, then outgoing, so the chat ends on Alice's own messages as it was seeded.
+  for (const [from, to] of [
+    [SECONDARY_USER, PRIMARY_USER],
+    [PRIMARY_USER, SECONDARY_USER],
+  ]) {
+    for (let i = 0; i < missing[from]; i++) {
+      const sent = await fetch(`${apiBase()}/messages`, {
+        method: 'POST',
+        headers: { ...apiHeaders(), onBehalfOf: from },
+        body: JSON.stringify({
+          receiver: to,
+          receiverType: 'user',
+          category: 'message',
+          type: 'text',
+          data: { text: from === PRIMARY_USER ? `Hi Bob, baseline message ${i + 1}` : `Hi Alice, baseline message ${i + 1}` },
+        }),
+      });
+      if (!sent.ok) throw new Error(`[seed] Bob chat baseline: sending as ${from} failed (HTTP ${sent.status})`);
+    }
+  }
+  console.log(
+    `[seed] Bob chat baseline: restored (${Math.max(missing[SECONDARY_USER], 0)} incoming, ` +
+      `${Math.max(missing[PRIMARY_USER], 0)} outgoing re-sent)`
+  );
+}
+
+interface BaselineMessage {
+  sender: string;
+  category: string;
+  type: string;
+  deletedAt?: number;
 }
 
 /**

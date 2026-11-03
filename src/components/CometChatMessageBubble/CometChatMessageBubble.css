@@ -567,16 +567,16 @@
  * the batch into one cohesive unit.
  */
 .cometchat-message-bubble-wrapper--batch-first {
-  padding-bottom: var(--cometchat-spacing-half, 2px);
+  padding-bottom: var(--cometchat-spacing-half, var(--cometchat-spacing, 2px));
 }
 
 .cometchat-message-bubble-wrapper--batch-middle {
-  padding-top: var(--cometchat-spacing-half, 2px);
-  padding-bottom: var(--cometchat-spacing-half, 2px);
+  padding-top: var(--cometchat-spacing-half, var(--cometchat-spacing, 2px));
+  padding-bottom: var(--cometchat-spacing-half, var(--cometchat-spacing, 2px));
 }
 
 .cometchat-message-bubble-wrapper--batch-last {
-  padding-top: var(--cometchat-spacing-half, 2px);
+  padding-top: var(--cometchat-spacing-half, var(--cometchat-spacing, 2px));
 }
 
 div:has(> .cometchat-message-bubble-wrapper--batch-first .cometchat-message-bubble__leading-view)

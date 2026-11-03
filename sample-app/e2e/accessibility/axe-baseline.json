@@ -1,0 +1,37 @@
+{
+  "calls": [
+    "color-contrast",
+    "nested-interactive"
+  ],
+  "chat": [
+    "aria-allowed-attr",
+    "color-contrast",
+    "nested-interactive"
+  ],
+  "conversations": [
+    "color-contrast"
+  ],
+  "group details": [
+    "aria-allowed-attr",
+    "aria-prohibited-attr",
+    "color-contrast",
+    "nested-interactive"
+  ],
+  "groups": [
+    "aria-allowed-attr",
+    "color-contrast",
+    "nested-interactive"
+  ],
+  "search": [
+    "aria-required-parent",
+    "color-contrast"
+  ],
+  "thread": [
+    "aria-allowed-attr",
+    "color-contrast",
+    "nested-interactive"
+  ],
+  "users": [
+    "color-contrast"
+  ]
+}

@@ -2,8 +2,10 @@
  * Unit tests for useCometChatMessageComposer hook.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { mockCometChat } from '../../../testing/mock-sdk';
+import { buildTextMessage } from '../../../testing/mock-builders';
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({ CometChat: mockCometChat }));
 
@@ -23,6 +25,10 @@ vi.mock('../CometChatMessageComposerManager', async () => {
   };
 });
 
+vi.mock('../../../utils/wavConversion', () => ({
+  convertToWav: vi.fn(),
+}));
+
 vi.mock('../../../resources/CometChatSoundManager/CometChatSoundManager', () => ({
   CometChatSoundManager: { play: vi.fn() },
 }));
@@ -30,13 +36,15 @@ vi.mock('../../../resources/CometChatSoundManager/CometChatSoundManager', () => 
 import { useCometChatMessageComposer } from '../useCometChatMessageComposer';
 import { CometChatSoundManager } from '../../../resources/CometChatSoundManager/CometChatSoundManager';
 import * as ComposerManager from '../CometChatMessageComposerManager';
+import { convertToWav } from '../../../utils/wavConversion';
+import { CometChatLogger } from '../../../utils/CometChatLogger';
 
 function makeUser(uid = 'user-1') {
   return {
     getUid: () => uid,
     getName: () => 'Test User',
     getStatus: () => 'online',
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.User;
+  } as unknown as CometChat.User;
 }
 
 function makeTextMessage(id: number, text: string) {
@@ -45,7 +53,7 @@ function makeTextMessage(id: number, text: string) {
     getText: () => text,
     getType: () => 'text',
     getMetadata: () => ({}),
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.TextMessage;
+  } as unknown as CometChat.TextMessage;
 }
 
 describe('useCometChatMessageComposer', () => {
@@ -515,7 +523,7 @@ describe('useCometChatMessageComposer', () => {
         result.current.dispatch({
           type: 'TRAY_SET_ATTACHMENT',
           fileId: 'f2',
-          attachment: {} as import('@cometchat/chat-sdk-javascript').CometChat.Attachment,
+          attachment: {} as CometChat.Attachment,
         });
       });
       expect(result.current.canSend).toBe(true);
@@ -534,7 +542,7 @@ describe('useCometChatMessageComposer', () => {
         percent: 100,
         attachment: {
           getUrl: () => 'http://cdn/photo.jpg',
-        } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.Attachment,
+        } as unknown as CometChat.Attachment,
       };
     }
 
@@ -645,5 +653,134 @@ describe('useCometChatMessageComposer', () => {
       );
     });
     /* eslint-enable @typescript-eslint/unbound-method */
+  });
+
+  describe('sendMediaMessage (voice note)', () => {
+    function sent(): { file: File; getMetadata: () => Record<string, unknown> } {
+      return (mockCometChat.sendMediaMessage as ReturnType<typeof vi.fn>).mock.lastCall?.[0] as {
+        file: File;
+        getMetadata: () => Record<string, unknown>;
+      };
+    }
+
+    const recording = () =>
+      new File(['webm-audio'], 'voice-recording.wav', { type: 'audio/webm;codecs=opus' });
+    const wav = new Blob(['wav-audio'], { type: 'audio/wav' });
+
+    beforeEach(() => {
+      mockCometChat.isInitialized = vi.fn().mockReturnValue(true);
+      vi.mocked(convertToWav).mockReset();
+    });
+
+    it('sends a voice note as WAV with its length in whole seconds, rounded down', async () => {
+      vi.mocked(convertToWav).mockResolvedValue({ wav, durationSeconds: 3.75 });
+      const { result } = renderHook(() => useCometChatMessageComposer({ user: makeUser() }));
+
+      await act(async () => {
+        await result.current.sendMediaMessage(recording(), 'audio', { isVoiceNote: true });
+      });
+
+      expect(sent().file.type).toBe('audio/wav');
+      expect(sent().file.name).toBe('voice-recording.wav');
+      expect(sent().getMetadata()).toMatchObject({
+        audioType: 'voice_note',
+        audioDuration: 3,
+        fileName: 'voice-recording.wav',
+        fileType: 'audio/wav',
+        fileSize: wav.size,
+      });
+    });
+
+    it.each(['note.webm', 'note'])(
+      'names a converted voice note .wav when given %s',
+      async name => {
+        vi.mocked(convertToWav).mockResolvedValue({ wav, durationSeconds: 2 });
+        const { result } = renderHook(() => useCometChatMessageComposer({ user: makeUser() }));
+
+        await act(async () => {
+          await result.current.sendMediaMessage(
+            new File(['webm-audio'], name, { type: 'audio/webm' }),
+            'audio',
+            { isVoiceNote: true }
+          );
+        });
+
+        expect(sent().file.name).toBe('note.wav');
+        expect(sent().getMetadata()).toMatchObject({ fileName: 'note.wav', fileType: 'audio/wav' });
+      }
+    );
+
+    it('stamps at least 1 second for a sub-second voice note', async () => {
+      vi.mocked(convertToWav).mockResolvedValue({ wav, durationSeconds: 0.3 });
+      const { result } = renderHook(() => useCometChatMessageComposer({ user: makeUser() }));
+
+      await act(async () => {
+        await result.current.sendMediaMessage(recording(), 'audio', { isVoiceNote: true });
+      });
+
+      expect(sent().getMetadata()).toMatchObject({ audioDuration: 1 });
+    });
+
+    it('sends the original recording, without a length, when conversion fails', async () => {
+      const error = new Error('EncodingError');
+      vi.mocked(convertToWav).mockRejectedValue(error);
+      const warn = vi.spyOn(CometChatLogger, 'warn').mockImplementation(() => undefined);
+      const { result } = renderHook(() => useCometChatMessageComposer({ user: makeUser() }));
+
+      await act(async () => {
+        await result.current.sendMediaMessage(recording(), 'audio', { isVoiceNote: true });
+      });
+
+      expect(warn).toHaveBeenCalledWith('CometChatMessageComposer', expect.any(String), error);
+      warn.mockRestore();
+      expect(sent().file.type).toBe('audio/webm;codecs=opus');
+      expect(sent().getMetadata()).toMatchObject({ audioType: 'voice_note' });
+      expect(sent().getMetadata()).not.toHaveProperty('audioDuration');
+    });
+
+    it('clears the reply before converting, and the voice note still quotes it', async () => {
+      let finishConversion: (value: { wav: Blob; durationSeconds: number }) => void = () =>
+        undefined;
+      vi.mocked(convertToWav).mockReturnValue(
+        new Promise(resolve => {
+          finishConversion = resolve;
+        })
+      );
+      const reply = buildTextMessage({ id: 7 }) as unknown as CometChat.BaseMessage;
+      const nextReply = buildTextMessage({ id: 8 }) as unknown as CometChat.BaseMessage;
+      const { result, rerender } = renderHook(
+        ({ messageToReply }) => useCometChatMessageComposer({ user: makeUser(), messageToReply }),
+        { initialProps: { messageToReply: reply } }
+      );
+
+      let sending: Promise<void> = Promise.resolve();
+      act(() => {
+        sending = result.current.sendMediaMessage(recording(), 'audio', { isVoiceNote: true });
+      });
+      expect(result.current.state.messageToReply).toBeNull();
+
+      // A new reply picked while the voice note converts stays in the composer.
+      rerender({ messageToReply: nextReply });
+      await act(async () => {
+        finishConversion({ wav, durationSeconds: 2 });
+        await sending;
+      });
+
+      expect(result.current.state.messageToReply).toBe(nextReply);
+      expect((sent() as unknown as { quotedMessageId: number }).quotedMessageId).toBe(7);
+    });
+
+    it('does not convert audio that is not a voice note', async () => {
+      const { result } = renderHook(() => useCometChatMessageComposer({ user: makeUser() }));
+      const song = new File(['mp3-audio'], 'song.mp3', { type: 'audio/mpeg' });
+
+      await act(async () => {
+        await result.current.sendMediaMessage(song, 'audio');
+      });
+
+      expect(convertToWav).not.toHaveBeenCalled();
+      expect(sent().file.type).toBe('audio/mpeg');
+      expect(sent().getMetadata()).not.toHaveProperty('audioDuration');
+    });
   });
 });

@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { downloadWithProgress } from '../../../utils/downloadWithProgress';
 import './CometChatDownloadButton.css';
 import { useLocale } from '../../../hooks/useLocale';
+import { fillTemplate } from '../../../utils/fillTemplate';
 
 export interface CometChatDownloadButtonProps {
   /** The file URL to download. */
@@ -76,7 +77,7 @@ export const CometChatDownloadButton: React.FC<CometChatDownloadButtonProps> = (
             type="button"
             className={'cometchat-download-button__cancel'}
             onClick={handleCancel}
-            aria-label="Cancel download"
+            aria-label={getLocalizedString('audio_bubble_cancel_download')}
           />
         </div>
       </div>
@@ -91,7 +92,7 @@ export const CometChatDownloadButton: React.FC<CometChatDownloadButtonProps> = (
         onClick={() => {
           void handleDownload();
         }}
-        aria-label={getLocalizedString('accessibility_download_file').replace('{name}', fileName)}
+        aria-label={fillTemplate(getLocalizedString('accessibility_download_file'), { name: fileName })}
       />
     </div>
   );

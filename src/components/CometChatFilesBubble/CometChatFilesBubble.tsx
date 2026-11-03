@@ -166,7 +166,10 @@ export const CometChatFilesBubble: React.FC<CometChatFilesBubbleProps> = ({
             className="cometchat-files-bubble__toggle"
             onClick={toggleExpanded}
             aria-expanded={false}
-            aria-label={`Show ${String(remainingCount)} more files`}
+            aria-label={getLocalizedString('accessibility_show_more_files').replace(
+              '{count}',
+              String(remainingCount)
+            )}
           >
             {(getLocalizedString('bubble_show_more') || 'Show {count} more').replace(
               '{count}',
@@ -197,7 +200,7 @@ export const CometChatFilesBubble: React.FC<CometChatFilesBubbleProps> = ({
             className="cometchat-files-bubble__toggle"
             onClick={toggleExpanded}
             aria-expanded={true}
-            aria-label="Show less"
+            aria-label={getLocalizedString('bubble_show_less')}
           >
             {getLocalizedString('bubble_show_less') || 'Show less'}
             <svg

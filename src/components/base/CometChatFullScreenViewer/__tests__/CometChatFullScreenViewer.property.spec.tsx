@@ -133,7 +133,7 @@ describe('CometChatFullScreenViewer property-based tests', () => {
           const indexDisplay = screen.getByText(/of 3/);
           const match = indexDisplay.textContent?.match(/^(\d+) of 3$/);
           expect(match).not.toBeNull();
-          const index = parseInt(match![1], 10);
+          const index = parseInt(match![1]!, 10);
           expect(index).toBeGreaterThanOrEqual(1);
           expect(index).toBeLessThanOrEqual(3);
           unmount();

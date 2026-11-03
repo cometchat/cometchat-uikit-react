@@ -17,6 +17,7 @@ import {
   extractVideoSenderName,
 } from './CometChatVideoBubble.utils';
 import './CometChatVideoBubble.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 // Lazy-load the FullScreenViewer — only needed when user clicks to view fullscreen.
 const LazyCometChatFullScreenViewer = lazy(
@@ -155,9 +156,9 @@ export const CometChatVideoBubble: React.FC<CometChatVideoBubbleProps> = ({
 
   // --- Accessibility ---
 
-  const tileAriaLabel = 'Play video. Press Enter to open.';
+  const tileAriaLabel = getLocalizedString('accessibility_play_video');
 
-  const overflowAriaLabel = `${String(overflowCount)} more videos. Press Enter to view all.`;
+  const overflowAriaLabel = fillTemplate(getLocalizedString('accessibility_more_videos'), { count: String(overflowCount) });
 
   // --- CSS classes ---
 
@@ -258,7 +259,7 @@ export const CometChatVideoBubble: React.FC<CometChatVideoBubbleProps> = ({
               preload="metadata"
               aria-label={
                 senderName
-                  ? `Video from ${senderName}`
+                  ? fillTemplate(getLocalizedString('accessibility_video_from'), { name: senderName })
                   : getLocalizedString('accessibility_video_message')
               }
             />
@@ -277,7 +278,7 @@ export const CometChatVideoBubble: React.FC<CometChatVideoBubbleProps> = ({
             preload="metadata"
             aria-label={
               senderName
-                ? `Video from ${senderName}`
+                ? fillTemplate(getLocalizedString('accessibility_video_from'), { name: senderName })
                 : getLocalizedString('accessibility_video_message')
             }
             onPlay={handleVideoPlay}

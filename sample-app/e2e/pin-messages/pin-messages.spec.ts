@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/test';
 import { loginToApp } from '../helpers';
 import { openStrategyChat } from '../helpers';
 import { bubbleWithText } from '../helpers/threads';
@@ -26,6 +26,7 @@ import {
   pinnedPanelErrorState,
   waitForPinnedListSettled,
   withOffline,
+  denyPinnedListing,
 } from '../helpers/pinSave';
 
 /**
@@ -41,17 +42,6 @@ import {
 
 const PIN_LIMIT = Number(process.env.E2E_PIN_MESSAGES_LIMIT ?? '');
 
-/**
- * Permission-deny flags. Set each to `1` only after you've applied the matching
- * DENY to the **participant** scope in the Strategy group's dashboard settings
- * (see README → Pin & Save prerequisites). Each test self-skips until then,
- * because the deny lives in dashboard config, not in code — an un-configured app
- * would let the action through and fail the test for the wrong reason.
- */
-const PARTICIPANT_PIN_DENIED = (process.env.E2E_PARTICIPANT_PIN_DENIED ?? '') === '1';
-const PARTICIPANT_UNPIN_DENIED = (process.env.E2E_PARTICIPANT_UNPIN_DENIED ?? '') === '1';
-const PARTICIPANT_PIN_LISTING_DENIED =
-  (process.env.E2E_PARTICIPANT_PIN_LISTING_DENIED ?? '') === '1';
 
 /** Seed a fresh Strategy message and wait for its bubble. */
 async function seedMessage(page: import('@playwright/test').Page, label: string) {
@@ -68,12 +58,7 @@ test.describe('Pin message', () => {
     await openStrategyChat(page);
   });
 
-  test('offers "Pin message" on an eligible message', async ({ page }) => {
-    const { text } = await seedMessage(page, 'Pin option');
-    expect(await messageOptionVisible(page, bubbleWithText(page, text), PIN_MESSAGE_OPTION)).toBe(true);
-  });
-
-  test('pinning shows the indicator and flips the option to Unpin', async ({ page }) => {
+  test('pinning shows the indicator and flips the option to Unpin', { tag: '@smoke' }, async ({ page }) => {
     const { text } = await seedMessage(page, 'Pin me');
     const bubble = bubbleWithText(page, text);
 
@@ -94,14 +79,6 @@ test.describe('Pin message', () => {
     await unpinMessageUI(page, bubble);
     await expect(pinnedIndicator(bubble)).toHaveCount(0, { timeout: 10_000 });
     expect(await messageOptionVisible(page, bubble, PIN_MESSAGE_OPTION)).toBe(true);
-  });
-
-  test('the pinned panel lists a pinned message', async ({ page }) => {
-    const { id, text } = await seedMessage(page, 'Panel pin');
-    await pinMessageRest(id, PRIMARY_UID);
-
-    await openPinnedPanel(page);
-    await expect(pinnedPanelRow(page, text)).toBeVisible({ timeout: 10_000 });
   });
 
   test('clicking a normal pinned row jumps the main list to it', async ({ page }) => {
@@ -172,11 +149,12 @@ test.describe('Pin message', () => {
 });
 
 test.describe('Pin message — permissions', () => {
-  // The client no longer gates Pin/Unpin by role — every member sees the option
-  // and the SERVER enforces who may act. The first test proves the option is
-  // offered to a participant; the rest prove the server's denial surfaces as a
-  // toast (or the panel's error state). Those three need the deny actually
-  // applied in the dashboard, so they self-skip until the matching env flag is set.
+  // The client does not gate Pin/Unpin by role — every member sees the option and
+  // the SERVER enforces who may act. The E2E app keeps the DEFAULT participant
+  // permissions: pin denied, unpin denied, pinned-listing allowed. Those denials
+  // are exercised live against the server; a denied LISTING cannot coexist with
+  // them, so it is simulated with `denyPinnedListing` (the server's permission
+  // error, returned for the panel's fetch only).
 
   test('a participant IS offered "Pin message" (the option is no longer role-gated)', async ({
     page,
@@ -197,10 +175,6 @@ test.describe('Pin message — permissions', () => {
   });
 
   test('a denied pin shows the permission toast and does not pin', async ({ page }) => {
-    test.skip(
-      !PARTICIPANT_PIN_DENIED,
-      'Set E2E_PARTICIPANT_PIN_DENIED=1 after denying the participant scope the PIN permission in the Strategy group (see README → Pin & Save prerequisites).'
-    );
     await clearPinnedMessages(STRATEGY_GROUP, PRIMARY_UID);
 
     const text = `Denied pin [${Date.now()}]`;
@@ -221,10 +195,6 @@ test.describe('Pin message — permissions', () => {
   });
 
   test('a denied unpin shows the permission toast and stays pinned', async ({ page }) => {
-    test.skip(
-      !PARTICIPANT_UNPIN_DENIED,
-      'Set E2E_PARTICIPANT_UNPIN_DENIED=1 after denying the participant scope the UNPIN permission in the Strategy group (see README → Pin & Save prerequisites).'
-    );
     await clearPinnedMessages(STRATEGY_GROUP, PRIMARY_UID);
 
     // The owner pins it; the participant will be denied the unpin.
@@ -245,11 +215,7 @@ test.describe('Pin message — permissions', () => {
     await expect(pinnedIndicator(bubble)).toBeVisible({ timeout: 5_000 });
   });
 
-  test('a denied pinned-listing shows the panel error state', async ({ page }) => {
-    test.skip(
-      !PARTICIPANT_PIN_LISTING_DENIED,
-      'Set E2E_PARTICIPANT_PIN_LISTING_DENIED=1 after denying the participant scope the PINNED-MESSAGES LISTING permission in the Strategy group (see README → Pin & Save prerequisites).'
-    );
+  test('a denied pinned-listing shows the panel error state (simulated denial)', async ({ page }) => {
     await clearPinnedMessages(STRATEGY_GROUP, PRIMARY_UID);
 
     // There IS a pin, so a working listing would show a row — the error state is
@@ -258,6 +224,7 @@ test.describe('Pin message — permissions', () => {
     const id = await sendStrategyMessage({ as: PRIMARY_UID, text });
     await pinMessageRest(id, PRIMARY_UID);
 
+    await denyPinnedListing(page, STRATEGY_GROUP);
     await loginToApp(page, STRATEGY_PARTICIPANT_UID);
     await openStrategyChat(page);
     await expect(bubbleWithText(page, text)).toBeVisible({ timeout: 15_000 });
@@ -268,20 +235,15 @@ test.describe('Pin message — permissions', () => {
     await expect(pinnedPanelRow(page, text)).toHaveCount(0);
   });
 
-  // ── Permutations across the deny flags ────────────────────────────────────
-  // Each needs a specific ALLOWED/DENIED mix, so they self-skip unless that exact
-  // combination is configured — the full matrix spans more than one env setup.
+  // ── Realtime behaviour around denials ─────────────────────────────────────
 
-  test('a denied listing does not append a realtime pin', async ({ page }) => {
-    test.skip(
-      PARTICIPANT_PIN_DENIED || !PARTICIPANT_PIN_LISTING_DENIED,
-      'Requires pin ALLOWED and listing DENIED — leave E2E_PARTICIPANT_PIN_DENIED unset and set E2E_PARTICIPANT_PIN_LISTING_DENIED=1.'
-    );
+  test('a denied listing does not append a realtime pin (simulated denial)', async ({ page }) => {
     await clearPinnedMessages(STRATEGY_GROUP, PRIMARY_UID);
 
     const text = `Realtime pin, denied listing [${Date.now()}]`;
-    await sendStrategyMessage({ as: PRIMARY_UID, text });
+    const id = await sendStrategyMessage({ as: PRIMARY_UID, text });
 
+    await denyPinnedListing(page, STRATEGY_GROUP);
     await loginToApp(page, STRATEGY_PARTICIPANT_UID);
     await openStrategyChat(page);
     const bubble = bubbleWithText(page, text);
@@ -291,22 +253,18 @@ test.describe('Pin message — permissions', () => {
     await openPinnedPanel(page);
     await expect(pinnedPanelErrorState(page)).toBeVisible({ timeout: 10_000 });
 
-    // Then: pin from the FRONTEND message option (allowed) — a real pin that
-    // broadcasts to the OPEN panel, which must not append it into an errored list.
-    await clickMessageOption(page, bubble, PIN_MESSAGE_OPTION);
-    await page.waitForTimeout(2500);
+    // Then: the owner pins it — a real pin that broadcasts to this OPEN panel.
+    // The main-list indicator proves the realtime event arrived.
+    await pinMessageRest(id, PRIMARY_UID);
+    await expect(pinnedIndicator(bubble)).toBeVisible({ timeout: 15_000 });
 
-    // Still errored, no row leaked in.
+    // The errored list must not have appended it.
     await expect(pinnedPanelErrorState(page)).toBeVisible();
     await expect(pinnedPanelError(page)).toHaveText(PANEL_ERROR_SUBTITLE);
     await expect(pinnedPanelRow(page, text)).toHaveCount(0);
   });
 
   test('a denied pin never reaches the (allowed) pinned list', async ({ page }) => {
-    test.skip(
-      !PARTICIPANT_PIN_DENIED || PARTICIPANT_PIN_LISTING_DENIED,
-      'Requires pin DENIED and listing ALLOWED — set E2E_PARTICIPANT_PIN_DENIED=1 and leave E2E_PARTICIPANT_PIN_LISTING_DENIED unset.'
-    );
     await clearPinnedMessages(STRATEGY_GROUP, PRIMARY_UID);
 
     const text = `Denied pin, allowed listing [${Date.now()}]`;
@@ -322,52 +280,44 @@ test.describe('Pin message — permissions', () => {
     await openPinnedPanel(page);
     await waitForPinnedListSettled(page);
 
-    // Then: pin from the FRONTEND message option — the server rejects it.
+    // Then: pin from the message option — the server rejects it.
     await clickMessageOption(page, bubble, PIN_MESSAGE_OPTION);
     await expect(page.locator('.cometchat-toast__text')).toHaveText(PERMISSION_DENIED_TOAST, {
       timeout: 10_000,
     });
-    await page.waitForTimeout(2500);
 
-    // The denied pin produced no row and did not flip the list to error.
+    // The denied pin produced no row, no indicator, and did not flip the list to error.
     await expect(pinnedPanelErrorState(page)).toHaveCount(0);
     await expect(pinnedPanelRow(page, text)).toHaveCount(0);
+    await expect(pinnedIndicator(bubble)).toHaveCount(0);
   });
 
   test('a denied unpin does not remove the message from the OPEN pinned list (realtime)', async ({
     page,
   }) => {
-    test.skip(
-      !PARTICIPANT_UNPIN_DENIED || PARTICIPANT_PIN_DENIED || PARTICIPANT_PIN_LISTING_DENIED,
-      'Requires unpin DENIED with pin and listing ALLOWED — set E2E_PARTICIPANT_UNPIN_DENIED=1 and leave E2E_PARTICIPANT_PIN_DENIED and E2E_PARTICIPANT_PIN_LISTING_DENIED unset.'
-    );
     await clearPinnedMessages(STRATEGY_GROUP, PRIMARY_UID);
 
-    const text = `Participant pins, unpin denied [${Date.now()}]`;
-    await sendStrategyMessage({ as: PRIMARY_UID, text });
+    // The owner pins it; the participant (unpin denied) will try to unpin.
+    const text = `Owner pins, participant unpin denied [${Date.now()}]`;
+    const id = await sendStrategyMessage({ as: PRIMARY_UID, text });
+    await pinMessageRest(id, PRIMARY_UID);
 
     await loginToApp(page, STRATEGY_PARTICIPANT_UID);
     await openStrategyChat(page);
     const bubble = bubbleWithText(page, text);
-    await expect(bubble).toBeVisible({ timeout: 15_000 });
-
-    // The participant pins it themselves (pin allowed).
-    await clickMessageOption(page, bubble, PIN_MESSAGE_OPTION);
-    await expect(pinnedIndicator(bubble)).toBeVisible({ timeout: 10_000 });
+    await expect(pinnedIndicator(bubble)).toBeVisible({ timeout: 15_000 });
 
     // First: open the pinned list and wait until it shows the row.
     await openPinnedPanel(page);
     await waitForPinnedListSettled(page);
     await expect(pinnedPanelRow(page, text)).toBeVisible({ timeout: 10_000 });
 
-    // Then: attempt the unpin from the frontend — denied. With the list OPEN,
-    // the denied unpin must NOT remove the row in realtime (no server-confirmed
-    // unpin event ever arrives).
+    // Then: attempt the unpin — denied. With the list OPEN, the denied unpin must
+    // NOT remove the row (no server-confirmed unpin event ever arrives).
     await unpinMessageUI(page, bubble);
     await expect(page.locator('.cometchat-toast__text')).toHaveText(PERMISSION_DENIED_TOAST, {
       timeout: 10_000,
     });
-    await page.waitForTimeout(2500);
 
     await expect(pinnedPanelRow(page, text)).toBeVisible();
     await expect(pinnedIndicator(bubble)).toBeVisible();

@@ -74,6 +74,8 @@ function App(props: IAppProps) {
     const sharedInstance = CometChatLocalize.getSharedInstance();
     if (sharedInstance) {
       sharedInstance.addTranslation(sampleAppTranslations);
+      // Tell screen readers which language the UI is in, so they pronounce it correctly.
+      document.documentElement.lang = sharedInstance.getCurrentLanguage();
     }
   }, [isInitialized]);
 

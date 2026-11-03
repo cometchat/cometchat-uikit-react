@@ -22,7 +22,7 @@ export const CometChatNotificationFeedLoadingState: React.FC<
       className="cometchat-notification-feed__loading"
       role="status"
       aria-busy="true"
-      aria-label="Loading notifications"
+      aria-label={getLocalizedString('accessibility_loading_notifications')}
     >
       {children ?? (
         <>

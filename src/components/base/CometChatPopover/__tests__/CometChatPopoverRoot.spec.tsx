@@ -276,6 +276,37 @@ describe('CometChatPopoverRoot', () => {
     expect(content).not.toHaveAttribute('tabindex');
   });
 
+  it('moves focus to the first focusable element when it opens with trapFocus', () => {
+    renderPopover({
+      isOpen: true,
+      trapFocus: true,
+      children: (
+        <>
+          <CometChatPopover.Trigger>
+            <button>Open</button>
+          </CometChatPopover.Trigger>
+          <CometChatPopover.Content>
+            <button disabled>Disabled</button>
+            <button>First</button>
+            <button>Second</button>
+          </CometChatPopover.Content>
+        </>
+      ),
+    });
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
+  });
+
+  it('focuses the popover itself when it has nothing focusable inside', () => {
+    renderPopover({ isOpen: true, trapFocus: true });
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(screen.getByText('Popover body').parentElement).toHaveFocus();
+  });
+
   // ─── ARIA props ───
 
   it('passes ariaLabel to content', () => {

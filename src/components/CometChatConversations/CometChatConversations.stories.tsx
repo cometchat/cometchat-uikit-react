@@ -10,7 +10,6 @@
  * - Multiple selection mode
  * - With active conversation
  * - Dark theme
- * - RTL
  *
  * @module components/CometChatConversations
  */
@@ -19,7 +18,11 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { CometChatConversations } from './CometChatConversations';
 import { CometChatConversationsContext } from './CometChatConversations.context';
-import type { CometChatConversationsContextValue } from './CometChatConversations.types';
+import type {
+  CometChatConversationsContextValue,
+  CometChatConversationsRootProps,
+  CometChatConversationsSelectionMode,
+} from './CometChatConversations.types';
 
 // ============================================
 // Mock Data
@@ -188,8 +191,29 @@ function createMockContext(
     setConversationToBeDeleted: () => {
       /* no-op */
     },
+    pinConversation: () => {
+      /* no-op */
+    },
+    unpinConversation: () => {
+      /* no-op */
+    },
+    pinToastText: '',
+    pinToastId: 0,
+    pinToastVariant: 'default',
+    clearPinToast: () => {
+      /* no-op */
+    },
+    pinConfirmState: null,
+    confirmPinAction: () => {
+      /* no-op */
+    },
+    cancelPinAction: () => {
+      /* no-op */
+    },
+    pinIsBusy: false,
     conversationToBeDeleted: null,
     hideGroupType: false,
+    showScrollbar: false,
     loggedInUserId: null,
     typingIndicatorMap: new Map(),
     hideDeleteConversation: false,
@@ -215,7 +239,23 @@ const containerStyle: React.CSSProperties = {
 // Meta Configuration
 // ============================================
 
-const meta: Meta = {
+/** Story controls; they feed the mock context, plus the Root callbacks logged as actions. */
+interface ConversationsStoryArgs extends Pick<
+  CometChatConversationsRootProps,
+  'onItemClick' | 'onSelect' | 'onError' | 'onEmpty' | 'onSearchBarClicked'
+> {
+  hideUserStatus: boolean;
+  hideUnreadCount: boolean;
+  hideReceipts: boolean;
+  hideGroupType: boolean;
+  hideDeleteConversation: boolean;
+  showSearchBar: boolean;
+  showScrollbar: boolean;
+  disableSoundForMessages: boolean;
+  selectionMode: CometChatConversationsSelectionMode;
+}
+
+const meta: Meta<ConversationsStoryArgs> = {
   title: 'Components/Conversations/CometChat Conversations',
   component: CometChatConversations.Root,
   tags: ['autodocs'],
@@ -346,22 +386,14 @@ const meta: Meta = {
   ],
 };
 export default meta;
-type Story = StoryObj;
+type Story = StoryObj<ConversationsStoryArgs>;
 
 // ============================================
 // Stories
 // ============================================
 
 /** Default loaded state with conversations. */
-function DefaultDemo(args: {
-  hideUserStatus?: boolean;
-  hideUnreadCount?: boolean;
-  hideReceipts?: boolean;
-  hideGroupType?: boolean;
-  hideDeleteConversation?: boolean;
-  showSearchBar?: boolean;
-  selectionMode?: string;
-}) {
+function DefaultDemo(args: ConversationsStoryArgs) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const selectedMap = new Map(
     selectedIds
@@ -382,7 +414,8 @@ function DefaultDemo(args: {
     selectionMode: args.selectionMode,
     selectedConversationIds: selectedIds,
     selectedConversationsMap: selectedMap,
-    selectConversation: (id: string) => {
+    selectConversation: (conversation: CometChat.Conversation) => {
+      const id = conversation.getConversationId();
       if (args.selectionMode === 'single') {
         setSelectedIds([id]);
       } else {
@@ -408,7 +441,7 @@ function DefaultDemo(args: {
     <CometChatConversationsContext.Provider value={ctx}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <CometChatConversations.Header />
-        {args.showSearchBar !== false && <CometChatConversations.SearchBar />}
+        {args.showSearchBar && <CometChatConversations.SearchBar />}
         <CometChatConversations.List />
       </div>
     </CometChatConversationsContext.Provider>
@@ -512,7 +545,7 @@ export const SingleSelection: Story = {
   render: args => <SingleSelectionDemo {...args} />,
 };
 
-function SingleSelectionDemo(args: any) {
+function SingleSelectionDemo(args: ConversationsStoryArgs) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>(['conv_user_bob']);
   const selectedMap = new Map(
     selectedIds
@@ -526,8 +559,8 @@ function SingleSelectionDemo(args: any) {
     selectionMode: 'single',
     selectedConversationIds: selectedIds,
     selectedConversationsMap: selectedMap,
-    selectConversation: (id: string) => {
-      setSelectedIds([id]);
+    selectConversation: (conversation: CometChat.Conversation) => {
+      setSelectedIds([conversation.getConversationId()]);
     },
     deselectConversation: (id: string) => {
       setSelectedIds(prev => prev.filter(x => x !== id));
@@ -564,7 +597,7 @@ export const MultipleSelection: Story = {
   render: args => <MultipleSelectionDemo {...args} />,
 };
 
-function MultipleSelectionDemo(args: any) {
+function MultipleSelectionDemo(args: ConversationsStoryArgs) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([
     'conv_user_alice',
     'conv_group_team',
@@ -581,7 +614,8 @@ function MultipleSelectionDemo(args: any) {
     selectionMode: 'multiple',
     selectedConversationIds: selectedIds,
     selectedConversationsMap: selectedMap,
-    selectConversation: (id: string) => {
+    selectConversation: (conversation: CometChat.Conversation) => {
+      const id = conversation.getConversationId();
       setSelectedIds(prev => (prev.includes(id) ? prev : [...prev, id]));
     },
     deselectConversation: (id: string) => {

@@ -11,7 +11,13 @@
  * - Any other non-E2E data
  *
  * Usage:
- *   npm run e2e:cleanup
+ *   npm run e2e:cleanup                 # everything above (resets the app)
+ *   npm run e2e:cleanup -- --leftovers  # only throwaway data a run left behind
+ *
+ * --leftovers keeps the baseline e2e-user-1…35 and e2e-group-1…35 that the seed creates, and
+ * removes only E2E_Test_* groups and e2e-*-tmp-* / e2e-user-journey-* fixtures. Deleting and
+ * re-seeding the baseline between back-to-back runs recreates groups under the same GUID,
+ * which is slow and churns server-side state for no benefit.
  *
  * Requires: sample-app/.env.e2e with APP_ID, REGION, API_KEY
  */
@@ -106,8 +112,29 @@ async function listGroups(): Promise<string[]> {
   return guids;
 }
 
+async function listThrowawayUsers(): Promise<string[]> {
+  const uids: string[] = [];
+  let page = 1;
+  const perPage = 100;
+  while (true) {
+    const res = await fetch(`${BASE_URL}/users?perPage=${perPage}&page=${page}&searchKey=e2e-user-`, { headers: HEADERS });
+    const data = await res.json().catch(() => ({ data: [] }));
+    const users = (data?.data ?? []) as { uid?: string }[];
+    if (users.length === 0) break;
+    for (const u of users) {
+      const uid = u.uid ?? '';
+      if (uid.startsWith('e2e-user-tmp-') || uid.startsWith('e2e-user-journey-')) uids.push(uid);
+    }
+    if (users.length < perPage) break;
+    page++;
+  }
+  return uids;
+}
+
+const LEFTOVERS_ONLY = process.argv.includes('--leftovers');
+
 async function main() {
-  console.log('🧹 E2E Cleanup Script');
+  console.log(LEFTOVERS_ONLY ? '🧹 E2E Cleanup Script (leftovers only)' : '🧹 E2E Cleanup Script');
   console.log(`   App ID: ${APP_ID}`);
   console.log(`   Region: ${REGION}`);
   console.log('');
@@ -116,14 +143,19 @@ async function main() {
   console.log('🗑️  Deleting E2E groups...');
 
   // Delete known e2e-group-* groups
-  for (let i = 1; i <= 35; i++) {
-    await deleteGroup(`e2e-group-${i}`);
+  if (!LEFTOVERS_ONLY) {
+    for (let i = 1; i <= 35; i++) {
+      await deleteGroup(`e2e-group-${i}`);
+    }
   }
 
   // Also find and delete any E2E_Test_* groups (by name) from create-group tests
   const extraGroups = await listGroups();
+  // Anything not already deleted by number above: E2E_Test_* (UI-created) and
+  // e2e-group-tmp-* (throwaway fixtures left by a run that died early).
+  const numbered = new Set(Array.from({ length: 35 }, (_, i) => `e2e-group-${String(i + 1)}`));
   for (const guid of extraGroups) {
-    if (!guid.startsWith('e2e-group-')) {
+    if (!numbered.has(guid)) {
       await deleteGroup(guid);
     }
   }
@@ -131,8 +163,14 @@ async function main() {
 
   // ─── Delete Users ──────────────────────────────────────────────────────────
   console.log('🗑️  Deleting E2E users...');
-  for (let i = 1; i <= 35; i++) {
-    await deleteUser(`e2e-user-${i}`);
+  if (!LEFTOVERS_ONLY) {
+    for (let i = 1; i <= 35; i++) {
+      await deleteUser(`e2e-user-${i}`);
+    }
+  }
+  // Throwaway users left by a run that died early (e2e-user-tmp-*, e2e-user-journey-*).
+  for (const uid of await listThrowawayUsers()) {
+    await deleteUser(uid);
   }
   console.log(`   Done. ${deletedUsers} deleted, ${failedUsers} failed.\n`);
 
@@ -145,7 +183,11 @@ async function main() {
     console.log(`   ⚠️  Failures: ${failedUsers} users, ${failedGroups} groups`);
   }
   console.log('═══════════════════════════════════════════════════════');
-  console.log('\n✅ Cleanup complete. App is reset to empty state.');
+  console.log(
+    LEFTOVERS_ONLY
+      ? '\n✅ Cleanup complete. Leftovers removed; the seeded baseline is kept.'
+      : '\n✅ Cleanup complete. App is reset to empty state.'
+  );
   console.log('   Note: "AI Agent E2E" user was NOT deleted (manually managed).\n');
 }
 

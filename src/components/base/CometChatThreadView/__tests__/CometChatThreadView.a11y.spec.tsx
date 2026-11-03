@@ -5,12 +5,16 @@ import { describe, it, expect, vi } from 'vitest';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { CometChatThreadView } from '../CometChatThreadView';
 
-vi.mock('../../../../context/locale/LocaleContext', () => ({
-  useLocale: () => ({
-    getLocalizedString: (key: string) => key,
-    language: 'en-us',
-  }),
-}));
+vi.mock('../../../../context/locale/LocaleContext', async () => {
+  const enUs = (await import('../../../../resources/CometChatLocalize/resources/en-us/translation.json'))
+    .default as Record<string, string>;
+  return {
+    useLocale: () => ({
+      getLocalizedString: (key: string) => enUs[key] ?? key,
+      language: 'en-us',
+    }),
+  };
+});
 
 expect.extend(toHaveNoViolations);
 
@@ -56,7 +60,7 @@ describe('CometChatThreadView accessibility', () => {
         <CometChatThreadView.Icon />
       </CometChatThreadView.Root>
     );
-    expect(screen.getByLabelText('3 thread_view_replies, view thread')).toBeInTheDocument();
+    expect(screen.getByLabelText('3 replies, view thread')).toBeInTheDocument();
   });
 
   it('aria-label includes unread count when present', () => {
@@ -66,7 +70,7 @@ describe('CometChatThreadView accessibility', () => {
       </CometChatThreadView.Root>
     );
     expect(
-      screen.getByLabelText('5 thread_view_replies, view thread, 2 unread')
+      screen.getByLabelText('5 replies, view thread, 2 unread')
     ).toBeInTheDocument();
   });
 

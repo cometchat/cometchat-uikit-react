@@ -3,6 +3,7 @@ import { CometChatDate } from '../base/CometChatDate';
 import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
 import './CometChatMessageList.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { dateLiteral } from '../../resources/CometChatLocalize/dateFormat.utils';
 
 export interface CometChatMessageListDateSeparatorProps {
   /** Unix timestamp (seconds) for the date to display. */
@@ -27,8 +28,8 @@ export const CometChatMessageListDateSeparator: React.FC<
   const classes = ['cometchat-message-list__date-separator', className].filter(Boolean).join(' ');
 
   const resolvedFormatConfig: CometChatDateFormatConfig = formatConfig ?? {
-    today: getLocalizedString('date_today'),
-    yesterday: getLocalizedString('date_yesterday'),
+    today: dateLiteral(getLocalizedString('date_today')),
+    yesterday: dateLiteral(getLocalizedString('date_yesterday')),
     lastWeek: 'dddd',
     otherDays: 'DD MMM, YYYY',
   };

@@ -1,5 +1,6 @@
 import { Page, expect } from '@playwright/test';
 import { openActionSheet, bubbleWithText } from './threads';
+import { visibleWithin } from './wait';
 
 /**
  * Helpers for the Pin & Save suites (pin/save messages + pin conversation).
@@ -52,14 +53,14 @@ export const PANEL_ERROR_SUBTITLE = 'Looks like something went wrong';
 
 // ─── REST config ─────────────────────────────────────────────────────────────
 
-function restBase(): string {
+export function restBase(): string {
   const appId = process.env.COMETCHAT_APP_ID ?? '';
   const region = process.env.COMETCHAT_REGION ?? 'us';
   return `https://${appId}.api-${region}.cometchat.io/v3`;
 }
 
 /** Acts as a specific user (per-user pins/saves are scoped by onBehalfOf). */
-function userHeaders(onBehalfOf: string): Record<string, string> {
+export function userHeaders(onBehalfOf: string): Record<string, string> {
   return {
     'Content-Type': 'application/json',
     apikey: process.env.COMETCHAT_API_KEY ?? '',
@@ -68,8 +69,37 @@ function userHeaders(onBehalfOf: string): Record<string, string> {
   };
 }
 
+/**
+ * `fetch` for a call that acts on a message by id. On some apps the API answers 403
+ * ERR_MESSAGE_NO_ACCESS for a message created a moment earlier, even to its sender, before
+ * settling; retry that answer with a short backoff and log it, so how often it happens stays
+ * visible. Any other response is returned as is.
+ */
+export async function fetchForMessage(url: string, init: RequestInit): Promise<Response> {
+  const started = Date.now();
+  for (let attempt = 1; ; attempt++) {
+    const res = await fetch(url, init);
+    if (res.status !== 403 || attempt === 6) return res;
+    if (!(await res.clone().text()).includes('ERR_MESSAGE_NO_ACCESS')) return res;
+    console.warn(
+      `[e2e] ERR_MESSAGE_NO_ACCESS on ${new URL(url).pathname} ` +
+        `(attempt ${String(attempt)}, ${String(Date.now() - started)} ms); retrying`
+    );
+    await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+  }
+}
+
+/** React to a message as `asUid`, retrying the brief no-access answer for a new message. */
+export async function addReaction(id: number, emoji: string, asUid: string): Promise<void> {
+  const res = await fetchForMessage(`${restBase()}/messages/${String(id)}/reactions/${encodeURIComponent(emoji)}`, {
+    method: 'POST',
+    headers: userHeaders(asUid),
+  });
+  if (!res.ok) throw new Error(`${asUid} reacting with ${emoji} failed: ${String(res.status)} ${await res.text()}`);
+}
+
 /** Admin-scoped (no onBehalfOf) — for system/admin pins. */
-function adminHeaders(): Record<string, string> {
+export function adminHeaders(): Record<string, string> {
   return {
     'Content-Type': 'application/json',
     apikey: process.env.COMETCHAT_API_KEY ?? '',
@@ -129,7 +159,7 @@ export async function sendMessageToGroup({
     ? `${restBase()}/messages/${String(parentMessageId)}/thread`
     : `${restBase()}/messages`;
 
-  const res = await fetch(url, { method: 'POST', headers: userHeaders(as), body: JSON.stringify(body) });
+  const res = await fetchForMessage(url, { method: 'POST', headers: userHeaders(as), body: JSON.stringify(body) });
   const payload = (await res.json()) as { data?: { id?: string | number; parentId?: string | number } };
   const id = Number(payload.data?.id);
   if (!id) throw new Error(`sendMessageToGroup failed as ${as}: ${JSON.stringify(payload)}`);
@@ -200,7 +230,7 @@ export async function getPinnedMessageIds(guid: string, asUid: string): Promise<
 }
 
 export async function pinMessageRest(id: number, asUid: string): Promise<void> {
-  const res = await fetch(`${restBase()}/messages/${String(id)}/pin`, {
+  const res = await fetchForMessage(`${restBase()}/messages/${String(id)}/pin`, {
     method: 'POST',
     headers: userHeaders(asUid),
   });
@@ -208,7 +238,7 @@ export async function pinMessageRest(id: number, asUid: string): Promise<void> {
 }
 
 export async function unpinMessageRest(id: number, asUid: string): Promise<void> {
-  const res = await fetch(`${restBase()}/messages/${String(id)}/pin`, {
+  const res = await fetchForMessage(`${restBase()}/messages/${String(id)}/pin`, {
     method: 'DELETE',
     headers: userHeaders(asUid),
   });
@@ -233,7 +263,7 @@ export async function getSavedMessageIds(asUid: string): Promise<number[]> {
 }
 
 export async function saveMessageRest(id: number, asUid: string): Promise<void> {
-  const res = await fetch(`${restBase()}/messages/${String(id)}/save`, {
+  const res = await fetchForMessage(`${restBase()}/messages/${String(id)}/save`, {
     method: 'POST',
     headers: userHeaders(asUid),
   });
@@ -241,7 +271,7 @@ export async function saveMessageRest(id: number, asUid: string): Promise<void> 
 }
 
 export async function unsaveMessageRest(id: number, asUid: string): Promise<void> {
-  const res = await fetch(`${restBase()}/messages/${String(id)}/save`, {
+  const res = await fetchForMessage(`${restBase()}/messages/${String(id)}/save`, {
     method: 'DELETE',
     headers: userHeaders(asUid),
   });
@@ -302,24 +332,26 @@ export function savedIndicator(bubble: ReturnType<Page['locator']>) {
  * "Organize ▸" submenu if the pin/save option is nested there. Uses EXACT name
  * matching — a substring match on "Pin message" would also hit "Unpin message"
  * (and "Save message" → "Unsave message"). Returns a locator; the caller checks
- * `.isVisible()` / clicks it.
+ * visibility / clicks it.
+ *
+ * The sheet renders asynchronously and can re-render while options load, so
+ * wait for it to show either the option or "Organize" before deciding, and
+ * retry the "Organize" click if the row is replaced mid-click.
  */
 async function messageOptionLocator(page: Page, option: string) {
   const flat = page.getByRole('menuitem', { name: option, exact: true }).first();
-  if (await flat.isVisible({ timeout: 1500 }).catch(() => false)) return flat;
+  const organize = page.getByRole('menuitem', { name: ORGANIZE_OPTION, exact: true }).first();
+  await flat.or(organize).first().waitFor({ state: 'visible', timeout: 5_000 }).catch(() => undefined);
+  if (await flat.isVisible()) return flat;
 
   // Not at the first level — it may live under the "Organize" fly-out.
-  const organize = page.getByRole('menuitem', { name: ORGANIZE_OPTION, exact: true }).first();
-  if (await organize.isVisible({ timeout: 1000 }).catch(() => false)) {
-    await organize.click();
-    await page
-      .waitForSelector('.cometchat-context-menu__submenu-panel', { timeout: 3_000 })
-      .catch(() => undefined);
-    await page.waitForTimeout(200);
-    return page
-      .locator('.cometchat-context-menu__submenu-panel')
-      .getByRole('menuitem', { name: option, exact: true })
-      .first();
+  if (await organize.isVisible()) {
+    const submenu = page.locator('.cometchat-context-menu__submenu-panel').first();
+    await expect(async () => {
+      if (!(await submenu.isVisible())) await organize.click({ timeout: 2_000 });
+      await expect(submenu).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 10_000 });
+    return submenu.getByRole('menuitem', { name: option, exact: true }).first();
   }
 
   return flat; // absent — caller sees it as not visible
@@ -331,9 +363,12 @@ export async function clickMessageOption(
   bubble: ReturnType<Page['locator']>,
   option: string
 ): Promise<void> {
-  await openActionSheet(page, bubble);
-  await (await messageOptionLocator(page, option)).click();
-  await page.waitForTimeout(400);
+  // The menu can close under us (the kit closes menus on any scroll), so open,
+  // locate and click as one retried unit rather than retrying only the click.
+  await expect(async () => {
+    await openActionSheet(page, bubble);
+    await (await messageOptionLocator(page, option)).click({ timeout: 3_000 });
+  }).toPass({ timeout: 30_000 });
 }
 
 /** Is the given option available (flat or under "Organize")? Closes the sheet afterwards. */
@@ -343,7 +378,7 @@ export async function messageOptionVisible(
   option: string
 ): Promise<boolean> {
   await openActionSheet(page, bubble);
-  const present = await (await messageOptionLocator(page, option)).isVisible().catch(() => false);
+  const present = await visibleWithin(await messageOptionLocator(page, option), 2_000);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
   return present;
@@ -477,19 +512,32 @@ export async function openConversationRowMenu(page: Page, name: string): Promise
     `Conversation "${name}" is not visible in the list — send it a message first (search results don't expose row actions).`
   ).toBeVisible({ timeout: 15_000 });
 
-  await row.hover();
-  await page.waitForTimeout(300);
-  // With pin enabled, the row's actions collapse into a context menu.
-  await row.locator('.cometchat-conversations__item-options button').first().click();
-  await page.waitForTimeout(300);
+  // With pin enabled, the row's actions collapse into a context menu that only shows on
+  // hover. A realtime update can re-sort the list under the cursor, and the menu closes
+  // when the list re-renders, so hover, open and check again until the menu stays open.
+  const trigger = row.locator('.cometchat-conversations__item-options button').first();
+  const firstItem = page.getByRole('menuitem').first();
+  await expect(async () => {
+    if (await firstItem.isVisible()) return;
+    await row.hover();
+    await trigger.click({ timeout: 2_000 });
+    await expect(firstItem).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
 }
 
 /** Pin a conversation from its (already-visible) row context menu. */
 export async function pinConversationUI(page: Page, name: string): Promise<void> {
-  await openConversationRowMenu(page, name);
+  const row = conversationItem(page, name);
   // Exact match — "Pin conversation" is a substring of "Unpin conversation".
-  await page.getByRole('menuitem', { name: PIN_CONVERSATION_OPTION, exact: true }).first().click();
-  await page.waitForTimeout(600);
+  const option = page.getByRole('menuitem', { name: PIN_CONVERSATION_OPTION, exact: true }).first();
+  // The menu closes whenever the list re-renders, so reopen and click until the row
+  // shows as pinned.
+  await expect(async () => {
+    if (await conversationPinIndicator(row).isVisible()) return;
+    if (!(await option.isVisible())) await openConversationRowMenu(page, name);
+    await option.click({ timeout: 2_000 });
+    await expect(conversationPinIndicator(row)).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 30_000 });
 }
 
 /** Pinned indicator on a conversation row. */
@@ -513,4 +561,31 @@ export async function withOffline(page: Page, fn: () => Promise<void>): Promise<
   } finally {
     await page.context().setOffline(false);
   }
+}
+
+// ─── Simulated permission denials ────────────────────────────────────────────
+
+/**
+ * Make the pinned-messages LISTING fail with the server's permission error, for
+ * this page only. Every E2E app keeps the default participant permissions (pin and
+ * unpin denied, listing allowed), so a denied listing can't exist alongside them —
+ * it is simulated here instead. Only the panel's `pinned` fetch is intercepted;
+ * the main message list for the same group is untouched.
+ */
+export async function denyPinnedListing(page: Page, guid: string): Promise<void> {
+  await page.route(
+    url => url.pathname.endsWith(`/groups/${guid}/messages`) && url.searchParams.has('pinned'),
+    route =>
+      route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: {
+            code: 'ERR_PERMISSION_DENIED',
+            message: 'You do not have permission to list pinned messages.',
+            details: {},
+          },
+        }),
+      })
+  );
 }

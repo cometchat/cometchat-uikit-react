@@ -29,6 +29,7 @@ import './CometChatPollBubble.css';
 import { useLocale } from '../../hooks/useLocale';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
 import { getBubbleAlignment } from '../../utils/getBubbleAlignment';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 export const CometChatPollBubble: React.FC<CometChatPollBubbleProps> = ({
   message,
@@ -125,7 +126,9 @@ export const CometChatPollBubble: React.FC<CometChatPollBubbleProps> = ({
             optionText: option.text,
             message,
           });
-          setAnnouncement(`Vote submitted for ${option.text}`);
+          setAnnouncement(
+            fillTemplate(getLocalizedString('accessibility_vote_submitted'), { option: option.text })
+          );
         })
         .catch((error: unknown) => {
           setPollData(previousPollData);
@@ -146,6 +149,7 @@ export const CometChatPollBubble: React.FC<CometChatPollBubbleProps> = ({
       message,
       onVoteSubmit,
       onVoteError,
+      getLocalizedString,
     ]
   );
 
@@ -171,10 +175,7 @@ export const CometChatPollBubble: React.FC<CometChatPollBubbleProps> = ({
     <div
       className={rootClasses}
       role="group"
-      aria-label={getLocalizedString('accessibility_poll_question').replace(
-        '{question}',
-        pollData.question
-      )}
+      aria-label={fillTemplate(getLocalizedString('accessibility_poll_question'), { question: pollData.question })}
     >
       {/* Question */}
       <div className={'cometchat-poll-bubble__question'}>{pollData.question}</div>
@@ -191,7 +192,7 @@ export const CometChatPollBubble: React.FC<CometChatPollBubbleProps> = ({
             className={'cometchat-poll-bubble__option'}
             role="radio"
             aria-checked={option.selectedByLoggedInUser}
-            aria-label={`${option.text}, ${getLocalizedString('accessibility_vote_count').replace('{count}', String(option.count))}, ${option.percent}`}
+            aria-label={`${option.text}, ${fillTemplate(getLocalizedString('accessibility_vote_count'), { count: String(option.count) })}, ${option.percent}`}
             tabIndex={disableInteraction ? -1 : 0}
             onClick={() => {
               handleOptionClick(option);
@@ -265,10 +266,7 @@ export const CometChatPollBubble: React.FC<CometChatPollBubbleProps> = ({
                 aria-valuenow={parseInt(option.percent)}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label={getLocalizedString('accessibility_of_votes').replace(
-                  '{percent}',
-                  option.percent
-                )}
+                aria-label={fillTemplate(getLocalizedString('accessibility_of_votes'), { percent: option.percent })}
               >
                 <div
                   className={'cometchat-poll-bubble__option-progress-bar'}

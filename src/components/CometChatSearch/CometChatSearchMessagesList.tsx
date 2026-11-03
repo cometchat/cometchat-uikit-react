@@ -437,7 +437,10 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                                 {url && (
                                   <img
                                     src={url}
-                                    alt={`Image from ${message.getSender().getName()}`}
+                                    alt={getLocalizedString('accessibility_image_from').replace(
+                                      '{name}',
+                                      message.getSender().getName()
+                                    )}
                                     loading="lazy"
                                     decoding="async"
                                   />

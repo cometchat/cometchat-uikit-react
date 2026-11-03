@@ -5,10 +5,10 @@ import { applyDisplayFormatters } from '../applyDisplayFormatters';
 class ColorFormatter extends CometChatTextFormatter {
   readonly id = 'color';
   override priority = 60;
-  getRegex(): RegExp {
+  override getRegex(): RegExp {
     return /\{color:(#[0-9a-fA-F]{3,6})\}([\s\S]*?)\{\/color\}/g;
   }
-  format(text: string): string {
+  override format(text: string): string {
     return text.replace(
       this.getRegex(),
       (_m, c: string, b: string) => `<span style="color:${c}">${b}</span>`
@@ -19,10 +19,10 @@ class ColorFormatter extends CometChatTextFormatter {
 class UpperFormatter extends CometChatTextFormatter {
   readonly id = 'upper';
   override priority = 10; // runs first
-  getRegex(): RegExp {
+  override getRegex(): RegExp {
     return /!!(.*?)!!/g;
   }
-  format(text: string): string {
+  override format(text: string): string {
     return text.replace(this.getRegex(), (_m, b: string) => b.toUpperCase());
   }
 }
@@ -53,10 +53,10 @@ describe('applyDisplayFormatters', () => {
   it('a throwing formatter does not break the pipeline', () => {
     class Bad extends CometChatTextFormatter {
       readonly id = 'bad';
-      getRegex(): RegExp {
+      override getRegex(): RegExp {
         return /x/g;
       }
-      format(): string {
+      override format(): string {
         throw new Error('boom');
       }
     }

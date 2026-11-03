@@ -54,6 +54,7 @@ vi.mock('../../utils/CometChatLogger', () => ({
 
 import { CometChatEventsProvider } from '../CometChatEventsProvider';
 import { useCometChatEventsContext } from '../CometChatEventsContext';
+import { CometChatMessageStatus } from '../CometChatEvents.types';
 
 // Test component to access context
 function TestConsumer({
@@ -74,12 +75,13 @@ describe('CometChatEventsProvider', () => {
   });
 
   it('should render children', () => {
-    const { getByText } = render(
+    const { container } = render(
       <CometChatEventsProvider>
         <div>Hello</div>
       </CometChatEventsProvider>
     );
-    expect(getByText('Hello')).toBeTruthy();
+    // As they are: the provider adds no markup of its own.
+    expect(container.innerHTML).toBe('<div>Hello</div>');
   });
 
   it('should register message, user, group, call, and connection listeners', () => {
@@ -146,7 +148,7 @@ describe('CometChatEventsProvider', () => {
     });
 
     act(() => {
-      contextValue!.publish({ type: 'ui:message/sent', message: {} as any, status: 'success' });
+      contextValue!.publish({ type: 'ui:message/sent', message: {} as any, status: CometChatMessageStatus.success });
     });
 
     expect(handler).toHaveBeenCalledWith(expect.objectContaining({ type: 'ui:message/sent' }));
@@ -177,7 +179,7 @@ describe('CometChatEventsProvider', () => {
     });
 
     act(() => {
-      contextValue!.publish({ type: 'ui:message/sent', message: {} as any, status: 'success' });
+      contextValue!.publish({ type: 'ui:message/sent', message: {} as any, status: CometChatMessageStatus.success });
     });
 
     expect(handler).not.toHaveBeenCalled();
@@ -207,7 +209,7 @@ describe('CometChatEventsProvider', () => {
     });
 
     act(() => {
-      contextValue!.publish({ type: 'ui:message/sent', message: {} as any, status: 'success' });
+      contextValue!.publish({ type: 'ui:message/sent', message: {} as any, status: CometChatMessageStatus.success });
     });
 
     // Error handler threw but good handler should still be called

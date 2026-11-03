@@ -65,7 +65,7 @@
 .cometchat-list-item--active {
   background: var(
     --cometchat-list-item-background-active,
-    var(--cometchat-primary-color-light, #ebf5ff)
+    var(--cometchat-primary-color-light, var(--cometchat-extended-primary-color-100, #ebf5ff))
   );
 }
 

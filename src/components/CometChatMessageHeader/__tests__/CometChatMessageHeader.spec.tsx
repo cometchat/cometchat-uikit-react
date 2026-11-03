@@ -3,17 +3,24 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 // ─── Mock Root + sub-components as simple, identifiable elements ──────────────
-// The flat component delegates to Root (passing rootProps) and renders default
-// sub-components when convenience props are supplied. We mock each so we can
-// assert delegation/composition without pulling in the full SDK stack.
+// The flat component delegates to Root (passing rootProps), and hands its view
+// props to Root's layout through the views context. We mock each so we can
+// assert delegation without pulling in the full SDK stack; the layout itself is
+// covered against the real Root in CometChatMessageHeader.props.spec.tsx.
 
 vi.mock('../CometChatMessageHeaderRoot', () => ({
   CometChatMessageHeaderRoot: vi.fn(
-    ({ children, ...props }: { children?: React.ReactNode } & Record<string, unknown>) => (
-      <div data-testid="root" data-props={JSON.stringify(Object.keys(props))}>
-        {children}
-      </div>
-    )
+    ({ children, ...props }: { children?: React.ReactNode } & Record<string, unknown>) => {
+      const views = React.useContext(CometChatMessageHeaderViewsContext);
+      return (
+        <div data-testid="root" data-props={JSON.stringify(Object.keys(props))}>
+          {children}
+          {Object.entries(views).map(([name, view]) => (
+            <React.Fragment key={name}>{view}</React.Fragment>
+          ))}
+        </div>
+      );
+    }
   ),
 }));
 
@@ -58,6 +65,7 @@ import { CometChatMessageHeaderSearchButton } from '../CometChatMessageHeaderSea
 import { CometChatMessageHeaderSummaryButton } from '../CometChatMessageHeaderSummaryButton';
 import { CometChatMessageHeaderOverflowMenu } from '../CometChatMessageHeaderOverflowMenu';
 import { CometChatMessageHeaderAuxiliaryButtons } from '../CometChatMessageHeaderAuxiliaryButtons';
+import { CometChatMessageHeaderViewsContext } from '../CometChatMessageHeader.context';
 import { buildUser, buildGroup } from '../../../testing/mock-builders';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 
@@ -96,7 +104,7 @@ describe('CometChatMessageHeader (flat)', () => {
       expect(screen.queryByTestId('avatar')).not.toBeInTheDocument();
       expect(screen.queryByTestId('title')).not.toBeInTheDocument();
       // Root received props (user + hideBackButton).
-      const call = vi.mocked(CometChatMessageHeaderRoot).mock.calls[0][0] as Record<
+      const call = vi.mocked(CometChatMessageHeaderRoot).mock.calls[0]![0] as Record<
         string,
         unknown
       >;
@@ -107,7 +115,7 @@ describe('CometChatMessageHeader (flat)', () => {
 
     it('works for a group conversation', () => {
       render(<CometChatMessageHeader group={group} />);
-      const call = vi.mocked(CometChatMessageHeaderRoot).mock.calls[0][0] as Record<
+      const call = vi.mocked(CometChatMessageHeaderRoot).mock.calls[0]![0] as Record<
         string,
         unknown
       >;
@@ -115,80 +123,30 @@ describe('CometChatMessageHeader (flat)', () => {
     });
   });
 
-  describe('convenience props → composes default layout', () => {
-    it('renders default Avatar/Title/Subtitle/CallButtons/OverflowMenu when only subtitleView is set', () => {
-      render(<CometChatMessageHeader user={user} subtitleView={<span>custom-sub</span>} />);
-      expect(screen.getByTestId('root')).toBeInTheDocument();
-      // back button shown (hideBackButton not set)
-      expect(screen.getByTestId('back-button')).toBeInTheDocument();
-      // leadingView not set → default avatar
-      expect(screen.getByTestId('avatar')).toBeInTheDocument();
-      // titleView not set → default title
-      expect(screen.getByTestId('title')).toBeInTheDocument();
-      // subtitleView provided → custom, no default subtitle
-      expect(screen.getByText('custom-sub')).toBeInTheDocument();
-      expect(screen.queryByTestId('subtitle')).not.toBeInTheDocument();
-      // trailingView not set → call buttons + overflow menu
-      expect(screen.getByTestId('call-buttons')).toBeInTheDocument();
-      expect(screen.getByTestId('overflow-menu')).toBeInTheDocument();
-    });
-
-    it('renders leadingView/titleView when provided instead of defaults', () => {
+  describe('view props → handed to Root\'s own layout', () => {
+    it('reach Root through the views context, with the root props and no children', () => {
       render(
         <CometChatMessageHeader
           user={user}
+          hideBackButton
           leadingView={<span>lead</span>}
           titleView={<span>head</span>}
-        />
-      );
-      expect(screen.getByText('lead')).toBeInTheDocument();
-      expect(screen.getByText('head')).toBeInTheDocument();
-      expect(screen.queryByTestId('avatar')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('title')).not.toBeInTheDocument();
-      // subtitle default still rendered (subtitleView not set)
-      expect(screen.getByTestId('subtitle')).toBeInTheDocument();
-    });
-
-    it('omits back button when hideBackButton is true (with convenience props)', () => {
-      render(<CometChatMessageHeader user={user} hideBackButton titleView={<span>t</span>} />);
-      expect(screen.queryByTestId('back-button')).not.toBeInTheDocument();
-    });
-
-    it('renders trailingView instead of call buttons/overflow when provided', () => {
-      render(
-        <CometChatMessageHeader
-          user={user}
-          titleView={<span>t</span>}
+          subtitleView={<span>sub</span>}
           trailingView={<span>trail</span>}
+          auxiliaryButtonView={<span>aux</span>}
         />
       );
-      expect(screen.getByText('trail')).toBeInTheDocument();
-      expect(screen.queryByTestId('call-buttons')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('overflow-menu')).not.toBeInTheDocument();
-    });
-
-    it('wraps auxiliaryButtonView in AuxiliaryButtons instead of overflow menu', () => {
-      render(<CometChatMessageHeader user={user} auxiliaryButtonView={<button>aux</button>} />);
-      expect(screen.getByTestId('aux-buttons')).toBeInTheDocument();
-      expect(screen.getByText('aux')).toBeInTheDocument();
-      expect(screen.queryByTestId('overflow-menu')).not.toBeInTheDocument();
-    });
-
-    it('hides call buttons when both voice and video are hidden', () => {
-      render(
-        <CometChatMessageHeader
-          user={user}
-          titleView={<span>t</span>}
-          hideVoiceCallButton
-          hideVideoCallButton
-        />
-      );
-      expect(screen.queryByTestId('call-buttons')).not.toBeInTheDocument();
-    });
-
-    it('keeps call buttons when only one of voice/video is hidden', () => {
-      render(<CometChatMessageHeader user={user} titleView={<span>t</span>} hideVoiceCallButton />);
-      expect(screen.getByTestId('call-buttons')).toBeInTheDocument();
+      for (const text of ['lead', 'head', 'sub', 'trail', 'aux']) {
+        expect(screen.getByText(text)).toBeInTheDocument();
+      }
+      const call = vi.mocked(CometChatMessageHeaderRoot).mock.calls[0]?.[0] as Record<
+        string,
+        unknown
+      >;
+      expect(call.user).toBe(user);
+      expect(call.hideBackButton).toBe(true);
+      expect(call.children).toBeUndefined();
+      expect(call).not.toHaveProperty('titleView');
     });
   });
 });

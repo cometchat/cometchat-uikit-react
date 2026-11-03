@@ -106,12 +106,8 @@ export const CometChatMessageHeaderOverflowMenu: React.FC<
     >
       <CometChatContextMenu.Root>
         <CometChatContextMenu.Trigger>
-          <div
-            className={'cometchat-message-header__menu-button'}
-            aria-label={getLocalizedString('accessibility_more_options')}
-            tabIndex={0}
-            role="button"
-          >
+          {/* Styling only: the trigger is the button (one control, one tab stop). */}
+          <div className={'cometchat-message-header__menu-button'}>
             <span
               className={[
                 'cometchat-message-header__menu-button-icon',

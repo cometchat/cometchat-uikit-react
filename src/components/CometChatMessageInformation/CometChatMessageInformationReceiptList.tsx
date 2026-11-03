@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import type { CometChatMessageInformationReceiptListProps } from './CometChatMessageInformation.types';
-import { useCometChatMessageInformationContext } from './CometChatMessageInformation.context';
+import {
+  CometChatMessageInformationViewsContext,
+  useCometChatMessageInformationContext,
+} from './CometChatMessageInformation.context';
 import { CometChatMessageInformationLoadingState } from './CometChatMessageInformationLoadingState';
 import { CometChatMessageInformationErrorState } from './CometChatMessageInformationErrorState';
 import { CometChatMessageInformationEmptyState } from './CometChatMessageInformationEmptyState';
@@ -28,6 +31,7 @@ export const CometChatMessageInformationReceiptList: React.FC<
     showScrollbar,
     messageInfoDateTimeFormat,
   } = useCometChatMessageInformationContext();
+  const { loadingView, errorView, emptyView } = useContext(CometChatMessageInformationViewsContext);
   const { getLocalizedString } = useLocale();
 
   const contentClass = [
@@ -47,7 +51,9 @@ export const CometChatMessageInformationReceiptList: React.FC<
   ) {
     return (
       <div className={contentClass}>
-        <CometChatMessageInformationLoadingState />
+        <CometChatMessageInformationLoadingState>
+          {loadingView}
+        </CometChatMessageInformationLoadingState>
       </div>
     );
   }
@@ -61,7 +67,9 @@ export const CometChatMessageInformationReceiptList: React.FC<
   ) {
     return (
       <div className={contentClass}>
-        <CometChatMessageInformationErrorState />
+        <CometChatMessageInformationErrorState>
+          {errorView}
+        </CometChatMessageInformationErrorState>
       </div>
     );
   }
@@ -128,7 +136,11 @@ export const CometChatMessageInformationReceiptList: React.FC<
               ))}
             </ul>
           ) : (
-            fetchState !== 'error' && <CometChatMessageInformationEmptyState />
+            fetchState !== 'error' && (
+              <CometChatMessageInformationEmptyState>
+                {emptyView}
+              </CometChatMessageInformationEmptyState>
+            )
           )}
         </>
       )}

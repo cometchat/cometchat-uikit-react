@@ -24,9 +24,12 @@ const root = resolve(__dirname, '..');
 const srcStyles = resolve(root, 'src/styles');
 const destStyles = resolve(root, 'dist/styles');
 
+// Tests and their baselines live beside the styles; they are not part of the package.
+const isTestFile = path => /(^|[\\/])__tests__([\\/]|$)|\.(spec|test)\.[cm]?[jt]sx?$/.test(path);
+
 if (existsSync(srcStyles)) {
   mkdirSync(destStyles, { recursive: true });
-  cpSync(srcStyles, destStyles, { recursive: true });
+  cpSync(srcStyles, destStyles, { recursive: true, filter: source => !isTestFile(source) });
   console.log('[copy-assets] Copied: src/styles → dist/styles');
 } else {
   console.warn('[copy-assets] Warning: src/styles not found');

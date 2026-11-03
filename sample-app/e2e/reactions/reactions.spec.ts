@@ -1,11 +1,15 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openStrategyChat } from '../helpers';
+import { waitForBubbleSettled } from '../helpers/threads';
+import { addReaction, sendStrategyMessage, PRIMARY_UID, SECONDARY_UID } from '../helpers/pinSave';
 
 /**
  * E2E Tests — CometChatReactions (React)
  *
  * Tests the reactions components on messages.
- * The first test adds a reaction via the UI so subsequent tests can verify display.
+ * The first test adds a reaction via the UI. It is tagged @smoke, so it can run without the
+ * rest (and a run that excludes @smoke skips it): the setup also gives the fresh message
+ * reactions over REST, so the later tests don't depend on it.
  */
 
 test.describe('CometChatReactions', () => {
@@ -18,22 +22,12 @@ test.describe('CometChatReactions', () => {
     await loginToApp(page);
     await page.waitForSelector('.cometchat-conversations__item', { timeout: 30_000 });
 
-    // Send a fresh message via REST API so we have a clean bubble to react to
-    const APP_ID = process.env.COMETCHAT_APP_ID ?? '';
-    const REGION = process.env.COMETCHAT_REGION ?? 'us';
-    const API_KEY = process.env.COMETCHAT_API_KEY ?? '';
-    const API_BASE = `https://${APP_ID}.api-${REGION}.cometchat.io/v3`;
-    await fetch(`${API_BASE}/messages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: API_KEY, appid: APP_ID, onBehalfOf: 'e2e-user-1' },
-      body: JSON.stringify({
-        receiver: 'e2e-group-35',
-        receiverType: 'group',
-        category: 'message',
-        type: 'text',
-        data: { text: `React to this [${Date.now()}]` },
-      }),
-    });
+    // A fresh message to react to, already carrying our reaction and someone else's (that one stays
+    // when a test removes ours).
+    const id = await sendStrategyMessage({ as: PRIMARY_UID, text: `React to this [${Date.now()}]` });
+    for (const [uid, emoji] of [[PRIMARY_UID, '👍'], [SECONDARY_UID, '❤️']] as const) {
+      await addReaction(id, emoji, uid);
+    }
 
     await openStrategyChat(page);
   });
@@ -44,23 +38,22 @@ test.describe('CometChatReactions', () => {
 
   // ==================== Add Reaction First ====================
 
-  test('add a reaction to a message via the UI', async () => {
+  test('add a reaction to a message via the UI', { tag: '@smoke' }, async () => {
     const messageBubble = page.locator('.cometchat-message-bubble__body-wrapper').last();
     await expect(messageBubble).toBeVisible({ timeout: 10_000 });
+    // The fresh message scrolls the list; a scroll closes the emoji picker, so let it settle.
+    await waitForBubbleSettled(messageBubble);
 
-    // Hover to show quick actions (React button is a top-menu quick action)
-    await messageBubble.hover();
-    await page.waitForTimeout(500);
-
-    // Click the "React" quick action button (shown directly on hover, aria-label="React")
+    // Hover to show the quick actions, then open the picker from "React". A late scroll (the
+    // seeded reactions arriving) closes the picker, so open it again until it stays open.
     const reactBtn = page.locator('button[aria-label="React"]').last();
-    await expect(reactBtn).toBeVisible({ timeout: 5_000 });
-    await reactBtn.click();
-    await page.waitForTimeout(1000);
-
-    // Emoji picker should open
     const emojiPicker = page.locator('.cometchat-emoji-keyboard').first();
-    await expect(emojiPicker).toBeVisible({ timeout: 5_000 });
+    await expect(async () => {
+      if (await emojiPicker.isVisible()) return;
+      await messageBubble.hover();
+      await reactBtn.click({ timeout: 3_000 });
+      await expect(emojiPicker).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
 
     // Click the first emoji in the picker
     const emoji = emojiPicker.locator('.cometchat-emoji-keyboard__emoji-item').first();
@@ -74,15 +67,6 @@ test.describe('CometChatReactions', () => {
   });
 
   // ==================== Reactions Display ====================
-
-  test('reactions display on messages that have them', async () => {
-    const reactions = page.locator('.cometchat-reactions').first();
-    await expect(reactions).toBeVisible({ timeout: 10_000 });
-
-    const reactionItems = reactions.locator('.cometchat-reactions__chip');
-    const count = await reactionItems.count();
-    expect(count).toBeGreaterThan(0);
-  });
 
   // ==================== Reaction Count ====================
 
@@ -99,13 +83,32 @@ test.describe('CometChatReactions', () => {
 
   // ==================== Clicking Reaction ====================
 
-  test('clicking a reaction emoji toggles it', async () => {
-    const reactionItem = page.locator('.cometchat-reactions__chip').first();
-    await expect(reactionItem).toBeVisible({ timeout: 10_000 });
+  test('clicking your own reaction removes it', async () => {
+    const reacted = page
+      .locator('.cometchat-message-bubble__wrapper')
+      .filter({ has: page.locator('.cometchat-reactions__chip--active') })
+      .last();
+    await expect(reacted).toBeVisible({ timeout: 10_000 });
 
-    await reactionItem.click();
-    await page.waitForTimeout(2000);
-    // No error means the click was processed (reaction toggled)
+    // Pin the bubble by its text, so the locator survives the chip going away.
+    const text = (await reacted.locator('.cometchat-message-bubble__body').first().innerText()).split('\n')[0].trim();
+    const bubble = page.locator('.cometchat-message-bubble__wrapper').filter({ hasText: text }).last();
+    const mine = bubble.locator('.cometchat-reactions__chip--active').first();
+    const emoji = (await mine.locator('.cometchat-reactions__chip-emoji').innerText()).trim();
+
+    await mine.click();
+    await expect(bubble.locator('.cometchat-reactions__chip--active').filter({ hasText: emoji })).toHaveCount(0, {
+      timeout: 10_000,
+    });
+
+    // If others reacted with the same emoji the chip stays — clicking it again adds mine back.
+    const remaining = bubble.locator('.cometchat-reactions__chip').filter({ hasText: emoji });
+    if ((await remaining.count()) > 0) {
+      await remaining.first().click();
+      await expect(bubble.locator('.cometchat-reactions__chip--active').filter({ hasText: emoji })).toHaveCount(1, {
+        timeout: 10_000,
+      });
+    }
   });
 
   // ==================== Reaction Info (Hover/Tooltip) ====================

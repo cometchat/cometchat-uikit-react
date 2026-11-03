@@ -21,17 +21,17 @@ const conversationIdArb = fc.string({ minLength: 1, maxLength: 10 });
 
 const validActionArb: fc.Arbitrary<CometChatConversationsAction> = fc.oneof(
   fc.constant({ type: 'FETCH_START' } as CometChatConversationsAction),
-  fc.array(conversationIdArb, { minLength: 0, maxLength: 5 }).map(ids => ({
+  fc.array(conversationIdArb, { minLength: 0, maxLength: 5 }).map((ids): CometChatConversationsAction => ({
     type: 'FETCH_SUCCESS',
     conversations: ids.map(id => createMockConversation(id)),
     hasMore: ids.length > 0,
   })),
-  fc.string().map(error => ({ type: 'FETCH_ERROR', error })),
-  conversationIdArb.map(id => ({
+  fc.string().map((error): CometChatConversationsAction => ({ type: 'FETCH_ERROR', error })),
+  conversationIdArb.map((id): CometChatConversationsAction => ({
     type: 'SELECT_CONVERSATION',
     conversation: createMockConversation(id),
   })),
-  conversationIdArb.map(id => ({ type: 'DESELECT_CONVERSATION', conversationId: id })),
+  conversationIdArb.map((id): CometChatConversationsAction => ({ type: 'DESELECT_CONVERSATION', conversationId: id })),
   fc.constant({ type: 'CLEAR_SELECTION' } as CometChatConversationsAction),
   fc.constant({ type: 'RESET' } as CometChatConversationsAction)
 );

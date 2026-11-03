@@ -1,7 +1,8 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { test, expect, Page } from '@playwright/test';
-import { loginToApp, openStrategyChat } from '../helpers';
+import { test, expect, Page } from '../helpers/test';
+import { loginToApp, openStrategyChat, TEST_USERS } from '../helpers';
+import { waitForChatOpen } from '../helpers/navigation';
 
 // ESM has no __dirname; derive it from the module URL (matches the other specs).
 const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +38,7 @@ import {
   threadBubbleWithText,
   unsubscribeViaBell,
 } from '../helpers/threads';
+import { sendDirectMessage } from '../helpers/pinSave';
 
 /**
  * E2E — Thread subscription (React)
@@ -197,7 +199,7 @@ test.describe('Thread subscription', () => {
 
   // ==================== Toggling, and the two surfaces agreeing ====================
 
-  test('follow and unfollow from the bell, reflected in replies and in the main list', async () => {
+  test('follow and unfollow from the bell, reflected in replies and in the main list', { tag: '@smoke' }, async () => {
     const { text: parentText } = await seedParent('Bell round trip');
     const replyText = `Round-trip reply [${Date.now()}]`;
 
@@ -248,13 +250,16 @@ test.describe('Thread subscription', () => {
   test('follow and unfollow each show their confirmation toast', async () => {
     const { text } = await seedParent('Toast both ways');
 
+    // The page is shared across this describe, so a toast from the previous test
+    // may still be up — let it close so the assertion reads this action's toast.
+    const toast = page.locator('.cometchat-toast__text');
+    await expect(toast).toHaveCount(0, { timeout: 15_000 });
+
     // Starts followed (mine) → unfollowing shows the unsubscribed toast.
     await openActionSheet(page, bubbleWithText(page, text));
     await page.locator(`[role="menuitem"]:has-text("${UNSUBSCRIBE_OPTION}")`).first().click();
-    await expect(page.locator('.cometchat-toast__text')).toHaveText(UNSUBSCRIBED_TOAST, {
-      timeout: 5_000,
-    });
-    await page.waitForTimeout(2500);
+    await expect(toast).toHaveText(UNSUBSCRIBED_TOAST, { timeout: 5_000 });
+    await expect(toast).toHaveCount(0, { timeout: 15_000 });
 
     // ...then following again shows the subscribed toast.
     await openActionSheet(page, bubbleWithText(page, text));
@@ -634,14 +639,18 @@ test.describe('Thread subscription', () => {
     // appear on the message action sheet on both surfaces.
     const usersTab = page.locator('.cometchat-tab-component__tab:has-text("Users")').first();
     await usersTab.click();
-    await page.waitForSelector('.cometchat-users__item', { timeout: 30_000 });
-    await page.locator('.cometchat-users__item').filter({ hasText: 'Bob' }).first().click();
-    await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
-    await page.waitForTimeout(1000);
+    // Charlie, not Bob: Bob's chat is the static fixture other specs read.
+    const charlie = page.locator('.cometchat-users__item').filter({ hasText: 'Charlie Brown' }).first();
+    await expect(charlie).toBeVisible({ timeout: 30_000 });
+    await charlie.click();
+    await waitForChatOpen(page, 'Charlie Brown');
 
-    const bubble = page
-      .locator('.cometchat-message-list .cometchat-message-bubble__wrapper')
-      .last();
+    // Act on a text message sent for this test: the chat's last bubble may be a
+    // call or action message left by another spec, which has no message options.
+    const text = `1:1 thread option [${Date.now()}]`;
+    await sendDirectMessage({ from: TEST_USERS.tertiary, to: PRIMARY_UID, text });
+    const bubble = bubbleWithText(page, text);
+    await expect(bubble).toBeVisible({ timeout: 15_000 });
     await openActionSheet(page, bubble);
 
     // Either label is acceptable — the option is present; its wording depends on

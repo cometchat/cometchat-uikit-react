@@ -460,7 +460,7 @@ export const CometChatTextBubble: React.FC<CometChatTextBubbleProps> = ({
                   <img
                     className={'cometchat-text-bubble__link-preview-image'}
                     src={preview.image}
-                    alt={preview.title ?? 'Link preview image'}
+                    alt={preview.title ?? getLocalizedString('accessibility_link_preview_image')}
                     loading="lazy"
                     decoding="async"
                   />

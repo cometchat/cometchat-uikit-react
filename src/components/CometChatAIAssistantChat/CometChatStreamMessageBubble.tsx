@@ -233,7 +233,7 @@ export const CometChatStreamMessageBubble: React.FC<CometChatStreamMessageBubble
                 className={'cometchat-card-bubble cometchat-stream-message-bubble__card-loader'}
                 role="status"
                 aria-busy="true"
-                aria-label={entry.executionText || 'Loading card'}
+                aria-label={entry.executionText || getLocalizedString('accessibility_loading_card')}
               >
                 {/* Card-shaped skeleton: image block, title/text lines, action buttons */}
                 <div className={'cometchat-stream-message-bubble__card-loader-image'} />

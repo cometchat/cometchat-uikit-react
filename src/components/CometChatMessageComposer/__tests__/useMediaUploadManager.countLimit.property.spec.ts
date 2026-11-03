@@ -139,6 +139,7 @@ describe('Feature: multi-attachments, Property 1: Count-limit trimming never exc
       );
       // 100 property runs, each a full renderHook + async SDK-max resolution; give
       // it headroom over the 5s default so it doesn't flake under full-suite load.
-    }, 20000);
+      // A deep run (FC_RUNS_MULTIPLIER) does that many times the work.
+    }, 20000 * Number(process.env.FC_RUNS_MULTIPLIER ?? 1));
   });
 });

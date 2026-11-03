@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { useCometChatMessageListContext } from './CometChatMessageList.context';
+import { useLocale } from '../../context/locale/LocaleContext';
 import './CometChatMessageList.css';
 
 export interface CometChatMessageListScrollToBottomProps {
@@ -15,6 +16,7 @@ export const CometChatMessageListScrollToBottom: React.FC<
 > = ({ scrollContainerRef }) => {
   const { isAtBottom, newMessageCount, unreadCount, isLoading, hasReachedLatest, scrollToBottom } =
     useCometChatMessageListContext();
+  const { getLocalizedString } = useLocale();
 
   // Show the higher of newMessageCount (real-time) or unreadCount (from conversation/mark-as-unread)
   const badgeCount = Math.max(newMessageCount, unreadCount);
@@ -48,7 +50,12 @@ export const CometChatMessageListScrollToBottom: React.FC<
       role="button"
       tabIndex={0}
       aria-label={
-        badgeCount > 0 ? `Scroll to bottom, ${String(badgeCount)} new messages` : 'Scroll to bottom'
+        badgeCount > 0
+          ? getLocalizedString('accessibility_scroll_to_bottom_new_messages').replace(
+              '{count}',
+              String(badgeCount)
+            )
+          : getLocalizedString('accessibility_scroll_to_bottom')
       }
       onClick={handleScrollToBottom}
       onKeyDown={handleKeyDown}

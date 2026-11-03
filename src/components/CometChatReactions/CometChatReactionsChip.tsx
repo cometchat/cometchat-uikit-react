@@ -3,6 +3,7 @@ import type { CometChatReactionsChipProps } from './CometChatReactions.types';
 import { useCometChatReactionsContext } from './CometChatReactions.context';
 import { useLocale } from '../../context/locale/LocaleContext';
 import './CometChatReactions.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * CometChatReactionsChip — a single reaction chip button.
@@ -35,9 +36,7 @@ export const CometChatReactionsChip = React.memo<CometChatReactionsChipProps>(
         type="button"
         className={chipClass}
         onClick={handleClick}
-        aria-label={getLocalizedString('accessibility_reacted_by')
-          .replace('{emoji}', emoji)
-          .replace('{count}', String(count))}
+        aria-label={fillTemplate(getLocalizedString('accessibility_reacted_by'), { emoji, count: String(count) })}
         aria-pressed={reactedByMe}
       >
         <span className={'cometchat-reactions__chip-emoji'}>{emoji}</span>

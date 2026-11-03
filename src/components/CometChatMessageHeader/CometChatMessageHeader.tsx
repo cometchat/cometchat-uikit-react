@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CometChatMessageHeaderRoot } from './CometChatMessageHeaderRoot';
 import { CometChatMessageHeaderBackButton } from './CometChatMessageHeaderBackButton';
 import { CometChatMessageHeaderAvatar } from './CometChatMessageHeaderAvatar';
@@ -10,6 +10,7 @@ import { CometChatMessageHeaderSummaryButton } from './CometChatMessageHeaderSum
 import { CometChatMessageHeaderOverflowMenu } from './CometChatMessageHeaderOverflowMenu';
 import { CometChatMessageHeaderAuxiliaryButtons } from './CometChatMessageHeaderAuxiliaryButtons';
 import type { CometChatMessageHeaderProps } from './CometChatMessageHeader.types';
+import { CometChatMessageHeaderViewsContext } from './CometChatMessageHeader.context';
 
 /**
  * CometChatMessageHeader — Direct flat API component.
@@ -43,45 +44,16 @@ const CometChatMessageHeaderComponent: React.FC<CometChatMessageHeaderProps> = (
   auxiliaryButtonView,
   ...rootProps
 }) => {
-  // If any convenience props are provided, we need to render custom children
-  const hasConvenienceProps =
-    leadingView !== undefined ||
-    titleView !== undefined ||
-    subtitleView !== undefined ||
-    trailingView !== undefined ||
-    auxiliaryButtonView !== undefined;
+  const views = useMemo(
+    () => ({ leadingView, titleView, subtitleView, trailingView, auxiliaryButtonView }),
+    [leadingView, titleView, subtitleView, trailingView, auxiliaryButtonView]
+  );
 
-  if (!hasConvenienceProps) {
-    // No convenience props — let Root render its own default layout
-    return <CometChatMessageHeaderRoot {...rootProps} />;
-  }
-
-  const showCallButtons = !rootProps.hideVoiceCallButton || !rootProps.hideVideoCallButton;
-
-  // Render with convenience props injected into the default layout structure
+  // Root's default layout places the views (see CometChatMessageHeaderViewsContext).
   return (
-    <CometChatMessageHeaderRoot {...rootProps}>
-      {!rootProps.hideBackButton && <CometChatMessageHeaderBackButton />}
-      {leadingView !== undefined ? leadingView : <CometChatMessageHeaderAvatar />}
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-        {titleView !== undefined ? titleView : <CometChatMessageHeaderTitle />}
-        {subtitleView !== undefined ? subtitleView : <CometChatMessageHeaderSubtitle />}
-      </div>
-      {trailingView !== undefined ? (
-        trailingView
-      ) : (
-        <>
-          {showCallButtons && <CometChatMessageHeaderCallButtons />}
-          {auxiliaryButtonView !== undefined ? (
-            <CometChatMessageHeaderAuxiliaryButtons>
-              {auxiliaryButtonView}
-            </CometChatMessageHeaderAuxiliaryButtons>
-          ) : (
-            <CometChatMessageHeaderOverflowMenu />
-          )}
-        </>
-      )}
-    </CometChatMessageHeaderRoot>
+    <CometChatMessageHeaderViewsContext.Provider value={views}>
+      <CometChatMessageHeaderRoot {...rootProps} />
+    </CometChatMessageHeaderViewsContext.Provider>
   );
 };
 

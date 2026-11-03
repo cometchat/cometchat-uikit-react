@@ -4,12 +4,18 @@
  *
  * Tests SDK call orchestration for message search.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { mockCometChat } from '../../../testing/mock-sdk';
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({ CometChat: mockCometChat }));
 
 import { CometChatSearchMessagesManager } from '../CometChatSearchMessagesManager';
+
+// The shared SDK mock does not define these; this file installs them per test.
+const sdkMock = mockCometChat as typeof mockCometChat & {
+  MessagesRequestBuilder: Mock;
+  AttachmentType: Record<'IMAGE' | 'VIDEO' | 'FILE' | 'AUDIO', string>;
+};
 
 // Mock the MessagesRequestBuilder and MessagesRequest
 const mockFetchPrevious = vi.fn();
@@ -25,7 +31,7 @@ const mockHasLinks = vi.fn().mockReturnThis();
 beforeEach(() => {
   vi.clearAllMocks();
 
-  mockCometChat.MessagesRequestBuilder = vi.fn().mockImplementation(() => ({
+  sdkMock.MessagesRequestBuilder = vi.fn().mockImplementation(() => ({
     setLimit: mockSetLimit,
     setSearchKeyword: mockSetSearchKeyword,
     setUID: mockSetUID,
@@ -36,7 +42,7 @@ beforeEach(() => {
     build: mockBuild,
   }));
 
-  mockCometChat.AttachmentType = {
+  sdkMock.AttachmentType = {
     IMAGE: 'image',
     VIDEO: 'video',
     FILE: 'file',
@@ -56,7 +62,7 @@ describe('CometChatSearchMessagesManager', () => {
       const manager = new CometChatSearchMessagesManager();
       const result = await manager.search('hello', [], undefined, undefined);
 
-      expect(mockCometChat.MessagesRequestBuilder).toHaveBeenCalled();
+      expect(sdkMock.MessagesRequestBuilder).toHaveBeenCalled();
       expect(mockFetchPrevious).toHaveBeenCalledOnce();
       expect(result.results).toHaveLength(2);
     });
@@ -73,9 +79,10 @@ describe('CometChatSearchMessagesManager', () => {
       const result = await manager.search('hello', []);
 
       // Results should be reversed (fetchPrevious returns newest first)
-      expect(result.results[0].text).toBe('third');
-      expect(result.results[1].text).toBe('second');
-      expect(result.results[2].text).toBe('first');
+      const results = result.results as unknown as { text: string }[];
+      expect(results[0]!.text).toBe('third');
+      expect(results[1]!.text).toBe('second');
+      expect(results[2]!.text).toBe('first');
     });
 
     it('sets hasMore to true when results length equals limit', async () => {

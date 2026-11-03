@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Meta } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { CometChatActionSheet } from './CometChatActionSheet';
 import type { CometChatActionSheetItemData } from './CometChatActionSheet.types';
 
@@ -58,21 +58,20 @@ const extensionActions: CometChatActionSheetItemData[] = [
 
 const allActions = [...coreActions, ...extensionActions];
 
-const meta: Meta = {
+interface ActionSheetStoryArgs {
+  isOpen: boolean;
+}
+
+const meta: Meta<ActionSheetStoryArgs> = {
   title: 'Components/Misc/Action Sheet',
   tags: ['autodocs'],
   args: {
     isOpen: true,
-    closeOnOutsideClick: true,
   },
   argTypes: {
     isOpen: {
       control: 'boolean',
       description: 'Whether the action sheet is open.',
-    },
-    closeOnOutsideClick: {
-      control: 'boolean',
-      description: 'Whether clicking outside closes the action sheet.',
     },
   },
   parameters: {
@@ -102,7 +101,9 @@ const meta: Meta = {
 };
 export default meta;
 
-function DefaultDemo(args: { isOpen: boolean; closeOnOutsideClick: boolean }) {
+type Story = StoryObj<ActionSheetStoryArgs>;
+
+function DefaultDemo(args: ActionSheetStoryArgs) {
   const [open, setOpen] = useState(args.isOpen);
   React.useEffect(() => {
     setOpen(args.isOpen);
@@ -113,7 +114,6 @@ function DefaultDemo(args: { isOpen: boolean; closeOnOutsideClick: boolean }) {
       <CometChatActionSheet.Root
         isOpen={open}
         onClose={() => setOpen(false)}
-        closeOnOutsideClick={args.closeOnOutsideClick}
       >
         <CometChatActionSheet.Layout mode="list">
           {allActions.map(a => (
@@ -125,12 +125,12 @@ function DefaultDemo(args: { isOpen: boolean; closeOnOutsideClick: boolean }) {
   );
 }
 
-export const Default = {
-  render: (args: { isOpen: boolean; closeOnOutsideClick: boolean }) => <DefaultDemo {...args} />,
+export const Default: Story = {
+  render: (args: ActionSheetStoryArgs) => <DefaultDemo {...args} />,
 };
 
 /** With cancel button at the bottom. */
-function WithCancelButtonDemo(args: { isOpen: boolean; closeOnOutsideClick: boolean }) {
+function WithCancelButtonDemo(args: ActionSheetStoryArgs) {
   const [open, setOpen] = useState(args.isOpen);
   React.useEffect(() => {
     setOpen(args.isOpen);
@@ -141,7 +141,6 @@ function WithCancelButtonDemo(args: { isOpen: boolean; closeOnOutsideClick: bool
       <CometChatActionSheet.Root
         isOpen={open}
         onClose={() => setOpen(false)}
-        closeOnOutsideClick={args.closeOnOutsideClick}
       >
         <CometChatActionSheet.Layout mode="list">
           {allActions.map(a => (
@@ -172,14 +171,14 @@ function WithCancelButtonDemo(args: { isOpen: boolean; closeOnOutsideClick: bool
   );
 }
 
-export const WithCancelButton = {
-  render: (args: { isOpen: boolean; closeOnOutsideClick: boolean }) => (
+export const WithCancelButton: Story = {
+  render: (args: ActionSheetStoryArgs) => (
     <WithCancelButtonDemo {...args} />
   ),
 };
 
 /** With disabled items. */
-function WithDisabledItemsDemo(args: { isOpen: boolean; closeOnOutsideClick: boolean }) {
+function WithDisabledItemsDemo(args: ActionSheetStoryArgs) {
   const [open, setOpen] = useState(args.isOpen);
   React.useEffect(() => {
     setOpen(args.isOpen);
@@ -196,7 +195,6 @@ function WithDisabledItemsDemo(args: { isOpen: boolean; closeOnOutsideClick: boo
       <CometChatActionSheet.Root
         isOpen={open}
         onClose={() => setOpen(false)}
-        closeOnOutsideClick={args.closeOnOutsideClick}
       >
         <CometChatActionSheet.Layout>
           {actions.map(a => (
@@ -208,8 +206,8 @@ function WithDisabledItemsDemo(args: { isOpen: boolean; closeOnOutsideClick: boo
   );
 }
 
-export const WithDisabledItems = {
-  render: (args: { isOpen: boolean; closeOnOutsideClick: boolean }) => (
+export const WithDisabledItems: Story = {
+  render: (args: ActionSheetStoryArgs) => (
     <WithDisabledItemsDemo {...args} />
   ),
 };

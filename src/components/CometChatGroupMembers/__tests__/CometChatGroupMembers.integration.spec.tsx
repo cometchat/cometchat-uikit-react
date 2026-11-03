@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatGroupMembers } from '../CometChatGroupMembers';
+import { GlobalConfigProvider } from '../../../context/GlobalConfigContext';
+import { covers } from '../../../testing/covers';
 
 // Mock IntersectionObserver
 beforeAll(() => {
@@ -119,6 +122,7 @@ vi.mock('../../../context/locale/LocaleContext', () => ({
     getLocalizedString: (key: string) => {
       const translations: Record<string, string> = {
         group_members_header: 'Members',
+        accessibility_back: 'Back',
         group_members_admin: 'Admin',
         group_members_moderator: 'Moderator',
         group_members_owner: 'Owner',
@@ -177,8 +181,21 @@ vi.mock('../../base/CometChatRadioButton/CometChatRadioButton', () => ({
 
 vi.mock('../../base/CometChatContextMenu/CometChatContextMenu', () => ({
   CometChatContextMenu: {
-    Root: ({ children }: { children?: React.ReactNode }) => (
-      <div data-testid="context-menu">{children}</div>
+    Root: ({
+      children,
+      items = [],
+    }: {
+      children?: React.ReactNode;
+      items?: { id: string; title: string; onClick?: () => void }[];
+    }) => (
+      <div data-testid="context-menu">
+        {items.map(item => (
+          <button key={item.id} data-testid={`option-${item.id}`} onClick={item.onClick}>
+            {item.title}
+          </button>
+        ))}
+        {children}
+      </div>
     ),
     Trigger: ({ children }: { children?: React.ReactNode }) => (
       <button data-testid="context-menu-trigger">{children}</button>
@@ -275,6 +292,7 @@ describe('CometChatGroupMembers — Integration', () => {
   });
 
   it('hides the default header when hideHeader is set', async () => {
+    covers('CometChatGroupMembers.hideHeader', 'true');
     const members = [createMockMember('u1', 'Alice', 'participant')];
     mockFetchNext.mockResolvedValueOnce(members);
 
@@ -285,6 +303,45 @@ describe('CometChatGroupMembers — Integration', () => {
       expect(screen.getByText('Alice')).toBeInTheDocument();
     });
     expect(screen.queryByText('Members')).not.toBeInTheDocument();
+  });
+
+  it('shows a back button only when onBack is set, and calls it on click', async () => {
+    covers('CometChatGroupMembers.onBack', 'called');
+    mockFetchNext.mockResolvedValueOnce([createMockMember('u1', 'Alice')]);
+    const group = createMockGroup();
+    const onBack = vi.fn();
+
+    const { rerender } = render(<CometChatGroupMembers group={group} />);
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument();
+
+    rerender(<CometChatGroupMembers group={group} onBack={onBack} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the list scrollbar by default and when showScrollbar is false, shows it when true', async () => {
+    covers('CometChatGroupMembers.showScrollbar', 'default', 'false', 'true');
+    const hidden = async (props: { showScrollbar?: boolean }) => {
+      mockFetchNext.mockResolvedValueOnce([createMockMember('u1', 'Alice')]);
+      const { container, unmount } = render(
+        <CometChatGroupMembers group={createMockGroup()} {...props} />
+      );
+      await waitFor(() => {
+        expect(screen.getByText('Alice')).toBeInTheDocument();
+      });
+      const list = container.querySelector('.cometchat-group-members__list');
+      if (!list) throw new Error('the list did not render');
+      const result = list.classList.contains('cometchat-group-members__list--hide-scrollbar');
+      unmount();
+      return result;
+    };
+
+    expect(await hidden({})).toBe(true);
+    expect(await hidden({ showScrollbar: false })).toBe(true);
+    expect(await hidden({ showScrollbar: true })).toBe(false);
   });
 
   it('renders role badges for non-participant members', async () => {
@@ -350,6 +407,7 @@ describe('CometChatGroupMembers — Integration', () => {
   });
 
   it('renders checkboxes in multiple selection mode', async () => {
+    covers('CometChatGroupMembers.selectionMode', 'multiple');
     const members = [createMockMember('u1', 'Alice')];
     mockFetchNext.mockResolvedValueOnce(members);
 
@@ -361,6 +419,7 @@ describe('CometChatGroupMembers — Integration', () => {
   });
 
   it('renders radio buttons in single selection mode', async () => {
+    covers('CometChatGroupMembers.selectionMode', 'single');
     const members = [createMockMember('u1', 'Alice')];
     mockFetchNext.mockResolvedValueOnce(members);
 
@@ -372,6 +431,7 @@ describe('CometChatGroupMembers — Integration', () => {
   });
 
   it('calls onItemClick when a member is clicked', async () => {
+    covers('CometChatGroupMembers.onItemClick', 'called');
     const onItemClick = vi.fn();
     const members = [createMockMember('u1', 'Alice')];
     mockFetchNext.mockResolvedValueOnce(members);
@@ -383,10 +443,11 @@ describe('CometChatGroupMembers — Integration', () => {
     });
 
     fireEvent.click(screen.getByText('Alice'));
-    expect(onItemClick).toHaveBeenCalled();
+    expect(onItemClick).toHaveBeenCalledWith(members[0]);
   });
 
   it('calls onError when fetch fails', async () => {
+    covers('CometChatGroupMembers.onError', 'called');
     const onError = vi.fn();
     mockFetchNext.mockRejectedValueOnce(new Error('Fail'));
 
@@ -398,6 +459,7 @@ describe('CometChatGroupMembers — Integration', () => {
   });
 
   it('calls onEmpty when no members are returned', async () => {
+    covers('CometChatGroupMembers.onEmpty', 'called');
     const onEmpty = vi.fn();
     mockFetchNext.mockResolvedValueOnce([]);
 
@@ -409,6 +471,7 @@ describe('CometChatGroupMembers — Integration', () => {
   });
 
   it('renders custom children when provided (compound composition)', () => {
+    covers('CometChatGroupMembers.children', 'custom');
     mockFetchNext.mockResolvedValueOnce([createMockMember('u1', 'Alice')]);
 
     render(
@@ -444,6 +507,7 @@ describe('CometChatGroupMembers — Integration', () => {
   });
 
   it('renders status indicators when hideUserStatus is false', async () => {
+    covers('CometChatGroupMembers.hideUserStatus', 'false');
     const members = [createMockMember('u1', 'Alice', 'participant', 'online')];
     mockFetchNext.mockResolvedValueOnce(members);
 
@@ -455,6 +519,7 @@ describe('CometChatGroupMembers — Integration', () => {
   });
 
   it('hides status indicators when hideUserStatus is true', async () => {
+    covers('CometChatGroupMembers.hideUserStatus', 'true');
     const members = [createMockMember('u1', 'Alice', 'participant', 'online')];
     mockFetchNext.mockResolvedValueOnce(members);
 
@@ -465,5 +530,253 @@ describe('CometChatGroupMembers — Integration', () => {
     });
 
     expect(screen.queryByTestId('status-online')).not.toBeInTheDocument();
+  });
+});
+
+/** The i-th element, or a clear failure when there are fewer. */
+function nth(elements: HTMLElement[], i: number): HTMLElement {
+  const element = elements[i];
+  if (!element) throw new Error(`expected at least ${String(i + 1)} elements, found ${String(elements.length)}`);
+  return element;
+}
+
+describe('CometChatGroupMembers props', () => {
+  const group = createMockGroup();
+  const alice = createMockMember('u1', 'Alice');
+  const bob = createMockMember('u2', 'Bob');
+  const builders = () => vi.mocked(CometChat.GroupMembersRequestBuilder).mock.results.map(r => r.value as Record<string, ReturnType<typeof vi.fn>>);
+  const loaded = () => screen.findByText('Alice');
+
+  /** A request builder an app passes in, returning its own members. */
+  function appBuilder(members: CometChat.GroupMember[]) {
+    const fetchNext = vi.fn().mockResolvedValue(members);
+    const builder = { setSearchKeyword: vi.fn(), build: vi.fn(() => ({ fetchNext })) };
+    builder.setSearchKeyword.mockReturnValue(builder);
+    return builder;
+  }
+  const asBuilder = (b: ReturnType<typeof appBuilder>) => b as unknown as CometChat.GroupMembersRequestBuilder;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFetchNext.mockResolvedValue([alice, bob]);
+  });
+
+  it("fetches the group's members, 30 at a time, with no search keyword by default", async () => {
+    covers('CometChatGroupMembers.group', 'set');
+    covers('CometChatGroupMembers.groupMemberRequestBuilder', 'default');
+    covers('CometChatGroupMembers.searchKeyword', 'default');
+    render(<CometChatGroupMembers group={group} />);
+    await loaded();
+    expect(CometChat.GroupMembersRequestBuilder).toHaveBeenCalledWith('group-1');
+    expect(builders()[0]?.setLimit).toHaveBeenCalledWith(30);
+    expect(builders()[0]?.setSearchKeyword).not.toHaveBeenCalled();
+  });
+
+  it("an app's members builder is the one fetched from", async () => {
+    covers('CometChatGroupMembers.groupMemberRequestBuilder', 'used');
+    const builder = appBuilder([createMockMember('c', 'Carol')]);
+    render(<CometChatGroupMembers group={group} groupMemberRequestBuilder={asBuilder(builder)} />);
+    expect(await screen.findByText('Carol')).toBeInTheDocument();
+    expect(mockFetchNext).not.toHaveBeenCalled();
+  });
+
+  it('searchKeyword filters the first fetch', async () => {
+    covers('CometChatGroupMembers.searchKeyword', 'set');
+    covers('CometChatGroupMembers.searchRequestBuilder', 'default');
+    render(<CometChatGroupMembers group={group} searchKeyword="al" />);
+    await loaded();
+    expect(builders()[0]?.setSearchKeyword).toHaveBeenCalledWith('al');
+  });
+
+  it("a search uses the app's search builder", async () => {
+    covers('CometChatGroupMembers.searchRequestBuilder', 'used');
+    const search = appBuilder([createMockMember('d', 'Dana')]);
+    render(<CometChatGroupMembers group={group} searchKeyword="da" searchRequestBuilder={asBuilder(search)} />);
+    expect(await screen.findByText('Dana')).toBeInTheDocument();
+    expect(search.setSearchKeyword).toHaveBeenCalledWith('da');
+    expect(mockFetchNext).not.toHaveBeenCalled();
+  });
+
+  it('onSelect reports the picked member', async () => {
+    covers('CometChatGroupMembers.onSelect', 'called');
+    const onSelect = vi.fn();
+    render(<CometChatGroupMembers group={group} selectionMode="multiple" onSelect={onSelect} />);
+    await loaded();
+    fireEvent.click(nth(screen.getAllByTestId('checkbox'), 0));
+    expect(onSelect).toHaveBeenCalledWith(alice, true);
+  });
+
+  it('by default rows have no checkbox or radio button', async () => {
+    covers('CometChatGroupMembers.selectionMode', 'default', 'none');
+    for (const props of [{ selectionMode: 'none' as const }, {}]) {
+      const view = render(<CometChatGroupMembers group={group} {...props} />);
+      await loaded();
+      expect(screen.queryAllByTestId('checkbox')).toHaveLength(0);
+      expect(screen.queryAllByTestId('radio')).toHaveLength(0);
+      view.unmount();
+    }
+  });
+
+  it('the header and the search box show by default', async () => {
+    covers('CometChatGroupMembers.hideHeader', 'false', 'default');
+    covers('CometChatGroupMembers.hideSearch', 'false', 'default');
+    for (const props of [{ hideHeader: false, hideSearch: false }, {}]) {
+      const view = render(<CometChatGroupMembers group={group} {...props} />);
+      await loaded();
+      expect(screen.getByText('Members')).toBeInTheDocument();
+      expect(screen.getByTestId('search-bar')).toBeInTheDocument();
+      view.unmount();
+    }
+  });
+
+  it('hideSearch removes the search box', async () => {
+    covers('CometChatGroupMembers.hideSearch', 'true');
+    render(<CometChatGroupMembers group={group} hideSearch />);
+    await loaded();
+    expect(screen.queryByTestId('search-bar')).toBeNull();
+  });
+
+  it("status shows by default; the prop wins over the app's global setting", async () => {
+    covers('CometChatGroupMembers.hideUserStatus', 'default', 'overrides-context');
+    let view = render(<CometChatGroupMembers group={group} />);
+    await loaded();
+    expect(screen.getAllByTestId('status-online')).toHaveLength(2);
+    view.unmount();
+
+    view = render(
+      <GlobalConfigProvider config={{ hideUserStatus: true }}>
+        <CometChatGroupMembers group={group} />
+      </GlobalConfigProvider>
+    );
+    await loaded();
+    expect(screen.queryAllByTestId('status-online')).toHaveLength(0);
+    view.unmount();
+
+    render(
+      <GlobalConfigProvider config={{ hideUserStatus: true }}>
+        <CometChatGroupMembers group={group} hideUserStatus={false} />
+      </GlobalConfigProvider>
+    );
+    await loaded();
+    expect(screen.getAllByTestId('status-online')).toHaveLength(2);
+  });
+
+  describe("the owner's options on a member", () => {
+    const optionIds = () => screen.queryAllByTestId(/^option-/).map(el => el.dataset.testid);
+
+    it('kick, ban and change scope are all offered by default', async () => {
+      covers('CometChatGroupMembers.hideKickMemberOption', 'false', 'default');
+      covers('CometChatGroupMembers.hideBanMemberOption', 'false', 'default');
+      covers('CometChatGroupMembers.hideScopeChangeOption', 'false', 'default');
+      for (const props of [{ hideKickMemberOption: false, hideBanMemberOption: false, hideScopeChangeOption: false }, {}]) {
+        const view = render(<CometChatGroupMembers group={group} {...props} />);
+        await loaded();
+        await waitFor(() => {
+          expect(new Set(optionIds())).toEqual(new Set(['option-kick', 'option-ban', 'option-change-scope']));
+        });
+        view.unmount();
+      }
+    });
+
+    it.each([
+      ['hideKickMemberOption', 'option-kick'],
+      ['hideBanMemberOption', 'option-ban'],
+      ['hideScopeChangeOption', 'option-change-scope'],
+    ] as const)('%s removes that option and keeps the others', async (prop, id) => {
+      covers('CometChatGroupMembers.hideKickMemberOption', 'true');
+      covers('CometChatGroupMembers.hideBanMemberOption', 'true');
+      covers('CometChatGroupMembers.hideScopeChangeOption', 'true');
+      render(<CometChatGroupMembers group={group} {...{ [prop]: true }} />);
+      await loaded();
+      await waitFor(() => {
+        expect(optionIds().length).toBeGreaterThan(0);
+      });
+      expect(optionIds()).not.toContain(id);
+      expect(new Set(optionIds()).size).toBe(2);
+    });
+
+    it("options replaces them with the app's own, acting on that member", async () => {
+      covers('CometChatGroupMembers.options', 'set', 'default');
+      const onClick = vi.fn();
+      render(<CometChatGroupMembers group={group} options={() => [{ id: 'dm', title: 'Message', onClick }]} />);
+      await loaded();
+      const dms = screen.getAllByTestId('option-dm');
+      expect(dms).toHaveLength(2);
+      expect(optionIds()).not.toContain('option-kick');
+      fireEvent.click(nth(dms, 1));
+      expect(onClick).toHaveBeenCalledWith(bob);
+    });
+  });
+
+  describe('views', () => {
+    it('custom loading, error and empty views fill those states', async () => {
+      covers('CometChatGroupMembers.loadingView', 'custom');
+      covers('CometChatGroupMembers.errorView', 'custom');
+      covers('CometChatGroupMembers.emptyView', 'custom');
+      const views = { loadingView: <i>wait</i>, errorView: <i>broken</i>, emptyView: <i>nobody</i> };
+
+      mockFetchNext.mockReturnValueOnce(new Promise(() => {}));
+      let view = render(<CometChatGroupMembers group={group} {...views} />);
+      expect(await screen.findByText('wait')).toBeInTheDocument();
+      view.unmount();
+
+      mockFetchNext.mockRejectedValueOnce(new Error('Fail'));
+      view = render(<CometChatGroupMembers group={group} {...views} />);
+      expect(await screen.findByText('broken')).toBeInTheDocument();
+      view.unmount();
+
+      mockFetchNext.mockResolvedValueOnce([]);
+      render(<CometChatGroupMembers group={group} {...views} />);
+      expect(await screen.findByText('nobody')).toBeInTheDocument();
+    });
+
+    it('a custom header replaces the default one', async () => {
+      covers('CometChatGroupMembers.headerView', 'custom');
+      render(<CometChatGroupMembers group={group} headerView={<b>Team</b>} />);
+      await loaded();
+      expect(screen.getByText('Team')).toBeInTheDocument();
+      expect(screen.queryByText('Members')).toBeNull();
+    });
+
+    it('another view prop keeps the default header', async () => {
+      render(<CometChatGroupMembers group={group} emptyView={<i>nobody</i>} />);
+      await loaded();
+      expect(screen.getByText('Members')).toBeInTheDocument();
+    });
+
+    it('hideHeader still hides the header alongside a view prop', async () => {
+      render(<CometChatGroupMembers group={group} hideHeader emptyView={<i>nobody</i>} />);
+      await loaded();
+      expect(screen.queryByText('Members')).toBeNull();
+    });
+
+    it('a custom item view draws each row', async () => {
+      covers('CometChatGroupMembers.itemView', 'custom');
+      render(<CometChatGroupMembers group={group} itemView={m => <p>row {m.getUid()}</p>} />);
+      expect(await screen.findByText('row u1')).toBeInTheDocument();
+      expect(screen.getByText('row u2')).toBeInTheDocument();
+      expect(screen.queryByText('Alice')).toBeNull();
+    });
+
+    it('slot views fill their place in the default row', async () => {
+      covers('CometChatGroupMembers.leadingView', 'custom');
+      covers('CometChatGroupMembers.titleView', 'custom');
+      covers('CometChatGroupMembers.subtitleView', 'custom');
+      covers('CometChatGroupMembers.trailingView', 'custom');
+      render(
+        <CometChatGroupMembers
+          group={group}
+          leadingView={m => <span>L-{m.getUid()}</span>}
+          titleView={m => <span>T-{m.getUid()}</span>}
+          subtitleView={m => <span>S-{m.getUid()}</span>}
+          trailingView={m => <span>R-{m.getUid()}</span>}
+        />
+      );
+      for (const text of ['L-u1', 'T-u1', 'S-u1', 'R-u1']) {
+        expect(await screen.findByText(text)).toBeInTheDocument();
+      }
+      expect(screen.queryByText('Alice')).toBeNull();
+      expect(screen.queryByTestId('avatar-Alice')).toBeNull();
+    });
   });
 });

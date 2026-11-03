@@ -14,7 +14,7 @@ export interface CometChatCallLogsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   callLogRequestBuilder?: any;
 
-  /** Format for displaying the call initiation time in call log items. */
+  /** Format for the call time in each item, laid over the global calendar format (`CometChatLocalize`); any part left out keeps the default. */
   callInitiatedDateTimeFormat?: CometChatDateFormatConfig;
 
   /** Callback when a call log item is clicked. */

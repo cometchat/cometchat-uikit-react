@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import {
   loginToApp,
   getAgenticConfig,
@@ -11,9 +11,10 @@ import {
   AGENT_BUBBLE,
   type AgenticConfig,
 } from '../helpers';
+import { visibleWithin } from '../helpers/wait';
 
 /**
- * E2E Tests — Agentic Group Chat (ENG-36495)
+ * E2E Tests — Agentic Group Chat
  *
  * Covers AI agents responding inside group conversations:
  *   - Group 1 (solo):  1 human + 1 agent — agent replies to a plain message.
@@ -66,18 +67,16 @@ test.describe('Agentic Group Chat', () => {
     // reuse an existing reply from history (the solo group accumulates them)
     // rather than invoking the agent again. Wait for lazy-loaded bubbles to mount;
     // only trigger a fresh reply if the group has none yet.
-    const hasHistory = await page
+    const hasHistory = await visibleWithin(page
       .locator(AGENT_BUBBLE)
-      .first()
-      .isVisible({ timeout: 10_000 })
-      .catch(() => false);
+      .first(), 10_000);
     if (!hasHistory) {
       await sendComposerMessage(page, `What is CometChat? [${Date.now()}]`);
       await waitForAgentReply(page);
     }
 
     // In groups the inline copy button is suppressed (showCopyButton=false);
-    // copy is offered via the context menu instead (ENG-36495).
+    // copy is offered via the context menu instead.
     const agentBubble = page.locator(AGENT_BUBBLE).last();
     await expect(agentBubble).toBeVisible();
     await expect(
@@ -94,13 +93,16 @@ test.describe('Agentic Group Chat', () => {
     await sendComposerMessage(page, `Sidebar update check [${Date.now()}]`);
     await waitForAgentReply(page);
 
-    // Switch to the Chats tab and verify the group bubbled to the top with a
-    // non-empty preview (the conversation list reflects the latest message).
+    // Switch to the Chats tab and verify the group bubbled to the top of the unpinned
+    // chats (pinned chats stay above it) with a non-empty preview.
     const chatsTab = page.locator('.cometchat-tab-component__tab:has-text("Chats")').first();
     await chatsTab.click();
     await page.waitForSelector('.cometchat-conversations__item', { timeout: 30_000 });
 
-    const topItem = page.locator('.cometchat-conversations__item').first();
+    const topItem = page
+      .locator('.cometchat-conversations__item')
+      .filter({ hasNot: page.locator('.cometchat-conversations__item-pin-indicator') })
+      .first();
     await expect(topItem).toContainText(cfg.group1Name, { timeout: 10_000 });
 
     const subtitle = topItem.locator('.cometchat-conversations__subtitle, [class*="subtitle"]').first();

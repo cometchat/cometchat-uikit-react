@@ -1,5 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CometChatThreadHeaderRoot } from '../CometChatThreadHeaderRoot';
 import { useCometChatThreadHeaderContext } from '../CometChatThreadHeader.context';
@@ -137,7 +138,7 @@ function createMockMessage(overrides: Record<string, unknown> = {}) {
     getAttachment: () => null,
     getMentionedUsers: () => [],
     getReactions: () => [],
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+  } as unknown as CometChat.BaseMessage;
 }
 
 describe('CometChatThreadHeaderRoot', () => {
@@ -175,7 +176,6 @@ describe('CometChatThreadHeaderRoot', () => {
     render(
       <CometChatThreadHeaderRoot
         parentMessage={createMockMessage({ replyCount: 10 })}
-        replyCount={10}
       >
         <ContextConsumer />
       </CometChatThreadHeaderRoot>
@@ -204,6 +204,22 @@ describe('CometChatThreadHeaderRoot', () => {
     expect(banner).toHaveAttribute('aria-label');
     expect(banner.getAttribute('aria-label')).toContain('Thread');
     expect(banner.getAttribute('aria-label')).toContain('replies');
+  });
+
+  it.each([
+    ['image', 'Image'],
+    ['video', 'Video'],
+    ['audio', 'Audio'],
+    ['file', 'File'],
+    ['custom', 'Message'],
+  ])('names a %s parent by its translated type in the aria-label', (type, preview) => {
+    render(<CometChatThreadHeaderRoot parentMessage={createMockMessage({ type })} />);
+    expect(screen.getByRole('banner')).toHaveAttribute('aria-label', `Thread: ${preview}, 5 replies`);
+  });
+
+  it('names an empty text parent as a text message in the aria-label', () => {
+    render(<CometChatThreadHeaderRoot parentMessage={createMockMessage({ text: '' })} />);
+    expect(screen.getByRole('banner')).toHaveAttribute('aria-label', 'Thread: Text message, 5 replies');
   });
 
   it('calls onClose when Escape is pressed', () => {

@@ -5,7 +5,6 @@
  * - Default (with localized message)
  * - Custom message
  * - Dark theme
- * - RTL
  *
  * @module components/base/CometChatModerationView
  */

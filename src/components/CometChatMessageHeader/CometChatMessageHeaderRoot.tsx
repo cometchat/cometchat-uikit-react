@@ -1,14 +1,16 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useMemo, useRef } from 'react';
 import type {
   CometChatMessageHeaderRootProps,
   CometChatMessageHeaderContextValue,
 } from './CometChatMessageHeader.types';
-import { CometChatMessageHeaderContext } from './CometChatMessageHeader.context';
+import {
+  CometChatMessageHeaderContext,
+  CometChatMessageHeaderViewsContext,
+} from './CometChatMessageHeader.context';
 import { useCometChatMessageHeader } from './useCometChatMessageHeader';
 import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import { usePublishEvent } from '../../hooks/usePublishEvent';
 import { usePinSaveFeatures } from '../../hooks/usePinSaveFeatures';
-import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import { CometChatMessageHeaderBackButton } from './CometChatMessageHeaderBackButton';
 import { CometChatMessageHeaderAvatar } from './CometChatMessageHeaderAvatar';
 import { CometChatMessageHeaderTitle } from './CometChatMessageHeaderTitle';
@@ -17,6 +19,7 @@ import { CometChatMessageHeaderCallButtons } from './CometChatMessageHeaderCallB
 import { CometChatMessageHeaderSearchButton } from './CometChatMessageHeaderSearchButton';
 import { CometChatMessageHeaderSummaryButton } from './CometChatMessageHeaderSummaryButton';
 import { CometChatMessageHeaderOverflowMenu } from './CometChatMessageHeaderOverflowMenu';
+import { CometChatMessageHeaderAuxiliaryButtons } from './CometChatMessageHeaderAuxiliaryButtons';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { useGlobalConfig } from '../../context/GlobalConfigContext';
 import './CometChatMessageHeader.css';
@@ -42,6 +45,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
   hideVoiceCallButton = false,
   hideVideoCallButton = false,
   callSettingsBuilder,
+  lastActiveAtDateTimeFormat,
   onBack,
   onItemClick,
   onSearchOptionClicked,
@@ -64,6 +68,8 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
   });
 
   const { getLocalizedString } = useLocale();
+  // The flat API's view props; empty when Root is used directly.
+  const views = useContext(CometChatMessageHeaderViewsContext);
 
   const publish = usePublishEvent();
 
@@ -73,8 +79,13 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
 
   // Default summary click handler: publishes ui:panel/show event
   const defaultSummaryClick = useCallback(() => {
-    publish({ type: 'ui:panel/show', position: 'messageListFooter', panel: 'conversationSummary' });
-  }, [publish]);
+    publish({
+      type: 'ui:panel/show',
+      position: 'messageListFooter',
+      panel: 'conversationSummary',
+      messageCount: summaryGenerationMessageCount,
+    });
+  }, [publish, summaryGenerationMessageCount]);
 
   const effectiveSummaryClick = onSummaryClick ?? defaultSummaryClick;
 
@@ -141,7 +152,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
           : getLocalizedString('message_header_members');
       return `${displayName}, ${String(hookResult.groupMemberCount)} ${memberText}`;
     }
-    return 'Message header';
+    return getLocalizedString('accessibility_message_header');
   }, [
     user,
     group,
@@ -162,6 +173,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
       typingText: hookResult.typingText,
       groupMemberCount: hookResult.groupMemberCount,
       hideUserStatus,
+      lastActiveAtDateTimeFormat,
       displayName,
       avatarImage,
       avatarName,
@@ -177,12 +189,20 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
       showConversationSummaryButton,
       showSearchOption,
       summaryGenerationMessageCount,
+      hideVoiceCallButton,
+      hideVideoCallButton,
+      onVoiceCallClick,
+      onVideoCallClick,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      callSettingsBuilder,
+      onError,
     }),
     [
       user,
       group,
       hookResult,
       hideUserStatus,
+      lastActiveAtDateTimeFormat,
       displayName,
       avatarImage,
       avatarName,
@@ -197,6 +217,12 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
       showConversationSummaryButton,
       showSearchOption,
       summaryGenerationMessageCount,
+      hideVoiceCallButton,
+      hideVideoCallButton,
+      onVoiceCallClick,
+      onVideoCallClick,
+      callSettingsBuilder,
+      onError,
     ]
   );
 
@@ -204,11 +230,6 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
     .filter(Boolean)
     .join(' ');
 
-  // Determine trailing section content — call buttons hidden when calling is not enabled
-  const callingEnabled = CometChatUIKit.getSettings()?.isCallingEnabled() ?? false;
-  const effectiveHideVoiceCall = hideVoiceCallButton || !callingEnabled;
-  const effectiveHideVideoCall = hideVideoCallButton || !callingEnabled;
-  const showCallButtons = !effectiveHideVoiceCall || !effectiveHideVideoCall;
   /*
    * Which of the three trailing options are available decides how they are presented: one of them
    * alone gets a dedicated button, two or more share the overflow menu.
@@ -244,35 +265,42 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
               onKeyDown={handleItemKeyDown}
             >
               {/* Leading: Avatar + Status */}
-              <CometChatMessageHeaderAvatar />
+              {views.leadingView !== undefined ? views.leadingView : <CometChatMessageHeaderAvatar />}
 
               {/* Body: Title + Subtitle */}
               <div className={'cometchat-message-header__body'}>
-                <CometChatMessageHeaderTitle />
-                <CometChatMessageHeaderSubtitle />
+                {views.titleView !== undefined ? views.titleView : <CometChatMessageHeaderTitle />}
+                {views.subtitleView !== undefined ? (
+                  views.subtitleView
+                ) : (
+                  <CometChatMessageHeaderSubtitle />
+                )}
               </div>
             </div>
 
-            {/* Trailing: Call Buttons + Menu */}
+            {/* Trailing: Call Buttons + Menu, then the app's buttons (as in v6); or the app's own */}
             <div className={'cometchat-message-header__trailing'}>
-              {showCallButtons && (
-                <CometChatMessageHeaderCallButtons
-                  onVoiceCallClick={onVoiceCallClick}
-                  onVideoCallClick={onVideoCallClick}
-                  onError={onError}
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                  callSettingsBuilder={callSettingsBuilder}
-                  hideVoiceCallButton={effectiveHideVoiceCall}
-                  hideVideoCallButton={effectiveHideVideoCall}
-                />
-              )}
+              {views.trailingView !== undefined ? (
+                views.trailingView
+              ) : (
+                <>
+                  {/* Hidden when calling is off or both buttons are hidden. */}
+                  <CometChatMessageHeaderCallButtons />
 
-              {/* Menu Section */}
-              <div className={'cometchat-message-header__menu-buttons'}>
-                {showOverflowMenu && <CometChatMessageHeaderOverflowMenu />}
-                {showSearchOnly && <CometChatMessageHeaderSearchButton />}
-                {showSummaryOnly && <CometChatMessageHeaderSummaryButton />}
-              </div>
+                  {/* Menu Section */}
+                  <div className={'cometchat-message-header__menu-buttons'}>
+                    {showOverflowMenu && <CometChatMessageHeaderOverflowMenu />}
+                    {showSearchOnly && <CometChatMessageHeaderSearchButton />}
+                    {showSummaryOnly && <CometChatMessageHeaderSummaryButton />}
+                  </div>
+
+                  {views.auxiliaryButtonView !== undefined && (
+                    <CometChatMessageHeaderAuxiliaryButtons>
+                      {views.auxiliaryButtonView}
+                    </CometChatMessageHeaderAuxiliaryButtons>
+                  )}
+                </>
+              )}
             </div>
           </>
         )}

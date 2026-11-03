@@ -295,7 +295,7 @@ describe('useCometChatConversations — Extended', () => {
       vi.mocked(CometChat.CometChatHelper.getConversationFromMessage).mockResolvedValue(
         createMockConversation(
           'group_g1'
-        ) as unknown as import('@cometchat/chat-sdk-javascript').CometChat.Conversation
+        ) as unknown as CometChat.Conversation
       );
 
       const { result } = renderHook(() => useCometChatConversations());

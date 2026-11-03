@@ -282,7 +282,7 @@ describe('CometChatUsersItem', () => {
     expect(screen.getByText('Alice')).toBeInTheDocument();
   });
 
-  // --- Checkbox: keep list-scoped shortcuts working (ENG-37421) ---
+  // --- Checkbox: keep list-scoped shortcuts working ---
 
   it('lets Ctrl/Cmd+A bubble from the checkbox to the list', () => {
     const user = createMockUser('u1', 'Alice');

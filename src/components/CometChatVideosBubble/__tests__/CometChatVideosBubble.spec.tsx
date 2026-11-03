@@ -186,7 +186,9 @@ describe('CometChatVideosBubble', () => {
         alignment="right"
       />
     );
-    expect(container.querySelector('[class*="--single"]')).toBeTruthy();
+    expect(container.querySelector('.cometchat-videos-bubble')).toHaveClass('cometchat-videos-bubble--single');
+    expect(container.querySelector('.cometchat-videos-bubble__grid')).toBeNull();
+    expect(container.querySelectorAll('.cometchat-videos-bubble__tile')).toHaveLength(1);
   });
 
   it('renders side-by-side grid for 2 videos', () => {
@@ -203,7 +205,9 @@ describe('CometChatVideosBubble', () => {
     const { container } = render(
       <CometChatVideosBubble message={buildVideoMessage({ urls })} alignment="right" />
     );
-    expect(container.querySelector('[class*="grid--three"]')).toBeTruthy();
+    const grid = container.querySelector('.cometchat-videos-bubble__grid');
+    expect(grid).toHaveClass('cometchat-videos-bubble__grid--three');
+    expect(grid?.querySelectorAll('.cometchat-videos-bubble__tile')).toHaveLength(3);
   });
 
   it('renders 4 videos in 2x2 grid', () => {
@@ -211,7 +215,10 @@ describe('CometChatVideosBubble', () => {
     const { container } = render(
       <CometChatVideosBubble message={buildVideoMessage({ urls })} alignment="right" />
     );
-    expect(container.querySelector('[class*="grid--2x2"]')).toBeTruthy();
+    const grid = container.querySelector('.cometchat-videos-bubble__grid');
+    expect(grid).toHaveClass('cometchat-videos-bubble__grid--2x2');
+    expect(grid?.querySelectorAll('.cometchat-videos-bubble__tile')).toHaveLength(4);
+    expect(container.querySelector('.cometchat-videos-bubble__overflow-tile')).toBeNull();
   });
 
   it('renders overflow indicator for 5+ videos', () => {
@@ -234,7 +241,9 @@ describe('CometChatVideosBubble', () => {
         alignment="right"
       />
     );
-    expect(container.querySelector('.cometchat-videos-bubble__caption')).toBeTruthy();
+    expect(container.querySelector('.cometchat-videos-bubble__caption')).toHaveTextContent(
+      'Check this out'
+    );
   });
 
   it('does not render caption when absent', () => {
@@ -284,5 +293,24 @@ describe('CometChatVideosBubble', () => {
     const tile = container.querySelector('.cometchat-videos-bubble__tile');
     expect(tile?.getAttribute('role')).toBe('button');
     expect(tile?.getAttribute('tabindex')).toBe('0');
+  });
+
+  // --- Uploading tile ---
+
+  it('renders a non-focusable uploading tile while a sent video has no url yet', () => {
+    // An optimistic message carries the local File in metadata and no
+    // attachments, which yields a single attachment without a url.
+    const file = new File(['video'], 'clip.mp4', { type: 'video/mp4' });
+    const { container } = render(
+      <CometChatVideosBubble
+        message={buildVideoMessage({ urls: [], metadata: { file } })}
+        alignment="right"
+      />
+    );
+    const tile = container.querySelector('.cometchat-videos-bubble__tile');
+    expect(tile).toHaveAttribute('role', 'button');
+    expect(tile).toHaveAttribute('tabindex', '-1');
+    expect(tile).toHaveAttribute('aria-label', 'Uploading video...');
+    expect(container.querySelector('.cometchat-videos-bubble__placeholder')).toBeInTheDocument();
   });
 });

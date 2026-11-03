@@ -66,6 +66,8 @@ function createContextValue(
     // Mirrors the Root's own default, which is what the menu sees in practice.
     showSearchOption: true,
     summaryGenerationMessageCount: 1000,
+    hideVoiceCallButton: false,
+    hideVideoCallButton: false,
     ...overrides,
   };
 }
@@ -91,9 +93,11 @@ describe('CometChatMessageHeaderOverflowMenu', () => {
     expect(screen.getByTestId('context-menu-root')).toBeInTheDocument();
   });
 
-  it('renders a trigger button with "More options" aria-label', () => {
+  it('puts only the icon in the trigger, which is the button (no control nested in it)', () => {
     renderOverflowMenu();
-    expect(screen.getByRole('button', { name: 'accessibility_more_options' })).toBeInTheDocument();
+    const trigger = screen.getByTestId('context-menu-trigger');
+    expect(trigger.querySelector('.cometchat-message-header__menu-button-icon--more')).not.toBeNull();
+    expect(trigger.querySelector('[role="button"], [tabindex], [aria-label]')).toBeNull();
   });
 
   it('renders the dropdown container', () => {

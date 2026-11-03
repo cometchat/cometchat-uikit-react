@@ -118,7 +118,7 @@ function createMockMessage(
     getReplyCount: () => 0,
     getMentionedUsers: () => [],
     getEditedAt: () => null,
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+  } as unknown as CometChat.BaseMessage;
 }
 
 const panelStyle: React.CSSProperties = {

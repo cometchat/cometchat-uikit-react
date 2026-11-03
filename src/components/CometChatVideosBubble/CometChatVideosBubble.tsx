@@ -9,6 +9,7 @@ import { downloadWithProgress } from '../../utils/downloadWithProgress';
 import { getBubbleAlignment } from '../../utils/getBubbleAlignment';
 import { getReceiptStatus } from '../../utils/MessageReceiptUtils';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
+import { useLocale } from '../../context/locale/LocaleContext';
 import { useVideoMeta } from '../../hooks/useVideoMeta';
 import {
   extractVideoAttachments,
@@ -17,6 +18,7 @@ import {
 } from './CometChatVideosBubble.utils';
 import unsupportedIcon from '../../assets/unsupported.svg';
 import './CometChatVideosBubble.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 // Lazy-load the FullScreenViewer — it's heavy and only needed on tile click.
 const LazyCometChatFullScreenViewer = lazy(
@@ -75,6 +77,7 @@ const VideoTile: React.FC<VideoTileProps> = ({
   ariaLabel,
   isPending,
 }) => {
+  const { getLocalizedString } = useLocale();
   // Probe the URL to confirm it's a real, playable video (not an audio file, an
   // image, or a broken link) and to read its duration. Re-probe once the message
   // is confirmed (isPending → false), since a just-uploaded CDN URL can fail the
@@ -121,7 +124,7 @@ const VideoTile: React.FC<VideoTileProps> = ({
         className="cometchat-videos-bubble__tile"
         tabIndex={-1}
         role="button"
-        aria-label="Uploading video..."
+        aria-label={getLocalizedString('accessibility_uploading_video')}
       >
         <div className="cometchat-videos-bubble__placeholder">
           <div className="cometchat-videos-bubble__play-icon" aria-hidden="true" />
@@ -210,6 +213,7 @@ export const CometChatVideosBubble: React.FC<CometChatVideosBubbleProps> = ({
   const [viewerStartIndex, setViewerStartIndex] = useState(0);
 
   const loggedInUser = useLoggedInUser();
+  const { getLocalizedString } = useLocale();
 
   // Self-extract everything message-derived.
   const attachments = useMemo(() => extractVideoAttachments(message), [message]);
@@ -287,10 +291,10 @@ export const CometChatVideosBubble: React.FC<CometChatVideosBubbleProps> = ({
   // --- Accessibility ---
 
   const tileAriaLabel = caption
-    ? `Video: ${caption}. Press Enter to play fullscreen.`
-    : 'Video message. Press Enter to play fullscreen.';
+    ? fillTemplate(getLocalizedString('accessibility_video_caption_play'), { caption })
+    : getLocalizedString('accessibility_video_message_play');
 
-  const overflowAriaLabel = `${String(overflowCount)} more videos. Press Enter to view all.`;
+  const overflowAriaLabel = fillTemplate(getLocalizedString('accessibility_more_videos'), { count: String(overflowCount) });
 
   // --- CSS classes ---
 

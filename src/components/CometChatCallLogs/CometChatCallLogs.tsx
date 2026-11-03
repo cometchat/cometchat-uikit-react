@@ -42,7 +42,7 @@ export const CometChatCallLogs: React.FC<CometChatCallLogsProps> = ({
     onCallButtonClicked,
   });
 
-  const { getLocalizedString } = useLocale();
+  const { getLocalizedString, calendarObject } = useLocale();
   const listRef = useRef<HTMLDivElement>(null);
 
   // --- Scroll handler for infinite scroll ---
@@ -77,14 +77,15 @@ export const CometChatCallLogs: React.FC<CometChatCallLogsProps> = ({
           {initiatedAt > 0 ? (
             <CometChatDate
               timestamp={initiatedAt}
-              formatConfig={
-                callInitiatedDateTimeFormat ?? {
-                  today: 'DD MMM, hh:mm A',
-                  yesterday: 'DD MMM, hh:mm A',
-                  lastWeek: 'DD MMM, hh:mm A',
-                  otherDays: 'DD MMM, hh:mm A',
-                }
-              }
+              // As in v6: the default, then the app's calendar format, then the prop.
+              formatConfig={{
+                today: 'DD MMM, hh:mm A',
+                yesterday: 'DD MMM, hh:mm A',
+                lastWeek: 'DD MMM, hh:mm A',
+                otherDays: 'DD MMM, hh:mm A',
+                ...calendarObject,
+                ...callInitiatedDateTimeFormat,
+              }}
               variant="body"
             />
           ) : (

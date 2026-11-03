@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/test';
 import { loginToApp, openStrategyChat } from '../helpers';
 import { bubbleWithText } from '../helpers/threads';
 import {
@@ -43,12 +43,7 @@ test.describe('Save message', () => {
     await openStrategyChat(page);
   });
 
-  test('offers "Save message" on a message', async ({ page }) => {
-    const { text } = await seedMessage(page, 'Save option');
-    expect(await messageOptionVisible(page, bubbleWithText(page, text), SAVE_MESSAGE_OPTION)).toBe(true);
-  });
-
-  test('saving shows the indicator and flips the option to Unsave', async ({ page }) => {
+  test('saving shows the indicator and flips the option to Unsave', { tag: '@smoke' }, async ({ page }) => {
     const { text } = await seedMessage(page, 'Save me');
     const bubble = bubbleWithText(page, text);
 
@@ -68,14 +63,6 @@ test.describe('Save message', () => {
     await unsaveMessageUI(page, bubble); // unsave is gated behind a confirm dialog
     await expect(savedIndicator(bubble)).toHaveCount(0, { timeout: 10_000 });
     expect(await messageOptionVisible(page, bubble, SAVE_MESSAGE_OPTION)).toBe(true);
-  });
-
-  test('the saved screen lists a saved message', async ({ page }) => {
-    const { id, text } = await seedMessage(page, 'Saved screen');
-    await saveMessageRest(id, PRIMARY_UID);
-
-    await openSavedScreen(page);
-    await expect(savedScreenRow(page, text)).toBeVisible({ timeout: 10_000 });
   });
 
   test('saves from different conversations all appear in the saved screen', async ({ page }) => {

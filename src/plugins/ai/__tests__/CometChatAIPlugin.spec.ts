@@ -12,6 +12,7 @@ const GROUP = CometChatUIKitConstants.MessageReceiverType.group;
 const USER = CometChatUIKitConstants.MessageReceiverType.user;
 const ASSISTANT = CometChatUIKitConstants.MessageTypes.assistant;
 const TOOL_ARGS = CometChatUIKitConstants.MessageTypes.toolArguments;
+const TOOL_RESULTS = CometChatUIKitConstants.MessageTypes.toolResults;
 
 function makeContext(
   overrides: Partial<CometChatMessagePluginContext> = {}
@@ -50,7 +51,7 @@ describe('CometChatAIPlugin.getOptions', () => {
   it('returns a copy-only option for an assistant message in a group', () => {
     const options = CometChatAIPlugin.getOptions?.(makeMessage(), makeContext()) ?? [];
     expect(options).toHaveLength(1);
-    expect(options[0].id).toBe(CometChatUIKitConstants.MessageOption.copyMessage);
+    expect(options[0]!.id).toBe(CometChatUIKitConstants.MessageOption.copyMessage);
   });
 
   it('returns no options for an assistant message in 1:1 (inline copy button is used)', () => {
@@ -75,7 +76,7 @@ describe('CometChatAIPlugin.getOptions', () => {
         makeMessage({ text: 'copy this reply' }),
         makeContext({ showToast })
       ) ?? [];
-    copy.onClick(makeMessage({ text: 'copy this reply' }));
+    copy!.onClick(makeMessage({ text: 'copy this reply' }));
 
     expect(writeText).toHaveBeenCalledWith('copy this reply');
     expect(showToast).toHaveBeenCalled();
@@ -149,5 +150,40 @@ describe('CometChatAIPlugin.getLastMessagePreview', () => {
     } as unknown as CometChat.BaseMessage;
     const preview = CometChatAIPlugin.getLastMessagePreview?.(empty, user);
     expect(preview).toBe('AI message');
+  });
+
+  it('labels a tool-call message with the translated "ai_tool_call" string', () => {
+    const t = vi.fn((key: string) => `translated:${key}`);
+    const preview = CometChatAIPlugin.getLastMessagePreview?.(
+      makeMessage({ type: TOOL_ARGS }),
+      user,
+      t
+    );
+    expect(t).toHaveBeenCalledWith('ai_tool_call');
+    expect(preview).toBe('translated:ai_tool_call');
+  });
+
+  it('labels a tool-call message "Tool call" when no translator is given', () => {
+    const preview = CometChatAIPlugin.getLastMessagePreview?.(makeMessage({ type: TOOL_ARGS }), user);
+    expect(preview).toBe('Tool call');
+  });
+
+  it('labels a tool-result message with the translated "ai_tool_result" string', () => {
+    const t = vi.fn((key: string) => `translated:${key}`);
+    const preview = CometChatAIPlugin.getLastMessagePreview?.(
+      makeMessage({ type: TOOL_RESULTS }),
+      user,
+      t
+    );
+    expect(t).toHaveBeenCalledWith('ai_tool_result');
+    expect(preview).toBe('translated:ai_tool_result');
+  });
+
+  it('labels a tool-result message "Tool result" when no translator is given', () => {
+    const preview = CometChatAIPlugin.getLastMessagePreview?.(
+      makeMessage({ type: TOOL_RESULTS }),
+      user
+    );
+    expect(preview).toBe('Tool result');
   });
 });

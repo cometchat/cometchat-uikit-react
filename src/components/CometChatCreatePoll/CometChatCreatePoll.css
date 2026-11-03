@@ -24,7 +24,7 @@
   max-height: 80vh;
   background: var(--cometchat-background-color-01, #fff);
   border-radius: var(--cometchat-radius-4, 16px);
-  box-shadow: var(--cometchat-shadow-high, 0 8px 32px rgba(0, 0, 0, 0.16));
+  box-shadow: var(--cometchat-shadow-high, var(--cometchat-elevation-4, 0 8px 32px rgba(0, 0, 0, 0.16)));
   overflow: hidden;
 }
 

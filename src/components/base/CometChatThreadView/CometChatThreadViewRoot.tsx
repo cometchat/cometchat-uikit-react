@@ -9,6 +9,7 @@ import { CometChatThreadViewIcon } from './CometChatThreadViewIcon';
 import { CometChatThreadViewUnreadIndicator } from './CometChatThreadViewUnreadIndicator';
 import { useLocale } from '../../../context/locale/LocaleContext';
 import './CometChatThreadView.css';
+import { fillTemplate } from '../../../utils/fillTemplate';
 
 /**
  * Formats the display count: caps at "999+" for values over 999.
@@ -41,13 +42,11 @@ export const CometChatThreadViewRoot: React.FC<CometChatThreadViewRootProps> = (
   }
 
   const countDisplay = formatCount(replyCount);
-  const replyWord =
-    replyCount === 1
-      ? getLocalizedString('thread_view_reply')
-      : getLocalizedString('thread_view_replies');
-  let label = `${countDisplay} ${replyWord}, view thread`;
+  let label = fillTemplate(getLocalizedString(
+    replyCount === 1 ? 'accessibility_thread_reply_count' : 'accessibility_thread_replies_count'
+  ), { count: countDisplay });
   if (unreadReplyCount > 0) {
-    label = `${label}, ${String(unreadReplyCount)} unread`;
+    label = fillTemplate(getLocalizedString('accessibility_thread_unread_replies'), { label, count: String(unreadReplyCount) });
   }
 
   const rootBase = 'cometchat-thread-view';

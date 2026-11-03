@@ -52,7 +52,7 @@
   width: 100%;
   max-width: 100%;
   overflow: hidden;
-  font-size: var(--cometchat-font-size-sm, 14px);
+  font-size: var(--cometchat-font-size-sm, var(--cometchat-font-size-body, 14px));
   line-height: 1.6;
   color: var(--cometchat-text-color-primary, #141414);
 }

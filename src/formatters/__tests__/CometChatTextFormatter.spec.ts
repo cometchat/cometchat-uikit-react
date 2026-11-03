@@ -4,10 +4,10 @@ import { CometChatTextFormatter } from '../CometChatTextFormatter';
 // Concrete subclass for testing the abstract base
 class TestFormatter extends CometChatTextFormatter {
   readonly id = 'test-formatter';
-  getRegex(): RegExp {
+  override getRegex(): RegExp {
     return /test/g;
   }
-  format(text: string): string {
+  override format(text: string): string {
     this.originalText = text;
     this.formattedText = text.replace(this.getRegex(), '<b>test</b>');
     return this.formattedText;

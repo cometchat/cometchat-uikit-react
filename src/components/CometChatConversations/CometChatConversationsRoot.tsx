@@ -46,6 +46,7 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
   hideDeleteConversation = false,
   hidePinConversation = false,
   showSearchBar = true,
+  showScrollbar = false,
   searchView,
   textFormatters,
   children,
@@ -86,6 +87,7 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
       hideDeleteConversation,
       hidePinConversation,
       showSearchBar,
+      showScrollbar,
       textFormatters,
     }),
     [
@@ -101,6 +103,7 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
       hideDeleteConversation,
       hidePinConversation,
       showSearchBar,
+      showScrollbar,
       textFormatters,
     ]
   );

@@ -69,6 +69,8 @@ function createContext(
     selectionMode: 'none',
     hideUserStatus: false,
     hideSearch: false,
+    hideHeader: false,
+    showScrollbar: false,
     hideKickMemberOption: false,
     hideBanMemberOption: false,
     hideScopeChangeOption: false,

@@ -15,7 +15,8 @@ export const CometChatConversationsList: React.FC<CometChatConversationsListProp
   itemView,
 }) => {
   const { getLocalizedString } = useLocale();
-  const { conversations, hasMore, fetchState, fetchNext } = useCometChatConversationsContext();
+  const { conversations, hasMore, fetchState, fetchNext, showScrollbar } =
+    useCometChatConversationsContext();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const handleKeyDown = useListKeyboardNavigation(listRef);
@@ -45,7 +46,7 @@ export const CometChatConversationsList: React.FC<CometChatConversationsListProp
   return (
     <div
       ref={listRef}
-      className={'cometchat-conversations__list'}
+      className={`cometchat-conversations__list ${!showScrollbar ? 'cometchat-conversations__list--hide-scrollbar' : ''}`}
       role="listbox"
       aria-label={getLocalizedString('accessibility_conversations_list')}
       aria-busy={fetchState === 'loading'}

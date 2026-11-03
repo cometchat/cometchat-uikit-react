@@ -3,6 +3,9 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { CometChatGroupMembersContext } from '../CometChatGroupMembers.context';
 import { CometChatGroupMembersList } from '../CometChatGroupMembersList';
+import { CometChatGroupMembersLoadingState } from '../CometChatGroupMembersLoadingState';
+import { CometChatGroupMembersErrorState } from '../CometChatGroupMembersErrorState';
+import { CometChatGroupMembersEmptyState } from '../CometChatGroupMembersEmptyState';
 import type { CometChatGroupMembersContextValue } from '../CometChatGroupMembers.types';
 
 // Mock IntersectionObserver for jsdom
@@ -49,6 +52,8 @@ function createMockContext(
     selectionMode: 'none',
     hideUserStatus: false,
     hideSearch: false,
+    hideHeader: false,
+    showScrollbar: false,
     hideKickMemberOption: false,
     hideBanMemberOption: false,
     hideScopeChangeOption: false,
@@ -64,6 +69,8 @@ function createMockContext(
     banMember: vi.fn(),
     unbanMember: vi.fn(),
     changeScope: vi.fn(),
+    setMemberToChangeScope: vi.fn(),
+    memberToChangeScope: null,
     ...overrides,
   };
 }
@@ -143,5 +150,24 @@ describe('CometChatGroupMembersList', () => {
     const listbox = container.querySelector('[role="listbox"]');
     expect(listbox).toHaveAttribute('aria-label', 'Group members list');
     expect(listbox).toHaveAttribute('aria-busy', 'true');
+  });
+});
+
+describe('CometChatGroupMembers state parts', () => {
+  // Placed by an app inside Root, each part shows only in its own state.
+  it('each shows only in its own state', () => {
+    for (const state of ['loading', 'error', 'empty', 'loaded'] as const) {
+      const view = render(
+        <CometChatGroupMembersContext.Provider value={createMockContext({ fetchState: state })}>
+          <CometChatGroupMembersLoadingState>loading view</CometChatGroupMembersLoadingState>
+          <CometChatGroupMembersErrorState>error view</CometChatGroupMembersErrorState>
+          <CometChatGroupMembersEmptyState>empty view</CometChatGroupMembersEmptyState>
+        </CometChatGroupMembersContext.Provider>
+      );
+      for (const shown of ['loading', 'error', 'empty']) {
+        expect(screen.queryByText(`${shown} view`) !== null).toBe(shown === state);
+      }
+      view.unmount();
+    }
   });
 });

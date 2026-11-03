@@ -404,7 +404,8 @@ class Renderer extends EventEmitter<RendererEvents> {
     vScale: number
   ) {
     const topChannel = channelData[0];
-    const bottomChannel = channelData[1] || channelData[0];
+    if (!topChannel) return;
+    const bottomChannel = channelData[1] || topChannel;
     const length = topChannel.length;
 
     const { width, height } = ctx.canvas;
@@ -468,6 +469,7 @@ class Renderer extends EventEmitter<RendererEvents> {
   ) {
     const drawChannel = (index: number) => {
       const channel = channelData[index] || channelData[0];
+      if (!channel) return;
       const length = channel.length;
       const { height } = ctx.canvas;
       const halfHeight = height / 2;
@@ -520,7 +522,7 @@ class Renderer extends EventEmitter<RendererEvents> {
     // Vertical scaling
     let vScale = options.barHeight || 1;
     if (options.normalize) {
-      const max = Array.from(channelData[0]).reduce((m, value) => Math.max(m, Math.abs(value)), 0);
+      const max = Array.from(channelData[0] ?? []).reduce((m, value) => Math.max(m, Math.abs(value)), 0);
       vScale = max ? 1 / max : 1;
     }
 

@@ -1,5 +1,6 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openStrategyChat } from '../helpers';
+import { expectSendAccepted } from '../helpers/send';
 
 /**
  * E2E Tests — @Mentions in Message Composer (React)
@@ -17,28 +18,6 @@ test.describe('Mentions', () => {
     await openStrategyChat(page);
     await page.waitForSelector('.cometchat-message-composer', { timeout: 15_000 });
     await page.waitForTimeout(1000);
-  });
-
-  test('typing @ triggers mention suggestions dropdown', async () => {
-    const composer = page.locator('.cometchat-message-composer').first();
-    const input = composer.locator('[contenteditable="true"]').first();
-    await expect(input).toBeVisible({ timeout: 5_000 });
-
-    await input.click();
-    await page.keyboard.type('@');
-    await page.waitForTimeout(2000);
-
-    const mentionDropdown = page.locator('.cometchat-message-composer__mentions-list').first();
-    await expect(mentionDropdown).toBeVisible({ timeout: 5_000 });
-
-    const suggestions = mentionDropdown.locator('.cometchat-group-members__item');
-    const count = await suggestions.count();
-    expect(count).toBeGreaterThan(0);
-
-    // Cleanup
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('Meta+a');
-    await page.keyboard.press('Backspace');
   });
 
   test('typing after @ filters suggestions', async () => {
@@ -60,7 +39,7 @@ test.describe('Mentions', () => {
 
     // Cleanup
     await page.keyboard.press('Escape');
-    await page.keyboard.press('Meta+a');
+    await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
   });
 
@@ -78,14 +57,14 @@ test.describe('Mentions', () => {
 
     const firstSuggestion = mentionDropdown.locator('.cometchat-group-members__item').first();
     await expect(firstSuggestion).toBeVisible({ timeout: 3_000 });
+    const memberName = (await firstSuggestion.locator('.cometchat-group-members__item-title, [class*="title"]').first().innerText()).trim();
     await firstSuggestion.click();
-    await page.waitForTimeout(500);
 
-    const content = await input.textContent();
-    expect(content?.trim().length).toBeGreaterThan(0);
+    await expect(mentionDropdown).toBeHidden({ timeout: 5_000 });
+    await expect(input).toContainText(memberName);
 
     // Cleanup
-    await page.keyboard.press('Meta+a');
+    await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
   });
 
@@ -112,7 +91,7 @@ test.describe('Mentions', () => {
     expect(content?.trim().length).toBeGreaterThan(0);
 
     // Cleanup
-    await page.keyboard.press('Meta+a');
+    await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
   });
 
@@ -123,23 +102,19 @@ test.describe('Mentions', () => {
 
     await input.click();
     await page.keyboard.type('@');
-    await page.waitForTimeout(2000);
-
     const mentionDropdown = page.locator('.cometchat-message-composer__mentions-list').first();
     await expect(mentionDropdown).toBeVisible({ timeout: 5_000 });
 
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
+    await expect(mentionDropdown).toBeHidden({ timeout: 5_000 });
 
-    // After Escape, dropdown should close (or at minimum, pressing Escape didn't crash)
-    // Some implementations keep the dropdown open — verify the Escape was handled
-    await page.keyboard.press('Meta+a');
+    await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
   });
 
   // ==================== Send mention and verify in list ====================
 
-  test('sending a message with mention renders in message list', async () => {
+  test('sending a message with mention renders in message list', { tag: '@smoke' }, async () => {
     const composer = page.locator('.cometchat-message-composer').first();
     const input = composer.locator('[contenteditable="true"]').first();
     await expect(input).toBeVisible({ timeout: 5_000 });
@@ -163,7 +138,7 @@ test.describe('Mentions', () => {
 
     // Send the message
     const sendBtn = composer.locator('[class*="send-button"], button[aria-label*="Send" i]').first();
-    await sendBtn.click();
+    await expectSendAccepted(page, () => sendBtn.click());
 
     // Verify the message appears in the message list
     await expect(

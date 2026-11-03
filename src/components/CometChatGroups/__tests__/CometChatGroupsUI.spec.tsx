@@ -8,6 +8,7 @@ import { CometChatGroupsItem } from '../CometChatGroupsItem';
 import { CometChatGroupsManager } from '../CometChatGroupsManager';
 import type { CometChatGroupsContextValue } from '../CometChatGroups.types';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import { covers } from '../../../testing/covers';
 
 // --- Mock SDK ---
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
@@ -193,6 +194,7 @@ function createMockContext(
     selectionMode: 'none',
     hideGroupType: false,
     hideSearch: false,
+    showScrollbar: false,
     options: undefined,
     fetchNext: vi.fn(),
     setSearchText: vi.fn(),
@@ -241,6 +243,7 @@ describe('CometChatGroupsRoot', () => {
   });
 
   it('renders custom children when provided', () => {
+    covers('CometChatGroups.children', 'custom');
     render(
       <CometChatGroupsRoot>
         <div data-testid="custom-child">Custom Content</div>
@@ -525,7 +528,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
     expect(addGroupListenerMock).toHaveBeenCalledWith('test-listener', expect.any(Object));
 
     // Get the listener callbacks that were passed to addGroupListener
-    const listenerObj = addGroupListenerMock.mock.calls[0][1] as Record<
+    const listenerObj = addGroupListenerMock.mock.calls[0]![1] as Record<
       string,
       (...args: unknown[]) => void
     >;
@@ -535,7 +538,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
     const mockUser = { getUid: () => 'user-1' } as unknown as CometChat.User;
     const mockGroup = createMockGroup('g1', 'Test Group');
 
-    listenerObj.onGroupMemberJoined(mockMessage, mockUser, mockGroup);
+    listenerObj.onGroupMemberJoined!(mockMessage, mockUser, mockGroup);
 
     expect(onGroupMemberJoined).toHaveBeenCalledWith(mockMessage, mockUser, mockGroup);
 
@@ -552,7 +555,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
       onGroupMemberScopeChanged: vi.fn(),
     });
 
-    const listenerObj = addGroupListenerMock.mock.calls[0][1] as Record<
+    const listenerObj = addGroupListenerMock.mock.calls[0]![1] as Record<
       string,
       (...args: unknown[]) => void
     >;
@@ -561,7 +564,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
     const mockUser = { getUid: () => 'user-1' } as unknown as CometChat.User;
     const mockGroup = createMockGroup('g1', 'Test Group');
 
-    listenerObj.onGroupMemberLeft(mockMessage, mockUser, mockGroup);
+    listenerObj.onGroupMemberLeft!(mockMessage, mockUser, mockGroup);
 
     expect(onGroupMemberLeft).toHaveBeenCalledWith(mockMessage, mockUser, mockGroup);
 
@@ -578,7 +581,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
       onGroupMemberScopeChanged: vi.fn(),
     });
 
-    const listenerObj = addGroupListenerMock.mock.calls[0][1] as Record<
+    const listenerObj = addGroupListenerMock.mock.calls[0]![1] as Record<
       string,
       (...args: unknown[]) => void
     >;
@@ -588,7 +591,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
     const mockBannedBy = { getUid: () => 'admin-1' } as unknown as CometChat.User;
     const mockGroup = createMockGroup('g1', 'Test Group');
 
-    listenerObj.onGroupMemberBanned(mockMessage, mockBannedUser, mockBannedBy, mockGroup);
+    listenerObj.onGroupMemberBanned!(mockMessage, mockBannedUser, mockBannedBy, mockGroup);
 
     expect(onGroupMemberBanned).toHaveBeenCalledWith(
       mockMessage,
@@ -610,7 +613,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
       onGroupMemberScopeChanged: vi.fn(),
     });
 
-    const listenerObj = addGroupListenerMock.mock.calls[0][1] as Record<
+    const listenerObj = addGroupListenerMock.mock.calls[0]![1] as Record<
       string,
       (...args: unknown[]) => void
     >;
@@ -620,7 +623,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
     const mockKickedBy = { getUid: () => 'admin-1' } as unknown as CometChat.User;
     const mockGroup = createMockGroup('g1', 'Test Group');
 
-    listenerObj.onGroupMemberKicked(mockMessage, mockKickedUser, mockKickedBy, mockGroup);
+    listenerObj.onGroupMemberKicked!(mockMessage, mockKickedUser, mockKickedBy, mockGroup);
 
     expect(onGroupMemberKicked).toHaveBeenCalledWith(
       mockMessage,
@@ -642,7 +645,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
       onGroupMemberScopeChanged,
     });
 
-    const listenerObj = addGroupListenerMock.mock.calls[0][1] as Record<
+    const listenerObj = addGroupListenerMock.mock.calls[0]![1] as Record<
       string,
       (...args: unknown[]) => void
     >;
@@ -651,7 +654,7 @@ describe('CometChatGroupsManager — GroupListener callbacks', () => {
     const mockUser = { getUid: () => 'user-4' } as unknown as CometChat.User;
     const mockGroup = createMockGroup('g1', 'Test Group');
 
-    listenerObj.onGroupMemberScopeChanged(mockMessage, mockUser, 'admin', 'participant', mockGroup);
+    listenerObj.onGroupMemberScopeChanged!(mockMessage, mockUser, 'admin', 'participant', mockGroup);
 
     expect(onGroupMemberScopeChanged).toHaveBeenCalledWith(
       mockMessage,

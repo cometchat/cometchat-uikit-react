@@ -21,7 +21,10 @@ export interface CometChatThreadHeaderRootProps {
   hideThreadSubscriptionToggle?: boolean | undefined;
   /** Called when the thread's subscription state changes, from any source. */
   onThreadSubscriptionChange?: ((subscribed: boolean) => void) | undefined;
-  /** Format for the date chip shown above the parent bubble. */
+  /**
+   * Format for the date chip shown above the parent bubble, laid over the global calendar format
+   * (`CometChatLocalize`); any part left out keeps the default.
+   */
   separatorDateTimeFormat?: CometChatDateFormatConfig | undefined;
   /** Format for the sent-at timestamp on the parent message bubble. */
   messageSentAtDateTimeFormat?: CometChatDateFormatConfig | undefined;
@@ -109,6 +112,8 @@ export interface CometChatThreadHeaderContextValue {
   onClose?: (() => void) | undefined;
   /** Subtitle click handler (navigate to parent in main list). */
   onSubtitleClicked?: (() => void) | undefined;
+  /** Whether to hide receipts on the parent bubble; unset follows the global setting. */
+  hideReceipts?: boolean | undefined;
   /** Whether to hide the date chip above the parent bubble. */
   hideDate?: boolean | undefined;
   /** Whether to hide the reply count section. */

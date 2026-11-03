@@ -197,11 +197,14 @@ export class CometChatUIKitConstants {
    * UIKit-owned message metadata keys for the multi-attachments feature.
    * `batchId` is the render-time grouping key shared across all messages produced
    * by one send; `audioType` disambiguates an attached audio file from a recorded
-   * voice note.
+   * voice note. `audioDuration` is a recorded voice note's length in whole
+   * seconds, so receivers can show it without decoding the file. It matches the
+   * key and type the iOS UIKit already writes and reads.
    */
   static MetadataKeys = Object.freeze({
     batchId: 'batchId',
     audioType: 'audioType',
+    audioDuration: 'audioDuration',
   });
 
   /**

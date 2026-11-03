@@ -1,5 +1,8 @@
 import { createContext, useContext } from 'react';
-import type { CometChatMessageHeaderContextValue } from './CometChatMessageHeader.types';
+import type {
+  CometChatMessageHeaderContextValue,
+  CometChatMessageHeaderConvenienceProps,
+} from './CometChatMessageHeader.types';
 
 export const CometChatMessageHeaderContext =
   createContext<CometChatMessageHeaderContextValue | null>(null);
@@ -21,3 +24,10 @@ export function useCometChatMessageHeaderContext(): CometChatMessageHeaderContex
   }
   return ctx;
 }
+
+/**
+ * The flat API's view props, read by Root's default layout so they slot into that one layout (and
+ * keep its click handling, call-button rules and menu) rather than a second copy of it. Internal.
+ */
+export const CometChatMessageHeaderViewsContext =
+  createContext<CometChatMessageHeaderConvenienceProps>({});

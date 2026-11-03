@@ -29,6 +29,13 @@ const mockT = vi.fn((key: string) => {
     message_list_action_banned: 'banned',
     message_list_action_unbanned: 'unbanned',
     message_list_action_made: 'made',
+    group_action_added: '{actor} added {member}',
+    group_action_joined: '{actor} joined',
+    group_action_left: '{actor} left',
+    group_action_kicked: '{actor} kicked {member}',
+    group_action_banned: '{actor} banned {member}',
+    group_action_unbanned: '{actor} unbanned {member}',
+    group_action_scope_changed: '{actor} made {member} {scope}',
     member_scope_admin: 'Admin',
     member_scope_moderator: 'Moderator',
     member_scope_participant: 'Participant',
@@ -105,8 +112,27 @@ describe('getActionMessageText', () => {
     expect(getActionMessageText(msg as unknown as CometChat.BaseMessage)).toBe('');
   });
 
-  it('works without t function (falls back to key names)', () => {
+  it('works without translations (falls back to the English sentence, never a raw key)', () => {
     const msg = mockAction({ action: 'joined', byName: 'Alice' });
-    expect(getActionMessageText(msg)).toBe('Alice message_list_action_joined');
+    expect(getActionMessageText(msg)).toBe('Alice joined');
+  });
+
+  it('lets a translation put the names in its own word order', () => {
+    const msg = mockAction({ action: 'scopeChanged', byName: 'Alice', onName: 'Bob', newScope: 'admin' });
+    const t = (key: string) =>
+      ({ group_action_scope_changed: '{actor}が{member}を{scope}にしました', member_scope_admin: '管理者' })[key] ?? key;
+    expect(getActionMessageText(msg, t as never)).toBe('AliceがBobを管理者にしました');
+  });
+
+  // Display names are user-controlled: replacement patterns and placeholder text in a name are
+  // shown as typed, and one name never fills another's placeholder.
+  it.each([
+    ['a member named with $&', { byName: 'Bob', onName: 'Al$&ice' }, 'Bob kicked Al$&ice'],
+    ['a member named with $` $\' and $$', { byName: 'Bob', onName: "$`x$'y$$z" }, "Bob kicked $`x$'y$$z"],
+    ['an actor named {member}', { byName: '{member}', onName: 'Carl' }, '{member} kicked Carl'],
+    ['an actor named with $$', { byName: 'Pay$$Bob', onName: 'Carl' }, 'Pay$$Bob kicked Carl'],
+  ])('shows %s as typed', (_, names, expected) => {
+    const msg = mockAction({ action: 'kicked', ...names });
+    expect(getActionMessageText(msg, mockT as never)).toBe(expected);
   });
 });

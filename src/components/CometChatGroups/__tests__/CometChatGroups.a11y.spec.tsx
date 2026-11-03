@@ -57,6 +57,7 @@ function createMockContext(
     selectionMode: 'none',
     hideGroupType: false,
     hideSearch: false,
+    showScrollbar: false,
     options: undefined,
     fetchNext: vi.fn(),
     setSearchText: vi.fn(),
@@ -112,18 +113,30 @@ describe('CometChatGroups accessibility', () => {
   });
 
   it('loading state has aria-busy="true"', () => {
-    render(<CometChatGroups.LoadingState />);
+    render(
+      <CometChatGroupsContext.Provider value={createMockContext({ fetchState: 'loading' })}>
+        <CometChatGroups.LoadingState />
+      </CometChatGroupsContext.Provider>
+    );
     const loading = screen.getByRole('status');
     expect(loading).toHaveAttribute('aria-busy', 'true');
   });
 
   it('empty state has role="status"', () => {
-    render(<CometChatGroups.EmptyState />);
+    render(
+      <CometChatGroupsContext.Provider value={createMockContext({ fetchState: 'empty' })}>
+        <CometChatGroups.EmptyState />
+      </CometChatGroupsContext.Provider>
+    );
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   it('error state has role="status"', () => {
-    render(<CometChatGroups.ErrorState />);
+    render(
+      <CometChatGroupsContext.Provider value={createMockContext({ fetchState: 'error' })}>
+        <CometChatGroups.ErrorState />
+      </CometChatGroupsContext.Provider>
+    );
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
@@ -141,5 +154,24 @@ describe('CometChatGroups accessibility', () => {
     );
     expect(screen.getByLabelText('Private group')).toBeInTheDocument();
     expect(screen.getByLabelText('Password protected group')).toBeInTheDocument();
+  });
+});
+
+describe('CometChatGroups state parts', () => {
+  // Placed by an app inside Root, each part shows only in its own state.
+  it('each shows only in its own state', () => {
+    for (const state of ['loading', 'error', 'empty', 'loaded'] as const) {
+      const view = render(
+        <CometChatGroupsContext.Provider value={createMockContext({ fetchState: state })}>
+          <CometChatGroups.LoadingState>loading view</CometChatGroups.LoadingState>
+          <CometChatGroups.ErrorState>error view</CometChatGroups.ErrorState>
+          <CometChatGroups.EmptyState>empty view</CometChatGroups.EmptyState>
+        </CometChatGroupsContext.Provider>
+      );
+      for (const shown of ['loading', 'error', 'empty']) {
+        expect(screen.queryByText(`${shown} view`) !== null).toBe(shown === state);
+      }
+      view.unmount();
+    }
   });
 });

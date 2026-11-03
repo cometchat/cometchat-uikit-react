@@ -17,7 +17,7 @@
   max-width: 560px;
   min-height: 32px;
   box-sizing: border-box;
-  box-shadow: var(--cometchat-shadow-2, 0 2px 8px rgba(0, 0, 0, 0.15));
+  box-shadow: var(--cometchat-shadow-2, var(--cometchat-elevation-1, 0 2px 8px rgba(0, 0, 0, 0.15)));
   animation: cometchat-toast-slide-up 0.3s ease-out;
 }
 

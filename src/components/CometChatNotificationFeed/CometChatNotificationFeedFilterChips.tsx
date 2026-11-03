@@ -25,7 +25,7 @@ export const CometChatNotificationFeedFilterChips: React.FC<
     <div
       className="cometchat-notification-feed__chips"
       role="tablist"
-      aria-label="Filter notifications by category"
+      aria-label={getLocalizedString('accessibility_filter_notifications')}
     >
       {children ?? (
         <>

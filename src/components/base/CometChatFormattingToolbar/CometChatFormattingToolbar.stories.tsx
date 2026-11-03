@@ -6,7 +6,6 @@
  * - With active formats
  * - Inline formatting disabled (e.g., inside a code block)
  * - Dark theme
- * - RTL
  *
  * @module components/base/CometChatFormattingToolbar
  */

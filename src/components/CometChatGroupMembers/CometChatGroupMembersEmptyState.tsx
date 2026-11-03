@@ -1,4 +1,5 @@
 import React from 'react';
+import { useCometChatGroupMembersContext } from './CometChatGroupMembers.context';
 import type { CometChatGroupMembersEmptyStateProps } from './CometChatGroupMembers.types';
 import groupsEmptyIcon from '../../assets/groups_empty_state.svg';
 import './CometChatGroupMembers.css';
@@ -11,6 +12,11 @@ export const CometChatGroupMembersEmptyState: React.FC<CometChatGroupMembersEmpt
   children,
 }) => {
   const { getLocalizedString } = useLocale();
+  const { fetchState } = useCometChatGroupMembersContext();
+
+  // Shown only in its state, wherever it is placed.
+  if (fetchState !== 'empty') return null;
+
   return (
     <div className={'cometchat-group-members__empty-state'} role="status">
       {children ?? (

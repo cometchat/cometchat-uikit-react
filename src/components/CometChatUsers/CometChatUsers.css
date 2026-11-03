@@ -6,7 +6,7 @@
   height: 100%;
   overflow: hidden;
   background: var(--cometchat-background-color-01, #fff);
-  border-radius: var(--cometchat-border-radius-3, 8px);
+  border-radius: var(--cometchat-border-radius-3, var(--cometchat-radius-2, 8px));
   font-family: var(--cometchat-font-family, inherit);
 }
 
@@ -223,7 +223,7 @@
 .cometchat-users__shimmer-item-title {
   height: 14px;
   width: 120px;
-  border-radius: var(--cometchat-border-radius-2, 8px);
+  border-radius: var(--cometchat-border-radius-2, var(--cometchat-radius-2, 8px));
   background: var(
     --cometchat-shimmer-gradient-color,
     linear-gradient(90deg, #e0e0e0 0%, #eee 100%)

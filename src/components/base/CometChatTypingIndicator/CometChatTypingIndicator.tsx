@@ -1,6 +1,8 @@
 import React, { forwardRef, useMemo } from 'react';
+import { useLocale } from '../../../hooks/useLocale';
 import type { CometChatTypingIndicatorProps } from './CometChatTypingIndicator.types';
 import './CometChatTypingIndicator.css';
+import { fillTemplate } from '../../../utils/fillTemplate';
 
 /**
  * CometChatTypingIndicator — displays animated typing feedback when users
@@ -19,26 +21,27 @@ import './CometChatTypingIndicator.css';
  */
 export const CometChatTypingIndicator = forwardRef<HTMLDivElement, CometChatTypingIndicatorProps>(
   ({ typingNames, isGroupChat = false, className, ...rest }, ref) => {
+    const { getLocalizedString } = useLocale();
     const ariaLabel = useMemo(() => {
       if (typingNames.length === 0) return '';
 
       if (!isGroupChat) {
-        return 'Someone is typing';
+        return getLocalizedString('typing_indicator_someone');
       }
 
       const firstName = typingNames[0] ?? '';
 
       if (typingNames.length === 1) {
-        return `${firstName} is typing`;
+        return fillTemplate(getLocalizedString('typing_indicator_one'), { name: firstName });
       }
 
       if (typingNames.length === 2) {
         const secondName = typingNames[1] ?? '';
-        return `${firstName} and ${secondName} are typing`;
+        return fillTemplate(getLocalizedString('typing_indicator_two'), { first: firstName, second: secondName });
       }
 
-      return 'Multiple people are typing';
-    }, [typingNames, isGroupChat]);
+      return getLocalizedString('typing_indicator_many');
+    }, [typingNames, isGroupChat, getLocalizedString]);
 
     if (typingNames.length === 0) return null;
 

@@ -1,5 +1,5 @@
 /**
- * Tests for useListKeyboardNavigation (ENG-37423).
+ * Tests for useListKeyboardNavigation.
  */
 import React, { useRef } from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';

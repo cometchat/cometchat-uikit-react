@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('@cometchat/chat-sdk-javascript', () => ({
   CometChat: {
-    StorageMode: { LOCAL: 'localStorage', NONE: 'none' },
+    StorageMode: { LOCAL: 'local', SESSION: 'session' },
   },
 }));
 
@@ -74,8 +74,8 @@ describe('UIKitSettingsBuilder', () => {
   });
 
   it('should set storageMode', () => {
-    const settings = new UIKitSettingsBuilder().setStorageMode(CometChat.StorageMode.NONE).build();
-    expect(settings.getStorageMode()).toBe('none');
+    const settings = new UIKitSettingsBuilder().setStorageMode(CometChat.StorageMode.SESSION).build();
+    expect(settings.getStorageMode()).toBe('session');
   });
 
   it('should set callingEnabled', () => {

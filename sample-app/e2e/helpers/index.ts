@@ -1,4 +1,6 @@
 export { loginToApp, TEST_USERS } from './auth';
+export { covers } from './covers';
+export { knownIssue } from './known-issue';
 export {
   seedTestData,
   cleanupTestData,
@@ -21,3 +23,4 @@ export {
   waitForAgentReply,
   expectNoAgentReply,
 } from './agentic';
+export { expectSendAccepted } from './send';

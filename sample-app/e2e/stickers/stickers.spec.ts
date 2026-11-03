@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openStrategyChat } from '../helpers';
 
 /**
@@ -18,21 +18,6 @@ test.describe('Stickers Keyboard', () => {
     await openStrategyChat(page);
   });
 
-  test('stickers button is present in composer', async () => {
-    const stickersBtn = page.locator('.cometchat-message-composer__sticker-button').first();
-    await expect(stickersBtn).toBeVisible({ timeout: 5_000 });
-  });
-
-  test('clicking stickers button opens stickers keyboard', async () => {
-    const stickersBtn = page.locator('.cometchat-message-composer__sticker-button').first();
-    await expect(stickersBtn).toBeVisible({ timeout: 5_000 });
-    await stickersBtn.click();
-    await page.waitForTimeout(1000);
-
-    const stickersKeyboard = page.locator('.cometchat-stickers-keyboard, [class*="stickers-keyboard"]').first();
-    await expect(stickersKeyboard).toBeVisible({ timeout: 5_000 });
-  });
-
   test('stickers keyboard shows category tabs', async () => {
     const stickersBtn = page.locator('.cometchat-message-composer__sticker-button').first();
     await expect(stickersBtn).toBeVisible({ timeout: 5_000 });
@@ -43,8 +28,7 @@ test.describe('Stickers Keyboard', () => {
     await expect(stickersKeyboard).toBeVisible({ timeout: 5_000 });
 
     const categoryTabs = stickersKeyboard.locator('[class*="category"], [class*="tab"], [role="tab"]');
-    const tabCount = await categoryTabs.count();
-    expect(tabCount).toBeGreaterThan(0);
+    await expect(categoryTabs.first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('stickers grid displays sticker images', async () => {
@@ -57,11 +41,10 @@ test.describe('Stickers Keyboard', () => {
     await expect(stickersKeyboard).toBeVisible({ timeout: 5_000 });
 
     const stickerItems = stickersKeyboard.locator('[class*="sticker-item"], img[class*="sticker"]');
-    const count = await stickerItems.count();
-    expect(count).toBeGreaterThan(0);
+    await expect(stickerItems.first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test('clicking a sticker sends it as a message', async () => {
+  test('clicking a sticker sends it as a message', { tag: '@smoke' }, async () => {
     // Count existing sticker bubbles before sending
     const stickerBubblesBefore = await page.locator('.cometchat-sticker-bubble, [class*="sticker-bubble"]').count();
 

@@ -2,6 +2,17 @@ import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatUIKitConstants } from '../../../constants/CometChatUIKitConstants';
 import { CometChatLocalize } from '../../../resources/CometChatLocalize/CometChatLocalize';
 import type { TranslateFunction } from '../../../resources/CometChatLocalize/localize.types';
+import { fillTemplate } from '../../../utils/fillTemplate';
+
+const ENGLISH_SENTENCES = {
+  group_action_added: '{actor} added {member}',
+  group_action_joined: '{actor} joined',
+  group_action_left: '{actor} left',
+  group_action_kicked: '{actor} kicked {member}',
+  group_action_banned: '{actor} banned {member}',
+  group_action_unbanned: '{actor} unbanned {member}',
+  group_action_scope_changed: '{actor} made {member} {scope}',
+};
 
 /**
  * Generate localized action message text from a CometChat.Action message.
@@ -59,24 +70,32 @@ export function getActionMessageText(
       ? (onEntity.name as string) || ''
       : '';
 
+  // Whole sentences with placeholders, so each language can put the names where its grammar needs them.
+  // A missing key comes back as the key itself; use the English sentence then, not the raw key.
+  const sentence = (key: keyof typeof ENGLISH_SENTENCES, scope = '') => {
+    const translated = translate(key);
+    const template = translated && translated !== key ? translated : ENGLISH_SENTENCES[key];
+    return fillTemplate(template, { actor: byString, member: forString, scope });
+  };
+
   switch (action) {
     case CometChatUIKitConstants.groupMemberAction.ADDED:
-      return `${byString} ${translate('message_list_action_added')} ${forString}`;
+      return sentence('group_action_added');
 
     case CometChatUIKitConstants.groupMemberAction.JOINED:
-      return `${byString} ${translate('message_list_action_joined')}`;
+      return sentence('group_action_joined');
 
     case CometChatUIKitConstants.groupMemberAction.LEFT:
-      return `${byString} ${translate('message_list_action_left')}`;
+      return sentence('group_action_left');
 
     case CometChatUIKitConstants.groupMemberAction.KICKED:
-      return `${byString} ${translate('message_list_action_kicked')} ${forString}`;
+      return sentence('group_action_kicked');
 
     case CometChatUIKitConstants.groupMemberAction.BANNED:
-      return `${byString} ${translate('message_list_action_banned')} ${forString}`;
+      return sentence('group_action_banned');
 
     case CometChatUIKitConstants.groupMemberAction.UNBANNED:
-      return `${byString} ${translate('message_list_action_unbanned')} ${forString}`;
+      return sentence('group_action_unbanned');
 
     case CometChatUIKitConstants.groupMemberAction.SCOPE_CHANGE: {
       const data = actionMsg.data as Record<string, unknown>;
@@ -84,7 +103,7 @@ export function getActionMessageText(
       const scope = extras.scope as Record<string, unknown>;
       const newScope = scope.new as string;
       const localizedScope = translate(`member_scope_${newScope}`) || newScope;
-      return `${byString} ${translate('message_list_action_made')} ${forString} ${localizedScope}`;
+      return sentence('group_action_scope_changed', localizedScope);
     }
 
     default:

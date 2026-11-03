@@ -12,6 +12,7 @@ import { sanitizeHtml } from '../../utils/sanitizeHtml';
 import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
 import threadIcon from '../../assets/conversations_thread.svg';
 import { localizeWithFallback } from '../../utils/localizeWithFallback';
+import { dateLiteral } from '../../resources/CometChatLocalize/dateFormat.utils';
 
 export interface CometChatSavedMessagesItemProps {
   message: CometChat.BaseMessage;
@@ -158,7 +159,7 @@ export const CometChatSavedMessagesItem: React.FC<CometChatSavedMessagesItemProp
           variant="caption2"
           formatConfig={{
             today: 'hh:mm A',
-            yesterday: loc('date_yesterday', 'Yesterday'),
+            yesterday: dateLiteral(loc('date_yesterday', 'Yesterday')),
             otherDays: 'DD/MM/YYYY',
           }}
         />

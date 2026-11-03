@@ -100,13 +100,13 @@ npm run build-storybook
 
 ### E2E Tests (Playwright)
 
-End-to-end tests live in `sample-app/e2e/` and run against the live sample app. They cover full user journeys: login, messaging, reactions, threads, groups, calls, search, and more.
+End-to-end tests live in `sample-app/e2e/` and run against the live sample app and a real CometChat app. They cover full user journeys: login, messaging, attachments, reactions, threads, pin & save, groups, calls, search, AI, and more.
 
 #### Prerequisites
 
 ##### 1. Create a CometChat App
 
-Create a **new** CometChat app (or use an existing one dedicated to E2E testing).
+Create a **new** CometChat app dedicated to E2E testing — the suite creates and deletes `e2e-*` users and groups, so don't point it at an app with real data.
 
 - Go to [CometChat Dashboard](https://app.cometchat.com)
 - Note down: **App ID**, **Region**, **Auth Key**, **REST API Key**
@@ -115,24 +115,23 @@ Create a **new** CometChat app (or use an existing one dedicated to E2E testing)
 
 In the CometChat Dashboard, enable:
 
-- **Stickers** (also add sticker packs from settings)
+- **Stickers** — and add sticker packs from its settings (the sticker tests need at least one pack)
 - **Calling**
 - **Conversation & Advanced Search**
 - **Polls**
 - **Collaborative Document**
 - **Collaborative Whiteboard**
 
-Then, under **Chat & Messaging → Settings → General Configuration → Media URL Access**, select **Presigned URLs** 
+Then, under **Chat & Messaging → Settings → General Configuration → Media URL Access**, select **Presigned URLs**.
 
 > **Required** for every attachment flow — `e2e/multi-attachment`, the `e2e/message-composer` attachment tests, and the image test in `e2e/thread-subscription`. Without it the upload tray never resolves and those tests time out.
 
-##### 3. Create AI Agent User
+##### 3. Create the AI Agent Users
 
 In the Dashboard → BYO Agents:
 
-- **UID**: `ai-agent-e2e`
-- **Name**: `AI Agent E2E`
-- **Role**: `@agentic`
+- **AI assistant chat:** UID `ai-agent-e2e` or mention it in `AI_AGENT_UID`, name `AI Agent E2E`, role `@agentic`.
+- **Agentic group chat:** two more `@agentic` users; put their UIDs in `GROUP_AGENT_1_UID` / `GROUP_AGENT_2_UID`. The agents must be connected to a backend that **actually replies** — the agentic-group tests wait for a real reply.
 
 ##### 4. Configure Environment
 
@@ -150,64 +149,68 @@ COMETCHAT_API_KEY=your-rest-api-key
 AI_AGENT_UID=ai-agent-e2e
 ```
 
-`.env.e2e.example` is the full reference — it also carries the optional per-suite flags below, each of which **self-skips its tests when left blank**:
+`.env.e2e.example` documents **every** variable the suite reads. The optional ones only enable specific tests:
 
 | Var | Suite |
 |-----|-------|
 | `E2E_BLOCKED_MIME_TYPE` | multi-attachment (blocked-MIME test) |
-| `E2E_PIN_MESSAGES_LIMIT`, `E2E_PARTICIPANT_PIN_DENIED`, `E2E_PARTICIPANT_UNPIN_DENIED`, `E2E_PARTICIPANT_PIN_LISTING_DENIED` | pin & save (see below) |
+| `E2E_PIN_MESSAGES_LIMIT` | pin & save (pin-limit test, see below) |
 | `GROUP_AGENT_1_UID`, `GROUP_AGENT_2_UID`, `AGENTIC_GROUP_1_ID`, `AGENTIC_GROUP_2_ID` | agentic group chat |
 
-##### 5. Install Playwright Browsers
+At the start of every run the suite prints any variable that is missing and which tests it will skip.
+
+##### 5. Install Dependencies and Playwright Browsers
+
+The sample app can run against your **local UI Kit source** (`src/`) instead of the published package, which needs both installs:
 
 ```bash
-npx playwright install
+npm ci                       # repo root — the UI Kit's own dependencies
+cd sample-app && npm ci      # the sample app
+npx playwright install chromium
 ```
 
 #### Running E2E Tests
 
-**Seed test data (one-time, idempotent):**
+**Seed test data (idempotent — safe to re-run):**
 
 ```bash
 cd sample-app
 npm run e2e:seed
 ```
 
-**Start dev server (keep running in separate terminal):**
-
-```bash
-npm run dev
-```
-
 **Run all E2E tests (headless):**
 
 ```bash
-npm run e2e
+UIKIT_LOCAL=1 npm run e2e
 ```
 
-**Run with Playwright UI (interactive):**
+`UIKIT_LOCAL=1` makes the sample app resolve `@cometchat/chat-uikit-react` from `../src`, so the tests exercise **your local changes**. Without it they run against the published package in `sample-app/node_modules`. On Windows (or to make it permanent) put `UIKIT_LOCAL=1` in `sample-app/.env` instead.
+
+Playwright starts the dev server on `http://localhost:3005` by itself (and reuses one you already have running), so there is no need to start it in a separate terminal. To use another port, set `E2E_PORT` together with a server command for that port (e.g. `E2E_PORT=3006 E2E_WEB_SERVER_COMMAND="npx vite --port 3006 --strictPort"`).
+
+**Run against a production build** — what end users get, and slower to start:
 
 ```bash
-npm run e2e:ui
+UIKIT_LOCAL=1 npm run build -- --sourcemap
+E2E_WEB_SERVER_COMMAND="npx vite preview --port 3005 --strictPort" npm run e2e
 ```
 
-**Run headed (visible browser):**
+**Other modes:**
 
 ```bash
-npm run e2e:headed
+npm run e2e:ui                                             # Playwright UI (interactive)
+npm run e2e:headed                                         # visible browser
+npm run e2e:debug                                          # step through
+npx playwright test e2e/conversations/conversations.spec.ts  # one spec file
+npx playwright test --grep "pin"                           # tests whose title matches
+npx playwright test --grep @smoke                          # the core-flow smoke subset (~10 min)
 ```
 
-**Run in debug mode:**
+**Accessibility:** `e2e/accessibility/axe.spec.ts` scans the main screens with axe (WCAG 2.0/2.1 A and AA). Violations that exist today are listed per screen in `e2e/accessibility/axe-baseline.json`; the scan fails only on new ones. After fixing a violation, remove its rule from the baseline. To regenerate the baseline from the current app (review the diff before committing): `UPDATE_AXE_BASELINE=1 npx playwright test e2e/accessibility`.
 
-```bash
-npm run e2e:debug
-```
+**Lint the suite:** `npm run lint:e2e` (`eslint-plugin-playwright` — prefer web-first assertions such as `await expect(locator).toBeVisible()` over fixed `waitForTimeout` sleeps). `locator.isVisible()` does not wait, so it is a lint error when given a timeout; use `toBeVisible({ timeout })`, or `visibleWithin()` from `e2e/helpers/wait.ts` for an optional element.
 
-**Run a specific test file:**
-
-```bash
-npx playwright test e2e/conversations/conversations.spec.ts
-```
+**Results:** the HTML report is written to `playwright-report/` (`npx playwright show-report`), a machine-readable summary to `e2e-results/results.json`, and traces/screenshots of failures to `test-results/`.
 
 #### Cleanup
 
@@ -219,39 +222,45 @@ npm run e2e:cleanup
 
 #### Test Data Strategy
 
-| Chat | Purpose | Modified by Tests? |
+| Chat / user | Purpose | Modified by Tests? |
 |------|---------|-------------------|
-| **Bob Smith** (e2e-user-2) | Static 1:1 — read-only tests | ❌ Never |
+| **Alice Johnson** (e2e-user-1) | The logged-in test user | — |
+| **Bob Smith** (e2e-user-2) | Static 1:1 — read-only tests; the **participant** in Strategy | ❌ Never |
 | **Design Team** (e2e-group-1) | Static group — pagination, group details | ❌ Never |
-| **Strategy** (e2e-group-35) | Mutable group — send/edit/delete/thread/reactions | ✅ Yes |
+| **Strategy** (e2e-group-35) | Mutable group — send/edit/delete/thread/reactions/pin | ✅ Yes |
 | **CI/CD** (e2e-group-33) | Incoming messages for message-privately / pin-conversation tests | ❌ Never - Unless the tests send incoming messages |
 | **Engineering** | Mutable group — the chat the pin-conversation tests pin/unpin | ✅ Yes |
 | **Testing** | Secondary mutable group — use for anything (currently the pin-conversation "stays below pinned" test) | ✅ Yes |
 | **AI Agent E2E** | AI assistant chat tests | ✅ Yes |
+| **Perf User** (perf-user-1) | A stable login for performance measurement; created by the seed, never deleted by cleanup | ❌ Never |
+| **Charlie Brown** (e2e-user-3), **Diana Prince** (e2e-user-4) | Caller and callee in the incoming-call tests; members of the agentic groups; Charlie also logs in during the switch-user journey | ✅ Call logs grow — don't assert on their call history |
+| Other seeded users (e2e-user-5 … e2e-user-35) and groups (e2e-group-2 … e2e-group-34) | Population for lists, search, pagination and member counts | ❌ Never |
+| **AI Solo E2E**, **AI Squad E2E** (e2e-agentic-group-1/2, or `AGENTIC_GROUP_1_ID`/`AGENTIC_GROUP_2_ID`) | Agentic group tests, with the agents in `GROUP_AGENT_1_UID`/`GROUP_AGENT_2_UID` | ✅ Yes |
+
+> **Reserved for generated data** — tests create their own throwaway fixtures with these prefixes and delete them afterwards; `npm run e2e:cleanup` sweeps any a failed run leaves behind. Don't create your own users or groups with them:
+> groups `e2e-group-tmp-*` (guid) and `E2E_Test_*` (name), users `e2e-user-tmp-*` and `e2e-user-journey-*` (uid).
 
 > **Engineering & Testing groups** — create two public groups named **exactly `Engineering`** and **exactly `Testing`** (any guids). Add `e2e-user-1` to **Engineering** (the tests send it a message as `e2e-user-1` to bring it into the list, then pin it) and `e2e-user-2` to **Testing** (used to send an incoming). The suite resolves both by name at runtime, so no guids go in env. Treat `Testing` as a free secondary group for future tests.
 
 #### Pin & Save prerequisites
 
-The pin/save suites (`e2e/pin-messages`, `e2e/save-messages`, and the "Pin conversation" block in `e2e/conversations`) need these enabled on the E2E app:
+The pin/save suites (`e2e/pin-messages`, `e2e/save-messages`, and the "Pin conversation" block in `e2e/conversations`) need these on the E2E app:
 
 - **Enable** in the dashboard: `features.ux.messages.pinned.enabled`, `features.ux.messages.saved.enabled`, `features.ux.conversations.pinned.enabled`.
-- **Strategy roles**: `e2e-user-1` is owner/admin; `e2e-user-2` is a **participant**. The UI Kit shows Pin/Unpin to *every* member and the **server** enforces who may act — so the permission test asserts the participant *is* offered *Pin message* (the deny surfaces as a toast, covered below).
-- **Pin-message limit test** self-skips unless `E2E_PIN_MESSAGES_LIMIT=5` (it's only meaningful at a small cap). Set it to your `features.ux.messages.pinned.limit`.
-- **Pin-permission deny tests** (denied pin / denied unpin / denied pinned-listing) each self-skip until you both (a) apply the matching **deny to the participant scope** in the Strategy group and (b) set the flag. Apply these in the dashboard **after seeding** — they act on the Strategy group, so it must already exist:
-  - Deny the **participant** scope *pin* → set `E2E_PARTICIPANT_PIN_DENIED=1`.
-  - Deny the **participant** scope *unpin* → set `E2E_PARTICIPANT_UNPIN_DENIED=1`.
-  - Deny the **participant** scope *pinned-messages listing* → set `E2E_PARTICIPANT_PIN_LISTING_DENIED=1`.
-
-  Leave a flag blank to skip its test. (The deny lives in dashboard config, not seeding, so an un-configured app would let the action through and the test would fail for the wrong reason — hence the self-skip.)
-  There are also three **permutation** tests that need a specific *mix* of allowed/denied — a denied listing must not append a realtime pin (**pin allowed, listing denied**); a denied pin must not reach the list (**pin denied, listing allowed**); a denied unpin keeps the message listed (**unpin denied, pin & listing allowed**). Because they need different mixes, the full permission matrix spans more than one env/dashboard configuration — run them in separate passes.
+- **Pin-message limit:** set `features.ux.messages.pinned.limit` to **5** and `E2E_PIN_MESSAGES_LIMIT=5` — the limit test only runs at that cap.
+- **Strategy roles:** `e2e-user-1` is owner/admin; `e2e-user-2` is a **participant**. The UI Kit shows Pin/Unpin to *every* member and the **server** enforces who may act.
+- **Participant permissions:** keep the **default** scope permissions for the **participant** role — **pin denied, unpin denied, pinned-messages listing allowed**. The permission tests exercise those denials live against the server. A denied *listing* can't coexist with them, so those tests simulate the server's permission error for the pinned-list request instead — no extra dashboard setup or env flags.
 - Each test **clears its own pinned/saved state over REST first**, so the low pin/save caps never leak between tests. Conversation-pin tests **system-pin Strategy** and pin **only** the Engineering chat (Bob stays a read-only fixture).
+
+#### Moderation prerequisites
+
+`e2e/message-actions/moderation.spec.ts` reports a message and checks that the profanity filter blocks one. Both need the **Moderation** feature on the E2E app, with **profanity filtering** turned on; without them those two tests skip with the reason. They act only on throwaway users and groups.
 
 #### Thread subscription prerequisites
 
 `e2e/thread-subscription` needs no dashboard flag of its own, but:
 
-- **Stickers** and **Polls** extensions must be enabled (step 2) — the "auto-subscribe by message type" tests send one of each.
+- **Stickers** (with a sticker pack) and **Polls** must be enabled (step 2) — the "auto-subscribe by message type" tests send one of each.
 - **Presigned URLs** must be on (step 2) — one test sends an image.
 - Runs against **Strategy** (group cases) and the **Bob Smith** 1:1 — thread subscription is offered in 1:1 as well as groups, so the 1:1 case asserts the option *is* present.
 
@@ -288,19 +297,19 @@ This test needs **both** of the following — if either is missing it is skipped
   env var and must match what you denied.
 
 **Where to set the restriction:** on the **Strategy group → Scope permissions → Admin**
-role. The E2E suite runs against the Strategy group and the e2e user `e2e-user-` is normally an
+role. The E2E suite runs against the Strategy group and the e2e user `e2e-user-1` is normally an
 admin/owner there, so blocking the MIME type for the Admin scope reliably applies to the
 uploads under test.
 
 #### Quick Start
 
 ```bash
-cd sample-app
-cp .env.e2e.example .env.e2e    # Fill in credentials
-npx playwright install           # Install browsers (once)
-npm run e2e:seed                 # Seed test data (once)
-npm run dev                      # Start dev server
-npm run e2e                      # Run tests
+npm ci                              # repo root
+cd sample-app && npm ci
+cp .env.e2e.example .env.e2e        # fill in credentials
+npx playwright install chromium     # once
+npm run e2e:seed                    # seed test data
+UIKIT_LOCAL=1 npm run e2e           # run against your local UI Kit source
 ```
 
 ## Help and Support

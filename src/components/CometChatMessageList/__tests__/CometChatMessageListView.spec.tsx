@@ -197,7 +197,7 @@ function buildMockCtx(
   const deleteMessage = vi.fn<(id: number) => Promise<void>>(async () => {
     /* noop */
   });
-  const markMessageAsUnread = vi.fn<(msg: never) => Promise<void>>(async () => {
+  const markMessageAsUnread = vi.fn<(msg: CometChat.BaseMessage) => Promise<void>>(async () => {
     /* noop */
   });
   const scrollToMessage = vi.fn<(id: number) => void>();
@@ -214,6 +214,7 @@ function buildMockCtx(
     state,
     allMessages: state.messages,
     loggedInUser: buildUser({ uid: 'me' }) as never,
+    user: undefined,
     group: (overrides.group as CometChat.Group | undefined) ?? undefined,
     isLoading: overrides.isLoading ?? state.fetchState === 'loading',
     isEmpty: overrides.isEmpty ?? state.fetchState === 'empty',
@@ -227,6 +228,9 @@ function buildMockCtx(
     clearNewMessageCount: vi.fn(),
     markConversationAsReadIfUnread,
     markMessageAsUnread,
+    reactToMessage: vi.fn<(messageId: number, emoji: string) => Promise<void>>(async () => {
+      /* noop */
+    }),
     scrollToBottom: () => 'scroll-dom',
     hasMore: state.hasMore,
     hasMoreNewer: state.hasMoreNewer,
@@ -242,9 +246,11 @@ function buildMockCtx(
       hideStickyDate: false,
       hideAvatar: false,
       hideGroupActionMessages: false,
+      hideReceipts: false,
       quickOptionsCount: 2,
       hideReplyOption: false,
       hideReplyInThreadOption: false,
+      hideThreadSubscriptionOption: false,
       hideEditMessageOption: false,
       hideDeleteMessageOption: false,
       hideCopyMessageOption: false,
@@ -254,6 +260,10 @@ function buildMockCtx(
       hideMessagePrivatelyOption: false,
       hideTranslateMessageOption: false,
       showMarkAsUnreadOption: false,
+      hidePinMessageOption: false,
+      hideUnpinMessageOption: false,
+      hideSaveMessageOption: false,
+      hideUnsaveMessageOption: false,
       separatorDateTimeFormat: undefined,
       stickyDateTimeFormat: undefined,
       messageSentAtDateTimeFormat: undefined,
@@ -264,18 +274,20 @@ function buildMockCtx(
       messageAlignment: 1,
       showScrollbar: false,
       hideDateSeparator: false,
-      loadingView: undefined,
-      emptyView: undefined,
-      errorView: undefined,
-      headerView: undefined,
-      footerView: undefined,
       onThreadRepliesClick: undefined,
       onAvatarClick: undefined,
+      onEditMessage: undefined,
+      onReplyMessage: undefined,
       hideFlagRemarkField: false,
       disableTruncation: false,
       hideModerationView: false,
       isAgentChat: false,
       bubbleView: undefined,
+      showSmartReplies: false,
+      smartRepliesKeywords: ['what', 'when', 'why', 'who', 'where', 'how', '?'],
+      smartRepliesDelayDuration: 10000,
+      showConversationStarters: false,
+      loadLastAgentConversation: false,
     },
   };
 }
@@ -305,7 +317,6 @@ beforeEach(() => {
   // mock context's loggedInUser), so alignment tests still compute correctly.
   vi.spyOn(CometChatUIKit, 'getLoggedInUser').mockReturnValue(buildUser({ uid: 'me' }) as never);
 
-  // @ts-expect-error override global for jsdom
   globalThis.IntersectionObserver = FakeIntersectionObserver;
 
   // jsdom doesn't implement scrollIntoView
@@ -465,7 +476,7 @@ describe('CometChatMessageListView — unread banner', () => {
       buildTextMessage({ id: 20 }),
       buildTextMessage({ id: 30 }),
     ] as never[];
-    renderView(
+    const { container } = renderView(
       buildMockCtx({
         messages: msgs,
         fetchState: 'loaded',
@@ -473,10 +484,13 @@ describe('CometChatMessageListView — unread banner', () => {
         lastReadMessageId: 20,
       })
     );
-    // The banner renders with aria-label "New" (localized)
-    const separators = screen.getAllByRole('separator');
-    const newBanner = separators.find(el => el.getAttribute('aria-label')?.length);
-    expect(newBanner).toBeDefined();
+    expect(screen.getByRole('separator', { name: 'New' })).toHaveTextContent('New');
+    const order = Array.from(
+      container.querySelectorAll(
+        '[data-testid="mock-bubble"], .cometchat-message-list__new-message-divider'
+      )
+    ).map(el => el.getAttribute('data-message-id') ?? 'banner');
+    expect(order).toEqual(['10', '20', 'banner', '30']);
   });
 
   it('does not render the banner when lastReadMessageId is the last message', () => {

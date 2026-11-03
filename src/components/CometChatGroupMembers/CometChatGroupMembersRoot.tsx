@@ -33,6 +33,7 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
   hideUserStatus: hideUserStatusProp,
   hideSearch = false,
   hideHeader = false,
+  showScrollbar = false,
   hideKickMemberOption = false,
   hideBanMemberOption = false,
   hideScopeChangeOption = false,
@@ -42,6 +43,7 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
   onSelect,
   onError,
   onEmpty,
+  onBack,
   children,
 }) => {
   const { getLocalizedString } = useLocale();
@@ -67,6 +69,9 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
       selectionMode,
       hideUserStatus,
       hideSearch,
+      hideHeader,
+      showScrollbar,
+      onBack,
       hideKickMemberOption,
       hideBanMemberOption,
       hideScopeChangeOption,
@@ -78,6 +83,9 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
       selectionMode,
       hideUserStatus,
       hideSearch,
+      hideHeader,
+      showScrollbar,
+      onBack,
       hideKickMemberOption,
       hideBanMemberOption,
       hideScopeChangeOption,
@@ -185,7 +193,7 @@ export const CometChatGroupMembersRoot: React.FC<CometChatGroupMembersRootProps>
                   onScopeChanged={handleChangeScopeConfirm}
                   onClose={handleChangeScopeClose}
                   title={getLocalizedString('change_scope_title')}
-                  description="You can change scope for the group member to manage group permissions and responsibilities."
+                  description={getLocalizedString('change_scope_subtitle')}
                   submitText={getLocalizedString('change_scope_confirm_yes')}
                   cancelText={getLocalizedString('change_scope_confirm_no')}
                 />

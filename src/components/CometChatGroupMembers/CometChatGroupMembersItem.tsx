@@ -8,6 +8,7 @@ import { useLocale } from '../../context/locale/LocaleContext';
 import type { CometChatGroupMembersItemProps } from './CometChatGroupMembers.types';
 import type { CometChatContextMenuItemData } from '../base/CometChatContextMenu/CometChatContextMenu.types';
 import './CometChatGroupMembers.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * Get the display label for a member scope.
@@ -145,7 +146,7 @@ function CometChatGroupMembersItemInner({
     if (canKick && !ctx.hideKickMemberOption) {
       items.push({
         id: 'kick',
-        title: 'Kick',
+        title: getLocalizedString('member_option_kick'),
         onClick: () => {
           void ctx.kickMember(uid);
         },
@@ -155,7 +156,7 @@ function CometChatGroupMembersItemInner({
     if (canBan && !ctx.hideBanMemberOption) {
       items.push({
         id: 'ban',
-        title: 'Ban',
+        title: getLocalizedString('member_option_ban'),
         onClick: () => {
           void ctx.banMember(uid);
         },
@@ -166,7 +167,7 @@ function CometChatGroupMembersItemInner({
     if (canChangeScope && !ctx.hideScopeChangeOption) {
       items.push({
         id: 'change-scope',
-        title: 'Change Scope',
+        title: getLocalizedString('member_option_change_scope'),
         onClick: () => {
           ctx.setMemberToChangeScope(member);
         },
@@ -174,7 +175,7 @@ function CometChatGroupMembersItemInner({
     }
 
     return items;
-  }, [ctx, member, uid, scope, isOwner]);
+  }, [ctx, member, uid, scope, isOwner, getLocalizedString]);
 
   const scopeLabel = getScopeLabel(scope, getLocalizedString);
 
@@ -242,7 +243,7 @@ function CometChatGroupMembersItemInner({
               <CometChatCheckbox
                 checked={isSelected}
                 onChange={handleCheckboxChange}
-                aria-label={getLocalizedString('accessibility_select_item').replace('{name}', name)}
+                aria-label={fillTemplate(getLocalizedString('accessibility_select_item'), { name })}
               />
             </div>
           )}
@@ -260,7 +261,7 @@ function CometChatGroupMembersItemInner({
                 name="cometchat-group-members-selection"
                 checked={isSelected}
                 onChange={handleRadioChange}
-                ariaLabel={getLocalizedString('accessibility_select_item').replace('{name}', name)}
+                ariaLabel={fillTemplate(getLocalizedString('accessibility_select_item'), { name })}
               />
             </div>
           )}

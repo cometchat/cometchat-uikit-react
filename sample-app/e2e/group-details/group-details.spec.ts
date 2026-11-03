@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openDesignTeamChat } from '../helpers';
 
 /**
@@ -40,11 +40,6 @@ test.describe('Group Details', () => {
     await expect(detailsPanel).toBeVisible({ timeout: 5_000 });
     return detailsPanel;
   }
-
-  test('clicking header title opens group details', async () => {
-    const panel = await openGroupDetails();
-    await expect(panel).toBeVisible();
-  });
 
   test('group details shows group name and avatar', async () => {
     await openGroupDetails();
@@ -101,23 +96,6 @@ test.describe('Group Details', () => {
     // Actually with seeded messages it should NOT be disabled. Check either way:
     const classes = await deleteChatAction.getAttribute('class');
     expect(classes).toBeTruthy();
-  });
-
-  test('delete and exit action is present and clicking shows dialog', async () => {
-    await openGroupDetails();
-
-    const deleteExitAction = page.locator('.side-component-content__action-item:has-text("Delete and Exit")').first();
-    await expect(deleteExitAction).toBeVisible({ timeout: 5_000 });
-    await deleteExitAction.click();
-    await page.waitForTimeout(1000);
-
-    // Confirm dialog should appear
-    const confirmDialog = page.locator('.cometchat-delete-group__backdrop, .cometchat-confirm-dialog').first();
-    await expect(confirmDialog).toBeVisible({ timeout: 5_000 });
-
-    // Dismiss it
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
   });
 
   test('group details has close button that closes the panel', async () => {

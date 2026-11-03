@@ -1,6 +1,7 @@
 import React, { forwardRef, useId, useRef, useState, useCallback } from 'react';
 import type { ChangeEvent, MouseEvent } from 'react';
 import type { CometChatCheckboxProps } from './CometChatCheckbox.types';
+import { useLocale } from '../../../context/locale/LocaleContext';
 import './CometChatCheckbox.css';
 
 /**
@@ -22,6 +23,7 @@ export const CometChatCheckbox = forwardRef<HTMLInputElement, CometChatCheckboxP
     ref
   ) => {
     const id = useId();
+    const { getLocalizedString } = useLocale();
     const isControlled = checked !== undefined;
 
     // Internal state for uncontrolled mode only
@@ -79,7 +81,7 @@ export const CometChatCheckbox = forwardRef<HTMLInputElement, CometChatCheckboxP
             checked={currentChecked}
             disabled={disabled}
             aria-disabled={disabled || undefined}
-            aria-label={label ? undefined : 'checkbox'}
+            aria-label={label ? undefined : getLocalizedString('accessibility_checkbox')}
             onClick={handleClick}
             onChange={handleChange}
             {...rest}

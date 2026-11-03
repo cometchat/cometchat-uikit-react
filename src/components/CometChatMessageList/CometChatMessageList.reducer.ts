@@ -5,6 +5,7 @@ import {
   type CometChatMessageListAction,
 } from './CometChatMessageList.types';
 import {
+  carryQuotedMessage,
   cloneMessage,
   deduplicateById,
   updateReceiptsOnMessages,
@@ -319,6 +320,7 @@ export function messageListReducer(
         if (!shouldReplace(m, action.message)) return m;
         // An edit payload doesn't re-send threadSubscribed; keep the optimistic flag.
         carryThreadSubscribed(m, action.message);
+        carryQuotedMessage(m, action.message);
         return action.message;
       });
       messages = updateQuotedMessageReferences(messages, action.message);

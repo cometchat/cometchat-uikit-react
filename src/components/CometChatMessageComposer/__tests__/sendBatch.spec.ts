@@ -7,6 +7,7 @@
  * - Happy-path full batch flow (optimistic publish, success publish, request released, tray cleared)
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { renderHook, act } from '@testing-library/react';
 import { mockCometChat, mockUser, getLastUploadRequest } from '../../../testing/mock-sdk';
 
@@ -28,7 +29,7 @@ function makeUser(uid = 'user-1') {
     getUid: () => uid,
     getName: () => 'Test User',
     getStatus: () => 'online',
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.User;
+  } as unknown as CometChat.User;
 }
 
 function makeBaseMessage(id: number) {
@@ -36,7 +37,7 @@ function makeBaseMessage(id: number) {
     getId: () => id,
     getType: () => 'text',
     getMetadata: () => ({}),
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+  } as unknown as CometChat.BaseMessage;
 }
 
 function makeTrayItem(
@@ -57,7 +58,7 @@ function makeTrayItem(
       status === 'success'
         ? ({
             getUrl: () => `https://cdn.example.com/${fileId}`,
-          } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.Attachment)
+          } as unknown as CometChat.Attachment)
         : undefined,
   };
 }
@@ -84,10 +85,10 @@ describe('sendBatch', () => {
       ];
       const groups = groupAndOrderTrayItems(items);
       expect(groups.map(g => g.kind)).toEqual(['image', 'video', 'audio', 'file']);
-      expect(groups[0].items).toHaveLength(2); // 2 images
-      expect(groups[1].items).toHaveLength(1); // 1 video
-      expect(groups[2].items).toHaveLength(1); // 1 audio
-      expect(groups[3].items).toHaveLength(1); // 1 file
+      expect(groups[0]!.items).toHaveLength(2); // 2 images
+      expect(groups[1]!.items).toHaveLength(1); // 1 video
+      expect(groups[2]!.items).toHaveLength(1); // 1 audio
+      expect(groups[3]!.items).toHaveLength(1); // 1 file
     });
 
     it('single-type input produces one group', () => {
@@ -98,8 +99,8 @@ describe('sendBatch', () => {
       ];
       const groups = groupAndOrderTrayItems(items);
       expect(groups).toHaveLength(1);
-      expect(groups[0].kind).toBe('image');
-      expect(groups[0].items).toHaveLength(3);
+      expect(groups[0]!.kind).toBe('image');
+      expect(groups[0]!.items).toHaveLength(3);
     });
 
     it('filters out non-success items', () => {
@@ -110,7 +111,7 @@ describe('sendBatch', () => {
       ];
       const groups = groupAndOrderTrayItems(items);
       expect(groups).toHaveLength(1);
-      expect(groups[0].kind).toBe('image');
+      expect(groups[0]!.kind).toBe('image');
     });
 
     it('returns empty array for no success items', () => {
@@ -198,7 +199,7 @@ describe('sendBatch', () => {
         publish,
       });
 
-      const sentMsg = mockCometChat.sendMediaMessage.mock.calls[0][0] as Record<string, unknown>;
+      const sentMsg = mockCometChat.sendMediaMessage.mock.calls[0]![0] as Record<string, unknown>;
       const metadata = (sentMsg as { metadata: Record<string, unknown> }).metadata;
       expect(metadata.batchId).toBe('batch-456');
     });
@@ -244,7 +245,7 @@ describe('sendBatch', () => {
 
       // Every batch reply carries the sender's subscription, same as text/media.
       const confirmed = publish.mock.calls
-        .map(([e]: [Record<string, unknown>]) => e)
+        .map(([e]) => e as Record<string, unknown>)
         .filter(e => e.type === 'ui:message/sent' && e.status === 'success')
         .map(e => e.message as { isThreadSubscribed: () => boolean });
       expect(confirmed.length).toBe(2);
@@ -267,7 +268,7 @@ describe('sendBatch', () => {
       });
 
       const confirmed = publish.mock.calls
-        .map(([e]: [Record<string, unknown>]) => e)
+        .map(([e]) => e as Record<string, unknown>)
         .filter(e => e.type === 'ui:message/sent' && e.status === 'success')
         .map(e => e.message as { isThreadSubscribed: () => boolean });
       expect(confirmed.length).toBe(1);
@@ -292,7 +293,7 @@ describe('sendBatch', () => {
       expect(mockCometChat.sendMediaMessage).toHaveBeenCalledTimes(2);
 
       const sentMsgs = mockCometChat.sendMediaMessage.mock.calls.map(
-        ([msg]: [Record<string, unknown>]) => msg
+        ([msg]) => msg as Record<string, unknown>
       );
 
       // First message (image) carries the quoted message.
@@ -353,10 +354,10 @@ describe('sendBatch', () => {
 
       // 8 publish calls: 4 inprogress + 4 success
       const inprogress = publish.mock.calls.filter(
-        ([e]: [{ status: string }]) => e.status === 'inprogress'
+        ([e]) => (e as { status: string }).status === 'inprogress'
       );
       const success = publish.mock.calls.filter(
-        ([e]: [{ status: string }]) => e.status === 'success'
+        ([e]) => (e as { status: string }).status === 'success'
       );
       expect(inprogress).toHaveLength(4);
       expect(success).toHaveLength(4);
@@ -380,12 +381,12 @@ describe('sendBatch', () => {
 
       // The mock message stores caption via setCaption
       const msgs = mockCometChat.sendMediaMessage.mock.calls.map(
-        ([msg]: [Record<string, unknown>]) => msg
+        ([msg]) => msg as Record<string, unknown>
       );
       // First message (image) should NOT have caption
-      expect(msgs[0].caption).toBe('');
+      expect(msgs[0]!.caption).toBe('');
       // Last message (file) should have caption
-      expect(msgs[1].caption).toBe('My caption');
+      expect(msgs[1]!.caption).toBe('My caption');
     });
 
     it('assigns unique muids to each message', async () => {
@@ -406,7 +407,7 @@ describe('sendBatch', () => {
       });
 
       const muids = mockCometChat.sendMediaMessage.mock.calls.map(
-        ([msg]: [Record<string, unknown>]) => (msg as { muid: string }).muid
+        ([msg]) => (msg as { muid: string }).muid
       );
       // All unique
       expect(new Set(muids).size).toBe(3);
@@ -434,10 +435,10 @@ describe('sendBatch', () => {
       });
 
       const sentAts = mockCometChat.sendMediaMessage.mock.calls.map(
-        ([msg]: [Record<string, unknown>]) => (msg as { sentAt: number }).sentAt
+        ([msg]) => (msg as { sentAt: number }).sentAt
       );
       for (let i = 0; i < sentAts.length - 1; i++) {
-        expect(sentAts[i]).toBeLessThan(sentAts[i + 1]);
+        expect(sentAts[i]).toBeLessThan(sentAts[i + 1]!);
       }
     });
 
@@ -454,7 +455,7 @@ describe('sendBatch', () => {
         publish,
       });
 
-      const msg = mockCometChat.sendMediaMessage.mock.calls[0][0] as Record<string, unknown>;
+      const msg = mockCometChat.sendMediaMessage.mock.calls[0]![0] as Record<string, unknown>;
       const metadata = (msg as { metadata: Record<string, unknown> }).metadata;
       expect(metadata.audioType).toBeUndefined();
       expect(metadata.batchId).toBe('batch-audio-no-type');
@@ -488,10 +489,10 @@ describe('sendBatch', () => {
       // First message: inprogress + error
       // Second message: inprogress + success
       const errorEvents = publish.mock.calls.filter(
-        ([e]: [{ status: string }]) => e.status === 'error'
+        ([e]) => (e as { status: string }).status === 'error'
       );
       const successEvents = publish.mock.calls.filter(
-        ([e]: [{ status: string }]) => e.status === 'success'
+        ([e]) => (e as { status: string }).status === 'success'
       );
       expect(errorEvents).toHaveLength(1);
       expect(successEvents).toHaveLength(1);

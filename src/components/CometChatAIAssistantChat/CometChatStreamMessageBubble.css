@@ -81,7 +81,7 @@
 .cometchat-stream-message-bubble__content {
   display: block;
   width: 100%;
-  font-size: var(--cometchat-font-size-sm, 14px);
+  font-size: var(--cometchat-font-size-sm, var(--cometchat-font-size-body, 14px));
   line-height: 1.75;
   color: var(--cometchat-text-color-primary, #141414);
   text-align: left;

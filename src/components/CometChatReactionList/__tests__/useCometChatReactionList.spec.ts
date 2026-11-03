@@ -61,7 +61,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     vi.mocked(CometChat.getLoggedinUser).mockResolvedValue({
@@ -96,7 +96,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const message = buildMessage();
     const { result } = renderHook(() => useCometChatReactionList({ message }));
@@ -132,7 +132,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const message = buildMessage();
     const { result } = renderHook(() => useCometChatReactionList({ message }));
@@ -175,7 +175,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const message = buildMessage();
     const { result } = renderHook(() => useCometChatReactionList({ message }));
@@ -210,7 +210,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const message = buildMessage();
     const { result } = renderHook(() => useCometChatReactionList({ message }));
@@ -241,7 +241,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const onItemClick = vi.fn();
     const message = buildMessage();
@@ -273,7 +273,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const onEmpty = vi.fn();
     const message = buildMessage();
@@ -306,7 +306,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const onEmpty = vi.fn();
     const message = buildMessage();
@@ -340,7 +340,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const onError = vi.fn();
     const message = buildMessage();
@@ -373,7 +373,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const onError = vi.fn();
     const message = buildMessage();
@@ -399,7 +399,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const message = buildMessage();
     const { result } = renderHook(() => useCometChatReactionList({ message }));
@@ -424,7 +424,7 @@ describe('useCometChatReactionList', () => {
       setLimit: vi.fn().mockReturnThis(),
       setMessageId: vi.fn().mockReturnThis(),
       build: mockBuild,
-    }));
+    }) as unknown as CometChat.ReactionsRequestBuilder);
 
     const message = buildMessage();
     const { result } = renderHook(() => useCometChatReactionList({ message }));

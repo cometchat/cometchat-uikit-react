@@ -1,5 +1,6 @@
-import { test, expect, Page, Locator } from '@playwright/test';
+import { test, expect, Page, Locator } from '../helpers/test';
 import { loginToApp, openStrategyChat } from '../helpers';
+import { expectSendAccepted } from '../helpers/send';
 
 /**
  * E2E Tests — Markdown formatting: composer preview vs. sent message (React)
@@ -59,7 +60,7 @@ async function pasteInComposer(page: Page, text: string): Promise<void> {
 }
 
 async function sendComposer(page: Page): Promise<void> {
-  await composerInput(page).press('Enter');
+  await expectSendAccepted(page, () => composerInput(page).press('Enter'));
 }
 
 /** The rendered text of the sent bubble carrying `token`. */
@@ -141,7 +142,7 @@ test.describe('Markdown formatting — composer and sent message agree', () => {
     });
   }
 
-  test('typed bold at the very end of a message still renders', async () => {
+  test('typed bold at the very end of a message still renders', { tag: '@smoke' }, async () => {
     const token = uniqueToken();
     await typeInComposer(page, `${token} **bold**`);
     await sendComposer(page);

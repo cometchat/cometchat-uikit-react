@@ -3,6 +3,7 @@ import { useCometChatFullScreenViewerContext } from './CometChatFullScreenViewer
 import { CometChatFullScreenViewerUnsupportedState } from './CometChatFullScreenViewerUnsupportedState';
 import { useLocale } from '../../../context/locale/LocaleContext';
 import './CometChatFullScreenViewer.css';
+import { fillTemplate } from '../../../utils/fillTemplate';
 
 type VideoStatus = 'loading' | 'valid' | 'invalid';
 
@@ -84,7 +85,7 @@ export const CometChatFullScreenViewerVideoView: React.FC = () => {
         tabIndex={status === 'valid' ? undefined : -1}
         aria-label={
           senderName
-            ? `Video from ${senderName}`
+            ? fillTemplate(getLocalizedString('accessibility_video_from'), { name: senderName })
             : getLocalizedString('accessibility_full_screen_video')
         }
       >

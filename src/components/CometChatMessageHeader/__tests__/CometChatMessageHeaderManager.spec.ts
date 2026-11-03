@@ -79,7 +79,7 @@ describe('CometChatMessageHeaderManager', () => {
 
       const listenerCallbacks = getListenerCallbacks(mockAddUserListener);
       const mockUser = { getUid: () => 'user-1' } as CometChat.User;
-      listenerCallbacks.onUserOnline(mockUser);
+      listenerCallbacks.onUserOnline!(mockUser);
 
       expect(callbacks.onUserOnline).toHaveBeenCalledWith(mockUser);
     });
@@ -90,7 +90,7 @@ describe('CometChatMessageHeaderManager', () => {
 
       const listenerCallbacks = getListenerCallbacks(mockAddUserListener);
       const mockUser = { getUid: () => 'user-999' } as CometChat.User;
-      listenerCallbacks.onUserOnline(mockUser);
+      listenerCallbacks.onUserOnline!(mockUser);
 
       expect(callbacks.onUserOnline).not.toHaveBeenCalled();
     });
@@ -101,7 +101,7 @@ describe('CometChatMessageHeaderManager', () => {
 
       const listenerCallbacks = getListenerCallbacks(mockAddUserListener);
       const mockUser = { getUid: () => 'user-1' } as CometChat.User;
-      listenerCallbacks.onUserOffline(mockUser);
+      listenerCallbacks.onUserOffline!(mockUser);
 
       expect(callbacks.onUserOffline).toHaveBeenCalledWith(mockUser);
     });
@@ -112,7 +112,7 @@ describe('CometChatMessageHeaderManager', () => {
 
       const listenerCallbacks = getListenerCallbacks(mockAddUserListener);
       const mockUser = { getUid: () => 'user-999' } as CometChat.User;
-      listenerCallbacks.onUserOffline(mockUser);
+      listenerCallbacks.onUserOffline!(mockUser);
 
       expect(callbacks.onUserOffline).not.toHaveBeenCalled();
     });
@@ -147,7 +147,7 @@ describe('CometChatMessageHeaderManager', () => {
         getReceiverType: () => 'user',
         getSender: () => ({ getUid: () => 'user-1', getName: () => 'Alice' }),
       } as unknown as CometChat.TypingIndicator;
-      listenerCallbacks.onTypingStarted(mockIndicator);
+      listenerCallbacks.onTypingStarted!(mockIndicator);
 
       expect(callbacks.onTypingStarted).toHaveBeenCalledWith(mockIndicator);
     });
@@ -162,7 +162,7 @@ describe('CometChatMessageHeaderManager', () => {
         getReceiverType: () => 'user',
         getSender: () => ({ getUid: () => 'user-999', getName: () => 'Bob' }),
       } as unknown as CometChat.TypingIndicator;
-      listenerCallbacks.onTypingStarted(mockIndicator);
+      listenerCallbacks.onTypingStarted!(mockIndicator);
 
       expect(callbacks.onTypingStarted).not.toHaveBeenCalled();
     });
@@ -177,7 +177,7 @@ describe('CometChatMessageHeaderManager', () => {
         getReceiverType: () => 'group',
         getSender: () => ({ getUid: () => 'user-1', getName: () => 'Alice' }),
       } as unknown as CometChat.TypingIndicator;
-      listenerCallbacks.onTypingStarted(mockIndicator);
+      listenerCallbacks.onTypingStarted!(mockIndicator);
 
       expect(callbacks.onTypingStarted).toHaveBeenCalledWith(mockIndicator);
     });
@@ -192,7 +192,7 @@ describe('CometChatMessageHeaderManager', () => {
         getReceiverType: () => 'group',
         getSender: () => ({ getUid: () => 'user-1', getName: () => 'Alice' }),
       } as unknown as CometChat.TypingIndicator;
-      listenerCallbacks.onTypingStarted(mockIndicator);
+      listenerCallbacks.onTypingStarted!(mockIndicator);
 
       expect(callbacks.onTypingStarted).not.toHaveBeenCalled();
     });
@@ -207,7 +207,7 @@ describe('CometChatMessageHeaderManager', () => {
         getReceiverType: () => 'user',
         getSender: () => ({ getUid: () => 'user-1', getName: () => 'Alice' }),
       } as unknown as CometChat.TypingIndicator;
-      listenerCallbacks.onTypingEnded(mockIndicator);
+      listenerCallbacks.onTypingEnded!(mockIndicator);
 
       expect(callbacks.onTypingEnded).toHaveBeenCalledWith(mockIndicator);
     });
@@ -258,7 +258,7 @@ describe('CometChatMessageHeaderManager', () => {
       const mockAction = {} as CometChat.Action;
       const mockUser = { getUid: () => 'user-1' } as CometChat.User;
       const mockGroup = { getGuid: () => 'group-1', getMembersCount: () => 13 } as CometChat.Group;
-      listenerCallbacks.onGroupMemberJoined(mockAction, mockUser, mockGroup);
+      listenerCallbacks.onGroupMemberJoined!(mockAction, mockUser, mockGroup);
 
       expect(callbacks.onGroupMemberJoined).toHaveBeenCalledWith(mockAction, mockUser, mockGroup);
     });
@@ -278,7 +278,7 @@ describe('CometChatMessageHeaderManager', () => {
       const mockAction = {} as CometChat.Action;
       const mockUser = { getUid: () => 'user-1' } as CometChat.User;
       const mockGroup = { getGuid: () => 'group-999', getMembersCount: () => 5 } as CometChat.Group;
-      listenerCallbacks.onGroupMemberJoined(mockAction, mockUser, mockGroup);
+      listenerCallbacks.onGroupMemberJoined!(mockAction, mockUser, mockGroup);
 
       expect(callbacks.onGroupMemberJoined).not.toHaveBeenCalled();
     });
@@ -308,7 +308,7 @@ describe('CometChatMessageHeaderManager', () => {
       attachConnectionListener('test-conn-listener', callbacks);
 
       const listenerCallbacks = getListenerCallbacks(mockAddConnectionListener);
-      listenerCallbacks.onConnected();
+      listenerCallbacks.onConnected!();
 
       expect(callbacks.onConnected).toHaveBeenCalled();
     });
@@ -318,7 +318,7 @@ describe('CometChatMessageHeaderManager', () => {
       attachConnectionListener('test-conn-listener', callbacks);
 
       const listenerCallbacks = getListenerCallbacks(mockAddConnectionListener);
-      listenerCallbacks.onDisconnected();
+      listenerCallbacks.onDisconnected!();
 
       expect(callbacks.onDisconnected).toHaveBeenCalled();
     });

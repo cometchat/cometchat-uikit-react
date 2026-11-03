@@ -101,33 +101,18 @@ describe('useCometChatThreadHeader', () => {
   });
 
   describe('initial state', () => {
-    it('returns the replyCount from the prop when provided', () => {
+    it('initialises replyCount from parentMessage.getReplyCount()', () => {
       const parentMessage = createMockMessage({ replyCount: 42 });
       const loggedInUser = createMockUser();
 
       const { result } = renderHook(() =>
         useCometChatThreadHeader({
           parentMessage,
-          replyCount: 42,
           loggedInUser,
         })
       );
 
       expect(result.current.replyCount).toBe(42);
-    });
-
-    it('falls back to parentMessage.getReplyCount() when replyCount prop is undefined', () => {
-      const parentMessage = createMockMessage({ replyCount: 7 });
-      const loggedInUser = createMockUser();
-
-      const { result } = renderHook(() =>
-        useCometChatThreadHeader({
-          parentMessage,
-          loggedInUser,
-        })
-      );
-
-      expect(result.current.replyCount).toBe(7);
     });
 
     it('returns the sender name from the parent message', () => {

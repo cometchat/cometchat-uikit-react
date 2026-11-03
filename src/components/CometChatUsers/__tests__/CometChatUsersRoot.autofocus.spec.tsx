@@ -1,5 +1,5 @@
 /**
- * Tests for the CometChatUsers.Root `autoFocus` prop (ENG-37421).
+ * Tests for the CometChatUsers.Root `autoFocus` prop.
  *
  * When set, the list should receive focus once users first load, so keyboard
  * shortcuts (e.g. Ctrl/Cmd+A select-all) work without a prior click.
@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { CometChatUsers } from '../CometChatUsers';
+import { covers } from '../../../testing/covers';
 
 const mockFetchNext = vi.fn();
 
@@ -51,6 +52,7 @@ describe('CometChatUsers.Root autoFocus', () => {
   });
 
   it('focuses the list once users load when autoFocus is set', async () => {
+    covers('CometChatUsers.autoFocus', 'true');
     render(
       <CometChatUsers.Root autoFocus selectionMode="multiple">
         <CometChatUsers.List />
@@ -122,6 +124,7 @@ describe('CometChatUsers.Root autoFocus', () => {
   });
 
   it('does not steal focus when autoFocus is not set', async () => {
+    covers('CometChatUsers.autoFocus', 'default');
     render(
       <CometChatUsers.Root selectionMode="multiple">
         <CometChatUsers.List />

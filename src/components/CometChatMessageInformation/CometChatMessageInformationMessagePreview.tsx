@@ -21,7 +21,7 @@ import './CometChatMessageInformation.css';
 export const CometChatMessageInformationMessagePreview: React.FC<
   CometChatMessageInformationMessagePreviewProps
 > = ({ className }) => {
-  const { message, showScrollbar, textFormatters, hideReceipts } =
+  const { message, showScrollbar, textFormatters, hideReceipts, messageSentAtDateTimeFormat } =
     useCometChatMessageInformationContext();
   const { getLocalizedString } = useLocale();
 
@@ -72,6 +72,7 @@ export const CometChatMessageInformationMessagePreview: React.FC<
           hideAvatar
           hideSenderName
           {...(hideReceipts !== undefined && { hideReceipts })}
+          {...(messageSentAtDateTimeFormat !== undefined && { messageSentAtDateTimeFormat })}
           hideThreadView
           disableInteraction
         />

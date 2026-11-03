@@ -4,6 +4,7 @@ import { render, screen, act } from '@testing-library/react';
 import React from 'react';
 import { CometChatConversationsContext } from '../CometChatConversations.context';
 import type { CometChatConversationsContextValue } from '../CometChatConversations.types';
+import { covers } from '../../../testing/covers';
 
 // ==================== Global Mocks ====================
 
@@ -259,6 +260,7 @@ function createMockContext(
     hideUnreadCount: false,
     hideReceipts: false,
     hideGroupType: false,
+    showScrollbar: false,
     loggedInUserId: 'user-1',
     options: undefined,
     conversationToBeDeleted: null,
@@ -275,6 +277,16 @@ function createMockContext(
     handleItemClick: vi.fn(),
     deleteConversation: vi.fn(),
     setConversationToBeDeleted: vi.fn(),
+    pinConversation: vi.fn(),
+    unpinConversation: vi.fn(),
+    pinToastText: '',
+    pinToastId: 0,
+    pinToastVariant: 'default',
+    clearPinToast: vi.fn(),
+    pinConfirmState: null,
+    confirmPinAction: vi.fn(),
+    cancelPinAction: vi.fn(),
+    pinIsBusy: false,
     ...overrides,
   };
 }
@@ -570,6 +582,7 @@ describe('CometChatConversationsRoot', () => {
   });
 
   it('renders custom children when provided', () => {
+    covers('CometChatConversations.children', 'custom');
     render(
       <CometChatConversationsRoot>
         <div data-testid="custom-child">Custom Content</div>
@@ -652,6 +665,37 @@ describe('CometChatConversationsRoot', () => {
     expect(contextValue!.hideReceipts).toBe(true);
   });
 
+  it('hides the list scrollbar by default and when showScrollbar is false, shows it when true', async () => {
+    covers('CometChatConversations.showScrollbar', 'default', 'false', 'true');
+    const { CometChatConversationsList } = await import('../CometChatConversationsList');
+    // The list renders once loaded; the Root's own fetch never loads here, so mark it loaded.
+    const LoadedList: React.FC = () => {
+      const ctx = React.useContext(CometChatConversationsContext);
+      if (!ctx) throw new Error('rendered outside CometChatConversationsRoot');
+      return (
+        <CometChatConversationsContext.Provider value={{ ...ctx, fetchState: 'loaded' }}>
+          <CometChatConversationsList />
+        </CometChatConversationsContext.Provider>
+      );
+    };
+    const hidden = (props: { showScrollbar?: boolean }) => {
+      const { container, unmount } = render(
+        <CometChatConversationsRoot {...props}>
+          <LoadedList />
+        </CometChatConversationsRoot>
+      );
+      const list = container.querySelector('.cometchat-conversations__list');
+      if (!list) throw new Error('the list did not render');
+      const result = list.classList.contains('cometchat-conversations__list--hide-scrollbar');
+      unmount();
+      return result;
+    };
+
+    expect(hidden({})).toBe(true);
+    expect(hidden({ showScrollbar: false })).toBe(true);
+    expect(hidden({ showScrollbar: true })).toBe(false);
+  });
+
   it('renders the region wrapper with correct role and aria-label', () => {
     const { container } = render(
       <CometChatConversationsRoot>
@@ -690,15 +734,20 @@ describe('CometChatConversations (flat API)', () => {
     expect(screen.getByTestId('custom-header-view')).toBeInTheDocument();
   });
 
-  it('exposes compound component sub-components', () => {
-    expect(CometChatConversations.Root).toBeDefined();
-    expect(CometChatConversations.List).toBeDefined();
-    expect(CometChatConversations.Item).toBeDefined();
-    expect(CometChatConversations.Header).toBeDefined();
-    expect(CometChatConversations.SearchBar).toBeDefined();
-    expect(CometChatConversations.EmptyState).toBeDefined();
-    expect(CometChatConversations.ErrorState).toBeDefined();
-    expect(CometChatConversations.LoadingState).toBeDefined();
+  it('exposes compound component sub-components', async () => {
+    const parts = {
+      Root: (await import('../CometChatConversationsRoot')).CometChatConversationsRoot,
+      List: (await import('../CometChatConversationsList')).CometChatConversationsList,
+      Item: (await import('../CometChatConversationsItem')).CometChatConversationsItem,
+      Header: (await import('../CometChatConversationsHeader')).CometChatConversationsHeader,
+      SearchBar: (await import('../CometChatConversationsSearchBar')).CometChatConversationsSearchBar,
+      EmptyState: (await import('../CometChatConversationsEmptyState')).CometChatConversationsEmptyState,
+      ErrorState: (await import('../CometChatConversationsErrorState')).CometChatConversationsErrorState,
+      LoadingState: (await import('../CometChatConversationsLoadingState')).CometChatConversationsLoadingState,
+    };
+    for (const [name, part] of Object.entries(parts)) {
+      expect(CometChatConversations[name as keyof typeof parts], name).toBe(part);
+    }
   });
 
   it('renders with custom emptyView when fetchState is empty', () => {

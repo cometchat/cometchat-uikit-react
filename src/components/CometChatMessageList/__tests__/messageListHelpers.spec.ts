@@ -27,7 +27,7 @@ describe('messageListHelpers', () => {
       const event: CometChatSDKEvent = {
         type: 'group/member-joined',
         joinedGroup: fakeGroup,
-      } as CometChatSDKEvent;
+      } as unknown as CometChatSDKEvent;
       expect(extractGroupFromEvent(event)).toBe(fakeGroup);
     });
 
@@ -35,7 +35,7 @@ describe('messageListHelpers', () => {
       const event: CometChatSDKEvent = {
         type: 'group/member-left',
         leftGroup: fakeGroup,
-      } as CometChatSDKEvent;
+      } as unknown as CometChatSDKEvent;
       expect(extractGroupFromEvent(event)).toBe(fakeGroup);
     });
 
@@ -43,7 +43,7 @@ describe('messageListHelpers', () => {
       const event: CometChatSDKEvent = {
         type: 'group/member-kicked',
         kickedFrom: fakeGroup,
-      } as CometChatSDKEvent;
+      } as unknown as CometChatSDKEvent;
       expect(extractGroupFromEvent(event)).toBe(fakeGroup);
     });
 
@@ -51,7 +51,7 @@ describe('messageListHelpers', () => {
       const event: CometChatSDKEvent = {
         type: 'group/member-banned',
         bannedFrom: fakeGroup,
-      } as CometChatSDKEvent;
+      } as unknown as CometChatSDKEvent;
       expect(extractGroupFromEvent(event)).toBe(fakeGroup);
     });
 
@@ -59,7 +59,7 @@ describe('messageListHelpers', () => {
       const event: CometChatSDKEvent = {
         type: 'group/member-unbanned',
         unbannedFrom: fakeGroup,
-      } as CometChatSDKEvent;
+      } as unknown as CometChatSDKEvent;
       expect(extractGroupFromEvent(event)).toBe(fakeGroup);
     });
 
@@ -67,7 +67,7 @@ describe('messageListHelpers', () => {
       const event: CometChatSDKEvent = {
         type: 'group/member-added',
         addedTo: fakeGroup,
-      } as CometChatSDKEvent;
+      } as unknown as CometChatSDKEvent;
       expect(extractGroupFromEvent(event)).toBe(fakeGroup);
     });
 
@@ -75,12 +75,12 @@ describe('messageListHelpers', () => {
       const event: CometChatSDKEvent = {
         type: 'group/member-scope-changed',
         changedGroup: fakeGroup,
-      } as CometChatSDKEvent;
+      } as unknown as CometChatSDKEvent;
       expect(extractGroupFromEvent(event)).toBe(fakeGroup);
     });
 
     it('returns undefined for non-group event types', () => {
-      const event = { type: 'message/text-received' } as CometChatSDKEvent;
+      const event = { type: 'message/text-received' } as unknown as CometChatSDKEvent;
       expect(extractGroupFromEvent(event)).toBeUndefined();
     });
   });

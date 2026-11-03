@@ -3,6 +3,7 @@
  * Pure function tests — no mocking needed.
  */
 import { describe, it, expect } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import {
   composerReducer,
   initialComposerState,
@@ -28,7 +29,7 @@ function makeTextMessage(id: number, text: string) {
     getText: () => text,
     getType: () => 'text',
     getMetadata: () => ({}),
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.TextMessage;
+  } as unknown as CometChat.TextMessage;
 }
 
 function makeBaseMessage(id: number) {
@@ -36,7 +37,7 @@ function makeBaseMessage(id: number) {
     getId: () => id,
     getType: () => 'text',
     getCategory: () => 'message',
-  } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.BaseMessage;
+  } as unknown as CometChat.BaseMessage;
 }
 
 describe('composerReducer', () => {
@@ -376,8 +377,8 @@ describe('composerReducer', () => {
         fileId: 'a',
         status: 'failed',
       });
-      expect(next.tray.items[0].status).toBe('failed');
-      expect(next.tray.items[1].status).toBe('uploading');
+      expect(next.tray.items[0]!.status).toBe('failed');
+      expect(next.tray.items[1]!.status).toBe('uploading');
     });
 
     it('stores the error when provided', () => {
@@ -392,7 +393,7 @@ describe('composerReducer', () => {
         status: 'rejected',
         error: err,
       });
-      expect(next.tray.items[0].error).toBe(err);
+      expect(next.tray.items[0]!.error).toBe(err);
     });
 
     it('is a no-op when the fileId does not match', () => {
@@ -405,7 +406,7 @@ describe('composerReducer', () => {
         fileId: 'zzz',
         status: 'success',
       });
-      expect(next.tray.items[0].status).toBe('uploading');
+      expect(next.tray.items[0]!.status).toBe('uploading');
     });
   });
 
@@ -420,7 +421,7 @@ describe('composerReducer', () => {
         fileId: 'a',
         percent: 42,
       });
-      expect(next.tray.items[0].percent).toBe(42);
+      expect(next.tray.items[0]!.percent).toBe(42);
     });
 
     it('leaves other items unchanged', () => {
@@ -439,7 +440,7 @@ describe('composerReducer', () => {
         fileId: 'a',
         percent: 90,
       });
-      expect(next.tray.items[1].percent).toBe(10);
+      expect(next.tray.items[1]!.percent).toBe(10);
     });
   });
 
@@ -447,7 +448,7 @@ describe('composerReducer', () => {
     it('sets the attachment and marks the item success', () => {
       const attachment = {
         getUrl: () => 'https://x',
-      } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.Attachment;
+      } as unknown as CometChat.Attachment;
       const state: CometChatMessageComposerState = {
         ...initialComposerState,
         tray: { batchId: 'batch-1', items: [makeTrayItem({ fileId: 'a' })] },
@@ -457,8 +458,8 @@ describe('composerReducer', () => {
         fileId: 'a',
         attachment,
       });
-      expect(next.tray.items[0].attachment).toBe(attachment);
-      expect(next.tray.items[0].status).toBe('success');
+      expect(next.tray.items[0]!.attachment).toBe(attachment);
+      expect(next.tray.items[0]!.status).toBe('success');
     });
   });
 

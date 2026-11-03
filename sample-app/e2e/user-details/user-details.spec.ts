@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openBobChat } from '../helpers';
 
 /**
@@ -16,15 +16,6 @@ test.describe('User Details', () => {
     await loginToApp(page);
     await page.waitForSelector('.cometchat-conversations__item', { timeout: 30_000 });
     await openBobChat(page);
-  });
-
-  test('clicking header title opens user details', async () => {
-    const headerTitle = page.locator('.cometchat-message-header__title, .cometchat-message-header .cometchat-avatar').first();
-    await headerTitle.click();
-    await page.waitForTimeout(2000);
-
-    const detailsPanel = page.locator('.side-component-wrapper').first();
-    await expect(detailsPanel).toBeVisible({ timeout: 5_000 });
   });
 
   test('user details shows user name and avatar', async () => {

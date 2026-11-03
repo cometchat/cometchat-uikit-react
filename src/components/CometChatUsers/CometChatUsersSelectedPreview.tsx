@@ -5,6 +5,7 @@ import { useCometChatUsersContext } from './CometChatUsers.context';
 import { useLocale } from '../../context/locale/LocaleContext';
 import type { CometChatUsersSelectedPreviewProps } from './CometChatUsers.types';
 import './CometChatUsers.css';
+import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
  * CometChatUsersSelectedPreview — Selected users chip preview (multiple mode).
@@ -39,10 +40,7 @@ export const CometChatUsersSelectedPreview: React.FC<CometChatUsersSelectedPrevi
     <div
       className={`cometchat-users__selected-preview ${!showScrollbar ? 'cometchat-users__selected-preview--hide-scrollbar' : ''}`}
       role="group"
-      aria-label={getLocalizedString('accessibility_users_selected').replace(
-        '{count}',
-        String(selectedUsers.length)
-      )}
+      aria-label={fillTemplate(getLocalizedString('accessibility_users_selected'), { count: String(selectedUsers.length) })}
     >
       <div className={'cometchat-users__selected-preview-container'}>
         {selectedUsers.map(user => {
@@ -64,7 +62,7 @@ export const CometChatUsersSelectedPreview: React.FC<CometChatUsersSelectedPrevi
                 onClick={() => {
                   handleRemove(uid);
                 }}
-                aria-label={getLocalizedString('accessibility_remove_item').replace('{name}', name)}
+                aria-label={fillTemplate(getLocalizedString('accessibility_remove_item'), { name })}
                 type="button"
               >
                 <svg width="14" height="14" viewBox="0 0 12 12" fill="currentColor">

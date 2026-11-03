@@ -209,7 +209,7 @@
   width: 72px;
   height: 72px;
   margin-bottom: var(--cometchat-margin-4, 16px);
-  background: var(--cometchat-icon-color-disabled, #dcdcdc);
+  background: var(--cometchat-icon-color-disabled, var(--cometchat-icon-color-tertiary, #dcdcdc));
   -webkit-mask: url('../../assets/saved.svg') center center / contain no-repeat;
   mask: url('../../assets/saved.svg') center center / contain no-repeat;
 }

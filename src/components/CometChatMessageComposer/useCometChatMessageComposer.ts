@@ -17,6 +17,8 @@ import type { CometChatEvent } from '../../context/CometChatEvents.types';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
 import { writeThreadSubscribed } from '../../utils/CometChatThreadSubscription';
+import { convertToWav } from '../../utils/wavConversion';
+import { CometChatLogger } from '../../utils/CometChatLogger';
 import { CometChatSoundManager } from '../../resources/CometChatSoundManager/CometChatSoundManager';
 
 const TYPING_TIMEOUT_MS = 500;
@@ -479,6 +481,28 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
         }
       }
 
+      // Clear the reply before anything async, as sendBatch does.
+      const replyMessage = state.messageToReply;
+      dispatch({ type: 'SET_REPLY_MESSAGE', message: null });
+
+      // Voice notes are sent as WAV: browsers record WebM,
+      // Ogg or fragmented MP4 with no usable length, and iOS can't play WebM or
+      // Ogg. If conversion fails, the recording is sent as-is.
+      let voiceNoteSeconds: number | undefined;
+      if (options?.isVoiceNote) {
+        try {
+          const { wav, durationSeconds } = await convertToWav(file);
+          file = new File([wav], `${file.name.replace(/\.[^./]+$/, '')}.wav`, { type: wav.type });
+          voiceNoteSeconds = durationSeconds;
+        } catch (error) {
+          CometChatLogger.warn(
+            'CometChatMessageComposer',
+            'Could not convert the voice note to WAV; sending the original recording',
+            error
+          );
+        }
+      }
+
       dispatch({ type: 'SET_SEND_STATE', sendState: 'sending' });
       onAttachmentAdded?.(file);
 
@@ -506,6 +530,14 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
             [CometChatUIKitConstants.MetadataKeys.audioType]:
               CometChatUIKitConstants.AudioType.voiceNote,
           }),
+          // Whole seconds, rounded down like the audio bubble and the iOS UIKit; iOS
+          // reads this key as an Int and ignores decimals.
+          ...(voiceNoteSeconds !== undefined && {
+            [CometChatUIKitConstants.MetadataKeys.audioDuration]: Math.max(
+              1,
+              Math.floor(voiceNoteSeconds)
+            ),
+          }),
         });
         // Set sender
         try {
@@ -516,7 +548,6 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
         }
 
         // Set quoted message (reply-to)
-        const replyMessage = state.messageToReply;
         if (replyMessage) {
           (
             mediaMessage as unknown as { setQuotedMessage: (msg: CometChat.BaseMessage) => void }
@@ -528,7 +559,6 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
 
         // Clear composer immediately
         dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
-        dispatch({ type: 'SET_REPLY_MESSAGE', message: null });
 
         // Publish inprogress
         publish({

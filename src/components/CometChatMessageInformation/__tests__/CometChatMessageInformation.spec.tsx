@@ -3,10 +3,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 // ─── Mock Root + sub-components ──────────────────────────────────────────────
+// The mocked Root renders the views it receives through context, so these tests can assert
+// delegation without the SDK stack; the layout itself is covered against the real Root in
+// CometChatMessageInformation.props.spec.tsx.
 vi.mock('../CometChatMessageInformationRoot', () => ({
-  CometChatMessageInformationRoot: vi.fn(({ children }: { children?: React.ReactNode }) => (
-    <div data-testid="root">{children}</div>
-  )),
+  CometChatMessageInformationRoot: vi.fn(({ children }: { children?: React.ReactNode }) => {
+    const views = React.useContext(CometChatMessageInformationViewsContext);
+    return (
+      <div data-testid="root">
+        {children}
+        {Object.entries(views).map(([name, view]) => (
+          <React.Fragment key={name}>{view}</React.Fragment>
+        ))}
+      </div>
+    );
+  }),
 }));
 vi.mock('../CometChatMessageInformationHeader', () => ({
   CometChatMessageInformationHeader: () => <div data-testid="header" />,
@@ -28,6 +39,7 @@ vi.mock('../CometChatMessageInformationEmptyState', () => ({
 }));
 
 import { CometChatMessageInformation } from '../CometChatMessageInformation';
+import { CometChatMessageInformationViewsContext } from '../CometChatMessageInformation.context';
 import { CometChatMessageInformationRoot } from '../CometChatMessageInformationRoot';
 import { CometChatMessageInformationHeader } from '../CometChatMessageInformationHeader';
 import { CometChatMessageInformationMessagePreview } from '../CometChatMessageInformationMessagePreview';
@@ -65,65 +77,35 @@ describe('CometChatMessageInformation (flat)', () => {
     });
   });
 
-  describe('no convenience props → delegates to Root with no children', () => {
-    it('renders Root and forwards root props', () => {
+  describe('delegates to Root', () => {
+    it('renders Root and forwards root props, with no children', () => {
       const onClose = vi.fn();
       render(<CometChatMessageInformation message={message} onClose={onClose} showScrollbar />);
       expect(screen.getByTestId('root')).toBeInTheDocument();
-      expect(screen.queryByTestId('header')).not.toBeInTheDocument();
-      const call = vi.mocked(CometChatMessageInformationRoot).mock.calls[0][0] as Record<
-        string,
-        unknown
-      >;
-      expect(call.message).toBe(message);
-      expect(call.onClose).toBe(onClose);
-      expect(call.showScrollbar).toBe(true);
-      expect(call.children).toBeUndefined();
-    });
-  });
-
-  describe('convenience props → composes default layout', () => {
-    it('renders default header/preview/receipt-list when only headerView is set', () => {
-      render(<CometChatMessageInformation message={message} headerView={<span>h</span>} />);
-      expect(screen.getByText('h')).toBeInTheDocument();
-      expect(screen.queryByTestId('header')).not.toBeInTheDocument();
-      expect(screen.getByTestId('preview')).toBeInTheDocument();
-      expect(screen.getByTestId('receipt-list')).toBeInTheDocument();
+      const call = vi.mocked(CometChatMessageInformationRoot).mock.calls[0]?.[0];
+      expect(call?.message).toBe(message);
+      expect(call?.onClose).toBe(onClose);
+      expect(call?.showScrollbar).toBe(true);
+      expect(call?.children).toBeUndefined();
     });
 
-    it('renders default header when a non-header convenience prop forces layout', () => {
-      render(<CometChatMessageInformation message={message} loadingView={<span>l</span>} />);
-      expect(screen.getByTestId('header')).toBeInTheDocument();
-      expect(screen.getByTestId('preview')).toBeInTheDocument();
-      expect(screen.getByTestId('receipt-list')).toBeInTheDocument();
-    });
-
-    it('uses custom receiptListView when provided', () => {
-      render(<CometChatMessageInformation message={message} receiptListView={<span>rl</span>} />);
-      expect(screen.getByText('rl')).toBeInTheDocument();
-      expect(screen.queryByTestId('receipt-list')).not.toBeInTheDocument();
-    });
-
-    it('renders LoadingState when loadingView is provided', () => {
-      render(<CometChatMessageInformation message={message} loadingView={<span>l</span>} />);
-      expect(screen.getByTestId('loading')).toBeInTheDocument();
-    });
-
-    it('renders ErrorState when errorView is provided', () => {
-      render(<CometChatMessageInformation message={message} errorView={<span>e</span>} />);
-      expect(screen.getByTestId('error')).toBeInTheDocument();
-    });
-
-    it('renders EmptyState when emptyView is provided', () => {
-      render(<CometChatMessageInformation message={message} emptyView={<span>e</span>} />);
-      expect(screen.getByTestId('empty')).toBeInTheDocument();
-    });
-
-    it('does not render optional states when their views are not provided', () => {
-      render(<CometChatMessageInformation message={message} headerView={<span>h</span>} />);
-      expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('error')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('empty')).not.toBeInTheDocument();
+    it('hands the view props to Root through context, not as props or children', () => {
+      render(
+        <CometChatMessageInformation
+          message={message}
+          headerView={<span>h</span>}
+          receiptListView={<span>rl</span>}
+          loadingView={<span>l</span>}
+          errorView={<span>e</span>}
+          emptyView={<span>n</span>}
+        />
+      );
+      for (const text of ['h', 'rl', 'l', 'e', 'n']) {
+        expect(screen.getByText(text)).toBeInTheDocument();
+      }
+      const call = vi.mocked(CometChatMessageInformationRoot).mock.calls[0]?.[0];
+      expect(call?.children).toBeUndefined();
+      expect(call).not.toHaveProperty('headerView');
     });
   });
 });

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useCometChatGroupsContext } from './CometChatGroups.context';
 import type { CometChatGroupsLoadingStateProps } from './CometChatGroups.types';
 import './CometChatGroups.css';
 import { useLocale } from '../../context/locale/LocaleContext';
@@ -14,6 +15,11 @@ export const CometChatGroupsLoadingState: React.FC<CometChatGroupsLoadingStatePr
   children,
 }) => {
   const { getLocalizedString } = useLocale();
+  const { fetchState } = useCometChatGroupsContext();
+
+  // Shown only in its state, wherever it is placed.
+  if (fetchState !== 'loading') return null;
+
   return (
     <div
       className={'cometchat-groups__loading-state'}

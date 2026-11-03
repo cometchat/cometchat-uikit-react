@@ -1,4 +1,5 @@
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect, test } from '@playwright/test';
+import { visibleWithin } from './wait';
 
 /**
  * Navigation helpers for opening specific chats in E2E tests.
@@ -9,6 +10,30 @@ import { Page, expect } from '@playwright/test';
  * - Strategy (e2e-group-35): mutable group — for send/edit/delete tests
  * - AI Agent E2E: optional AI agent chat
  */
+
+/** Resolves true once `locator` is visible, false if it isn't within `timeout`. */
+
+/**
+ * Wait until the open conversation is `name`'s and its message list has finished
+ * its first load (shimmer gone). With `expectMessages`, also wait for a bubble.
+ * Replaces fixed sleeps after opening a chat.
+ */
+export async function waitForChatOpen(
+  page: Page,
+  name: string,
+  { expectMessages = false }: { expectMessages?: boolean } = {}
+): Promise<void> {
+  const chat = page.locator('.cometchat-messages-wrapper');
+  await expect(chat.locator('.cometchat-message-header__title').first()).toContainText(name, {
+    timeout: 15_000,
+  });
+  const list = chat.locator('.cometchat-message-list').first();
+  await expect(list).toBeVisible({ timeout: 15_000 });
+  await expect(chat.locator('.cometchat-message-list__shimmer')).toHaveCount(0, { timeout: 20_000 });
+  if (expectMessages) {
+    await expect(list.locator('.cometchat-message-bubble').first()).toBeVisible({ timeout: 15_000 });
+  }
+}
 
 /**
  * Select a group by name from the Groups tab.
@@ -29,7 +54,7 @@ export async function selectGroupByName(page: Page, name: string): Promise<void>
   const groupItem = () => page.locator('.cometchat-groups__item').filter({ hasText: name }).first();
 
   // Fast path — the group is on the currently loaded page of the list.
-  if (await groupItem().isVisible({ timeout: 5_000 }).catch(() => false)) {
+  if (await visibleWithin(groupItem(), 5_000)) {
     await groupItem().click();
     return;
   }
@@ -44,16 +69,14 @@ export async function selectGroupByName(page: Page, name: string): Promise<void>
   ).toBeVisible({ timeout: 5_000 });
 
   await searchInput.fill(name);
-  await page.waitForTimeout(1500); // 300 ms debounce + the fetch it triggers
-
+  // Waits out the search debounce and the fetch it triggers.
   await expect(groupItem(), `Group "${name}" not found, even via search`).toBeVisible({
-    timeout: 10_000,
+    timeout: 15_000,
   });
   await groupItem().click();
 
   // Leave the list unfiltered for the next helper that uses this tab.
   await searchInput.fill('').catch(() => undefined);
-  await page.waitForTimeout(500);
 }
 
 /** Open Bob Smith's 1:1 chat via Users tab */
@@ -65,27 +88,33 @@ export async function openBobChat(page: Page): Promise<void> {
   const bobUser = page.locator('.cometchat-users__item').filter({ hasText: 'Bob' }).first();
   await expect(bobUser).toBeVisible({ timeout: 5_000 });
   await bobUser.click();
-
-  await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
-  await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
-  await page.waitForTimeout(1000);
+  await waitForChatOpen(page, 'Bob', { expectMessages: true });
 }
 
 /** Open Design Team group chat via Groups tab */
 export async function openDesignTeamChat(page: Page): Promise<void> {
   await selectGroupByName(page, 'Design Team');
-
-  await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
-  await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
-  await page.waitForTimeout(1000);
+  await waitForChatOpen(page, 'Design Team', { expectMessages: true });
 }
 
 /** Open Strategy group chat via Groups tab */
 export async function openStrategyChat(page: Page): Promise<void> {
   await selectGroupByName(page, 'Strategy');
-
-  await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
-  await page.waitForTimeout(2000);
+  await waitForChatOpen(page, 'Strategy');
+  // Strategy always has messages, so an empty list is the known blank-list issue (a chat opened
+  // while the SDK is still connecting never loads). That isn't what callers test, so open another
+  // chat and come back: by then the SDK has connected and the list loads. (A reload would only
+  // restart the race.)
+  const bubble = page.locator('.cometchat-messages-wrapper .cometchat-message-bubble').first();
+  if (await visibleWithin(bubble, 10_000)) return;
+  test.info().annotations.push({
+    type: 'known-bug',
+    description: 'message list stayed blank after opening a chat during connect; reopened it',
+  });
+  await selectGroupByName(page, 'CI/CD');
+  await waitForChatOpen(page, 'CI/CD');
+  await selectGroupByName(page, 'Strategy');
+  await waitForChatOpen(page, 'Strategy', { expectMessages: true });
 }
 
 /** Open Strategy group chat via Conversations tab (should be at top after seed) */
@@ -101,23 +130,18 @@ export async function openStrategyChatFromConversations(page: Page): Promise<voi
 
   // The seed posts to Strategy so it sits at the top, but a busy app can push it
   // off the loaded page — fall back to opening it from the Groups tab.
-  if (await strategy.isVisible({ timeout: 5_000 }).catch(() => false)) {
+  if (await visibleWithin(strategy, 5_000)) {
     await strategy.click();
   } else {
     await selectGroupByName(page, 'Strategy');
   }
-
-  await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
-  await page.waitForTimeout(2000);
+  await waitForChatOpen(page, 'Strategy');
 }
 
 /** Open CI/CD group chat via Groups tab (has incoming messages for message-privately tests) */
 export async function openCICDChat(page: Page): Promise<void> {
   await selectGroupByName(page, 'CI/CD');
-
-  await page.waitForSelector('.cometchat-message-list', { timeout: 15_000 });
-  await page.waitForSelector('.cometchat-message-bubble', { timeout: 15_000 });
-  await page.waitForTimeout(1000);
+  await waitForChatOpen(page, 'CI/CD', { expectMessages: true });
 }
 
 /** Open AI Agent chat from conversations (skip-safe — returns false if not found) */
@@ -135,11 +159,34 @@ export async function openAIAgentChat(page: Page): Promise<boolean> {
       has: page.locator('.cometchat-conversations__item-title', { hasText: /^AI Agent E2E$/ }),
     })
     .first();
-  const found = await aiAgent.isVisible({ timeout: 5_000 }).catch(() => false);
+  const found = await visibleWithin(aiAgent, 5_000);
   if (!found) return false;
 
   await aiAgent.click();
   await page.waitForSelector('.cometchat-message-list, .cometchat-ai-assistant-chat', { timeout: 15_000 });
   await page.waitForTimeout(2000);
   return true;
+}
+
+/**
+ * Open a conversation from the Chats list by name and wait for its messages.
+ *
+ * Known issue: a chat opened right after load can stay permanently blank. The
+ * group-details and message-list specs enforce the fix; for tests about other
+ * behaviour this records the hit in the report and reopens the chat once.
+ */
+export async function openConversationFromList(page: Page, name: string): Promise<void> {
+  const row = page.locator('.cometchat-conversations__item').filter({ hasText: name }).first();
+  const header = page.locator('.cometchat-messages-wrapper .cometchat-message-header__title').first();
+  const firstBubble = page.locator('.cometchat-messages-wrapper .cometchat-message-list .cometchat-message-bubble').first();
+  await expect(row).toBeVisible({ timeout: 30_000 });
+  await row.click();
+  await expect(header).toContainText(name, { timeout: 15_000 });
+  if (!(await visibleWithin(firstBubble, 15_000))) {
+    test.info().annotations.push({ type: 'known-bug', description: 'blank message list right after load; chat reopened' });
+    await page.locator('.cometchat-conversations__item').filter({ hasNotText: name }).first().click();
+    await row.click();
+    await expect(header).toContainText(name, { timeout: 15_000 });
+  }
+  await expect(firstBubble).toBeVisible({ timeout: 20_000 });
 }

@@ -45,7 +45,7 @@ export const CometChatNotificationFeedList: React.FC<CometChatNotificationFeedLi
       onScroll={handleScroll}
       aria-busy={ctx.screenState === 'loading'}
     >
-      <div role="feed" aria-label="Notification feed" aria-busy={ctx.isLoadingMore}>
+      <div role="feed" aria-label={getLocalizedString('accessibility_notification_feed')} aria-busy={ctx.isLoadingMore}>
         {ctx.groupedItems.map((group: TimestampGroup) => (
           <div key={group.label}>
             {group.items.map(item =>
@@ -77,7 +77,7 @@ export const CometChatNotificationFeedList: React.FC<CometChatNotificationFeedLi
             }}
             role="button"
             tabIndex={0}
-            aria-label="Tap to retry loading more"
+            aria-label={getLocalizedString('accessibility_retry_loading_more')}
             onKeyDown={e => {
               if (e.key === 'Enter' || e.key === ' ') ctx.retryPagination();
             }}

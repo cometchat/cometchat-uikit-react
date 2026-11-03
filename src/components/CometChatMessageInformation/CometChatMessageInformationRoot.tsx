@@ -1,11 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import type { CometChatMessageInformationRootProps } from './CometChatMessageInformation.types';
-import { CometChatMessageInformationContext } from './CometChatMessageInformation.context';
+import {
+  CometChatMessageInformationContext,
+  CometChatMessageInformationViewsContext,
+} from './CometChatMessageInformation.context';
 import { useCometChatMessageInformation } from './useCometChatMessageInformation';
 import { CometChatMessageInformationHeader } from './CometChatMessageInformationHeader';
 import { CometChatMessageInformationMessagePreview } from './CometChatMessageInformationMessagePreview';
 import { CometChatMessageInformationReceiptList } from './CometChatMessageInformationReceiptList';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
+import { useLocale } from '../../context/locale/LocaleContext';
 import './CometChatMessageInformation.css';
 
 const DEFAULT_DATE_FORMAT = {
@@ -36,6 +40,8 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const IframeContext = useCometChatFrameContext();
+  const views = useContext(CometChatMessageInformationViewsContext);
+  const { calendarObject } = useLocale();
 
   const getCurrentDocument = useCallback(() => {
     return IframeContext.iframeDocument ?? document;
@@ -117,7 +123,12 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
       oneOnOneDeliveredAt,
       error,
       isGroupMessage,
-      messageInfoDateTimeFormat: messageInfoDateTimeFormat ?? DEFAULT_DATE_FORMAT,
+      // As in v6: the default, then the app's calendar format, then the prop.
+      messageInfoDateTimeFormat: {
+        ...DEFAULT_DATE_FORMAT,
+        ...calendarObject,
+        ...messageInfoDateTimeFormat,
+      },
       messageSentAtDateTimeFormat,
       textFormatters: textFormatters ?? [],
       showScrollbar,
@@ -133,6 +144,7 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
       oneOnOneDeliveredAt,
       error,
       isGroupMessage,
+      calendarObject,
       messageInfoDateTimeFormat,
       messageSentAtDateTimeFormat,
       textFormatters,
@@ -158,9 +170,17 @@ export const CometChatMessageInformationRoot: React.FC<CometChatMessageInformati
       >
         {children ?? (
           <>
-            <CometChatMessageInformationHeader />
+            {views.headerView !== undefined ? (
+              views.headerView
+            ) : (
+              <CometChatMessageInformationHeader />
+            )}
             <CometChatMessageInformationMessagePreview />
-            <CometChatMessageInformationReceiptList />
+            {views.receiptListView !== undefined ? (
+              views.receiptListView
+            ) : (
+              <CometChatMessageInformationReceiptList />
+            )}
           </>
         )}
       </div>

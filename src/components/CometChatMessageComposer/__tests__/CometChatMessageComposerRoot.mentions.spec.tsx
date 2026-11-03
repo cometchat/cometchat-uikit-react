@@ -1,12 +1,13 @@
 /**
  * Mentions in the plain text composer (enableRichTextEditor={false}).
  *
- * Regression coverage for ENG-38099: selecting a suggestion recorded the
+ * Regression coverage: selecting a suggestion recorded the
  * mentioned user on the outgoing payload but never inserted anything into the
  * composer, so the message went out without the mention text or its SDK token.
  */
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { mockCometChat } from '../../../testing/mock-sdk';
 
@@ -16,7 +17,7 @@ const MEMBER = {
   getUid: () => 'member5',
   getName: () => 'Member 5',
   getAvatar: () => '',
-} as unknown as import('@cometchat/chat-sdk-javascript').CometChat.User;
+} as unknown as CometChat.User;
 
 // Stand-in for the suggestions dropdown: the real one renders CometChatUsers /
 // CometChatGroupMembers, which need live SDK requests. Selecting from it is all
@@ -93,13 +94,13 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 const RECEIVER = {
   getUid: () => 'cometchat-uid-2',
   getName: () => 'Andrew',
-} as unknown as import('@cometchat/chat-sdk-javascript').CometChat.User;
+} as unknown as CometChat.User;
 
 const GROUP = {
   getGuid: () => 'group-1',
   getName: () => 'Team',
   getIcon: () => '',
-} as unknown as import('@cometchat/chat-sdk-javascript').CometChat.Group;
+} as unknown as CometChat.Group;
 
 /** Type `value` into the contentEditable and put the caret at its end. */
 function typeInto(input: HTMLElement, value: string): void {
@@ -215,7 +216,7 @@ describe('plain text composer — mentions (enableRichTextEditor={false})', () =
     await waitFor(() => {
       expect(mockCometChat.sendMessage).toHaveBeenCalled();
     });
-    const sent = mockCometChat.sendMessage.mock.calls[0][0] as {
+    const sent = mockCometChat.sendMessage.mock.calls[0]![0] as {
       getText: () => string;
       getMentionedUsers: () => { getUid: () => string }[];
     };
@@ -236,7 +237,7 @@ describe('plain text composer — mentions (enableRichTextEditor={false})', () =
     await waitFor(() => {
       expect(mockCometChat.sendMessage).toHaveBeenCalled();
     });
-    const sent = mockCometChat.sendMessage.mock.calls[0][0] as { getText: () => string };
+    const sent = mockCometChat.sendMessage.mock.calls[0]![0] as { getText: () => string };
     expect(sent.getText()).toBe('standup <@all:all>');
   });
 
@@ -247,7 +248,7 @@ describe('plain text composer — mentions (enableRichTextEditor={false})', () =
       getText: () => '<@uid:member5> are you around?',
       getMentionedUsers: () => [MEMBER],
       getMetadata: () => ({}),
-    } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.TextMessage;
+    } as unknown as CometChat.TextMessage;
 
     render(
       <CometChatMessageComposerRoot

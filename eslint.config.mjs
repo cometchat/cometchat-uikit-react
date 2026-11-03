@@ -72,6 +72,35 @@ export default tseslint.config(
     },
   },
   {
+    // CI scripts: plain Node, outside the TypeScript project, so no type-aware rules.
+    files: ['.github/**/*.{mjs,cjs,js}'],
+    extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: {
+      globals: {
+        Buffer: 'readonly',
+        URL: 'readonly',
+        clearTimeout: 'readonly',
+        console: 'readonly',
+        fetch: 'readonly',
+        process: 'readonly',
+        setTimeout: 'readonly',
+      },
+    },
+  },
+  {
+    files: ['.github/**/*.{cjs,js}'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { __dirname: 'readonly', __filename: 'readonly', exports: 'writable', module: 'writable', require: 'readonly' },
+    },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
+  {
+    // Lighthouse's login script passes callbacks to page.evaluate(), which run in the browser.
+    files: ['.github/lighthouse/**'],
+    languageOptions: { globals: { document: 'readonly', window: 'readonly' } },
+  },
+  {
     ignores: ['dist/', 'node_modules/', 'sample-app-old/', 'sample-app/', 'v6/', 'uikit-react-v6/', '.storybook/', '*.config.*'],
   },
 );

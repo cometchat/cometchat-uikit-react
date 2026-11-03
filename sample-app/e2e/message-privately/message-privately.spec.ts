@@ -1,5 +1,6 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../helpers/test';
 import { loginToApp, openCICDChat } from '../helpers';
+import { waitForBubbleSettled } from '../helpers/threads';
 
 /**
  * E2E Tests — Message Privately (React)
@@ -26,6 +27,7 @@ test.describe('Message Privately', () => {
     await expect(outgoingWrapper).toBeVisible({ timeout: 10_000 });
 
     const bodyArea = outgoingWrapper.locator('.cometchat-message-bubble__body').first();
+    await waitForBubbleSettled(bodyArea);
     await bodyArea.hover();
     await page.waitForTimeout(500);
 
@@ -48,6 +50,7 @@ test.describe('Message Privately', () => {
 
     await incomingBubble.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
+    await waitForBubbleSettled(incomingBubble);
     await incomingBubble.hover();
     await page.waitForTimeout(500);
 
@@ -70,6 +73,7 @@ test.describe('Message Privately', () => {
 
     await incomingBubble.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
+    await waitForBubbleSettled(incomingBubble);
     await incomingBubble.hover();
     await page.waitForTimeout(500);
 

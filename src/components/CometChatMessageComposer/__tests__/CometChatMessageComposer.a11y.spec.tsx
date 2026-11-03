@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { mockCometChat } from '../../../testing/mock-sdk';
@@ -376,7 +377,7 @@ describe('CometChatMessageComposer — Accessibility', () => {
         getParentMessageId: () => 0,
         getSentAt: () => Date.now(),
         getMuid: () => 'muid-1',
-      } as unknown as import('@cometchat/chat-sdk-javascript').CometChat.TextMessage;
+      } as unknown as CometChat.TextMessage;
 
       render(<CometChatMessageComposerRoot messageToEdit={mockEditMessage} />, { wrapper });
       const input = screen.getByRole('textbox');
