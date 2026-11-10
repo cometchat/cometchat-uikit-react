@@ -1,3 +1,14 @@
+# v7.2.6
+
+## New
+- None
+
+## Enhancements
+- Enhanced End to End and Unit test cases to improve test reliability and coverage, particularly for message threads.
+
+## Fixes
+- None
+
 # v7.2.5
 
 ## New

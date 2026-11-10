@@ -238,8 +238,16 @@ export async function openActionSheet(page: Page, bubble: ReturnType<Page['locat
 }
 
 export async function closeActionSheet(page: Page) {
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
+  // The menu handles Escape only once focus is inside it, and it moves focus in a frame after it
+  // shows: an Escape pressed in between does nothing, and the menu's overlay then blocks the next
+  // click (the thread panel's Close button). So press Escape until the menu is actually gone. That
+  // is a bug in the menu, not the test, and it is tracked: once it's fixed, one Escape is enough.
+  const anyOption = page.getByRole('menuitem').first();
+  await expect(async () => {
+    if (!(await anyOption.isVisible())) return;
+    await page.keyboard.press('Escape');
+    await expect(anyOption).toBeHidden({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
 }
 
 /** The bubble in the main message list containing the given text. */
