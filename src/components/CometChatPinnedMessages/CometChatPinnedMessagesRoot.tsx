@@ -71,7 +71,7 @@ export const CometChatPinnedMessagesRoot: React.FC<CometChatPinnedMessagesRootPr
 }) => {
   const { getLocalizedString } = useLocale();
   const loggedInUser = useLoggedInUser();
-  const { messages, fetchState, hasMore, loadMore } = useCometChatPinnedMessages(
+  const { messages, fetchState, connectToLoad, hasMore, loadMore } = useCometChatPinnedMessages(
     user,
     group,
     messagesRequestBuilder
@@ -115,6 +115,7 @@ export const CometChatPinnedMessagesRoot: React.FC<CometChatPinnedMessagesRootPr
     () => ({
       messages,
       fetchState,
+      ...(connectToLoad !== undefined && { connectToLoad }),
       hasMore,
       loadMore,
       hideCloseButton,
@@ -142,6 +143,7 @@ export const CometChatPinnedMessagesRoot: React.FC<CometChatPinnedMessagesRootPr
     [
       messages,
       fetchState,
+      connectToLoad,
       hasMore,
       loadMore,
       hideCloseButton,

@@ -22,6 +22,7 @@ import { CometChatMessageHeaderOverflowMenu } from './CometChatMessageHeaderOver
 import { CometChatMessageHeaderAuxiliaryButtons } from './CometChatMessageHeaderAuxiliaryButtons';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { useGlobalConfig } from '../../context/GlobalConfigContext';
+import { usePresenceSuppressed } from '../../utils/offline/presence';
 import './CometChatMessageHeader.css';
 
 /**
@@ -68,6 +69,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
   });
 
   const { getLocalizedString } = useLocale();
+  const presenceHidden = usePresenceSuppressed();
   // The flat API's view props; empty when Root is used directly.
   const views = useContext(CometChatMessageHeaderViewsContext);
 
@@ -139,6 +141,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
   // Build ARIA label
   const ariaLabel = useMemo(() => {
     if (user) {
+      if (presenceHidden) return displayName;
       const statusText =
         hookResult.userStatus === 'online'
           ? getLocalizedString('message_header_online')
@@ -159,6 +162,7 @@ export const CometChatMessageHeaderRoot: React.FC<CometChatMessageHeaderRootProp
     displayName,
     hookResult.userStatus,
     hookResult.groupMemberCount,
+    presenceHidden,
     getLocalizedString,
   ]);
 

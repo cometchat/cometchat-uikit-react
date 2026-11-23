@@ -32,4 +32,9 @@ export class CometChatReactionListManager {
     if (!this.request) return Promise.resolve([]);
     return this.request.fetchNext();
   }
+
+  /** The underlying request (null when the SDK is not ready), for the offline path. @internal */
+  getRequest(): CometChat.ReactionsRequest | null {
+    return this.request;
+  }
 }

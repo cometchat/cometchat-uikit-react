@@ -43,7 +43,7 @@ export const CometChatSavedMessagesRoot: React.FC<CometChatSavedMessagesRootProp
 }) => {
   const { getLocalizedString } = useLocale();
   const loggedInUser = useLoggedInUser();
-  const { messages, fetchState, hasMore, loadMore } =
+  const { messages, fetchState, connectToLoad, hasMore, loadMore } =
     useCometChatSavedMessages(messagesRequestBuilder);
 
   // `id` increments on every raise so two identical toasts in a row still remount
@@ -72,6 +72,7 @@ export const CometChatSavedMessagesRoot: React.FC<CometChatSavedMessagesRootProp
     () => ({
       messages,
       fetchState,
+      ...(connectToLoad !== undefined && { connectToLoad }),
       hasMore,
       loadMore,
       onUnsave: pinSave.requestUnsave,
@@ -85,6 +86,7 @@ export const CometChatSavedMessagesRoot: React.FC<CometChatSavedMessagesRootProp
     [
       messages,
       fetchState,
+      connectToLoad,
       hasMore,
       loadMore,
       pinSave.requestUnsave,

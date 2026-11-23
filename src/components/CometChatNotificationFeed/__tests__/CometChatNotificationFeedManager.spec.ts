@@ -29,6 +29,7 @@ const sdk = vi.hoisted(() => {
       return feedBuilder;
     }),
     getNotificationFeedUnreadCount: vi.fn(),
+    isOfflineEnabled: vi.fn(() => false),
     markFeedItemAsDelivered: vi.fn(),
     markFeedItemAsRead: vi.fn(),
     reportFeedEngagement: vi.fn(),
@@ -47,6 +48,9 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
       constructor(public callbacks: unknown) {}
     },
     getNotificationFeedUnreadCount: sdk.getNotificationFeedUnreadCount,
+    // The offline gate's surface: `isOfflineEnabled` plus the 4.3.1 floor probe.
+    isOfflineEnabled: sdk.isOfflineEnabled,
+    OfflineCacheResetReason: { SCHEMA_RESET: 'SCHEMA_RESET' },
     markFeedItemAsDelivered: sdk.markFeedItemAsDelivered,
     markFeedItemAsRead: sdk.markFeedItemAsRead,
     reportFeedEngagement: sdk.reportFeedEngagement,
@@ -70,6 +74,7 @@ describe('CometChatNotificationFeedManager', () => {
     sdk.feedBuilder.build.mockReturnValue(sdk.feedRequest);
     sdk.categoriesBuilder.setLimit.mockReturnValue(sdk.categoriesBuilder);
     sdk.categoriesBuilder.build.mockReturnValue(sdk.categoriesRequest);
+    sdk.isOfflineEnabled.mockReturnValue(false);
     warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   });
 
@@ -160,9 +165,18 @@ describe('CometChatNotificationFeedManager', () => {
       await expect(CometChatNotificationFeedManager.fetchUnreadCount()).resolves.toBe(7);
     });
 
-    it('returns 0 and warns on unexpected errors', async () => {
+    it('offline off: an unexpected error resets the count to 0, as before offline support', async () => {
       sdk.getNotificationFeedUnreadCount.mockRejectedValue({ code: 'NETWORK' });
+      // The regression: `null` kept a stale badge where 7.2.x reset it, with
+      // offline off and nothing in the PR asking for it.
       await expect(CometChatNotificationFeedManager.fetchUnreadCount()).resolves.toBe(0);
+      expect(warn).toHaveBeenCalled();
+    });
+
+    it('offline on: an unexpected error returns null and warns, so the shown count is kept', async () => {
+      sdk.isOfflineEnabled.mockReturnValue(true);
+      sdk.getNotificationFeedUnreadCount.mockRejectedValue({ code: 'NETWORK' });
+      await expect(CometChatNotificationFeedManager.fetchUnreadCount()).resolves.toBeNull();
       expect(warn).toHaveBeenCalled();
     });
 

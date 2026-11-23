@@ -3,6 +3,7 @@ import type { CometChatMessageHeaderAvatarProps } from './CometChatMessageHeader
 import { useCometChatMessageHeaderContext } from './CometChatMessageHeader.context';
 import { CometChatAvatar } from '../base/CometChatAvatar';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { usePresenceSuppressed } from '../../utils/offline/presence';
 import './CometChatMessageHeader.css';
 
 /**
@@ -17,10 +18,11 @@ export const CometChatMessageHeaderAvatar: React.FC<CometChatMessageHeaderAvatar
   const { avatarImage, avatarName, isUserConversation, hideUserStatus, userStatus, isTyping } =
     useCometChatMessageHeaderContext();
   const { getLocalizedString } = useLocale();
+  const presenceHidden = usePresenceSuppressed();
 
   const rootClasses = ['cometchat-message-header__leading', className].filter(Boolean).join(' ');
 
-  const showStatusIndicator = isUserConversation && !hideUserStatus && !isTyping;
+  const showStatusIndicator = isUserConversation && !hideUserStatus && !isTyping && !presenceHidden;
 
   return (
     <div className={rootClasses}>

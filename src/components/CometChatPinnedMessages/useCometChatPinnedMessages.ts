@@ -3,12 +3,29 @@ import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import type { CometChatEvent } from '../../context/CometChatEvents.types';
 import { cloneMessage } from '../CometChatMessageList/CometChatMessageList.utils';
-import { CometChatPinnedMessagesManager } from './CometChatPinnedMessagesManager';
+import {
+  CometChatPinnedMessagesManager,
+  PINNED_MESSAGES_PAGE_SIZE,
+} from './CometChatPinnedMessagesManager';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { useReloadOnReconnect } from '../../utils/offline/useReloadOnReconnect';
+import { useOfflineListLifecycle } from '../../utils/offline/useOfflineListLifecycle';
+import { useDeferredLoadMore } from '../../utils/offline/useDeferredLoadMore';
+import {
+  buildPinnedRequest,
+  readPanelPage,
+  withOfflinePages,
+  type PanelRequest,
+} from '../../utils/offline/messagePanel';
 import {
   initialPinnedMessagesState,
   pinnedMessagesReducer,
 } from './CometChatPinnedMessages.reducer';
 import type { CometChatPinnedMessagesState } from './CometChatPinnedMessages.types';
+
+/** Today's reducer, plus the offline path's page actions (inert with offline off). */
+const pinnedReducer = withOfflinePages(pinnedMessagesReducer);
+const PINNED_ERROR_TEXT = 'Failed to load pinned messages';
 
 /**
  * Does this message belong to the conversation the panel is scoped to?
@@ -61,10 +78,101 @@ export function useCometChatPinnedMessages(
   const uid = user?.getUid();
   const guid = group?.getGuid();
 
-  const [state, dispatch] = useReducer(pinnedMessagesReducer, initialPinnedMessagesState);
+  const [state, dispatch] = useReducer(pinnedReducer, initialPinnedMessagesState);
   const managerRef = useRef<CometChatPinnedMessagesManager | null>(null);
 
+  // --- Offline support (ON path only; inert with offline off) ---
+  const rowsRef = useRef(state.messages);
+  rowsRef.current = state.messages;
+  /** The offline path's request, tied to the manager (panel instance) it belongs to. */
+  const offlineRef = useRef<{
+    manager: CometChatPinnedMessagesManager;
+    panel: PanelRequest;
+  } | null>(null);
+  /** True while an offline read's server phase is pending: one read at a time. */
+  const offlineInFlightRef = useRef(false);
+  /** The error view on screen is from being offline: the next reconnect reads the panel again (D83). */
+  const reloadOnConnectRef = useRef(false);
+  const latestLoadMoreRef = useRef<() => void>(() => undefined);
+  const deferLoadMore = useDeferredLoadMore(() => {
+    latestLoadMoreRef.current();
+  }, offlineInFlightRef);
+
+  // Logout, user switch or cache reset (UIK-LIFE-01/02).
+  const lifecycleReloadRef = useRef<() => void>(() => undefined);
+  const offlineUsedRef = useOfflineListLifecycle({
+    onSessionEnd: () => {
+      // No manager: a read still running is stale, and "load more" asks nothing.
+      managerRef.current = null;
+      offlineInFlightRef.current = false;
+      dispatch({ type: 'RESET' });
+    },
+    onCacheReset: () => {
+      lifecycleReloadRef.current();
+    },
+    // A user switch, or a login after the logout that cleared this list:
+    // read it for whoever is signed in now, instead of staying on the blank
+    // frame `onSessionEnd` left until this list is remounted (F1).
+    onLogin: () => {
+      lifecycleReloadRef.current();
+    },
+  });
+
+  /**
+   * Offline path: one two-phase page in the server's order (newest pin first);
+   * the server page replaces its cached slice in place, deduped by id, so
+   * "load more" never repeats or skips (BEH-PIN-02, UIT-LIST-10).
+   */
+  const readOffline = useCallback(
+    (manager: CometChatPinnedMessagesManager, panel: PanelRequest) => {
+      offlineUsedRef.current = true;
+      offlineInFlightRef.current = true;
+      const settle = () => {
+        if (managerRef.current === manager) offlineInFlightRef.current = false;
+      };
+      return readPanelPage({
+        panel,
+        // A conversation switch mid-flight must not land the old result.
+        isStale: () => managerRef.current !== manager,
+        shown: () => rowsRef.current,
+        dispatch: action => {
+          if (action.type === 'OFFLINE_PAGE_ERROR' || action.page.phase === 'server') settle();
+          if (action.type === 'OFFLINE_PAGE_ERROR') {
+            reloadOnConnectRef.current = action.notConnected && rowsRef.current.length === 0;
+          }
+          dispatch(action);
+        },
+        errorText: PINNED_ERROR_TEXT,
+      }).finally(settle);
+    },
+    [offlineUsedRef]
+  );
+
   const fetchFirst = useCallback(() => {
+    if (isOfflineOn()) {
+      const manager = new CometChatPinnedMessagesManager(uid, guid, messagesRequestBuilder);
+      managerRef.current = manager;
+      offlineInFlightRef.current = false;
+      reloadOnConnectRef.current = false;
+      dispatch({ type: 'RESET' });
+      dispatch({ type: 'FETCH_START' });
+      // The caller's builder is copied, never changed.
+      const panel = buildPinnedRequest(
+        uid,
+        guid,
+        messagesRequestBuilder,
+        () => new CometChat.MessagesRequestBuilder().setLimit(PINNED_MESSAGES_PAGE_SIZE),
+        PINNED_MESSAGES_PAGE_SIZE
+      );
+      offlineRef.current = panel ? { manager, panel } : null;
+      if (!panel) {
+        dispatch({ type: 'FETCH_SUCCESS', messages: [], hasMore: false });
+        return;
+      }
+      void readOffline(manager, panel);
+      return;
+    }
+
     const manager = new CometChatPinnedMessagesManager(uid, guid, messagesRequestBuilder);
     managerRef.current = manager;
     dispatch({ type: 'RESET' });
@@ -83,11 +191,21 @@ export function useCometChatPinnedMessages(
           error: error instanceof Error ? error.message : 'Failed to load pinned messages',
         });
       });
-  }, [uid, guid, messagesRequestBuilder]);
+  }, [uid, guid, messagesRequestBuilder, readOffline]);
 
   const loadMore = useCallback(() => {
     const manager = managerRef.current;
     if (!manager || !state.hasMore || state.fetchState === 'loading') return;
+    const offline = offlineRef.current;
+    if (isOfflineOn() && offline?.manager === manager) {
+      if (offlineInFlightRef.current) {
+        deferLoadMore();
+        return;
+      }
+      dispatch({ type: 'FETCH_START' });
+      void readOffline(manager, offline.panel);
+      return;
+    }
     dispatch({ type: 'FETCH_START' });
     manager
       .fetchNext()
@@ -102,7 +220,21 @@ export function useCometChatPinnedMessages(
           error: error instanceof Error ? error.message : 'Failed to load pinned messages',
         });
       });
-  }, [state.hasMore, state.fetchState]);
+  }, [state.hasMore, state.fetchState, readOffline, deferLoadMore]);
+  latestLoadMoreRef.current = loadMore;
+
+  lifecycleReloadRef.current = fetchFirst;
+
+  // D83: an error view that came from being offline reads again once on reconnect.
+  const errorViewRef = useRef(false);
+  errorViewRef.current = state.fetchState === 'error' && state.messages.length === 0;
+  useReloadOnReconnect(
+    () => errorViewRef.current && reloadOnConnectRef.current,
+    () => {
+      reloadOnConnectRef.current = false;
+      fetchFirst();
+    }
+  );
 
   useEffect(() => {
     fetchFirst();

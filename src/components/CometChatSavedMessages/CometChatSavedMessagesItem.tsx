@@ -123,6 +123,8 @@ export const CometChatSavedMessagesItem: React.FC<CometChatSavedMessagesItemProp
   return (
     <CometChatListItem
       id={String(message.getId())}
+      // Inside the list's `listitem` wrapper: `option` needs a listbox parent.
+      role="group"
       onItemClick={() => {
         onClick(message);
       }}

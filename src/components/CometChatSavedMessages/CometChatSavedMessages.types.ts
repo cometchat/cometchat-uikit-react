@@ -80,6 +80,12 @@ export interface CometChatSavedMessagesContextValue {
   messages: CometChat.BaseMessage[];
   /** Current fetch lifecycle state. */
   fetchState: CometChatFetchState;
+  /**
+   * Offline support: true when the list could not load because the SDK is not connected and
+   * nothing is saved, so the error state reads "Connect to load messages" (no Retry). Only ever
+   * set when the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
   /** Whether more pages are available. */
   hasMore: boolean;
   /** Load the next page. */
@@ -106,6 +112,8 @@ export interface CometChatSavedMessagesState {
   fetchState: CometChatFetchState;
   hasMore: boolean;
   error: string | null;
+  /** Offline: nothing saved and not connected (never set offline off). */
+  connectToLoad?: boolean;
 }
 
 export type CometChatSavedMessagesAction =

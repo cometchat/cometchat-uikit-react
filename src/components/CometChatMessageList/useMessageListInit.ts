@@ -6,6 +6,15 @@ import { shouldMarkConversationRead } from './CometChatMessageList.utils';
 import { noop } from './messageListHelpers';
 import { usePublishEvent } from '../../context/CometChatEventsContext';
 import type { MessageListRefs, MessageListDispatch } from './messageListRefs';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { reportsReadError } from '../../utils/offline/entityList';
+import {
+  fetchAroundOffline,
+  readPageOffline,
+  rememberOfflineRead,
+  rowsOf,
+  type OfflineListContext,
+} from './messageListOffline';
 
 // ---------------------------------------------------------------------------
 // Initialization sub-hook
@@ -99,25 +108,40 @@ export function useMessageListInit(
     refs.generationRef.current += 1;
     dispatch({ type: 'RESET' });
 
+    // The manager reads each option only when it is set.
     const managerOpts: CometChatMessageListManagerOptions = {
+      user,
+      group,
+      builder: messagesRequestBuilder,
+      parentMessageId,
       messageTypes,
       messageCategories,
+      isAgentChat,
     };
-    if (user) managerOpts.user = user;
-    if (group) managerOpts.group = group;
-    if (messagesRequestBuilder) managerOpts.builder = messagesRequestBuilder;
-    if (parentMessageId) managerOpts.parentMessageId = parentMessageId;
-    if (isAgentChat) managerOpts.isAgentChat = true;
 
-    const manager = new CometChatMessageListManager(managerOpts);
-    refs.managerRef.current = manager;
+    const initialManager = new CometChatMessageListManager(managerOpts);
+    refs.managerRef.current = initialManager;
     refs.groupRef.current = group;
-
-    const gen = refs.generationRef.current;
 
     let aborted = false;
 
-    const initialize = async () => {
+    // `manager` and `gen` are parameters, not closure constants: the reconnect
+    // path re-runs this after it has bumped the generation and replaced the
+    // manager, so a captured copy would make every re-run bail out as stale.
+    const initialize = async (manager: CometChatMessageListManager, gen: number) => {
+      // Offline support: read once for this initialization (README §3.1).
+      const offlineOn = isOfflineOn();
+      const offlineCtx: OfflineListContext = {
+        refs,
+        dispatch,
+        publish,
+        user,
+        group,
+        parentMessageId,
+        loggedInUser,
+        isAgentChat: isAgentChat ?? false,
+        makeManager: () => new CometChatMessageListManager(managerOpts),
+      };
       try {
         let lastReadId: number | null = null;
         let convUnreadCount = 0;
@@ -125,11 +149,16 @@ export function useMessageListInit(
         // Fetch conversation for unread info (non-thread mode)
         if (!parentMessageId) {
           try {
-            const conversation = await manager.getConversation();
+            // Offline path: two-phase, so a cached chat opens at once, offline too.
+            const conversation = offlineOn
+              ? await manager.getConversationTwoPhase()
+              : await manager.getConversation();
             if (aborted || refs.generationRef.current !== gen) return;
-            const rawLastRead = conversation.getLastReadMessageId();
-            lastReadId = rawLastRead ? Number(rawLastRead) : null;
-            convUnreadCount = conversation.getUnreadMessageCount() || 0;
+            if (conversation) {
+              const rawLastRead = conversation.getLastReadMessageId();
+              lastReadId = rawLastRead ? Number(rawLastRead) : null;
+              convUnreadCount = conversation.getUnreadMessageCount() || 0;
+            }
           } catch {
             // Proceed without unread info
           }
@@ -145,7 +174,38 @@ export function useMessageListInit(
         }
         let fetchedMessages: CometChat.BaseMessage[] = [];
 
-        if (target) {
+        if (target && offlineOn) {
+          // Offline path: the window around the target, two-phase (cached first).
+          dispatch({ type: 'FETCH_PREVIOUS_START' });
+          // The open's own read holds both paging flags until it settles (a scroll
+          // meanwhile must not start a second read on the same request).
+          refs.isFetchingPrevRef.current = true;
+          refs.isFetchingNextRef.current = true;
+          let around: Awaited<ReturnType<typeof fetchAroundOffline>>;
+          try {
+            around = await fetchAroundOffline(
+              offlineCtx,
+              manager,
+              target,
+              gen,
+              Boolean(goToMessageId) && goToMessageId === target
+            );
+          } finally {
+            refs.isFetchingPrevRef.current = false;
+            refs.isFetchingNextRef.current = false;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          if (aborted || around.stale) return;
+          fetchedMessages = around.rows;
+          // D84: a jump that could not load reports once with nothing on screen, offline too;
+          // over rows only a real error does.
+          if (
+            around.error !== undefined &&
+            reportsReadError(around.notConnected === true, fetchedMessages.length > 0, false, false)
+          ) {
+            onError?.(around.error as CometChat.CometChatException);
+          }
+        } else if (target) {
           // Fetch around the target message (bidirectional)
           // Dispatch loading state so the View shows the shimmer
           dispatch({ type: 'FETCH_PREVIOUS_START' });
@@ -182,6 +242,44 @@ export function useMessageListInit(
 
           // hasReachedLatest is set by the reducer based on hasMoreNewer
           // (FETCH_AROUND_SUCCESS sets hasReachedLatest = !hasMoreNewer)
+        } else if (offlineOn) {
+          // Offline path: the newest page, two-phase: the device cache paints
+          // first and the server page then replaces the same slice.
+          dispatch({ type: 'FETCH_PREVIOUS_START' });
+          // The open's own read holds the older-read flag until it settles, so a
+          // scroll up during the server phase cannot start a second read.
+          refs.isFetchingPrevRef.current = true;
+          let page: Awaited<ReturnType<typeof readPageOffline>>;
+          try {
+            page = await readPageOffline(offlineCtx, manager, 'previous', gen);
+          } finally {
+            refs.isFetchingPrevRef.current = false;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          if (aborted || page.stale) return;
+          fetchedMessages = rowsOf(page);
+          // D84: the open reports a failed read with nothing on screen, "not connected"
+          // included; over saved rows only a real error reaches onError (offline is silent).
+          if (
+            page.error !== undefined &&
+            reportsReadError(page.notConnected, fetchedMessages.length > 0, false, false)
+          ) {
+            onError?.(page.error as CometChat.CometChatException);
+          }
+          // Agent chat shows the parent question with its thread, as today.
+          if (isAgentChat && parentMessageId && fetchedMessages.length > 0) {
+            try {
+              const { CometChat } = await import('@cometchat/chat-sdk-javascript');
+              const parentMsg = await CometChat.getMessageDetails(String(parentMessageId));
+              if (refs.generationRef.current === gen) {
+                dispatch({ type: 'OFFLINE_UPSERT', messages: [parentMsg] });
+                fetchedMessages = [parentMsg, ...fetchedMessages];
+              }
+            } catch {
+              // Offline or gone: proceed without the parent message
+            }
+          }
+          dispatch({ type: 'SET_HAS_REACHED_LATEST', hasReachedLatest: true });
         } else {
           // Normal latest-message init
           dispatch({ type: 'FETCH_PREVIOUS_START' });
@@ -244,7 +342,17 @@ export function useMessageListInit(
           parentMessageId
         );
         if (shouldMarkRead) {
-          manager.markConversationAsRead().catch(noop);
+          manager
+            .markConversationAsRead()
+            // Offline: the SDK clears the cached unread count; the server hears
+            // about it after the next sync (AC-7.4).
+            .catch(
+              offlineOn
+                ? () => {
+                    rememberOfflineRead(offlineCtx);
+                  }
+                : noop
+            );
 
           const lastFetchedMsg = fetchedMessages[fetchedMessages.length - 1];
           if (lastFetchedMsg) {
@@ -310,12 +418,16 @@ export function useMessageListInit(
       }
     };
 
-    // Store initialize so connection/connected can call it
+    // Store initialize so connection/connected can call it. It runs against the
+    // manager and generation current at call time (the caller has just replaced
+    // the manager and bumped the generation).
     refs.initializeRef.current = () => {
-      void initialize();
+      const manager = refs.managerRef.current ?? new CometChatMessageListManager(managerOpts);
+      refs.managerRef.current = manager;
+      void initialize(manager, refs.generationRef.current);
     };
 
-    void initialize();
+    void initialize(initialManager, refs.generationRef.current);
 
     return () => {
       aborted = true;

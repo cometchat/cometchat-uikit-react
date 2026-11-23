@@ -17,6 +17,7 @@ import type {
 import './CometChatConversations.css';
 import { useLocale } from '../../context/locale/LocaleContext';
 import { useGlobalConfig } from '../../context/GlobalConfigContext';
+import { CometChatConversationsOfflineNotices } from './CometChatConversationsOfflineNotices';
 
 /**
  * CometChatConversationsRoot — Provider + default layout.
@@ -31,6 +32,7 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
   hideUserStatus: hideUserStatusProp,
   hideUnreadCount = false,
   hideReceipts: hideReceiptsProp,
+  hideOfflineNotices = false,
   hideGroupType = false,
   lastMessageDateTimeFormat,
   disableSoundForMessages: disableSoundForMessagesProp,
@@ -145,6 +147,9 @@ export const CometChatConversationsRoot: React.FC<CometChatConversationsRootProp
             )}
           </>
         )}
+
+        {/* Offline support: unsent messages lost in a cache reset. */}
+        {!hideOfflineNotices && <CometChatConversationsOfflineNotices />}
 
         {/* Delete confirmation dialog — scoped to the conversation list, not the app.
             `container` points at this component's own root, so the dialog's backdrop dims exactly

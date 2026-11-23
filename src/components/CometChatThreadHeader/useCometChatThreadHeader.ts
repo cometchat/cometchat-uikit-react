@@ -6,6 +6,8 @@ import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import type { CometChatEvent } from '../../context/CometChatEvents.types';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
 import { carryThreadSubscribed } from '../../utils/CometChatThreadSubscription';
+import { OfflineHub } from '../../utils/offline/hub';
+import { localIdOf } from '../../utils/offline/identity';
 
 export interface UseCometChatThreadHeaderOptions {
   /** The parent message of the thread. */
@@ -136,7 +138,13 @@ export function useCometChatThreadHeader(
         if (parentId === parentMessage.getId()) {
           const messageId = message.getId();
           if (messageId) {
-            dispatch({ type: 'INCREMENT_REPLY_COUNT', messageId });
+            // With offline on, a reply counted at pending is not counted again.
+            const localMessageId = localIdOf(message);
+            dispatch({
+              type: 'INCREMENT_REPLY_COUNT',
+              messageId,
+              ...(localMessageId && { localMessageId }),
+            });
           }
         }
       }
@@ -174,6 +182,33 @@ export function useCometChatThreadHeader(
   );
 
   useCometChatEvents(handleEvent, [parentMessage.getId(), loggedInUser?.getUid()]);
+
+  // Offline support (UIT-SEND-21): an own reply counts from the moment it is
+  // pending, a discard takes it back, and a fresher parent from the SDK
+  // (onMessagesSynced) replaces the count. The hub only emits with offline on.
+  useEffect(() => {
+    const hub = OfflineHub.getInstance();
+    const parentId = parentMessage.getId();
+    const stopSend = hub.sendState.subscribe(event => {
+      if (event.gen !== hub.gen || !event.localMessageId) return;
+      if (event.message.getParentMessageId() !== parentId) return;
+      if (event.state === 'sending') {
+        dispatch({ type: 'OFFLINE_REPLY_PENDING', localMessageId: event.localMessageId });
+      } else if (event.state === 'discarded') {
+        dispatch({ type: 'OFFLINE_REPLY_DISCARDED', localMessageId: event.localMessageId });
+      }
+    });
+    const stopUpdated = hub.messagesUpdated.subscribe(event => {
+      if (event.gen !== hub.gen) return;
+      const fresher = event.messages.find(m => m.getId() === parentId);
+      if (!fresher) return;
+      dispatch({ type: 'OFFLINE_PARENT_REFRESHED', count: fresher.getReplyCount() || 0 });
+    });
+    return () => {
+      stopSend();
+      stopUpdated();
+    };
+  }, [parentMessage]);
 
   // Derive sender name from the current parent message
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition

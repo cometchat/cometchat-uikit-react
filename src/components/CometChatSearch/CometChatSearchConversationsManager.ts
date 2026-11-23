@@ -37,16 +37,30 @@ export class CometChatSearchConversationsManager {
     if (this.isLoadingMore || !this.searchRequest) {
       return { results: [], hasMore: false };
     }
+    const request = this.searchRequest;
     this.isLoadingMore = true;
     try {
-      const results = await this.searchRequest.fetchNext();
+      const results = await request.fetchNext();
       return {
         results,
         hasMore: results.length >= 30,
       };
     } finally {
-      this.isLoadingMore = false;
+      // A newer search's own load-more is not released by this one's end.
+      if (this.searchRequest === request) this.isLoadingMore = false;
     }
+  }
+
+  /**
+   * Offline (ON) path, no keyword: the request a filter-only read pages with.
+   * A filter is answered from the cache too, so the hook reads it two-phase.
+   */
+  startFilterRead(
+    filters: CometChatSearchFilter[],
+    customBuilder?: CometChat.ConversationsRequestBuilder
+  ): CometChat.ConversationsRequest {
+    this.searchRequest = this.buildRequest('', filters, customBuilder, 30);
+    return this.searchRequest;
   }
 
   /** Reset the request state. */

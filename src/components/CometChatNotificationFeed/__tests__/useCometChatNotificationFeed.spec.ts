@@ -275,6 +275,19 @@ describe('useCometChatNotificationFeed', () => {
       expect(mocks.fetchUnreadCount).not.toHaveBeenCalled();
     });
 
+    it('keeps the shown count when a poll fails', async () => {
+      const { result } = await loaded();
+      expect(result.current.totalUnreadCount).toBe(3);
+      mocks.fetchUnreadCount.mockClear();
+      mocks.fetchUnreadCount.mockResolvedValue(null);
+      act(() => {
+        window.dispatchEvent(new Event('focus'));
+      });
+      await waitFor(() => expect(mocks.fetchUnreadCount).toHaveBeenCalled());
+      await act(() => new Promise(r => setTimeout(r, 0)));
+      expect(result.current.totalUnreadCount).toBe(3);
+    });
+
     it('re-fetches the count when the window regains focus', async () => {
       const { result } = await loaded();
       mocks.fetchUnreadCount.mockResolvedValue(5);

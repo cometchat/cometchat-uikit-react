@@ -45,6 +45,12 @@ vi.mock('@cometchat/chat-sdk-javascript', async () =>
   (await import('./helpers/messageListSdkMock')).mockSdkModule()
 );
 
+// The offline notices are tested on their own (utils/offline/__tests__); here a marker stands in
+// for them so hideOfflineNotices can be checked without an offline SDK.
+vi.mock('../CometChatMessageListOfflineNotices', () => ({
+  CometChatMessageListOfflineNotices: () => <div data-testid="offline-notices-slot" />,
+}));
+
 installBrowser();
 
 beforeAll(async () => {
@@ -147,6 +153,25 @@ describe('CometChatMessageList props: what is fetched', () => {
     });
     expect(sdk.messageRequests[1]?.setTypes).toEqual([['text']]);
     expect(sdk.messageRequests[1]?.setCategories).toEqual([['message']]);
+  });
+});
+
+describe('CometChatMessageList props: offline notices', () => {
+  it('hideOfflineNotices removes the offline notices; they are shown by default', async () => {
+    covers('CometChatMessageList.hideOfflineNotices', 'true', 'false', 'default');
+    history(text({ id: 1, from: bob, text: 'Hi from Bob' }));
+    let view = show({ hideOfflineNotices: true });
+    await bubbleText('Hi from Bob');
+    expect(screen.queryByTestId('offline-notices-slot')).toBeNull();
+    view.unmount();
+    for (const props of [{ hideOfflineNotices: false }, {}]) {
+      resetHarness();
+      history(text({ id: 1, from: bob, text: 'Hi from Bob' }));
+      view = show(props);
+      await bubbleText('Hi from Bob');
+      expect(screen.getByTestId('offline-notices-slot')).toBeTruthy();
+      view.unmount();
+    }
   });
 });
 

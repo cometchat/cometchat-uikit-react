@@ -56,7 +56,14 @@ export type CometChatMessageComposerAction =
   | { type: 'SET_ERROR'; error: string | null }
   // --- Tray actions ---
   | { type: 'TRAY_ADD'; items: TrayItem[]; batchId?: string | null }
-  | { type: 'TRAY_UPDATE_STATUS'; fileId: string; status: TrayItemStatus; error?: unknown }
+  | {
+      type: 'TRAY_UPDATE_STATUS';
+      fileId: string;
+      status: TrayItemStatus;
+      error?: unknown;
+      /** Offline support: the upload could not reach the server. */
+      queueOffline?: boolean;
+    }
   | { type: 'TRAY_UPDATE_PROGRESS'; fileId: string; percent: number }
   | { type: 'TRAY_SET_ATTACHMENT'; fileId: string; attachment: CometChat.Attachment }
   | { type: 'TRAY_REMOVE'; fileId: string }
@@ -153,15 +160,18 @@ export function composerReducer(
         ...state,
         tray: {
           ...state.tray,
-          items: state.tray.items.map(item =>
-            item.fileId === action.fileId
-              ? {
-                  ...item,
-                  status: action.status,
-                  ...(action.error !== undefined ? { error: action.error } : {}),
-                }
-              : item
-          ),
+          items: state.tray.items.map(item => {
+            if (item.fileId !== action.fileId) return item;
+            const next: TrayItem = {
+              ...item,
+              status: action.status,
+              ...(action.error !== undefined ? { error: action.error } : {}),
+            };
+            // A retry starts over: only this failure can say the file queues.
+            if (action.queueOffline) next.queueOffline = true;
+            else delete next.queueOffline;
+            return next;
+          }),
         },
       };
 
@@ -220,5 +230,10 @@ export function composerReducer(
  * `rejected`). There is no partial-send / `sendMode` option.
  */
 export function selectCanSend(tray: TrayState): boolean {
-  return tray.items.length > 0 && tray.items.every(item => item.status === 'success');
+  return (
+    tray.items.length > 0 &&
+    tray.items.every(
+      item => item.status === 'success' || (item.status === 'failed' && item.queueOffline === true)
+    )
+  );
 }

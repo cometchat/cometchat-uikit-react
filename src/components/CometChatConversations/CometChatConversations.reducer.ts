@@ -11,6 +11,14 @@ import {
   repositionForPinChange,
   sortByPinTier,
 } from './CometChatConversations.utils';
+import {
+  applyFirstServerPage,
+  applyNextServerPage,
+  dedupeConversations,
+  mergeFirstServerPage,
+  reconcileSyncPage,
+} from './conversationsOffline';
+import { offlineListStates } from '../../utils/offline/entityList';
 
 // ==================== State ====================
 
@@ -31,6 +39,10 @@ export interface CometChatConversationsState {
   activeConversationId: string | null;
   /** Current search text. */
   searchText: string;
+  /** Offline: a keyword search could not reach the server; nothing saved (offline on only). */
+  connectToSearch?: boolean;
+  /** Offline: nothing saved and not connected (never set offline off). */
+  connectToLoad?: boolean;
   /** Typing indicators keyed by user UID or group GUID. */
   typingIndicatorMap: Map<string, CometChat.TypingIndicator>;
 }
@@ -46,6 +58,10 @@ export type CometChatConversationsAction =
   | { type: 'MOVE_TO_TOP'; conversation: CometChat.Conversation }
   /** Pin state changed — re-band the conversation, or ignore it if not listed. */
   | { type: 'CONVERSATION_PIN_CHANGED'; conversation: CometChat.Conversation }
+  /** Offline (ON) pin event matched by (type, with) to the listed row `targetId` (UIK-CONV-01). */
+  | { type: 'OFFLINE_PIN_EVENT'; conversation: CometChat.Conversation; targetId: string }
+  /** Offline (ON) pin event for a chat that was not on screen, fetched and inserted. */
+  | { type: 'OFFLINE_PIN_INSERT'; conversation: CometChat.Conversation }
   | { type: 'ADD_CONVERSATION'; conversation: CometChat.Conversation }
   | { type: 'RESET_UNREAD_COUNT'; conversationId: string }
   | {
@@ -62,6 +78,31 @@ export type CometChatConversationsAction =
   | { type: 'SET_ACTIVE_CONVERSATION'; conversationId: string | null }
   | { type: 'ADD_TYPING_INDICATOR'; id: string; indicator: CometChat.TypingIndicator }
   | { type: 'REMOVE_TYPING_INDICATOR'; id: string }
+  // --- Offline support (dispatched only with the SDK's offline support on) ---
+  /** A page of a two-phase read: `cached` paints first, `server` replaces it. */
+  | {
+      type: 'OFFLINE_PAGE';
+      phase: 'cached' | 'server';
+      first: boolean;
+      conversations: CometChat.Conversation[];
+      /** Ids the cached page of this read showed (server phase of a later page). */
+      cachedIds?: string[];
+      /** The kit's own re-read of page one: its server page merges into the rows shown. */
+      merge?: boolean;
+    }
+  /** A two-phase read ended without a server page. */
+  | {
+      type: 'OFFLINE_PAGE_ERROR';
+      notConnected: boolean;
+      error: string;
+      hasMore: boolean;
+      /** The read carried a search keyword (absent: no). */
+      keyword?: boolean;
+    }
+  /** The SDK's catch-up sync page, reconciled on the plain list. */
+  | { type: 'OFFLINE_SYNC_PAGE'; conversations: CometChat.Conversation[] }
+  /** Reconnected after an offline read past the cache closed paging: open it again (R5). */
+  | { type: 'OFFLINE_PAGING_REOPEN' }
   | { type: 'RESET' };
 
 // ==================== Initial State ====================
@@ -96,7 +137,17 @@ export function conversationsReducer(
     case 'FETCH_SUCCESS': {
       // The server pin-orders each page, but a realtime insert between pages can
       // still leave the merged list out of band order — re-assert it.
-      const merged = sortByPinTier([...state.conversations, ...action.conversations]);
+      // A conversation moved to the top by a realtime event can also arrive on a
+      // later page: keep the listed (fresher) row and drop the page's copy.
+      const listedIds = new Set(state.conversations.map(c => c.getConversationId()));
+      const pageIds = new Set<string>();
+      const fresh = action.conversations.filter(c => {
+        const id = c.getConversationId();
+        if (listedIds.has(id) || pageIds.has(id)) return false;
+        pageIds.add(id);
+        return true;
+      });
+      const merged = sortByPinTier([...state.conversations, ...fresh]);
       const fetchState: CometChatFetchState = merged.length === 0 ? 'empty' : 'loaded';
       return {
         ...state,
@@ -198,6 +249,31 @@ export function conversationsReducer(
       return {
         ...state,
         conversations: repositionForPinChange(state.conversations, merged),
+      };
+    }
+
+    case 'OFFLINE_PIN_EVENT': {
+      const existing = state.conversations.find(
+        c => c.getConversationId() === action.targetId
+      );
+      if (!existing) return state;
+      // As CONVERSATION_PIN_CHANGED: only the pin attributes move onto the row.
+      const merged = CometChatUIKitUtility.clone(existing);
+      merged.setPinnedAt(action.conversation.getPinnedAt());
+      merged.setPinnedBy(action.conversation.getPinnedBy());
+      return {
+        ...state,
+        conversations: repositionForPinChange(state.conversations, merged),
+      };
+    }
+
+    case 'OFFLINE_PIN_INSERT': {
+      const convId = action.conversation.getConversationId();
+      if (state.conversations.some(c => c.getConversationId() === convId)) return state;
+      return {
+        ...state,
+        conversations: repositionForPinChange(state.conversations, action.conversation),
+        fetchState: 'loaded',
       };
     }
 
@@ -332,6 +408,78 @@ export function conversationsReducer(
       const newMap = new Map(state.typingIndicatorMap);
       newMap.delete(action.id);
       return { ...state, typingIndicatorMap: newMap };
+    }
+
+    case 'OFFLINE_PAGE': {
+      let conversations: CometChat.Conversation[];
+      if (action.phase === 'cached') {
+        conversations = dedupeConversations([...state.conversations, ...action.conversations]);
+      } else if (action.first && action.merge) {
+        conversations = mergeFirstServerPage(
+          state.conversations,
+          new Set(action.cachedIds ?? []),
+          action.conversations
+        );
+      } else if (action.first) {
+        conversations = applyFirstServerPage(state.conversations, action.conversations);
+      } else {
+        conversations = applyNextServerPage(
+          state.conversations,
+          new Set(action.cachedIds ?? []),
+          action.conversations
+        );
+      }
+      const sorted = sortByPinTier(conversations);
+      const isServer = action.phase === 'server';
+      return {
+        ...state,
+        conversations: sorted,
+        // A cached page, even empty, never ends the list; only a server one does.
+        fetchState: sorted.length > 0 ? 'loaded' : isServer ? 'empty' : state.fetchState,
+        hasMore: isServer ? action.conversations.length > 0 : state.hasMore,
+        ...(isServer && { error: null, connectToSearch: false, connectToLoad: false }),
+      };
+    }
+
+    case 'OFFLINE_PAGE_ERROR': {
+      const none = state.conversations.length === 0;
+      const offline = offlineListStates(
+        action.notConnected,
+        action.keyword === true,
+        state.conversations.length
+      );
+      if (action.notConnected) {
+        // Offline past the cache: keep the saved chats. With none: "Connect to search" for a
+        // keyword (an empty state, no error), else the error state worded "Connect to load".
+        return {
+          ...state,
+          fetchState: !none ? 'loaded' : action.keyword === true ? 'empty' : 'error',
+          hasMore: action.hasMore,
+          ...(none && action.keyword !== true && { error: action.error }),
+          ...offline,
+        };
+      }
+      return {
+        ...state,
+        fetchState: none ? 'error' : state.fetchState,
+        error: action.error,
+        ...offline,
+      };
+    }
+
+    case 'OFFLINE_SYNC_PAGE': {
+      const conversations = sortByPinTier(
+        reconcileSyncPage(state.conversations, action.conversations)
+      );
+      return {
+        ...state,
+        conversations,
+        fetchState: conversations.length === 0 ? state.fetchState : 'loaded',
+      };
+    }
+
+    case 'OFFLINE_PAGING_REOPEN': {
+      return state.hasMore ? state : { ...state, hasMore: true };
     }
 
     case 'RESET': {

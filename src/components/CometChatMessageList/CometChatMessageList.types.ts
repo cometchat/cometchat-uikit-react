@@ -1,5 +1,5 @@
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type { CometChatFetchState } from '../../types';
 import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
 import type { CometChatTextFormatter } from '../../formatters/CometChatTextFormatter';
@@ -100,6 +100,44 @@ export interface CometChatMessageListState {
    *  True only when: init goes to lastRead, scroll-to-bottom goes to lastRead, or mark-as-unread.
    *  Cleared on RESET (new chat). */
   showUnreadBanner: boolean;
+  /**
+   * Offline support only: `'connect_to_load_more'` when an offline read could
+   * not go past the device cache (the list shows a "Connect to load older
+   * messages" footer). Absent with offline off.
+   */
+  offlineFooter?: 'none' | 'connect_to_load_more';
+  /**
+   * Offline support only: `'connect_to_load_more'` when an offline read of
+   * newer messages (a jumped window) could not go past the device cache; the
+   * list stops paging newer and offers a "Connect to load newer messages"
+   * button. Absent with offline off.
+   */
+  offlineNewerFooter?: 'none' | 'connect_to_load_more';
+  /**
+   * Offline support only: a sweep missed more than one page while the user was
+   * reading older messages; the list keeps what is shown and offers "Jump to
+   * latest". Absent with offline off.
+   */
+  offlineJumpToLatest?: boolean;
+  /**
+   * Offline support only: a jump or start-from-unread read is filling the
+   * window around this message, page by page (cached first). Until it is
+   * positioned there (`scrollToMessageId` set), the list neither scrolls to
+   * the bottom nor loads newer messages. Absent with offline off.
+   */
+  offlineScrollAnchor?: number | null;
+  /**
+   * Offline support only: the connection came back while a "Connect to load"
+   * footer is shown, so scrolling to that end loads again, as tapping it
+   * does (UIK-READ-03). Absent with offline off.
+   */
+  offlineFooterRetryable?: boolean;
+  /**
+   * Offline support only: the list could not load because the SDK is not connected and
+   * nothing is saved, so its error state reads "Connect to load messages" with no Retry (D84).
+   * Absent with offline off.
+   */
+  connectToLoad?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -182,6 +220,11 @@ export type CometChatMessageListAction =
       message: CometChat.BaseMessage;
       fromLoggedInUser?: boolean;
       isLocalGroupAction?: boolean;
+      /**
+       * Offline support only: insert in sorted place by identity; `swept` = the
+       * SDK's catch-up sweep delivered it (no unread or new-message count).
+       */
+      offline?: { swept: boolean };
     }
   | { type: 'MESSAGE_EDITED'; message: CometChat.BaseMessage }
   | { type: 'MESSAGE_DELETED'; message: CometChat.BaseMessage }
@@ -215,6 +258,8 @@ export type CometChatMessageListAction =
       messageId: number;
       timestamp: number;
       loggedInUserId: string;
+      /** Offline support only: never mark a row without a server id. */
+      offline?: boolean;
     }
 
   // --- Reactions ---
@@ -264,6 +309,44 @@ export type CometChatMessageListAction =
   // --- Group reference sync ---
   // Updates the local group reference when group membership/ownership changes.
   | { type: 'UPDATE_GROUP_REFERENCE'; group: CometChat.Group }
+
+  // --- Offline support (dispatched only with the SDK's offline support on) ---
+  // Upsert rows by identity into their sorted place (cached page, own sends, sweep).
+  | { type: 'OFFLINE_UPSERT'; messages: CometChat.BaseMessage[]; updateOnly?: boolean }
+  // Apply a server page over the slice its cached page showed (windowed reconcile).
+  | {
+      type: 'OFFLINE_SERVER_PAGE';
+      direction: 'previous' | 'next';
+      cachedKeys: string[];
+      messages: CometChat.BaseMessage[];
+      /** The page before the kit's client filter, when it applied one. */
+      rawMessages?: CometChat.BaseMessage[];
+      /** The read goes on: this page left the list short, with history left. */
+      continuing?: boolean;
+      /** Rows this read's cached page added to the list, and every row of that page (D13-R2). */
+      paintedKeys?: string[];
+      rawCachedKeys?: string[];
+    }
+  // An offline read ended without a server page.
+  | {
+      type: 'OFFLINE_PAGE_ERROR';
+      direction: 'previous' | 'next';
+      notConnected: boolean;
+      error: string;
+      /** The connection was already back when the read gave up (it loads on scroll). */
+      retryable?: boolean;
+    }
+  | { type: 'OFFLINE_REMOVE'; message: CometChat.BaseMessage }
+  // Re-render the rows given (their send state changed outside the reducer).
+  | { type: 'OFFLINE_TOUCH'; messages: CometChat.BaseMessage[] }
+  // Reset to the newest window (a sweep missed more than one page).
+  | { type: 'OFFLINE_REPLACE_ALL'; messages: CometChat.BaseMessage[] }
+  // The newest window is ready but the user is reading older messages.
+  | { type: 'OFFLINE_SET_JUMP_TO_LATEST'; value: boolean }
+  // A jump / start-from-unread read around this message has started.
+  | { type: 'OFFLINE_AROUND_START'; messageId: number }
+  // The realtime connection is back: a "Connect to load" footer may load on scroll.
+  | { type: 'OFFLINE_CONNECTED' }
 
   // --- Reset ---
   | { type: 'RESET' };
@@ -416,6 +499,11 @@ export interface CometChatUseMessageListOptions {
   disableTruncation?: boolean;
   /** Hide the moderation footer beneath disapproved messages. */
   hideModerationView?: boolean;
+  /**
+   * Offline support only: hide the notices about unsent messages (removed,
+   * not sent, lost in a cache reset). Default `false`.
+   */
+  hideOfflineNotices?: boolean;
   /** Whether this is an AI agent chat (suppresses moderation UI). */
   isAgentChat?: boolean;
   /** Custom display formatters merged into text/caption bubbles. */
@@ -541,6 +629,7 @@ export interface CometChatMessageListOptions {
   hideFlagRemarkField: boolean;
   disableTruncation: boolean;
   hideModerationView: boolean;
+  hideOfflineNotices?: boolean;
   isAgentChat: boolean;
   textFormatters?: CometChatTextFormatter[];
 
@@ -571,12 +660,19 @@ export interface CometChatUseMessageListReturn {
   loggedInUser: CometChat.User;
   user: CometChat.User | undefined;
   group: CometChat.Group | undefined;
+  /** The thread's parent message id in thread mode, else undefined. */
+  parentMessageId?: number | undefined;
   isLoading: boolean;
   isEmpty: boolean;
   isError: boolean;
   fetchPrevious: () => Promise<void>;
   fetchNext: () => Promise<void>;
-  deleteMessage: (messageId: number) => Promise<void>;
+  /**
+   * Deletes a message. Resolves `false` when the delete did not happen - offline, or with no
+   * permission - so a caller does not report a delete that was refused. No SDK queues a delete
+   * of an already-sent message. An implementation that resolves nothing is read as done.
+   */
+  deleteMessage: (messageId: number) => Promise<unknown>;
   scrollToMessage: (messageId: number) => void;
   /**
    * Jump to a specific message — re-fetches around it if not loaded.
@@ -599,6 +695,17 @@ export interface CometChatUseMessageListReturn {
    * If unread messages exist, first click goes to last-read message, second click goes to actual bottom.
    */
   scrollToBottom: () => 'scroll-dom' | 'refetching';
+  /**
+   * Offline support only: show the newest messages a catch-up sweep found
+   * while the user was reading older ones (`state.offlineJumpToLatest`).
+   */
+  offlineJumpToLatest?: () => void;
+  /**
+   * @internal The view's prepend bookkeeping, held here so the data hook can run it
+   * before an older page it reads itself lands (the reconnect edge load). The view's
+   * scroll hook fills it in; nothing outside the kit should call or set it.
+   */
+  markOlderPrependRef?: RefObject<(() => void) | null>;
   hasMore: boolean;
   hasMoreNewer: boolean;
   /**

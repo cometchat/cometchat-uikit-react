@@ -147,6 +147,19 @@ export interface CometChatGroupsContextValue {
   activeGroupId: string | null;
   /** Current search text. */
   searchText: string;
+  /**
+   * Offline support: true when a keyword search ran while offline with nothing saved
+   * to show. A search keyword has no offline cache, so the empty state reads "Connect to
+   * search". Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToSearch?: boolean;
+  /**
+   * Offline support: true when the list could not load because the SDK is not connected
+   * and nothing is saved, so the error state reads "Connect to load groups" (no Retry).
+   * A list opened with only a filter counts as this, not as a search. Only ever set when
+   * the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
 
   // --- Configuration ---
   /** Selection mode. */
@@ -246,6 +259,19 @@ export interface CometChatUseCometChatGroupsReturn {
   selectedGroupsMap: Map<string, CometChat.Group>;
   activeGroupId: string | null;
   searchText: string;
+  /**
+   * Offline support: true when a keyword search ran while offline with nothing saved
+   * to show. A search keyword has no offline cache, so the empty state reads "Connect to
+   * search". Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToSearch?: boolean;
+  /**
+   * Offline support: true when the list could not load because the SDK is not connected
+   * and nothing is saved, so the error state reads "Connect to load groups" (no Retry).
+   * A list opened with only a filter counts as this, not as a search. Only ever set when
+   * the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
   // Actions
   fetchNext: () => Promise<void>;
   setSearchText: (text: string) => void;

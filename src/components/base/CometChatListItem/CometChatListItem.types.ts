@@ -25,6 +25,12 @@ export interface CometChatListItemRootProps {
   menuShortcutKey?: string | null;
   /** Whether to disable the tabindex on the list item (when parent manages focus via roving tabindex). */
   disableTabIndex?: boolean;
+  /**
+   * The row's ARIA role: `option` (default) inside a listbox, `group` when the
+   * row sits inside a `listitem`. `aria-selected` is set only on an `option`, the
+   * role that allows it.
+   */
+  role?: 'option' | 'group';
   /** Whether the list item is currently focused (managed by parent). */
   isFocused?: boolean;
 }

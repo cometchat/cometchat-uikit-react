@@ -13,6 +13,8 @@ const BASE_URL = `http://localhost:${process.env.E2E_PORT ?? '3005'}`;
 
 export default defineConfig({
   testDir: './e2e',
+  // The offline suite runs against a local fake server: playwright.offline.config.ts.
+  testIgnore: ['**/offline/**'],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -59,5 +61,8 @@ export default defineConfig({
     // requested (e.g. a production build), so a stray dev server can't stand in.
     reuseExistingServer: !process.env.E2E_WEB_SERVER_COMMAND,
     timeout: 60_000,
+    // The sample app turns offline support on by default; this suite covers the
+    // kit's own default (offline OFF), like an integrator who never opts in.
+    env: { VITE_COMETCHAT_OFFLINE: '0' },
   },
 });

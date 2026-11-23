@@ -47,7 +47,11 @@ export function createStreamingMessage(
     getSentAt: () => 0,
     getReactions: () => [],
     getMentions: () => [],
-    getMuid: () => String(Date.now()),
+    // Stable: a muid that changed on every call gave the bubble a new React key
+    // on each render wherever the key falls back to it (Prajwal
+    // CometChatMessageListView.tsx:229). The placeholder is local, so its id is
+    // its identity.
+    getMuid: () => `stream_${String(streamingBubbleId)}`,
     getConversationId: () => '',
     getUnreadRepliesCount: () => 0,
     getStatus: () => '',

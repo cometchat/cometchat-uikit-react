@@ -1329,6 +1329,30 @@ describe('useMessageListEvents', () => {
     });
   });
 
+  // D2: an un-acked own message (id 0) at the bottom must not skip the catch-up.
+  it('connection/connected anchors the catch-up on the newest row with a server id (D2)', async () => {
+    const acked = buildTextMessage({ id: 5 });
+    const pending = buildTextMessage({ id: 0, muid: 'm-1' });
+    const { refs, manager } = makeRefs({
+      ...initialMessageListState,
+      messages: [acked as never, pending as never],
+    });
+    const initNextRequest = vi.fn();
+    (manager as Record<string, unknown>).initNextRequest = initNextRequest;
+    (manager as Record<string, unknown>).fetchNext = vi.fn().mockResolvedValue([]);
+
+    const { emit } = setup(baseOptions({ user: user as never, loggedInUser: me as never }), refs);
+
+    act(() => {
+      emit({ type: 'connection/connected' } as never);
+    });
+
+    await waitFor(() => {
+      expect(initNextRequest).toHaveBeenCalledWith(5);
+      expect((manager as Record<string, ReturnType<typeof vi.fn>>).fetchNext).toHaveBeenCalled();
+    });
+  });
+
   it('connection/connected falls back to re-init when fetchNext rejects', async () => {
     const existing = buildTextMessage({ id: 5 });
     const { refs, manager } = makeRefs({

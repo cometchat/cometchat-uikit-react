@@ -8,6 +8,8 @@ import type {
 import { CometChatEventsContext } from './CometChatEventsContext';
 import { CometChatLogger } from '../utils/CometChatLogger';
 import { CometChatUIKit } from '../CometChatUIKit/CometChatUIKit';
+import { OfflineHub } from '../utils/offline/hub';
+import { sweptGroupEventsForUser } from '../utils/offline/groupActions';
 
 /**
  * CometChatEventsProvider — unified event system for CometChat UIKit.
@@ -236,6 +238,20 @@ export const CometChatEventsProvider: React.FC<CometChatEventsProviderProps> = (
       CometChat.removeGroupListener(id);
     };
   }, [instanceId, emit]);
+
+  // --- Offline support: swept group actions (UIK-SYNC-03, UIT-SYNC-13) ---
+  // A kick, ban, leave or scope change that affected the user while offline
+  // arrives only through the SDK's catch-up sweep, never through the
+  // GroupListener above. Re-emit it as the live group/member-* event so every
+  // subscriber runs today's handler. The hub only emits with offline on.
+  useEffect(() => {
+    const hub = OfflineHub.getInstance();
+    return hub.messageSync.subscribe(event => {
+      if (event.gen !== hub.gen) return;
+      const uid = CometChatUIKit.getLoggedInUser()?.getUid();
+      for (const groupEvent of sweptGroupEventsForUser(event.messages, uid)) emit(groupEvent);
+    });
+  }, [emit]);
 
   // --- Call listener ---
   useEffect(() => {

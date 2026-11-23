@@ -7,6 +7,40 @@ import { CometChat } from '@cometchat/chat-sdk-javascript';
 export type CometChatPresenceSubscription = 'ALL_USERS' | 'FRIENDS' | 'ROLES';
 
 /**
+ * Offline support settings, passed through unchanged to the Chat SDK's
+ * `AppSettingsBuilder.setOfflineConfig()`.
+ *
+ * Declared structurally so the kit's public types never depend on a Chat SDK
+ * release with offline support. It lists every field the SDK's `OfflineConfig`
+ * has and nothing else, so a misspelled field is a compile error rather than a
+ * setting that is silently ignored. Offline support needs a Chat SDK with
+ * offline support (4.3.1 or later); on an older SDK, 4.3.0 included, this
+ * setting has no effect. Leaving it unset keeps offline support off.
+ */
+export interface CometChatOfflineConfig {
+  /** Turns offline support on. */
+  enabled?: boolean;
+  cacheDurationDays?: number;
+  maxStorageSize?: number;
+  maxMessagesPerConversation?: number;
+  maxConversations?: number;
+  maxPendingMessages?: number;
+  autoSendPendingOnReconnect?: boolean;
+  /** The SDK's `PendingMessageOverflowPolicy`, e.g. `'REJECT_NEWEST'`. */
+  pendingQueueOverflowPolicy?: string;
+  /** The SDK's `MediaCachingMode`: `'AUTO'` or `'OFF'`. */
+  mediaCaching?: string;
+  maxMediaCacheSize?: number;
+  maxSnapshotQueries?: number;
+  snapshotTtlDays?: number;
+  encryption?: boolean;
+  /** The SDK's `EncryptionFailureBehavior`. */
+  encryptionFailureBehavior?: string;
+  /** Dev-only diagnostic trace. */
+  debugTracing?: boolean;
+}
+
+/**
  * Represents the settings required to initialize the CometChat UIKit.
  * This class holds various configuration options, such as app credentials,
  * socket connection settings, and feature toggles.
@@ -89,6 +123,13 @@ export class UIKitSettings {
   readonly callAppSettings?: any;
 
   /**
+   * Offline support settings handed to the Chat SDK at init. Absent by
+   * default, which leaves offline support off.
+   * @type {CometChatOfflineConfig}
+   */
+  readonly offlineConfig?: CometChatOfflineConfig;
+
+  /**
    * Private constructor to initialize the settings using the provided builder.
    * @param {UIKitSettingsBuilder} builder - The builder instance containing the settings configuration.
    */
@@ -105,6 +146,7 @@ export class UIKitSettings {
     this.callingEnabled = builder.callingEnabled ?? false;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     this.callAppSettings = builder.callAppSettings;
+    if (builder.offlineConfig) this.offlineConfig = builder.offlineConfig;
   }
 
   /**
@@ -204,6 +246,14 @@ export class UIKitSettings {
   getCallAppSettings(): any {
     return this.callAppSettings;
   }
+
+  /**
+   * Retrieves the offline support settings, if any were set.
+   * @returns {CometChatOfflineConfig | undefined} The offline config, or undefined.
+   */
+  getOfflineConfig(): CometChatOfflineConfig | undefined {
+    return this.offlineConfig;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -284,6 +334,12 @@ export class UIKitSettingsBuilder {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   callAppSettings?: any;
+
+  /**
+   * Offline support settings for the Chat SDK.
+   * @type {CometChatOfflineConfig}
+   */
+  offlineConfig?: CometChatOfflineConfig;
 
   /**
    * Builds and returns an instance of UIKitSettings.
@@ -431,6 +487,29 @@ export class UIKitSettingsBuilder {
   setCallAppSettings(callAppSettings: any): this {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     this.callAppSettings = callAppSettings;
+    return this;
+  }
+
+  /**
+   * Turns on the Chat SDK's offline support (cached reads, a durable outbox,
+   * catch-up sync) and the kit's offline UI. The config is passed to the SDK
+   * as is. Requires a Chat SDK with offline support (4.3.1 or later); on an
+   * older SDK, 4.3.0 included, it is ignored and the kit behaves as before.
+   *
+   * @example
+   * ```typescript
+   * new UIKitSettingsBuilder()
+   *   .setAppId('APP_ID')
+   *   .setRegion('us')
+   *   .setOfflineConfig({ enabled: true })
+   *   .build();
+   * ```
+   *
+   * @param {CometChatOfflineConfig} config - Offline settings for the Chat SDK.
+   * @returns {UIKitSettingsBuilder} The builder instance.
+   */
+  setOfflineConfig(config: CometChatOfflineConfig): this {
+    this.offlineConfig = config;
     return this;
   }
 }

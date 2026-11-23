@@ -104,6 +104,20 @@ export const mockCometChat = {
   getConnectionStatus: vi.fn().mockReturnValue('connected'),
   setSource: vi.fn(),
 
+  // The offline cache-reset reasons, in the Chat SDK 4.3.1 shape. SCHEMA_RESET is
+  // the member the kit's offline floor probes for (utils/offline/gate.ts
+  // hasOfflineSdk): without it `isOfflineOn()` answers false however
+  // `isOfflineEnabled` is stubbed, so a spec that turns offline on needs it here.
+  // Delete it from the mock in a spec that wants a 4.3.0-shaped SDK.
+  OfflineCacheResetReason: {
+    KEY_LOST: 'KEY_LOST',
+    WRONG_KEY: 'WRONG_KEY',
+    CORRUPTED: 'CORRUPTED',
+    ESCALATED: 'ESCALATED',
+    ENCRYPTION_CHANGED: 'ENCRYPTION_CHANGED',
+    SCHEMA_RESET: 'SCHEMA_RESET',
+  },
+
   // Messaging
   sendMessage: vi.fn().mockImplementation((msg: unknown) => Promise.resolve(msg)),
   sendTextMessage: vi.fn().mockImplementation((msg: unknown) => Promise.resolve(msg)),

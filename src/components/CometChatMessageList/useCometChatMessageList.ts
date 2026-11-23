@@ -1,5 +1,6 @@
 import { useMemo, useReducer, useRef } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import { isOfflineOn } from '../../utils/offline/gate';
 import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import type { CometChatMessageListManager } from './CometChatMessageListManager';
 import { messageListReducer, initialMessageListState } from './CometChatMessageList.reducer';
@@ -78,7 +79,17 @@ export function useCometChatMessageList(
   // The list only mounts inside an authenticated session, so a user is expected
   // either from the prop or the UIKit store. Narrow up front and fail loud rather
   // than assert — guarding before any hook keeps the hook order stable.
-  const loggedInUser = loggedInUserProp ?? CometChatUIKit.getLoggedInUser();
+  const currentUser = loggedInUserProp ?? CometChatUIKit.getLoggedInUser();
+  // Offline support: a logout clears this list through the hub, so it renders
+  // once more before the app takes it away, with the user already gone. That
+  // render keeps the user the list had. With offline off it never happens.
+  const lastUserRef = useRef(currentUser);
+  const offlineSeenRef = useRef(false);
+  if (currentUser) {
+    lastUserRef.current = currentUser;
+    offlineSeenRef.current ||= isOfflineOn();
+  }
+  const loggedInUser = currentUser ?? (offlineSeenRef.current ? lastUserRef.current : null);
   if (!loggedInUser) {
     throw new Error(
       'useCometChatMessageList requires a logged-in user; use it inside an authenticated session.'
@@ -118,6 +129,12 @@ export function useCometChatMessageList(
    * the initialization effect and the connection/connected handler.
    */
   const initializeRef = useRef<(() => void) | null>(null);
+  const reconnectEdgesRef = useRef<(() => void) | null>(null);
+  /**
+   * The view's prepend bookkeeping, for an older read the kit starts itself.
+   * Set by the view's scroll hook, called by the scroll hook's reconnect edge load.
+   */
+  const markOlderPrependRef = useRef<(() => void) | null>(null);
 
   // --- Shared refs object (memoized so sub-hook useCallback deps stay stable) ---
   // Each individual ref is already stable (from useRef), but the container object
@@ -133,6 +150,8 @@ export function useCometChatMessageList(
       stateRef,
       optionsRef,
       initializeRef,
+      reconnectEdgesRef,
+      markOlderPrependRef,
       pendingMessagesMap: {},
     }),
     []
@@ -204,6 +223,7 @@ export function useCometChatMessageList(
     scrollToMessage,
     goToMessage,
     scrollToBottom,
+    offlineJumpToLatest,
   } = useMessageListScroll(
     {
       user,
@@ -274,6 +294,7 @@ export function useCometChatMessageList(
     hideFlagRemarkField = false,
     disableTruncation = false,
     hideModerationView = false,
+    hideOfflineNotices = false,
     bubbleView,
     showSmartReplies = false,
     smartRepliesKeywords = ['what', 'when', 'why', 'who', 'where', 'how', '?'],
@@ -325,6 +346,7 @@ export function useCometChatMessageList(
       hideFlagRemarkField,
       disableTruncation,
       hideModerationView,
+      hideOfflineNotices,
       isAgentChat,
       textFormatters,
       bubbleView,
@@ -373,6 +395,7 @@ export function useCometChatMessageList(
       hideFlagRemarkField,
       disableTruncation,
       hideModerationView,
+      hideOfflineNotices,
       isAgentChat,
       textFormatters,
       bubbleView,
@@ -394,6 +417,7 @@ export function useCometChatMessageList(
     loggedInUser,
     user,
     group,
+    parentMessageId,
     isLoading,
     isEmpty,
     isError,
@@ -408,6 +432,8 @@ export function useCometChatMessageList(
     markMessageAsUnread,
     reactToMessage,
     scrollToBottom,
+    offlineJumpToLatest,
+    markOlderPrependRef,
     hasMore: state.hasMore,
     hasMoreNewer: state.hasMoreNewer,
     hasReachedLatest: state.hasReachedLatest,

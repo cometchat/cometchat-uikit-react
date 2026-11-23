@@ -16,6 +16,8 @@ import {
   determineLayout,
 } from './CometChatImagesBubble.utils';
 import unsupportedIcon from '../../assets/unsupported.svg';
+import { useCachedMedia, useQueuedFilePreviews } from '../../utils/offline/media';
+import { OfflineMediaUnavailable } from '../../utils/offline/OfflineMediaUnavailable';
 import './CometChatImagesBubble.css';
 import { fillTemplate } from '../../utils/fillTemplate';
 
@@ -163,7 +165,12 @@ export const CometChatImagesBubble: React.FC<CometChatImagesBubbleProps> = ({
   const loggedInUser = useLoggedInUser();
 
   // Self-extract everything message-derived.
-  const attachments = useMemo(() => extractImageAttachments(message), [message]);
+  // Offline support: the SDK's cached copy when it has one (object URLs are
+  // revoked on unmount); with offline off, exactly the extracted attachments.
+  const media = useCachedMedia(
+    useQueuedFilePreviews(useMemo(() => extractImageAttachments(message), [message]))
+  );
+  const attachments = media.attachments;
   const caption = useMemo(() => extractCaption(message), [message]);
   const variant =
     (alignment ?? getBubbleAlignment(message, loggedInUser)) === 'right' ? 'outgoing' : 'incoming';
@@ -290,7 +297,9 @@ export const CometChatImagesBubble: React.FC<CometChatImagesBubbleProps> = ({
         handleImageKeyDown(e, index);
       },
       ariaLabel: !attachment.url ? getLocalizedString('accessibility_uploading_image') : imageAriaLabel,
-      isPending,
+      // Offline support: not on the device and no connection is not "unsupported",
+      // and the load is tried again when the connection returns (AC-12.3).
+      isPending: isPending || media.unavailable,
     };
     if (placeholderImage) {
       tileProps.placeholderImage = placeholderImage;
@@ -392,6 +401,8 @@ export const CometChatImagesBubble: React.FC<CometChatImagesBubbleProps> = ({
 
   return (
     <div className={rootClasses}>
+      {/* Offline support: "Available when online" while offline with no cached copy. */}
+      {media.unavailable && <OfflineMediaUnavailable onDownload={media.download} />}
       {renderContent()}
 
       {/* Caption rendered via CometChatTextBubble */}

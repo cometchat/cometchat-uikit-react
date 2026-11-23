@@ -14,55 +14,59 @@ import './CometChatReactionList.css';
 export const CometChatReactionListTabs: React.FC<CometChatReactionListTabsProps> = ({
   className,
 }) => {
-  const { selectedEmoji, emojiTabs, totalCount, groupedReactions, selectEmoji } =
-    useCometChatReactionListContext();
+  const {
+    selectedEmoji,
+    emojiTabs,
+    totalCount,
+    groupedReactions,
+    selectEmoji,
+    connectToLoad,
+    message,
+  } = useCometChatReactionListContext();
   const { getLocalizedString } = useLocale();
   const tabsContainerRef = useRef<HTMLDivElement>(null);
 
   const allText = getLocalizedString('reaction_list_all') || 'All';
 
-  // Build tab data: "All" + one per emoji
-  const tabs = useMemo(
-    () => [
-      { id: null as string | null, label: allText, count: totalCount },
-      ...emojiTabs.map(emoji => ({
-        id: emoji,
-        label: emoji,
-        count: groupedReactions.get(emoji)?.length ?? 0,
-      })),
-    ],
-    [allText, totalCount, emojiTabs, groupedReactions]
-  );
+  // Tab data: "All" (id null) + one per emoji. Offline before any reactor has loaded, the
+  // counts come from the message itself (as on Android) until the list can load.
+  const tabs = useMemo(() => {
+    const own = connectToLoad && !totalCount ? message.getReactions() : null;
+    const emojis = own
+      ? own.map(r => ({ id: r.getReaction(), count: r.getCount() }))
+      : emojiTabs.map(id => ({
+          id,
+          count: groupedReactions.get(id)?.length ?? 0,
+        }));
+    return [
+      {
+        id: null as string | null,
+        count: own ? emojis.reduce((n, e) => n + e.count, 0) : totalCount,
+      },
+      ...emojis,
+    ];
+  }, [totalCount, emojiTabs, groupedReactions, connectToLoad, message]);
 
   const handleTabKeyDown = useCallback(
     (e: React.KeyboardEvent, tabIndex: number) => {
-      let nextIndex = tabIndex;
-      if (e.key === 'ArrowRight') {
-        nextIndex = (tabIndex + 1) % tabs.length;
-        e.preventDefault();
-      } else if (e.key === 'ArrowLeft') {
-        nextIndex = (tabIndex - 1 + tabs.length) % tabs.length;
-        e.preventDefault();
-      } else if (e.key === 'Home') {
-        nextIndex = 0;
-        e.preventDefault();
-      } else if (e.key === 'End') {
-        nextIndex = tabs.length - 1;
-        e.preventDefault();
-      } else {
-        return;
-      }
-
-      const nextTab = tabs[nextIndex];
-      if (nextTab) {
-        selectEmoji(nextTab.id);
-        // Focus the new tab button
-        if (tabsContainerRef.current) {
-          const tabElements =
-            tabsContainerRef.current.querySelectorAll<HTMLElement>('[role="tab"]');
-          tabElements[nextIndex]?.focus();
-        }
-      }
+      const n = tabs.length;
+      const k = e.key;
+      const next =
+        k === 'ArrowRight'
+          ? (tabIndex + 1) % n
+          : k === 'ArrowLeft'
+            ? (tabIndex - 1 + n) % n
+            : k === 'Home'
+              ? 0
+              : k === 'End'
+                ? n - 1
+                : -1;
+      const nextTab = tabs[next];
+      if (!nextTab) return;
+      e.preventDefault();
+      selectEmoji(nextTab.id);
+      // Focus the new tab button
+      tabsContainerRef.current?.querySelectorAll<HTMLElement>('[role="tab"]')[next]?.focus();
     },
     [tabs, selectEmoji]
   );
@@ -78,12 +82,7 @@ export const CometChatReactionListTabs: React.FC<CometChatReactionListTabsProps>
     >
       {tabs.map((tab, index) => {
         const isActive = selectedEmoji === tab.id;
-        const tabClass = [
-          'cometchat-reaction-list__tabs-tab',
-          isActive ? 'cometchat-reaction-list__tabs-tab--active' : '',
-        ]
-          .filter(Boolean)
-          .join(' ');
+        const active = (base: string) => `${base}${isActive ? ` ${base}--active` : ''}`;
 
         return (
           <button
@@ -92,7 +91,7 @@ export const CometChatReactionListTabs: React.FC<CometChatReactionListTabsProps>
             role="tab"
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
-            className={tabClass}
+            className={active('cometchat-reaction-list__tabs-tab')}
             onClick={() => {
               selectEmoji(tab.id);
             }}
@@ -100,26 +99,10 @@ export const CometChatReactionListTabs: React.FC<CometChatReactionListTabsProps>
               handleTabKeyDown(e, index);
             }}
           >
-            <span
-              className={[
-                'cometchat-reaction-list__tabs-tab-emoji',
-                isActive ? 'cometchat-reaction-list__tabs-tab-emoji--active' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              {tab.label}
+            <span className={active('cometchat-reaction-list__tabs-tab-emoji')}>
+              {tab.id ?? allText}
             </span>
-            <span
-              className={[
-                'cometchat-reaction-list__tabs-tab-count',
-                isActive ? 'cometchat-reaction-list__tabs-tab-count--active' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              {tab.count}
-            </span>
+            <span className={active('cometchat-reaction-list__tabs-tab-count')}>{tab.count}</span>
           </button>
         );
       })}

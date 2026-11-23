@@ -6,12 +6,13 @@ import { useLocale } from '../../context/locale/LocaleContext';
 import './CometChatNotificationFeed.css';
 
 /**
- * CometChatNotificationFeedErrorState — Error state view.
+ * CometChatNotificationFeedErrorState — Error state view. Offline with nothing saved
+ * (`connectToLoad`) it reads "Connect to load notifications", with no retry button.
  */
 export const CometChatNotificationFeedErrorState: React.FC<
   CometChatNotificationFeedErrorStateProps
 > = ({ children }) => {
-  const { screenState, refresh } = useCometChatNotificationFeedContext();
+  const { screenState, refresh, connectToLoad } = useCometChatNotificationFeedContext();
   const { getLocalizedString } = useLocale();
 
   if (screenState !== 'error') return null;
@@ -29,21 +30,31 @@ export const CometChatNotificationFeedErrorState: React.FC<
               decoding="async"
             />
           </div>
-          <div className="cometchat-notification-feed__error-text-container">
-            <p className="cometchat-notification-feed__error-title">
-              {getLocalizedString('notifications_error_title')}
-            </p>
-            <p className="cometchat-notification-feed__error-subtitle">
-              {getLocalizedString('notifications_error_subtitle')}
-            </p>
-          </div>
-          <button
-            className="cometchat-notification-feed__error-retry-button"
-            onClick={() => void refresh()}
-            aria-label={getLocalizedString('accessibility_retry_notifications')}
-          >
-            {getLocalizedString('retry')}
-          </button>
+          {connectToLoad ? (
+            <div className="cometchat-notification-feed__error-text-container">
+              <p className="cometchat-notification-feed__error-title">
+                {getLocalizedString('notifications_connect_to_load')}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="cometchat-notification-feed__error-text-container">
+                <p className="cometchat-notification-feed__error-title">
+                  {getLocalizedString('notifications_error_title')}
+                </p>
+                <p className="cometchat-notification-feed__error-subtitle">
+                  {getLocalizedString('notifications_error_subtitle')}
+                </p>
+              </div>
+              <button
+                className="cometchat-notification-feed__error-retry-button"
+                onClick={() => void refresh()}
+                aria-label={getLocalizedString('accessibility_retry_notifications')}
+              >
+                {getLocalizedString('retry')}
+              </button>
+            </>
+          )}
         </>
       )}
     </div>

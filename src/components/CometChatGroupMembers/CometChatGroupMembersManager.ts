@@ -32,6 +32,11 @@ export class CometChatGroupMembersManager {
     return this.membersRequest.fetchNext();
   }
 
+  /** The underlying request, for the offline path's two-phase read. @internal */
+  request(): CometChat.GroupMembersRequest {
+    return this.membersRequest;
+  }
+
   /**
    * Kick a member from the group.
    * @param guid - The group GUID.

@@ -31,6 +31,7 @@ import { useFeatureProps } from '../../config/useFeatureProps';
 import type { TabName } from '../../config/settings.types';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { assetUrl } from '../../utils/assetUrl';
+import { E2EEventRecorder } from '../../e2e/E2EEventRecorder';
 
 const blockIcon = assetUrl(blockIconAsset);
 
@@ -300,62 +301,33 @@ export const CometChatHome = ({
     [loggedInUser]
   );
 
-  // --- SDK Group listener for kicked/banned (shows modal when user is removed) ---
-  useEffect(() => {
-    const listenerId = `CometChatHome_group_${Date.now()}`;
-
-    const getSelectedGroupGuid = (): string | undefined => {
-      if (!selectedItem) return undefined;
-      if ('getGuid' in selectedItem) return (selectedItem as CometChat.Group).getGuid();
-      if ('getConversationWith' in selectedItem) {
+  // --- Kicked/banned (shows a modal when the user is removed) ---
+  // Through the kit's event stream rather than a GroupListener of our own: it
+  // carries the live events and, with offline support on, the ones the SDK's
+  // catch-up sweep found after a period offline (a kick while offline).
+  useCometChatEvents(
+    event => {
+      if (event.type !== 'group/member-kicked' && event.type !== 'group/member-banned') return;
+      const removedUser = event.type === 'group/member-kicked' ? event.kickedUser : event.bannedUser;
+      const fromGroup = event.type === 'group/member-kicked' ? event.kickedFrom : event.bannedFrom;
+      if (removedUser.getUid() !== loggedInUser.getUid()) return;
+      let selectedGuid: string | undefined;
+      if (selectedItem && 'getGuid' in selectedItem) {
+        selectedGuid = (selectedItem as CometChat.Group).getGuid();
+      } else if (selectedItem && 'getConversationWith' in selectedItem) {
         const convWith = (selectedItem as CometChat.Conversation).getConversationWith();
-        if (convWith && 'getGuid' in convWith) return (convWith as CometChat.Group).getGuid();
+        if (convWith && 'getGuid' in convWith) selectedGuid = (convWith as CometChat.Group).getGuid();
       }
-      return undefined;
-    };
-
-    CometChat.addGroupListener(
-      listenerId,
-      new CometChat.GroupListener({
-        onGroupMemberKicked: (
-          _message: CometChat.Action,
-          kickedUser: CometChat.User,
-          _kickedBy: CometChat.User,
-          kickedFrom: CometChat.Group
-        ) => {
-          if (kickedUser.getUid() === loggedInUser.getUid()) {
-            const selectedGuid = getSelectedGroupGuid();
-            if (selectedGuid === kickedFrom.getGuid()) {
-              setKickedBannedAlert({
-                visible: true,
-                message: getLocalizedString('you_have_been_kicked'),
-              });
-            }
-          }
-        },
-        onGroupMemberBanned: (
-          _message: CometChat.Action,
-          bannedUser: CometChat.User,
-          _bannedBy: CometChat.User,
-          bannedFrom: CometChat.Group
-        ) => {
-          if (bannedUser.getUid() === loggedInUser.getUid()) {
-            const selectedGuid = getSelectedGroupGuid();
-            if (selectedGuid === bannedFrom.getGuid()) {
-              setKickedBannedAlert({
-                visible: true,
-                message: getLocalizedString('you_have_been_banned'),
-              });
-            }
-          }
-        },
-      })
-    );
-
-    return () => {
-      CometChat.removeGroupListener(listenerId);
-    };
-  }, [loggedInUser, selectedItem, getLocalizedString]);
+      if (selectedGuid !== fromGroup.getGuid()) return;
+      setKickedBannedAlert({
+        visible: true,
+        message: getLocalizedString(
+          event.type === 'group/member-kicked' ? 'you_have_been_kicked' : 'you_have_been_banned'
+        ),
+      });
+    },
+    [loggedInUser, selectedItem, getLocalizedString]
+  );
 
   const handleKickedBannedDismiss = useCallback(() => {
     setKickedBannedAlert({ visible: false, message: '' });
@@ -687,6 +659,8 @@ export const CometChatHome = ({
        from this hook rather than a media query: the hook measures the app container, a media
        query measures the viewport, and an embedded app makes those two different numbers. */
     <div className={`cometchat-root${isMobile ? ' cometchat-root--mobile' : ''}`}>
+      {/* Offline E2E only: records the kit's public send events for the suite. */}
+      {import.meta.env.MODE === 'offline-e2e' && <E2EEventRecorder />}
       {/* Kicked/Banned alert modal */}
       <CometChatConfirmDialog.Root
         isOpen={kickedBannedAlert.visible}

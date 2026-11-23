@@ -38,15 +38,14 @@ export default defineConfig({
         'src/components/base/CometChatEmojiKeyboard/CometChatEmojiData.ts', // 7,000-line data table
         'src/components/CometChatAudioBubble/wavesurfer/**', // vendored third-party port, not modified here
       ],
-      // Floors just under the measured coverage on this denominator (lines 91.91%,
-      // branches 88.01%, functions 88.06%); branches and functions sit half a point under, as
-      // 88 would leave a margin of two branches. They only ever go up; the target is 90% lines,
+      // Floors just under the measured coverage on this denominator (lines 92.51%,
+      // branches 88.51%, functions 89.60%). They only ever go up; the target is 90% lines,
       // 95% the stretch.
       thresholds: {
-        lines: 91,
-        functions: 87.5,
-        branches: 87.5,
-        statements: 91,
+        lines: 92,
+        functions: 89,
+        branches: 88,
+        statements: 92,
       },
     },
   },

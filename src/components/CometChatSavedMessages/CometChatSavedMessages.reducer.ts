@@ -22,7 +22,7 @@ export const initialSavedMessagesState: CometChatSavedMessagesState = {
  * every merge — a later page can legitimately contain a message newer than
  * anything on the first page, and the list will visibly re-order as it pages.
  */
-function sentAtDesc(a: CometChat.BaseMessage, b: CometChat.BaseMessage): number {
+export function sentAtDesc(a: CometChat.BaseMessage, b: CometChat.BaseMessage): number {
   // Guarded: a message reaching the reducer over the socket is not guaranteed to
   // be a fully hydrated SDK instance, and an ordering helper must never throw.
   const at = typeof a.getSentAt === 'function' ? a.getSentAt() : 0;

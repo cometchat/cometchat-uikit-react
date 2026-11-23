@@ -14,17 +14,66 @@ import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
 import type { CometChatEvent } from '../../context/CometChatEvents.types';
 import type { CometChatConversationsAction } from './CometChatConversations.reducer';
 import { CometChatConversationsManager } from './CometChatConversationsManager';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { foldOntoListedRow, receiverKeyOf, rowFromMessageOffline } from './conversationsOffline';
 
 export interface UseCometChatConversationsEventsOptions {
   dispatch: React.Dispatch<CometChatConversationsAction>;
   conversationsRef: React.RefObject<CometChat.Conversation[]>;
   loggedInUserId: string | null;
+  /**
+   * Offline (ON) handler for a pin/unpin from another device, an admin or the
+   * sweep: matched by (type, with), may fetch a chat not on screen (UIK-CONV-01).
+   */
+  onRemotePinEvent?: (conversation: CometChat.Conversation, pinned: boolean) => void;
 }
 
 export function useCometChatConversationsEvents(
   options: UseCometChatConversationsEventsOptions
 ): void {
-  const { dispatch, conversationsRef, loggedInUserId } = options;
+  const { dispatch, conversationsRef, loggedInUserId, onRemotePinEvent } = options;
+
+  /**
+   * Offline (ON) path of an acked own send. The SDK's copy may have no receiver,
+   * so the row is never rebuilt from it alone (see {@link rowFromMessageOffline}).
+   * A chat not listed yet (a first message) is asked for by its receiver.
+   */
+  const placeSentMessageOffline = (message: CometChat.BaseMessage) => {
+    rowFromMessageOffline(message, conversationsRef.current)
+      .then(async row => {
+        if (row) return row;
+        const key = receiverKeyOf(message);
+        if (!key) return null;
+        return CometChat.getConversation(message.getReceiverId(), key.type);
+      })
+      .then(fetched => {
+        if (!fetched) return;
+        // An own ack never touches a listed chat's unread count (it may land in a
+        // chat the user is not viewing) and never replaces a newer preview (R7).
+        const conversation = foldOntoListedRow(fetched, message, conversationsRef.current, 0);
+        if (!conversation) return;
+        dispatch({ type: 'MOVE_TO_TOP', conversation });
+      })
+      .catch(() => {
+        /* skip */
+      });
+  };
+
+  /** Offline (ON) path of an update to a chat that is listed; others are not this list's. */
+  const updateRowOffline = (
+    message: CometChat.BaseMessage,
+    adjust?: (row: CometChat.Conversation) => void
+  ) => {
+    rowFromMessageOffline(message, conversationsRef.current)
+      .then(conversation => {
+        if (!conversation) return;
+        adjust?.(conversation);
+        dispatch({ type: 'UPDATE_CONVERSATION', conversation });
+      })
+      .catch(() => {
+        /* skip */
+      });
+  };
 
   useCometChatEvents(
     (event: CometChatEvent) => {
@@ -49,6 +98,10 @@ export function useCometChatConversationsEvents(
           if (!CometChatConversationsManager.shouldLastMessageAndUnreadCountBeUpdated(msg)) {
             break;
           }
+          if (isOfflineOn()) {
+            placeSentMessageOffline(msg);
+            break;
+          }
           CometChat.CometChatHelper.getConversationFromMessage(msg)
             .then((conversation: CometChat.Conversation) => {
               // Reset unread count — user just sent a message in this conversation
@@ -64,6 +117,10 @@ export function useCometChatConversationsEvents(
         case 'ui:compose/edit': {
           if (event.status !== CometChatMessageStatus.success) break;
           const msg = event.message;
+          if (isOfflineOn()) {
+            updateRowOffline(msg);
+            break;
+          }
           CometChat.CometChatHelper.getConversationFromMessage(msg)
             .then((conversation: CometChat.Conversation) => {
               dispatch({ type: 'UPDATE_CONVERSATION', conversation });
@@ -76,6 +133,10 @@ export function useCometChatConversationsEvents(
 
         case 'ui:message/deleted': {
           const msg = event.message;
+          if (isOfflineOn()) {
+            updateRowOffline(msg);
+            break;
+          }
           CometChat.CometChatHelper.getConversationFromMessage(msg)
             .then((conversation: CometChat.Conversation) => {
               dispatch({ type: 'UPDATE_CONVERSATION', conversation });
@@ -88,6 +149,12 @@ export function useCometChatConversationsEvents(
 
         case 'ui:message/read': {
           const msg = event.message;
+          if (isOfflineOn()) {
+            updateRowOffline(msg, row => {
+              row.setUnreadMessageCount(0);
+            });
+            break;
+          }
           CometChat.CometChatHelper.getConversationFromMessage(msg)
             .then((conversation: CometChat.Conversation) => {
               conversation.setUnreadMessageCount(0);
@@ -108,6 +175,14 @@ export function useCometChatConversationsEvents(
         // off the conversation rather than toggling.
         case 'conversation/pinned':
         case 'conversation/unpinned':
+          // Offline (ON): matched by (type, with); a chat not on screen is
+          // fetched and inserted (UIK-CONV-01). Read the gate per event.
+          if (onRemotePinEvent && isOfflineOn()) {
+            onRemotePinEvent(event.conversation, event.type === 'conversation/pinned');
+            break;
+          }
+          dispatch({ type: 'CONVERSATION_PIN_CHANGED', conversation: event.conversation });
+          break;
         case 'ui:conversation/pin-changed': {
           dispatch({ type: 'CONVERSATION_PIN_CHANGED', conversation: event.conversation });
           break;

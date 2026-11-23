@@ -16,6 +16,8 @@ import {
   type AudioPlaybackHandle,
 } from '../../utils/audioPlaybackController';
 import './CometChatAudioBubble.css';
+import { useCachedMedia } from '../../utils/offline/media';
+import { OfflineMediaUnavailable } from '../../utils/offline/OfflineMediaUnavailable';
 
 // --- Helpers ---
 
@@ -139,12 +141,19 @@ const AudioItem: React.FC<AudioItemProps> = ({ attachment, variant }) => {
       setHasError(true);
     });
 
+    // Destroying this player (a rebuild, or the cached copy replacing the URL) makes its pending
+    // load() reject with an AbortError. That failure belongs to a player no longer shown, so it
+    // must not mark the one on screen as failed. (The 'error' event needs no guard: unAll()
+    // removes it before destroy().)
+    let replaced = false;
     ws.load(attachment.url).catch(() => {
+      if (replaced) return;
       setIsLoading(false);
       setHasError(true);
     });
 
     return () => {
+      replaced = true;
       // eslint-disable-next-line react-hooks/exhaustive-deps
       stopExclusivePlayback(playbackHandleRef.current);
       ws.unAll();
@@ -325,7 +334,10 @@ export const CometChatAudioBubble: React.FC<CometChatAudioBubbleProps> = ({
     (alignment ?? getBubbleAlignment(message, loggedInUser)) === 'right' ? 'outgoing' : 'incoming';
   const isSentByMe = variant === 'outgoing';
 
-  const attachments = useMemo(() => extractAudioAttachments(message), [message]);
+  // Offline support: the SDK's cached copy when it has one; with offline off,
+  // exactly the extracted attachments.
+  const media = useCachedMedia(useMemo(() => extractAudioAttachments(message), [message]));
+  const attachments = media.attachments;
   const caption = useMemo(() => extractAudioCaption(message), [message]);
 
   // Singular bubble: render only the first attachment.
@@ -341,8 +353,12 @@ export const CometChatAudioBubble: React.FC<CometChatAudioBubbleProps> = ({
 
   return (
     <div className={rootClasses}>
+      {/* Offline support: "Available when online" while offline with no cached copy. */}
+      {media.unavailable && <OfflineMediaUnavailable onDownload={media.download} />}
       <div className={'cometchat-audio-bubble__container'}>
-        {attachment && <AudioItem attachment={attachment} variant={variant} />}
+        {/* Keyed by its source: when the cached copy replaces the URL, the player starts fresh,
+            even if the remote load already failed (offline, it fails before the cache answers). */}
+        {attachment && <AudioItem key={attachment.url} attachment={attachment} variant={variant} />}
       </div>
 
       {/* Caption */}

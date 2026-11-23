@@ -17,6 +17,8 @@ import {
   determineLayout,
 } from './CometChatVideosBubble.utils';
 import unsupportedIcon from '../../assets/unsupported.svg';
+import { useCachedMedia, useQueuedFilePreviews } from '../../utils/offline/media';
+import { OfflineMediaUnavailable } from '../../utils/offline/OfflineMediaUnavailable';
 import './CometChatVideosBubble.css';
 import { fillTemplate } from '../../utils/fillTemplate';
 
@@ -216,7 +218,12 @@ export const CometChatVideosBubble: React.FC<CometChatVideosBubbleProps> = ({
   const { getLocalizedString } = useLocale();
 
   // Self-extract everything message-derived.
-  const attachments = useMemo(() => extractVideoAttachments(message), [message]);
+  // Offline support: the SDK's cached copy when it has one (object URLs are
+  // revoked on unmount); with offline off, exactly the extracted attachments.
+  const media = useCachedMedia(
+    useQueuedFilePreviews(useMemo(() => extractVideoAttachments(message), [message]))
+  );
+  const attachments = media.attachments;
   const caption = useMemo(() => extractVideoCaption(message), [message]);
   const variant =
     (alignment ?? getBubbleAlignment(message, loggedInUser)) === 'right' ? 'outgoing' : 'incoming';
@@ -324,7 +331,8 @@ export const CometChatVideosBubble: React.FC<CometChatVideosBubbleProps> = ({
         onClick={handleTileClick}
         onKeyDown={handleTileKeyDown}
         ariaLabel={tileAriaLabel}
-        isPending={isPending}
+        // Offline support: as in the images bubble, tried again once online (AC-12.3).
+        isPending={isPending || media.unavailable}
       />
     );
   };
@@ -415,6 +423,8 @@ export const CometChatVideosBubble: React.FC<CometChatVideosBubbleProps> = ({
 
   return (
     <div className={rootClasses}>
+      {/* Offline support: "Available when online" while offline with no cached copy. */}
+      {media.unavailable && <OfflineMediaUnavailable onDownload={media.download} />}
       {renderContent()}
 
       {/* Caption rendered via CometChatTextBubble */}

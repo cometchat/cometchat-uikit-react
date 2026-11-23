@@ -807,6 +807,9 @@ const TrayTile: React.FC<TrayTileProps> = ({ item, onRemove, onRetry, onOpenMedi
       className={tileClasses}
       data-file-id={item.fileId}
       data-status={item.status}
+      data-cc="composer-tray-tile"
+      data-cc-file-id={item.fileId}
+      data-cc-state={item.status === 'success' ? 'done' : item.status}
       {...(hasRejectionTooltip
         ? {
             onMouseEnter: openTooltip,

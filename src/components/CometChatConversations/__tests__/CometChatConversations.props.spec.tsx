@@ -130,6 +130,12 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
   },
 }));
 
+// The offline notices are tested on their own (utils/offline/__tests__); here a marker stands in
+// for them so hideOfflineNotices can be checked without an offline SDK.
+vi.mock('../CometChatConversationsOfflineNotices', () => ({
+  CometChatConversationsOfflineNotices: () => <div data-testid="offline-notices-slot" />,
+}));
+
 vi.mock('../../../resources/CometChatSoundManager/CometChatSoundManager', () => ({
   CometChatSoundManager: { play: sdk.playSound },
 }));
@@ -235,6 +241,22 @@ afterEach(() => {
 });
 
 describe('CometChatConversations props', () => {
+  describe('offline notices', () => {
+    it('hideOfflineNotices removes the offline notices; they are shown by default', async () => {
+      covers('CometChatConversations.hideOfflineNotices', 'true', 'false', 'default');
+      let view = render(<CometChatConversations hideOfflineNotices />);
+      await loaded();
+      expect(screen.queryByTestId('offline-notices-slot')).toBeNull();
+      view.unmount();
+      for (const props of [{ hideOfflineNotices: false }, {}]) {
+        view = render(<CometChatConversations {...props} />);
+        await loaded();
+        expect(screen.getByTestId('offline-notices-slot')).toBeTruthy();
+        view.unmount();
+      }
+    });
+  });
+
   describe('request builders and search', () => {
     it('without a builder, fetches 30 conversations at a time with no search keyword', async () => {
       covers('CometChatConversations.conversationsRequestBuilder', 'default');

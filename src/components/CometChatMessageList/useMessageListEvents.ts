@@ -27,6 +27,21 @@ import {
   getStreamState,
 } from '../CometChatAIAssistantChat/CometChatAIStreamingService';
 import { createStreamingMessage } from '../../utils/CometChatStreamingMessageFactory';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { localIdOf } from '../../utils/offline/identity';
+import { OfflineHub } from '../../utils/offline/hub';
+import {
+  applyMessageSync,
+  applyMessagesUpdated,
+  applySendState,
+  failStrandedSends,
+  holdReceiptIfUnshown,
+  isSwept,
+  offlineStateOf,
+  recoverEmptyChat,
+  refreshNewestWindow,
+  type OfflineListContext,
+} from './messageListOffline';
 
 // ---------------------------------------------------------------------------
 // Real-time event handling sub-hook
@@ -76,6 +91,36 @@ export function useMessageListEvents(
   } = options;
 
   const publish = usePublishEvent();
+
+  /** Context for one offline (ON-path) operation of this list. */
+  const offlineContext = (): OfflineListContext => {
+    // The manager reads each option only when it is set.
+    const managerOpts: CometChatMessageListManagerOptions = {
+      user,
+      group,
+      builder: messagesRequestBuilder,
+      parentMessageId,
+      messageTypes,
+      messageCategories,
+      isAgentChat: refs.optionsRef.current.isAgentChat,
+    };
+    return {
+      refs,
+      dispatch,
+      publish,
+      user,
+      group,
+      parentMessageId,
+      loggedInUser,
+      isAgentChat: refs.optionsRef.current.isAgentChat ?? false,
+      messageTypes,
+      messageCategories,
+      ...(messagesRequestBuilder && { builder: messagesRequestBuilder }),
+      makeManager: () => new CometChatMessageListManager(managerOpts),
+    };
+  };
+  const offlineContextRef = useRef(offlineContext);
+  offlineContextRef.current = offlineContext;
 
   useCometChatEvents(
     (event: CometChatEvent) => {
@@ -165,6 +210,12 @@ export function useMessageListEvents(
               });
           }
 
+          // Offline support: one gate read for this event. A message the SDK's
+          // catch-up sweep delivered makes no sound, gets no per-message
+          // receipt and no unread +1 (UIK-SYNC-02); one read follows the sweep.
+          const offlineOn = isOfflineOn();
+          const swept = offlineOn && isSwept(msg);
+
           if (isForConversation || isOwnMessageFromElsewhere) {
             // Case 2 — the author is auto-subscribed to their own message's thread by
             // default. An own message arriving over the socket (sent from another tab/
@@ -192,9 +243,10 @@ export function useMessageListEvents(
               type: 'MESSAGE_RECEIVED',
               message: msg,
               fromLoggedInUser: isOwnMessageFromElsewhere,
+              ...(offlineOn && { offline: { swept } }),
             });
 
-            if (!isFromLoggedInUser && !msg.getDeliveredAt()) {
+            if (!isFromLoggedInUser && !msg.getDeliveredAt() && !swept) {
               refs.managerRef.current?.markAsDelivered(msg).catch(noop);
             }
 
@@ -208,7 +260,7 @@ export function useMessageListEvents(
               dispatch({ type: 'SET_CONVERSATION_READ' });
             }
 
-            if (!disableSoundForMessages && !isOwnMessageFromElsewhere) {
+            if (!disableSoundForMessages && !isOwnMessageFromElsewhere && !swept) {
               playIncomingSound(customSoundForMessages);
             }
 
@@ -217,6 +269,7 @@ export function useMessageListEvents(
             // or our own optimistic send bouncing back).
             if (
               !isOwnMessageFromElsewhere &&
+              !swept &&
               currentState.isAtBottom &&
               currentState.hasReachedLatest &&
               !currentState.markedUnreadByUser
@@ -235,14 +288,17 @@ export function useMessageListEvents(
               dispatch({ type: 'SET_AT_BOTTOM', isAtBottom: true });
             }
           } else if (isThreadReplyForConversation(msg, user, group)) {
-            // Thread reply — update reply count on parent
-            if (!disableSoundForMessages) {
+            // Thread reply — update reply count on parent. A swept reply is
+            // already counted in the parent the sweep delivers.
+            if (!disableSoundForMessages && !swept) {
               playIncomingSound(customSoundForMessages);
             }
-            dispatch({
-              type: 'UPDATE_REPLY_COUNT',
-              parentMessageId: msg.getParentMessageId(),
-            });
+            if (!swept) {
+              dispatch({
+                type: 'UPDATE_REPLY_COUNT',
+                parentMessageId: msg.getParentMessageId(),
+              });
+            }
 
             // Case 3 — a reply from someone else that @mentions me subscribes me
             // to the thread. The reply isn't displayed in the main list (no parent
@@ -389,12 +445,22 @@ export function useMessageListEvents(
             event.type === 'receipt/delivered' || event.type === 'receipt/delivered-to-all'
               ? 'delivered'
               : 'read';
+          const receiptMessageId = parseInt(receipt.getMessageId(), 10);
+          const receiptTimestamp =
+            receiptType === 'delivered' ? receipt.getDeliveredAt() : receipt.getReadAt();
+          // Offline support: unsent rows never show a receipt, and a receipt
+          // for an id whose ack has not landed is held until it does.
+          const offlineReceipt = isOfflineOn();
+          if (offlineReceipt) {
+            holdReceiptIfUnshown({ refs }, receiptMessageId, receiptType, receiptTimestamp);
+          }
           dispatch({
             type: 'RECEIPT_UPDATE',
             receiptType,
-            messageId: parseInt(receipt.getMessageId(), 10),
-            timestamp: receiptType === 'delivered' ? receipt.getDeliveredAt() : receipt.getReadAt(),
+            messageId: receiptMessageId,
+            timestamp: receiptTimestamp,
             loggedInUserId: loggedInUser.getUid(),
+            ...(offlineReceipt && { offline: true }),
           });
           break;
         }
@@ -447,10 +513,11 @@ export function useMessageListEvents(
             refs.groupRef.current = eventGroup;
             dispatch({ type: 'UPDATE_GROUP_REFERENCE', group: eventGroup });
 
-            // Add action message to list
+            // Add action message to list (sorted by identity with offline on)
             dispatch({
               type: 'MESSAGE_RECEIVED',
               message: actionMsg as CometChat.BaseMessage,
+              ...(isOfflineOn() && { offline: { swept: false } }),
             });
 
             // Scroll/unread behavior same as regular messages
@@ -463,6 +530,21 @@ export function useMessageListEvents(
 
         // --- Connection recovery ---
         case 'connection/connected': {
+          // Offline support: the SDK's catch-up sweep delivers what was missed
+          // (outbox flush → conversations → changelog); the list makes no
+          // fetch of its own (UIK-SYNC-01). It consumes the sweep via the hub.
+          if (isOfflineOn()) {
+            // A "Connect to load more" footer now loads on scroll as well as on tap
+            // (UIK-READ-03), and a blocked edge loads its page once by itself (D84).
+            dispatch({ type: 'OFFLINE_CONNECTED' });
+            recoverEmptyChat(offlineContextRef.current());
+            refs.reconnectEdgesRef?.current?.();
+            break;
+          }
+          // Offline turned off mid-session (kill switch): un-acked rows the
+          // offline path left behind turn failed (direct), with a notice.
+          failStrandedSends(offlineContextRef.current());
+
           // Do NOT reset/clear the list — that causes a blank screen.
           const messages = currentState.messages;
           const manager = refs.managerRef.current;
@@ -471,18 +553,8 @@ export function useMessageListEvents(
             refs.generationRef.current += 1;
             dispatch({ type: 'RESET' });
 
-            const reconnectOpts: CometChatMessageListManagerOptions = {
-              messageTypes,
-              messageCategories,
-            };
-            if (user) reconnectOpts.user = user;
-            if (group) reconnectOpts.group = group;
-            if (messagesRequestBuilder) reconnectOpts.builder = messagesRequestBuilder;
-            if (parentMessageId) reconnectOpts.parentMessageId = parentMessageId;
-            if (opts.isAgentChat) reconnectOpts.isAgentChat = true;
-
-            const newManager = new CometChatMessageListManager(reconnectOpts);
-            refs.managerRef.current = newManager;
+            // A fresh manager with the list's request configuration.
+            refs.managerRef.current = offlineContextRef.current().makeManager();
 
             if (refs.initializeRef.current) {
               refs.initializeRef.current();
@@ -490,9 +562,17 @@ export function useMessageListEvents(
             break;
           }
 
-          // Get the last message ID and fetch newer messages from there
-          const lastMsg = messages[messages.length - 1];
-          const lastMsgId = lastMsg ? lastMsg.getId() : 0;
+          // Fetch newer messages from the newest row the server knows. An
+          // un-acked own send (id 0) or a streaming placeholder (negative id)
+          // at the bottom must not skip the catch-up.
+          let lastMsgId = 0;
+          for (let i = messages.length - 1; i >= 0; i--) {
+            const id = Number(messages[i]?.getId());
+            if (id > 0) {
+              lastMsgId = id;
+              break;
+            }
+          }
           if (lastMsgId > 0) {
             manager.initNextRequest(lastMsgId);
             const gen = refs.generationRef.current;
@@ -519,18 +599,7 @@ export function useMessageListEvents(
                 refs.generationRef.current += 1;
                 dispatch({ type: 'RESET' });
 
-                const fallbackOpts: CometChatMessageListManagerOptions = {
-                  messageTypes,
-                  messageCategories,
-                };
-                if (user) fallbackOpts.user = user;
-                if (group) fallbackOpts.group = group;
-                if (messagesRequestBuilder) fallbackOpts.builder = messagesRequestBuilder;
-                if (parentMessageId) fallbackOpts.parentMessageId = parentMessageId;
-                if (opts.isAgentChat) fallbackOpts.isAgentChat = true;
-
-                const newManager = new CometChatMessageListManager(fallbackOpts);
-                refs.managerRef.current = newManager;
+                refs.managerRef.current = offlineContextRef.current().makeManager();
 
                 if (refs.initializeRef.current) {
                   refs.initializeRef.current();
@@ -563,6 +632,16 @@ export function useMessageListEvents(
         // --- UI Events: message sent by local composer (optimistic flow) ---
         case 'ui:message/sent': {
           const msg = event.message;
+          // Offline support: an own message the SDK has given a local handle is
+          // on the offline path; the hub's send-state channel places its row
+          // (by identity, in sorted place). Everything else here still runs.
+          const offlineOnForThisSend = isOfflineOn();
+          const placedByOfflineHub = offlineOnForThisSend && localIdOf(msg) !== '';
+          // Kill switch, at the next operation: a send made with offline off
+          // turns the rows the offline path left unsent failed (direct).
+          if (!offlineOnForThisSend && event.status === CometChatMessageStatus.inprogress) {
+            failStrandedSends(offlineContextRef.current());
+          }
 
           // Case 2 — sending any message auto-subscribes the author to its thread.
           // Stamp the outgoing message's own flag so it shows subscribed in realtime,
@@ -594,7 +673,7 @@ export function useMessageListEvents(
             // A new streaming bubble is added on 'success' for the next response.
 
             const muid = msg.getMuid() || '';
-            if (muid) {
+            if (muid && !placedByOfflineHub) {
               const currentState = refs.stateRef.current;
 
               if (!currentState.hasReachedLatest) {
@@ -626,7 +705,7 @@ export function useMessageListEvents(
             }
 
             const errorMuid = msg.getMuid() || '';
-            if (errorMuid) {
+            if (errorMuid && !placedByOfflineHub) {
               dispatch({
                 type: 'MESSAGE_SEND_ERROR',
                 muid: errorMuid,
@@ -677,7 +756,9 @@ export function useMessageListEvents(
           const hasByMuid =
             msgMuid !== '' && currentState.messages.some(m => m.getMuid() === msgMuid);
 
-          if (hasByMuid && msgMuid) {
+          if (placedByOfflineHub) {
+            // Placed by the hub's send-state channel.
+          } else if (hasByMuid && msgMuid) {
             dispatch({ type: 'MESSAGE_SEND_SUCCESS', muid: msgMuid, confirmedMessage: msg });
           } else {
             // No pending found by muid — check by id to avoid duplicating
@@ -855,6 +936,70 @@ export function useMessageListEvents(
       hideReceipts,
     ]
   );
+
+  // --- Offline support: the hub's private channels (inert with offline off) ---
+  useEffect(() => {
+    const hub = OfflineHub.getInstance();
+    const ctx = () => offlineContextRef.current();
+    const unsubscribers = [
+      hub.sendState.subscribe(event => {
+        applySendState(ctx(), event);
+      }),
+      hub.messageSync.subscribe(event => {
+        applyMessageSync(ctx(), event, refs.optionsRef.current.hideGroupActionMessages ?? false);
+      }),
+      hub.messagesUpdated.subscribe(event => {
+        applyMessagesUpdated(ctx(), event);
+      }),
+      hub.syncFailed.subscribe(event => {
+        // A failed message sweep: refresh the newest window once (README §3.7).
+        if (event.phase === 'message' && event.gen === hub.gen) void refreshNewestWindow(ctx());
+      }),
+      hub.session.subscribe(() => {
+        // Logout, user switch or cache reset: drop this list's rows so no
+        // frame of the old session's data is shown. Only a list that used the
+        // offline path reacts, so logout with offline off is unchanged.
+        const offlineState = offlineStateOf(refs);
+        if (!offlineState.used) return;
+        offlineState.held.clear();
+        refs.generationRef.current += 1;
+        dispatch({ type: 'RESET' });
+      }),
+      hub.login.subscribe(() => {
+        // Another user is signed in now (a user switch, or a login after the
+        // logout that cleared this list): load this chat for them, instead of
+        // staying on the blank frame `session` left until the list is
+        // remounted. Only a list that used the offline path cleared itself.
+        const offlineState = offlineStateOf(refs);
+        if (!offlineState.used) return;
+        // Except when the chat on screen is the user who just signed in: after a
+        // switch from A to B, a list still pointed at B would load B's chat with
+        // themselves. It stays cleared until the app points it at a chat for the
+        // new user (Aanshi Q2 on #2460).
+        const peerUid = refs.optionsRef.current.user?.getUid();
+        const signedInUid = hub.signedInUid;
+        if (peerUid && signedInUid && peerUid === signedInUid) return;
+        const fresh = ctx().makeManager();
+        refs.generationRef.current += 1;
+        dispatch({ type: 'RESET' });
+        refs.managerRef.current = fresh;
+        refs.initializeRef.current?.();
+      }),
+      hub.cacheReset.subscribe(() => {
+        // Everything shown came from the old cache: reload, two-phase.
+        const fresh = ctx().makeManager();
+        refs.generationRef.current += 1;
+        dispatch({ type: 'RESET' });
+        refs.managerRef.current = fresh;
+        refs.initializeRef.current?.();
+      }),
+    ];
+    return () => {
+      unsubscribers.forEach(stop => {
+        stop();
+      });
+    };
+  }, [refs, dispatch]);
 
   // Subscribe to streaming state changes.
   const chatId = user?.getUid() ?? group?.getGuid() ?? '';

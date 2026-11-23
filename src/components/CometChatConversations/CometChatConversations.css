@@ -751,3 +751,44 @@
   width: 24px;
   height: 24px;
 }
+
+/* --- Offline support (rendered only with the Chat SDK's offline support on) --- */
+.cometchat-conversations__offline-notices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-1, 4px);
+  padding: var(--cometchat-padding-2, 8px) var(--cometchat-padding-3, 12px);
+}
+
+.cometchat-conversations__offline-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-2, 8px);
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-3, 12px);
+  border-radius: var(--cometchat-radius-3, 12px);
+  background: var(
+    --cometchat-conversations-offline-notice-background,
+    var(--cometchat-neutral-color-300, #e8e8e8)
+  );
+  color: var(
+    --cometchat-conversations-offline-notice-color,
+    var(--cometchat-text-color-secondary, #727272)
+  );
+  font: var(
+    --cometchat-conversations-offline-notice-font,
+    var(--cometchat-font-caption1-regular, 400 12px / 14.4px Roboto)
+  );
+}
+
+.cometchat-conversations__offline-notice-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cometchat-conversations__offline-notice-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--cometchat-text-color-secondary, #727272);
+  font: inherit;
+}

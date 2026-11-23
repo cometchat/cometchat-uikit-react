@@ -431,6 +431,37 @@ describe('useCometChatConversations', () => {
     });
   });
 
+  // QA (#2460, offline off): after a short outage Chats stayed on "OOPS! Looks like
+  // something went wrong" until a reload. The sibling Angular kit had that bug — a
+  // first page that failed left its `initialFetchDone` guard closed, so the reconnect
+  // subscription returned early for the rest of the session (fixed there in 44639921).
+  // This kit's connection handler (useCometChatConversations.ts:786) has no such
+  // guard: it re-reads whatever the list last loaded. This test holds that open.
+  it('re-reads on reconnect after a first fetch that failed, and leaves the error view', async () => {
+    const { CometChat } = await import('@cometchat/chat-sdk-javascript');
+    mockFetchNext.mockRejectedValueOnce(new Error('Network error'));
+
+    const { result } = renderHook(() => useCometChatConversations());
+
+    await waitFor(() => {
+      expect(result.current.fetchState).toBe('error');
+    });
+    expect(result.current.conversations).toHaveLength(0);
+
+    mockFetchNext.mockResolvedValue([createMockConversation('c-recovered')]);
+    const connListenerCallbacks = vi.mocked(CometChat.ConnectionListener).mock.calls.at(-1)?.[0] as
+      | { onConnected?: () => void }
+      | undefined;
+    act(() => {
+      connListenerCallbacks?.onConnected?.();
+    });
+
+    await waitFor(() => {
+      expect(result.current.fetchState).toBe('loaded');
+    });
+    expect(result.current.conversations).toHaveLength(1);
+  });
+
   // Regression: per-user receipts apply only to 1:1 (receiverType 'user');
   // groups advance only on delivered-to-all / read-by-all.
   describe('receipt sync between group and 1:1 conversations', () => {

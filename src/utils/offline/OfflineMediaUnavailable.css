@@ -1,0 +1,23 @@
+/* Offline support: "Available when online" on a media bubble whose bytes are not cached. */
+.cometchat-offline-media-unavailable {
+  display: block;
+  width: 100%;
+  margin: 0 0 var(--cometchat-spacing-1, 4px);
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-2, 8px);
+  border: none;
+  border-radius: var(--cometchat-radius-2, 8px);
+  background: var(
+    --cometchat-offline-media-unavailable-background,
+    var(--cometchat-neutral-color-300, #e8e8e8)
+  );
+  color: var(
+    --cometchat-offline-media-unavailable-color,
+    var(--cometchat-text-color-secondary, #727272)
+  );
+  font: var(
+    --cometchat-offline-media-unavailable-font,
+    var(--cometchat-font-caption1-regular, 400 12px / 14.4px Roboto)
+  );
+  text-align: center;
+  cursor: pointer;
+}

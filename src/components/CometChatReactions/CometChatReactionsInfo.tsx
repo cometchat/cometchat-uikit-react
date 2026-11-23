@@ -4,6 +4,9 @@ import type { CometChatReactionsInfoProps } from './CometChatReactions.types';
 import { useCometChatReactionsContext } from './CometChatReactions.context';
 import { useLocale } from '../../context/locale/LocaleContext';
 import './CometChatReactions.css';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { fetchTwoPhase } from '../../utils/offline/two-phase';
+import { copyRequestBuilder } from '../../utils/copyRequestBuilder';
 
 const INFO_LIMIT = 3;
 
@@ -49,6 +52,50 @@ export const CometChatReactionsInfo: React.FC<CometChatReactionsInfoProps> = ({
       const messageId = message.getId();
       if (!messageId) {
         setInfoState('loaded');
+        return;
+      }
+
+      if (isOfflineOn()) {
+        // Offline path: the cached reactors paint first, the server's replace
+        // them; offline past the cache keeps what is shown (BEH-SNAP-08). The
+        // integrator's builder is copied, never changed.
+        const offlineBuilder = reactionsRequestBuilder
+          ? copyRequestBuilder(reactionsRequestBuilder)
+          : new CometChat.ReactionsRequestBuilder().setLimit(INFO_LIMIT);
+        offlineBuilder.setMessageId(messageId);
+        offlineBuilder.setReaction(emoji);
+        let loggedInUid: string | undefined;
+        try {
+          loggedInUid = (await CometChat.getLoggedinUser())?.getUid();
+        } catch {
+          // skip "You" substitution
+        }
+        const namesOf = (reactors: CometChat.Reaction[]): string[] => {
+          const list: string[] = [];
+          for (const reactor of reactors) {
+            const reactedBy = reactor.getReactedBy();
+            if (loggedInUid && reactedBy.getUid() === loggedInUid) {
+              list.unshift(getLocalizedString('reaction_popup_you') || 'You');
+            } else {
+              list.push(reactedBy.getName());
+            }
+          }
+          return list;
+        };
+        await fetchTwoPhase<CometChat.Reaction>(offlineBuilder.build(), 'next', 'reactions', {
+          onCached: reactors => {
+            if (reactors.length === 0) return;
+            setNames(namesOf(reactors));
+            setInfoState('loaded');
+          },
+          onServer: reactors => {
+            setNames(namesOf(reactors));
+            setInfoState('loaded');
+          },
+          onError: () => {
+            setInfoState('loaded');
+          },
+        });
         return;
       }
 

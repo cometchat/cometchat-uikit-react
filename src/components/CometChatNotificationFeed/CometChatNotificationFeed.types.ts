@@ -62,6 +62,12 @@ export interface CometChatNotificationFeedState {
   error: CometChat.CometChatException | null;
   hasMorePages: boolean;
   paginationError: boolean;
+  /**
+   * Offline support: true when the feed could not load because the SDK is not connected
+   * and nothing is saved, so the error state reads "Connect to load notifications" (no
+   * Retry). Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
 }
 
 // ==================== Root Props ====================
@@ -167,6 +173,12 @@ export interface CometChatNotificationFeedContextValue {
   error: CometChat.CometChatException | null;
   hasMorePages: boolean;
   paginationError: boolean;
+  /**
+   * Offline support: true when the feed could not load because the SDK is not connected
+   * and nothing is saved, so the error state reads "Connect to load notifications" (no
+   * Retry). Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
 
   // --- Configuration ---
   title: string;
@@ -240,6 +252,12 @@ export interface CometChatUseCometChatNotificationFeedReturn {
   error: CometChat.CometChatException | null;
   hasMorePages: boolean;
   paginationError: boolean;
+  /**
+   * Offline support: true when the feed could not load because the SDK is not connected
+   * and nothing is saved, so the error state reads "Connect to load notifications" (no
+   * Retry). Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
   // Actions
   fetchNextPage: () => Promise<void>;
   refresh: () => Promise<void>;

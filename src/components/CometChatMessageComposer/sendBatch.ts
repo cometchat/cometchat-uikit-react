@@ -12,6 +12,8 @@ import type { TrayItem, TrayItemKind } from './CometChatMessageComposer.types';
 import { stampBatchMetadata, getBatchId } from '../../utils/CometChatMetadataUtils';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
 import { writeThreadSubscribed } from '../../utils/CometChatThreadSubscription';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { sendWithState } from '../../utils/offline/send';
 
 /** A group of tray items sharing the same media kind. */
 export interface TrayItemGroup {
@@ -125,7 +127,19 @@ export async function sendBatch(options: SendBatchOptions): Promise<void> {
   } = options;
 
   const groups = groupAndOrderTrayItems(items);
-  if (groups.length === 0) return;
+  // Offline support: read once for the whole batch; every message of it takes
+  // the same path (README §3.4).
+  const offlineOn = isOfflineOn();
+  // Offline support: files whose upload could not reach the server go as queued
+  // messages of their own, carrying the file itself (AC-12.4). Only while
+  // offline is on: an item flagged while it was on, and sent after it was
+  // turned off (the kill switch, or the next login), is left in the tray as a
+  // failed upload, exactly as before 7.3.0. Sending it would reach
+  // `sendWithState`'s listener form with the gate off, which never settles.
+  const queuedFiles = offlineOn
+    ? items.filter(item => item.status === 'failed' && item.queueOffline)
+    : [];
+  if (groups.length === 0 && queuedFiles.length === 0) return;
 
   // Get the logged-in user once for the whole batch.
   let loggedInUser: CometChat.User | null = null;
@@ -142,7 +156,7 @@ export async function sendBatch(options: SendBatchOptions): Promise<void> {
     const group = groups[p];
     if (!group) continue;
     const isFirst = p === 0;
-    const isLast = p === lastIndex;
+    const isLast = p === lastIndex && queuedFiles.length === 0;
 
     // Create the MediaMessage with null file (attachments are pre-uploaded and set
     // via setAttachments — the SDK skips the upload step when file is null/empty and
@@ -199,6 +213,28 @@ export async function sendBatch(options: SendBatchOptions): Promise<void> {
       message: msg,
       status: CometChatMessageStatus.inprogress,
     });
+
+    if (offlineOn) {
+      // Offline path: the hub draws the row and emits the public events; a
+      // queued message is not a failure. Best-effort, as below.
+      const result = await sendWithState(msg, 'media');
+      if (result.state === 'failed') continue;
+      onSent?.(result.message);
+      if (result.state === 'sent') {
+        const confirmedMessage = result.message as CometChat.MediaMessage;
+        if (parentMessageId) writeThreadSubscribed(confirmedMessage, true);
+        if (messageToReply && isFirst) {
+          publish({
+            type: 'ui:compose/reply',
+            message: confirmedMessage,
+            status: CometChatMessageStatus.success,
+            parentMessageId: parentMessageId ?? null,
+          });
+        }
+      }
+      if (onSendButtonClick) onSendButtonClick(result.message, 'send');
+      continue;
+    }
 
     // Send via SDK — best-effort, continue on failure.
     try {
@@ -266,5 +302,44 @@ export async function sendBatch(options: SendBatchOptions): Promise<void> {
       });
       // Best-effort: continue sending remaining messages.
     }
+  }
+
+  for (const [q, item] of queuedFiles.entries()) {
+    const isFirst = groups.length === 0 && q === 0;
+    const isLast = q === queuedFiles.length - 1;
+    const msg = new CometChat.MediaMessage(
+      receiverId,
+      item.file,
+      TYPE_MAP[item.kind],
+      receiverType
+    );
+    msg.setMuid(freshMuid());
+    msg.setSentAt(nowSeconds + groups.length + q);
+    msg.setMetadata({
+      file: item.file,
+      fileName: item.file.name,
+      fileType: item.file.type,
+      fileSize: item.file.size,
+    });
+    const captionForThisMsg = isLast && caption.trim() ? caption.trim() : undefined;
+    stampBatchMetadata(msg, { batchId, caption: captionForThisMsg });
+    if (parentMessageId) {
+      msg.setParentMessageId(parentMessageId);
+      writeThreadSubscribed(msg, true);
+    }
+    if (messageToReply && isFirst) {
+      (msg as unknown as { setQuotedMessage: (m: CometChat.BaseMessage) => void }).setQuotedMessage(
+        messageToReply
+      );
+      (msg as unknown as { setQuotedMessageId: (id: number) => void }).setQuotedMessageId(
+        messageToReply.getId()
+      );
+    }
+    if (loggedInUser) msg.setSender(loggedInUser);
+    publish({ type: 'ui:message/sent', message: msg, status: CometChatMessageStatus.inprogress });
+    const result = await sendWithState(msg, 'media');
+    if (result.state === 'failed') continue;
+    onSent?.(result.message);
+    if (onSendButtonClick) onSendButtonClick(result.message, 'send');
   }
 }

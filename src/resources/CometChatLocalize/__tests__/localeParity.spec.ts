@@ -37,7 +37,13 @@ describe('locale parity with en-us', () => {
     const gaps = new Set(knownGaps[locale] ?? []);
 
     it('has no keys that en-us lacks', () => {
-      expect(Object.keys(translations).filter(key => !(key in enUs))).toEqual([]);
+      // A language may need plural forms English doesn't (ru, lt: `_few`, `_many`); those are
+      // allowed where en-us has the key's `_other` form (see getLocalizedPlural).
+      const isPluralForm = (key: string) => {
+        const base = /^(.+)_(zero|two|few|many)$/.exec(key)?.[1];
+        return base !== undefined && `${base}_other` in enUs;
+      };
+      expect(Object.keys(translations).filter(key => !(key in enUs) && !isPluralForm(key))).toEqual([]);
     });
 
     it('loses no translations beyond the known gaps', () => {

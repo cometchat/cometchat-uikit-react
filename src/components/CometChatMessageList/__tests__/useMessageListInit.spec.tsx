@@ -356,4 +356,44 @@ describe('useMessageListInit', () => {
 
     expect(markAsDelivered).not.toHaveBeenCalled();
   });
+
+  // D1: the reconnect path bumps the generation and replaces the manager before
+  // calling initializeRef; a re-run must use those, not the values captured at
+  // mount, or it bails out as stale and an empty chat never leaves 'idle'.
+  it('initializeRef re-runs against the current manager and generation (D1)', async () => {
+    const refs = makeRefs();
+    const { result } = renderHook(() =>
+      useHarness(baseOptions({ user: user as never }), refs)
+    );
+    await waitFor(() => {
+      expect(result.current.dispatched.some(a => a.type === 'FETCH_PREVIOUS_SUCCESS')).toBe(true);
+    });
+    const firstRunSuccesses = result.current.dispatched.filter(
+      a => a.type === 'FETCH_PREVIOUS_SUCCESS'
+    ).length;
+
+    // What connection/connected does for an empty list.
+    const reconnectManager = {
+      fetchPrevious: vi.fn().mockResolvedValue([]),
+      fetchAroundMessageId: vi.fn().mockResolvedValue({ messages: [], hasMoreNewer: false }),
+      markAsDelivered: vi.fn().mockResolvedValue(undefined),
+      markConversationAsRead: vi.fn().mockResolvedValue(undefined),
+      getConversation: vi.fn().mockResolvedValue({
+        getLastReadMessageId: () => null,
+        getUnreadMessageCount: () => 0,
+      }),
+    };
+    refs.generationRef.current += 1;
+    refs.managerRef.current = reconnectManager as never;
+    refs.initializeRef.current?.();
+
+    await waitFor(() => {
+      expect(reconnectManager.fetchPrevious).toHaveBeenCalledTimes(1);
+      expect(
+        result.current.dispatched.filter(a => a.type === 'FETCH_PREVIOUS_SUCCESS').length
+      ).toBe(firstRunSuccesses + 1);
+    });
+    expect(reconnectManager.getConversation).toHaveBeenCalledTimes(1);
+  });
 });
+

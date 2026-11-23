@@ -6,6 +6,13 @@ import type {
 } from './CometChatNotificationFeed.types';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { groupByTimestamp } from './utils';
+import {
+  offlineListStates,
+  reduceEntityPage,
+  type EntityPagePayload,
+} from '../../utils/offline/entityList';
+
+const feedIdOf = (item: NotificationFeedItem): string => item.getId();
 
 // ==================== Actions ====================
 
@@ -30,6 +37,16 @@ export type CometChatNotificationFeedAction =
   | { type: 'SET_HAS_MORE_PAGES'; hasMorePages: boolean }
   | { type: 'SET_PAGINATION_ERROR'; paginationError: boolean }
   | { type: 'SET_ERROR'; error: CometChat.CometChatException | null }
+  /** Offline path: one phase of a two-phase page read. */
+  | { type: 'OFFLINE_PAGE'; page: EntityPagePayload<NotificationFeedItem> }
+  /** Offline path: a two-phase read ended without a server page. */
+  | {
+      type: 'OFFLINE_PAGE_ERROR';
+      notConnected: boolean;
+      hasMore: boolean;
+      /** A read past the first page (pagination), whose failure shows the retry footer. */
+      paginating: boolean;
+    }
   | { type: 'RESET' };
 
 // ==================== Initial State ====================
@@ -166,6 +183,46 @@ export function notificationFeedReducer(
 
     case 'SET_ERROR': {
       return { ...state, error: action.error };
+    }
+
+    case 'OFFLINE_PAGE': {
+      const next = reduceEntityPage(
+        { rows: state.items, fetchState: 'loading', hasMore: state.hasMorePages },
+        action.page,
+        feedIdOf
+      );
+      const isServer = action.page.phase === 'server';
+      return {
+        ...state,
+        items: next.rows,
+        groupedItems: next.rows === state.items ? state.groupedItems : groupByTimestamp(next.rows),
+        screenState: next.rows.length > 0 ? 'loaded' : isServer ? 'empty' : state.screenState,
+        hasMorePages: next.hasMore,
+        ...(isServer && { isLoadingMore: false, paginationError: false, connectToLoad: false }),
+      };
+    }
+
+    case 'OFFLINE_PAGE_ERROR': {
+      const hasRows = state.items.length > 0;
+      if (action.notConnected) {
+        // Offline past the cache: keep the items; with none, the error screen worded "Connect to
+        // load" (D84). The loader ends.
+        return {
+          ...state,
+          screenState: hasRows ? 'loaded' : 'error',
+          hasMorePages: action.hasMore,
+          isLoadingMore: false,
+          paginationError: false,
+          ...offlineListStates(!action.paginating, false, state.items.length),
+        };
+      }
+      return {
+        ...state,
+        // Never blank items already shown (BEH-READ-06).
+        screenState: hasRows ? 'loaded' : 'error',
+        isLoadingMore: false,
+        paginationError: action.paginating,
+      };
     }
 
     case 'RESET': {

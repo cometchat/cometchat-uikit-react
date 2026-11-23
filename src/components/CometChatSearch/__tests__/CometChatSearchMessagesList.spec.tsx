@@ -45,9 +45,12 @@ interface MsgOptions {
   metadata?: Record<string, unknown>;
   parentId?: number;
   attachments?: string[];
+  /** A peer the row carries instead of the named default (a cached copy). */
+  sender?: Record<string, unknown>;
+  receiver?: Record<string, unknown>;
 }
 
-function msg({ id, type = 'text', sentAt = 1_760_000_000, text = 'hello', metadata, parentId = 0, attachments = [] }: MsgOptions) {
+function msg({ id, type = 'text', sentAt = 1_760_000_000, text = 'hello', metadata, parentId = 0, attachments = [], sender, receiver }: MsgOptions) {
   return {
     getId: () => id,
     getType: () => type,
@@ -55,8 +58,8 @@ function msg({ id, type = 'text', sentAt = 1_760_000_000, text = 'hello', metada
     getText: () => text,
     getMetadata: () => metadata,
     getParentMessageId: () => parentId,
-    getSender: () => ({ getName: () => 'Bob' }),
-    getReceiver: () => ({ getName: () => 'Design Team' }),
+    getSender: () => sender ?? { getName: () => 'Bob' },
+    getReceiver: () => receiver ?? { getName: () => 'Design Team' },
     getAttachments: () => attachments.map(url => ({ getUrl: () => url })),
   };
 }
@@ -161,6 +164,52 @@ describe('CometChatSearchMessagesList', () => {
       renderList({ uid: 'bob' });
       expect(item(1).querySelector('.cometchat-search__messages-list-item-title')?.textContent).toBe('Bob');
       expect(mocks.subtitle.mock.calls[0]![1]).toMatchObject({ includeSenderPrefix: false });
+    });
+
+    it('a nameless cached peer falls back to its id instead of taking the list down', () => {
+      // An own message off the outbox, or a partly parsed cached copy, carries a
+      // peer with only an id, and the SDK's `getName()` throws on it. Unguarded,
+      // one such row threw while rendering and the whole list went blank.
+      const nameless = (id: string) => ({
+        getUid: () => id,
+        getName: () => {
+          throw new Error('name is not set');
+        },
+      });
+      loaded([
+        msg({ id: 1, receiver: nameless('cached-chat') }),
+        msg({
+          id: 2,
+          type: 'image',
+          attachments: ['https://x.test/a.png'],
+          sender: nameless('cached-sender'),
+        }),
+      ]);
+      renderList();
+
+      expect(item(1).querySelector('.cometchat-search__messages-list-item-title')?.textContent).toBe('cached-chat');
+      // The media row's alt text reads the sender's name too: with no guard it
+      // threw here, so the row rendering at all is the assertion (the localized
+      // string is the untranslated key in this suite, so `{name}` stays put).
+      const image = item(2).querySelector('.cometchat-search__messages-trailing-view img');
+      expect(image?.getAttribute('src')).toBe('https://x.test/a.png');
+      expect(image?.getAttribute('alt')).toBeTruthy();
+    });
+
+    it('inside one conversation, a nameless sender titles the row with its id', () => {
+      loaded([
+        msg({
+          id: 1,
+          sender: {
+            getUid: () => 'bob',
+            getName: () => {
+              throw new Error('name is not set');
+            },
+          },
+        }),
+      ]);
+      renderList({ uid: 'bob' });
+      expect(item(1).querySelector('.cometchat-search__messages-list-item-title')?.textContent).toBe('bob');
     });
 
     it('marks thread replies with a thread icon', () => {

@@ -343,4 +343,95 @@ describe('useCometChatSearchMessages', () => {
       });
     });
   });
+
+  describe('a changed search', () => {
+    const defer = <T,>() => {
+      let resolve!: (value: T) => void;
+      let reject!: (reason: unknown) => void;
+      const promise = new Promise<T>((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+      return { promise, resolve, reject };
+    };
+
+    it('shows only the new search: the old keyword\'s late answer is dropped', async () => {
+      const oldRead = defer<{ results: unknown[]; hasMore: boolean }>();
+      mockSearch
+        .mockReturnValueOnce(oldRead.promise)
+        .mockResolvedValueOnce({ results: [{ getId: () => 2 }], hasMore: false });
+      const { result, rerender } = renderHook(
+        ({ keyword }: { keyword: string }) =>
+          useCometChatSearchMessages({ searchKeyword: keyword, activeFilters: stableEmptyFilters }),
+        { initialProps: { keyword: 'old' } }
+      );
+      rerender({ keyword: 'new' });
+      await waitFor(() => {
+        expect(result.current.fetchState).toBe('loaded');
+      });
+      await act(async () => {
+        oldRead.resolve({ results: [{ getId: () => 1 }, { getId: () => 9 }], hasMore: true });
+        await oldRead.promise;
+      });
+      expect(result.current.messages.map(m => m.getId())).toEqual([2]);
+      expect(result.current.hasMore).toBe(false);
+    });
+
+    it('drops the old keyword\'s late failure', async () => {
+      const oldRead = defer<{ results: unknown[]; hasMore: boolean }>();
+      const onError = vi.fn();
+      mockSearch
+        .mockReturnValueOnce(oldRead.promise)
+        .mockResolvedValueOnce({ results: [{ getId: () => 2 }], hasMore: false });
+      const { result, rerender } = renderHook(
+        ({ keyword }: { keyword: string }) =>
+          useCometChatSearchMessages({
+            searchKeyword: keyword,
+            activeFilters: stableEmptyFilters,
+            onError,
+          }),
+        { initialProps: { keyword: 'old' } }
+      );
+      rerender({ keyword: 'new' });
+      await waitFor(() => {
+        expect(result.current.fetchState).toBe('loaded');
+      });
+      await act(async () => {
+        oldRead.reject(new Error('old search failed'));
+        await oldRead.promise.catch(() => undefined);
+      });
+      expect(result.current.fetchState).toBe('loaded');
+      expect(onError).not.toHaveBeenCalled();
+    });
+
+    it('drops a load-more the old keyword asked for', async () => {
+      const oldMore = defer<{ results: unknown[]; hasMore: boolean }>();
+      mockSearch
+        .mockResolvedValueOnce({ results: [{ getId: () => 1 }], hasMore: true })
+        .mockResolvedValueOnce({ results: [{ getId: () => 2 }], hasMore: true });
+      mockLoadMore.mockReturnValueOnce(oldMore.promise);
+      const { result, rerender } = renderHook(
+        ({ keyword }: { keyword: string }) =>
+          useCometChatSearchMessages({ searchKeyword: keyword, activeFilters: stableEmptyFilters }),
+        { initialProps: { keyword: 'old' } }
+      );
+      await waitFor(() => {
+        expect(result.current.fetchState).toBe('loaded');
+      });
+      let pending!: Promise<void>;
+      act(() => {
+        pending = result.current.loadMore();
+      });
+      rerender({ keyword: 'new' });
+      await waitFor(() => {
+        expect(result.current.messages.map(m => m.getId())).toEqual([2]);
+      });
+      await act(async () => {
+        oldMore.resolve({ results: [{ getId: () => 7 }], hasMore: false });
+        await pending;
+      });
+      expect(result.current.messages.map(m => m.getId())).toEqual([2]);
+      expect(result.current.hasMore).toBe(true);
+    });
+  });
 });

@@ -19,6 +19,28 @@ export const PIN_TIER = {
 
 export type ConversationPinTier = (typeof PIN_TIER)[keyof typeof PIN_TIER];
 
+/**
+ * The id of the user or group a conversation is with, whatever shape the peer has.
+ *
+ * A row rebuilt from the device store can carry a plain `{ uid }` / `{ guid }` object instead of a
+ * `User` / `Group`: `'getGuid' in peer` is then false and `peer.getUid()` is not a function, so
+ * drawing the row threw and took the whole app down with it. The real fix is in the SDK (#663
+ * returns a `User` again); this reads the id either way, so a row like that can neither crash the
+ * app nor quietly drop out of a delete or a presence update.
+ */
+export function peerIdOf(peer: CometChat.User | CometChat.Group | null | undefined): string {
+  const p = peer as unknown as {
+    getGuid?: () => string;
+    getUid?: () => string;
+    guid?: string;
+    uid?: string;
+  } | null;
+  if (!p) return '';
+  if (typeof p.getGuid === 'function') return p.getGuid();
+  if (typeof p.getUid === 'function') return p.getUid();
+  return p.guid ?? p.uid ?? '';
+}
+
 /** Is this conversation pinned, by anyone? */
 export function isConversationPinned(conversation: CometChat.Conversation): boolean {
   // Guarded throughout: an older SDK build predates these accessors entirely, and

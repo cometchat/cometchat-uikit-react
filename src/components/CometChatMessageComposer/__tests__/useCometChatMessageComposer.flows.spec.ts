@@ -377,6 +377,15 @@ describe('sendMessage', () => {
     );
   });
 
+  it('still caps blank lines at one when sending rich text (edit-only fix)', async () => {
+    const { result } = setup({ user: makeUser() });
+    await act(() => result.current.sendMessage(undefined, '<p>A</p><br><br><br><p>B</p>'));
+
+    expect(sdk.CometChat.sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'A\n\nB' })
+    );
+  });
+
   it('publishes the same optimistic message with the error attached when the SDK rejects', async () => {
     const error = new Error('Network down');
     sdk.CometChat.sendMessage.mockRejectedValueOnce(error);
@@ -840,6 +849,27 @@ describe('editMessage', () => {
     expect(getInputFormatters).toHaveBeenCalled();
     expect(manager.editMediaCaption).toHaveBeenCalledWith(43, '**new** caption', []);
     expect(manager.editTextMessage).not.toHaveBeenCalled();
+  });
+
+  // The edit composer is seeded with one <br> per blank line; saving must keep them all.
+  it('keeps every blank line when saving a rich-text edit', async () => {
+    const original = textMessage(42, 'A\n\n\n\nB');
+    const { result } = setup({ user: makeUser(), messageToEdit: original });
+    await waitFor(() => expect(result.current.isInEditMode).toBe(true));
+
+    await act(() => result.current.editMessage('<p>A</p><br><br><br><p>B</p>'));
+
+    expect(manager.editTextMessage).toHaveBeenCalledWith(42, 'A\n\n\n\nB', []);
+  });
+
+  it('keeps every blank line when saving a plain-text edit', async () => {
+    const original = textMessage(42, 'A\n\n\n\nB <@uid:bob>');
+    const { result } = setup({ user: makeUser(), messageToEdit: original });
+    await waitFor(() => expect(result.current.isInEditMode).toBe(true));
+
+    await act(() => result.current.editMessage(undefined, 'A\n\n\n\nB <@uid:bob>'));
+
+    expect(manager.editTextMessage).toHaveBeenCalledWith(42, 'A\n\n\n\nB <@uid:bob>', []);
   });
 
   it('does nothing for blank text or an uninitialised SDK', async () => {

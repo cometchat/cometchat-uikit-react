@@ -29,6 +29,11 @@ export class CometChatGroupsManager {
     return this.groupsRequest.fetchNext();
   }
 
+  /** The underlying request, for the offline path's two-phase read. @internal */
+  request(): CometChat.GroupsRequest {
+    return this.groupsRequest;
+  }
+
   /**
    * Create a new group.
    * @param group - The group object to create.

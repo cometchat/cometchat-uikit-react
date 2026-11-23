@@ -1,6 +1,14 @@
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { clone } from '../../utils/CometChatUIKitUtility';
 import type { CometChatFetchState } from '../../types';
+import {
+  reduceEntityPage,
+  reduceEntityPageError,
+  offlineListStates,
+  type EntityPagePayload,
+} from '../../utils/offline/entityList';
+
+const memberUidOf = (member: CometChat.GroupMember): string => member.getUid();
 
 // ==================== State ====================
 
@@ -21,6 +29,10 @@ export interface CometChatGroupMembersState {
   activeMemberId: string | null;
   /** Current search text. */
   searchText: string;
+  /** Offline: a keyword search could not reach the server; nothing saved (offline on only). */
+  connectToSearch?: boolean;
+  /** Offline: nothing saved and not connected (never set offline off). */
+  connectToLoad?: boolean;
 }
 
 // ==================== Actions ====================
@@ -39,6 +51,18 @@ export type CometChatGroupMembersAction =
   | { type: 'DESELECT_MEMBER'; uid: string }
   | { type: 'CLEAR_SELECTION' }
   | { type: 'SET_ACTIVE_MEMBER'; uid: string | null }
+  /** Offline path: one phase of a two-phase page read. */
+  | { type: 'OFFLINE_PAGE'; page: EntityPagePayload<CometChat.GroupMember> }
+  /** Offline path: a two-phase read ended without a server page. */
+  | {
+      type: 'OFFLINE_PAGE_ERROR';
+      quiet?: boolean;
+      notConnected: boolean;
+      error: string;
+      hasMore: boolean;
+      /** The read carried a search keyword (absent: no). */
+      keyword?: boolean;
+    }
   | { type: 'RESET' };
 
 // ==================== Initial State ====================
@@ -200,6 +224,52 @@ export function groupMembersReducer(
       return {
         ...state,
         activeMemberId: action.uid,
+      };
+    }
+
+    case 'OFFLINE_PAGE': {
+      const next = reduceEntityPage(
+        { rows: state.members, fetchState: state.fetchState, hasMore: state.hasMore },
+        action.page,
+        memberUidOf
+      );
+      return {
+        ...state,
+        members: next.rows,
+        fetchState: next.fetchState,
+        hasMore: next.hasMore,
+        ...(action.page.phase === 'server' && {
+          error: null,
+          connectToSearch: false,
+          connectToLoad: false,
+        }),
+      };
+    }
+
+    case 'OFFLINE_PAGE_ERROR': {
+      const next = reduceEntityPageError(
+        { rows: state.members, fetchState: state.fetchState, hasMore: state.hasMore },
+        action.notConnected,
+        action.hasMore,
+        action.quiet === true,
+        action.keyword === true
+      );
+      const offline = offlineListStates(
+        action.notConnected,
+        action.keyword === true,
+        next.rows.length
+      );
+      return {
+        ...state,
+        fetchState: next.fetchState,
+        hasMore: next.hasMore,
+        // Rows on screen keep the error out of sight; "Connect to search" is not an error.
+        error:
+          action.quiet ||
+          (action.notConnected && (next.rows.length > 0 || offline.connectToSearch))
+            ? state.error
+            : action.error,
+        ...(!action.quiet && offline),
       };
     }
 

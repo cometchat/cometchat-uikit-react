@@ -16,6 +16,9 @@ import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import { usePublishEvent } from '../../hooks/usePublishEvent';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
 import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { isQuietRejection } from '../../utils/offline/send';
+import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 
 // --- State ---
 
@@ -216,14 +219,29 @@ export function useCometChatCallButtons(options: UseCometChatCallButtonsOptions)
       );
 
       (
-        customMessage as unknown as { setMetadata: (m: Record<string, unknown>) => void }
+        customMessage as unknown as {
+          setMetadata: (m: Record<string, unknown>) => void;
+        }
       ).setMetadata({ incrementUnreadCount: true });
 
       (
-        customMessage as unknown as { shouldUpdateConversation: (v: boolean) => void }
+        customMessage as unknown as {
+          shouldUpdateConversation: (v: boolean) => void;
+        }
       ).shouldUpdateConversation(true);
       if (loggedInUser) {
         customMessage.setSender(loggedInUser);
+      }
+
+      // Offline support: read once for this send (README §3.4). The same helper
+      // as every other send (UIK-SEND-10): a queued message is not a failure,
+      // and the hub draws the row and emits the public events.
+      if (isOfflineOn()) {
+        CometChatUIKit.sendCustomMessage(customMessage).catch((error: unknown) => {
+          // A logout or a removal is not an error to report (as on Android).
+          if (!isQuietRejection(error)) handleError(error);
+        });
+        return;
       }
 
       CometChat.sendCustomMessage(customMessage).then(

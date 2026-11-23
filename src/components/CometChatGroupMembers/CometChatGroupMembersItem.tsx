@@ -5,6 +5,7 @@ import { CometChatRadioButton } from '../base/CometChatRadioButton/CometChatRadi
 import { CometChatContextMenu } from '../base/CometChatContextMenu/CometChatContextMenu';
 import { useCometChatGroupMembersContext } from './CometChatGroupMembers.context';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { usePresenceSuppressed } from '../../utils/offline/presence';
 import type { CometChatGroupMembersItemProps } from './CometChatGroupMembers.types';
 import type { CometChatContextMenuItemData } from '../base/CometChatContextMenu/CometChatContextMenu.types';
 import './CometChatGroupMembers.css';
@@ -49,6 +50,8 @@ function CometChatGroupMembersItemInner({
   const name = member.getName();
   const avatar = member.getAvatar();
   const status = member.getStatus();
+  // Offline on and not connected: no one reads as online, to a screen reader either.
+  const presenceHidden = usePresenceSuppressed();
   const rawScope = member.getScope();
   // Check if this member is the group owner (SDK returns 'admin' for owners)
   const isOwner = ctx.group.getOwner() === uid;
@@ -192,7 +195,7 @@ function CometChatGroupMembersItemInner({
       className={classNames}
       role="option"
       aria-selected={isSelected || isActive}
-      aria-label={`${name}${scopeLabel ? `, ${scopeLabel}` : ''}${status === 'online' ? `, ${getLocalizedString('accessibility_online')}` : ''}`}
+      aria-label={`${name}${scopeLabel ? `, ${scopeLabel}` : ''}${status === 'online' && !presenceHidden ? `, ${getLocalizedString('accessibility_online')}` : ''}`}
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}

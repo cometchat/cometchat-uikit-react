@@ -15,13 +15,18 @@ import { useOptionalConversationsContext } from './CometChatConversations.contex
 import { sanitizeHtml } from '../../utils/sanitizeHtml';
 import { localizeSharedWithFallback } from '../../utils/localizeWithFallback';
 import { dateLiteral } from '../../resources/CometChatLocalize/dateFormat.utils';
-import { isConversationPinned, isConversationSystemPinned } from './CometChatConversations.utils';
+import {
+  isConversationPinned,
+  isConversationSystemPinned,
+  peerIdOf,
+} from './CometChatConversations.utils';
 import { usePinSaveFeatures } from '../../hooks/usePinSaveFeatures';
 import pinIcon from '../../assets/pin.svg';
 import unpinIcon from '../../assets/unpin.svg';
 import { applyDisplayFormatters } from '../../formatters/applyDisplayFormatters';
 import './CometChatConversations.css';
 import type { CometChatConversationsItemProps } from './CometChatConversations.types';
+import { offlineRowStateOf } from '../../utils/offline/rowState';
 import { fillTemplate } from '../../utils/fillTemplate';
 
 /**
@@ -30,10 +35,16 @@ import { fillTemplate } from '../../utils/fillTemplate';
 function getConversationName(conversation: CometChat.Conversation): string {
   const conversationWith = conversation.getConversationWith();
   if (!conversationWith) return '';
-  if ('getName' in conversationWith) {
-    return conversationWith.getName();
-  }
-  return '';
+  const name = 'getName' in conversationWith ? conversationWith.getName() : undefined;
+  if (name) return name;
+  // Android parity: a peer that arrived id-only renders its id, not an empty line.
+  // Two rows reach here. A chat composed while offline is stamped by the SDK with an
+  // id-only peer (`stampReceiverIfAbsent`, mirroring Android `Outbox.stampConversationTarget`),
+  // whose `getName()` is null. A row rebuilt from the device store can instead carry a plain
+  // `{ uid }` / `{ guid }` with no `getName` at all. Android's Outbox states the intent for
+  // both — "the row renders the uid instead of a blank" — so the chat stays identifiable and
+  // tappable until the server echo brings the display fields.
+  return peerIdOf(conversationWith);
 }
 
 /**
@@ -473,6 +484,12 @@ function getReceiptStatus(
   if (!sender || !loggedInUserId) return null;
   if (sender.getUid() !== loggedInUserId) return null;
 
+  // Offline support: an own preview that is not sent yet shows the clock, or
+  // the error mark once it failed; never a sent tick (BEH-SEND-32).
+  const offlineState = offlineRowStateOf(lastMessage);
+  if (offlineState === 'failed') return 'error';
+  if (offlineState === 'sending') return 'wait';
+
   // Check receipt status.
   if (lastMessage.getReadAt?.()) return 'read';
   if (lastMessage.getDeliveredAt?.()) return 'delivered';
@@ -533,8 +550,7 @@ function CometChatConversationsItemInner({
   const unreadCount = conversation.getUnreadMessageCount();
 
   const typingConvWith = conversation.getConversationWith();
-  const typingKey =
-    'getGuid' in typingConvWith ? typingConvWith.getGuid() : typingConvWith.getUid();
+  const typingKey = peerIdOf(typingConvWith);
   const typingIndicator = ctx?.typingIndicatorMap?.get(typingKey);
 
   const isActive = isActiveProp ?? (ctx ? ctx.activeConversationId === convId : false);
@@ -671,12 +687,27 @@ function CometChatConversationsItemInner({
     });
   }
 
+  // State contract (TEST-PLAN §3.3): identifiers for test runners, no message text.
+  const previewReceipt = getReceiptStatus(conversation, ctx?.loggedInUserId ?? undefined);
+  const contractWith = peerIdOf(convWith);
+
   return (
     <div
       className={classNames}
       role="option"
       aria-selected={isSelected || isActive}
       tabIndex={0}
+      data-cc="conversation-row"
+      data-cc-with={contractWith}
+      data-cc-preview-state={
+        previewReceipt === 'wait'
+          ? 'sending'
+          : previewReceipt === 'error'
+            ? 'failed'
+            : (previewReceipt ?? 'none')
+      }
+      data-cc-unread={String(unreadCount)}
+      data-cc-pinned={isConversationPinned(conversation) ? 'true' : 'false'}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       onMouseEnter={() => {

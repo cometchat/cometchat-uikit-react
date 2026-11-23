@@ -206,6 +206,19 @@ describe('CometChatStreamingMessageFactory', () => {
       expect(msg.getReactions()).toEqual([]);
     });
 
+    it('getMuid is stable: the same value on every call, derived from the bubble id', () => {
+      const msg = createStreamingMessage({
+        originalMessageId: 9,
+        sender: mockSender,
+        receiver: mockReceiver,
+        chatId: 'chat_123',
+      });
+      // It used to be `String(Date.now())`, so anything keyed by the muid got a
+      // new key on each render.
+      expect(msg.getMuid()).toBe('stream_-9');
+      expect(msg.getMuid()).toBe(msg.getMuid());
+    });
+
     it('should have all setter methods as callable noops', () => {
       const msg = createStreamingMessage({
         originalMessageId: 1,

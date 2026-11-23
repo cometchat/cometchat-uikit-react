@@ -21,6 +21,13 @@ export enum CometChatMessageStatus {
   cancelled = 'cancelled',
 }
 
+/**
+ * An own message's send state with the Chat SDK's offline support on:
+ * `sending` (queued or in flight, not acked yet), `sent`, `failed` (Retry
+ * offered), `discarded` (removed before it was sent).
+ */
+export type CometChatMessageSendState = 'sending' | 'sent' | 'failed' | 'discarded';
+
 // ---------------------------------------------------------------------------
 // SDK Events (from network — existing, unchanged)
 // ---------------------------------------------------------------------------
@@ -148,6 +155,24 @@ export type CometChatUIEvent =
         | CometChatMessageStatus.success
         | CometChatMessageStatus.error;
     }
+  /**
+   * Offline support only (Chat SDK with offline enabled): an own message's send
+   * state changed. Emitted once per transition per message; never with offline
+   * off. `reason` is the SDK's `MessageFailureReason` for `failed`/`discarded`.
+   * `ui:message/sent` keeps its meaning and still fires once per transition.
+   */
+  | {
+      type: 'ui:message/send-state-changed';
+      message: CometChat.BaseMessage;
+      state: CometChatMessageSendState;
+      reason?: string;
+    }
+  /**
+   * Offline support only: the SDK wiped and rebuilt its offline cache. Every
+   * mounted list reloads. `pendingMessagesLost` is the number of unsent
+   * messages that could not be kept, or `null` when unknown.
+   */
+  | { type: 'ui:offline/cache-reset'; reason: string; pendingMessagesLost: number | null }
   | { type: 'ui:message/deleted'; message: CometChat.BaseMessage }
   | { type: 'ui:message/read'; message: CometChat.BaseMessage }
   // --- Pin / Save (optimistic, fired locally on SDK success before the socket echo) ---

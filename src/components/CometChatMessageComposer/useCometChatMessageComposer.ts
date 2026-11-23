@@ -20,6 +20,8 @@ import { writeThreadSubscribed } from '../../utils/CometChatThreadSubscription';
 import { convertToWav } from '../../utils/wavConversion';
 import { CometChatLogger } from '../../utils/CometChatLogger';
 import { CometChatSoundManager } from '../../resources/CometChatSoundManager/CometChatSoundManager';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { sendWithState } from '../../utils/offline/send';
 
 const TYPING_TIMEOUT_MS = 500;
 
@@ -280,10 +282,17 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       // formatter pipeline converts it back to HTML on render.
       let textToSend = textOverride ?? state.text;
       if (richTextHtml) {
-        const { CometChatRichTextFormatter } =
-          await import('../../formatters/CometChatRichTextFormatter');
-        const formatter = new CometChatRichTextFormatter(getInputFormatters?.() ?? []);
-        textToSend = formatter.format(richTextHtml);
+        try {
+          const { CometChatRichTextFormatter } =
+            await import('../../formatters/CometChatRichTextFormatter');
+          const formatter = new CometChatRichTextFormatter(getInputFormatters?.() ?? []);
+          textToSend = formatter.format(richTextHtml);
+        } catch (error) {
+          // A failed lazy chunk load (e.g. offline in a production build) must not
+          // leave the double-send guard set, or every later send is dropped.
+          isSendingRef.current = false;
+          throw error;
+        }
       }
       const trimmedText = textToSend.trim();
       if (!trimmedText) {
@@ -305,6 +314,9 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
 
       dispatch({ type: 'SET_SEND_STATE', sendState: 'sending' });
       endTyping();
+
+      // Offline support: read once for this send (README §3.4).
+      const offlineOn = isOfflineOn();
 
       // Declared outside try so it's accessible in catch for error attachment
       let textMessage: CometChat.TextMessage | null = null;
@@ -373,6 +385,43 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           message: textMessage,
           status: CometChatMessageStatus.inprogress,
         });
+
+        if (offlineOn) {
+          // Offline path: the hub draws the row and emits the public events;
+          // a queued message is not a failure.
+          // Once the outbox has it, the next send need not wait for this one's
+          // answer: a chat with no answer must not hold up the composer (or another
+          // chat, BEH-SEND-09).
+          let handedOver = false;
+          const result = await sendWithState(textMessage, 'text', {
+            onPending: () => {
+              handedOver = true;
+              isSendingRef.current = false;
+            },
+          });
+          clearMentionedUsers?.();
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- set by the callback
+          if (!handedOver) isSendingRef.current = false;
+          if (result.state === 'failed') {
+            dispatch({ type: 'SET_SEND_STATE', sendState: 'error' });
+            handleError(result.error);
+            return;
+          }
+          if (onSendButtonClick) onSendButtonClick(result.message, 'send');
+          playOutgoingSound();
+          if (result.state === 'sent') {
+            if (replyMessage) {
+              publish({
+                type: 'ui:compose/reply',
+                message: result.message,
+                status: CometChatMessageStatus.success,
+                parentMessageId: parentMessageId ?? null,
+              });
+            }
+            if (parentMessageId) writeThreadSubscribed(result.message, true);
+          }
+          return;
+        }
 
         // Send the SAME message to the SDK (muid is preserved on the response)
         const confirmedMessage = await (CometChat.sendMessage(
@@ -506,6 +555,9 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       dispatch({ type: 'SET_SEND_STATE', sendState: 'sending' });
       onAttachmentAdded?.(file);
 
+      // Offline support: read once for this send (README §3.4).
+      const offlineOn = isOfflineOn();
+
       // Declared outside try so it's accessible in catch for error attachment
       let mediaMessage: CometChat.MediaMessage | null = null;
 
@@ -566,6 +618,32 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
           message: mediaMessage,
           status: CometChatMessageStatus.inprogress,
         });
+
+        if (offlineOn) {
+          // Offline path: the hub draws the row and emits the public events;
+          // a queued message is not a failure.
+          const result = await sendWithState(mediaMessage, 'media');
+          if (result.state === 'failed') {
+            onAttachmentRemoved?.(file);
+            dispatch({ type: 'SET_SEND_STATE', sendState: 'error' });
+            handleError(result.error);
+            return;
+          }
+          if (onSendButtonClick) onSendButtonClick(result.message, 'send');
+          playOutgoingSound();
+          if (result.state === 'sent') {
+            if (replyMessage) {
+              publish({
+                type: 'ui:compose/reply',
+                message: result.message,
+                status: CometChatMessageStatus.success,
+                parentMessageId: parentMessageId ?? null,
+              });
+            }
+            if (parentMessageId) writeThreadSubscribed(result.message, true);
+          }
+          return;
+        }
 
         // Send the SAME message to the SDK
         const confirmedMessage = await (CometChat.sendMediaMessage(
@@ -666,18 +744,18 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       dispatch({ type: 'SET_SEND_STATE', sendState: 'idle' });
       endTyping();
 
-      let caption = rawCaption;
-      if (richTextHtml) {
-        const { CometChatRichTextFormatter } =
-          await import('../../formatters/CometChatRichTextFormatter');
-        const formatter = new CometChatRichTextFormatter(getInputFormatters?.() ?? []);
-        caption = formatter.format(richTextHtml);
-      }
-
       // One send action, one sound — a batch of four files is still a single press of send.
       let soundPlayed = false;
 
       try {
+        // Inside the try so a failed lazy chunk load still releases the upload request.
+        let caption = rawCaption;
+        if (richTextHtml) {
+          const { CometChatRichTextFormatter } =
+            await import('../../formatters/CometChatRichTextFormatter');
+          const formatter = new CometChatRichTextFormatter(getInputFormatters?.() ?? []);
+          caption = formatter.format(richTextHtml);
+        }
         await sendBatchFn({
           items: itemsSnapshot,
           batchId,
@@ -731,15 +809,19 @@ export function useCometChatMessageComposer(options: CometChatUseCometChatMessag
       // text with mention tokens, which the text state alone does not carry.
       let textToSend = textOverride ?? state.text;
       if (richTextHtml) {
-        const { CometChatRichTextFormatter } =
+        const { CometChatRichTextFormatter, formatRichTextForEdit } =
           await import('../../formatters/CometChatRichTextFormatter');
         const formatter = new CometChatRichTextFormatter(getInputFormatters?.() ?? []);
-        textToSend = formatter.format(richTextHtml);
+        // Keep every blank line on edit; send keeps its existing cap.
+        textToSend = formatRichTextForEdit(formatter, richTextHtml);
       }
       const trimmedText = textToSend.trim();
       if (!trimmedText) return;
 
       const messageToEdit = state.textMessageToEdit;
+      // The composer is cleared and leaves edit mode before the request, offline
+      // on or off. A failed edit is reported through the edit event and onError;
+      // the text is not put back (same as the Android UI Kit).
 
       // Capture mentioned users BEFORE clearing
       const mentionedUsersForSend = getMentionedUsers ? getMentionedUsers() : [];

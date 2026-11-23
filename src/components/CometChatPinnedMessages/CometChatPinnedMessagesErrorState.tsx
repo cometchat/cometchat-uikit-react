@@ -4,6 +4,7 @@ import { localizeWithFallback } from '../../utils/localizeWithFallback';
 import { useCometChatPinnedMessagesContext } from './CometChatPinnedMessages.context';
 import type { CometChatPinnedMessagesSlotProps } from './CometChatPinnedMessages.types';
 import listErrorIcon from '../../assets/list_error_state_icon.svg';
+import { OfflineListState } from '../../utils/offline/OfflineListState';
 
 /**
  * CometChatPinnedMessages.ErrorState — shown when the initial fetch fails.
@@ -15,10 +16,22 @@ export const CometChatPinnedMessagesErrorState: React.FC<CometChatPinnedMessages
   const { getLocalizedString } = useLocale();
   const loc = (key: string, fallback: string): string =>
     localizeWithFallback(getLocalizedString, key, fallback);
-  const { fetchState, messages } = useCometChatPinnedMessagesContext();
+  const { fetchState, messages, connectToLoad } = useCometChatPinnedMessagesContext();
 
   if (fetchState !== 'error' || messages.length > 0) return null;
   if (children !== undefined) return <>{children}</>;
+
+  if (connectToLoad) {
+    return (
+      <div className={'cometchat-pinned-messages__error'} role="status">
+        <OfflineListState
+          block="cometchat-pinned-messages__error"
+          icon={listErrorIcon}
+          title={loc('message_list_connect_to_load', 'Connect to load messages')}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={'cometchat-pinned-messages__error'} role="status">

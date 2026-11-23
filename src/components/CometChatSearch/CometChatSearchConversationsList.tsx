@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useRef } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useCometChatSearchContext } from './CometChatSearch.context';
 import { useCometChatSearchConversations } from './useCometChatSearchConversations';
 import { CometChatConversationsItem } from '../CometChatConversations/CometChatConversationsItem';
+import { CometChatSearchOfflineContext, searchOfflineKind } from './searchOffline';
 import { CometChatLocalize } from '../../resources/CometChatLocalize/CometChatLocalize';
 import type { CometChatSearchConversationsListProps } from './CometChatSearch.types';
 import './CometChatSearch.css';
@@ -35,13 +36,21 @@ export const CometChatSearchConversationsList: React.FC<CometChatSearchConversat
   const derivedScrollPagination = !!ctx.uid || !!ctx.guid || ctx.activeFilters.length > 0;
   const useScrollPagination = useScrollPaginationProp ?? derivedScrollPagination;
 
-  const { conversations, fetchState, hasMore, loadMore } = useCometChatSearchConversations({
-    searchKeyword: ctx.searchText,
-    activeFilters: ctx.activeFilters,
-    conversationsRequestBuilder: ctx.conversationsRequestBuilder,
-    onError: ctx.handleError,
-    onStateChange: ctx.handleConversationsStateChange,
-  });
+  const { conversations, fetchState, hasMore, loadMore, connectToSearch, searchFailed } =
+    useCometChatSearchConversations({
+      searchKeyword: ctx.searchText,
+      activeFilters: ctx.activeFilters,
+      conversationsRequestBuilder: ctx.conversationsRequestBuilder,
+      onError: ctx.handleError,
+      onStateChange: ctx.handleConversationsStateChange,
+    });
+
+  // Offline support: tell the root's unified view what this scope could not do offline.
+  const reportOffline = useContext(CometChatSearchOfflineContext)?.report;
+  const offlineKind = searchOfflineKind(connectToSearch, searchFailed);
+  useEffect(() => {
+    reportOffline?.('conversations', offlineKind);
+  }, [reportOffline, offlineKind]);
 
   // Sentinel ref for IntersectionObserver-based infinite scroll
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -124,10 +133,16 @@ export const CometChatSearchConversationsList: React.FC<CometChatSearchConversat
             <div className={'cometchat-search__section-empty-view-icon'} />
             <div className={'cometchat-search__section-state-body'}>
               <div className={'cometchat-search__section-state-title'}>
-                {getLocalizedString('search_no_result_title')}
+                {getLocalizedString(
+                  connectToSearch ? 'search_connect_to_search_messages' : 'search_no_result_title'
+                )}
               </div>
               <div className={'cometchat-search__section-state-description'}>
-                {getLocalizedString('search_no_result_subtitle')}
+                {getLocalizedString(
+                  connectToSearch
+                    ? 'search_connect_to_search_subtitle'
+                    : 'search_no_result_subtitle'
+                )}
               </div>
             </div>
           </div>

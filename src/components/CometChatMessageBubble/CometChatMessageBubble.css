@@ -587,3 +587,38 @@ div:has(> .cometchat-message-bubble-wrapper--batch-first .cometchat-message-bubb
   .cometchat-message-bubble-wrapper--batch-last:has(.cometchat-message-bubble-incoming) {
   padding-left: 40px;
 }
+
+/* Offline support: Retry on a failed own message (rendered only with offline on). */
+.cometchat-message-bubble__offline-retry {
+  align-self: flex-end;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: var(--cometchat-padding-1, 4px) 0 0;
+  color: var(--cometchat-message-bubble-offline-retry-color, var(--cometchat-error-color, #f44649));
+  font: var(
+    --cometchat-message-bubble-offline-retry-font,
+    var(--cometchat-font-caption1-regular, 400 12px / 14.4px Roboto)
+  );
+}
+
+.cometchat-message-bubble__offline-retry:focus-visible {
+  outline: 2px solid
+    var(
+      --cometchat-message-bubble-offline-retry-focus-outline-color,
+      var(--cometchat-primary-color, #6852d6)
+    );
+  outline-offset: 2px;
+}
+
+/* Offline support: a failed own message's row tint and icon (none by default beyond today's error mark). */
+[data-cc='message-row'][data-cc-state='failed'] {
+  background: var(--cometchat-message-bubble-offline-failed-tint, transparent);
+}
+
+[data-cc='message-row'][data-cc-state='failed'] .cometchat-receipts-error {
+  background: var(
+    --cometchat-message-bubble-offline-failed-icon-color,
+    var(--cometchat-error-color, #f44336)
+  );
+}

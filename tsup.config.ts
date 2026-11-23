@@ -42,10 +42,14 @@ export default defineConfig({
     }
     return { js: "require('./index.css');" };
   },
+  // The state-contract frame probe (src/utils/offline/contract.ts) exists only
+  // in source builds for E2E; the published package defines it false so the
+  // bundler drops it (scripts/check-no-frame-probe.mjs proves it on dist/).
+  define: { __CC_FRAME_PROBE__: 'false' },
   // Icons and images are inlined as data URLs, so the package ships no loose image files.
   loader: {
     '.svg': 'dataurl',
     '.png': 'dataurl',
   },
-  onSuccess: 'node scripts/copy-assets.js',
+  onSuccess: 'node scripts/copy-assets.js && node scripts/check-no-frame-probe.mjs',
 });

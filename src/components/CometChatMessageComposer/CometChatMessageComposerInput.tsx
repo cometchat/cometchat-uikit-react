@@ -183,6 +183,7 @@ export const CometChatMessageComposerInput: React.FC<CometChatMessageComposerInp
         ref={activeRef}
         className={inputClass}
         contentEditable
+        data-cc="composer-input"
         role="textbox"
         tabIndex={0}
         aria-multiline="true"

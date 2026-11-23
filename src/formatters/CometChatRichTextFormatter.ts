@@ -76,6 +76,37 @@ function decodeHtmlEntities(text: string): string {
   });
 }
 
+/**
+ * Set only while {@link formatRichTextForEdit} runs. Module-scoped rather than a
+ * constructor option so the public `CometChatRichTextFormatter` API is unchanged.
+ * `format()` is synchronous, so the flag cannot leak into another call.
+ */
+let preserveBlankLines = false;
+
+/** Block elements that start on their own line in the editor. */
+const BLOCK_TAGS = new Set(['P', 'DIV', 'BLOCKQUOTE', 'PRE', 'OL', 'UL']);
+
+/**
+ * Convert composer HTML to stored text for a message EDIT, keeping every blank
+ * line the editor shows.
+ *
+ * Sending still goes through `format()`, which caps runs of blank lines at one.
+ * Editing must not: the edit composer is seeded from the stored text with one
+ * `<br>` per blank line, so applying the cap on save silently removed blank
+ * lines the user never touched. Internal; not exported from the package.
+ */
+export function formatRichTextForEdit(
+  formatter: CometChatRichTextFormatter,
+  html: string
+): string {
+  preserveBlankLines = true;
+  try {
+    return formatter.format(html);
+  } finally {
+    preserveBlankLines = false;
+  }
+}
+
 export class CometChatRichTextFormatter extends CometChatTextFormatter {
   readonly id = 'rich-text-formatter';
   override priority = 200;
@@ -147,15 +178,33 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
     return this.processNode(container);
   }
 
-  private processNode(node: Node, depth = 0): string {
+  /**
+   * @param inListItem true inside a list item's own text (see
+   *   {@link extractListItemContent}), which stays on one line.
+   */
+  private processNode(node: Node, depth = 0, inListItem = false): string {
     let result = '';
     for (const child of Array.from(node.childNodes)) {
-      result += this.processChildNode(child, depth);
+      // Edit: a block that follows inline content starts on a new line in the
+      // editor (e.g. `A<div>B</div>`), so the stored text must too. Not inside
+      // a list item: a new line there would move the rest of the item out of
+      // the list.
+      if (
+        preserveBlankLines &&
+        !inListItem &&
+        result !== '' &&
+        !result.endsWith('\n') &&
+        child.nodeType === Node.ELEMENT_NODE &&
+        BLOCK_TAGS.has((child as HTMLElement).tagName.toUpperCase())
+      ) {
+        result += '\n';
+      }
+      result += this.processChildNode(child, depth, inListItem);
     }
     return result;
   }
 
-  private processChildNode(node: Node, depth = 0): string {
+  private processChildNode(node: Node, depth = 0, inListItem = false): string {
     if (node.nodeType === Node.TEXT_NODE) {
       return node.textContent ?? '';
     }
@@ -167,7 +216,7 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
     const element = node as HTMLElement;
 
     const tagName = element.tagName.toUpperCase();
-    const innerContent = this.processNode(element, depth);
+    const innerContent = this.processNode(element, depth, inListItem);
 
     switch (tagName) {
       case 'B':
@@ -193,7 +242,8 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
       case 'PRE': {
         const codeEl = element.querySelector('code') ?? element;
         const codeContent = this.extractCodeContent(codeEl, false);
-        return `\`\`\`\n${codeContent}\n\`\`\``;
+        // Edit: end the fence's line so the text after it keeps its own line and blank lines.
+        return `\`\`\`\n${codeContent}\n\`\`\`${preserveBlankLines ? '\n' : ''}`;
       }
 
       case 'CODE': {
@@ -226,7 +276,9 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
         while (lines.length > 0 && (lines[lines.length - 1] ?? '').trim() === '') {
           lines.pop();
         }
-        return lines.map(line => `> ${line}`).join('\n');
+        const quoted = lines.map(line => `> ${line}`).join('\n');
+        // Edit: end the quote's line, otherwise one blank line after it is lost.
+        return preserveBlankLines && quoted ? `${quoted}\n` : quoted;
       }
 
       case 'A': {
@@ -286,6 +338,9 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
 
       case 'P':
       case 'DIV':
+        // Edit: a trailing <br> in a block is the browser's line placeholder
+        // (`<div><br></div>` is ONE empty line), so it already ends the line.
+        if (preserveBlankLines && innerContent.endsWith('\n')) return innerContent;
         return innerContent + '\n';
 
       case 'SPAN': {
@@ -459,7 +514,7 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
           nested += this.processChildNode(child, depth + 1);
         } else if (tag === 'DIV' || tag === 'P') {
           // Flatten div/p inside list items — treat as inline content
-          const innerContent = this.processNode(child as HTMLElement, depth);
+          const innerContent = this.processNode(child as HTMLElement, depth, true);
           // Only add space separator if there's already content (avoid leading spaces)
           if (text && innerContent.trim()) {
             text += ' ';
@@ -471,7 +526,7 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
             text += ' ';
           }
         } else {
-          text += this.processChildNode(child, depth);
+          text += this.processChildNode(child, depth, true);
         }
       } else {
         text += child.textContent ?? '';
@@ -488,7 +543,7 @@ export class CometChatRichTextFormatter extends CometChatTextFormatter {
     return stripCaretMarkers(markdown)
       .replace(/```\n?(?:\u200B|\u200C|\u200D|\uFEFF|\s)*\n?```/g, '')
       .replace(/(?<!`)`(?!`)(?:[^\S\n]|\u200B|\u200C|\u200D|\uFEFF)*`(?!`)/g, '')
-      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\n{3,}/g, match => (preserveBlankLines ? match : '\n\n'))
       .trim();
   }
 

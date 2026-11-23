@@ -28,6 +28,11 @@ export class CometChatUsersManager {
     return this.usersRequest.fetchNext();
   }
 
+  /** The underlying request, for the offline path's two-phase read. @internal */
+  request(): CometChat.UsersRequest {
+    return this.usersRequest;
+  }
+
   /**
    * Attach an SDK UserListener for online/offline status updates.
    * @param listenerId - Unique listener ID.

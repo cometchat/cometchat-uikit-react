@@ -75,6 +75,33 @@ describe('conversationsReducer', () => {
     });
   });
 
+  describe('FETCH_SUCCESS dedupe (D3)', () => {
+    it('drops a page row that is already listed and keeps the listed copy', () => {
+      const listed = createMockConversation('c1', 3);
+      const stateWithConvs: CometChatConversationsState = {
+        ...initialConversationsState,
+        conversations: [listed],
+        fetchState: 'loaded',
+      };
+      const state = conversationsReducer(stateWithConvs, {
+        type: 'FETCH_SUCCESS',
+        conversations: [createMockConversation('c1', 0), createMockConversation('c2')],
+        hasMore: true,
+      });
+      expect(state.conversations.map(c => c.getConversationId())).toEqual(['c1', 'c2']);
+      expect(state.conversations[0]).toBe(listed);
+    });
+
+    it('drops a duplicate inside one page', () => {
+      const state = conversationsReducer(initialConversationsState, {
+        type: 'FETCH_SUCCESS',
+        conversations: [createMockConversation('c1'), createMockConversation('c1')],
+        hasMore: true,
+      });
+      expect(state.conversations).toHaveLength(1);
+    });
+  });
+
   describe('FETCH_ERROR', () => {
     it('sets fetchState to error and stores message when list is empty', () => {
       const state = conversationsReducer(initialConversationsState, {

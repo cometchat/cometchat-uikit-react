@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useRef } from 'react';
+import React, { lazy, Suspense, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useCometChatMessageListContext } from './CometChatMessageList.context';
@@ -12,13 +12,22 @@ import { CometChatPinSaveConfirmDialog } from '../base/CometChatPinSaveConfirmDi
 import { CometChatFlagMessageDialog } from '../CometChatFlagMessageDialog/CometChatFlagMessageDialog';
 import { CometChatToast } from '../base/CometChatToast/CometChatToast';
 import { useLocale } from '../../context/locale/LocaleContext';
-import { useMessageListViewScroll } from './useMessageListViewScroll';
+import { canLoadOnScroll, useMessageListViewScroll } from './useMessageListViewScroll';
 import { useMessageListViewDialogs } from './useMessageListViewDialogs';
 import { isDifferentDay } from './CometChatMessageList.utils';
 import { computeBatchPosition } from '../../utils/CometChatBatchUtils';
 import type { CometChatMessageListAlignment } from './CometChatMessageList.types';
 import { useOverlayContainer } from '../../context/OverlayContainerContext';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { renderKey } from '../../utils/offline/identity';
+import { CometChatMessageListOfflineNotices } from './CometChatMessageListOfflineNotices';
 import './CometChatMessageList.css';
+import {
+  contractRowOf,
+  messageRowAttributes,
+  reportFrame,
+  type ContractListFooter,
+} from '../../utils/offline/contract';
 
 // Lazy-load heavy components only needed on interaction
 const LazyCometChatEmojiKeyboard = lazy(() =>
@@ -74,7 +83,9 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
   const {
     allMessages,
     loggedInUser,
+    user,
     group,
+    parentMessageId,
     isLoading,
     isEmpty,
     isError,
@@ -84,6 +95,8 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
     fetchNext,
     isFetchingMore,
     state,
+    offlineJumpToLatest,
+    markOlderPrependRef,
     setAtBottom,
     scrollToMessage,
     markConversationAsReadIfUnread,
@@ -107,20 +120,42 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
 
   const { getLocalizedString } = useLocale();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Once this list has shown offline keys it keeps them, so the kill switch
+  // turning offline off mid-session never remounts the rows (the list is not
+  // reloaded then). A list that never ran offline keeps today's keys.
+  const offlineKeysRef = useRef(false);
 
   // --- Scroll behavior (observers, position restore, auto-scroll) ---
   const { topSentinelRef, bottomSentinelRef, liveRegionRef } = useMessageListViewScroll({
     scrollContainerRef,
     allMessages,
     isFetchingMore,
-    hasMore,
-    hasMoreNewer,
+    // Offline: past the cache the footer offers the retry; scrolling does too
+    // once the connection is back (UIK-READ-03). The same for the "load newer"
+    // button of a jumped window.
+    hasMore: canLoadOnScroll(hasMore, state.offlineFooter, state.offlineFooterRetryable),
+    hasMoreNewer: canLoadOnScroll(
+      hasMoreNewer,
+      state.offlineNewerFooter,
+      state.offlineFooterRetryable
+    ),
     state,
     fetchPrevious,
     fetchNext,
     setAtBottom,
     markConversationAsReadIfUnread,
     scrollToMessage,
+    // Offline: the reconnect edge load reads older messages without a sentinel or a
+    // gesture; it records the prepend through this ref so the reader's position holds.
+    markOlderPrependRef,
+  });
+
+  // State contract frame probe (E2E source builds only; dropped from the package).
+  useEffect(() => {
+    reportFrame('messages', () => {
+      const uid = loggedInUser.getUid();
+      return allMessages.map(m => contractRowOf(m, uid));
+    });
   });
 
   // --- Dialog/overlay state (delete, flag, emoji picker, message info, toast) ---
@@ -164,6 +199,11 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
   // --- Build message list with date separators ---
   const messageElements = () => {
     const elements: React.ReactNode[] = [];
+    // Offline support: one gate read per render. On the offline path an own
+    // message keeps one key from compose to ack, so its bubble never remounts;
+    // with offline off the key is exactly today's.
+    const offlineKeys = (offlineKeysRef.current ||= isOfflineOn());
+    const loggedInUid = loggedInUser.getUid();
     const messages = listOptions.hideGroupActionMessages
       ? allMessages.filter(m => (m.getCategory() as string) !== CometChat.CATEGORY_ACTION)
       : allMessages;
@@ -189,7 +229,11 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
       }
 
       elements.push(
-        <div key={String(msg.getId() || msg.getMuid())} data-message-id={String(msg.getId())}>
+        <div
+          key={offlineKeys ? renderKey(msg, loggedInUid) : String(msg.getId() || msg.getMuid())}
+          data-message-id={String(msg.getId())}
+          {...messageRowAttributes(contractRowOf(msg, loggedInUid))}
+        >
           {listOptions.bubbleView ? (
             listOptions.bubbleView(msg, loggedInUser)
           ) : (
@@ -286,6 +330,15 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
 
   if (isLoading || isError || isEmpty) return null;
 
+  // State contract (TEST-PLAN §3.3): what the older-messages end of the list shows.
+  const listFooter: ContractListFooter = isFetchingMore
+    ? 'loading'
+    : state.offlineFooter === 'connect_to_load_more'
+      ? 'connect-to-load-more'
+      : hasMore
+        ? 'none'
+        : 'end';
+
   const scrollClasses = [
     'cometchat-message-list__scroll-container',
     !showScrollbar ? 'cometchat-message-list__scroll-container--hide-scrollbar' : '',
@@ -312,6 +365,8 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
           className={scrollClasses}
           role="log"
           aria-label={getLocalizedString('accessibility_message_list')}
+          data-cc="message-list"
+          data-cc-list-footer={listFooter}
         >
           {/* Top sentinel for reverse infinite scroll */}
           <div
@@ -319,6 +374,25 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
             className={'cometchat-message-list__top-sentinel'}
             aria-hidden="true"
           />
+
+          {/* Offline support: older messages need a connection */}
+          {state.offlineFooter === 'connect_to_load_more' && !isFetchingMore && (
+            <div
+              className={'cometchat-message-list__offline-footer'}
+              data-testid="offline-load-more"
+              role="status"
+            >
+              <button
+                type="button"
+                className={'cometchat-message-list__offline-footer-button'}
+                onClick={() => {
+                  void fetchPrevious();
+                }}
+              >
+                {getLocalizedString('message_list_connect_to_load_more')}
+              </button>
+            </div>
+          )}
 
           {/* Fetch-more loading indicator */}
           {isFetchingMore && (
@@ -339,6 +413,25 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
           {/* Messages */}
           <div className={'cometchat-message-list__messages'}>{messageElements()}</div>
 
+          {/* Offline support: newer messages of a jumped window need a connection */}
+          {state.offlineNewerFooter === 'connect_to_load_more' && !isFetchingMore && (
+            <div
+              className={'cometchat-message-list__offline-footer'}
+              data-testid="offline-load-newer"
+              role="status"
+            >
+              <button
+                type="button"
+                className={'cometchat-message-list__offline-footer-button'}
+                onClick={() => {
+                  void fetchNext();
+                }}
+              >
+                {getLocalizedString('message_list_connect_to_load_newer')}
+              </button>
+            </div>
+          )}
+
           {/* Bottom sentinel for at-bottom detection */}
           <div
             ref={bottomSentinelRef}
@@ -347,6 +440,34 @@ export const CometChatMessageListView: React.FC<CometChatMessageListViewProps> =
           />
         </div>
       </div>
+
+      {/* Offline support: notices about unsent messages */}
+      {!listOptions.hideOfflineNotices && (
+        <CometChatMessageListOfflineNotices
+          user={user}
+          group={group}
+          parentMessageId={parentMessageId}
+          loggedInUser={loggedInUser}
+        />
+      )}
+
+      {/* Offline support: a sweep found more than a page while reading older messages */}
+      {state.offlineJumpToLatest && offlineJumpToLatest && (
+        <button
+          type="button"
+          className={'cometchat-message-list__offline-jump-to-latest'}
+          data-testid="offline-jump-to-latest"
+          onClick={() => {
+            offlineJumpToLatest();
+            requestAnimationFrame(() => {
+              const el = scrollContainerRef.current;
+              if (el) el.scrollTop = el.scrollHeight;
+            });
+          }}
+        >
+          {getLocalizedString('message_list_jump_to_latest')}
+        </button>
+      )}
 
       {/* Scroll-to-bottom button */}
       <CometChatMessageListScrollToBottom scrollContainerRef={scrollContainerRef} />

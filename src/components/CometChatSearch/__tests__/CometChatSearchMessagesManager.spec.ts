@@ -240,6 +240,35 @@ describe('CometChatSearchMessagesManager', () => {
     });
   });
 
+  describe('a load-more of an earlier search', () => {
+    it('does not release the newer search\'s load-more lock when it ends', async () => {
+      const page = Array.from({ length: 30 }, (_, i) => ({ getId: () => i }));
+      const requestA = { fetchPrevious: vi.fn() };
+      const requestB = { fetchPrevious: vi.fn() };
+      let finishA!: (rows: unknown[]) => void;
+      requestA.fetchPrevious
+        .mockResolvedValueOnce(page)
+        .mockReturnValueOnce(new Promise(resolve => (finishA = resolve)));
+      requestB.fetchPrevious
+        .mockResolvedValueOnce(page)
+        .mockReturnValueOnce(new Promise(() => undefined));
+      mockBuild.mockReturnValueOnce(requestA).mockReturnValueOnce(requestB);
+
+      const manager = new CometChatSearchMessagesManager();
+      await manager.search('old', []);
+      const oldMore = manager.loadMore();
+      manager.reset();
+      await manager.search('new', []);
+      void manager.loadMore();
+      finishA([{ getId: () => 99 }]);
+      await oldMore;
+
+      const third = await manager.loadMore();
+      expect(third.results).toEqual([]);
+      expect(requestB.fetchPrevious).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('reset', () => {
     it('clears the search request state', async () => {
       const mockMessages = Array.from({ length: 30 }, (_, i) => ({ getId: () => i }));

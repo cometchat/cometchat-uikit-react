@@ -18,6 +18,8 @@ import playArrowIcon from '../../assets/play_arrow.svg';
 import pauseIcon from '../../assets/pause.svg';
 import unsupportedIcon from '../../assets/unsupported.svg';
 import './CometChatAudiosBubble.css';
+import { useCachedMedia } from '../../utils/offline/media';
+import { OfflineMediaUnavailable } from '../../utils/offline/OfflineMediaUnavailable';
 
 /**
  * Format seconds to m:ss.
@@ -224,7 +226,10 @@ export const CometChatAudiosBubble: React.FC<CometChatAudiosBubbleProps> = ({
     (alignment ?? getBubbleAlignment(message, loggedInUser)) === 'right' ? 'outgoing' : 'incoming';
   const isSentByMe = variant === 'outgoing';
 
-  const attachments = useMemo(() => extractAudioAttachments(message), [message]);
+  // Offline support: the SDK's cached copy when it has one; with offline off,
+  // exactly the extracted attachments.
+  const media = useCachedMedia(useMemo(() => extractAudioAttachments(message), [message]));
+  const attachments = media.attachments;
   const caption = useMemo(() => extractAudioCaption(message), [message]);
   const hasMultiple = attachments.length > 1;
 
@@ -250,6 +255,8 @@ export const CometChatAudiosBubble: React.FC<CometChatAudiosBubbleProps> = ({
 
   return (
     <div className={rootClasses}>
+      {/* Offline support: "Available when online" while offline with no cached copy. */}
+      {media.unavailable && <OfflineMediaUnavailable onDownload={media.download} />}
       <div
         className={`cometchat-audios-bubble__container${hasMultiple ? ' cometchat-audios-bubble__container--multi' : ''}`}
       >

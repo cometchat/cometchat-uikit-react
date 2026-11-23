@@ -24,6 +24,12 @@ import {
 } from './CometChatMessageHeaderManager';
 import { useLoggedInUser } from '../../hooks/useLoggedInUser';
 import { useCometChatEvents } from '../../hooks/useCometChatEvents';
+import { OfflineHub } from '../../utils/offline/hub';
+import {
+  runGroupListener,
+  sweptGroupEventsForUser,
+  type GroupListenerCallbacks,
+} from '../../utils/offline/groupActions';
 
 const TYPING_TIMEOUT_MS = 2000;
 
@@ -39,6 +45,8 @@ export function useCometChatMessageHeader(options: CometChatUseCometChatMessageH
   const [state, dispatch] = useReducer(messageHeaderReducer, initialMessageHeaderState);
   const instanceId = useId();
   const loggedInUser = useLoggedInUser();
+  const loggedInUserIdRef = useRef<string | null>(null);
+  loggedInUserIdRef.current = loggedInUser?.getUid() ?? null;
 
   // Typing timeout refs
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -166,7 +174,7 @@ export function useCometChatMessageHeader(options: CometChatUseCometChatMessageH
     const groupId = group.getGuid();
     const listenerId = `CometChatMessageHeader_group_${instanceId}`;
 
-    const cleanup = attachGroupMemberListener(listenerId, groupId, {
+    const callbacks = {
       onGroupMemberJoined: () => {
         dispatch({ type: 'INCREMENT_GROUP_MEMBER_COUNT' });
       },
@@ -185,9 +193,28 @@ export function useCometChatMessageHeader(options: CometChatUseCometChatMessageH
       onGroupMemberScopeChanged: () => {
         // Scope changes don't affect member count
       },
+    };
+    const cleanup = attachGroupMemberListener(listenerId, groupId, callbacks);
+
+    // Offline support: a group action that affected the user while offline
+    // comes only through the sweep; run the same handler for this group
+    // (UIK-SYNC-03).
+    const hub = OfflineHub.getInstance();
+    const sweptCallbacks: GroupListenerCallbacks = callbacks;
+    const stopSweep = hub.messageSync.subscribe(event => {
+      if (event.gen !== hub.gen) return;
+      const uid = loggedInUserIdRef.current;
+      for (const groupEvent of sweptGroupEventsForUser(event.messages, uid)) {
+        const groupOf = (groupEvent.action.getActionFor() ?? null) as CometChat.Group | null;
+        if (groupOf?.getGuid() !== groupId) continue;
+        runGroupListener(groupEvent, sweptCallbacks);
+      }
     });
 
-    return cleanup;
+    return () => {
+      cleanup();
+      stopSweep();
+    };
   }, [group, instanceId]);
 
   // --- Connection listener ---

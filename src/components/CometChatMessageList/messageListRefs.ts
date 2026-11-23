@@ -44,6 +44,19 @@ export interface MessageListRefs {
    */
   initializeRef: RefObject<(() => void) | null>;
   /**
+   * Offline support: loads an edge that stopped at "Connect to load more" once the connection
+   * returns (D84). Set by the scroll hook; the connection handler calls it.
+   */
+  reconnectEdgesRef?: RefObject<(() => void) | null>;
+  /**
+   * Records the prepend bookkeeping of an older page before it lands, so the rows the
+   * user is reading stay where they are. Set by the view's scroll hook, which owns the
+   * scroll container; the data hook calls it before an older read it starts itself (the
+   * reconnect edge load, D84 rule 9), exactly as the top sentinel and the scroll retry
+   * at a "Connect to load older messages" footer do for the reads the user starts.
+   */
+  markOlderPrependRef?: RefObject<(() => void) | null>;
+  /**
    * Pending messages map for AI agent chat.
    * When streaming ends, these are spliced into the list replacing the run_started bubble.
    */

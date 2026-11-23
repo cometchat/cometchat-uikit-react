@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:offline-e2e": "vite --mode offline-e2e",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -14,12 +15,13 @@
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",
     "e2e:debug": "playwright test --debug",
+    "e2e:offline": "playwright test -c playwright.offline.config.ts",
     "lint:e2e": "eslint e2e"
   },
   "dependencies": {
     "@cometchat/calls-sdk-javascript": "^5.0.3",
-    "@cometchat/chat-sdk-javascript": "^4.2.1",
-    "@cometchat/chat-uikit-react": "^7.2.5",
+    "@cometchat/chat-sdk-javascript": "^4.3.1",
+    "@cometchat/chat-uikit-react": "^7.3.0",
     "dompurify": "3.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

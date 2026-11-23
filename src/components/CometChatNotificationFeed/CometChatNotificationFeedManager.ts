@@ -1,5 +1,6 @@
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { NotificationFeedItem, NotificationCategory } from './CometChatNotificationFeed.types';
+import { isOfflineOn } from '../../utils/offline/gate';
 
 /**
  * CometChatNotificationFeedManager — SDK wrapper for notification feed operations.
@@ -45,6 +46,11 @@ export class CometChatNotificationFeedManager {
     return this.feedRequestBuilder.fetchNext();
   }
 
+  /** The underlying feed request (null if it could not be built), for the offline path. @internal */
+  getRequest(): { fetchNext: (listener?: object) => Promise<unknown> } | null {
+    return this.feedRequestBuilder;
+  }
+
   /**
    * Fetch available notification categories.
    */
@@ -71,9 +77,14 @@ export class CometChatNotificationFeedManager {
   }
 
   /**
-   * Fetch current unread count.
+   * Fetch current unread count. With offline support on, a failed request resolves
+   * to `null` so the caller keeps the count it already shows rather than blanking
+   * the badge while the device cannot reach the server. With offline off it
+   * resolves to 0, as it did before offline support (7.2.x), so nothing about the
+   * badge changes for an integrator who has not turned offline on (Prajwal
+   * CometChatNotificationFeedManager.ts:82). 0 as well when the feed is not enabled.
    */
-  static async fetchUnreadCount(): Promise<number> {
+  static async fetchUnreadCount(): Promise<number | null> {
     try {
       const result = await CometChat.getNotificationFeedUnreadCount();
       return result.count;
@@ -81,6 +92,7 @@ export class CometChatNotificationFeedManager {
       const err = error as { code?: string };
       if (err.code !== 'ERR_BAD_REQUEST') {
         console.warn('[NotificationFeed] Failed to fetch unread count:', error);
+        return isOfflineOn() ? null : 0;
       }
       return 0;
     }

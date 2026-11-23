@@ -44,6 +44,7 @@ export function CometChatListItemRoot({
   'aria-label': ariaLabel,
   menuShortcutKey = 'M',
   disableTabIndex = false,
+  role = 'option',
   isFocused = false,
 }: CometChatListItemRootProps) {
   const [isHovering, setIsHovering] = useState(false);
@@ -158,9 +159,9 @@ export function CometChatListItemRoot({
       <div
         className={rootClasses}
         id={id}
-        role="option"
+        role={role}
         tabIndex={disableTabIndex ? -1 : 0}
-        aria-selected={isActive}
+        {...(role === 'option' && { 'aria-selected': isActive })}
         aria-disabled={disabled || undefined}
         aria-label={ariaLabel}
         onMouseEnter={handleMouseEnter}

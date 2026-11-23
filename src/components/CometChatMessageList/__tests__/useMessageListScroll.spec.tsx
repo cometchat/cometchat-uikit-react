@@ -475,6 +475,38 @@ describe('useMessageListScroll', () => {
     expect(types).toContain('FETCH_AROUND_SUCCESS');
   });
 
+  it('goToMessage: an older-page read already in flight never lands in the jumped-to window', async () => {
+    const { refs, manager } = makeRefs();
+    let finishOlder!: (rows: unknown[]) => void;
+    manager.fetchPrevious.mockReturnValueOnce(
+      new Promise(resolve => {
+        finishOlder = resolve;
+      })
+    );
+    manager.fetchAroundMessageId.mockResolvedValueOnce({
+      messages: [buildTextMessage({ id: 100 })],
+      hasMoreNewer: false,
+    });
+
+    const { result } = renderHook(() => useHarness(baseOptions({ user: user as never }), refs));
+
+    let older!: Promise<void>;
+    act(() => {
+      older = result.current.api.fetchPrevious();
+    });
+    await act(async () => {
+      await result.current.api.goToMessage(100);
+    });
+    await act(async () => {
+      finishOlder([buildTextMessage({ id: 1 })]);
+      await older;
+    });
+
+    const types = result.current.dispatched.map(a => a.type);
+    expect(types).toContain('FETCH_AROUND_SUCCESS');
+    expect(types).not.toContain('FETCH_PREVIOUS_SUCCESS');
+  });
+
   it('goToMessage dispatches FETCH_PREVIOUS_ERROR on SDK failure', async () => {
     const { refs, manager } = makeRefs();
     manager.fetchAroundMessageId.mockRejectedValueOnce(new Error('nope'));

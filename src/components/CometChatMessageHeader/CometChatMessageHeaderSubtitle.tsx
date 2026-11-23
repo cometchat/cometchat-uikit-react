@@ -2,6 +2,7 @@ import React from 'react';
 import type { CometChatMessageHeaderSubtitleProps } from './CometChatMessageHeader.types';
 import { useCometChatMessageHeaderContext } from './CometChatMessageHeader.context';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { usePresenceSuppressed } from '../../utils/offline/presence';
 import { dateLiteral, formatDateWithConfig } from '../../resources/CometChatLocalize/dateFormat.utils';
 import type { CometChatDateFormatConfig } from '../base/CometChatDate/CometChatDate.types';
 import './CometChatMessageHeader.css';
@@ -34,13 +35,20 @@ export const CometChatMessageHeaderSubtitle: React.FC<CometChatMessageHeaderSubt
     user,
   } = useCometChatMessageHeaderContext();
   const { getLocalizedString, calendarObject, timezone, dateLocaleLanguage } = useLocale();
+  const presenceHidden = usePresenceSuppressed();
 
   const rootClasses = ['cometchat-message-header__subtitle-wrapper', className]
     .filter(Boolean)
     .join(' ');
 
+  // Offline on and not connected: no typing (none can arrive) and no presence for a user.
+  // A group keeps its member count.
+  if (presenceHidden && !isGroupConversation) {
+    return <div className={rootClasses} />;
+  }
+
   // --- Typing indicator (both user and group) ---
-  if (isTyping) {
+  if (isTyping && !presenceHidden) {
     return (
       <div className={rootClasses} aria-live="polite" aria-atomic="true">
         <span

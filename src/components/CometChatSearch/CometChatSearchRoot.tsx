@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatSearchContext } from './CometChatSearch.context';
+import {
+  CometChatSearchOfflineContext,
+  type SearchOfflineContextValue,
+  type SearchOfflineKind,
+  type SearchOfflineScope,
+  bothScopesFailed,
+} from './searchOffline';
 import { CometChatSearchConversationsList } from './CometChatSearchConversationsList';
 import { CometChatSearchMessagesList } from './CometChatSearchMessagesList';
 import { CometChatSearchBar } from '../base/CometChatSearchBar/CometChatSearchBar';
@@ -157,27 +164,62 @@ export const CometChatSearchRoot: React.FC<CometChatSearchRootProps> = ({
 
   const bothScopesActive = showConversations && showMessages;
 
+  // Offline support: what each result scope could not do offline (set only with the SDK's
+  // offline support on): "Connect to search" for a keyword.
+  const [offlineKinds, setOfflineKinds] = useState<Record<SearchOfflineScope, SearchOfflineKind>>({
+    conversations: null,
+    messages: null,
+  });
+  const reportOfflineScope = useCallback((scope: SearchOfflineScope, kind: SearchOfflineKind) => {
+    setOfflineKinds(previous =>
+      previous[scope] === kind ? previous : { ...previous, [scope]: kind }
+    );
+  }, []);
+  // Real errors of scopes with nothing to show, held until every scope has answered.
+  const heldErrorsRef = useRef(new Map<SearchOfflineScope, unknown>());
+  const holdOfflineError = useCallback((scope: SearchOfflineScope, error: unknown) => {
+    if (error === null) heldErrorsRef.current.delete(scope);
+    else heldErrorsRef.current.set(scope, error);
+  }, []);
+  const offlineSearch: SearchOfflineContextValue = useMemo(
+    () => ({
+      kinds: offlineKinds,
+      report: reportOfflineScope,
+      hold: holdOfflineError,
+      bothScopesActive,
+    }),
+    [offlineKinds, reportOfflineScope, holdOfflineError, bothScopesActive]
+  );
+  // Android: both scopes failed, one at least for a real reason, is the error view; a scope
+  // that cannot search offline counts as failed then (D84).
+  const failedTogether =
+    bothScopesActive && bothScopesFailed(offlineKinds.conversations, offlineKinds.messages);
+  const conversationsEffective: CometChatFetchState = failedTogether
+    ? 'error'
+    : conversationsState;
+  const messagesEffective: CometChatFetchState = failedTogether ? 'error' : messagesState;
+
   const hideConversationsSection = useMemo(() => {
     if (!bothScopesActive) return false;
-    if (conversationsState === 'empty' && messagesState === 'empty') return true;
-    if (conversationsState === 'error' && messagesState === 'error') return true;
-    if (conversationsState === 'empty' && messagesState === 'loaded') return true;
+    if (conversationsEffective === 'empty' && messagesEffective === 'empty') return true;
+    if (conversationsEffective === 'error' && messagesEffective === 'error') return true;
+    if (conversationsEffective === 'empty' && messagesEffective === 'loaded') return true;
     return false;
-  }, [bothScopesActive, conversationsState, messagesState]);
+  }, [bothScopesActive, conversationsEffective, messagesEffective]);
 
   const hideMessagesSection = useMemo(() => {
     if (!bothScopesActive) return false;
-    if (conversationsState === 'empty' && messagesState === 'empty') return true;
-    if (conversationsState === 'error' && messagesState === 'error') return true;
-    if (messagesState === 'empty' && conversationsState === 'loaded') return true;
+    if (conversationsEffective === 'empty' && messagesEffective === 'empty') return true;
+    if (conversationsEffective === 'error' && messagesEffective === 'error') return true;
+    if (messagesEffective === 'empty' && conversationsEffective === 'loaded') return true;
     return false;
-  }, [bothScopesActive, conversationsState, messagesState]);
+  }, [bothScopesActive, conversationsEffective, messagesEffective]);
 
   const showUnifiedEmpty =
-    bothScopesActive && conversationsState === 'empty' && messagesState === 'empty';
+    bothScopesActive && conversationsEffective === 'empty' && messagesEffective === 'empty';
 
   const showUnifiedError =
-    bothScopesActive && conversationsState === 'error' && messagesState === 'error';
+    bothScopesActive && conversationsEffective === 'error' && messagesEffective === 'error';
 
   // ── Actions ──
   const setSearchValue = useCallback((value: string) => {
@@ -242,6 +284,23 @@ export const CometChatSearchRoot: React.FC<CometChatSearchRootProps> = ({
     },
     [onError]
   );
+
+  // Offline support (Android's updateFinalStateIfCompleted): a scope that failed with a real
+  // error and has nothing to show waits for the other scope. Both failed is the error view and
+  // onError; results from the other scope stay and the failure reaches onError (rule 5); no
+  // results anywhere is the plain empty state and no onError.
+  const conversationsAnswer = showConversations ? conversationsEffective : 'idle';
+  const messagesAnswer = showMessages ? messagesEffective : 'idle';
+  useEffect(() => {
+    const held = heldErrorsRef.current;
+    if (held.size === 0) return;
+    if (conversationsAnswer === 'loading' || messagesAnswer === 'loading') return;
+    const errors = [...held.values()];
+    held.clear();
+    if (showUnifiedError || conversationsAnswer === 'loaded' || messagesAnswer === 'loaded') {
+      errors.forEach(handleError);
+    }
+  }, [conversationsAnswer, messagesAnswer, showUnifiedError, handleError]);
 
   // Cleanup debounce on unmount
   useEffect(() => {
@@ -368,13 +427,15 @@ export const CometChatSearchRoot: React.FC<CometChatSearchRootProps> = ({
 
   return (
     <CometChatSearchContext.Provider value={contextValue}>
-      <div
-        className={['cometchat', 'cometchat-search'].filter(Boolean).join(' ')}
-        role="search"
-        aria-label={getLocalizedString('search_title')}
-      >
-        {hasChildren ? children : <CometChatSearchDefaultLayout inputRef={inputRef} />}
-      </div>
+      <CometChatSearchOfflineContext.Provider value={offlineSearch}>
+        <div
+          className={['cometchat', 'cometchat-search'].filter(Boolean).join(' ')}
+          role="search"
+          aria-label={getLocalizedString('search_title')}
+        >
+          {hasChildren ? children : <CometChatSearchDefaultLayout inputRef={inputRef} />}
+        </div>
+      </CometChatSearchOfflineContext.Provider>
     </CometChatSearchContext.Provider>
   );
 };
@@ -389,7 +450,11 @@ interface DefaultLayoutProps {
 
 const CometChatSearchDefaultLayout: React.FC<DefaultLayoutProps> = ({ inputRef }) => {
   const ctx = React.useContext(CometChatSearchContext);
+  const kinds = React.useContext(CometChatSearchOfflineContext)?.kinds;
   if (!ctx) return null;
+  // Offline support: a keyword search that could not reach the server says so, never "No results".
+  // A filter-only read that cannot reach it is the plain empty state (Android).
+  const connectToSearch = kinds?.conversations === 'search' || kinds?.messages === 'search';
 
   return (
     <>
@@ -499,10 +564,16 @@ const CometChatSearchDefaultLayout: React.FC<DefaultLayoutProps> = ({ inputRef }
                 <div className={'cometchat-search__empty-view-icon'} aria-hidden="true" />
                 <div className={'cometchat-search__empty-view-body'}>
                   <div className={'cometchat-search__empty-view-body-title'}>
-                    {getLocalizedString('search_no_result_title')}
+                    {getLocalizedString(
+                      connectToSearch ? 'search_connect_to_search_messages' : 'search_no_result_title'
+                    )}
                   </div>
                   <div className={'cometchat-search__empty-view-body-description'}>
-                    {getLocalizedString('search_no_result_subtitle')}
+                    {getLocalizedString(
+                      connectToSearch
+                        ? 'search_connect_to_search_subtitle'
+                        : 'search_no_result_subtitle'
+                    )}
                   </div>
                 </div>
               </div>

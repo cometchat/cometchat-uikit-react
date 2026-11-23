@@ -1,6 +1,6 @@
 {
   "name": "@cometchat/chat-uikit-react",
-  "version": "7.2.6",
+  "version": "7.3.0",
   "description": "Ready-to-use Chat UI Components for React",
   "author": "CometChat",
   "type": "module",
@@ -43,6 +43,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.build.json",
     "typecheck:all": "tsc --noEmit -p tsconfig.json",
     "typecheck:spec": "tsc -p tsconfig.spec.json",
+    "offline:compat": "node scripts/offline-compat-check.mjs",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
@@ -51,7 +52,7 @@
   },
   "devDependencies": {
     "@cometchat/calls-sdk-javascript": "^5.0.3",
-    "@cometchat/chat-sdk-javascript": "^4.2.1",
+    "@cometchat/chat-sdk-javascript": "^4.3.1",
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@eslint/js": "^9.39.4",

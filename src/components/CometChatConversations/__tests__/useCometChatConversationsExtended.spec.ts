@@ -487,3 +487,91 @@ describe('useCometChatConversations — Extended', () => {
     });
   });
 });
+
+/**
+ * A row rebuilt from the device store can carry a plain `{ uid }` object as its
+ * peer instead of a `User` (the SDK's id-only user; #663 fixes the source).
+ * Beyond drawing the row, the chat still has to be deletable and still has to
+ * follow presence.
+ *
+ * Review: Aanshi F3 on #2460.
+ */
+describe('useCometChatConversations with a plain { uid } peer', () => {
+  function plainPeerConversation(
+    id: string,
+    peer: Record<string, unknown>
+  ): CometChat.Conversation {
+    const conversation = createMockConversation(id);
+    (conversation as unknown as { getConversationWith: () => unknown }).getConversationWith = () =>
+      peer;
+    return conversation;
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('deletes the chat by the uid on the plain object', async () => {
+    const { CometChat } = await import('@cometchat/chat-sdk-javascript');
+    vi.mocked(CometChat.deleteConversation).mockResolvedValue('success');
+    mockFetchNext.mockReset();
+    mockFetchNext.mockResolvedValue([plainPeerConversation('c1', { uid: 'bob' })]);
+
+    const { result } = renderHook(() => useCometChatConversations());
+    await waitFor(() => {
+      expect(result.current.fetchState).toBe('loaded');
+    });
+
+    await act(async () => {
+      await result.current.deleteConversation('c1');
+    });
+
+    expect(CometChat.deleteConversation).toHaveBeenCalledWith('bob', 'user');
+    expect(result.current.conversations).toHaveLength(0);
+  });
+
+  it('follows the peer going online', async () => {
+    const { CometChat } = await import('@cometchat/chat-sdk-javascript');
+    const setStatus = vi.fn();
+    mockFetchNext.mockReset();
+    mockFetchNext.mockResolvedValue([plainPeerConversation('c1', { uid: 'bob', setStatus })]);
+
+    const { result } = renderHook(() => useCometChatConversations());
+    await waitFor(() => {
+      expect(result.current.fetchState).toBe('loaded');
+    });
+
+    const added = vi
+      .mocked(CometChat.addUserListener)
+      .mock.calls.find(([id]) => id.startsWith('CometChatConversations_user_'));
+    const callbacks = added?.[1] as unknown as { onUserOnline: (user: unknown) => void };
+    act(() => {
+      callbacks.onUserOnline({ getUid: () => 'bob' });
+    });
+
+    // The row used to be skipped by the `'getUid' in convWith` test, so its
+    // status never changed.
+    expect(setStatus).toHaveBeenCalledWith('online');
+  });
+
+  it('a peer with no setStatus at all does not throw', async () => {
+    const { CometChat } = await import('@cometchat/chat-sdk-javascript');
+    mockFetchNext.mockReset();
+    mockFetchNext.mockResolvedValue([plainPeerConversation('c1', { uid: 'bob' })]);
+
+    const { result } = renderHook(() => useCometChatConversations());
+    await waitFor(() => {
+      expect(result.current.fetchState).toBe('loaded');
+    });
+
+    const added = vi
+      .mocked(CometChat.addUserListener)
+      .mock.calls.find(([id]) => id.startsWith('CometChatConversations_user_'));
+    const callbacks = added?.[1] as unknown as { onUserOffline: (user: unknown) => void };
+    expect(() => {
+      act(() => {
+        callbacks.onUserOffline({ getUid: () => 'bob' });
+      });
+    }).not.toThrow();
+  });
+});

@@ -12,6 +12,23 @@ import { usePublishEvent } from '../../hooks/usePublishEvent';
 import { useCometChatEvents } from '../../hooks/useCometChatEvents';
 import { clone, createActionMessage } from '../../utils/CometChatUIKitUtility';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { useOfflineListLifecycle } from '../../utils/offline/useOfflineListLifecycle';
+import { useDeferredLoadMore } from '../../utils/offline/useDeferredLoadMore';
+import {
+  applyEntityPage,
+  errorMessageOf,
+  nextOfflineOpId,
+  offlineListBuilder,
+  reportsReadError,
+  carriesKeyword,
+  readEntityPage,
+} from '../../utils/offline/entityList';
+
+const memberUidOf = (member: CometChat.GroupMember): string => member.getUid();
+
+/** How an offline-path read relates to the rows on screen. */
+type OfflineReadMode = 'first' | 'next' | 'refresh';
 
 /**
  * useCometChatGroupMembers — orchestration hook for the group members list data layer.
@@ -120,9 +137,139 @@ export function useCometChatGroupMembers(
     [guid, groupMemberRequestBuilder, searchRequestBuilder]
   );
 
+  // --- Offline support (ON path only; inert with offline off) ---
+  const membersRef = useRef(state.members);
+  membersRef.current = state.members;
+  const loggedInUserForOfflineRef = useRef(loggedInUser);
+  loggedInUserForOfflineRef.current = loggedInUser;
+  /** The offline read whose server phase is still pending (one at a time per request). */
+  const offlineInFlightRef = useRef<string | null>(null);
+  /** The offline state on screen: the next reconnect reads the list again (D84). */
+  const reloadOnConnectRef = useRef(false);
+  /** The search keyword of the request the list last loaded, for that reload. */
+  const loadedSearchRef = useRef('');
+  const errorViewRef = useRef(false);
+  errorViewRef.current =
+    (state.fetchState === 'error' || state.connectToSearch === true) && state.members.length === 0;
+  const latestFetchNextRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const deferFetchNext = useDeferredLoadMore(
+    () => latestFetchNextRef.current(),
+    offlineInFlightRef
+  );
+
+  // Logout, user switch or cache reset (UIK-LIFE-01/02). The latest closures are
+  // read through refs: this is declared before the functions it calls.
+  const lifecycleReloadRef = useRef<() => void>(() => undefined);
+  const offlineUsedRef = useOfflineListLifecycle({
+    onSessionEnd: () => {
+      fetchIdRef.current = nextOfflineOpId('session');
+      offlineInFlightRef.current = null;
+      managerRef.current = null;
+      dispatch({ type: 'RESET' });
+    },
+    onCacheReset: () => {
+      lifecycleReloadRef.current();
+    },
+    // A user switch, or a login after the logout that cleared this list:
+    // read it for whoever is signed in now, instead of staying on the blank
+    // frame `onSessionEnd` left until this list is remounted (F1).
+    onLogin: () => {
+      lifecycleReloadRef.current();
+    },
+  });
+
+  /**
+   * Offline path: one two-phase page read. The cached page paints first; the
+   * server page replaces the same slice in place. D84: with nothing on screen a
+   * failed read is the error view (offline: "Connect to load ...") and one `onError`;
+   * an offline keyword search is "Connect to search" and no `onError`. Rows on screen
+   * stay: offline is silent, a real error reaches `onError` unless the kit started the
+   * read itself (`refresh` or `automatic`).
+   */
+  const readOffline = useCallback(
+    (
+      manager: CometChatGroupMembersManager,
+      opId: string,
+      mode: OfflineReadMode,
+      automatic = false
+    ) => {
+      offlineUsedRef.current = true;
+      offlineInFlightRef.current = opId;
+      const settle = () => {
+        if (offlineInFlightRef.current === opId) offlineInFlightRef.current = null;
+      };
+      reloadOnConnectRef.current = false;
+      return readEntityPage<CometChat.GroupMember>(
+        {
+          request: manager.request(),
+          kind: 'groupMembers',
+          refresh: mode === 'refresh',
+          idOf: memberUidOf,
+          isStale: () => fetchIdRef.current !== opId,
+          shown: () => membersRef.current,
+        },
+        {
+          onPage: page => {
+            if (page.phase === 'server') settle();
+            const emptyAfter =
+              page.phase === 'server' &&
+              applyEntityPage(membersRef.current, page, memberUidOf).length === 0;
+            dispatch({ type: 'OFFLINE_PAGE', page });
+            // The logged-in user's scope, from whichever page lists them.
+            const me = loggedInUserForOfflineRef.current;
+            const mine = me ? page.rows.find(m => m.getUid() === me.getUid()) : undefined;
+            if (mine) setLoggedInUserScope(mine.getScope());
+            if (emptyAfter) onEmpty?.();
+          },
+          onError: (error, notConnected, hasMore) => {
+            settle();
+            // A cached page painted in this same tick may not have reached the ref yet.
+            const shown = membersRef.current.length > 0 || (notConnected && hasMore);
+            const keyword = carriesKeyword(loadedSearchRef.current, manager.request());
+            // A re-read the kit started (reconnect refresh, cache-reset reload) stays quiet
+            // over rows on screen: rows stay, no error output, no onError.
+            const kitStarted = mode === 'refresh' || automatic;
+            const quiet = mode === 'refresh' && !notConnected && shown;
+            if (reportsReadError(notConnected, shown, keyword, kitStarted)) {
+              onError?.(error as CometChat.CometChatException);
+            }
+            // "Connect to search" is the empty state, so it reports `onEmpty` like any empty list.
+            if (notConnected && keyword && !shown) onEmpty?.();
+            // An offline state shown because the device was offline reloads once on reconnect.
+            reloadOnConnectRef.current = notConnected && !shown && mode !== 'next';
+            dispatch({
+              type: 'OFFLINE_PAGE_ERROR',
+              quiet,
+              notConnected,
+              error: errorMessageOf(error),
+              hasMore,
+              keyword,
+            });
+          },
+        }
+      ).finally(settle);
+    },
+    [onEmpty, onError, offlineUsedRef]
+  );
+
   // --- Fetch next page ---
   const fetchNext = useCallback(async () => {
     if (!managerRef.current || !state.hasMore || state.fetchState === 'loading') return;
+
+    if (isOfflineOn()) {
+      // A read whose server phase is pending is still running: never start a
+      // second one on the same request (the SDK answers it empty, BEH-SNAP-14).
+      if (offlineInFlightRef.current) {
+        // Asked again later, once the pending read lands (never dropped).
+        deferFetchNext();
+        return;
+      }
+      const opId = nextOfflineOpId('fetch');
+      fetchIdRef.current = opId;
+      dispatch({ type: 'FETCH_START' });
+      await readOffline(managerRef.current, opId, 'next');
+      return;
+    }
 
     const currentFetchId = `fetch_${String(Date.now())}`;
     fetchIdRef.current = currentFetchId;
@@ -160,11 +307,38 @@ export function useCometChatGroupMembers(
     onEmpty,
     loggedInUser,
     loggedInUserScope,
+    readOffline,
+    deferFetchNext,
   ]);
+  latestFetchNextRef.current = fetchNext;
 
   // --- Initialize Manager + first fetch ---
   const initializeAndFetch = useCallback(
-    (search: string) => {
+    (search: string, offline?: { on: boolean; refresh: boolean; automatic?: boolean }) => {
+      if (offline?.on ?? isOfflineOn()) {
+        // Offline path: the integrator's builder is copied, never changed. A
+        // refresh (reconnect) re-reads page one over the rows on screen.
+        const manager = new CometChatGroupMembersManager(
+          guid,
+          offlineListBuilder(search, searchRequestBuilder, groupMemberRequestBuilder, () =>
+            new CometChat.GroupMembersRequestBuilder(guid).setLimit(30)
+          )
+        );
+        managerRef.current = manager;
+        loadedSearchRef.current = search;
+        const opId = nextOfflineOpId('fetch');
+        fetchIdRef.current = opId;
+        if (!offline?.refresh) dispatch({ type: 'RESET' });
+        dispatch({ type: 'FETCH_START' });
+        void readOffline(
+          manager,
+          opId,
+          offline?.refresh ? 'refresh' : 'first',
+          offline?.automatic === true
+        );
+        return;
+      }
+
       const builder = buildRequestBuilder(search);
       managerRef.current = new CometChatGroupMembersManager(guid, builder);
       dispatch({ type: 'RESET' });
@@ -195,7 +369,16 @@ export function useCometChatGroupMembers(
           handleError(error);
         });
     },
-    [guid, buildRequestBuilder, handleError, onEmpty, loggedInUser]
+    [
+      guid,
+      buildRequestBuilder,
+      handleError,
+      onEmpty,
+      loggedInUser,
+      readOffline,
+      searchRequestBuilder,
+      groupMemberRequestBuilder,
+    ]
   );
 
   // --- Initial fetch on mount and when builders/group change ---
@@ -289,6 +472,14 @@ export function useCometChatGroupMembers(
    */
   const searchTextRef = useRef(state.searchText);
   searchTextRef.current = state.searchText;
+  lifecycleReloadRef.current = () => {
+    // The kit's own reload after a cache reset: quiet if it fails over rows on screen.
+    initializeAndFetch(searchTextRef.current, {
+      on: isOfflineOn(),
+      refresh: false,
+      automatic: true,
+    });
+  };
 
   // --- Connection recovery ---
   useEffect(() => {
@@ -296,7 +487,21 @@ export function useCometChatGroupMembers(
     const cleanup = CometChatGroupMembersManager.attachConnectionListener(listenerId, {
       onConnected: () => {
         CometChatLogger.info('CometChatGroupMembers', 'Connection recovered, re-fetching members');
-        initializeAndFetch(searchTextRef.current);
+        if (isOfflineOn()) {
+          if (errorViewRef.current) {
+            // D84: an offline state reads again once; any other error view stays until the
+            // app or the user reloads.
+            if (reloadOnConnectRef.current) {
+              reloadOnConnectRef.current = false;
+              initializeAndFetch(loadedSearchRef.current, { on: true, refresh: false });
+            }
+            return;
+          }
+          // Offline path: re-read two-phase into the rows on screen, no blank.
+          initializeAndFetch(searchTextRef.current, { on: true, refresh: true });
+          return;
+        }
+        initializeAndFetch(searchTextRef.current, { on: false, refresh: false });
       },
     });
 
@@ -539,6 +744,8 @@ export function useCometChatGroupMembers(
     selectedMembersMap: state.selectedMembersMap,
     activeMemberId: state.activeMemberId,
     searchText: state.searchText,
+    ...(state.connectToSearch !== undefined && { connectToSearch: state.connectToSearch }),
+    ...(state.connectToLoad !== undefined && { connectToLoad: state.connectToLoad }),
     loggedInUser,
     loggedInUserScope,
     // Actions

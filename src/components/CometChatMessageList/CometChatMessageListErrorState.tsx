@@ -20,7 +20,7 @@ export const CometChatMessageListErrorState: React.FC<CometChatMessageListErrorS
   children,
   onRetry,
 }) => {
-  const { isError, fetchPrevious } = useCometChatMessageListContext();
+  const { isError, fetchPrevious, state } = useCometChatMessageListContext();
   const { getLocalizedString } = useLocale();
 
   if (!isError) return null;
@@ -28,24 +28,44 @@ export const CometChatMessageListErrorState: React.FC<CometChatMessageListErrorS
   const handleRetry = onRetry ?? (() => void fetchPrevious());
 
   if (children) {
-    return <div className={'cometchat-message-list__error-state'}>{children}</div>;
+    return (
+      <div
+        className={'cometchat-message-list__error-state'}
+        data-cc="error"
+        data-cc-reason="messages"
+      >
+        {children}
+      </div>
+    );
   }
 
   return (
-    <div className={'cometchat-message-list__error-state'} role="alert">
+    <div
+      className={'cometchat-message-list__error-state'}
+      role="alert"
+      data-cc="error"
+      data-cc-reason="messages"
+    >
       <div className={'cometchat-message-list__error-state-content'}>
         <div className={'cometchat-message-list__error-state-icon'} aria-hidden="true" />
         <p className={'cometchat-message-list__error-state-text'}>
-          {getLocalizedString('component_error_retry')}
+          {getLocalizedString(
+            state.connectToLoad ? 'message_list_connect_to_load' : 'component_error_retry'
+          )}
         </p>
-        <CometChatButton.Root
-          variant="primary"
-          size="md"
-          onClick={handleRetry}
-          aria-label={getLocalizedString('error_boundary_retry')}
-        >
-          <CometChatButton.Text>{getLocalizedString('error_boundary_retry')}</CometChatButton.Text>
-        </CometChatButton.Root>
+        {/* Offline with nothing saved: "Connect to load messages", with no Retry (D84). */}
+        {!state.connectToLoad && (
+          <CometChatButton.Root
+            variant="primary"
+            size="md"
+            onClick={handleRetry}
+            aria-label={getLocalizedString('error_boundary_retry')}
+          >
+            <CometChatButton.Text>
+              {getLocalizedString('error_boundary_retry')}
+            </CometChatButton.Text>
+          </CometChatButton.Root>
+        )}
       </div>
     </div>
   );

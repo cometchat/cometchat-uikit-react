@@ -70,10 +70,13 @@ describe('useMessageListActions', () => {
       useHarness({ onError: undefined, onMessageDeleted, onConversationUpdated: undefined }, refs)
     );
 
+    let outcome: boolean | undefined;
     await act(async () => {
-      await result.current.api.deleteMessage(7);
+      outcome = await result.current.api.deleteMessage(7);
     });
 
+    // The caller shows the "deleted" toast off this answer.
+    expect(outcome).toBe(true);
     expect(manager.deleteMessage).toHaveBeenCalledWith(7);
     expect(result.current.dispatched).toContainEqual({ type: 'MESSAGE_DELETED', message: deleted });
     expect(onMessageDeleted).toHaveBeenCalledWith(deleted);
@@ -90,10 +93,12 @@ describe('useMessageListActions', () => {
       )
     );
 
+    let outcome: boolean | undefined;
     await act(async () => {
-      await result.current.api.deleteMessage(5);
+      outcome = await result.current.api.deleteMessage(5);
     });
 
+    expect(outcome).toBe(false);
     expect(manager.deleteMessage).not.toHaveBeenCalled();
   });
 
@@ -106,10 +111,14 @@ describe('useMessageListActions', () => {
       useHarness({ onError, onMessageDeleted: undefined, onConversationUpdated: undefined }, refs)
     );
 
+    let outcome: boolean | undefined;
     await act(async () => {
-      await result.current.api.deleteMessage(1);
+      outcome = await result.current.api.deleteMessage(1);
     });
 
+    // Nothing was deleted - offline this is the usual answer, and the caller must not
+    // report success.
+    expect(outcome).toBe(false);
     expect(onError).toHaveBeenCalled();
   });
 

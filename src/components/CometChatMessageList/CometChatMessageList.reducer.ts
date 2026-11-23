@@ -13,6 +13,14 @@ import {
 } from './CometChatMessageList.utils';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
 import { carryThreadSubscribed } from '../../utils/CometChatThreadSubscription';
+import {
+  dropUnjoinedCachedPage,
+  findRowIndex,
+  reconcileServerPage,
+  removeRow,
+  upsertSorted,
+} from '../../utils/offline/reconcile';
+import { serverIdOf } from '../../utils/offline/identity';
 
 export { initialMessageListState };
 
@@ -82,6 +90,55 @@ function messageAlreadyPresent(
 }
 
 /**
+ * Collapse an own send that sits in the list twice: the optimistic row, which
+ * has no server id, and the server's own copy of it out of a fetched page.
+ *
+ * The reconnect catch-up reads the newest page while a send is still in flight,
+ * so the page can carry the server copy before the send's answer gets back.
+ * `deduplicateById` keeps every id-0 row, so both stayed: the list showed the
+ * message twice, and `MESSAGE_SEND_SUCCESS` then gave the optimistic row the
+ * same id, which React saw as a duplicate key. This hits a flaky network with
+ * offline off as well, so it is not an offline-only path (Aanshi B4 on #2460).
+ *
+ * The first row keeps its place, so the bubble does not jump, and the fetched
+ * copy's content takes it over under the same rule a send's own answer follows.
+ */
+function collapseByMuid(messages: CometChat.BaseMessage[]): CometChat.BaseMessage[] {
+  const firstIndexOf = new Map<string, number>();
+  const duplicates = new Set<number>();
+  const kept = [...messages];
+  for (let i = 0; i < kept.length; i++) {
+    const message = kept[i];
+    const muid = message?.getMuid();
+    if (!message || !muid) continue;
+    const first = firstIndexOf.get(muid);
+    if (first === undefined) {
+      firstIndexOf.set(muid, i);
+      continue;
+    }
+    const existing = kept[first];
+    // Two confirmed rows that share a muid are two real messages, not a copy of
+    // one: the muid is the client's, so a backend or a bot sending through REST
+    // can reuse it, another platform's scheme can collide with it, and a resend
+    // after a lost ack gets a second server id under the first muid. Collapsing
+    // them would drop a message the server holds. Only a row that has no server
+    // id yet — the optimistic one — folds into its confirmed copy.
+    if (existing?.getId() && message.getId()) {
+      // The later row stands on its own, and anchors the muid from here on so a
+      // pending send after it still collapses into the row it belongs to.
+      firstIndexOf.set(muid, i);
+      continue;
+    }
+    duplicates.add(i);
+    if (existing && !existing.getId() && message.getId() && shouldReplace(existing, message)) {
+      kept[first] = message;
+    }
+  }
+  if (duplicates.size === 0) return messages;
+  return kept.filter((_message, i) => !duplicates.has(i));
+}
+
+/**
  * Pure reducer for the CometChatMessageList data layer.
  * Handles all state transitions via a discriminated union of actions.
  */
@@ -104,7 +161,7 @@ export function messageListReducer(
 
     case 'FETCH_PREVIOUS_SUCCESS': {
       const merged = [...action.messages, ...state.messages];
-      const deduped = deduplicateById(merged);
+      const deduped = collapseByMuid(deduplicateById(merged));
       return {
         ...state,
         messages: deduped,
@@ -131,7 +188,7 @@ export function messageListReducer(
 
     case 'FETCH_NEXT_SUCCESS': {
       const merged = [...state.messages, ...action.messages];
-      const deduped = deduplicateById(merged);
+      const deduped = collapseByMuid(deduplicateById(merged));
       return {
         ...state,
         messages: deduped,
@@ -267,6 +324,7 @@ export function messageListReducer(
     }
 
     case 'MESSAGE_RECEIVED': {
+      if (action.offline) return offlineMessageReceived(state, action, action.offline.swept);
       const incomingId = action.message.getId();
 
       // For local group action messages (no SDK ID), skip duplicate check — just append.
@@ -381,6 +439,22 @@ export function messageListReducer(
     // --- Receipts ---
 
     case 'RECEIPT_UPDATE': {
+      if (action.offline) {
+        // Rows without a server id never show a receipt (BEH-SEND-32).
+        const acked = state.messages.filter(m => serverIdOf(m) > 0);
+        if (acked.length === 0) return state;
+        const updated = updateReceiptsOnMessages(
+          acked,
+          action.receiptType,
+          action.messageId,
+          action.timestamp,
+          action.loggedInUserId
+        );
+        if (updated === acked) return state;
+        let k = 0;
+        const messages = state.messages.map(m => (serverIdOf(m) > 0 ? (updated[k++] ?? m) : m));
+        return { ...state, messages };
+      }
       const messages = updateReceiptsOnMessages(
         state.messages,
         action.receiptType,
@@ -441,6 +515,8 @@ export function messageListReducer(
         ...state,
         scrollToMessageId: action.messageId,
         scrollToMessageHighlight: action.highlight ?? false,
+        // The window around an offline jump target is positioned now.
+        ...(action.messageId && state.offlineScrollAnchor != null && { offlineScrollAnchor: null }),
       };
 
     case 'CLEAR_NEW_MESSAGE_COUNT':
@@ -468,6 +544,140 @@ export function messageListReducer(
     case 'SET_SHOW_UNREAD_BANNER':
       return { ...state, showUnreadBanner: action.value };
 
+    // --- Offline support (ON path only) ---
+
+    case 'OFFLINE_UPSERT': {
+      const incoming = action.updateOnly
+        ? action.messages.filter(m => findRowIndex(state.messages, m) !== -1)
+        : action.messages;
+      if (incoming.length === 0) return state;
+      const result = upsertSorted(state.messages, incoming);
+      if (!result.changed) return state;
+      return {
+        ...state,
+        messages: result.rows,
+        fetchState: result.rows.length > 0 ? 'loaded' : state.fetchState,
+      };
+    }
+
+    case 'OFFLINE_SERVER_PAGE': {
+      const rawPage = action.rawMessages ?? action.messages;
+      const result = reconcileServerPage(
+        state.messages,
+        new Set(action.cachedKeys),
+        action.messages,
+        rawPage
+      );
+      // Only an empty server page, online, ends this direction (BEH-READ-09b),
+      // and rows the kit filtered out of it still count.
+      const more = rawPage.length > 0;
+      // A stale cached page that does not join this server page is not kept (D13-R2).
+      const rows = action.paintedKeys
+        ? dropUnjoinedCachedPage(
+            result.rows,
+            action.paintedKeys,
+            action.rawCachedKeys ?? [],
+            rawPage,
+            action.direction
+          )
+        : result.rows;
+      const noRowsYet = rows.length === 0 && action.continuing;
+      return {
+        ...state,
+        messages: rows,
+        fetchState: noRowsYet
+          ? state.fetchState
+          : rows.length === 0 && !state.hasMoreNewer
+            ? 'empty'
+            : 'loaded',
+        isFetchingMore: action.continuing ? rows.length > 0 : false,
+        error: null,
+        connectToLoad: false,
+        ...(action.direction === 'previous'
+          ? { hasMore: more, offlineFooter: 'none' }
+          : { hasMoreNewer: more, offlineNewerFooter: 'none' }),
+      };
+    }
+
+    case 'OFFLINE_PAGE_ERROR': {
+      if (action.notConnected) {
+        // Saved messages stay, with the footer offering a retry (BEH-READ-05): a cached
+        // page, even empty, never ends pagination. With nothing on screen the read
+        // failed: the error view worded "Connect to load messages" (D84), which a reconnect
+        // replaces with one read.
+        return {
+          ...state,
+          fetchState: state.messages.length === 0 ? 'error' : 'loaded',
+          ...(state.messages.length === 0 && { error: action.error }),
+          connectToLoad: state.messages.length === 0,
+          isFetchingMore: false,
+          ...(action.direction === 'previous'
+            ? { offlineFooter: 'connect_to_load_more' }
+            : { offlineNewerFooter: 'connect_to_load_more' }),
+          // Not connected: tap to retry; once the connection is back, scrolling too.
+          offlineFooterRetryable: action.retryable ?? false,
+        };
+      }
+      // Never blank the cached rows already shown (BEH-READ-06).
+      return {
+        ...state,
+        fetchState: state.messages.length === 0 ? 'error' : state.fetchState,
+        isFetchingMore: false,
+        error: action.error,
+      };
+    }
+
+    case 'OFFLINE_REMOVE': {
+      const result = removeRow(state.messages, action.message);
+      if (!result.changed) return state;
+      return {
+        ...state,
+        messages: result.rows,
+        fetchState: result.rows.length === 0 && !state.hasMore ? 'empty' : state.fetchState,
+      };
+    }
+
+    case 'OFFLINE_TOUCH': {
+      const touched = (m: CometChat.BaseMessage) =>
+        action.messages.some(t => findRowIndex([m], t) === 0);
+      if (!state.messages.some(touched)) return state;
+      return {
+        ...state,
+        messages: state.messages.map(m => (touched(m) ? cloneMessage(m) : m)),
+      };
+    }
+
+    case 'OFFLINE_REPLACE_ALL':
+      return {
+        ...state,
+        messages: action.messages,
+        fetchState: action.messages.length === 0 ? 'empty' : 'loaded',
+        hasMore: true,
+        hasMoreNewer: false,
+        hasReachedLatest: true,
+        isFetchingMore: false,
+        offlineFooter: 'none',
+        offlineNewerFooter: 'none',
+        offlineJumpToLatest: false,
+      };
+
+    case 'OFFLINE_SET_JUMP_TO_LATEST':
+      return state.offlineJumpToLatest === action.value
+        ? state
+        : { ...state, offlineJumpToLatest: action.value };
+
+    case 'OFFLINE_AROUND_START':
+      return { ...state, offlineScrollAnchor: action.messageId };
+
+    case 'OFFLINE_CONNECTED': {
+      const footerShown =
+        state.offlineFooter === 'connect_to_load_more' ||
+        state.offlineNewerFooter === 'connect_to_load_more';
+      return footerShown && !state.offlineFooterRetryable
+        ? { ...state, offlineFooterRetryable: true }
+        : state;
+    }
+
     // --- Reset ---
 
     case 'RESET':
@@ -476,4 +686,43 @@ export function messageListReducer(
     default:
       return state;
   }
+}
+
+/**
+ * MESSAGE_RECEIVED on the offline (ON) path: upsert by identity into sorted
+ * place (live and swept messages alike). A swept message adds nothing to the
+ * unread or new-message counts: the synced conversation already counts it.
+ */
+function offlineMessageReceived(
+  state: CometChatMessageListState,
+  action: Extract<CometChatMessageListAction, { type: 'MESSAGE_RECEIVED' }>,
+  swept: boolean
+): CometChatMessageListState {
+  const existing = findRowIndex(state.messages, action.message);
+  if (existing !== -1) {
+    const result = upsertSorted(state.messages, [action.message]);
+    return result.changed ? { ...state, messages: result.rows } : state;
+  }
+  const isNewFromOther = !action.fromLoggedInUser && !swept;
+  if (!state.hasReachedLatest) {
+    return {
+      ...state,
+      newMessageCount: isNewFromOther ? state.newMessageCount + 1 : state.newMessageCount,
+    };
+  }
+  const result = upsertSorted(state.messages, [action.message]);
+  const shouldResetCount =
+    !state.markedUnreadByUser && (state.isAtBottom || Boolean(action.fromLoggedInUser));
+  return {
+    ...state,
+    messages: result.rows,
+    fetchState: 'loaded',
+    newMessageCount: shouldResetCount
+      ? 0
+      : isNewFromOther
+        ? state.newMessageCount + 1
+        : state.newMessageCount,
+    unreadCount:
+      state.markedUnreadByUser && isNewFromOther ? state.unreadCount + 1 : state.unreadCount,
+  };
 }

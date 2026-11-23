@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { usePublishEvent } from '../../context/CometChatEventsContext';
 import type { MessageListRefs, MessageListDispatch } from './messageListRefs';
+import { isOfflineOn } from '../../utils/offline/gate';
 
 // ---------------------------------------------------------------------------
 // Message actions sub-hook (delete, mark as unread, react)
@@ -49,7 +50,8 @@ export interface UseMessageListActionsOptions {
 }
 
 export interface UseMessageListActionsReturn {
-  deleteMessage: (messageId: number) => Promise<void>;
+  /** `false` when the delete failed (offline, no permission): the caller must not report success. */
+  deleteMessage: (messageId: number) => Promise<boolean>;
   markMessageAsUnread: (message: CometChat.BaseMessage) => Promise<void>;
   reactToMessage: (messageId: number, emoji: string) => Promise<void>;
 }
@@ -73,14 +75,18 @@ export function useMessageListActions(
 
   const deleteMessage = useCallback(
     async (messageId: number) => {
-      if (!refs.managerRef.current) return;
+      if (!refs.managerRef.current) return false;
       try {
         const deleted = await refs.managerRef.current.deleteMessage(messageId);
         dispatch({ type: 'MESSAGE_DELETED', message: deleted });
         publish({ type: 'ui:message/deleted', message: deleted });
         onMessageDeleted?.(deleted);
+        return true;
       } catch (error) {
+        // No SDK queues an offline delete, so the message stays as it is. The outcome is
+        // reported back so the caller cannot announce a delete that did not happen.
         onError?.(error as CometChat.CometChatException);
+        return false;
       }
     },
     [onError, onMessageDeleted, refs.managerRef, dispatch, publish]
@@ -93,6 +99,8 @@ export function useMessageListActions(
       // Guard against duplicate calls for the same message
       if (refs.lastUnreadMarkedIdRef.current === String(message.getId())) return;
       refs.lastUnreadMarkedIdRef.current = String(message.getId());
+      // Offline support: read once for this action (README §3.1).
+      const offlineOn = isOfflineOn();
 
       try {
         const conversation = await refs.managerRef.current.markMessageAsUnread(message);
@@ -109,6 +117,10 @@ export function useMessageListActions(
         publish({ type: 'ui:conversation/updated', conversation });
         onConversationUpdated?.(conversation);
       } catch (error) {
+        // Offline path: a mark-unread that failed (offline it ends in the
+        // not-connected error) leaves nothing behind, so it can be tried again
+        // (UIK-MUT-01); with offline off, today's guard is kept.
+        if (offlineOn) refs.lastUnreadMarkedIdRef.current = '';
         onError?.(error as CometChat.CometChatException);
       }
     },

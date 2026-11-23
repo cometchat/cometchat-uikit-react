@@ -43,6 +43,12 @@ export interface CometChatConversationsRootProps {
   hideUnreadCount?: boolean;
   /** Whether to hide message receipts (sent/delivered/read). */
   hideReceipts?: boolean;
+  /**
+   * Offline support only: hide the notice shown when the Chat SDK's offline
+   * cache was reset and unsent messages were or may have been lost. No effect
+   * with offline off. Default `false`.
+   */
+  hideOfflineNotices?: boolean;
   /** Custom display formatters applied to the last-message subtitle. */
   textFormatters?: CometChatTextFormatter[];
   /** Whether to hide the group type indicator. */
@@ -193,6 +199,19 @@ export interface CometChatConversationsContextValue {
   activeConversationId: string | null;
   /** Current search text. */
   searchText: string;
+  /**
+   * Offline support: true when a keyword search ran while offline with nothing saved
+   * to show. A search keyword has no offline cache, so the empty state reads "Connect to
+   * search". Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToSearch?: boolean;
+  /**
+   * Offline support: true when the list could not load because the SDK is not connected
+   * and nothing is saved, so the error state reads "Connect to load chats" (no Retry).
+   * A list opened with only a filter counts as this, not as a search. Only ever set when
+   * the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
   /** Typing indicators keyed by user UID or group GUID. */
   typingIndicatorMap: Map<string, CometChat.TypingIndicator>;
 
@@ -337,6 +356,19 @@ export interface CometChatUseCometChatConversationsReturn {
   selectedConversationsMap: Map<string, CometChat.Conversation>;
   activeConversationId: string | null;
   searchText: string;
+  /**
+   * Offline support: true when a keyword search ran while offline with nothing saved
+   * to show. A search keyword has no offline cache, so the empty state reads "Connect to
+   * search". Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToSearch?: boolean;
+  /**
+   * Offline support: true when the list could not load because the SDK is not connected
+   * and nothing is saved, so the error state reads "Connect to load chats" (no Retry).
+   * A list opened with only a filter counts as this, not as a search. Only ever set when
+   * the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
   typingIndicatorMap: Map<string, CometChat.TypingIndicator>;
   loggedInUserId: string | null;
   // Actions

@@ -266,6 +266,32 @@ describe('CometChatConversationsItem', () => {
     vi.restoreAllMocks();
   });
 
+  // 0. A row rebuilt from the device store can hold a plain peer object
+  it('draws a row whose peer is a bare { uid } object instead of a User', () => {
+    // The first message to a new contact came back from the store as `{ uid }`, with no getters.
+    // The row used to throw "getUid is not a function" and the whole app went blank.
+    const conv = createMockConversation();
+    (conv as unknown as { getConversationWith: () => unknown }).getConversationWith = () =>
+      ({ uid: 'bob' }) as unknown as CometChat.User;
+
+    expect(() => {
+      renderWithContext(conv);
+    }).not.toThrow();
+    expect(screen.getByRole('option')).toBeInTheDocument();
+  });
+
+  // 0b. A group row with only a guid
+  it('draws a group row whose peer is a bare { guid } object', () => {
+    const conv = createMockConversation({ type: 'group' });
+    (conv as unknown as { getConversationWith: () => unknown }).getConversationWith = () =>
+      ({ guid: 'g-1' }) as unknown as CometChat.Group;
+
+    expect(() => {
+      renderWithContext(conv);
+    }).not.toThrow();
+    expect(screen.getByRole('option')).toBeInTheDocument();
+  });
+
   // 1. Renders conversation name and avatar
   it('renders conversation name and avatar', () => {
     const conv = createMockConversation({ name: 'Alice', avatar: 'https://example.com/alice.png' });
@@ -273,6 +299,27 @@ describe('CometChatConversationsItem', () => {
 
     expect(screen.getByTestId('avatar')).toHaveAttribute('data-name', 'Alice');
     expect(screen.getByText('Alice')).toBeInTheDocument();
+  });
+
+  // 1b. Android parity: an id-only peer renders its id rather than a blank row.
+  it('renders the peer id when the peer carries no name', () => {
+    // The shape the SDK stamps on a chat composed offline: a peer with an id and
+    // no display fields yet. Android renders the uid here; so must this.
+    const conv = createMockConversation({ id: 'e2e-user-3', name: undefined });
+    renderWithContext(conv);
+
+    expect(screen.getByText('e2e-user-3')).toBeInTheDocument();
+  });
+
+  it('renders the peer id when the peer is a plain object from the store', () => {
+    // A row rebuilt from the device store: no accessors at all, just `{ uid }`.
+    const conv = {
+      ...createMockConversation({ id: 'e2e-user-3' }),
+      getConversationWith: () => ({ uid: 'e2e-user-3' }),
+    } as unknown as Parameters<typeof renderWithContext>[0];
+    renderWithContext(conv);
+
+    expect(screen.getByText('e2e-user-3')).toBeInTheDocument();
   });
 
   // 2. Shows online status for user conversations

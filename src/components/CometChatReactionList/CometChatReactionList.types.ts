@@ -42,6 +42,12 @@ export interface CometChatReactionListContextValue {
   hasMore: boolean;
   /** Whether a fetch is in progress. */
   isFetching: boolean;
+  /**
+   * Offline support: true when the reactions could not load because the SDK is not
+   * connected and nothing is saved, so the error state reads "Connect to load reactions"
+   * (no Retry). Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
   /** Unique emoji tabs derived from groupedReactions. */
   emojiTabs: string[];
   /** Total reaction count (sum of all). */

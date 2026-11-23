@@ -8,7 +8,7 @@ import './styles/index.css';
 
 // CometChatUIKit (main entry point)
 export { CometChatUIKit, UIKitSettingsBuilder, UIKitSettings } from './CometChatUIKit';
-export type { CometChatPresenceSubscription } from './CometChatUIKit';
+export type { CometChatPresenceSubscription, CometChatOfflineConfig } from './CometChatUIKit';
 export { VERSION } from './version';
 
 // Root Provider
@@ -266,7 +266,11 @@ export { usePublishEvent } from './hooks/usePublishEvent';
 export { useThreadSubscription, useThreadSubscriptionState } from './hooks/useThreadSubscription';
 export type { UseThreadSubscriptionResult } from './hooks/useThreadSubscription';
 export { CometChatMessageStatus } from './context/CometChatEvents.types';
-export type { CometChatEvent, CometChatUIEvent } from './context/CometChatEvents.types';
+export type {
+  CometChatEvent,
+  CometChatUIEvent,
+  CometChatMessageSendState,
+} from './context/CometChatEvents.types';
 
 // Pin & Save Message
 export { usePinSaveFeatures } from './hooks/usePinSaveFeatures';

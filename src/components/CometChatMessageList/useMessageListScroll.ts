@@ -1,10 +1,21 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { CometChatMessageListManager } from './CometChatMessageListManager';
 import type { CometChatMessageListManagerOptions } from './CometChatMessageList.types';
 import { noop } from './messageListHelpers';
 import { usePublishEvent } from '../../context/CometChatEventsContext';
 import type { MessageListRefs, MessageListDispatch } from './messageListRefs';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { reportsReadError } from '../../utils/offline/entityList';
+import { isNotConnectedError } from '../../utils/offline/reconcile';
+import {
+  failStrandedSends,
+  fetchAroundOffline,
+  readPageOffline,
+  rememberOfflineRead,
+  type OfflineListContext,
+  jumpToLatest,
+} from './messageListOffline';
 
 // ---------------------------------------------------------------------------
 // Scroll-dependent behavior sub-hook
@@ -37,7 +48,13 @@ export interface UseMessageListScrollReturn {
   scrollToMessage: (messageId: number) => void;
   goToMessage: (messageId: number) => Promise<void>;
   scrollToBottom: () => 'scroll-dom' | 'refetching';
+  /** Offline support only: show the newest window a sweep read ("Jump to latest"). */
+  offlineJumpToLatest: () => void;
 }
+
+/** How long a reconnect waits for the reads in flight before it gives up on the edge. */
+const EDGE_SETTLE_POLL_MS = 50;
+const EDGE_SETTLE_MAX_TRIES = 200;
 
 /**
  * Scroll-dependent behavior: pagination, scroll state, mark-as-read on scroll,
@@ -59,15 +76,94 @@ export function useMessageListScroll(
   } = options;
 
   const publish = usePublishEvent();
+  /** Counts jumps over rows on screen, so only the latest one's target lookup applies. */
+  const jumpSeqRef = useRef(0);
+
+  /** The list's request configuration, for a fresh manager (it reads each option only when set). */
+  const managerOptions = useCallback(
+    (): CometChatMessageListManagerOptions => ({
+      user,
+      group,
+      builder: messagesRequestBuilder,
+      parentMessageId,
+      messageTypes,
+      messageCategories,
+      isAgentChat: options.isAgentChat,
+    }),
+    [
+      user,
+      group,
+      messagesRequestBuilder,
+      parentMessageId,
+      messageTypes,
+      messageCategories,
+      options.isAgentChat,
+    ]
+  );
+
+  /** Context for one offline (ON-path) operation. */
+  const offlineContext = useCallback(
+    (): OfflineListContext => ({
+      refs,
+      dispatch,
+      publish,
+      user,
+      group,
+      parentMessageId,
+      // Always set by the orchestrator before any operation runs.
+      // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style
+      loggedInUser: refs.optionsRef.current.loggedInUser as CometChat.User,
+      isAgentChat: options.isAgentChat ?? false,
+      makeManager: () => new CometChatMessageListManager(managerOptions()),
+    }),
+    [refs, dispatch, publish, user, group, parentMessageId, options.isAgentChat, managerOptions]
+  );
 
   // ---------------------------------------------------------------------------
   // Fetch previous (older messages)
   // ---------------------------------------------------------------------------
 
-  const fetchPrevious = useCallback(async () => {
+  const readOlder = useCallback(async (kitStarted: boolean) => {
     if (refs.isFetchingPrevRef.current || !refs.managerRef.current) return;
     refs.isFetchingPrevRef.current = true;
     const gen = refs.generationRef.current;
+
+    const offlineOnForThisRead = isOfflineOn();
+    // Kill switch, at the next operation: rows the offline path left unsent
+    // turn failed (direct) once offline is off (no-op for a list that never
+    // used the offline path).
+    if (!offlineOnForThisRead) failStrandedSends(offlineContext());
+    if (offlineOnForThisRead) {
+      // Offline path: two-phase; offline past the cache shows the
+      // "Connect to load older messages" footer, never an error.
+      dispatch({ type: 'FETCH_PREVIOUS_START' });
+      try {
+        const page = await readPageOffline(
+          offlineContext(),
+          refs.managerRef.current,
+          'previous',
+          gen
+        );
+        // The "Connect to load more" footer is unchanged: offline past the cache with rows shown
+        // is silent. With nothing on screen the read reports; over rows a real error reports
+        // unless the kit started the read (D84).
+        if (
+          !page.stale &&
+          page.error !== undefined &&
+          reportsReadError(
+            page.notConnected,
+            refs.stateRef.current.messages.length > 0,
+            false,
+            kitStarted
+          )
+        ) {
+          onError?.(page.error as CometChat.CometChatException);
+        }
+      } finally {
+        refs.isFetchingPrevRef.current = false;
+      }
+      return;
+    }
 
     dispatch({ type: 'FETCH_PREVIOUS_START' });
     try {
@@ -88,16 +184,49 @@ export function useMessageListScroll(
     } finally {
       refs.isFetchingPrevRef.current = false;
     }
-  }, [onError, refs, dispatch]);
+  }, [onError, refs, dispatch, offlineContext]);
+  const fetchPrevious = useCallback(() => readOlder(false), [readOlder]);
 
   // ---------------------------------------------------------------------------
   // Fetch next (newer messages)
   // ---------------------------------------------------------------------------
 
-  const fetchNext = useCallback(async () => {
+  const readNewer = useCallback(async (kitStarted: boolean) => {
     if (refs.isFetchingNextRef.current || !refs.managerRef.current) return;
     refs.isFetchingNextRef.current = true;
     const gen = refs.generationRef.current;
+
+    const offlineOnForThisRead = isOfflineOn();
+    // Kill switch, at the next operation (see fetchPrevious).
+    if (!offlineOnForThisRead) failStrandedSends(offlineContext());
+    if (offlineOnForThisRead) {
+      // Offline path: two-phase newer page.
+      dispatch({ type: 'FETCH_NEXT_START' });
+      try {
+        const page = await readPageOffline(offlineContext(), refs.managerRef.current, 'next', gen);
+        if (!page.stale && page.moreOnServer === false) {
+          dispatch({ type: 'SET_HAS_REACHED_LATEST', hasReachedLatest: true });
+        }
+        // The "Connect to load more" footer is unchanged: offline past the cache with rows shown
+        // is silent. With nothing on screen the read reports; over rows a real error reports
+        // unless the kit started the read (D84).
+        if (
+          !page.stale &&
+          page.error !== undefined &&
+          reportsReadError(
+            page.notConnected,
+            refs.stateRef.current.messages.length > 0,
+            false,
+            kitStarted
+          )
+        ) {
+          onError?.(page.error as CometChat.CometChatException);
+        }
+      } finally {
+        refs.isFetchingNextRef.current = false;
+      }
+      return;
+    }
 
     dispatch({ type: 'FETCH_NEXT_START' });
     try {
@@ -125,7 +254,49 @@ export function useMessageListScroll(
     } finally {
       refs.isFetchingNextRef.current = false;
     }
-  }, [onError, refs, dispatch]);
+  }, [onError, refs, dispatch, offlineContext]);
+  const fetchNext = useCallback(() => readNewer(false), [readNewer]);
+
+  // ---------------------------------------------------------------------------
+  // Offline: a blocked edge loads by itself when the connection returns (D84 rule 9)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * The connection is back: an edge that stopped at "Connect to load more" loads its page once,
+   * with no tap. It waits for the reads in flight to settle, and loads only while the window is
+   * unchanged and the edge is still blocked: older first, newer after it settles. A jump in
+   * flight loads none. The kit started it, so a real error over rows stays silent.
+   */
+  const loadBlockedEdges = useCallback(async () => {
+    const gen = refs.generationRef.current;
+    const blocked = (edge: 'offlineFooter' | 'offlineNewerFooter') =>
+      refs.generationRef.current === gen &&
+      !refs.stateRef.current.offlineScrollAnchor &&
+      refs.stateRef.current[edge] === 'connect_to_load_more';
+    const settled = async () => {
+      const busy = () => refs.isFetchingPrevRef.current || refs.isFetchingNextRef.current;
+      for (let tries = 0; tries < EDGE_SETTLE_MAX_TRIES && busy(); tries += 1) {
+        await new Promise<void>(resolve => {
+          setTimeout(resolve, EDGE_SETTLE_POLL_MS);
+        });
+      }
+      return !busy();
+    };
+    if (!(await settled())) return;
+    if (blocked('offlineFooter')) {
+      // The page lands as a prepend: record the bookkeeping first, as the top sentinel
+      // and the scroll retry at the footer do, so the rows the user is reading stay
+      // where they are instead of the viewport moving with the page.
+      refs.markOlderPrependRef?.current?.();
+      await readOlder(true);
+    }
+    if ((await settled()) && blocked('offlineNewerFooter')) await readNewer(true);
+  }, [refs, readOlder, readNewer]);
+  if (refs.reconnectEdgesRef) {
+    refs.reconnectEdgesRef.current = () => {
+      void loadBlockedEdges();
+    };
+  }
 
   // ---------------------------------------------------------------------------
   // Scroll-dependent behavior
@@ -185,7 +356,17 @@ export function useMessageListScroll(
       return;
     }
 
-    refs.managerRef.current.markConversationAsRead().catch(noop);
+    const offlineOn = isOfflineOn();
+    refs.managerRef.current
+      .markConversationAsRead()
+      // Offline: sent again after the next sync (AC-7.4).
+      .catch(
+        offlineOn
+          ? () => {
+              rememberOfflineRead(offlineContext());
+            }
+          : noop
+      );
 
     // Set readAt locally so subsequent observer fires won't re-trigger
     const now = Math.floor(Date.now() / 1000);
@@ -211,7 +392,7 @@ export function useMessageListScroll(
         onConvRead(conversation);
       }, noop);
     }
-  }, [refs, dispatch, publish, parentMessageId]);
+  }, [refs, dispatch, publish, parentMessageId, offlineContext]);
 
   const scrollToMessage = useCallback(
     (messageId: number) => {
@@ -221,7 +402,7 @@ export function useMessageListScroll(
   );
 
   const goToMessage = useCallback(
-    async (messageId: number, highlight = true) => {
+    async (messageId: number, highlight = true, resetFirst = false) => {
       // Check if message is already loaded
       const existing = refs.stateRef.current.messages.find(m => m.getId() === messageId);
       if (existing) {
@@ -232,11 +413,56 @@ export function useMessageListScroll(
       // Not loaded — show loading state and re-fetch around the target
       if (!refs.managerRef.current) return;
 
+      // Offline, over rows: look the target up first and replace the rows only once it is
+      // found. Not found keeps the rows as they are, with no loader, error or scroll; only a
+      // real error reaches onError (Android jumpLocked → showRowsOrError).
+      let target: CometChat.BaseMessage | null | undefined;
+      if (isOfflineOn() && !resetFirst && refs.stateRef.current.messages.length > 0) {
+        const seq = (jumpSeqRef.current += 1);
+        const before = refs.generationRef.current;
+        let failure: unknown;
+        target = await refs.managerRef.current.getMessageDetailsTwoPhase(messageId, error => {
+          failure = error;
+        });
+        // A later jump, a chat switch or a new window took over meanwhile.
+        if (jumpSeqRef.current !== seq || refs.generationRef.current !== before) return;
+        if (!target) {
+          if (failure !== undefined && !isNotConnectedError(failure)) {
+            onError?.(failure as CometChat.CometChatException);
+          }
+          return;
+        }
+      }
+
+      // A new window: an older-page read still in flight must not land in it.
+      refs.generationRef.current += 1;
       // Show loading shimmer while fetching
       dispatch({ type: 'RESET' });
       dispatch({ type: 'FETCH_PREVIOUS_START' });
 
       const gen = refs.generationRef.current;
+
+      if (isOfflineOn()) {
+        // Offline path: the window around the target, two-phase.
+        const around = await fetchAroundOffline(
+          offlineContext(),
+          refs.managerRef.current,
+          messageId,
+          gen,
+          highlight,
+          target
+        );
+        // D84: a jump that could not load reports once with nothing on screen, offline too;
+        // over rows only a real error does.
+        if (
+          !around.stale &&
+          around.error !== undefined &&
+          reportsReadError(around.notConnected === true, around.rows.length > 0, false, false)
+        ) {
+          onError?.(around.error as CometChat.CometChatException);
+        }
+        return;
+      }
 
       try {
         const result = await refs.managerRef.current.fetchAroundMessageId(messageId);
@@ -259,7 +485,7 @@ export function useMessageListScroll(
         onError?.(error as CometChat.CometChatException);
       }
     },
-    [onError, refs, dispatch]
+    [onError, refs, dispatch, offlineContext]
   );
 
   /**
@@ -311,7 +537,8 @@ export function useMessageListScroll(
     ) {
       // Capture lastReadMessageId before goToMessage's RESET clears it
       const savedLastReadMessageId = currentState.lastReadMessageId;
-      void goToMessage(currentState.lastReadMessageId, false);
+      // Its restores below follow goToMessage's RESET, so the reset comes first.
+      void goToMessage(currentState.lastReadMessageId, false, true);
       refs.managerRef.current?.markConversationAsRead().catch(noop);
       dispatch({ type: 'CLEAR_NEW_MESSAGE_COUNT' });
       dispatch({ type: 'SET_UNREAD_COUNT', count: 0 });
@@ -344,20 +571,42 @@ export function useMessageListScroll(
       }
       dispatch({ type: 'FETCH_PREVIOUS_START' });
 
-      const managerOpts: CometChatMessageListManagerOptions = {
-        messageTypes,
-        messageCategories,
-      };
-      if (user) managerOpts.user = user;
-      if (group) managerOpts.group = group;
-      if (messagesRequestBuilder) managerOpts.builder = messagesRequestBuilder;
-      if (parentMessageId) managerOpts.parentMessageId = parentMessageId;
-      if (options.isAgentChat) managerOpts.isAgentChat = true;
-
-      const newManager = new CometChatMessageListManager(managerOpts);
+      const newManager = new CometChatMessageListManager(managerOptions());
       refs.managerRef.current = newManager;
 
       const gen = refs.generationRef.current;
+
+      if (isOfflineOn()) {
+        // Offline path: the newest page, two-phase.
+        const ctx = offlineContext();
+        void readPageOffline(ctx, newManager, 'previous', gen).then(page => {
+          if (page.stale) return;
+          // D84: this reload (scroll to the latest) reports a failed read once with nothing on
+          // screen, offline too; over rows only a real error does.
+          if (
+            page.error !== undefined &&
+            reportsReadError(
+              page.notConnected,
+              page.cachedPage.length > 0 || refs.stateRef.current.messages.length > 0,
+              false,
+              false
+            )
+          ) {
+            onError?.(page.error as CometChat.CometChatException);
+          }
+          dispatch({ type: 'SET_HAS_REACHED_LATEST', hasReachedLatest: true });
+          dispatch({ type: 'CLEAR_NEW_MESSAGE_COUNT' });
+          dispatch({ type: 'SET_AT_BOTTOM', isAtBottom: true });
+          if (!wasMarkedUnreadByUser) {
+            dispatch({ type: 'SET_UNREAD_COUNT', count: 0 });
+            newManager.markConversationAsRead().catch(() => {
+              rememberOfflineRead(ctx);
+            });
+            dispatch({ type: 'SET_CONVERSATION_READ' });
+          }
+        });
+        return 'refetching' as const;
+      }
 
       const refetch = async () => {
         try {
@@ -397,19 +646,19 @@ export function useMessageListScroll(
 
     return 'refetching' as const;
   }, [
-    user,
-    group,
-    messagesRequestBuilder,
-    parentMessageId,
-    messageTypes,
-    messageCategories,
+    managerOptions,
     onError,
-    options.isAgentChat,
     markConversationAsReadIfUnread,
     goToMessage,
     refs,
     dispatch,
+    offlineContext,
   ]);
+
+  // Offline support: "Jump to latest" after a sweep that missed more than a page.
+  const offlineJumpToLatest = useCallback(() => {
+    jumpToLatest(offlineContext());
+  }, [offlineContext]);
 
   return {
     fetchPrevious,
@@ -420,5 +669,6 @@ export function useMessageListScroll(
     scrollToMessage,
     goToMessage,
     scrollToBottom,
+    offlineJumpToLatest,
   };
 }

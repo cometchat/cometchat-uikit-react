@@ -6,7 +6,11 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
   },
 }));
 
-import { UIKitSettings, UIKitSettingsBuilder } from '../UIKitSettings';
+import {
+  UIKitSettings,
+  UIKitSettingsBuilder,
+  type CometChatOfflineConfig,
+} from '../UIKitSettings';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 
 describe('UIKitSettingsBuilder', () => {
@@ -116,5 +120,19 @@ describe('UIKitSettings.fromBuilder', () => {
     const settings = UIKitSettings.fromBuilder(builder);
     expect(settings.getAppId()).toBe('from-builder');
     expect(settings.getRegion()).toBe('us');
+  });
+});
+
+describe('CometChatOfflineConfig is a closed type', () => {
+  it('rejects a misspelled field at compile time (checked by typecheck:spec)', () => {
+    // `enable` is a typo for `enabled`. With an open index signature it compiled and offline
+    // stayed off without a word; the typed config (as Android's) refuses it.
+    // @ts-expect-error -- unknown field
+    const typo: CometChatOfflineConfig = { enable: true };
+    // The SDK's debug switch is a real field and still compiles.
+    const ok: CometChatOfflineConfig = { enabled: true, debugTracing: false };
+    expect(new UIKitSettingsBuilder().setOfflineConfig(ok).build().getOfflineConfig()).toBe(ok);
+    // The typo is stored as given: only the compiler catches it.
+    expect(typo).toEqual({ enable: true });
   });
 });

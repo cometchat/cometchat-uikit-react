@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCometChatThreadHeader } from '../useCometChatThreadHeader';
+import { OfflineHub } from '../../../utils/offline/hub';
+import { discardUnsentMessage, retryFailedMessage } from '../../../utils/offline/send';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 
 // ---------------------------------------------------------------------------
@@ -18,6 +20,8 @@ vi.mock('@cometchat/chat-sdk-javascript', () => ({
     removeMessageListener: vi.fn(),
     MessageListener: vi.fn().mockImplementation((callbacks: unknown) => callbacks),
     getLoggedinUser: vi.fn().mockResolvedValue(null),
+    discardLocalMessage: vi.fn(),
+    retryMessage: vi.fn(),
   },
 }));
 
@@ -447,5 +451,101 @@ describe('useCometChatThreadHeader', () => {
 
       expect(attachThreadHeaderMessageListener).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('offline own replies (UIT-SEND-21)', () => {
+  beforeEach(() => {
+    OfflineHub.resetForTests();
+  });
+
+  function reply(id: number, localMessageId: string, parentMessageId = 1001) {
+    return Object.assign(createMockMessage({ id, parentMessageId }), {
+      getLocalMessageId: () => localMessageId,
+    }) as unknown as CometChat.BaseMessage;
+  }
+
+  it('counts a pending reply at once, never counts its ack again, takes back a discard', () => {
+    const parent = createMockMessage({
+      id: 1001,
+      replyCount: 5,
+    }) as unknown as CometChat.BaseMessage;
+    const { result } = renderHook(() =>
+      useCometChatThreadHeader({ parentMessage: parent, loggedInUser: null })
+    );
+    const hub = OfflineHub.getInstance();
+    act(() => {
+      hub.reportSendState(reply(0, 'L1'), 'sending', { announced: true });
+    });
+    expect(result.current.replyCount).toBe(6);
+    // A reply to another thread is not counted here.
+    act(() => {
+      hub.reportSendState(reply(0, 'LX', 999), 'sending', { announced: true });
+    });
+    expect(result.current.replyCount).toBe(6);
+    // The ack arrives as today's ui:message/sent success: not a second reply.
+    act(() => {
+      sdkEventHandler?.({ type: 'ui:message/sent', message: reply(2001, 'L1'), status: 'success' });
+    });
+    expect(result.current.replyCount).toBe(6);
+    // A second pending reply, then discarded: back to 6.
+    act(() => {
+      hub.reportSendState(reply(0, 'L2'), 'sending', { announced: true });
+    });
+    expect(result.current.replyCount).toBe(7);
+    act(() => {
+      hub.reportSendState(reply(0, 'L2'), 'discarded', { reason: 'DISCARDED' });
+    });
+    expect(result.current.replyCount).toBe(6);
+  });
+
+  for (const action of ['Delete', 'Retry'] as const) {
+    it(`${action} answered NOT_FOUND on a pending reply takes back its count`, async () => {
+      const { CometChat: sdk } = (await import('@cometchat/chat-sdk-javascript')) as unknown as {
+        CometChat: Record<'discardLocalMessage' | 'retryMessage', Mock>;
+      };
+      sdk.discardLocalMessage.mockRejectedValue({ code: 'ERROR_OFFLINE_MESSAGE_NOT_FOUND' });
+      sdk.retryMessage.mockRejectedValue({ code: 'ERROR_OFFLINE_MESSAGE_NOT_FOUND' });
+      const parent = createMockMessage({
+        id: 1001,
+        replyCount: 5,
+      }) as unknown as CometChat.BaseMessage;
+      const { result } = renderHook(() =>
+        useCometChatThreadHeader({ parentMessage: parent, loggedInUser: null })
+      );
+      const queued = reply(0, 'L1');
+      act(() => {
+        OfflineHub.getInstance().reportSendState(queued, 'sending', { announced: true });
+      });
+      expect(result.current.replyCount).toBe(6);
+      await act(async () => {
+        if (action === 'Delete') await discardUnsentMessage(queued);
+        else await retryFailedMessage(queued);
+      });
+      expect(result.current.replyCount).toBe(5);
+    });
+  }
+
+  it('a fresher parent from onMessagesSynced replaces the count', () => {
+    const parent = createMockMessage({
+      id: 1001,
+      replyCount: 5,
+    }) as unknown as CometChat.BaseMessage;
+    const { result } = renderHook(() =>
+      useCometChatThreadHeader({ parentMessage: parent, loggedInUser: null })
+    );
+    const hub = OfflineHub.getInstance();
+    act(() => {
+      hub.reportSendState(reply(0, 'L1'), 'sending', { announced: true });
+    });
+    act(() => {
+      hub.messagesUpdated.emit({
+        gen: hub.gen,
+        messages: [
+          createMockMessage({ id: 1001, replyCount: 9 }) as unknown as CometChat.BaseMessage,
+        ],
+      });
+    });
+    expect(result.current.replyCount).toBe(9);
   });
 });

@@ -1,5 +1,19 @@
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import type { CometChatReactionListFetchState } from './CometChatReactionList.types';
+import {
+  reduceEntityPage,
+  reduceEntityPageError,
+  offlineListStates,
+  type EntityPagePayload,
+} from '../../utils/offline/entityList';
+
+/**
+ * A reaction's identity: one user reacts with one emoji once per message
+ * (the key the list already removes by).
+ */
+export function reactionKeyOf(reaction: CometChat.Reaction): string {
+  return `${reaction.getReactedBy().getUid()}-${reaction.getReaction()}`;
+}
 
 /** Groups a flat list of reactions by emoji. */
 function groupByEmoji(reactions: CometChat.Reaction[]): Map<string, CometChat.Reaction[]> {
@@ -26,6 +40,8 @@ export interface CometChatReactionListState {
   hasMore: boolean;
   /** Whether a fetch is in progress. */
   isFetching: boolean;
+  /** Offline: nothing saved and not connected (never set offline off). */
+  connectToLoad?: boolean;
 }
 
 /** Actions for the reaction list reducer. */
@@ -35,6 +51,10 @@ export type CometChatReactionListAction =
   | { type: 'FETCH_ERROR' }
   | { type: 'SELECT_EMOJI'; emoji: string | null }
   | { type: 'REMOVE_REACTION'; reactionId: string }
+  /** Offline path: one phase of a two-phase page read. */
+  | { type: 'OFFLINE_PAGE'; page: EntityPagePayload<CometChat.Reaction> }
+  /** Offline path: a two-phase read ended without a server page. */
+  | { type: 'OFFLINE_PAGE_ERROR'; notConnected: boolean; hasMore: boolean }
   | { type: 'RESET' };
 
 export const initialReactionListState: CometChatReactionListState = {
@@ -106,6 +126,44 @@ export function reactionListReducer(
         groupedReactions: grouped,
         selectedEmoji,
         fetchState: filtered.length === 0 ? 'empty' : state.fetchState,
+      };
+    }
+
+    case 'OFFLINE_PAGE': {
+      const next = reduceEntityPage(
+        { rows: state.allReactions, fetchState: state.fetchState, hasMore: state.hasMore },
+        action.page,
+        reactionKeyOf
+      );
+      const grouped = groupByEmoji(next.rows);
+      return {
+        ...state,
+        allReactions: next.rows,
+        groupedReactions: grouped,
+        selectedEmoji:
+          state.selectedEmoji !== null && !grouped.has(state.selectedEmoji)
+            ? null
+            : state.selectedEmoji,
+        fetchState: next.fetchState,
+        hasMore: next.hasMore,
+        // Still fetching until the read's terminal (one read at a time).
+        isFetching: action.page.phase === 'cached',
+        ...(action.page.phase === 'server' && { connectToLoad: false }),
+      };
+    }
+
+    case 'OFFLINE_PAGE_ERROR': {
+      const next = reduceEntityPageError(
+        { rows: state.allReactions, fetchState: state.fetchState, hasMore: state.hasMore },
+        action.notConnected,
+        action.hasMore
+      );
+      return {
+        ...state,
+        fetchState: next.fetchState,
+        hasMore: next.hasMore,
+        isFetching: false,
+        ...offlineListStates(action.notConnected, false, next.rows.length),
       };
     }
 

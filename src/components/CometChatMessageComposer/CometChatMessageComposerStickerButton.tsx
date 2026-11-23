@@ -10,6 +10,11 @@ import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
 import stickerIcon from '../../assets/sticker.svg';
 import stickerFillIcon from '../../assets/sticker_fill.svg';
 import './CometChatMessageComposer.css';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { sendWithState } from '../../utils/offline/send';
+
+/** The offline path finished the send itself. */
+const OFFLINE_HANDLED = Symbol('offline-handled');
 
 /**
  * CometChatMessageComposerStickerButton — sticker picker trigger.
@@ -84,7 +89,7 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
 
       // Set sender and publish optimistically, then send via SDK
       void CometChat.getLoggedinUser()
-        .then(loggedInUser => {
+        .then((loggedInUser): Promise<CometChat.BaseMessage | typeof OFFLINE_HANDLED> => {
           if (loggedInUser) customMessage.setSender(loggedInUser);
 
           // Publish inprogress so the message list can show it immediately (with quotedMessage)
@@ -94,9 +99,24 @@ export const CometChatMessageComposerStickerButton: React.FC<{ className?: strin
             status: CometChatMessageStatus.inprogress,
           });
 
+          // Offline support: read once for this send (README §3.4).
+          if (isOfflineOn()) {
+            // The hub draws the row and emits the public events; a queued
+            // sticker is not a failure.
+            return sendWithState(customMessage, 'custom').then(result => {
+              if (result.state === 'failed') {
+                onError?.(result.error as CometChat.CometChatException);
+                return OFFLINE_HANDLED;
+              }
+              playOutgoingSound();
+              if (messageToReply) closePreview();
+              return OFFLINE_HANDLED;
+            });
+          }
           return CometChat.sendCustomMessage(customMessage);
         })
-        .then((sentMessage: CometChat.BaseMessage) => {
+        .then((sentMessage: CometChat.BaseMessage | typeof OFFLINE_HANDLED) => {
+          if (sentMessage === OFFLINE_HANDLED) return;
           playOutgoingSound();
           publish({
             type: 'ui:message/sent',

@@ -1,4 +1,5 @@
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import { queuedMediaFiles } from '../../utils/offline/media';
 import type {
   CometChatImagesBubbleAttachment,
   CometChatImagesBubbleLayoutType,
@@ -22,9 +23,13 @@ export function extractImageAttachments(
 
     if (attachments && attachments.length > 0) {
       const result: CometChatImagesBubbleAttachment[] = [];
-      for (const att of attachments) {
+      const queued = queuedMediaFiles(message);
+      for (const [i, att] of attachments.entries()) {
         const url = att.getUrl();
-        if (url.length > 0) {
+        if (url.length === 0) {
+          // Unsent own media (offline): previewed from the file it still holds.
+          if (queued[i]) result.push(queued[i] as CometChatImagesBubbleAttachment);
+        } else {
           const entry: CometChatImagesBubbleAttachment = { url };
           const size = att.getSize();
           if (size) entry.size = size;
@@ -39,7 +44,8 @@ export function extractImageAttachments(
     // Pending (optimistic) message — no attachments yet, show placeholder
     const metadata = mediaMessage.getMetadata() as Record<string, unknown> | null;
     if (metadata && metadata.file instanceof File) {
-      return [{ url: '' }];
+      const queued = queuedMediaFiles(message);
+      return queued.length > 0 ? (queued as CometChatImagesBubbleAttachment[]) : [{ url: '' }];
     }
 
     return [];

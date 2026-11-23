@@ -33,6 +33,11 @@ export class CometChatConversationsManager {
     return this.conversationsRequest.fetchNext();
   }
 
+  /** The underlying request, for the offline path's two-phase read. @internal */
+  request(): CometChat.ConversationsRequest {
+    return this.conversationsRequest;
+  }
+
   /**
    * Delete a conversation by ID.
    * @param conversationId - The conversation ID to delete.

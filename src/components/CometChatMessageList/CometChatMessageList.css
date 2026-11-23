@@ -399,3 +399,112 @@
   display: block;
   width: 100%;
 }
+
+/* --- Offline support (rendered only with the Chat SDK's offline support on) --- */
+
+.cometchat-message-list__offline-footer {
+  /* Above the floating date (z-index 5), which would take its clicks at the top. */
+  position: relative;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  padding: var(--cometchat-padding-2, 8px);
+}
+
+/*
+ * With the floating date shown, the footer starts below it (its top offset, the
+ * ~24px chip and a small gap) so the chip never covers the button.
+ */
+.cometchat-message-list__scroll-wrapper:has(> .cometchat-message-list__floating-date)
+  .cometchat-message-list__offline-footer {
+  padding-top: calc(var(--cometchat-padding-2, 8px) + 24px + var(--cometchat-padding-1, 4px));
+}
+
+.cometchat-message-list__offline-footer-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(
+    --cometchat-message-list-offline-footer-color,
+    var(--cometchat-text-color-highlight, var(--cometchat-primary-color, #6852d6))
+  );
+  font: var(
+    --cometchat-message-list-offline-footer-font,
+    var(--cometchat-font-caption1-regular, 400 12px / 14.4px Roboto)
+  );
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-2, 8px);
+  border-radius: var(--cometchat-radius-max, 1000px);
+}
+
+.cometchat-message-list__offline-footer-button:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}
+
+.cometchat-message-list__offline-notices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cometchat-spacing-1, 4px);
+  padding: 0 var(--cometchat-padding-3, 12px) var(--cometchat-padding-2, 8px);
+}
+
+.cometchat-message-list__offline-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--cometchat-spacing-2, 8px);
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-3, 12px);
+  border-radius: var(--cometchat-radius-3, 12px);
+  background: var(
+    --cometchat-message-list-offline-notice-background,
+    var(--cometchat-neutral-color-300, #e8e8e8)
+  );
+  color: var(
+    --cometchat-message-list-offline-notice-color,
+    var(--cometchat-text-color-secondary, #727272)
+  );
+  font: var(
+    --cometchat-message-list-offline-notice-font,
+    var(--cometchat-font-caption1-regular, 400 12px / 14.4px Roboto)
+  );
+}
+
+.cometchat-message-list__offline-notice-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cometchat-message-list__offline-notice-action,
+.cometchat-message-list__offline-notice-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--cometchat-primary-color, #6852d6);
+  font: inherit;
+  padding: 0 var(--cometchat-padding-1, 4px);
+}
+
+.cometchat-message-list__offline-notice-close {
+  color: var(--cometchat-text-color-secondary, #727272);
+}
+
+/* Offline support: "Jump to latest" after a sweep that missed more than a page. */
+.cometchat-message-list__offline-jump-to-latest {
+  position: absolute;
+  bottom: var(--cometchat-spacing-4, 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  border: none;
+  cursor: pointer;
+  padding: var(--cometchat-padding-1, 4px) var(--cometchat-padding-3, 12px);
+  border-radius: var(--cometchat-radius-max, 1000px);
+  background: var(--cometchat-primary-color, #6852d6);
+  color: var(--cometchat-static-white, #fff);
+  font: var(--cometchat-font-caption1-medium, 500 12px / 14.4px Roboto);
+  box-shadow: var(--cometchat-elevation-1, 0 2px 8px rgba(0, 0, 0, 0.15));
+}
+
+.cometchat-message-list__offline-jump-to-latest:focus-visible {
+  outline: 2px solid var(--cometchat-primary-color, #6852d6);
+  outline-offset: 2px;
+}

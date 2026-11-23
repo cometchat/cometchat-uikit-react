@@ -320,6 +320,10 @@ export interface CometChatSearchConversationsState {
   fetchState: CometChatFetchState;
   hasMore: boolean;
   typingIndicators: Map<string, CometChat.TypingIndicator>;
+  /** Offline: a keyword search could not reach the server; nothing saved (offline on only). */
+  connectToSearch?: boolean;
+  /** Offline: a search failed with a real error and nothing is shown (offline on only). */
+  searchFailed?: boolean;
 }
 
 /** State managed by the messages search manager. */
@@ -327,6 +331,10 @@ export interface CometChatSearchMessagesState {
   messages: CometChat.BaseMessage[];
   fetchState: CometChatFetchState;
   hasMore: boolean;
+  /** Offline: a keyword search could not reach the server; nothing saved (offline on only). */
+  connectToSearch?: boolean;
+  /** Offline: a search failed with a real error and nothing is shown (offline on only). */
+  searchFailed?: boolean;
 }
 
 /** Options for useCometChatSearchConversations hook. */

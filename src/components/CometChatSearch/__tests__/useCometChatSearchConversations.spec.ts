@@ -254,4 +254,58 @@ describe('useCometChatSearchConversations', () => {
     expect(mocks.cleanups.user).toHaveBeenCalled();
     expect(mocks.cleanups.typing).toHaveBeenCalled();
   });
+
+  it('shows only the new search: the old keyword\'s late answer is dropped', async () => {
+    let resolveOld!: (value: { results: FakeConv[]; hasMore: boolean }) => void;
+    mocks.search
+      .mockReturnValueOnce(
+        new Promise(resolve => {
+          resolveOld = resolve;
+        })
+      )
+      .mockResolvedValueOnce({ results: [conv('new1')], hasMore: false });
+    const { result, rerender } = renderHook(
+      ({ keyword }: { keyword: string }) =>
+        useCometChatSearchConversations({ searchKeyword: keyword, activeFilters: NO_FILTERS }),
+      { initialProps: { keyword: 'old' } }
+    );
+    rerender({ keyword: 'new' });
+    await waitFor(() => expect(result.current.fetchState).toBe('loaded'));
+    await act(async () => {
+      resolveOld({ results: [conv('old1'), conv('old2')], hasMore: true });
+      await Promise.resolve();
+    });
+    expect(ids(result.current.conversations)).toEqual(['new1']);
+    expect(result.current.hasMore).toBe(false);
+  });
+
+  it('drops a load-more the old keyword asked for', async () => {
+    let resolveMore!: (value: { results: FakeConv[]; hasMore: boolean }) => void;
+    mocks.search
+      .mockResolvedValueOnce({ results: [conv('old1')], hasMore: true })
+      .mockResolvedValueOnce({ results: [conv('new1')], hasMore: true });
+    mocks.loadMore.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveMore = resolve;
+      })
+    );
+    const { result, rerender } = renderHook(
+      ({ keyword }: { keyword: string }) =>
+        useCometChatSearchConversations({ searchKeyword: keyword, activeFilters: NO_FILTERS }),
+      { initialProps: { keyword: 'old' } }
+    );
+    await waitFor(() => expect(result.current.fetchState).toBe('loaded'));
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.loadMore();
+    });
+    rerender({ keyword: 'new' });
+    await waitFor(() => expect(ids(result.current.conversations)).toEqual(['new1']));
+    await act(async () => {
+      resolveMore({ results: [conv('old2')], hasMore: false });
+      await pending;
+    });
+    expect(ids(result.current.conversations)).toEqual(['new1']);
+    expect(result.current.hasMore).toBe(true);
+  });
 });

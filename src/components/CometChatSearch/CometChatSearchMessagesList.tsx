@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useRef } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useCometChatSearchContext } from './CometChatSearch.context';
 import { useCometChatSearchMessages } from './useCometChatSearchMessages';
+import { CometChatSearchOfflineContext, searchOfflineKind } from './searchOffline';
 import { CometChatLocalize } from '../../resources/CometChatLocalize/CometChatLocalize';
 import { CometChatUIKit } from '../../CometChatUIKit/CometChatUIKit';
 import type { CometChatSearchMessagesListProps } from './CometChatSearch.types';
@@ -26,12 +27,33 @@ function getLocalizedString(key: string): string {
 
 // ── Helpers ──
 
+/**
+ * A sender's or receiver's display name, with its id as the fallback. A cached
+ * row can carry a peer that has only an id - one rebuilt from an own message,
+ * or a partly parsed copy - and the SDK's `getName()` throws without a name
+ * (the same guard as `hasPeer`, `conversationsOffline.ts:248`). Unguarded, one
+ * such row threw while rendering and took the whole search list down with it.
+ */
+function displayNameOf(entity: unknown): string {
+  const peer = entity as
+    | Partial<Record<'getName' | 'getGuid' | 'getUid', () => string>>
+    | null
+    | undefined;
+  const read = (key: 'getName' | 'getGuid' | 'getUid'): string => {
+    try {
+      return peer?.[key]?.() ?? '';
+    } catch {
+      return '';
+    }
+  };
+  return read('getName') || read('getGuid') || read('getUid');
+}
+
 function getMessageTitle(message: CometChat.BaseMessage, uid?: string, guid?: string): string {
   if (uid || guid) {
-    return message.getSender().getName();
+    return displayNameOf(message.getSender());
   }
-  const receiver = message.getReceiver();
-  return receiver.getName();
+  return displayNameOf(message.getReceiver());
 }
 
 /**
@@ -157,17 +179,25 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
   const alwaysShowSeeMore = alwaysShowSeeMoreProp ?? derivedAlwaysShowSeeMore;
   const useScrollPagination = !alwaysShowSeeMore || ctx.activeFilters.length > 0;
 
-  const { messages, fetchState, hasMore, loadMore } = useCometChatSearchMessages({
-    searchKeyword: ctx.searchText,
-    activeFilters: ctx.activeFilters,
-    uid: ctx.uid,
-    guid: ctx.guid,
-    alwaysShowSeeMore,
-    messagesRequestBuilder: ctx.messagesRequestBuilder,
-    messageSentAtDateTimeFormat: ctx.messageSentAtDateTimeFormat,
-    onError: ctx.handleError,
-    onStateChange: ctx.handleMessagesStateChange,
-  });
+  const { messages, fetchState, hasMore, loadMore, connectToSearch, searchFailed } =
+    useCometChatSearchMessages({
+      searchKeyword: ctx.searchText,
+      activeFilters: ctx.activeFilters,
+      uid: ctx.uid,
+      guid: ctx.guid,
+      alwaysShowSeeMore,
+      messagesRequestBuilder: ctx.messagesRequestBuilder,
+      messageSentAtDateTimeFormat: ctx.messageSentAtDateTimeFormat,
+      onError: ctx.handleError,
+      onStateChange: ctx.handleMessagesStateChange,
+    });
+
+  // Offline support: tell the root's unified view what this scope could not do offline.
+  const reportOffline = useContext(CometChatSearchOfflineContext)?.report;
+  const offlineKind = searchOfflineKind(connectToSearch, searchFailed);
+  useEffect(() => {
+    reportOffline?.('messages', offlineKind);
+  }, [reportOffline, offlineKind]);
 
   // Sentinel ref for IntersectionObserver-based infinite scroll
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -250,10 +280,16 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
             <div className={'cometchat-search__section-empty-view-icon'} />
             <div className={'cometchat-search__section-state-body'}>
               <div className={'cometchat-search__section-state-title'}>
-                {getLocalizedString('search_no_result_title')}
+                {getLocalizedString(
+                  connectToSearch ? 'search_connect_to_search_messages' : 'search_no_result_title'
+                )}
               </div>
               <div className={'cometchat-search__section-state-description'}>
-                {getLocalizedString('search_no_result_subtitle')}
+                {getLocalizedString(
+                  connectToSearch
+                    ? 'search_connect_to_search_subtitle'
+                    : 'search_no_result_subtitle'
+                )}
               </div>
             </div>
           </div>
@@ -439,7 +475,7 @@ export const CometChatSearchMessagesList: React.FC<CometChatSearchMessagesListPr
                                     src={url}
                                     alt={getLocalizedString('accessibility_image_from').replace(
                                       '{name}',
-                                      message.getSender().getName()
+                                      displayNameOf(message.getSender())
                                     )}
                                     loading="lazy"
                                     decoding="async"

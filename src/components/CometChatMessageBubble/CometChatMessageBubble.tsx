@@ -25,6 +25,8 @@ import {
 } from '../../utils/MessageReceiptUtils';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { localizeWithFallback } from '../../utils/localizeWithFallback';
+import { offlineRowStateOf } from '../../utils/offline/rowState';
+import { retryFailedMessageOnce } from '../../utils/offline/send';
 
 /**
  * Message types whose content is user-editable (text body or media caption).
@@ -194,7 +196,16 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   const locBubble = (key: string, fallback: string): string =>
     localizeWithFallback(getLocalizedString, key, fallback);
 
-  const receiptState = showError ? ('error' as const) : getReceiptStatus(message);
+  // Offline support: an own message not sent yet shows the clock, a failed one
+  // the error mark, never a sent tick (BEH-SEND-32). `null` with offline off.
+  const offlineState = isOutgoing ? offlineRowStateOf(message) : null;
+  const receiptState = showError
+    ? ('error' as const)
+    : offlineState === 'failed'
+      ? ('error' as const)
+      : offlineState === 'sending'
+        ? ('wait' as const)
+        : getReceiptStatus(message);
 
   // forceShowAvatar used in agent chat to show AI avatar in 1:1 mode
   const shouldShowAvatar =
@@ -407,6 +418,9 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
   }, [receiptState]);
 
   const receiptLabel = useMemo(() => {
+    // Offline support: announced in words, not by colour alone (UIK-A11Y-01).
+    if (offlineState === 'sending') return getLocalizedString('message_list_not_sent_yet');
+    if (offlineState === 'failed') return getLocalizedString('message_list_not_sent_tap_to_retry');
     switch (receiptState) {
       case 'read':
         return getLocalizedString('message_bubble_read');
@@ -419,7 +433,7 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
       default:
         return getLocalizedString('message_bubble_sent');
     }
-  }, [receiptState, getLocalizedString]);
+  }, [receiptState, offlineState, getLocalizedString]);
 
   return (
     <div
@@ -483,6 +497,8 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
                     : undefined
               }
               role="toolbar"
+              data-cc="message-options"
+              data-cc-options={options.map(option => option.id).join(',')}
             >
               <CometChatContextMenu
                 key={isHovering ? 'hovered' : 'not-hovered'}
@@ -621,6 +637,22 @@ export const CometChatMessageBubble: React.FC<CometChatMessageBubbleProps> = ({
                 </div>
               )}
             </div>
+
+            {offlineState === 'failed' && (
+              // Offline support: a failed own message offers Retry whatever the
+              // reason (R162), user-invoked only; Delete is in the menu.
+              <button
+                type="button"
+                className={'cometchat-message-bubble__offline-retry'}
+                data-testid="offline-retry"
+                onClick={event => {
+                  event.stopPropagation();
+                  retryFailedMessageOnce(message);
+                }}
+              >
+                {getLocalizedString('message_list_not_sent_tap_to_retry')}
+              </button>
+            )}
 
             {effectiveFooterContent && (
               <div className={'cometchat-message-bubble__body-footer-view'}>

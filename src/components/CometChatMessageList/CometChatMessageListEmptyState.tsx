@@ -21,7 +21,12 @@ export const CometChatMessageListEmptyState: React.FC<CometChatMessageListEmptyS
   if (!isEmpty) return null;
 
   return (
-    <div className={'cometchat-message-list__empty-state'} role="status">
+    <div
+      className={'cometchat-message-list__empty-state'}
+      role="status"
+      data-cc="empty"
+      data-cc-reason="messages"
+    >
       {children}
     </div>
   );

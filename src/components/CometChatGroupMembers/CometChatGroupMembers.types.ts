@@ -161,6 +161,19 @@ export interface CometChatGroupMembersContextValue {
   activeMemberId: string | null;
   /** Current search text. */
   searchText: string;
+  /**
+   * Offline support: true when a keyword search ran while offline with nothing saved
+   * to show. A search keyword has no offline cache, so the empty state reads "Connect to
+   * search". Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToSearch?: boolean;
+  /**
+   * Offline support: true when the list could not load because the SDK is not connected
+   * and nothing is saved, so the error state reads "Connect to load members" (no Retry).
+   * A list opened with only a filter counts as this, not as a search. Only ever set when
+   * the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
   /** The logged-in user (for role-based action visibility). */
   loggedInUser: CometChat.User | null;
   /** The logged-in user's scope in this group. */
@@ -275,6 +288,19 @@ export interface CometChatUseCometChatGroupMembersReturn {
   selectedMembersMap: Map<string, CometChat.GroupMember>;
   activeMemberId: string | null;
   searchText: string;
+  /**
+   * Offline support: true when a keyword search ran while offline with nothing saved
+   * to show. A search keyword has no offline cache, so the empty state reads "Connect to
+   * search". Only ever set when the Chat SDK's offline support is on.
+   */
+  connectToSearch?: boolean;
+  /**
+   * Offline support: true when the list could not load because the SDK is not connected
+   * and nothing is saved, so the error state reads "Connect to load members" (no Retry).
+   * A list opened with only a filter counts as this, not as a search. Only ever set when
+   * the Chat SDK's offline support is on.
+   */
+  connectToLoad?: boolean;
   loggedInUser: CometChat.User | null;
   loggedInUserScope: string | null;
   // Actions

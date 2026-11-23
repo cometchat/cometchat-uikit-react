@@ -18,18 +18,61 @@ export interface UseMessageListViewScrollOptions {
     scrollToMessageHighlight?: boolean;
     newMessageCount: number;
     markedUnreadByUser: boolean;
+    /** Offline support: a jump read is still filling the window around this message. */
+    offlineScrollAnchor?: number | null;
+    /** Offline support: the "Connect to load" footers and whether scrolling retries them. */
+    offlineFooter?: 'none' | 'connect_to_load_more';
+    offlineNewerFooter?: 'none' | 'connect_to_load_more';
+    offlineFooterRetryable?: boolean;
   };
   fetchPrevious: () => Promise<void>;
   fetchNext: () => Promise<void>;
   setAtBottom: (isAtBottom: boolean) => void;
   markConversationAsReadIfUnread: () => void;
   scrollToMessage: (messageId: number) => void;
+  /**
+   * Offline support: filled in with this hook's prepend bookkeeping, so an older read
+   * the kit starts itself (the reconnect edge load, D84 rule 9) can record it the way
+   * the top sentinel and the scroll retry at the footer do. Inert when not passed.
+   */
+  markOlderPrependRef?: React.RefObject<(() => void) | null>;
 }
 
 export interface UseMessageListViewScrollReturn {
   topSentinelRef: React.RefObject<HTMLDivElement | null>;
   bottomSentinelRef: React.RefObject<HTMLDivElement | null>;
   liveRegionRef: React.RefObject<HTMLDivElement | null>;
+}
+
+/**
+ * Whether reaching one end of the list by scrolling may load that direction.
+ * Offline past the cache a "Connect to load" footer stands there: only its
+ * tap retries until the connection is back, then scrolling does too
+ * (UIK-READ-03). With offline off the footer never shows and this is `more`.
+ */
+export function canLoadOnScroll(
+  more: boolean,
+  footer: 'none' | 'connect_to_load_more' | undefined,
+  retryable: boolean | undefined
+): boolean {
+  return more && (footer !== 'connect_to_load_more' || retryable === true);
+}
+
+/** The least time between two loads a scroll gesture at a "Connect to load" footer starts. */
+export const RETRY_ON_SCROLL_GAP_MS = 1_000;
+
+/** Which way a scroll gesture points, when the event says (wheel, keys). */
+function scrollDirectionOf(event: Event): 'up' | 'down' | undefined {
+  if (event.type === 'wheel') {
+    const { deltaY } = event as WheelEvent;
+    return deltaY < 0 ? 'up' : deltaY > 0 ? 'down' : undefined;
+  }
+  if (event.type === 'keydown') {
+    const { key } = event as KeyboardEvent;
+    if (key === 'ArrowUp' || key === 'PageUp' || key === 'Home') return 'up';
+    if (key === 'ArrowDown' || key === 'PageDown' || key === 'End') return 'down';
+  }
+  return undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -87,6 +130,23 @@ export function useMessageListViewScroll(
 
   const scrollHeightTupleRef = useRef<[number, number]>([0, 0]);
   const didTopObserverRunRef = useRef(false);
+
+  /**
+   * An older page is about to be prepended: the effect below restores the
+   * scroll position by the height it adds, so the rows the user was reading
+   * stay where they are. Every path that reads older messages has to say so —
+   * the top sentinel, and the retry a scroll gesture starts at a "Connect to
+   * load older messages" footer, which the sentinel cannot fire for because it
+   * is already in view (Prajwal `useMessageListViewScroll.ts:343`).
+   */
+  const markOlderPrepend = () => {
+    didTopObserverRunRef.current = true;
+    const container = scrollContainerRef.current;
+    if (container) {
+      const height = container.scrollHeight;
+      scrollHeightTupleRef.current = [height, height];
+    }
+  };
 
   // --- Scroll pinning ---
   // After initial scroll-to-bottom, keep the scroll pinned to the bottom
@@ -179,6 +239,7 @@ export function useMessageListViewScroll(
   });
 
   // --- Top sentinel IntersectionObserver (fetchPrevious) ---
+  const topVisibleRef = useRef(false);
   useEffect(() => {
     if (!topSentinelRef.current || allMessages.length === 0) return;
 
@@ -186,16 +247,13 @@ export function useMessageListViewScroll(
 
     const observer = new IntersectionObserver(
       ([entry]) => {
+        topVisibleRef.current = entry?.isIntersecting ?? false;
         if (!didInitialFire) {
           didInitialFire = true;
           return;
         }
         if (entry?.isIntersecting && !isFetchingMoreRef.current && hasMoreRef.current) {
-          didTopObserverRunRef.current = true;
-          if (scrollContainerRef.current) {
-            const h = scrollContainerRef.current.scrollHeight;
-            scrollHeightTupleRef.current = [h, h];
-          }
+          markOlderPrepend();
           void fetchPrevious();
         }
       },
@@ -220,6 +278,8 @@ export function useMessageListViewScroll(
   markConversationAsReadIfUnreadRef.current = markConversationAsReadIfUnread;
   const markedUnreadByUserRef = useRef(state.markedUnreadByUser);
   markedUnreadByUserRef.current = state.markedUnreadByUser;
+  const anchorPendingRef = useRef(false);
+  anchorPendingRef.current = Boolean(state.offlineScrollAnchor);
 
   useEffect(() => {
     const rootElement = scrollContainerRef.current;
@@ -253,7 +313,13 @@ export function useMessageListViewScroll(
         markConversationAsReadIfUnreadRef.current();
       }
 
-      if (isIntersecting && hasMoreNewerRef.current && !isFetchingMoreRef.current) {
+      if (
+        isIntersecting &&
+        hasMoreNewerRef.current &&
+        !isFetchingMoreRef.current &&
+        // Offline jump still filling its window: the bottom is not where the user is.
+        !anchorPendingRef.current
+      ) {
         void fetchNextRef.current();
       }
     }
@@ -267,6 +333,57 @@ export function useMessageListViewScroll(
       observer.unobserve(targetElement);
     };
   }, [hasMessages, scrollContainerRef]);
+
+  // --- Offline: a "Connect to load" footer loads on scroll once online ---
+  // The user scrolled to the end offline and the read stopped there; the
+  // sentinel at that end is still in view, so its observer will not fire
+  // again. Once the connection is back, the next scroll gesture at that end
+  // loads, as a tap on the footer does (UIK-READ-03). Inert with offline off.
+  const retryOlderOnScroll =
+    state.offlineFooter === 'connect_to_load_more' && state.offlineFooterRetryable === true;
+  const retryNewerOnScroll =
+    state.offlineNewerFooter === 'connect_to_load_more' && state.offlineFooterRetryable === true;
+  const fetchPreviousRef = useRef(fetchPrevious);
+  fetchPreviousRef.current = fetchPrevious;
+  const markOlderPrependRef = useRef(markOlderPrepend);
+  markOlderPrependRef.current = markOlderPrepend;
+  // The same bookkeeping for the older page the kit reads by itself when the connection
+  // returns: that read runs in the data hook, which has no scroll container, so it calls
+  // through this ref (as the connection handler calls `reconnectEdgesRef`).
+  if (options.markOlderPrependRef) {
+    options.markOlderPrependRef.current = markOlderPrepend;
+  }
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || (!retryOlderOnScroll && !retryNewerOnScroll)) return;
+    let lastAttempt = -Infinity;
+    const onScrollIntent = (event: Event) => {
+      if (isFetchingMoreRef.current) return;
+      const direction = scrollDirectionOf(event);
+      // Only the keys that scroll; typing in a row's controls is not a scroll.
+      if (event.type === 'keydown' && direction === undefined) return;
+      // One read per gesture: a scroll or wheel burst fires many events.
+      const now = Date.now();
+      if (now - lastAttempt < RETRY_ON_SCROLL_GAP_MS) return;
+      if (retryOlderOnScroll && topVisibleRef.current && direction !== 'down') {
+        lastAttempt = now;
+        // The page lands as a prepend, as the sentinel's would: keep the
+        // reader's position instead of jumping to the top of the new page.
+        markOlderPrependRef.current();
+        void fetchPreviousRef.current();
+      } else if (retryNewerOnScroll && isAtBottomRef.current && direction !== 'up') {
+        lastAttempt = now;
+        void fetchNextRef.current();
+      }
+    };
+    const events = ['wheel', 'touchmove', 'scroll', 'keydown'] as const;
+    for (const type of events) {
+      container.addEventListener(type, onScrollIntent, { passive: true });
+    }
+    return () => {
+      for (const type of events) container.removeEventListener(type, onScrollIntent);
+    };
+  }, [retryOlderOnScroll, retryNewerOnScroll, scrollContainerRef]);
 
   // --- Auto-scroll to bottom on new messages / initial load ---
   const userScrolledDuringInitRef = useRef(false);
@@ -289,8 +406,12 @@ export function useMessageListViewScroll(
     const container = scrollContainerRef.current;
     if (!container) return;
 
+    // Offline: a jump / start-from-unread read is still filling the window around
+    // its target; the scroll-to-message effect positions the list when it lands.
+    const anchorPending = Boolean(state.offlineScrollAnchor);
+
     // Initial load: scroll to bottom when messages first appear (no scrollToMessageId)
-    if (prevCount === 0 && newCount > 0 && !state.scrollToMessageId) {
+    if (prevCount === 0 && newCount > 0 && !state.scrollToMessageId && !anchorPending) {
       userScrolledDuringInitRef.current = false;
       const onUserScroll = () => {
         userScrolledDuringInitRef.current = true;
@@ -318,7 +439,11 @@ export function useMessageListViewScroll(
       });
     }
     // Real-time new message: auto-scroll if at bottom or pinned to bottom.
-    else if ((state.isAtBottom || shouldPinToBottomRef.current) && newCount === prevCount + 1) {
+    else if (
+      !anchorPending &&
+      (state.isAtBottom || shouldPinToBottomRef.current) &&
+      newCount === prevCount + 1
+    ) {
       container.scrollTop = container.scrollHeight;
       shouldPinToBottomRef.current = true;
     }
@@ -334,7 +459,13 @@ export function useMessageListViewScroll(
         initScrollListenerRef.current = null;
       }
     };
-  }, [allMessages.length, state.isAtBottom, state.scrollToMessageId, scrollContainerRef]);
+  }, [
+    allMessages.length,
+    state.isAtBottom,
+    state.scrollToMessageId,
+    state.offlineScrollAnchor,
+    scrollContainerRef,
+  ]);
 
   // Refs for pin cleanup — stored outside the effect so they persist across re-runs
   const pinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

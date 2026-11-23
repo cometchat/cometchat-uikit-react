@@ -21,6 +21,8 @@ import fileTypeMov from '../../assets/file_type_mov.svg';
 import fileTypeJpg from '../../assets/file_type_jpg.svg';
 import fileTypeUnsupported from '../../assets/file_type_unsupported.svg';
 import './CometChatFilesBubble.css';
+import { useCachedMedia } from '../../utils/offline/media';
+import { OfflineMediaUnavailable } from '../../utils/offline/OfflineMediaUnavailable';
 
 /** Maximum files to show before requiring expand. */
 const COLLAPSED_MAX = 3;
@@ -103,7 +105,10 @@ export const CometChatFilesBubble: React.FC<CometChatFilesBubbleProps> = ({
     (alignment ?? getBubbleAlignment(message, loggedInUser)) === 'right' ? 'outgoing' : 'incoming';
   const isSentByMe = variant === 'outgoing';
 
-  const attachments = useMemo(() => extractFileAttachments(message), [message]);
+  // Offline support: the SDK's cached copy when it has one; with offline off,
+  // exactly the extracted attachments.
+  const media = useCachedMedia(useMemo(() => extractFileAttachments(message), [message]));
+  const attachments = media.attachments;
   const caption = useMemo(() => extractFileCaption(message), [message]);
   const hasMultiple = attachments.length > 1;
 
@@ -128,6 +133,8 @@ export const CometChatFilesBubble: React.FC<CometChatFilesBubbleProps> = ({
 
   return (
     <div className={rootClasses}>
+      {/* Offline support: "Available when online" while offline with no cached copy. */}
+      {media.unavailable && <OfflineMediaUnavailable onDownload={media.download} />}
       <div
         className={`cometchat-files-bubble__container${hasMultiple ? ' cometchat-files-bubble__container--multi' : ''}`}
       >

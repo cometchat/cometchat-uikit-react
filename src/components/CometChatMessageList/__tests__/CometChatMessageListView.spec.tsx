@@ -102,6 +102,11 @@ import {
 import { LocaleProvider } from '../../../context/locale/LocaleProvider';
 import { buildUser, buildGroup, buildTextMessage } from '../../../testing/mock-builders';
 import { CometChatUIKit } from '../../../CometChatUIKit/CometChatUIKit';
+import {
+  installOfflineSdk,
+  offlineMessage,
+  textMessage,
+} from '../../../testing/offline-sdk-fake';
 
 // ---------------------------------------------------------------------------
 // IntersectionObserver mock
@@ -830,5 +835,64 @@ describe('CometChatMessageListView — group context', () => {
       })
     );
     expect(screen.getByRole('log')).toBeInTheDocument();
+  });
+});
+
+// ===========================================================================
+// Row keys across the kill switch
+// ===========================================================================
+
+describe('CometChatMessageListView — row keys when offline support turns off mid-session', () => {
+  it('keeps every row mounted: an own unsent row is not re-created', () => {
+    const fake = installOfflineSdk({ enabled: true });
+    try {
+      const pending = offlineMessage(textMessage('hello'), {
+        localMessageId: 'L1',
+        muid: 'M1',
+        status: 'PENDING',
+        sentAt: 1_700_000_000,
+      });
+      const ctx = buildMockCtx({ messages: [pending] as never[], fetchState: 'loaded' });
+      const { container, rerender } = renderView(ctx);
+      const row = container.querySelector('[data-cc="message-row"]');
+      expect(row).not.toBeNull();
+
+      // The kill switch flips: the SDK now reports offline off, the list re-renders.
+      fake.setEnabled(false);
+      rerender(
+        <LocaleProvider locale="en-us">
+          <CometChatMessageListProvider value={{ ...ctx }}>
+            <CometChatMessageListView />
+          </CometChatMessageListProvider>
+        </LocaleProvider>
+      );
+      expect(container.querySelector('[data-cc="message-row"]')).toBe(row);
+    } finally {
+      fake.restore();
+    }
+  });
+
+  it('a list that never ran offline keeps today\'s keys (no offline key is ever used)', () => {
+    const fake = installOfflineSdk({ enabled: false });
+    try {
+      const own = offlineMessage(textMessage('hello'), {
+        localMessageId: 'L1',
+        muid: 'M1',
+        sentAt: 1_700_000_000,
+      });
+      const ctx = buildMockCtx({ messages: [own] as never[], fetchState: 'loaded' });
+      const { container, rerender } = renderView(ctx);
+      const row = container.querySelector('[data-cc="message-row"]');
+      rerender(
+        <LocaleProvider locale="en-us">
+          <CometChatMessageListProvider value={{ ...ctx }}>
+            <CometChatMessageListView />
+          </CometChatMessageListProvider>
+        </LocaleProvider>
+      );
+      expect(container.querySelector('[data-cc="message-row"]')).toBe(row);
+    } finally {
+      fake.restore();
+    }
   });
 });

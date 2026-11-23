@@ -19,6 +19,8 @@ import {
   getReceiptStatus,
 } from '../../utils/MessageReceiptUtils';
 import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants';
+import { offlineRowStateOf, unsentActionsOf } from '../../utils/offline/rowState';
+import { getUnsentMessageOptions } from '../../plugins/core/shared/CometChatMessageOptions';
 import type {
   CometChatMessageBubbleAlignment,
   CometChatMessagePluginContext,
@@ -273,6 +275,12 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
   const options = useMemo<CometChatMessageOption[]>(() => {
     // Pending messages (optimistic, not yet confirmed by SDK): hide all options.
     if (!message.getId()) {
+      // Offline support: an own unsent or failed message offers Retry and
+      // Delete (BEH-SEND-37 as rewritten by R162 / S73).
+      const actions = unsentActionsOf(message);
+      if (actions && message.getSender().getUid() === loggedInUser.getUid()) {
+        return getUnsentMessageOptions(message, optionsContext, actions);
+      }
       return [];
     }
 
@@ -287,7 +295,7 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
     }
 
     return base;
-  }, [plugin, message, optionsContext, isBlocked]);
+  }, [plugin, message, optionsContext, isBlocked, loggedInUser]);
 
   // --- View slot resolution ---
   // For each slot: check plugin first. If plugin provides a view, pass it.
@@ -431,7 +439,9 @@ export const CometChatMessageBubbleRenderer: React.FC<CometChatMessageBubbleRend
     batchPosition === 'middle' || batchPosition === 'last' ? null : pluginHeaderView;
   // An errored message (RBAC/moderation failure) must surface its status even when
   // it sits mid-batch — otherwise the failure is invisible.
-  const hasError = !isDeleted && getReceiptStatus(message) === 'error';
+  const hasError =
+    !isDeleted &&
+    (getReceiptStatus(message) === 'error' || offlineRowStateOf(message) === 'failed');
   // A pinned or saved attachment must surface its indicator even mid-batch —
   // otherwise the only place the state is visible is a row that batching hides.
   // Attachments in one batch are pinned/saved independently, so a batch can show

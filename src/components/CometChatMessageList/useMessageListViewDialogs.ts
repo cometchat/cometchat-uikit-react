@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { CometChat } from '@cometchat/chat-sdk-javascript';
 import { useCometChatFrameContext } from '../../context/CometChatFrameContext';
+import { useCometChatEvents } from '../../hooks/useCometChatEvents';
+import { CometChatMessageStatus } from '../../context/CometChatEvents.types';
+import { isOfflineOn, isSdkConnected } from '../../utils/offline/gate';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -15,7 +18,8 @@ export interface ReactTargetState {
 export interface UseMessageListViewDialogsOptions {
   loggedInUser: CometChat.User;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
-  deleteMessage: (messageId: number) => Promise<void>;
+  /** `false` reports a delete that did not happen; a hook that reports nothing is read as done. */
+  deleteMessage: (messageId: number) => Promise<unknown>;
   markMessageAsUnread: (message: CometChat.BaseMessage) => Promise<void>;
   reactToMessage: (messageId: number, emoji: string) => Promise<void>;
   goToMessage: (messageId: number) => Promise<void>;
@@ -102,13 +106,42 @@ export function useMessageListViewDialogs(
   }, []);
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteTarget) return;
-    await deleteMessage(deleteTarget.getId());
+    const deleted = await deleteMessage(deleteTarget.getId());
     setDeleteTarget(null);
+    // Offline, a delete of an already-sent message is refused and the message stays on
+    // screen - no SDK queues one. The toast used to say it had been deleted anyway.
+    if (deleted === false) {
+      // Name the cause when it is the connection: the same string the message
+      // options path already shows for a refused delete, rather than the
+      // generic "Looks like something went wrong" (review: delete toast).
+      const refusedOffline = isOfflineOn() && !isSdkConnected();
+      showToast(
+        getLocalizedString(
+          refusedOffline ? 'message_list_option_delete_failed' : 'message_list_error_subtitle'
+        ),
+        'error'
+      );
+      return;
+    }
     showToast(getLocalizedString('message_list_message_deleted'));
   }, [deleteTarget, deleteMessage, getLocalizedString, showToast]);
   const handleDeleteCancel = useCallback(() => {
     setDeleteTarget(null);
   }, []);
+
+  // --- A failed edit ---
+  // An edit of an already-sent message is refused offline (no SDK queues one),
+  // and the composer leaves edit mode before the request and does not put the
+  // text back, as the Android kit does. Nothing told the user the edit had not
+  // happened, so the typed text looked like it had been dropped (QA item 3).
+  useCometChatEvents(
+    event => {
+      if (event.type !== 'ui:compose/edit') return;
+      if (event.status !== CometChatMessageStatus.error) return;
+      showToast(getLocalizedString('message_list_error_subtitle'), 'error');
+    },
+    [getLocalizedString, showToast]
+  );
 
   // --- Flag dialog state ---
   const [flagTarget, setFlagTarget] = useState<CometChat.BaseMessage | null>(null);

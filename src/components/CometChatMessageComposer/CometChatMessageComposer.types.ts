@@ -62,6 +62,11 @@ export interface TrayItem {
   previewUrl?: string;
   /** Error captured on failure/rejection. */
   error?: unknown;
+  /**
+   * Offline support only: the upload could not reach the server. Send queues the
+   * file itself, and the SDK uploads it when the connection returns (AC-12.4).
+   */
+  queueOffline?: boolean;
 }
 
 /** Composer staging-tray slice: one upload group of staged items. */

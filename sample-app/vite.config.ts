@@ -45,40 +45,52 @@ function optionalPeerDependency(...packageNames: string[]) {
   };
 }
 
+/**
+ * Aliases that build the app against the local UIKit source (../src) instead of
+ * the installed package. Always on in the `offline-e2e` mode (the offline E2E
+ * suite tests the kit in this repo); to use them in normal dev, set
+ * USE_LOCAL_UIKIT=1.
+ */
+const localUIKitAliases = [
+  {
+    find: '@cometchat/chat-uikit-react/styles',
+    replacement: resolve(__dirname, '../src/styles/index.css'),
+  },
+  {
+    find: /^@cometchat\/chat-uikit-react\/(.+)$/,
+    replacement: resolve(__dirname, '../src/$1'),
+  },
+  {
+    find: '@cometchat/chat-uikit-react',
+    replacement: resolve(__dirname, '../src'),
+  },
+];
+
 export default defineConfig(({ mode }) => {
   // Vite doesn't load .env files into process.env before this config is evaluated,
   // so UIKIT_LOCAL sitting in sample-app/.env would be invisible here. Read it
   // explicitly: '' loads all vars (not just VITE_-prefixed ones). An inline shell
   // var (UIKIT_LOCAL=1 npm run dev) still takes precedence via process.env.
   const env = loadEnv(mode, __dirname, '');
-  const useLocalUIKit = (process.env.UIKIT_LOCAL ?? env.UIKIT_LOCAL) === '1';
+  // The offline E2E mode always tests the kit in this repo.
+  const useLocalUIKit =
+    mode === 'offline-e2e' ||
+    (process.env.UIKIT_LOCAL ?? env.UIKIT_LOCAL) === '1' ||
+    process.env.USE_LOCAL_UIKIT === '1';
 
   return {
     plugins: [optionalPeerDependency(CALLS_SDK), react()],
+    // The kit's state-contract frame probe: on only in the offline E2E mode,
+    // which builds the kit from source (the published package compiles it out).
+    define: { __CC_FRAME_PROBE__: mode === 'offline-e2e' ? 'true' : 'false' },
     resolve: {
       // Ensure shared dependencies resolve to a single copy — prevents instanceof
       // failures when the UIKit source (aliased from ../src) and the sample app
       // both import the same package from different locations on disk.
       dedupe: ['@cometchat/chat-sdk-javascript', 'react', 'react-dom'],
-      // UIKIT_LOCAL=1 resolves the UIKit from ../src instead of the installed
-      // @cometchat/chat-uikit-react package, so the sample app (and the E2E suite)
-      // exercise local UI Kit changes rather than the last published release.
-      alias: useLocalUIKit
-        ? [
-            {
-              find: '@cometchat/chat-uikit-react/styles',
-              replacement: resolve(__dirname, '../src/styles/index.css'),
-            },
-            {
-              find: /^@cometchat\/chat-uikit-react\/(.+)$/,
-              replacement: resolve(__dirname, '../src/$1'),
-            },
-            {
-              find: '@cometchat/chat-uikit-react',
-              replacement: resolve(__dirname, '../src'),
-            },
-          ]
-        : [],
+      // UIKIT_LOCAL=1 (or the offline-e2e mode) resolves the UIKit from ../src instead
+      // of the installed package, so the sample app exercises local UI Kit changes.
+      alias: useLocalUIKit ? localUIKitAliases : [],
     },
     optimizeDeps: {
       // Only include for pre-bundling when actually installed.

@@ -5,6 +5,9 @@ import { CometChatUIKitConstants } from '../../constants/CometChatUIKitConstants
 import { selectCanSend } from './CometChatMessageComposer.reducer';
 import type { CometChatMessageComposerAction } from './CometChatMessageComposer.reducer';
 import type { TrayItem, TrayItemKind, TrayState } from './CometChatMessageComposer.types';
+import { isOfflineOn, isSdkConnected } from '../../utils/offline/gate';
+import { isNotConnectedError } from '../../utils/offline/reconcile';
+import { OfflineHub } from '../../utils/offline/hub';
 
 /**
  * Localization key for the count-exceeded toast. Reuses the composer's existing
@@ -83,6 +86,40 @@ function makeFileId(): string {
     /* fall through to the non-crypto fallback */
   }
   return `_${Math.random().toString(36).slice(2, 11)}`;
+}
+
+/** One file of a restored batch, as the SDK's `getItems()` / `getFiles()` describes it. */
+export interface RestoredUploadFile {
+  fileId: string;
+  name: string;
+  size?: number;
+  mimeType?: string;
+  status: string;
+  attachment?: CometChat.Attachment;
+  failure?: { code?: string; message?: string };
+  localCopyMissing?: boolean;
+}
+
+/** The parts of a restored `UploadFileRequest` the tray restore reads. */
+interface RestorableUploadRequest {
+  getItems?: () => RestoredUploadFile[];
+  getFiles?: () => RestoredUploadFile[];
+  getFileBytes?: (fileId: string) => Promise<Blob | null>;
+  getBatchId: () => string;
+  addUploadListener?: (listener: object) => void;
+  removeUploadListener?: () => void;
+}
+
+/**
+ * The tile a restored file shows (BEH-UPLOAD-14): UPLOADED -> done; REJECTED,
+ * or a failed file whose bytes are gone (retry would no-op), -> rejected
+ * (remove / re-add); anything else -> failed with Retry. Nothing uploads by
+ * itself.
+ */
+export function restoredTileStatus(file: RestoredUploadFile): TrayItem['status'] {
+  if (file.status === 'uploaded' && file.attachment) return 'success';
+  if (file.status === 'rejected' || file.localCopyMissing) return 'rejected';
+  return 'failed';
 }
 
 /** Options for {@link useMediaUploadManager}. */
@@ -182,6 +219,10 @@ export function useMediaUploadManager(options: UseMediaUploadManagerOptions): Me
   // The live upload request for the active batch. One request == one batch;
   // created lazily on the first add of a batch and reused for incremental adds.
   const requestRef = useRef<UploadFileRequest | null>(null);
+  /** The active request was restored from the SDK (offline tray restore). */
+  const restoredRef = useRef(false);
+  /** The active batch was started (or restored) with offline on. */
+  const offlineBatchRef = useRef(false);
 
   // Resolved per-batch attachment maximum. Read once from the SDK on mount and
   // cached in a ref; defaults to DEFAULT_MAX_ATTACHMENTS (10) until (and if)
@@ -237,7 +278,16 @@ export function useMediaUploadManager(options: UseMediaUploadManagerOptions): Me
         dispatch({ type: 'TRAY_SET_ATTACHMENT', fileId, attachment });
       },
       onFileFailure: (fileId: string, error: CometChat.CometChatException) => {
-        dispatch({ type: 'TRAY_UPDATE_STATUS', fileId, status: 'failed', error });
+        dispatch({
+          type: 'TRAY_UPDATE_STATUS',
+          fileId,
+          status: 'failed',
+          error,
+          // Offline support: not the file's fault, so Send can queue it (AC-12.4).
+          ...(isOfflineOn() && (isNotConnectedError(error) || !isSdkConnected())
+            ? { queueOffline: true }
+            : {}),
+        });
       },
       onFileError: (fileId: string, error: CometChat.CometChatException) => {
         dispatch({ type: 'TRAY_UPDATE_STATUS', fileId, status: 'rejected', error });
@@ -309,6 +359,9 @@ export function useMediaUploadManager(options: UseMediaUploadManagerOptions): Me
           request.setParentMessageId(parentMessageIdRef.current);
         }
         requestRef.current = request;
+        restoredRef.current = false;
+        // Offline support: a batch started with offline on goes with the session.
+        offlineBatchRef.current = isOfflineOn();
       }
       const request = requestRef.current;
 
@@ -372,6 +425,7 @@ export function useMediaUploadManager(options: UseMediaUploadManagerOptions): Me
       }
       if (isLastItem) {
         requestRef.current = null;
+        restoredRef.current = false;
       }
       revokeObjectUrl(fileId);
       dispatch({ type: 'TRAY_REMOVE', fileId });
@@ -384,14 +438,25 @@ export function useMediaUploadManager(options: UseMediaUploadManagerOptions): Me
       const request = requestRef.current;
       if (request) {
         try {
-          request.retryAttachment(fileId);
+          // A restored batch's files carry no per-call listener from this
+          // session: hand ours over with the retry so its events reach the tray.
+          if (restoredRef.current) {
+            // SDK 4.3 takes the listener as a second argument (4.2 typings do not).
+            (
+              request as unknown as {
+                retryAttachment: (fileId: string, listener?: object) => void;
+              }
+            ).retryAttachment(fileId, listener);
+          } else {
+            request.retryAttachment(fileId);
+          }
         } catch {
           /* non-fatal */
         }
       }
       dispatch({ type: 'TRAY_UPDATE_STATUS', fileId, status: 'uploading' });
     },
-    [dispatch]
+    [dispatch, listener]
   );
 
   const clear = useCallback(() => {
@@ -404,11 +469,157 @@ export function useMediaUploadManager(options: UseMediaUploadManagerOptions): Me
       }
     }
     requestRef.current = null;
+    restoredRef.current = false;
     revokeAllObjectUrls();
     dispatch({ type: 'TRAY_CLEAR' });
   }, [dispatch, revokeAllObjectUrls]);
 
   const getActiveRequest = useCallback(() => requestRef.current, []);
+
+  // --- Offline support: composer tray restore (BEH-UPLOAD-14, UIK-UPLOAD-01) ---
+  // A deferred, single-shot restore on the settled (receiver, type, parent)
+  // triple. `getExistingUploadFileRequest` is a local call: with offline off it
+  // answers null (no request, no storage), so the tray behaves as today. A
+  // thread composer asks for its own triple and never picks up the main chat's
+  // batch. On a triple change with offline on, the batch is detached (left with
+  // the SDK for a later restore); with offline off, today's behaviour is kept.
+  const tripleKey = `${receiverType}|${receiverId}|${String(parentMessageId ?? 0)}`;
+  const previousTripleRef = useRef(tripleKey);
+  useEffect(() => {
+    if (previousTripleRef.current !== tripleKey) {
+      previousTripleRef.current = tripleKey;
+      if (isOfflineOn() && requestRef.current) {
+        try {
+          requestRef.current.removeUploadListener();
+        } catch {
+          /* non-fatal */
+        }
+        requestRef.current = null;
+        restoredRef.current = false;
+        revokeAllObjectUrls();
+      }
+    }
+    if (!receiverId) return;
+    const sdk = CometChat as unknown as {
+      getExistingUploadFileRequest?: (
+        receiverId: string,
+        receiverType: string,
+        parentMessageId?: number
+      ) => Promise<RestorableUploadRequest | null>;
+    };
+    const getExisting = sdk.getExistingUploadFileRequest;
+    if (typeof getExisting !== 'function') return;
+    // Held in an object: the cleanup sets it while the restore is awaiting.
+    const run = { cancelled: false };
+    const isCancelled = () => run.cancelled;
+    const created: string[] = [];
+    // Deferred to a microtask, so a triple that changes again in the same
+    // commit restores only once, on its final value (no timer).
+    queueMicrotask(() => {
+      if (isCancelled()) return;
+      void (async () => {
+        try {
+          const restored = await getExisting.call(
+            CometChat,
+            receiverId,
+            receiverType,
+            parentMessageId !== undefined && parentMessageId > 0 ? parentMessageId : undefined
+          );
+          // Never replace a tray the user is already filling.
+          if (isCancelled() || !restored || trayRef.current.items.length > 0) return;
+          const files =
+            (typeof restored.getItems === 'function'
+              ? restored.getItems()
+              : restored.getFiles?.()) ?? [];
+          if (files.length === 0) return;
+          const items = await Promise.all(
+            files.map(async (info): Promise<TrayItem> => {
+              let bytes: Blob | null = null;
+              try {
+                bytes = (await restored.getFileBytes?.(info.fileId)) ?? null;
+              } catch {
+                bytes = null;
+              }
+              const file = new File(bytes ? [bytes] : [], info.name || 'file', {
+                type: info.mimeType ?? '',
+              });
+              const kind = deriveTrayItemKind(file);
+              let previewUrl: string | undefined;
+              if (bytes && (kind === 'image' || kind === 'video' || kind === 'audio')) {
+                try {
+                  previewUrl = URL.createObjectURL(bytes);
+                  created.push(previewUrl);
+                } catch {
+                  previewUrl = undefined;
+                }
+              }
+              // No bytes to read back is a missing local copy, as Android treats it:
+              // remove only. Retry would no-op, and a queued send would carry an empty file.
+              const status = restoredTileStatus(
+                bytes || info.status === 'uploaded' ? info : { ...info, localCopyMissing: true }
+              );
+              return {
+                fileId: info.fileId,
+                file,
+                kind,
+                status,
+                percent: status === 'success' ? 100 : 0,
+                ...(info.attachment && { attachment: info.attachment }),
+                ...(previewUrl && { previewUrl }),
+                ...(info.failure && { error: info.failure }),
+              };
+            })
+          );
+          if (isCancelled() || trayRef.current.items.length > 0) {
+            for (const url of created) URL.revokeObjectURL(url);
+            return;
+          }
+          requestRef.current = restored as unknown as UploadFileRequest;
+          restoredRef.current = true;
+          offlineBatchRef.current = true;
+          try {
+            restored.addUploadListener?.(listener);
+          } catch {
+            /* non-fatal */
+          }
+          for (const item of items) {
+            if (item.previewUrl) objectUrlsRef.current.set(item.fileId, item.previewUrl);
+          }
+          dispatch({ type: 'TRAY_ADD', items, batchId: restored.getBatchId() });
+        } catch {
+          /* nothing to restore */
+        }
+      })();
+    });
+    return () => {
+      run.cancelled = true;
+    };
+    // The triple is the trigger; the rest is read through refs or is stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripleKey]);
+
+  // Offline support: a logout or user switch clears a batch that belongs to
+  // the offline session (UIK-LIFE-01); its files stay with the SDK for that
+  // user. A batch started with offline off keeps today's behaviour.
+  //
+  // `sessionEnd`, not `session`: the same user's cache being reset does not
+  // take their attachments away, so it must not empty the tray they are still
+  // filling (review: composer tray).
+  useEffect(() => {
+    return OfflineHub.getInstance().sessionEnd.subscribe(() => {
+      if (!offlineBatchRef.current) return;
+      offlineBatchRef.current = false;
+      try {
+        requestRef.current?.removeUploadListener();
+      } catch {
+        /* non-fatal */
+      }
+      requestRef.current = null;
+      restoredRef.current = false;
+      revokeAllObjectUrls();
+      dispatch({ type: 'TRAY_CLEAR' });
+    });
+  }, [dispatch, revokeAllObjectUrls]);
 
   // Revoke any outstanding object URLs on unmount to avoid leaks.
   useEffect(() => {

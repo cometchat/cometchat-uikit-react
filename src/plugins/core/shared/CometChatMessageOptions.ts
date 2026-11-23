@@ -33,6 +33,9 @@ import saveIcon from '../../../assets/save.svg';
 import unsaveIcon from '../../../assets/unsave.svg';
 import { isPinned, isPinSaveEligible, isSaved } from '../../../utils/pinSaveUtils';
 import { getPinSaveFeatures } from '../../../utils/pinSaveFeatures';
+import retryIcon from '../../../assets/retry.svg';
+import { discardUnsentMessage, retryFailedMessageOnce } from '../../../utils/offline/send';
+import type { UnsentMessageActions } from '../../../utils/offline/rowState';
 
 // --- Option ID constants ---
 
@@ -54,6 +57,10 @@ export const MESSAGE_OPTION_IDS = {
   unpinMessage: 'unpin-message',
   saveMessage: 'save-message',
   unsaveMessage: 'unsave-message',
+  /** Offline support only: retry a failed own message. */
+  retryMessage: 'retry-message',
+  /** Offline support only: remove an unsent own message from this device. */
+  discardMessage: 'discard-message',
 } as const;
 
 // --- Helpers ---
@@ -617,4 +624,58 @@ export function getTextMessageOptions(
     sendPrivatelyOption(context),
   ];
   return filterOptions(allOptions, message, context);
+}
+
+// --- Offline support: options for an own message the server has not acked ---
+
+/**
+ * Options for an own message that is not sent yet (offline support only).
+ * Ruling R162 / S73 (BEH-SEND-37 as rewritten 2026-11-03): Retry and Delete on
+ * every own `PENDING`, `SENDING` and `FAILED` (any reason) message, and
+ * nothing that needs a server id (no reply, BEH-SEND-31). Retry is
+ * user-invoked only; Delete removes the message from this device
+ * (`discardLocalMessage`), or from the screen for a failed (direct) one. On a
+ * message whose send is under way the SDK answers
+ * `ERROR_OFFLINE_MESSAGE_IN_FLIGHT` to either and the "Sending… try again in a
+ * moment" notice shows (raised in `send.ts`).
+ */
+export function getUnsentMessageOptions(
+  _message: CometChat.BaseMessage,
+  context: CometChatMessagePluginContext,
+  actions: UnsentMessageActions
+): CometChatMessageOption[] {
+  const options: CometChatMessageOption[] = [];
+  if (actions.retry) {
+    options.push({
+      id: MESSAGE_OPTION_IDS.retryMessage,
+      title: loc(context, 'retry', 'Retry'),
+      iconURL: retryIcon,
+      onClick: msg => {
+        retryFailedMessageOnce(msg);
+      },
+    });
+  }
+  if (actions.discard && !context.hideDeleteMessageOption) {
+    options.push({
+      id: MESSAGE_OPTION_IDS.discardMessage,
+      title: loc(context, 'message_list_option_delete', 'Delete'),
+      iconURL: deleteIcon,
+      onClick: msg => {
+        void discardUnsentMessage(msg).then(outcome => {
+          // 'in-flight': its send is under way; the "Sending…" notice is up.
+          if (outcome === 'removed' || outcome === 'in-flight') return;
+          if (typeof outcome === 'object') {
+            // It went out meanwhile: delete the sent message the normal way.
+            context.onDeleteMessage?.(outcome.sent);
+            return;
+          }
+          context.showToast?.(
+            loc(context, 'message_list_option_delete_failed', "Couldn't remove the message"),
+            'error'
+          );
+        });
+      },
+    });
+  }
+  return options;
 }

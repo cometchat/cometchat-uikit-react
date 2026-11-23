@@ -21,6 +21,8 @@ import { CometChatUsers } from '../CometChatUsers/CometChatUsers';
 import { CometChatGroupMembers } from '../CometChatGroupMembers/CometChatGroupMembers';
 import { CometChatAvatar } from '../base/CometChatAvatar/CometChatAvatar';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { isOfflineOn } from '../../utils/offline/gate';
+import { isNotConnectedError } from '../../utils/offline/reconcile';
 import './CometChatMessageComposer.css';
 
 export interface CometChatMessageComposerMentionsListProps {
@@ -245,6 +247,20 @@ const CometChatMessageComposerMentionsListInner = (
     }
   }, [onEmpty, shouldShowMentionAll]);
 
+  // The people lists report a failed read to `onError` (D83). Offline with nothing saved, the
+  // suggestions close as they do for no match (never an error), as before; any other failure
+  // reaches `onError` as always.
+  const handleListError = useCallback(
+    (error?: unknown) => {
+      if (isOfflineOn() && isNotConnectedError(error)) {
+        handleOnEmpty();
+        return;
+      }
+      onError?.();
+    },
+    [onError, handleOnEmpty]
+  );
+
   const shouldCloseWhenMentionsDisabled = disableMentions && !shouldShowMentionAll;
 
   React.useEffect(() => {
@@ -298,13 +314,7 @@ const CometChatMessageComposerMentionsListInner = (
             onItemClick(u);
           }}
           onEmpty={handleOnEmpty}
-          onError={
-            onError
-              ? () => {
-                  onError();
-                }
-              : undefined
-          }
+          onError={handleListError}
           {...(usersRequestBuilder ? { usersRequestBuilder } : {})}
           headerView={null}
           trailingView={() => null}
@@ -323,13 +333,7 @@ const CometChatMessageComposerMentionsListInner = (
             onItemClick(member);
           }}
           onEmpty={handleOnEmpty}
-          onError={
-            onError
-              ? () => {
-                  onError();
-                }
-              : undefined
-          }
+          onError={handleListError}
           {...(groupMembersRequestBuilder
             ? { groupMemberRequestBuilder: groupMembersRequestBuilder }
             : {})}

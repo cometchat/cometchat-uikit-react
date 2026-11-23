@@ -1,4 +1,5 @@
 import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { copyRequestBuilder } from '../../utils/copyRequestBuilder';
 
 /**
  * Page size for a saved-messages read.
@@ -33,7 +34,10 @@ export class CometChatSavedMessagesManager {
    * else — page size above all — stays the caller's choice.
    */
   async fetchFirst(): Promise<{ messages: CometChat.BaseMessage[]; hasMore: boolean }> {
-    const builder = this.builder ?? new CometChat.MessagesRequestBuilder().setLimit(SAVE_LIMIT);
+    // setSaved(true) goes on a copy: the caller's builder is never changed.
+    const builder = this.builder
+      ? copyRequestBuilder(this.builder)
+      : new CometChat.MessagesRequestBuilder().setLimit(SAVE_LIMIT);
     this.request = builder.setSaved(true).build();
     // Read the limit back off the built request: only it exposes a getter, and a
     // caller's builder may carry its own page size.

@@ -4,6 +4,8 @@ import type { CometChatGroupMembersErrorStateProps } from './CometChatGroupMembe
 import listErrorIcon from '../../assets/list_error_state_icon.svg';
 import './CometChatGroupMembers.css';
 import { useLocale } from '../../context/locale/LocaleContext';
+import { OfflineListState } from '../../utils/offline/OfflineListState';
+import groupsEmptyIcon from '../../assets/groups_empty_state.svg';
 
 /**
  * CometChatGroupMembersErrorState — Displayed when fetching members fails.
@@ -12,33 +14,40 @@ export const CometChatGroupMembersErrorState: React.FC<CometChatGroupMembersErro
   children,
 }) => {
   const { getLocalizedString } = useLocale();
-  const { fetchState } = useCometChatGroupMembersContext();
+  const { fetchState, connectToLoad } = useCometChatGroupMembersContext();
 
   // Shown only in its state, wherever it is placed.
   if (fetchState !== 'error') return null;
 
   return (
     <div className={'cometchat-group-members__error-state'} role="alert">
-      {children ?? (
-        <>
-          <div className={'cometchat-group-members__error-state-icon'} aria-hidden="true">
-            <img
-              src={listErrorIcon}
-              alt=""
-              width={120}
-              height={120}
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <h3 className={'cometchat-group-members__error-state-title'}>
-            {getLocalizedString('member_error_title')}
-          </h3>
-          <p className={'cometchat-group-members__error-state-subtitle'}>
-            {getLocalizedString('member_error_subtitle')}
-          </p>
-        </>
-      )}
+      {children ??
+        (connectToLoad ? (
+          <OfflineListState
+            block="cometchat-group-members__error-state"
+            icon={groupsEmptyIcon}
+            title={getLocalizedString('group_members_connect_to_load')}
+          />
+        ) : (
+          <>
+            <div className={'cometchat-group-members__error-state-icon'} aria-hidden="true">
+              <img
+                src={listErrorIcon}
+                alt=""
+                width={120}
+                height={120}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <h3 className={'cometchat-group-members__error-state-title'}>
+              {getLocalizedString('member_error_title')}
+            </h3>
+            <p className={'cometchat-group-members__error-state-subtitle'}>
+              {getLocalizedString('member_error_subtitle')}
+            </p>
+          </>
+        ))}
     </div>
   );
 };
